@@ -1,0 +1,240 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<name>CMS Migration Framework</name>
+	<groupId>com.armedia.documentum</groupId>
+	<artifactId>cmsmf</artifactId>
+	<version>1.1.0</version>
+	<packaging>jar</packaging>
+
+	<scm>
+		<connection>scm:svn:https://project.armedia.com/svn/DCTM/cmsmf</connection>
+	</scm>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.build.target>1.7</project.build.target>
+		<dfc.base.dir>${env.DOCUMENTUM}</dfc.base.dir>
+		<maven.min-version>3.0</maven.min-version>
+		<dfc.version>6.7-SP2</dfc.version>
+	</properties>
+
+	<organization>
+		<name>Armedia</name>
+		<url>http://www.armedia.com</url>
+	</organization>
+
+	<repositories>
+		<repository>
+			<id>Armedia Repository</id>
+			<name>Armedia Artifacts Repository</name>
+			<url>https://project.armedia.com/nexus/content/groups/armedia/</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>Armedia Repository</id>
+			<name>Armedia Artifacts Repository</name>
+			<url>https://project.armedia.com/nexus/content/groups/armedia/</url>
+			<layout>default</layout>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.documentum.dfc</groupId>
+			<artifactId>dfc-jars</artifactId>
+			<version>${dfc.version}</version>
+			<type>pom</type>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+			<version>3.2.1</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>1.6</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>1.4</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.5</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1.1</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.16</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>2.3</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>2.9.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.17</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<encoding>${project.build.sourceEncoding}</encoding>
+						<source>${project.build.target}</source>
+						<target>${project.build.target}</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.4.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<version>1.3.1</version>
+					<configuration>
+						<rules>
+							<requireJavaVersion>
+								<version>1.7.0</version>
+							</requireJavaVersion>
+							<requireMavenVersion>
+								<version>[${maven.min-version},)</version>
+							</requireMavenVersion>
+							<requireEnvironmentVariable>
+								<variableName>DOCUMENTUM</variableName>
+								<message>The "DOCUMENTUM" environment variable must be set!</message>
+							</requireEnvironmentVariable>
+							<requireProperty>
+								<property>dfc</property>
+								<message>The "dfc" property must be set!</message>
+							</requireProperty>
+							<!--  TODO: Check for ${DOCUMENTUM} in the environment -->
+							<requireProperty>
+								<property>mode</property>
+								<regex>^(read|write)$</regex>
+								<message>The "mode" property must be either "read" or "write"</message>
+							</requireProperty>
+							<requireProperty>
+								<property>cfg</property>
+								<message>The "cfg" property must be set!</message>
+							</requireProperty>
+						</rules>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>exec-maven-plugin</artifactId>
+					<version>1.3.2</version>
+					<configuration>
+						<classpathScope>runtime</classpathScope>
+						<executable>java</executable>
+						<arguments>
+							<argument>-Xms256m</argument>
+							<argument>-Xmx512m</argument>
+							<argument>-Xss128k</argument>
+							<argument>-Dcom.sun.management.jmxremote</argument>
+						</arguments>
+						<additionalClasspathElements>
+							<additionalClasspathElement>${env.DOCUMENTUM}/config</additionalClasspathElement>
+							<additionalClasspathElement>${basedir}/cfg/${cfg}.properties</additionalClasspathElement>
+						</additionalClasspathElements>
+						<mainClass>com.delta.cmsmf.mainEngine.CMSMFMain</mainClass>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>enforce-base</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+  			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<parallel>classes</parallel>
+					<threadCount>10</threadCount>
+					<trimStackTrace>false</trimStackTrace>
+					<forkMode>always</forkMode>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
