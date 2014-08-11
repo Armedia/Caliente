@@ -7,6 +7,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import com.delta.cmsmf.cmsobjects.DctmACL;
 import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
@@ -38,11 +39,11 @@ public class DctmACLTest {
 		pm.loadProperties("config/CMSMF_app.properties");
 		// Set the filesystem location where files will be created or read from
 		String streamFilesDirectoryLocation = PropertiesManager.getPropertiesManager().getProperty(
-			"cmsmf.app.importexport.directory", "");
+			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, "");
 
 		// First set the directory path where all of the files will be created
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-		fsm.setStremsDiretoryPath(streamFilesDirectoryLocation);
+		fsm.setStreamsDirectoryPath(streamFilesDirectoryLocation);
 
 		// Delete existing cmsmf stream files before export process
 		fsm.deleteStreamFiles();

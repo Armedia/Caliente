@@ -16,8 +16,10 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.mainEngine.CMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.properties.PropertiesManager;
@@ -80,8 +82,7 @@ public class DctmDocument extends DctmObject {
 	 * properties file.
 	 * If the value is true, the documents and folders are created in /Replications cabinet.
 	 */
-	private static boolean isThisATest = PropertiesManager.getPropertiesManager().getProperty("cmsmf.app.run_mode", "")
-		.equalsIgnoreCase("test");
+	private static boolean isThisATest = CMSMFMain.getInstance().isTestMode();
 
 	/**
 	 * Gets the list of content rendition files for this document.
@@ -600,8 +601,7 @@ public class DctmDocument extends DctmObject {
 		List<DctmContent> contentList = dctmDoc.getContentList();
 		System.out.println("content files nbr: " + contentList.size());
 		// int lastPageNbr = -1;
-		String contentExportRootDir = PropertiesManager.getPropertiesManager().getProperty(
-			"cmsmf.app.importexport.content.directory", "");
+		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
 		for (DctmContent dctmContent : contentList) {
 			// if (dctmContent.getPageNbr() != lastPageNbr) {
 			// ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -621,16 +621,17 @@ public class DctmDocument extends DctmObject {
 			// }
 			// lastPageNbr = dctmContent.getPageNbr();
 
-			String contentFullPath = contentExportRootDir + File.separator
-				+ dctmContent.getRelativeContentFileLocation();
+			File contentFullPath = new File(contentExportRootDir, dctmContent.getRelativeContentFileLocation());
 			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-				DctmDocument.logger.debug("Content File Location in fileSystem is: " + contentFullPath);
+				DctmDocument.logger.debug("Content File Location in fileSystem is: "
+					+ contentFullPath.getAbsolutePath());
 			}
 			if (dctmContent.getRenditionNbr() == 0) {
-				sysObject.setFileEx(contentFullPath, dctmContent.getContentFormat(), dctmContent.getPageNbr(), null);
+				sysObject.setFileEx(contentFullPath.getAbsolutePath(), dctmContent.getContentFormat(),
+					dctmContent.getPageNbr(), null);
 			} else {
-				sysObject.addRenditionEx2(contentFullPath, dctmContent.getContentFormat(), dctmContent.getPageNbr(),
-					dctmContent.getPageModifier(), null, false, false, false);
+				sysObject.addRenditionEx2(contentFullPath.getAbsolutePath(), dctmContent.getContentFormat(),
+					dctmContent.getPageNbr(), dctmContent.getPageModifier(), null, false, false, false);
 			}
 			// We don't want to save it here, it will be saved in or checked in later
 // sysObject.save();
@@ -956,14 +957,13 @@ public class DctmDocument extends DctmObject {
 		int bufferSize = PropertiesManager.getPropertiesManager().getProperty("content_read_buffer_size",
 			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
 */
-		String contentExportRootDir = PropertiesManager.getPropertiesManager().getProperty(
-			"cmsmf.app.importexport.content.directory", "");
+		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
 		// Make sure the content export location exists
-		FileUtils.forceMkdir(new File(contentExportRootDir));
+		FileUtils.forceMkdir(contentExportRootDir);
 		String relativeContentFileLocation = CMSMFUtils.GetContentPathFromContentID(contentObjID);
 
 		// Make sure that the content file folder location exists
-		FileUtils.forceMkdir(new File(contentExportRootDir + File.separator + relativeContentFileLocation));
+		FileUtils.forceMkdir(new File(contentExportRootDir, relativeContentFileLocation));
 
 		String contentFileName = contentObjID + "_" + contentFormat + "_" + pageNbr;
 		if (StringUtils.isNotBlank(pageModifier)) {
@@ -996,7 +996,7 @@ public class DctmDocument extends DctmObject {
 			DctmDocument.logger.debug("Started converting content input stream to byte[]");
 		}
 
-		int bufferSize = PropertiesManager.getPropertiesManager().getProperty("content_read_buffer_size",
+		int bufferSize = PropertiesManager.getPropertiesManager().getProperty(CMSMFProperties.CONTENT_READ_BUFFER_SIZE,
 			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(bufferSize);
 		byte[] bytes = new byte[bufferSize];

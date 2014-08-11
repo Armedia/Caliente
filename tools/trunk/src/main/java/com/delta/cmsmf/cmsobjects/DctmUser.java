@@ -8,6 +8,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -80,7 +81,7 @@ public class DctmUser extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
@@ -127,7 +128,7 @@ public class DctmUser extends DctmObject {
 				CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
 				String inlinePasswordValue = CMSMFAppConstants.INLINE_PASSWORD_DEFAULT_VALUE;
 				inlinePasswordValue = PropertiesManager.getPropertiesManager().getProperty(
-					"cmsmf.app.inlinepassworduser.passwordvalue", inlinePasswordValue);
+					CMSMFProperties.CMSMF_APP_INLINEPASSWORDUSER_PASSWORDVALUE, inlinePasswordValue);
 				// If the value of property 'cmsmf.app.inlinepassworduser.passwordvalue' equals to
 				// default value, then set the password equal to the login name
 				if (inlinePasswordValue.equalsIgnoreCase(CMSMFAppConstants.INLINE_PASSWORD_DEFAULT_VALUE)) {
@@ -404,7 +405,7 @@ public class DctmUser extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override

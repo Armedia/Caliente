@@ -12,9 +12,9 @@ import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.mainEngine.CMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
-import com.delta.cmsmf.properties.PropertiesManager;
 import com.delta.cmsmf.runtime.DuplicateChecker;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -56,8 +56,7 @@ public class DctmFolder extends DctmObject {
 	 * properties file.
 	 * If the value is true, the documents and folders are created in /Replications cabinet.
 	 */
-	private static boolean isThisATest = PropertiesManager.getPropertiesManager().getProperty("cmsmf.app.run_mode", "")
-		.equalsIgnoreCase("test");
+	private static boolean isThisATest = CMSMFMain.getInstance().isTestMode();
 
 	/**
 	 * Instantiates a new dctm folder.
@@ -80,7 +79,7 @@ public class DctmFolder extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.repoSync.DctmObject#createInCMS()
 	 */
 	@Override
@@ -221,7 +220,7 @@ public class DctmFolder extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
@@ -336,7 +335,7 @@ public class DctmFolder extends DctmObject {
 				}
 				/*
 				 * String pathSep = "/";
-				 * 
+				 *
 				 * if (fldrPath.startsWith(pathSep)) { fldrPath = fldrPath.substring(1); } String[] fldrs =
 				 * fldrPath.split(pathSep); StringBuffer curFldrPath = new StringBuffer(); for (int j = 0; j <
 				 * fldrs.length - 1; j++) { curFldrPath.append(pathSep + fldrs[j]); if
@@ -347,7 +346,7 @@ public class DctmFolder extends DctmObject {
 				 * String ancestorFldrID = ancestorFldr.getObjectId().getId(); if
 				 * (!DuplicateChecker.getDuplicateChecker().isFolderProcessed(ancestorFldrID, false)) { //
 				 * Export other supporting objects exportSupportingObjects(ancestorFldr);
-				 * 
+				 *
 				 * DctmFolder dctmFolder = new DctmFolder(); getAllAttributesFromCMS(dctmFolder, ancestorFldr,
 				 * ancestorFldrID); // Update ACL Domain attribute value // No need to do this here anymore,
 				 * it is handled in getAllAttributesFromCMS() // itself. //

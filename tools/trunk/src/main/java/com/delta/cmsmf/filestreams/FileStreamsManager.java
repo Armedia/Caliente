@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.exception.CMSMFFileNotFoundException;
 import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.properties.PropertiesManager;
@@ -113,11 +114,16 @@ public class FileStreamsManager {
 	/** The src repo config file is. */
 	private InputStream srcRepoConfigFileIS = null;
 
+	private final boolean compressStreams;
+
 	/**
 	 * Instantiates a new file streams manager.
 	 */
 	private FileStreamsManager() {
 		// no code here; this is a singleton class so private constructor
+		String compressDataFlag = PropertiesManager.getPropertiesManager().getProperty(
+			CMSMFProperties.CMSMF_APP_COMPRESSDATA_FLAG, "");
+		this.compressStreams = (StringUtils.startsWithIgnoreCase(compressDataFlag, "y"));
 	}
 
 	/**
@@ -148,41 +154,47 @@ public class FileStreamsManager {
 	private static FileStreamsManager singletonInstance;
 
 	/** The strems diretory path where files are created. */
-	private String stremsDiretoryPath;
+	private File streamsDirectoryPath;
+
+	public void setStreamsDirectoryPath(String directoryPath) {
+		setStreamsDirectoryPath(new File(directoryPath));
+	}
 
 	/**
 	 * Sets the strems diretory path where the files will be created.
 	 * 
-	 * @param stremsDiretoryPath
+	 * @param streamsDirectoryPath
 	 *            the new strems diretory path
 	 */
-	public void setStremsDiretoryPath(String stremsDiretoryPath) {
-		this.stremsDiretoryPath = stremsDiretoryPath;
-
-		createStremsDirectory();
+	public void setStreamsDirectoryPath(File streamsDirectoryPath) {
+		this.streamsDirectoryPath = streamsDirectoryPath;
+		createStreamsDirectory();
 	}
 
 	/** The content directory path where content files are created. */
-	private String contentDiretoryPath;
+	private File contentDirectoryPath;
+
+	public void setContentDirectoryPath(String directoryPath) {
+		setContentDirectoryPath(new File(directoryPath));
+	}
 
 	/**
 	 * Sets the content directory path where the content files will be created.
 	 * 
-	 * @param contentDiretoryPath
+	 * @param contentDirectoryPath
 	 *            the new content directory path
 	 */
-	public void setContentDiretoryPath(String contentDiretoryPath) {
-		this.contentDiretoryPath = contentDiretoryPath;
+	public void setContentDirectoryPath(File contentDirectoryPath) {
+		this.contentDirectoryPath = contentDirectoryPath;
 	}
 
 	/**
 	 * Creates the streams directory if it does not exist.
 	 */
-	private void createStremsDirectory() {
+	private void createStreamsDirectory() {
 		// Create the directory if it doesn't exist
-		File directory = new File(this.stremsDiretoryPath);
-		if (!directory.exists()) {
-			directory.mkdirs();
+		if (!this.streamsDirectoryPath.exists()) {
+			this.streamsDirectoryPath.mkdirs();
 		}
 	}
 
@@ -353,10 +365,10 @@ public class FileStreamsManager {
 
 		OutputStream os;
 		// Make sure the streams directory exists
-		createStremsDirectory();
+		createStreamsDirectory();
 		// See if objects file exists
 		// open the obj file
-		File objFile = new File(new File(this.stremsDiretoryPath).getAbsolutePath() + File.separator + fileName);
+		File objFile = new File(this.streamsDirectoryPath, fileName);
 		if (!objFile.exists()) {
 			try {
 				objFile.createNewFile();
@@ -365,9 +377,7 @@ public class FileStreamsManager {
 			}
 		}
 		try {
-			String compressDataFlag = PropertiesManager.getPropertiesManager().getProperty(
-				"cmsmf.app.compressdata.flag", "");
-			if (StringUtils.startsWithIgnoreCase(compressDataFlag, "y")) {
+			if (this.compressStreams) {
 				os = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(objFile)));
 			} else {
 				os = new ObjectOutputStream(new FileOutputStream(objFile));
@@ -417,11 +427,9 @@ public class FileStreamsManager {
 	private InputStream createObjectInputStream(String fileName) throws CMSMFIOException, CMSMFFileNotFoundException {
 		InputStream is;
 		// open the obj file
-		File objFile = new File(new File(this.stremsDiretoryPath).getAbsolutePath() + File.separator + fileName);
+		File objFile = new File(this.streamsDirectoryPath, fileName);
 		try {
-			String compressDataFlag = PropertiesManager.getPropertiesManager().getProperty(
-				"cmsmf.app.compressdata.flag", "");
-			if (StringUtils.startsWithIgnoreCase(compressDataFlag, "y")) {
+			if (this.compressStreams) {
 				is = new ObjectInputStream(new GZIPInputStream(new FileInputStream(objFile)));
 			} else {
 				is = new ObjectInputStream(new FileInputStream(objFile));
@@ -507,7 +515,7 @@ public class FileStreamsManager {
 	 */
 	public void deleteStreamFiles() {
 
-		File directory = new File(this.stremsDiretoryPath);
+		File directory = this.streamsDirectoryPath;
 
 		if (directory.exists() && directory.isDirectory()) {
 			// clean the directory
@@ -519,7 +527,7 @@ public class FileStreamsManager {
 			}
 
 			// Delete the content files directory
-			File contentDirectory = new File(this.contentDiretoryPath);
+			File contentDirectory = this.contentDirectoryPath;
 			if (contentDirectory.exists() && contentDirectory.isDirectory()) {
 				try {
 					FileUtils.deleteDirectory(contentDirectory);
@@ -583,7 +591,7 @@ public class FileStreamsManager {
 		// This is mainly for testing purposes
 		System.out.println("started");
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-		fsm.setStremsDiretoryPath("C://temp2/temp2");
+		fsm.setStreamsDirectoryPath(new File("C://temp2/temp2"));
 		try {
 			fsm.getOutputStreamForType(DctmObjectTypesEnum.DCTM_DOCUMENT);
 			fsm.closeAllStreams();

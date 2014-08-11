@@ -1,5 +1,6 @@
 package com.delta.cmsmf.mainEngine;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
 import com.delta.cmsmf.cmsobjects.DctmUser;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFatalException;
@@ -54,16 +56,20 @@ import com.documentum.fc.common.IDfLoginInfo;
 public class CMSMFMain {
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(CMSMFMain.class);
+	private static Logger logger = Logger.getLogger(CMSMFMain.class);
+
+	private static CMSMFMain instance = null;
 
 	/** The dctm session. */
 	private IDfSession dctmSession = null;
 
 	/** The directory location where stream files will be created. */
-	private String streamFilesDirectoryLocation = null;
+	private File streamFilesDirectoryLocation = null;
 
 	/** The directory location where content files will be created. */
-	private String contentFilesDirectoryLocation = null;
+	private File contentFilesDirectoryLocation = null;
+
+	private boolean testMode = false;
 
 	/**
 	 * The main method.
@@ -73,25 +79,10 @@ public class CMSMFMain {
 	 * @throws ConfigurationException
 	 *             the configuration exception
 	 */
-	public static void main(String[] args) throws ConfigurationException {
-		CMSMFMain cmsmfMain = new CMSMFMain();
-
+	public static void main(String[] args) throws Throwable {
 		// Initialize Application
-		try {
-			CMSMFMain.initApp();
-		} catch (ConfigurationException e1) {
-			CMSMFMain.logger
-				.error("Failed to load the properties file for the application. Application will exit.", e1);
-			throw (e1);
-		}
-
-		try {
-			cmsmfMain.start();
-			// Use following for testing purposes
-			// repoSyncMain.start2();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		CMSMFMain.instance = CMSMFMain.initApp(args);
+		CMSMFMain.instance.start(args);
 	}
 
 	/**
@@ -100,13 +91,23 @@ public class CMSMFMain {
 	 * @throws ConfigurationException
 	 *             the configuration exception
 	 */
-	private static void initApp() throws ConfigurationException {
-
+	private static CMSMFMain initApp(String[] args) throws ConfigurationException {
 		PropertiesManager pm = PropertiesManager.getPropertiesManager();
-
 		// Load properties from config file
 		pm.loadProperties(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
+		return new CMSMFMain();
+	}
 
+	public File getStreamFilesDirectory() {
+		return this.streamFilesDirectoryLocation;
+	}
+
+	public File getContentFilesDirectory() {
+		return this.contentFilesDirectoryLocation;
+	}
+
+	public boolean isTestMode() {
+		return this.testMode;
 	}
 
 	/**
@@ -117,71 +118,74 @@ public class CMSMFMain {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void start() throws IOException {
+	private void start(String[] args) throws Throwable {
 		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
 			CMSMFMain.logger.info("##### CMS Migration Process Started #####");
 		}
 
-		String docbaseName = "";
-		String docbaseUser = "";
-		String docbasePassword = "";
 		// Determine if this is a export step or import step
-		String importOrExport = PropertiesManager.getPropertiesManager().getProperty("cmsmf.app.importexport.mode", "");
-		if (importOrExport.equalsIgnoreCase("Export")) {
-			// Read source repository connection properties
-			docbaseName = PropertiesManager.getPropertiesManager().getProperty("source.repository.name", "");
-			docbaseUser = PropertiesManager.getPropertiesManager().getProperty("source.repository.userName", "");
-			docbasePassword = PropertiesManager.getPropertiesManager().getProperty("source.repository.password", "");
-		} else if (importOrExport.equalsIgnoreCase("Import")) {
-			// Read source repository connection properties
-			docbaseName = PropertiesManager.getPropertiesManager().getProperty("target.repository.name", "");
-			docbaseUser = PropertiesManager.getPropertiesManager().getProperty("target.repository.userName", "");
-			docbasePassword = PropertiesManager.getPropertiesManager().getProperty("target.repository.password", "");
-		} else {
-			CMSMFMain.logger.error("Invalid value in importExport mode. Please check value of "
-				+ "cmsmf.app.importexport.mode property in CMSMF_app.properties file");
-			return;
+		String importOrExport = null;
+		if (importOrExport == null) {
+			// Support legacy configurations
+			importOrExport = PropertiesManager.getPropertiesManager().getProperty(
+				CMSMFProperties.CMSMF_APP_IMPORTEXPORT_MODE, "");
 		}
 
-		// Set the filesystem location where files will be created or read from
-		this.streamFilesDirectoryLocation = PropertiesManager.getPropertiesManager().getProperty(
-			"cmsmf.app.importexport.directory", "");
+		this.testMode = "test".equalsIgnoreCase(PropertiesManager.getPropertiesManager().getProperty(
+			CMSMFProperties.CMSMF_APP_RUN_MODE, ""));
 
-		// Set the filesystem location where the content files will be created or read from
-		this.contentFilesDirectoryLocation = PropertiesManager.getPropertiesManager().getProperty(
-			"cmsmf.app.importexport.content.directory", "");
+		final String docbaseName = PropertiesManager.getPropertiesManager().getProperty(CMSMFProperties.DOCBASE_NAME,
+			"");
+		final String docbaseUser = PropertiesManager.getPropertiesManager().getProperty(CMSMFProperties.DOCBASE_USER,
+			"");
+		String passTmp = PropertiesManager.getPropertiesManager().getProperty(CMSMFProperties.DOCBASE_PASSWORD, "");
 
-		// get a local client
+		final IDfClient dfClient;
 		try {
-			IDfClient dfClient = DfClient.getLocalClient();
+			dfClient = DfClient.getLocalClient();
 			if (dfClient == null) {
 				// If I don't have a local client then something was not
 				// installed
 				// correctly so throw an error
-				CMSMFMain.logger.error("No local client was established.  You may want to check the installation of "
-					+ "Documentum or this application on this machine.");
-			}// End if(dfClient.equals(null))
-			else {
-				// Check to see if password encrypted flag is set to yes, if it is, then decrypt the
-// password first.
-				String passwordEncryptedFlag = PropertiesManager.getPropertiesManager().getProperty(
-					"cmsmf.app.passwords.encrypted.flag", "No");
-				if (StringUtils.startsWithIgnoreCase(passwordEncryptedFlag, "y")) {
-					docbasePassword = EncryptPasswordUtil.decryptPassword(docbasePassword);
-				}
-
-				// Prepare login object
-				IDfLoginInfo li = new DfLoginInfo();
-				li.setUser(docbaseUser);
-				li.setPassword(docbasePassword);
-				li.setDomain(null);
-
-				// Get a documentum session using session manager
-				IDfSessionManager sessionManager = dfClient.newSessionManager();
-				sessionManager.setIdentity(docbaseName, li);
-				this.dctmSession = sessionManager.getSession(docbaseName);
+				String msg = "No local client was established.  You may want to check the installation of "
+					+ "Documentum or this application on this machine.";
+				CMSMFMain.logger.error(msg);
+				throw new RuntimeException(msg);
 			}
+		} catch (DfException e) {
+			String msg = "No local client was established.  You may want to check the installation of "
+				+ "Documentum or this application on this machine.";
+			CMSMFMain.logger.error(msg);
+			throw new RuntimeException(msg, e);
+		}
 
+		try {
+			passTmp = EncryptPasswordUtil.decryptPassword(passTmp);
+		} catch (Throwable t) {
+			// Not encrypted, use literal
+		}
+		final String docbasePassword = passTmp;
+
+		// Set the filesystem location where files will be created or read from
+		this.streamFilesDirectoryLocation = new File(PropertiesManager.getPropertiesManager().getProperty(
+			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, ""));
+
+		// Set the filesystem location where the content files will be created or read from
+		this.contentFilesDirectoryLocation = new File(PropertiesManager.getPropertiesManager().getProperty(
+			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, ""));
+
+		// get a local client
+		try {
+			// Prepare login object
+			IDfLoginInfo li = new DfLoginInfo();
+			li.setUser(docbaseUser);
+			li.setPassword(docbasePassword);
+			li.setDomain(null);
+
+			// Get a documentum session using session manager
+			IDfSessionManager sessionManager = dfClient.newSessionManager();
+			sessionManager.setIdentity(docbaseName, li);
+			this.dctmSession = sessionManager.getSession(docbaseName);
 		} catch (DfIdentityException e) {
 			CMSMFMain.logger.error("Error establishing Documentum session", e);
 		} catch (DfAuthenticationException e) {
@@ -189,8 +193,6 @@ public class CMSMFMain {
 		} catch (DfPrincipalException e) {
 			CMSMFMain.logger.error("Error establishing Documentum session", e);
 		} catch (DfServiceException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
-		} catch (DfException e) {
 			CMSMFMain.logger.error("Error establishing Documentum session", e);
 		}
 
@@ -259,12 +261,12 @@ public class CMSMFMain {
 		}
 
 		// Set the filesystem location where files will be created or read from
-		this.streamFilesDirectoryLocation = PropertiesManager.getPropertiesManager().getProperty(
-			"cmsmf.app.importexport.directory", "");
+		this.streamFilesDirectoryLocation = new File(PropertiesManager.getPropertiesManager().getProperty(
+			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, ""));
 
 		// Set the filesystem location where the content files will be created or read from
-		this.contentFilesDirectoryLocation = PropertiesManager.getPropertiesManager().getProperty(
-			"cmsmf.app.importexport.content.directory", "");
+		this.contentFilesDirectoryLocation = new File(PropertiesManager.getPropertiesManager().getProperty(
+			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, ""));
 
 		// Start the export process
 		startExporting2();
@@ -309,8 +311,8 @@ public class CMSMFMain {
 
 		// First set the directory path where all of the files will be created
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-		fsm.setStremsDiretoryPath(this.streamFilesDirectoryLocation);
-		fsm.setContentDiretoryPath(this.contentFilesDirectoryLocation);
+		fsm.setStreamsDirectoryPath(this.streamFilesDirectoryLocation);
+		fsm.setContentDirectoryPath(this.contentFilesDirectoryLocation);
 
 		// Delete existing cmsmf stream files before export process
 		fsm.deleteStreamFiles();
@@ -318,7 +320,7 @@ public class CMSMFMain {
 		// Build the query that will determine what objects will be exported
 		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
 		String fromWhereClause = PropertiesManager.getPropertiesManager().getProperty(
-			"cmsmf.app.export.query.predicate", "");
+			CMSMFProperties.CMSMF_APP_EXPORT_QUERY_PREDICATE, "");
 
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		dqlQry.setDQL(selectClause + fromWhereClause);
@@ -415,8 +417,8 @@ public class CMSMFMain {
 
 		// First set the directory path where all of the files will be created
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-		fsm.setStremsDiretoryPath(this.streamFilesDirectoryLocation);
-		fsm.setContentDiretoryPath(this.contentFilesDirectoryLocation);
+		fsm.setStreamsDirectoryPath(this.streamFilesDirectoryLocation);
+		fsm.setContentDirectoryPath(this.contentFilesDirectoryLocation);
 
 		// Delete existing cmsmf stream files before export process
 		fsm.deleteStreamFiles();
@@ -511,8 +513,8 @@ public class CMSMFMain {
 
 		// First set the directory path where all of the files were created
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-		fsm.setStremsDiretoryPath(this.streamFilesDirectoryLocation);
-		fsm.setContentDiretoryPath(this.contentFilesDirectoryLocation);
+		fsm.setStreamsDirectoryPath(this.streamFilesDirectoryLocation);
+		fsm.setContentDirectoryPath(this.contentFilesDirectoryLocation);
 
 		// Check that all prerequisites are met before importing anything
 		if (!isItSafeToImport()) {
@@ -669,8 +671,8 @@ public class CMSMFMain {
 
 		// First set the directory path where all of the files were created
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-		fsm.setStremsDiretoryPath(this.streamFilesDirectoryLocation);
-		fsm.setContentDiretoryPath(this.contentFilesDirectoryLocation);
+		fsm.setStreamsDirectoryPath(this.streamFilesDirectoryLocation);
+		fsm.setContentDirectoryPath(this.contentFilesDirectoryLocation);
 
 		// Check that all prerequisites are met before importing anything
 		if (!isItSafeToImport()) {
@@ -845,7 +847,10 @@ public class CMSMFMain {
 		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
 			CMSMFMain.logger.info("##### Import Process Finished #####");
 		}
+	}
 
+	public static CMSMFMain getInstance() {
+		return CMSMFMain.instance;
 	}
 
 	/**
@@ -882,9 +887,8 @@ public class CMSMFMain {
 					// of the file streams
 					RunTimeProperties.getRunTimePropertiesInstance().incrementImportProcessErrorCount();
 
-					String importErrorThresholdStr = PropertiesManager.getPropertiesManager().getProperty(
-						"cmsmf.app.import.errorcount.threshold", "0");
-					int importErrorThreshold = Integer.parseInt(importErrorThresholdStr);
+					int importErrorThreshold = PropertiesManager.getPropertiesManager().getProperty(
+						CMSMFProperties.CMSMF_APP_IMPORT_ERRORCOUNT_THRESHOLD, 0);
 					if (RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount() >= importErrorThreshold) {
 						// Raise the cmsmf fatal exception.
 						throw (new CMSMFFatalException(

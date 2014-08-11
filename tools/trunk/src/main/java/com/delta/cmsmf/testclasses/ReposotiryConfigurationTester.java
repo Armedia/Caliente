@@ -39,7 +39,7 @@ public class ReposotiryConfigurationTester {
 
 		// First set the directory path where all of the files were created
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-		fsm.setStremsDiretoryPath(streamFilesDirectoryLocation);
+		fsm.setStreamsDirectoryPath(streamFilesDirectoryLocation);
 
 		RepositoryConfiguration srcRepoConfig = DctmObjectReader.readSrcRepoConfig();
 		List<String> fileStores = srcRepoConfig.getFileStores();

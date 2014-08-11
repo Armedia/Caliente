@@ -1,7 +1,14 @@
 package com.delta.cmsmf.properties;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.configuration.CompositeConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+
+import com.delta.cmsmf.constants.CMSMFProperties;
 
 /**
  * The Class PropertiesManager reads the properties from cmsmf properties file and makes them
@@ -39,7 +46,7 @@ public class PropertiesManager {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#clone()
 	 */
 	@Override
@@ -60,13 +67,18 @@ public class PropertiesManager {
 	 * @throws ConfigurationException
 	 *             the configuration exception
 	 */
-	public void loadProperties(String fileName) throws ConfigurationException {
-		this.propConfig = new PropertiesConfiguration();
+	public void loadProperties(String... fileName) throws ConfigurationException {
 		// Disable parsing of the property value by delimiter. We do not have properties with
 		// multiple values for now. The default delimiting character is ','. We are overriding it
 		// with '|' to disable parsing
-		this.propConfig.setListDelimiter('|');
-		this.propConfig.load(fileName);
+		List<Configuration> l = new ArrayList<Configuration>();
+		for (String f : fileName) {
+			PropertiesConfiguration cfg = new PropertiesConfiguration();
+			cfg.setListDelimiter('|');
+			cfg.load(f);
+			l.add(cfg);
+		}
+		this.configuration = new CompositeConfiguration(l);
 	}
 
 	/**
@@ -78,8 +90,8 @@ public class PropertiesManager {
 	 *            the default value
 	 * @return the string
 	 */
-	public String getProperty(String propName, String defaultValue) {
-		return this.propConfig.getString(propName, defaultValue);
+	public String getProperty(CMSMFProperties propName, String defaultValue) {
+		return this.configuration.getString(propName.name, defaultValue);
 	}
 
 	/**
@@ -91,33 +103,10 @@ public class PropertiesManager {
 	 *            the default value
 	 * @return the int
 	 */
-	public int getProperty(String propName, int defaultValue) {
-		return this.propConfig.getInt(propName, defaultValue);
+	public int getProperty(CMSMFProperties propName, int defaultValue) {
+		return this.configuration.getInt(propName.name, defaultValue);
 	}
 
 	/** The prop config. */
-	private PropertiesConfiguration propConfig = null;
-
-	/**
-	 * The main method.
-	 * 
-	 * @param args
-	 *            the arguments
-	 * @throws ConfigurationException
-	 *             the configuration exception
-	 */
-	public static void main(String[] args) throws ConfigurationException {
-		// This main method is not supposed to be invoked outside of IDE.
-		// This is mainly for testing purposes
-
-		System.out.println("started");
-		PropertiesManager pm = PropertiesManager.getPropertiesManager();
-
-		pm.loadProperties("config/CMSMF_app.properties");
-		System.out.println(pm.getProperty("content_read_buffer_size", "defaultValue"));
-
-		System.out.println("finished");
-
-	}
-
+	private Configuration configuration = null;
 }
