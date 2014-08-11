@@ -39,7 +39,7 @@ public class CMSMFAppConstants {
 	public static final String EXPORT_QUERY_SELECT_CLAUSE = "select r_object_id, i_vstamp, r_object_type, r_aspect_name, i_is_replica, i_is_reference ";
 
 	/** The file name and path of the properties file used in CMSMF application. */
-	public static final String FULLY_QUALIFIED_CONFIG_FILE_NAME = "config/CMSMF_app.properties";
+	public static final String FULLY_QUALIFIED_CONFIG_FILE_NAME = "cfg/common.properties";
 
 	// Time patterns
 	/** The date and time pattern commonly used in documentum repository. */
