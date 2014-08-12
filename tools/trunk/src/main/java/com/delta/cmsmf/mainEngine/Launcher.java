@@ -161,6 +161,11 @@ public class Launcher {
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 			base.getAbsolutePath())); }
 
+		System.out.printf("Using %s=[%s]%n", Launcher.ENV_DOCUMENTUM_SHARED, base.getAbsolutePath());
+
+		// Make sure the environment reflects our changes
+		// System.getenv().put(Launcher.ENV_DOCUMENTUM_SHARED, base.getAbsolutePath());
+
 		// Next, does dctm.jar exist in there?
 		File tgt = new File(base, Launcher.DCTM_JAR);
 		if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
@@ -183,6 +188,10 @@ public class Launcher {
 		base = new File(var).getCanonicalFile();
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 			base.getAbsolutePath())); }
+
+		System.out.printf("Using %s=[%s]%n", Launcher.ENV_DOCUMENTUM, base.getAbsolutePath());
+		// Make sure the environment reflects our changes
+		// System.getenv().put(Launcher.ENV_DOCUMENTUM, base.getAbsolutePath());
 
 		tgt = new File(base, "config");
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
