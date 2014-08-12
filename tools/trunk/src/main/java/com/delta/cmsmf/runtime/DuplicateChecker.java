@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
  * list to
  * facilitate faster lookup. The object id of already processed object is stored as the key in the
  * map and to
- * conserve space, a simple byte is stored in a value in <key, value> pair of the map.
+ * conserve space, a simple byte is stored in a value in {@code <key, value>} pair of the map.
  * 
  * @author Shridev Makim 6/15/2010
  */
@@ -49,7 +49,7 @@ public class DuplicateChecker {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#clone()
 	 */
 	@Override

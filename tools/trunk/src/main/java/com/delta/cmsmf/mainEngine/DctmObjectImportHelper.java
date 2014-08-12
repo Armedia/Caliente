@@ -31,6 +31,7 @@ public class DctmObjectImportHelper {
 	 * @param fldrPath
 	 *            the folder path
 	 * @throws DfException
+	 *             raised from the DFC API
 	 */
 	public static void createFolderByPath(IDfSession dctmSession, String fldrPath) throws DfException {
 		if (DctmObjectImportHelper.logger.isEnabledFor(Level.INFO)) {

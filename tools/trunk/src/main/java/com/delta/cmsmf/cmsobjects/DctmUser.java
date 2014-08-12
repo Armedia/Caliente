@@ -31,7 +31,7 @@ import com.documentum.fc.common.DfException;
  * <b> NOTE: We are not handling aliases currently. </b>
  * <p>
  * <b> NOTE: During import process, if the user name is dmadmin or starts with "dm_",it will be
- * ignore and will not be created them in the repository.
+ * ignore and will not be created them in the repository.</b>
  * 
  * @author Shridev Makim 6/15/2010
  */
@@ -127,8 +127,8 @@ public class DctmUser extends DctmObject {
 			if (getStrSingleAttrValue(DctmAttrNameConstants.USER_SOURCE).equals(
 				CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
 				String inlinePasswordValue = CMSMFAppConstants.INLINE_PASSWORD_DEFAULT_VALUE;
-				inlinePasswordValue = PropertiesManager.getProperty(
-					CMSMFProperties.DEFAULT_USER_PASSWORD, inlinePasswordValue);
+				inlinePasswordValue = PropertiesManager.getProperty(CMSMFProperties.DEFAULT_USER_PASSWORD,
+					inlinePasswordValue);
 				// If the value of property 'cmsmf.app.inlinepassworduser.passwordvalue' equals to
 				// default value, then set the password equal to the login name
 				if (inlinePasswordValue.equalsIgnoreCase(CMSMFAppConstants.INLINE_PASSWORD_DEFAULT_VALUE)) {
