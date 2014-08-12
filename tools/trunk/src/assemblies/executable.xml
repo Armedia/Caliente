@@ -15,12 +15,6 @@
 			<useProjectArtifact>true</useProjectArtifact>
 			<unpack>true</unpack>
 			<scope>runtime</scope>
-			<excludes>
-				<exclude>META-INF</exclude>
-				<exclude>**/*.java</exclude>
-				<exclude>*.java</exclude>
-				<exclude>*:sources</exclude>
-			</excludes>
 		</dependencySet>
 	</dependencySets>
 </assembly>

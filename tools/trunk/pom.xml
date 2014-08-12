@@ -216,8 +216,9 @@
 						</goals>
 						<configuration>
 							<finalName>${project.artifactId}-${project.version}-exe</finalName>
-							<!-- <appendAssemblyId>false</appendAssemblyId> -->
 							<classifier>exe</classifier>
+							<attach>false</attach>
+							<appendAssemblyId>false</appendAssemblyId>
 							<descriptors>
 								<descriptor>src/assemblies/executable.xml</descriptor>
 							</descriptors>
