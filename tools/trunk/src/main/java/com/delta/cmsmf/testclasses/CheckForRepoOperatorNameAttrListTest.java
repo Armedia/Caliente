@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 
+import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.delta.cmsmf.runtime.RunTimeProperties;
@@ -24,9 +25,8 @@ public class CheckForRepoOperatorNameAttrListTest {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws DfException, CMSMFException, ConfigurationException, IOException {
-		PropertiesManager pm = PropertiesManager.getPropertiesManager();
-
-		pm.loadProperties("config/CMSMF_app.properties");
+		PropertiesManager.addPropertySource(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
+		PropertiesManager.init();
 
 		List<String> attrsToCheckForRepoOperatorName = RunTimeProperties.getRunTimePropertiesInstance()
 			.getAttrsToCheckForRepoOperatorName();

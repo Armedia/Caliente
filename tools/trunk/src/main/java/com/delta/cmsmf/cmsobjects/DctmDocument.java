@@ -954,7 +954,7 @@ public class DctmDocument extends DctmObject {
 // now
 		// using getFileEx2 instead.
 /*
-		int bufferSize = PropertiesManager.getPropertiesManager().getProperty("content_read_buffer_size",
+		int bufferSize = PropertiesManager.getProperty("content_read_buffer_size",
 			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
 */
 		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
@@ -996,7 +996,7 @@ public class DctmDocument extends DctmObject {
 			DctmDocument.logger.debug("Started converting content input stream to byte[]");
 		}
 
-		int bufferSize = PropertiesManager.getPropertiesManager().getProperty(CMSMFProperties.CONTENT_READ_BUFFER_SIZE,
+		int bufferSize = PropertiesManager.getProperty(CMSMFProperties.CONTENT_READ_BUFFER_SIZE,
 			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(bufferSize);
 		byte[] bytes = new byte[bufferSize];

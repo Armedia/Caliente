@@ -1,11 +1,16 @@
 package com.delta.cmsmf.properties;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 
+import org.apache.commons.configuration.AbstractConfiguration;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.delta.cmsmf.constants.CMSMFProperties;
@@ -31,54 +36,39 @@ public class PropertiesManager {
 		// no code here; this is a singleton class so private constructor
 	}
 
-	/**
-	 * Gets the singleton instance of properties manager class.
-	 * 
-	 * @return the properties manager
-	 */
-	public static synchronized PropertiesManager getPropertiesManager() {
-		if (PropertiesManager.singletonInstance == null) {
-			// we can call this private constructor
-			PropertiesManager.singletonInstance = new PropertiesManager();
-		}
-		return PropertiesManager.singletonInstance;
+	private static final List<Configuration> CONFIGURATIONS = new ArrayList<Configuration>();
+
+	private static Configuration CFG = null;
+
+	public static void addPropertySource(String propertyFilePath) throws ConfigurationException {
+		if (propertyFilePath == null) { return; }
+		PropertiesManager.addPropertySource(new File(propertyFilePath));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#clone()
-	 */
-	@Override
-	public Object clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException();
-		// prevent generation of a clone
+	public static void addPropertySource(File propertyFile) throws ConfigurationException {
+		if (propertyFile == null) { return; }
+		// TODO: Support XML properties file format?
+		PropertiesManager.addConfiguration(new PropertiesConfiguration(propertyFile));
 	}
 
-	/** The singleton instance. */
-	private static PropertiesManager singletonInstance;
+	public static void addPropertySource(Properties properties) throws ConfigurationException {
+		if (properties == null) { return; }
+		PropertiesManager.addConfiguration(new MapConfiguration(new HashMap<Object, Object>(properties)));
+	}
 
-	/**
-	 * Loads properties from the file detonated by file name. The named file
-	 * should be located in a path defined in classpath.
-	 * 
-	 * @param fileName
-	 *            the file name
-	 * @throws ConfigurationException
-	 *             the configuration exception
-	 */
-	public void loadProperties(String... fileName) throws ConfigurationException {
-		// Disable parsing of the property value by delimiter. We do not have properties with
-		// multiple values for now. The default delimiting character is ','. We are overriding it
-		// with '|' to disable parsing
-		List<Configuration> l = new ArrayList<Configuration>();
-		for (String f : fileName) {
-			PropertiesConfiguration cfg = new PropertiesConfiguration();
-			cfg.setListDelimiter('|');
-			cfg.load(f);
-			l.add(cfg);
+	protected static synchronized void addConfiguration(AbstractConfiguration configuration) {
+		if (PropertiesManager.CFG != null) { return; }
+		if (configuration != null) {
+			configuration.setDelimiterParsingDisabled(true);
+			configuration.setListDelimiter('|');
+			PropertiesManager.CONFIGURATIONS.add(configuration);
 		}
-		this.configuration = new CompositeConfiguration(l);
+	}
+
+	public static synchronized void init() throws ConfigurationException {
+		if (PropertiesManager.CFG == null) {
+			PropertiesManager.CFG = new CompositeConfiguration(PropertiesManager.CONFIGURATIONS);
+		}
 	}
 
 	/**
@@ -90,8 +80,8 @@ public class PropertiesManager {
 	 *            the default value
 	 * @return the string
 	 */
-	public String getProperty(CMSMFProperties propName, String defaultValue) {
-		return this.configuration.getString(propName.name, defaultValue);
+	public static String getProperty(CMSMFProperties propName, String defaultValue) {
+		return PropertiesManager.configuration.getString(propName.name, defaultValue);
 	}
 
 	/**
@@ -103,10 +93,14 @@ public class PropertiesManager {
 	 *            the default value
 	 * @return the int
 	 */
-	public int getProperty(CMSMFProperties propName, int defaultValue) {
-		return this.configuration.getInt(propName.name, defaultValue);
+	public static int getProperty(CMSMFProperties propName, int defaultValue) {
+		return PropertiesManager.configuration.getInt(propName.name, defaultValue);
+	}
+
+	public static boolean getProperty(CMSMFProperties propName, boolean defaultValue) {
+		return PropertiesManager.configuration.getBoolean(propName.name, defaultValue);
 	}
 
 	/** The prop config. */
-	private Configuration configuration = null;
+	private static Configuration configuration = null;
 }

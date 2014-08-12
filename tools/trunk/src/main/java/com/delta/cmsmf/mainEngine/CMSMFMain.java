@@ -4,7 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
@@ -55,8 +62,36 @@ import com.documentum.fc.common.IDfLoginInfo;
  */
 public class CMSMFMain {
 
+	private enum CLIParam {
+		//
+		cfg(null, true, "The configuration file to use"),
+		test(CMSMFProperties.CMSMF_APP_RUN_MODE, false, "Enable test mode"),
+		mode(CMSMFProperties.CMSMF_APP_IMPORTEXPORT_MODE, true, "The mode of operation, either 'import' or 'export'"),
+		predicate(CMSMFProperties.CMSMF_APP_EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
+		buffer(CMSMFProperties.CONTENT_READ_BUFFER_SIZE, true, "The size of the read buffer"),
+		streams(CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, true, "The Streams directory to use"),
+		content(CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, true, "The Content directory to use"),
+		compress(CMSMFProperties.CMSMF_APP_COMPRESSDATA_FLAG, false, "Enable compression for the data exported (GZip)"),
+		attributes(CMSMFProperties.CMSMF_APP_REPOSITORYOWNER_ATTRIBUTESTOCHECK, true, "The attributes to check for"),
+		errorCount(CMSMFProperties.CMSMF_APP_IMPORT_ERRORCOUNT_THRESHOLD, true,
+			"The number of errors to accept before aborting an import"),
+		defaultPassword(CMSMFProperties.CMSMF_APP_INLINEPASSWORDUSER_PASSWORDVALUE, true,
+			"The default password to use for users being copied over (leave blank to use the same login name)"),
+		docbase(CMSMFProperties.DOCBASE_NAME, true, "The docbase name to connect to"),
+		user(CMSMFProperties.DOCBASE_USER, true, "The username to connect with"),
+		password(CMSMFProperties.DOCBASE_PASSWORD, true, "The password to connect with");
+
+		private final CMSMFProperties property;
+		private final Option option;
+
+		private CLIParam(CMSMFProperties property, boolean hasParameter, String description) {
+			this.property = property;
+			this.option = new Option(null, name().replace('_', '-'), hasParameter, description);
+		}
+	}
+
 	/** The logger object used for logging. */
-	private static Logger logger = Logger.getLogger(CMSMFMain.class);
+	private final Logger logger = Logger.getLogger(getClass());
 
 	private static CMSMFMain instance = null;
 
@@ -64,12 +99,12 @@ public class CMSMFMain {
 	private IDfSession dctmSession = null;
 
 	/** The directory location where stream files will be created. */
-	private File streamFilesDirectoryLocation = null;
+	private final File streamFilesDirectoryLocation;
 
 	/** The directory location where content files will be created. */
-	private File contentFilesDirectoryLocation = null;
+	private final File contentFilesDirectoryLocation;
 
-	private boolean testMode = false;
+	private final boolean testMode;
 
 	/**
 	 * The main method.
@@ -81,21 +116,55 @@ public class CMSMFMain {
 	 */
 	public static void main(String[] args) throws Throwable {
 		// Initialize Application
-		CMSMFMain.instance = CMSMFMain.initApp(args);
-		CMSMFMain.instance.start(args);
+		CMSMFMain.instance = new CMSMFMain(args);
+		CMSMFMain.instance.start();
 	}
 
-	/**
-	 * Initializes the cmsmf application.
-	 * 
-	 * @throws ConfigurationException
-	 *             the configuration exception
-	 */
-	private static CMSMFMain initApp(String[] args) throws ConfigurationException {
-		PropertiesManager pm = PropertiesManager.getPropertiesManager();
-		// Load properties from config file
-		pm.loadProperties(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
-		return new CMSMFMain();
+	private CMSMFMain(String[] args) throws ConfigurationException, ParseException {
+		// Next, identify the run mode - import or export
+		Options options = new Options();
+		for (CLIParam p : CLIParam.values()) {
+			options.addOption(p.option);
+		}
+
+		CommandLineParser parser = new PosixParser();
+		CommandLine cli = parser.parse(options, args);
+
+		// Convert the command-line parameters into "configuration properties"
+		Properties parameters = new Properties();
+		for (CLIParam p : CLIParam.values()) {
+			if (!cli.hasOption(p.option.getLongOpt())) {
+				continue;
+			}
+			if (p.property != null) {
+				parameters.setProperty(p.property.name, cli.getOptionValue(p.option.getLongOpt()));
+			}
+		}
+
+		// TODO: Initialize the properties manager with all this crap
+		PropertiesManager.addPropertySource(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
+
+		// A configuration file has been specifed, so use its values ahead of the defaults
+		if (cli.hasOption(CLIParam.cfg.option.getLongOpt())) {
+			PropertiesManager.addPropertySource(cli.getOptionValue(CLIParam.cfg.option.getLongOpt()));
+		}
+
+		// If we have command-line parameters, these supersede all other configurations, even if
+		// we have a configuration file explicitly listed.
+		if (!parameters.isEmpty()) {
+			PropertiesManager.addPropertySource(parameters);
+		}
+		PropertiesManager.init();
+
+		this.testMode = "test".equalsIgnoreCase(PropertiesManager.getProperty(CMSMFProperties.CMSMF_APP_RUN_MODE, ""));
+
+		// Set the filesystem location where files will be created or read from
+		this.streamFilesDirectoryLocation = new File(PropertiesManager.getProperty(
+			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, ""));
+
+		// Set the filesystem location where the content files will be created or read from
+		this.contentFilesDirectoryLocation = new File(PropertiesManager.getProperty(
+			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, ""));
 	}
 
 	public File getStreamFilesDirectory() {
@@ -118,27 +187,21 @@ public class CMSMFMain {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void start(String[] args) throws Throwable {
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### CMS Migration Process Started #####");
+	private void start() throws Throwable {
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### CMS Migration Process Started #####");
 		}
 
 		// Determine if this is a export step or import step
 		String importOrExport = null;
 		if (importOrExport == null) {
 			// Support legacy configurations
-			importOrExport = PropertiesManager.getPropertiesManager().getProperty(
-				CMSMFProperties.CMSMF_APP_IMPORTEXPORT_MODE, "");
+			importOrExport = PropertiesManager.getProperty(CMSMFProperties.CMSMF_APP_IMPORTEXPORT_MODE, "");
 		}
 
-		this.testMode = "test".equalsIgnoreCase(PropertiesManager.getPropertiesManager().getProperty(
-			CMSMFProperties.CMSMF_APP_RUN_MODE, ""));
-
-		final String docbaseName = PropertiesManager.getPropertiesManager().getProperty(CMSMFProperties.DOCBASE_NAME,
-			"");
-		final String docbaseUser = PropertiesManager.getPropertiesManager().getProperty(CMSMFProperties.DOCBASE_USER,
-			"");
-		String passTmp = PropertiesManager.getPropertiesManager().getProperty(CMSMFProperties.DOCBASE_PASSWORD, "");
+		final String docbaseName = PropertiesManager.getProperty(CMSMFProperties.DOCBASE_NAME, "");
+		final String docbaseUser = PropertiesManager.getProperty(CMSMFProperties.DOCBASE_USER, "");
+		String passTmp = PropertiesManager.getProperty(CMSMFProperties.DOCBASE_PASSWORD, "");
 
 		final IDfClient dfClient;
 		try {
@@ -149,13 +212,13 @@ public class CMSMFMain {
 				// correctly so throw an error
 				String msg = "No local client was established.  You may want to check the installation of "
 					+ "Documentum or this application on this machine.";
-				CMSMFMain.logger.error(msg);
+				this.logger.error(msg);
 				throw new RuntimeException(msg);
 			}
 		} catch (DfException e) {
 			String msg = "No local client was established.  You may want to check the installation of "
 				+ "Documentum or this application on this machine.";
-			CMSMFMain.logger.error(msg);
+			this.logger.error(msg);
 			throw new RuntimeException(msg, e);
 		}
 
@@ -165,14 +228,6 @@ public class CMSMFMain {
 			// Not encrypted, use literal
 		}
 		final String docbasePassword = passTmp;
-
-		// Set the filesystem location where files will be created or read from
-		this.streamFilesDirectoryLocation = new File(PropertiesManager.getPropertiesManager().getProperty(
-			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, ""));
-
-		// Set the filesystem location where the content files will be created or read from
-		this.contentFilesDirectoryLocation = new File(PropertiesManager.getPropertiesManager().getProperty(
-			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, ""));
 
 		// get a local client
 		try {
@@ -187,13 +242,13 @@ public class CMSMFMain {
 			sessionManager.setIdentity(docbaseName, li);
 			this.dctmSession = sessionManager.getSession(docbaseName);
 		} catch (DfIdentityException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		} catch (DfAuthenticationException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		} catch (DfPrincipalException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		} catch (DfServiceException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		}
 
 		if (importOrExport.equalsIgnoreCase("Export")) {
@@ -203,8 +258,8 @@ public class CMSMFMain {
 			// Start the import process
 			startImporting();
 		}
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.debug("##### CMS Migration Process finished #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.debug("##### CMS Migration Process finished #####");
 		}
 	}
 
@@ -217,8 +272,8 @@ public class CMSMFMain {
 	@SuppressWarnings("unused")
 	@Deprecated
 	private void start2() throws IOException {
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### CMS Migration Process Started #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### CMS Migration Process Started #####");
 		}
 
 		String docbaseName = "cobtest";
@@ -232,7 +287,7 @@ public class CMSMFMain {
 				// If I don't have a local client then something was not
 				// installed
 				// correctly so throw an error
-				CMSMFMain.logger.error("No local client was established.  You may want to check the installation of "
+				this.logger.error("No local client was established.  You may want to check the installation of "
 					+ "Documentum or this application on this machine.");
 			}// End if(dfClient.equals(null))
 			else {
@@ -249,24 +304,16 @@ public class CMSMFMain {
 			}
 
 		} catch (DfIdentityException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		} catch (DfAuthenticationException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		} catch (DfPrincipalException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		} catch (DfServiceException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		} catch (DfException e) {
-			CMSMFMain.logger.error("Error establishing Documentum session", e);
+			this.logger.error("Error establishing Documentum session", e);
 		}
-
-		// Set the filesystem location where files will be created or read from
-		this.streamFilesDirectoryLocation = new File(PropertiesManager.getPropertiesManager().getProperty(
-			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, ""));
-
-		// Set the filesystem location where the content files will be created or read from
-		this.contentFilesDirectoryLocation = new File(PropertiesManager.getPropertiesManager().getProperty(
-			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, ""));
 
 		// Start the export process
 		startExporting2();
@@ -280,8 +327,8 @@ public class CMSMFMain {
 		// test xml synchronization
 		// testXMLSynchronization();
 
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.debug("##### CMS Migration Process finished #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.debug("##### CMS Migration Process finished #####");
 		}
 	}
 
@@ -294,8 +341,8 @@ public class CMSMFMain {
 	 *             Signals that an I/O exception has occurred.
 	 */
 	private void startExporting() throws IOException {
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### Export Process Started #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### Export Process Started #####");
 		}
 
 		// Load source repository configuration information
@@ -303,7 +350,7 @@ public class CMSMFMain {
 		try {
 			srcRepoConfig.loadRepositoryConfiguration(this.dctmSession);
 		} catch (DfException e1) {
-			CMSMFMain.logger.fatal("Couldn't retrieve repository configuration information", e1);
+			this.logger.fatal("Couldn't retrieve repository configuration information", e1);
 		}
 
 		// reset the counters that keeps track of how many objects are exported
@@ -319,14 +366,13 @@ public class CMSMFMain {
 
 		// Build the query that will determine what objects will be exported
 		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
-		String fromWhereClause = PropertiesManager.getPropertiesManager().getProperty(
-			CMSMFProperties.CMSMF_APP_EXPORT_QUERY_PREDICATE, "");
+		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.CMSMF_APP_EXPORT_QUERY_PREDICATE, "");
 
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		dqlQry.setDQL(selectClause + fromWhereClause);
 		dqlQry.setBatchSize(20000);
-		if (CMSMFMain.logger.isEnabledFor(Level.DEBUG)) {
-			CMSMFMain.logger.debug("Export DQL Query is: " + selectClause + fromWhereClause);
+		if (this.logger.isEnabledFor(Level.DEBUG)) {
+			this.logger.debug("Export DQL Query is: " + selectClause + fromWhereClause);
 		}
 
 		try {
@@ -338,7 +384,7 @@ public class CMSMFMain {
 				try {
 					prsstntObj = this.dctmSession.getObject(new DfId(objID));
 				} catch (DfException e) {
-					CMSMFMain.logger.error("Couldn't retrieve object by ID: " + objID, e);
+					this.logger.error("Couldn't retrieve object by ID: " + objID, e);
 				}
 
 				DctmObjectRetriever dctmObjRetriever = new DctmObjectRetriever(this.dctmSession);
@@ -351,15 +397,15 @@ public class CMSMFMain {
 					// If for some reason object is not retrieved from the system, or written to the
 					// filesystem,
 					// write to an error log and continue on
-					CMSMFMain.logger.error("Couldn't retrieve object information from repository for id: " + objID, e);
+					this.logger.error("Couldn't retrieve object information from repository for id: " + objID, e);
 				} catch (IOException e) {
 					// If there is IOException, log the error and exit out
-					CMSMFMain.logger.fatal("Couldn't serialize an object to the filesystem for id: " + objID, e);
+					this.logger.fatal("Couldn't serialize an object to the filesystem for id: " + objID, e);
 					// close all of the file streams
 					try {
 						fsm.closeAllStreams();
 					} catch (CMSMFIOException e2) {
-						CMSMFMain.logger.error("Couldn't close all of the filestreams", e2);
+						this.logger.error("Couldn't close all of the filestreams", e2);
 					}
 					throw (e);
 				}
@@ -370,25 +416,25 @@ public class CMSMFMain {
 			try {
 				DctmObjectWriter.writeBinaryObject(srcRepoConfig);
 			} catch (CMSMFException e) {
-				CMSMFMain.logger.error("Couldn't retrieve source repository configuration information.", e);
+				this.logger.error("Couldn't retrieve source repository configuration information.", e);
 			}
 		} catch (DfException e) {
 			// If there is a DfException while running the export query, log the error and exit out
-			CMSMFMain.logger.fatal("Export Query failed to run. Query is:  " + selectClause + fromWhereClause, e);
+			this.logger.fatal("Export Query failed to run. Query is:  " + selectClause + fromWhereClause, e);
 		} finally {
 			// close all of the file streams
 			try {
 				fsm.closeAllStreams();
 			} catch (CMSMFIOException e) {
-				CMSMFMain.logger.error("Couldn't close all of the filestreams", e);
+				this.logger.error("Couldn't close all of the filestreams", e);
 			}
 		}
 
 		// print the counters to see how many objects were processed
 		AppCounter.getObjectCounter().printCounters();
 
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### Export Process Finished #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### Export Process Finished #####");
 		}
 	}
 
@@ -400,8 +446,8 @@ public class CMSMFMain {
 	 */
 	@Deprecated
 	private void startExporting2() throws IOException {
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### Export Process Started #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### Export Process Started #####");
 		}
 
 		// Load source repository configuration information
@@ -409,7 +455,7 @@ public class CMSMFMain {
 		try {
 			srcRepoConfig.loadRepositoryConfiguration(this.dctmSession);
 		} catch (DfException e1) {
-			CMSMFMain.logger.fatal("Couldn't retrieve repository configuration information", e1);
+			this.logger.fatal("Couldn't retrieve repository configuration information", e1);
 		}
 
 		// reset the counters that keeps track of how many objects are exported
@@ -451,7 +497,7 @@ public class CMSMFMain {
 			try {
 				prsstntObj = this.dctmSession.getObject(new DfId(objID));
 			} catch (DfException e) {
-				CMSMFMain.logger.error("Couldn't retrieve object by ID: " + objID, e);
+				this.logger.error("Couldn't retrieve object by ID: " + objID, e);
 			}
 
 			DctmObjectRetriever dctmObjRetriever = new DctmObjectRetriever(this.dctmSession);
@@ -465,24 +511,24 @@ public class CMSMFMain {
 				try {
 					DctmObjectWriter.writeBinaryObject(srcRepoConfig);
 				} catch (CMSMFException e) {
-					CMSMFMain.logger.error("Couldn't retrieve source repository configuration information.", e);
+					this.logger.error("Couldn't retrieve source repository configuration information.", e);
 				}
 
 			} catch (CMSMFException e) {
 				// If for some reason object is not retrieved from the system,
 				// or written to the
 				// filesystem, write to an error log and continue on
-				CMSMFMain.logger.error("Couldn't retrieve object information from repository for id: " + objID, e);
+				this.logger.error("Couldn't retrieve object information from repository for id: " + objID, e);
 			} catch (IOException e) {
 				// If there is IOException, log the error and exit out
-				CMSMFMain.logger.fatal("Couldn't serialize an object to the filesystem for id: " + objID, e);
+				this.logger.fatal("Couldn't serialize an object to the filesystem for id: " + objID, e);
 				throw (e);
 			} finally {
 				// close all of the file streams
 				try {
 					fsm.closeAllStreams();
 				} catch (CMSMFIOException e) {
-					CMSMFMain.logger.error("Couldn't close all of the filestreams", e);
+					this.logger.error("Couldn't close all of the filestreams", e);
 				}
 			}
 		}
@@ -490,8 +536,8 @@ public class CMSMFMain {
 		// print the counters to see how many objects were processed
 		AppCounter.getObjectCounter().printCounters();
 
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### Export Process Finished #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### Export Process Finished #####");
 		}
 	}
 
@@ -504,8 +550,8 @@ public class CMSMFMain {
 	 *             Signals that an I/O exception has occurred.
 	 */
 	private void startImporting() throws IOException {
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### Import Process Started #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### Import Process Started #####");
 		}
 
 		// reset the counters that keeps track of how many objects are read
@@ -518,7 +564,7 @@ public class CMSMFMain {
 
 		// Check that all prerequisites are met before importing anything
 		if (!isItSafeToImport()) {
-			CMSMFMain.logger.error("Unsafe to continue import into target repository. Import process halted");
+			this.logger.error("Unsafe to continue import into target repository. Import process halted");
 			return;
 		}
 
@@ -545,13 +591,13 @@ public class CMSMFMain {
 			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_DOCUMENT);
 
 		} catch (CMSMFFatalException e) {
-			CMSMFMain.logger.error(e.getMessage());
+			this.logger.error(e.getMessage());
 		} finally {
 			// close all of the file streams
 			try {
 				fsm.closeAllStreams();
 			} catch (CMSMFIOException e) {
-				CMSMFMain.logger.error("Couldn't close all of the filestreams", e);
+				this.logger.error("Couldn't close all of the filestreams", e);
 			}
 		}
 
@@ -561,8 +607,8 @@ public class CMSMFMain {
 		// Print detailed import report
 		CMSMFMain.printImportReport();
 
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### Import Process Finished #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### Import Process Finished #####");
 		}
 	}
 
@@ -598,7 +644,7 @@ public class CMSMFMain {
 				isItSafeToImport = true;
 			}
 		} catch (CMSMFException e) {
-			CMSMFMain.logger.error("Error reading source repository configuration file.", e);
+			this.logger.error("Error reading source repository configuration file.", e);
 		}
 
 		return isItSafeToImport;
@@ -626,8 +672,8 @@ public class CMSMFMain {
 			IDfCollection resultCol = dqlQry.execute(this.dctmSession, IDfQuery.READ_QUERY);
 			while (resultCol.next()) {
 				String fileStoreName = resultCol.getString(DctmAttrNameConstants.NAME);
-				if (CMSMFMain.logger.isEnabledFor(Level.DEBUG)) {
-					CMSMFMain.logger.debug("FileStore in Target Repo: " + fileStoreName);
+				if (this.logger.isEnabledFor(Level.DEBUG)) {
+					this.logger.debug("FileStore in Target Repo: " + fileStoreName);
 				}
 				if (StringUtils.isNotBlank(fileStoreName)) {
 					targetRepoFileStores.add(fileStoreName);
@@ -647,7 +693,7 @@ public class CMSMFMain {
 // file
 			for (String fileStore : srcRepoFileStores) {
 				if (!targetRepoFileStores.contains(fileStore)) {
-					CMSMFMain.logger.error("The required filestore: " + fileStore + " must exist in target repository");
+					this.logger.error("The required filestore: " + fileStore + " must exist in target repository");
 				}
 			}
 		}
@@ -662,8 +708,8 @@ public class CMSMFMain {
 	 */
 	@Deprecated
 	private void startImporting2() throws IOException {
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### Import Process Started #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### Import Process Started #####");
 		}
 
 		// reset the counters that keeps track of how many objects are read
@@ -676,7 +722,7 @@ public class CMSMFMain {
 
 		// Check that all prerequisites are met before importing anything
 		if (!isItSafeToImport()) {
-			CMSMFMain.logger.error("Unsafe to continue import into target repository. Import process halted");
+			this.logger.error("Unsafe to continue import into target repository. Import process halted");
 			return;
 		}
 
@@ -690,10 +736,10 @@ public class CMSMFMain {
 					dctmUsr = (DctmUser) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_USER);
 				} catch (DfException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error creating/Updating user in dctm repository.", e);
+					this.logger.error("Error creating/Updating user in dctm repository.", e);
 				} catch (CMSMFException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error reading user object from file.", e);
+					this.logger.error("Error reading user object from file.", e);
 				}
 			}
 		} catch (IOException e) {
@@ -701,13 +747,13 @@ public class CMSMFMain {
 			try {
 				fsm.closeAllStreams();
 			} catch (CMSMFIOException e1) {
-				CMSMFMain.logger.error("Couldn't close all of the filestreams", e1);
+				this.logger.error("Couldn't close all of the filestreams", e1);
 			}
-			CMSMFMain.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
+			this.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
 			throw (e);
 		} catch (CMSMFException e) {
 			// log the error and continue on with next object
-			CMSMFMain.logger.error("Error reading user object from file.", e);
+			this.logger.error("Error reading user object from file.", e);
 		}
 
 		// Read groups from the file and create them
@@ -722,10 +768,10 @@ public class CMSMFMain {
 					// loop
 				} catch (DfException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error creating/Updating group in dctm repository.", e);
+					this.logger.error("Error creating/Updating group in dctm repository.", e);
 				} catch (CMSMFException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error reading group object from file.", e);
+					this.logger.error("Error reading group object from file.", e);
 				}
 			}
 		} catch (IOException e) {
@@ -733,13 +779,13 @@ public class CMSMFMain {
 			try {
 				fsm.closeAllStreams();
 			} catch (CMSMFIOException e1) {
-				CMSMFMain.logger.error("Couldn't close all of the filestreams", e1);
+				this.logger.error("Couldn't close all of the filestreams", e1);
 			}
-			CMSMFMain.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
+			this.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
 			throw (e);
 		} catch (CMSMFException e) {
 			// log the error and continue
-			CMSMFMain.logger.error("Error reading group object from file.", e);
+			this.logger.error("Error reading group object from file.", e);
 		}
 
 		// Read ACLs from the file and create them
@@ -754,10 +800,10 @@ public class CMSMFMain {
 					// loop
 				} catch (DfException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error creating/Updating ACL in dctm repository.", e);
+					this.logger.error("Error creating/Updating ACL in dctm repository.", e);
 				} catch (CMSMFException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error reading ACL object from file.", e);
+					this.logger.error("Error reading ACL object from file.", e);
 				}
 			}
 		} catch (IOException e) {
@@ -765,13 +811,13 @@ public class CMSMFMain {
 			try {
 				fsm.closeAllStreams();
 			} catch (CMSMFIOException e1) {
-				CMSMFMain.logger.error("Couldn't close all of the filestreams", e1);
+				this.logger.error("Couldn't close all of the filestreams", e1);
 			}
-			CMSMFMain.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
+			this.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
 			throw (e);
 		} catch (CMSMFException e) {
 			// log the error and continue on with next object
-			CMSMFMain.logger.error("Error reading ACL object from file.", e);
+			this.logger.error("Error reading ACL object from file.", e);
 		}
 
 		// Read the cabinets/folders and create them
@@ -784,10 +830,10 @@ public class CMSMFMain {
 					dctmFldr = (DctmFolder) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_FOLDER);
 				} catch (DfException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error creating/Updating folder in dctm repository.", e);
+					this.logger.error("Error creating/Updating folder in dctm repository.", e);
 				} catch (CMSMFException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error reading folder object from file.", e);
+					this.logger.error("Error reading folder object from file.", e);
 				}
 			}
 		} catch (IOException e) {
@@ -795,13 +841,13 @@ public class CMSMFMain {
 			try {
 				fsm.closeAllStreams();
 			} catch (CMSMFIOException e1) {
-				CMSMFMain.logger.error("Couldn't close all of the filestreams", e1);
+				this.logger.error("Couldn't close all of the filestreams", e1);
 			}
-			CMSMFMain.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
+			this.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
 			throw (e);
 		} catch (CMSMFException e) {
 			// log the error and continue on with next object
-			CMSMFMain.logger.error("Error reading folder object from file.", e);
+			this.logger.error("Error reading folder object from file.", e);
 		}
 
 		// Read the objects and create them
@@ -814,23 +860,23 @@ public class CMSMFMain {
 					dctmDoc = (DctmDocument) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_DOCUMENT);
 				} catch (DfException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error creating/Updating document in dctm repository.", e);
+					this.logger.error("Error creating/Updating document in dctm repository.", e);
 				} catch (CMSMFException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error reading document object from file.", e);
+					this.logger.error("Error reading document object from file.", e);
 				}
 			}
 		} catch (CMSMFException e) {
 			// log the error and continue on with next object
-			CMSMFMain.logger.error("Error reading document object from file.", e);
+			this.logger.error("Error reading document object from file.", e);
 		} catch (IOException e) {
 			// If there is IOException, close all of the streams, log the error and exit out
 			try {
 				fsm.closeAllStreams();
 			} catch (CMSMFIOException e1) {
-				CMSMFMain.logger.error("Couldn't close all of the filestreams", e1);
+				this.logger.error("Couldn't close all of the filestreams", e1);
 			}
-			CMSMFMain.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
+			this.logger.fatal("Couldn't deserialize an object from the filesystem.", e);
 			throw (e);
 		}
 
@@ -838,14 +884,14 @@ public class CMSMFMain {
 		try {
 			fsm.closeAllStreams();
 		} catch (CMSMFIOException e) {
-			CMSMFMain.logger.error("Couldn't close all of the filestreams", e);
+			this.logger.error("Couldn't close all of the filestreams", e);
 		}
 
 		// print the counters to see how many objects were processed
 		AppCounter.getObjectCounter().printCounters();
 
-		if (CMSMFMain.logger.isEnabledFor(Level.INFO)) {
-			CMSMFMain.logger.info("##### Import Process Finished #####");
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("##### Import Process Finished #####");
 		}
 	}
 
@@ -863,8 +909,8 @@ public class CMSMFMain {
 	 * @throws CMSMFFatalException
 	 */
 	private void readAndImportDctmObjects(DctmObjectTypesEnum dctmObjectType) throws IOException, CMSMFFatalException {
-		if (CMSMFMain.logger.isEnabledFor(Level.DEBUG)) {
-			CMSMFMain.logger.debug("Started Importing: " + dctmObjectType);
+		if (this.logger.isEnabledFor(Level.DEBUG)) {
+			this.logger.debug("Started Importing: " + dctmObjectType);
 		}
 
 		try {
@@ -878,7 +924,7 @@ public class CMSMFMain {
 					dctmObject.createInCMS();
 				} catch (DfException e) {
 					// log the error and continue on with next object
-					CMSMFMain.logger.error("Error creating/Updating " + dctmObjectType + " in dctm repository.", e);
+					this.logger.error("Error creating/Updating " + dctmObjectType + " in dctm repository.", e);
 
 					// increment import process error count; If the error count is more than the
 // error
@@ -887,7 +933,7 @@ public class CMSMFMain {
 					// of the file streams
 					RunTimeProperties.getRunTimePropertiesInstance().incrementImportProcessErrorCount();
 
-					int importErrorThreshold = PropertiesManager.getPropertiesManager().getProperty(
+					int importErrorThreshold = PropertiesManager.getProperty(
 						CMSMFProperties.CMSMF_APP_IMPORT_ERRORCOUNT_THRESHOLD, 0);
 					if (RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount() >= importErrorThreshold) {
 						// Raise the cmsmf fatal exception.
@@ -905,17 +951,17 @@ public class CMSMFMain {
 			try {
 				FileStreamsManager.getFileStreamManager().closeAllStreams();
 			} catch (CMSMFIOException e1) {
-				CMSMFMain.logger.error("Couldn't close all of the filestreams", e1);
+				this.logger.error("Couldn't close all of the filestreams", e1);
 			}
-			CMSMFMain.logger.fatal("Couldn't deserialize " + dctmObjectType + " object from the filesystem.", e);
+			this.logger.fatal("Couldn't deserialize " + dctmObjectType + " object from the filesystem.", e);
 			throw (e);
 		} catch (CMSMFException e) {
 			// log the error and continue on with next object
-			CMSMFMain.logger.error("Error reading " + dctmObjectType + " object from file.", e);
+			this.logger.error("Error reading " + dctmObjectType + " object from file.", e);
 		}
 
-		if (CMSMFMain.logger.isEnabledFor(Level.DEBUG)) {
-			CMSMFMain.logger.debug("Finished Importing: " + dctmObjectType);
+		if (this.logger.isEnabledFor(Level.DEBUG)) {
+			this.logger.debug("Finished Importing: " + dctmObjectType);
 		}
 	}
 

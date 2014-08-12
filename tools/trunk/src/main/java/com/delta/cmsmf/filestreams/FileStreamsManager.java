@@ -121,7 +121,7 @@ public class FileStreamsManager {
 	 */
 	private FileStreamsManager() {
 		// no code here; this is a singleton class so private constructor
-		String compressDataFlag = PropertiesManager.getPropertiesManager().getProperty(
+		String compressDataFlag = PropertiesManager.getProperty(
 			CMSMFProperties.CMSMF_APP_COMPRESSDATA_FLAG, "");
 		this.compressStreams = (StringUtils.startsWithIgnoreCase(compressDataFlag, "y"));
 	}

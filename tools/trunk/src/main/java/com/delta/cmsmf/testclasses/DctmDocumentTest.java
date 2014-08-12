@@ -7,6 +7,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import com.delta.cmsmf.cmsobjects.DctmDocument;
 import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -34,15 +35,14 @@ public class DctmDocumentTest {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws DfException, CMSMFException, ConfigurationException, IOException {
-		PropertiesManager pm = PropertiesManager.getPropertiesManager();
-
-		pm.loadProperties("config/CMSMF_app.properties");
+		PropertiesManager.addPropertySource(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
+		PropertiesManager.init();
 		// Set the filesystem location where files will be created or read from
-		String streamFilesDirectoryLocation = PropertiesManager.getPropertiesManager().getProperty(
+		String streamFilesDirectoryLocation = PropertiesManager.getProperty(
 			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, "");
 
 		// Set the filesystem location where the content files will be created or read from
-		String contentFilesDirectoryLocation = PropertiesManager.getPropertiesManager().getProperty(
+		String contentFilesDirectoryLocation = PropertiesManager.getProperty(
 			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, "");
 
 		// First set the directory path where all of the files will be created
