@@ -22,10 +22,6 @@ import com.delta.cmsmf.constants.CMSMFProperties;
 
 public class Launcher {
 
-	private static enum CLIParamBase {
-
-	}
-
 	static enum CLIParam {
 		//
 		help(null, false, "This help message"),
@@ -33,8 +29,8 @@ public class Launcher {
 		cfg(null, true, "The configuration file to use"),
 		dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
 		// dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
-		mode(null, true, true, "The mode of operation, either 'import' or 'export'"),
-		docbase(null, true, true, "The docbase name to connect to"),
+		mode(null, true, true, "The mode of operation, either 'encrypt', 'import' or 'export'"),
+		docbase(null, true, "The docbase name to connect to"),
 		user(null, true, "The username to connect with"),
 		password(null, true, "The password to connect with"),
 		predicate(CMSMFProperties.EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
@@ -53,7 +49,7 @@ public class Launcher {
 		private CLIParam(CMSMFProperties property, boolean hasParameter, boolean required, String description) {
 			this.property = property;
 			this.option = new Option(null, name().replace('_', '-'), hasParameter, description);
-			this.option.setRequired(false);
+			this.option.setRequired(required);
 		}
 
 		private CLIParam(CMSMFProperties property, boolean hasParameter, String description) {
@@ -114,20 +110,6 @@ public class Launcher {
 
 	public static void main(String[] args) throws Throwable {
 
-		// The first argument must be either "import", "export", or "encrypt" - that will
-		if (args.length < 1) {
-			System.out.printf("You must specify the operating mode, one of import, export or encrypt%n");
-			System.exit(1);
-		}
-
-		String mode = args[0];
-
-		if (mode.equals("encrypt")) {
-
-		} else {
-			// Export or Import
-		}
-
 		// To start off, parse the command line
 		Options options = new Options();
 		for (CLIParam p : CLIParam.values()) {
@@ -154,10 +136,7 @@ public class Launcher {
 		// Convert the command-line parameters into "configuration properties"
 		Map<CLIParam, String> cliParams = new EnumMap<CLIParam, String>(CLIParam.class);
 		for (CLIParam p : CLIParam.values()) {
-			if (!cli.hasOption(p.option.getLongOpt())) {
-				continue;
-			}
-			if (p.property != null) {
+			if (cli.hasOption(p.option.getLongOpt())) {
 				cliParams.put(p, cli.getOptionValue(p.option.getLongOpt()));
 			}
 		}
@@ -233,6 +212,6 @@ public class Launcher {
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
-		Class.forName(String.format(Launcher.MAIN_CLASS, mode)).newInstance();
+		Class.forName(String.format(Launcher.MAIN_CLASS, cliParams.get(CLIParam.mode))).newInstance();
 	}
 }
