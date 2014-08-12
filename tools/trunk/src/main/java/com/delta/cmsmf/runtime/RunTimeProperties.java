@@ -89,7 +89,7 @@ public class RunTimeProperties {
 	public List<String> getAttrsToCheckForRepoOperatorName() {
 		if (this.attrsToCheckForRepoOperatorName == null) {
 			String attrsToCheck = PropertiesManager.getProperty(
-				CMSMFProperties.CMSMF_APP_REPOSITORYOWNER_ATTRIBUTESTOCHECK, "");
+				CMSMFProperties.OWNER_ATTRIBUTES, "");
 			StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
 			this.attrsToCheckForRepoOperatorName = strTokenizer.getTokenList();
 		}

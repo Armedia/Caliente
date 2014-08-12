@@ -28,7 +28,7 @@ public class CheckForRepoOperatorNameAttrListTest extends BaseTest {
 			b.append(uuid);
 			expected.add(uuid);
 		}
-		props.setProperty(CMSMFProperties.CMSMF_APP_REPOSITORYOWNER_ATTRIBUTESTOCHECK.name, b.toString());
+		props.setProperty(CMSMFProperties.OWNER_ATTRIBUTES.name, b.toString());
 
 		PropertiesManager.addPropertySource(props);
 		PropertiesManager.init();

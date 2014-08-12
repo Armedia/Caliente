@@ -38,7 +38,7 @@ public class DctmFolderTest {
 		PropertiesManager.init();
 		// Set the filesystem location where files will be created or read from
 		String streamFilesDirectoryLocation = PropertiesManager.getProperty(
-			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, "");
+			CMSMFProperties.STREAMS_DIRECTORY, "");
 
 		// First set the directory path where all of the files will be created
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();

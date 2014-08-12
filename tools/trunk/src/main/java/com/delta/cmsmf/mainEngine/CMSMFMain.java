@@ -65,17 +65,17 @@ public class CMSMFMain {
 	private enum CLIParam {
 		//
 		cfg(null, true, "The configuration file to use"),
-		test(CMSMFProperties.CMSMF_APP_RUN_MODE, false, "Enable test mode"),
-		mode(CMSMFProperties.CMSMF_APP_IMPORTEXPORT_MODE, true, "The mode of operation, either 'import' or 'export'"),
-		predicate(CMSMFProperties.CMSMF_APP_EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
+		test(CMSMFProperties.TEST_MODE, false, "Enable test mode"),
+		mode(CMSMFProperties.OPERATING_MODE, true, "The mode of operation, either 'import' or 'export'"),
+		predicate(CMSMFProperties.EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
 		buffer(CMSMFProperties.CONTENT_READ_BUFFER_SIZE, true, "The size of the read buffer"),
-		streams(CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, true, "The Streams directory to use"),
-		content(CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, true, "The Content directory to use"),
-		compress(CMSMFProperties.CMSMF_APP_COMPRESSDATA_FLAG, false, "Enable compression for the data exported (GZip)"),
-		attributes(CMSMFProperties.CMSMF_APP_REPOSITORYOWNER_ATTRIBUTESTOCHECK, true, "The attributes to check for"),
-		errorCount(CMSMFProperties.CMSMF_APP_IMPORT_ERRORCOUNT_THRESHOLD, true,
+		streams(CMSMFProperties.STREAMS_DIRECTORY, true, "The Streams directory to use"),
+		content(CMSMFProperties.CONTENT_DIRECTORY, true, "The Content directory to use"),
+		compress(CMSMFProperties.COMPRESSDATA_FLAG, false, "Enable compression for the data exported (GZip)"),
+		attributes(CMSMFProperties.OWNER_ATTRIBUTES, true, "The attributes to check for"),
+		errorCount(CMSMFProperties.IMPORT_ERRORCOUNT_THRESHOLD, true,
 			"The number of errors to accept before aborting an import"),
-		defaultPassword(CMSMFProperties.CMSMF_APP_INLINEPASSWORDUSER_PASSWORDVALUE, true,
+		defaultPassword(CMSMFProperties.DEFAULT_USER_PASSWORD, true,
 			"The default password to use for users being copied over (leave blank to use the same login name)"),
 		docbase(CMSMFProperties.DOCBASE_NAME, true, "The docbase name to connect to"),
 		user(CMSMFProperties.DOCBASE_USER, true, "The username to connect with"),
@@ -156,15 +156,15 @@ public class CMSMFMain {
 		}
 		PropertiesManager.init();
 
-		this.testMode = "test".equalsIgnoreCase(PropertiesManager.getProperty(CMSMFProperties.CMSMF_APP_RUN_MODE, ""));
+		this.testMode = "test".equalsIgnoreCase(PropertiesManager.getProperty(CMSMFProperties.TEST_MODE, ""));
 
 		// Set the filesystem location where files will be created or read from
-		this.streamFilesDirectoryLocation = new File(PropertiesManager.getProperty(
-			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_DIRECTORY, ""));
+		this.streamFilesDirectoryLocation = new File(PropertiesManager.getProperty(CMSMFProperties.STREAMS_DIRECTORY,
+			""));
 
 		// Set the filesystem location where the content files will be created or read from
-		this.contentFilesDirectoryLocation = new File(PropertiesManager.getProperty(
-			CMSMFProperties.CMSMF_APP_IMPORTEXPORT_CONTENT_DIRECTORY, ""));
+		this.contentFilesDirectoryLocation = new File(PropertiesManager.getProperty(CMSMFProperties.CONTENT_DIRECTORY,
+			""));
 	}
 
 	public File getStreamFilesDirectory() {
@@ -196,7 +196,7 @@ public class CMSMFMain {
 		String importOrExport = null;
 		if (importOrExport == null) {
 			// Support legacy configurations
-			importOrExport = PropertiesManager.getProperty(CMSMFProperties.CMSMF_APP_IMPORTEXPORT_MODE, "");
+			importOrExport = PropertiesManager.getProperty(CMSMFProperties.OPERATING_MODE, "");
 		}
 
 		final String docbaseName = PropertiesManager.getProperty(CMSMFProperties.DOCBASE_NAME, "");
@@ -366,7 +366,7 @@ public class CMSMFMain {
 
 		// Build the query that will determine what objects will be exported
 		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
-		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.CMSMF_APP_EXPORT_QUERY_PREDICATE, "");
+		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.EXPORT_QUERY_PREDICATE, "");
 
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		dqlQry.setDQL(selectClause + fromWhereClause);
@@ -934,7 +934,7 @@ public class CMSMFMain {
 					RunTimeProperties.getRunTimePropertiesInstance().incrementImportProcessErrorCount();
 
 					int importErrorThreshold = PropertiesManager.getProperty(
-						CMSMFProperties.CMSMF_APP_IMPORT_ERRORCOUNT_THRESHOLD, 0);
+						CMSMFProperties.IMPORT_ERRORCOUNT_THRESHOLD, 0);
 					if (RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount() >= importErrorThreshold) {
 						// Raise the cmsmf fatal exception.
 						throw (new CMSMFFatalException(
