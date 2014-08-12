@@ -22,13 +22,17 @@ import com.delta.cmsmf.constants.CMSMFProperties;
 
 public class Launcher {
 
-	enum CLIParam {
+	private static enum CLIParamBase {
+
+	}
+
+	static enum CLIParam {
 		//
 		help(null, false, "This help message"),
 		test(null, false, "Enable test mode"),
 		cfg(null, true, "The configuration file to use"),
 		dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
-		dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
+		// dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
 		mode(null, true, true, "The mode of operation, either 'import' or 'export'"),
 		docbase(null, true, true, "The docbase name to connect to"),
 		user(null, true, "The username to connect with"),
@@ -59,11 +63,11 @@ public class Launcher {
 
 	private static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
 
-	private static final String ENV_DOCUMENTUM = "DOCUMENTUM";
+	// private static final String ENV_DOCUMENTUM = "DOCUMENTUM";
 
 	private static final String DCTM_JAR = "dctm.jar";
 
-	private static final String MAIN_CLASS = "com.delta.cmsmf.mainEngine.CMSMFMain";
+	private static final String MAIN_CLASS = "com.delta.cmsmf.mainEngine.CMSMFMain_%s";
 
 	private static final Class<?>[] PARAMETERS = new Class[] {
 		URL.class
@@ -109,6 +113,21 @@ public class Launcher {
 	}
 
 	public static void main(String[] args) throws Throwable {
+
+		// The first argument must be either "import", "export", or "encrypt" - that will
+		if (args.length < 1) {
+			System.out.printf("You must specify the operating mode, one of import, export or encrypt%n");
+			System.exit(1);
+		}
+
+		String mode = args[0];
+
+		if (mode.equals("encrypt")) {
+
+		} else {
+			// Export or Import
+		}
+
 		// To start off, parse the command line
 		Options options = new Options();
 		for (CLIParam p : CLIParam.values()) {
@@ -145,35 +164,17 @@ public class Launcher {
 		Launcher.CLI_ARGS = args.clone();
 		Launcher.CLI_PARSED = Collections.unmodifiableMap(cliParams);
 
-		// First, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
-		String var = System.getenv(Launcher.ENV_DOCUMENTUM_SHARED);
-		if (cliParams.containsKey(CLIParam.dfc)) {
-			// DFC is specified
-			var = cliParams.get(CLIParam.dfc);
-		} else {
-			// Go with the environment
-			if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
-				Launcher.ENV_DOCUMENTUM_SHARED)); }
-		}
+		String var = null;
+		File base = null;
+		File tgt = null;
 
-		// Next, is it a directory?
-		File base = new File(var).getCanonicalFile();
-		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
-			base.getAbsolutePath())); }
-
-		System.out.printf("Using %s=[%s]%n", Launcher.ENV_DOCUMENTUM_SHARED, base.getAbsolutePath());
-
-		// Make sure the environment reflects our changes
-		// System.getenv().put(Launcher.ENV_DOCUMENTUM_SHARED, base.getAbsolutePath());
-
-		// Next, does dctm.jar exist in there?
-		File tgt = new File(base, Launcher.DCTM_JAR);
-		if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
-			tgt.getAbsolutePath())); }
-
-		// Next, to the classpath
+		// First, add the ${PWD}/cfg directory to the classpath - whether it exists or not
+		var = System.getProperty("user.dir");
+		base = new File(var);
+		tgt = new File(var, "cfg");
 		Launcher.addToClassPath(tgt);
 
+		/*
 		// Next, add ${DOCUMENTUM}/config to the classpath
 		var = System.getenv(Launcher.ENV_DOCUMENTUM);
 		if (cliParams.containsKey(CLIParam.dctm)) {
@@ -198,10 +199,40 @@ public class Launcher {
 			tgt.getAbsolutePath())); }
 
 		Launcher.addToClassPath(tgt);
+		*/
+
+		// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
+		var = System.getenv(Launcher.ENV_DOCUMENTUM_SHARED);
+		if (cliParams.containsKey(CLIParam.dfc)) {
+			// DFC is specified
+			var = cliParams.get(CLIParam.dfc);
+		} else {
+			// Go with the environment
+			if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
+				Launcher.ENV_DOCUMENTUM_SHARED)); }
+		}
+
+		// Next, is it a directory?
+		base = new File(var).getCanonicalFile();
+		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
+			base.getAbsolutePath())); }
+
+		System.out.printf("Using %s=[%s]%n", Launcher.ENV_DOCUMENTUM_SHARED, base.getAbsolutePath());
+
+		// Make sure the environment reflects our changes
+		// System.getenv().put(Launcher.ENV_DOCUMENTUM_SHARED, base.getAbsolutePath());
+
+		// Next, does dctm.jar exist in there?
+		tgt = new File(base, Launcher.DCTM_JAR);
+		if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
+			tgt.getAbsolutePath())); }
+
+		// Next, to the classpath
+		Launcher.addToClassPath(tgt);
 
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
-		Class.forName(Launcher.MAIN_CLASS).newInstance();
+		Class.forName(String.format(Launcher.MAIN_CLASS, mode)).newInstance();
 	}
 }

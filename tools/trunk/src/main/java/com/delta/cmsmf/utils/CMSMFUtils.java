@@ -4,16 +4,6 @@ import java.io.File;
 
 public class CMSMFUtils {
 
-	/**
-	 * @param args
-	 *            command line arguments
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		System.out.println(CMSMFUtils.GetContentPathFromContentID("0600a92b80054db8"));
-
-	}
-
 	public static String GetContentPathFromContentID(String contentObjID) {
 		String contentPath = "";
 		String filePathSeparator = File.separator;
