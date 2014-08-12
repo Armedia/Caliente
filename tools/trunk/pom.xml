@@ -18,6 +18,9 @@
 		<dfc.base.dir>${env.DOCUMENTUM}</dfc.base.dir>
 		<maven.min-version>3.0</maven.min-version>
 		<dfc.version>6.7-SP2</dfc.version>
+
+		<!-- FOR NOW, WE DISABLE UNIT TESTS -->
+		<maven.test.skip>true</maven.test.skip>
 	</properties>
 
 	<organization>

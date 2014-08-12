@@ -6,26 +6,14 @@ import java.util.Properties;
 import java.util.UUID;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.delta.cmsmf.runtime.RunTimeProperties;
 
-public class CheckForRepoOperatorNameAttrListTest {
-
-	@BeforeClass
-	public void beforeClass() {
-		PropertiesManager.close();
-	}
-
-	@AfterClass
-	public void afterClass() {
-		PropertiesManager.close();
-	}
+public class CheckForRepoOperatorNameAttrListTest extends BaseTest {
 
 	@Test
 	public void test() throws ConfigurationException {
