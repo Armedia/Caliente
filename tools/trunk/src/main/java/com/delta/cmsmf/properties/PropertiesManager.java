@@ -1,6 +1,7 @@
 package com.delta.cmsmf.properties;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +46,11 @@ public class PropertiesManager {
 		PropertiesManager.addPropertySource(new File(propertyFilePath));
 	}
 
+	public static void addPropertySource(URL propertyUrl) throws ConfigurationException {
+		if (propertyUrl == null) { return; }
+		PropertiesManager.addConfiguration(new PropertiesConfiguration(propertyUrl));
+	}
+
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
 		// TODO: Support XML properties file format?
@@ -81,7 +87,7 @@ public class PropertiesManager {
 	 * @return the string
 	 */
 	public static String getProperty(CMSMFProperties propName, String defaultValue) {
-		return PropertiesManager.configuration.getString(propName.name, defaultValue);
+		return PropertiesManager.CFG.getString(propName.name, defaultValue);
 	}
 
 	/**
@@ -94,13 +100,14 @@ public class PropertiesManager {
 	 * @return the int
 	 */
 	public static int getProperty(CMSMFProperties propName, int defaultValue) {
-		return PropertiesManager.configuration.getInt(propName.name, defaultValue);
+		return PropertiesManager.CFG.getInt(propName.name, defaultValue);
 	}
 
 	public static boolean getProperty(CMSMFProperties propName, boolean defaultValue) {
-		return PropertiesManager.configuration.getBoolean(propName.name, defaultValue);
+		return PropertiesManager.CFG.getBoolean(propName.name, defaultValue);
 	}
 
-	/** The prop config. */
-	private static Configuration configuration = null;
+	public static synchronized void close() {
+		PropertiesManager.CFG = null;
+	}
 }
