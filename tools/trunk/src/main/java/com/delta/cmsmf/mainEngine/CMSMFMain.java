@@ -4,15 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -32,6 +26,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
+import com.delta.cmsmf.mainEngine.Launcher.CLIParam;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.runtime.RunTimeProperties;
@@ -62,34 +57,6 @@ import com.documentum.fc.common.IDfLoginInfo;
  */
 public class CMSMFMain {
 
-	private enum CLIParam {
-		//
-		cfg(null, true, "The configuration file to use"),
-		test(CMSMFProperties.TEST_MODE, false, "Enable test mode"),
-		mode(CMSMFProperties.OPERATING_MODE, true, "The mode of operation, either 'import' or 'export'"),
-		predicate(CMSMFProperties.EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
-		buffer(CMSMFProperties.CONTENT_READ_BUFFER_SIZE, true, "The size of the read buffer"),
-		streams(CMSMFProperties.STREAMS_DIRECTORY, true, "The Streams directory to use"),
-		content(CMSMFProperties.CONTENT_DIRECTORY, true, "The Content directory to use"),
-		compress(CMSMFProperties.COMPRESSDATA_FLAG, false, "Enable compression for the data exported (GZip)"),
-		attributes(CMSMFProperties.OWNER_ATTRIBUTES, true, "The attributes to check for"),
-		errorCount(CMSMFProperties.IMPORT_ERRORCOUNT_THRESHOLD, true,
-			"The number of errors to accept before aborting an import"),
-		defaultPassword(CMSMFProperties.DEFAULT_USER_PASSWORD, true,
-			"The default password to use for users being copied over (leave blank to use the same login name)"),
-		docbase(CMSMFProperties.DOCBASE_NAME, true, "The docbase name to connect to"),
-		user(CMSMFProperties.DOCBASE_USER, true, "The username to connect with"),
-		password(CMSMFProperties.DOCBASE_PASSWORD, true, "The password to connect with");
-
-		private final CMSMFProperties property;
-		private final Option option;
-
-		private CLIParam(CMSMFProperties property, boolean hasParameter, String description) {
-			this.property = property;
-			this.option = new Option(null, name().replace('_', '-'), hasParameter, description);
-		}
-	}
-
 	/** The logger object used for logging. */
 	private final Logger logger = Logger.getLogger(getClass());
 
@@ -106,47 +73,23 @@ public class CMSMFMain {
 
 	private final boolean testMode;
 
-	/**
-	 * The main method.
-	 * 
-	 * @param args
-	 *            the arguments
-	 * @throws ConfigurationException
-	 *             the configuration exception
-	 */
-	public static void main(String[] args) throws Throwable {
-		// Initialize Application
-		CMSMFMain.instance = new CMSMFMain(args);
-		CMSMFMain.instance.start();
-	}
+	CMSMFMain() throws Throwable {
 
-	private CMSMFMain(String[] args) throws ConfigurationException, ParseException {
-		// Next, identify the run mode - import or export
-		Options options = new Options();
-		for (CLIParam p : CLIParam.values()) {
-			options.addOption(p.option);
-		}
-
-		CommandLineParser parser = new PosixParser();
-		CommandLine cli = parser.parse(options, args);
-
-		// Convert the command-line parameters into "configuration properties"
+		// Convert the command-line parameters into configuration properties
 		Properties parameters = new Properties();
-		for (CLIParam p : CLIParam.values()) {
-			if (!cli.hasOption(p.option.getLongOpt())) {
-				continue;
-			}
+		Map<Launcher.CLIParam, String> cliArgs = Launcher.getParsedCliArgs();
+		for (Launcher.CLIParam p : cliArgs.keySet()) {
 			if (p.property != null) {
-				parameters.setProperty(p.property.name, cli.getOptionValue(p.option.getLongOpt()));
+				parameters.setProperty(p.property.name, cliArgs.get(p));
 			}
 		}
 
-		// TODO: Initialize the properties manager with all this crap
+		// TODO: Initialize the properties manager with all this default
 		PropertiesManager.addPropertySource(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
 
 		// A configuration file has been specifed, so use its values ahead of the defaults
-		if (cli.hasOption(CLIParam.cfg.option.getLongOpt())) {
-			PropertiesManager.addPropertySource(cli.getOptionValue(CLIParam.cfg.option.getLongOpt()));
+		if (cliArgs.containsKey(CLIParam.cfg.option.getLongOpt())) {
+			PropertiesManager.addPropertySource(cliArgs.get(CLIParam.cfg));
 		}
 
 		// If we have command-line parameters, these supersede all other configurations, even if
@@ -156,7 +99,7 @@ public class CMSMFMain {
 		}
 		PropertiesManager.init();
 
-		this.testMode = "test".equalsIgnoreCase(PropertiesManager.getProperty(CMSMFProperties.TEST_MODE, ""));
+		this.testMode = cliArgs.containsKey(CLIParam.test);
 
 		// Set the filesystem location where files will be created or read from
 		this.streamFilesDirectoryLocation = new File(PropertiesManager.getProperty(CMSMFProperties.STREAMS_DIRECTORY,
@@ -165,6 +108,9 @@ public class CMSMFMain {
 		// Set the filesystem location where the content files will be created or read from
 		this.contentFilesDirectoryLocation = new File(PropertiesManager.getProperty(CMSMFProperties.CONTENT_DIRECTORY,
 			""));
+
+		start("export".equalsIgnoreCase(cliArgs.get(CLIParam.mode)), cliArgs.get(CLIParam.docbase),
+			cliArgs.get(CLIParam.user), cliArgs.get(CLIParam.password));
 	}
 
 	public File getStreamFilesDirectory() {
@@ -187,21 +133,10 @@ public class CMSMFMain {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void start() throws Throwable {
+	private void start(boolean export, String docbaseName, String docbaseUser, String passTmp) throws Throwable {
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("##### CMS Migration Process Started #####");
 		}
-
-		// Determine if this is a export step or import step
-		String importOrExport = null;
-		if (importOrExport == null) {
-			// Support legacy configurations
-			importOrExport = PropertiesManager.getProperty(CMSMFProperties.OPERATING_MODE, "");
-		}
-
-		final String docbaseName = PropertiesManager.getProperty(CMSMFProperties.DOCBASE_NAME, "");
-		final String docbaseUser = PropertiesManager.getProperty(CMSMFProperties.DOCBASE_USER, "");
-		String passTmp = PropertiesManager.getProperty(CMSMFProperties.DOCBASE_PASSWORD, "");
 
 		final IDfClient dfClient;
 		try {
@@ -222,10 +157,12 @@ public class CMSMFMain {
 			throw new RuntimeException(msg, e);
 		}
 
-		try {
-			passTmp = EncryptPasswordUtil.decryptPassword(passTmp);
-		} catch (Throwable t) {
-			// Not encrypted, use literal
+		if (passTmp != null) {
+			try {
+				passTmp = EncryptPasswordUtil.decryptPassword(passTmp);
+			} catch (Throwable t) {
+				// Not encrypted, use literal
+			}
 		}
 		final String docbasePassword = passTmp;
 
@@ -233,8 +170,12 @@ public class CMSMFMain {
 		try {
 			// Prepare login object
 			IDfLoginInfo li = new DfLoginInfo();
-			li.setUser(docbaseUser);
-			li.setPassword(docbasePassword);
+			if (docbaseUser != null) {
+				li.setUser(docbaseUser);
+			}
+			if (docbasePassword != null) {
+				li.setPassword(docbasePassword);
+			}
 			li.setDomain(null);
 
 			// Get a documentum session using session manager
@@ -251,7 +192,7 @@ public class CMSMFMain {
 			this.logger.error("Error establishing Documentum session", e);
 		}
 
-		if (importOrExport.equalsIgnoreCase("Export")) {
+		if (export) {
 			// Start the export process
 			startExporting();
 		} else {
@@ -934,7 +875,7 @@ public class CMSMFMain {
 					RunTimeProperties.getRunTimePropertiesInstance().incrementImportProcessErrorCount();
 
 					int importErrorThreshold = PropertiesManager.getProperty(
-						CMSMFProperties.IMPORT_ERRORCOUNT_THRESHOLD, 0);
+						CMSMFProperties.IMPORT_MAX_ERRORS, 0);
 					if (RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount() >= importErrorThreshold) {
 						// Raise the cmsmf fatal exception.
 						throw (new CMSMFFatalException(

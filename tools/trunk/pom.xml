@@ -14,13 +14,10 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.target>1.7</project.build.target>
-		<dfc.base.dir>${env.DOCUMENTUM}</dfc.base.dir>
+		<project.build.target>1.6</project.build.target>
 		<maven.min-version>3.0</maven.min-version>
-		<dfc.version>6.7-SP2</dfc.version>
-
-		<!-- FOR NOW, WE DISABLE UNIT TESTS -->
-		<maven.test.skip>true</maven.test.skip>
+		<dfc.version>6.7-SP1</dfc.version>
+		<p>${path.separator}</p>
 	</properties>
 
 	<organization>
@@ -47,6 +44,14 @@
 	</pluginRepositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.documentum.dfc</groupId>
+			<artifactId>dfc-jars</artifactId>
+			<version>${dfc.version}</version>
+			<type>pom</type>
+			<scope>provided</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
@@ -90,13 +95,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.16</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
@@ -121,6 +119,10 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>2.17</version>
+					<!-- temporarily disable unit tests -->
+					<configuration>
+						<skip>true</skip>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -144,7 +146,7 @@
 					<configuration>
 						<rules>
 							<requireJavaVersion>
-								<version>1.7.0</version>
+								<version>1.6.0</version>
 							</requireJavaVersion>
 							<requireMavenVersion>
 								<version>[${maven.min-version},)</version>
@@ -156,6 +158,11 @@
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>exec-maven-plugin</artifactId>
 					<version>1.3.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>2.8</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -197,96 +204,32 @@
 					<forkMode>always</forkMode>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>make-exe</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>${project.artifactId}-${project.version}-exe</finalName>
+							<!-- <appendAssemblyId>false</appendAssemblyId> -->
+							<classifier>exe</classifier>
+							<descriptors>
+								<descriptor>src/assemblies/executable.xml</descriptor>
+							</descriptors>
+							<archive>
+								<manifest>
+									<mainClass>com.delta.cmsmf.mainEngine.Launcher</mainClass>
+								</manifest>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
-	<profiles>
-		<profile>
-			<id>compile</id>
-			<dependencies>
-				<dependency>
-					<groupId>com.documentum.dfc</groupId>
-					<artifactId>dfc-jars</artifactId>
-					<version>${dfc.version}</version>
-					<type>pom</type>
-					<scope>compile</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-
-		<profile>
-			<id>run</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-enforcer-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>enforce-base</id>
-								<phase>validate</phase>
-								<goals>
-									<goal>enforce</goal>
-								</goals>
-								<configuration>
-									<rules>
-										<requireEnvironmentVariable>
-											<variableName>DOCUMENTUM</variableName>
-											<message>The "DOCUMENTUM" environment variable must be set!</message>
-										</requireEnvironmentVariable>
-										<requireProperty>
-											<property>dfc.home</property>
-											<message>The "dfc.home" property must be set to a correct DFC install location!</message>
-										</requireProperty>
-										<requireProperty>
-											<property>mode</property>
-											<regex>^(export|import)$</regex>
-											<message>The "mode" property must be either "export" or "import"</message>
-										</requireProperty>
-										<requireProperty>
-											<property>cfg</property>
-											<message>The "cfg" property must be set</message>
-										</requireProperty>
-										<requireFilesExist>
-											<files>
-												<file>${basedir}/cfg/${cfg}</file>
-												<file>${dfc.home}/dctm.jar</file>
-											</files>
-										</requireFilesExist>
-									</rules>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>exec-maven-plugin</artifactId>
-						<configuration>
-							<classpathScope>runtime</classpathScope>
-							<executable>java</executable>
-							<environmentVariables>
-								<DOCUMENTUM_SHARED>${dfc.home}</DOCUMENTUM_SHARED>
-							</environmentVariables>
-							<arguments>
-								<argument>-Xms256m</argument>
-								<argument>-Xmx512m</argument>
-								<argument>-Xss128k</argument>
-								<argument>-Dcom.sun.management.jmxremote</argument>
-							</arguments>
-							<additionalClasspathElements>
-								<additionalClasspathElement>${env.DOCUMENTUM}/config</additionalClasspathElement>
-								<additionalClasspathElement>${dfc.home}/dctm.jar</additionalClasspathElement>
-								<additionalClasspathElement>${basedir}/cfg/${common}.properties</additionalClasspathElement>
-								<additionalClasspathElement>${basedir}/cfg/${cfg}.properties</additionalClasspathElement>
-							</additionalClasspathElements>
-							<mainClass>com.delta.cmsmf.mainEngine.CMSMFMain</mainClass>
-							<commandlineArgs>
-								<commandlineArg>${mode}</commandlineArg>
-							</commandlineArgs>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 </project>

@@ -126,14 +126,10 @@ public class DctmUser extends DctmObject {
 			// the user_login_name
 			if (getStrSingleAttrValue(DctmAttrNameConstants.USER_SOURCE).equals(
 				CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
-				String inlinePasswordValue = CMSMFAppConstants.INLINE_PASSWORD_DEFAULT_VALUE;
-				inlinePasswordValue = PropertiesManager.getProperty(CMSMFProperties.DEFAULT_USER_PASSWORD,
-					inlinePasswordValue);
-				// If the value of property 'cmsmf.app.inlinepassworduser.passwordvalue' equals to
-				// default value, then set the password equal to the login name
-				if (inlinePasswordValue.equalsIgnoreCase(CMSMFAppConstants.INLINE_PASSWORD_DEFAULT_VALUE)) {
-					inlinePasswordValue = getStrSingleAttrValue(DctmAttrNameConstants.USER_LOGIN_NAME);
-				}
+				// Default the password to the user's login name, if one hasn't been selected
+				// for global use
+				final String inlinePasswordValue = PropertiesManager.getProperty(CMSMFProperties.DEFAULT_USER_PASSWORD,
+					getStrSingleAttrValue(DctmAttrNameConstants.USER_LOGIN_NAME));
 				findAttribute(DctmAttrNameConstants.USER_PASSWORD).setSingleValue(inlinePasswordValue);
 
 			} else {
