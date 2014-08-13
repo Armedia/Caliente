@@ -44,6 +44,9 @@ public abstract class CMSMFMain {
 	protected final boolean testMode;
 
 	CMSMFMain() throws Throwable {
+		// First things first...
+		CMSMFMain.instance = this;
+
 		// Convert the command-line parameters into configuration properties
 		Properties parameters = new Properties();
 		Map<CLIParam, String> cliArgs = CMSMFLauncher.getParsedCliArgs();
