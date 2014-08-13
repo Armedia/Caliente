@@ -61,6 +61,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 		var = System.getProperty("user.dir");
 		base = new File(var);
 		tgt = new File(var, "cfg");
+		CMSMFLauncher.addToClassPath(base);
 		CMSMFLauncher.addToClassPath(tgt);
 
 		// Next, add ${DOCUMENTUM}/config to the classpath
