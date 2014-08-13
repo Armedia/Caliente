@@ -3,12 +3,20 @@ package com.delta.cmsmf.mainEngine;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -17,8 +25,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.commons.lang.SystemUtils;
 
 import com.delta.cmsmf.constants.CMSMFProperties;
+import com.delta.cmsmf.utils.ProcessFuture;
 
 public class Launcher {
 
@@ -106,6 +116,86 @@ public class Launcher {
 
 	static final String[] getCliArgs() {
 		return Launcher.CLI_ARGS;
+	}
+
+	@SuppressWarnings("unused")
+	private static ProcessFuture execClass(Class<?> klass, Collection<File> classpath, Map<String, String> environment,
+		String... args) throws IOException, InterruptedException {
+
+		try {
+			Method m = klass.getMethod("main", Array.class);
+			if (!Modifier.isStatic(m.getModifiers())) { return null; }
+		} catch (SecurityException e) {
+			// Can't tell, so we keep going...
+		} catch (NoSuchMethodException e) {
+			// No such method...
+			return null;
+		}
+
+		// This will help identify
+		RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+		List<String> jvmArgs = runtimeMxBean.getInputArguments();
+
+		String javaHome = System.getProperty("java.home");
+		File javaBin = new File(javaHome);
+		javaBin = new File(javaBin, "bin");
+		javaBin = new File(javaBin, (SystemUtils.IS_OS_WINDOWS ? "java.exe" : "java"));
+
+		StringBuilder b = new StringBuilder();
+
+		// First, parse out the current classpath
+		String currentCp = System.getProperty("java.class.path");
+		StringTokenizer tok = new StringTokenizer(currentCp, File.pathSeparator);
+		while (tok.hasMoreElements()) {
+			final String token = tok.nextToken();
+			if (token.length() == 0) {
+				continue;
+			}
+			if (b.length() > 0) {
+				b.append(File.pathSeparatorChar);
+			}
+			b.append(token);
+		}
+
+		// Current classpath has been pre-pended, we add the additional items
+		for (File f : classpath) {
+			if (b.length() > 0) {
+				b.append(File.pathSeparatorChar);
+			}
+			b.append(f.getAbsolutePath());
+		}
+		List<String> command = new ArrayList<String>();
+		command.add(javaBin.getAbsolutePath());
+
+		// Add the classpath first
+		command.add("-cp");
+		command.add(b.toString());
+
+		for (String s : jvmArgs) {
+			// Ignore -cp and -classpath
+			if ("-classpath".equals(s) || "-cp".equals(s)) {
+				continue;
+			}
+			command.add(s);
+		}
+
+		// Add the main class
+		command.add(klass.getCanonicalName());
+
+		// Add the class arguments
+		for (String s : args) {
+			if (s != null) {
+				continue;
+			}
+			command.add(s);
+		}
+
+		// Build the process
+		final ProcessBuilder builder = new ProcessBuilder(command);
+		if ((environment != null) && !environment.isEmpty()) {
+			builder.environment().putAll(environment);
+		}
+		return new ProcessFuture(builder.start());
 	}
 
 	public static void main(String[] args) throws Throwable {
