@@ -11,11 +11,7 @@ import org.apache.log4j.Logger;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.properties.PropertiesManager;
-import com.documentum.fc.client.DfAuthenticationException;
 import com.documentum.fc.client.DfClient;
-import com.documentum.fc.client.DfIdentityException;
-import com.documentum.fc.client.DfPrincipalException;
-import com.documentum.fc.client.DfServiceException;
 import com.documentum.fc.client.IDfClient;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSessionManager;
@@ -54,7 +50,11 @@ public abstract class CMSMFMain {
 		Map<CLIParam, String> cliArgs = CMSMFLauncher.getParsedCliArgs();
 		for (CLIParam p : cliArgs.keySet()) {
 			if (p.property != null) {
-				parameters.setProperty(p.property.name, cliArgs.get(p));
+				final String key = p.property.name;
+				final String value = cliArgs.get(p);
+				if ((key != null) && (value != null)) {
+					parameters.setProperty(key, value);
+				}
 			}
 		}
 
@@ -139,37 +139,33 @@ public abstract class CMSMFMain {
 		if (passTmp != null) {
 			try {
 				passTmp = RegistryPasswordUtils.decrypt(passTmp);
+				if (this.logger.isEnabledFor(Level.INFO)) {
+					this.logger.info(String.format("Password decrypted successfully"));
+				}
 			} catch (Throwable t) {
 				// Not encrypted, use literal
+				if (this.logger.isEnabledFor(Level.INFO)) {
+					this.logger.info(String.format("Password decryption failed, using as literal"));
+				}
 			}
 		}
 		final String docbasePassword = passTmp;
 
 		// get a local client
-		try {
-			// Prepare login object
-			IDfLoginInfo li = new DfLoginInfo();
-			if (docbaseUser != null) {
-				li.setUser(docbaseUser);
-			}
-			if (docbasePassword != null) {
-				li.setPassword(docbasePassword);
-			}
-			li.setDomain(null);
-
-			// Get a documentum session using session manager
-			IDfSessionManager sessionManager = dfClient.newSessionManager();
-			sessionManager.setIdentity(docbaseName, li);
-			this.dctmSession = sessionManager.getSession(docbaseName);
-		} catch (DfIdentityException e) {
-			this.logger.error("Error establishing Documentum session", e);
-		} catch (DfAuthenticationException e) {
-			this.logger.error("Error establishing Documentum session", e);
-		} catch (DfPrincipalException e) {
-			this.logger.error("Error establishing Documentum session", e);
-		} catch (DfServiceException e) {
-			this.logger.error("Error establishing Documentum session", e);
+		// Prepare login object
+		IDfLoginInfo li = new DfLoginInfo();
+		if (docbaseUser != null) {
+			li.setUser(docbaseUser);
 		}
+		if (docbasePassword != null) {
+			li.setPassword(docbasePassword);
+		}
+		li.setDomain(null);
+
+		// Get a documentum session using session manager
+		IDfSessionManager sessionManager = dfClient.newSessionManager();
+		sessionManager.setIdentity(docbaseName, li);
+		this.dctmSession = sessionManager.getSession(docbaseName);
 
 		run();
 		if (this.logger.isEnabledFor(Level.INFO)) {
