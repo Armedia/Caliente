@@ -30,6 +30,7 @@ public class DFCLauncher extends AbstractLauncher {
 		// First, add the ${PWD}/cfg directory to the classpath - whether it exists or not
 		var = System.getProperty("user.dir");
 		base = new File(var);
+		classpath.add(base);
 		tgt = new File(var, "cfg");
 		classpath.add(tgt);
 
