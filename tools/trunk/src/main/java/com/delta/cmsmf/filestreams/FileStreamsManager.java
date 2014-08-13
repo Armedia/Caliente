@@ -121,8 +121,7 @@ public class FileStreamsManager {
 	 */
 	private FileStreamsManager() {
 		// no code here; this is a singleton class so private constructor
-		String compressDataFlag = PropertiesManager.getProperty(
-			CMSMFProperties.COMPRESSDATA_FLAG, "");
+		String compressDataFlag = PropertiesManager.getProperty(CMSMFProperties.COMPRESSDATA_FLAG, "");
 		this.compressStreams = (StringUtils.startsWithIgnoreCase(compressDataFlag, "y"));
 	}
 
@@ -579,27 +578,4 @@ public class FileStreamsManager {
 		}
 		return returnObject;
 	}
-
-	/**
-	 * The main method.
-	 * 
-	 * @param args
-	 *            the arguments
-	 */
-	public static void main(String[] args) {
-		// This main method is not supposed to be invoked outside of IDE.
-		// This is mainly for testing purposes
-		System.out.println("started");
-		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-		fsm.setStreamsDirectoryPath(new File("C://temp2/temp2"));
-		try {
-			fsm.getOutputStreamForType(DctmObjectTypesEnum.DCTM_DOCUMENT);
-			fsm.closeAllStreams();
-		} catch (CMSMFIOException e) {
-			e.printStackTrace();
-		}
-		System.out.println("finished");
-
-	}
-
 }

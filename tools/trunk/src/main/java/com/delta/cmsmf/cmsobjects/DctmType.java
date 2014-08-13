@@ -82,7 +82,7 @@ public class DctmType extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
@@ -208,7 +208,7 @@ public class DctmType extends DctmObject {
 				dqlString.append(", ");
 			}
 		}
-		System.out.println(dqlString);
+		DctmType.logger.debug(dqlString);
 
 		// Add the supertype phrase if needed
 		superTypeName = (superTypeName.length() > 0) ? superTypeName : "Null ";
@@ -253,7 +253,7 @@ public class DctmType extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override

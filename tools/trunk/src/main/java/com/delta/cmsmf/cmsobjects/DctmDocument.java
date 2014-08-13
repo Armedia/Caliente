@@ -400,7 +400,7 @@ public class DctmDocument extends DctmObject {
 								if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 									DctmDocument.logger.debug("Sysobject already Linked error ignored");
 								}
-								System.out.println("Already Linked error ignored");
+								DctmDocument.logger.warn("Already Linked error ignored");
 							} else {
 								throw (dfe);
 							}
@@ -599,7 +599,7 @@ public class DctmDocument extends DctmObject {
 				+ sysObject.getObjectName());
 		}
 		List<DctmContent> contentList = dctmDoc.getContentList();
-		System.out.println("content files nbr: " + contentList.size());
+		DctmDocument.logger.info("Content files nbr: " + contentList.size());
 		// int lastPageNbr = -1;
 		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
 		for (DctmContent dctmContent : contentList) {

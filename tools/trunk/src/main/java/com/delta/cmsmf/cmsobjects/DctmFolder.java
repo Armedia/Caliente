@@ -178,7 +178,7 @@ public class DctmFolder extends DctmObject {
 							if (DctmFolder.logger.isEnabledFor(Level.DEBUG)) {
 								DctmFolder.logger.debug("Sysobject already Linked error ignored");
 							}
-							System.out.println("Already Linked error ignored");
+							DctmFolder.logger.warn("Already Linked error ignored");
 						} else {
 							throw (dfe);
 						}

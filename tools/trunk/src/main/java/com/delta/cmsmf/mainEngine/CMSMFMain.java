@@ -44,7 +44,6 @@ public abstract class CMSMFMain {
 	protected final boolean testMode;
 
 	CMSMFMain() throws Throwable {
-
 		// Convert the command-line parameters into configuration properties
 		Properties parameters = new Properties();
 		Map<CLIParam, String> cliArgs = CMSMFLauncher.getParsedCliArgs();
@@ -57,6 +56,8 @@ public abstract class CMSMFMain {
 				}
 			}
 		}
+
+		this.logger.info(String.format("Launching CMSMF %s mode%n", cliArgs.get(CLIParam.mode)));
 
 		// If we have command-line parameters, these supersede all other configurations, even if
 		// we have a configuration file explicitly listed.

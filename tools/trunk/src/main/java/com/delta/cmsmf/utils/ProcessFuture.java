@@ -100,16 +100,14 @@ public class ProcessFuture {
 
 		try {
 			Method m = klass.getMethod("main", String[].class);
-			if (!Modifier.isStatic(m.getModifiers())) {
-				System.err.printf("Class [%s] lacks a visible static main() method%n", klass.getCanonicalName());
-				return null;
-			}
+			if (!Modifier.isStatic(m.getModifiers())) { throw new IllegalArgumentException(String.format(
+				"Class [%s] lacks a visible static main() method%n", klass.getCanonicalName())); }
 		} catch (SecurityException e) {
 			// Can't tell, so we keep going...
 		} catch (NoSuchMethodException e) {
 			// No such method...
-			System.err.printf("Class [%s] lacks a main() method%n", klass.getCanonicalName());
-			return null;
+			throw new IllegalArgumentException(String.format("Class [%s] lacks a main() method%n",
+				klass.getCanonicalName()), e);
 		}
 
 		// This will help identify

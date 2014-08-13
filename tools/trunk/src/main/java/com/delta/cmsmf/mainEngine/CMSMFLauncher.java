@@ -81,8 +81,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 			base.getAbsolutePath())); }
 
-		System.out.printf("Using %s=[%s]%n", CMSMFLauncher.ENV_DOCUMENTUM, base.getAbsolutePath());
-
 		tgt = new File(base, "config");
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 			tgt.getAbsolutePath())); }
@@ -105,8 +103,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 			base.getAbsolutePath())); }
 
-		System.out.printf("Using %s=[%s]%n", CMSMFLauncher.ENV_DOCUMENTUM_SHARED, base.getAbsolutePath());
-
 		// Next, does dctm.jar exist in there?
 		tgt = new File(base, CMSMFLauncher.DCTM_JAR);
 		if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
@@ -117,7 +113,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 	}
 
 	public static void main(String[] args) throws Throwable {
-		System.out.printf("Launching CMSMF%n");
 		Map<CLIParam, String> cliParams = AbstractLauncher.parseArguments(args);
 		if (cliParams == null) { return; }
 
@@ -136,7 +131,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
 		String mode = cliParams.get(CLIParam.mode);
-		System.out.printf("Launching %s mode%n", mode);
 		Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode)).newInstance();
 	}
 }

@@ -1,6 +1,7 @@
 package com.delta.cmsmf.mainEngine;
 
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -14,22 +15,22 @@ import com.documentum.fc.tools.RegistryPasswordUtils;
 public class CMSMFMain_encrypt {
 
 	CMSMFMain_encrypt() throws Throwable {
-		// prompt the user to enter the password that needs to be encrypted
-		System.out.print("Enter the password that you would like to encrypt: ");
-
-		// open up standard input
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
+		final Console console = System.console();
 		String password = null;
-		// read the password from the command-line; need to use try/catch with the
-		// readLine() method
-		try {
-			password = br.readLine();
-		} catch (IOException ioe) {
-			System.out.println("IO error trying to read the password!");
-			System.exit(1);
+		if (console != null) {
+			// Don't output a prompt
+			char[] pass = console
+				.readPassword("Enter the password that you would like to encrypt (it will not be shown): ");
+			password = new String(pass);
+		} else {
+			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+			try {
+				password = br.readLine();
+			} catch (IOException e) {
+				throw e;
+			}
 		}
-
-		System.out.println("The encrypted password is: " + RegistryPasswordUtils.encrypt(password));
+		System.out.printf("%s%s%n", (console != null ? "The encrypted password is: " : ""),
+			RegistryPasswordUtils.encrypt(password));
 	}
 }

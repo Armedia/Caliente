@@ -49,7 +49,6 @@ public class DFCLauncher extends AbstractLauncher {
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 			base.getAbsolutePath())); }
 
-		System.out.printf("Using %s=[%s]%n", DFCLauncher.ENV_DOCUMENTUM, base.getAbsolutePath());
 		// Make sure the environment reflects our changes
 		environment.put(DFCLauncher.ENV_DOCUMENTUM, base.getCanonicalPath());
 
@@ -74,8 +73,6 @@ public class DFCLauncher extends AbstractLauncher {
 		base = new File(var).getCanonicalFile();
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 			base.getAbsolutePath())); }
-
-		System.out.printf("Using %s=[%s]%n", DFCLauncher.ENV_DOCUMENTUM_SHARED, base.getAbsolutePath());
 
 		// Make sure the environment reflects our changes
 		environment.put(DFCLauncher.ENV_DOCUMENTUM_SHARED, base.getCanonicalPath());
