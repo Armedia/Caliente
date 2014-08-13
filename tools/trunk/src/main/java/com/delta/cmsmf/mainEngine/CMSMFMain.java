@@ -58,30 +58,32 @@ public abstract class CMSMFMain {
 			}
 		}
 
-		// TODO: Initialize the properties manager with all this default
-		PropertiesManager.addPropertySource(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
+		// If we have command-line parameters, these supersede all other configurations, even if
+		// we have a configuration file explicitly listed.
+		if (!parameters.isEmpty()) {
+			PropertiesManager.addPropertySource(parameters);
+		}
 
 		// A configuration file has been specifed, so use its values ahead of the defaults
 		if (cliArgs.containsKey(CLIParam.cfg.option.getLongOpt())) {
 			PropertiesManager.addPropertySource(cliArgs.get(CLIParam.cfg));
 		}
 
-		// If we have command-line parameters, these supersede all other configurations, even if
-		// we have a configuration file explicitly listed.
-		if (!parameters.isEmpty()) {
-			PropertiesManager.addPropertySource(parameters);
-		}
+		// Finally, the catch-all, default configuration
+		PropertiesManager.addPropertySource(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
 		PropertiesManager.init();
 
 		this.testMode = cliArgs.containsKey(CLIParam.test);
 
 		// Set the filesystem location where files will be created or read from
 		this.streamFilesDirectoryLocation = new File(PropertiesManager.getProperty(CMSMFProperties.STREAMS_DIRECTORY,
-			""));
+			"")).getCanonicalFile();
+		this.logger.info(String.format("Using streams directory: [%s]", this.contentFilesDirectoryLocation));
 
 		// Set the filesystem location where the content files will be created or read from
 		this.contentFilesDirectoryLocation = new File(PropertiesManager.getProperty(CMSMFProperties.CONTENT_DIRECTORY,
-			""));
+			"")).getCanonicalFile();
+		this.logger.info(String.format("Using content directory: [%s]", this.contentFilesDirectoryLocation));
 
 		start(cliArgs.get(CLIParam.docbase), cliArgs.get(CLIParam.user), cliArgs.get(CLIParam.password));
 	}
