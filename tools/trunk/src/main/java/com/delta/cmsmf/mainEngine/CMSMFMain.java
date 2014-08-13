@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.CMSMFProperties;
-import com.delta.cmsmf.mainEngine.Launcher.CLIParam;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.documentum.fc.client.DfAuthenticationException;
 import com.documentum.fc.client.DfClient;
@@ -52,8 +51,8 @@ public abstract class CMSMFMain {
 
 		// Convert the command-line parameters into configuration properties
 		Properties parameters = new Properties();
-		Map<Launcher.CLIParam, String> cliArgs = Launcher.getParsedCliArgs();
-		for (Launcher.CLIParam p : cliArgs.keySet()) {
+		Map<CLIParam, String> cliArgs = CMSMFLauncher.getParsedCliArgs();
+		for (CLIParam p : cliArgs.keySet()) {
 			if (p.property != null) {
 				parameters.setProperty(p.property.name, cliArgs.get(p));
 			}

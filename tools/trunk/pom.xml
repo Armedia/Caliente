@@ -224,7 +224,7 @@
 							</descriptors>
 							<archive>
 								<manifest>
-									<mainClass>com.delta.cmsmf.mainEngine.Launcher</mainClass>
+									<mainClass>com.delta.cmsmf.mainEngine.CMSMFLauncher</mainClass>
 								</manifest>
 							</archive>
 						</configuration>
