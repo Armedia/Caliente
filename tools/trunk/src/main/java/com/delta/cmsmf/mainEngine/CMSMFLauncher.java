@@ -8,6 +8,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Map;
 
+import org.apache.log4j.xml.DOMConfigurator;
+
 public class CMSMFLauncher extends AbstractLauncher {
 
 	private static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
@@ -118,6 +120,15 @@ public class CMSMFLauncher extends AbstractLauncher {
 		System.out.printf("Launching CMSMF%n");
 		Map<CLIParam, String> cliParams = AbstractLauncher.parseArguments(args);
 		if (cliParams == null) { return; }
+
+		// Configure Log4J
+		String log4j = cliParams.get(CLIParam.log4j);
+		if (log4j != null) {
+			final File cfg = new File(log4j);
+			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
+				DOMConfigurator.configure(cfg.toURI().toURL());
+			}
+		}
 
 		CMSMFLauncher.patchClasspath(cliParams);
 

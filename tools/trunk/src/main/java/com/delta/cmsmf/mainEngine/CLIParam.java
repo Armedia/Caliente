@@ -15,6 +15,7 @@ enum CLIParam {
 	docbase(null, true, "The docbase name to connect to"),
 	user(null, true, "The username to connect with"),
 	password(null, true, "The password to connect with"),
+	log4j(null, true, "The Log4j configuration to use instead of the default"),
 	predicate(CMSMFProperties.EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
 	buffer(CMSMFProperties.CONTENT_READ_BUFFER_SIZE, true, "The size of the read buffer"),
 	streams(CMSMFProperties.STREAMS_DIRECTORY, true, "The Streams directory to use"),
