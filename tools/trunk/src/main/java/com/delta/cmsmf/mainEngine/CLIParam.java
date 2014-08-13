@@ -11,7 +11,7 @@ enum CLIParam {
 	cfg(null, true, "The configuration file to use"),
 	dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
 	dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
-	mode(null, true, true, "The mode of operation, either 'encrypt', 'import' or 'export'"),
+	mode(null, true, true, "The mode of operation, either 'encrypt', 'decrypt', 'import' or 'export'"),
 	docbase(null, true, "The docbase name to connect to"),
 	user(null, true, "The username to connect with"),
 	password(null, true, "The password to connect with"),
