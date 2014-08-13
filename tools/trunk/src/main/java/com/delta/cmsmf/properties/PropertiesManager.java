@@ -46,27 +46,40 @@ public class PropertiesManager {
 		PropertiesManager.addPropertySource(new File(propertyFilePath));
 	}
 
+	private static void configure(AbstractConfiguration cfg) {
+		if (cfg != null) {
+			cfg.setDelimiterParsingDisabled(true);
+			cfg.setListDelimiter('|');
+		}
+	}
+
 	public static void addPropertySource(URL propertyUrl) throws ConfigurationException {
 		if (propertyUrl == null) { return; }
-		PropertiesManager.addConfiguration(new PropertiesConfiguration(propertyUrl));
+		PropertiesConfiguration cfg = new PropertiesConfiguration();
+		PropertiesManager.configure(cfg);
+		cfg.load(propertyUrl);
+		PropertiesManager.addConfiguration(cfg);
 	}
 
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
+		PropertiesConfiguration cfg = new PropertiesConfiguration();
+		PropertiesManager.configure(cfg);
+		cfg.load(propertyFile);
 		// TODO: Support XML properties file format?
-		PropertiesManager.addConfiguration(new PropertiesConfiguration(propertyFile));
+		PropertiesManager.addConfiguration(cfg);
 	}
 
 	public static void addPropertySource(Properties properties) throws ConfigurationException {
 		if (properties == null) { return; }
-		PropertiesManager.addConfiguration(new MapConfiguration(new HashMap<Object, Object>(properties)));
+		MapConfiguration cfg = new MapConfiguration(new HashMap<Object, Object>(properties));
+		PropertiesManager.configure(cfg);
+		PropertiesManager.addConfiguration(cfg);
 	}
 
 	protected static synchronized void addConfiguration(AbstractConfiguration configuration) {
 		if (PropertiesManager.CFG != null) { return; }
 		if (configuration != null) {
-			configuration.setDelimiterParsingDisabled(true);
-			configuration.setListDelimiter('|');
 			PropertiesManager.CONFIGURATIONS.add(configuration);
 		}
 	}
@@ -107,7 +120,12 @@ public class PropertiesManager {
 		return PropertiesManager.CFG.getBoolean(propName.name, defaultValue);
 	}
 
+	public static List<Configuration> getConfigurations() {
+		return PropertiesManager.CONFIGURATIONS;
+	}
+
 	public static synchronized void close() {
+		PropertiesManager.CONFIGURATIONS.clear();
 		PropertiesManager.CFG = null;
 	}
 }
