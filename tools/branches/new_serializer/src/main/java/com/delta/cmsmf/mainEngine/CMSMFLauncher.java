@@ -50,8 +50,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 		CMSMFLauncher.addToClassPath(f.toURI().toURL());
 	}
 
-	public static Map<CLIParam, String> getParsedCliArgs() {
-		return AbstractLauncher.CLI_PARSED;
+	public static String getParameter(CLIParam param) {
+		return AbstractLauncher.CLI_PARSED.get(param);
 	}
 
 	private static void patchClasspath(Map<CLIParam, String> cliParams) throws IOException {

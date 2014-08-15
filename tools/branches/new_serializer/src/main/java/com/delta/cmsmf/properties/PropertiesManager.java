@@ -63,6 +63,8 @@ public class PropertiesManager {
 
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
+		if (!propertyFile.exists()) { return; }
+		if (!propertyFile.canRead()) { return; }
 		PropertiesConfiguration cfg = new PropertiesConfiguration();
 		PropertiesManager.configure(cfg);
 		cfg.load(propertyFile);

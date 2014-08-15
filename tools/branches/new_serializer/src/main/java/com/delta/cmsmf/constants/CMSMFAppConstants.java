@@ -9,6 +9,11 @@ package com.delta.cmsmf.constants;
 public class CMSMFAppConstants {
 
 	/**
+	 * The batch size for exporting content from Documentum
+	 */
+	public static final int BATCH_SIZE = 20000;
+
+	/**
 	 * The buffer size in bytes used to retrieve the content file. This buffer size is used to
 	 * read the content from input stream these many bytes at time and writing to output stream.
 	 */
@@ -21,22 +26,12 @@ public class CMSMFAppConstants {
 	public static final String USER_SOURCE_INLINE_PASSWORD = "inline password";
 
 	/**
-	 * The default value for cmsmf.app.inlinepassworduser.passwordvalue property in
-	 * CMSMF_app.properties file.
-	 * If this property is missing in the properties file, this default value will be used. If this
-	 * default
-	 * value is used during inline user creation during import, it will set their password same as
-	 * their login id
-	 */
-	public static final String INLINE_PASSWORD_DEFAULT_VALUE = "sameasloginid";
-
-	/**
 	 * The select clause of export query used to export sysobjects. To locate system object using a
 	 * dql, we need
 	 * several of the attributes present in select clause of the query. Hence this select clause
 	 * specified here.
 	 */
-	public static final String EXPORT_QUERY_SELECT_CLAUSE = "select r_object_id, i_vstamp, r_object_type, r_aspect_name, i_is_replica, i_is_reference ";
+	public static final String EXPORT_QUERY_SELECT_CLAUSE = "select distinct r_object_id ";
 
 	/** The file name and path of the properties file used in CMSMF application. */
 	public static final String FULLY_QUALIFIED_CONFIG_FILE_NAME = "cfg/default.properties";

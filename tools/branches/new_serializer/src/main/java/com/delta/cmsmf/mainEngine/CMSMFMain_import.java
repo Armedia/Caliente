@@ -28,6 +28,7 @@ import com.delta.cmsmf.serialization.DctmObjectReader;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
+import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
 /**
@@ -63,53 +64,64 @@ public class CMSMFMain_import extends CMSMFMain {
 		fsm.setStreamsDirectoryPath(this.streamFilesDirectoryLocation);
 		fsm.setContentDirectoryPath(this.contentFilesDirectoryLocation);
 
-		// Check that all prerequisites are met before importing anything
-		if (!isItSafeToImport()) {
-			this.logger.error("Unsafe to continue import into target repository. Import process halted");
-			return;
+		final IDfSession session;
+		try {
+			session = getSession();
+		} catch (Throwable t) {
+			throw new RuntimeException("Failed to get the main session", t);
 		}
 
 		try {
-			// Import user objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_USER);
-
-			// Import group objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_GROUP);
-
-			// Import ACL objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_ACL);
-
-			// Import Type objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_TYPE);
-
-			// Import format objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_FORMAT);
-
-			// Import folder objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_FOLDER);
-
-			// Import document objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_DOCUMENT);
-
-		} catch (CMSMFFatalException e) {
-			this.logger.error(e.getMessage());
-		} finally {
-			// close all of the file streams
-			try {
-				fsm.closeAllStreams();
-			} catch (CMSMFIOException e) {
-				this.logger.error("Couldn't close all of the filestreams", e);
+			// Check that all prerequisites are met before importing anything
+			if (!isItSafeToImport(session)) {
+				this.logger.error("Unsafe to continue import into target repository. Import process halted");
+				return;
 			}
-		}
 
-		// print the counters to see how many objects were processed
-		AppCounter.getObjectCounter().printCounters();
+			try {
+				// Import user objects
+				readAndImportDctmObjects(session, DctmObjectTypesEnum.DCTM_USER);
 
-		// Print detailed import report
-		CMSMFMain_import.printImportReport();
+				// Import group objects
+				readAndImportDctmObjects(session, DctmObjectTypesEnum.DCTM_GROUP);
 
-		if (this.logger.isEnabledFor(Level.INFO)) {
-			this.logger.info("##### Import Process Finished #####");
+				// Import ACL objects
+				readAndImportDctmObjects(session, DctmObjectTypesEnum.DCTM_ACL);
+
+				// Import Type objects
+				readAndImportDctmObjects(session, DctmObjectTypesEnum.DCTM_TYPE);
+
+				// Import format objects
+				readAndImportDctmObjects(session, DctmObjectTypesEnum.DCTM_FORMAT);
+
+				// Import folder objects
+				readAndImportDctmObjects(session, DctmObjectTypesEnum.DCTM_FOLDER);
+
+				// Import document objects
+				readAndImportDctmObjects(session, DctmObjectTypesEnum.DCTM_DOCUMENT);
+
+			} catch (CMSMFFatalException e) {
+				this.logger.error(e.getMessage());
+			} finally {
+				// close all of the file streams
+				try {
+					fsm.closeAllStreams();
+				} catch (CMSMFIOException e) {
+					this.logger.error("Couldn't close all of the filestreams", e);
+				}
+			}
+
+			// print the counters to see how many objects were processed
+			AppCounter.getObjectCounter().printCounters();
+
+			// Print detailed import report
+			CMSMFMain_import.printImportReport();
+
+			if (this.logger.isEnabledFor(Level.INFO)) {
+				this.logger.info("##### Import Process Finished #####");
+			}
+		} finally {
+			closeSession(session);
 		}
 	}
 
@@ -134,14 +146,14 @@ public class CMSMFMain_import extends CMSMFMain {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private boolean isItSafeToImport() throws IOException {
+	private boolean isItSafeToImport(IDfSession session) throws IOException {
 		boolean isItSafeToImport = false;
 
 		// Make sure that all of the fileStores that we need exists in the target repository
 		try {
 			RepositoryConfiguration srcRepoConfig = DctmObjectReader.readSrcRepoConfig();
 			List<String> fileStores = srcRepoConfig.getFileStores();
-			if (doesFileStoresExist(fileStores)) {
+			if (doesFileStoresExist(session, fileStores)) {
 				isItSafeToImport = true;
 			}
 		} catch (CMSMFException e) {
@@ -160,7 +172,7 @@ public class CMSMFMain_import extends CMSMFMain {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	private boolean doesFileStoresExist(List<String> srcRepoFileStores) throws CMSMFException {
+	private boolean doesFileStoresExist(IDfSession session, List<String> srcRepoFileStores) throws CMSMFException {
 
 		boolean doesFileStoresExistInTargetRepo = false;
 
@@ -170,7 +182,7 @@ public class CMSMFMain_import extends CMSMFMain {
 		try {
 			String fileStoreQry = "select distinct name from dm_store";
 			dqlQry.setDQL(fileStoreQry);
-			IDfCollection resultCol = dqlQry.execute(this.dctmSession, IDfQuery.READ_QUERY);
+			IDfCollection resultCol = dqlQry.execute(session, IDfQuery.READ_QUERY);
 			while (resultCol.next()) {
 				String fileStoreName = resultCol.getString(DctmAttrNameConstants.NAME);
 				if (this.logger.isEnabledFor(Level.DEBUG)) {
@@ -210,7 +222,8 @@ public class CMSMFMain_import extends CMSMFMain {
 	 *             Signals that an I/O exception has occurred.
 	 * @throws CMSMFFatalException
 	 */
-	private void readAndImportDctmObjects(DctmObjectTypesEnum dctmObjectType) throws IOException, CMSMFFatalException {
+	private void readAndImportDctmObjects(IDfSession session, DctmObjectTypesEnum dctmObjectType) throws IOException,
+		CMSMFFatalException {
 		if (this.logger.isEnabledFor(Level.DEBUG)) {
 			this.logger.debug("Started Importing: " + dctmObjectType);
 		}
@@ -222,7 +235,7 @@ public class CMSMFMain_import extends CMSMFMain {
 
 				try {
 					// Create appropriate object in target repository
-					dctmObject.setDctmSession(this.dctmSession);
+					dctmObject.setDctmSession(session);
 					dctmObject.createInCMS();
 				} catch (DfException e) {
 					// log the error and continue on with next object

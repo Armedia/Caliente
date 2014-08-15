@@ -863,6 +863,14 @@ public class DctmDocument extends DctmObject {
 		}
 	}
 
+	private static final String CONTENT_FILES_DQL = //
+	"         select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, dcs.content_size, dcs.set_file, dcs.set_time, dcs.data_ticket "
+		+ "     from dmr_content_r  dcr, dmr_content_s dcs " //
+		+ "    where dcr.parent_id = '%s' " //
+		+ "      and dcr.r_object_id = dcs.r_object_id" //
+		+ "      and page = %d" //
+		+ " order by rendition";
+
 	/**
 	 * Gets the content files from repository for an object and sets as the content file list of an
 	 * dctm
@@ -891,21 +899,16 @@ public class DctmDocument extends DctmObject {
 			}
 			for (int i = 0; i < pageCnt; i++) {
 				// Run a query to find out all dmr_content objects linked to the sysobject
-				StringBuffer contentDQLBuffer = new StringBuffer(
-					"select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, ");
-				contentDQLBuffer.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.data_ticket ");
-				contentDQLBuffer.append("from dmr_content_r  dcr, dmr_content_s dcs ");
-				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
-				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
-				contentDQLBuffer.append("and page = ");
-				contentDQLBuffer.append(i);
-				contentDQLBuffer.append(" order by rendition");
+				String contentDql = String.format(DctmDocument.CONTENT_FILES_DQL, sysObj.getObjectId().getId(), i)
+					.replaceAll(" +", " ");
+				// This last replaceAll() removes the spaces used for indentation to facilitate
+				// reading by developers
 
 				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-					DctmDocument.logger.debug("DQL Query to locate content is: " + contentDQLBuffer.toString());
+					DctmDocument.logger.debug("DQL Query to locate content is: " + contentDql);
 				}
 				IDfQuery contentQuery = new DfClientX().getQuery();
-				contentQuery.setDQL(contentDQLBuffer.toString());
+				contentQuery.setDQL(contentDql);
 				IDfCollection contentColl = contentQuery.execute(this.dctmSession, IDfQuery.READ_QUERY);
 				while (contentColl.next()) {
 					DctmContent dctmContent = new DctmContent();

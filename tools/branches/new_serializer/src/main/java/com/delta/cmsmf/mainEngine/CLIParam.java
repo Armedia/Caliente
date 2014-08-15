@@ -16,6 +16,8 @@ enum CLIParam {
 	user(null, true, "The username to connect with"),
 	password(null, true, "The password to connect with"),
 	log4j(null, true, "The Log4j configuration (XML format) to use instead of the default"),
+	batch(null, true, "The batch size to use when exporting objects from Documentum"),
+	threads(null, true, "The number of threads to use while importing or exporting"),
 	predicate(CMSMFProperties.EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
 	buffer(CMSMFProperties.CONTENT_READ_BUFFER_SIZE, true, "The size of the read buffer"),
 	streams(CMSMFProperties.STREAMS_DIRECTORY, true, "The Streams directory to use"),
