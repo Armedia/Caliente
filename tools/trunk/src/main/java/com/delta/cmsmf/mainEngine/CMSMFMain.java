@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.CMSMFProperties;
+import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.documentum.fc.client.DfClient;
 import com.documentum.fc.client.IDfClient;
@@ -108,7 +109,11 @@ public abstract class CMSMFMain {
 		return this.testMode;
 	}
 
-	protected abstract void run() throws IOException;
+	public IDfSession getSession() {
+		return this.dctmSession;
+	}
+
+	protected abstract void run() throws IOException, CMSMFFatalException;
 
 	/**
 	 * Starts the main processing of the application. It checks the properties

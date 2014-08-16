@@ -255,8 +255,8 @@ public class DctmReferenceDocument extends DctmDocument {
 					"Unable to locate a remote object while creating reference using target repository session.", e);
 				// if that fails, try to locate the remote object using source repository session
 				try {
-					remoteObj = (IDfSysObject) CMSMFMain.getSourceRepositorySession().getObject(
-						new DfId(getReferenceById()));
+					remoteObj = (IDfSysObject) CMSMFMain.getInstance().getSession()
+						.getObject(new DfId(getReferenceById()));
 				} catch (DfException e1) {
 					DctmReferenceDocument.logger.warn(
 						"Unable to locate a remote object while creating reference using source repository session.",
@@ -443,6 +443,7 @@ public class DctmReferenceDocument extends DctmDocument {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
+	@SuppressWarnings("unused")
 	private void exportSupportingObjects(IDfSysObject sysObj) throws DfException, CMSMFException {
 		// NOTE: For reference documents, we do not need to export owner and group objects, type,
 		// format etc. We only need to export the acl

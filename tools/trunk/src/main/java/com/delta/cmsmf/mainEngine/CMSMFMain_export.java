@@ -1,14 +1,18 @@
 package com.delta.cmsmf.mainEngine;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Level;
 
 import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
 import com.delta.cmsmf.properties.PropertiesManager;
@@ -42,7 +46,26 @@ public class CMSMFMain_export extends CMSMFMain {
 	 *             Signals that an I/O exception has occurred.
 	 */
 	@Override
-	protected void run() throws IOException {
+	protected void run() throws IOException, CMSMFFatalException {
+		// First check to see if import.lock file exists, if it does, that means import didn't
+// finish
+		// cleanly. In that case do not start the export.
+		File importLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.IMPORT_LOCK_FILE_NAME);
+		if (importLockFile.exists()) {
+			String msg = "_cmsmf_import.lck file exists in the export directory. Unsafe to continue with the export.";
+			throw (new CMSMFFatalException(msg));
+		}
+
+		// Create a export.lock file which will be removed at the of exporting. Import
+		// will not start if this file exists.
+		File exportLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.EXPORT_LOCK_FILE_NAME);
+		// Make sure that parent folder path exists before trying to create the file.
+		File parentFolderPath = new File(exportLockFile.getAbsolutePath());
+		parentFolderPath.mkdirs();
+		// This is unreliable as per the JDK
+		exportLockFile.createNewFile();
+
+		final Date exportStartTime = new Date();
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("##### Export Process Started #####");
 		}
@@ -138,6 +161,7 @@ public class CMSMFMain_export extends CMSMFMain {
 			} catch (CMSMFIOException e) {
 				this.logger.error("Couldn't close all of the filestreams", e);
 			}
+			exportLockFile.delete();
 		}
 
 		// print the counters to see how many objects were processed
@@ -148,6 +172,17 @@ public class CMSMFMain_export extends CMSMFMain {
 
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("##### Export Process Finished #####");
+		}
+		// If this is auto run type of an export instead of an adhoc query export, store the value
+		// of the current export date in the repository. This value will be looked up in the next
+		// run
+		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.ADHOC_QUERY_WHERE_CLAUSE, "");
+		if (StringUtils.isBlank(fromWhereClause)) {
+			// This is indeed an auto run type of export
+			String dateTimePattern = CMSMFAppConstants.LAST_EXPORT_DATE_PATTERN;
+			String exportStartDateStr = DateFormatUtils.format(exportStartTime, dateTimePattern);
+
+			CMSMFUtils.setLastExportDate(this.dctmSession, exportStartDateStr);
 		}
 	}
 

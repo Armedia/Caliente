@@ -17,7 +17,8 @@ public enum CMSMFProperties {
 	MAIL_SMTP_HOST("cmsmf.app.mail.smtphost"),
 	SKIP_ACLS("cmsmf.app.export.skip.acls"),
 	SKIP_USERS("cmsmf.app.export.skip.users"),
-	SKIP_GROUPS("cmsmf.app.export.skip.groups");
+	SKIP_GROUPS("cmsmf.app.export.skip.groups"),
+	POST_PROCESS_IMPORT("cmsmf.app.import.postprocess.flag");
 
 	public final String name;
 

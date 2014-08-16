@@ -1,8 +1,11 @@
 package com.delta.cmsmf.mainEngine;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
@@ -14,7 +17,10 @@ import com.delta.cmsmf.cmsobjects.DctmFormat;
 import com.delta.cmsmf.cmsobjects.DctmGroup;
 import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmReferenceDocument;
+import com.delta.cmsmf.cmsobjects.DctmType;
 import com.delta.cmsmf.cmsobjects.DctmUser;
+import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -25,6 +31,7 @@ import com.delta.cmsmf.properties.PropertiesManager;
 import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.delta.cmsmf.serialization.DctmObjectReader;
+import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
@@ -48,9 +55,24 @@ public class CMSMFMain_import extends CMSMFMain {
 	 * 
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
+	 * @throws CMSMFFatalException
 	 */
 	@Override
-	protected void run() throws IOException {
+	protected void run() throws IOException, CMSMFFatalException {
+		File exportLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.EXPORT_LOCK_FILE_NAME);
+		if (exportLockFile.exists()) {
+			String msg = "_cmsmf_export.lck file exists in the export directory. Unsafe to continue with the import.";
+			throw (new CMSMFFatalException(msg));
+		}
+		// Create an import.lock file which will be removed at the of exporting. Import
+		// will not start if this file exists.
+		File importLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.IMPORT_LOCK_FILE_NAME);
+		// Make sure that parent folder path exists before trying to create the file.
+		File parentFolderPath = new File(importLockFile.getAbsolutePath());
+		parentFolderPath.mkdirs();
+		// This is unreliable, as per Javadoc...
+		importLockFile.createNewFile();
+
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("##### Import Process Started #####");
 		}
@@ -93,6 +115,7 @@ public class CMSMFMain_import extends CMSMFMain {
 
 		} catch (CMSMFFatalException e) {
 			this.logger.error(e.getMessage());
+			throw (e);
 		} finally {
 			// close all of the file streams
 			try {
@@ -100,16 +123,42 @@ public class CMSMFMain_import extends CMSMFMain {
 			} catch (CMSMFIOException e) {
 				this.logger.error("Couldn't close all of the filestreams", e);
 			}
+			importLockFile.delete();
 		}
 
 		// print the counters to see how many objects were processed
 		AppCounter.getObjectCounter().printCounters();
 
 		// Print detailed import report
-		CMSMFMain_import.printImportReport();
+		printImportReport();
+
+		// Email detailed import report
+		emailImportReport();
 
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("##### Import Process Finished #####");
+		}
+
+		if (PropertiesManager.getProperty(CMSMFProperties.POST_PROCESS_IMPORT, false)) {
+			postProcessImport();
+		}
+	}
+
+	private void postProcessImport() {
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("Started executing import post process jobs");
+		}
+		try {
+			// Run a dm_clean job to clean up any unwanted internal acls created
+			CMSMFUtils.runDctmJob(this.dctmSession, "dm_DMClean");
+
+			// Run a UpdateStats job
+			CMSMFUtils.runDctmJob(this.dctmSession, "dm_UpdateStats");
+		} catch (DfException e) {
+			this.logger.error("Error running a post import process steps.", e);
+		}
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("Finished executing import post process jobs");
 		}
 	}
 
@@ -117,13 +166,37 @@ public class CMSMFMain_import extends CMSMFMain {
 	 * Prints the import report. It prints how many objects of each
 	 * type were read, created, skipped and updated during import process.
 	 */
-	private static void printImportReport() {
+	private void printImportReport() {
 		DctmUser.printImportReport();
 		DctmGroup.printImportReport();
 		DctmACL.printImportReport();
+		DctmType.printImportReport();
 		DctmFormat.printImportReport();
 		DctmFolder.printImportReport();
 		DctmDocument.printImportReport();
+		DctmReferenceDocument.printImportReport();
+	}
+
+	/**
+	 * Email import report.
+	 */
+	private void emailImportReport() {
+		StringBuffer emailMsg = new StringBuffer("Following is a detailed report from import step. \n");
+
+		emailMsg.append("\n" + DctmUser.getDetailedUserImportReport());
+		emailMsg.append("\n" + DctmGroup.getDetailedGroupImportReport());
+		emailMsg.append("\n" + DctmACL.getDetailedAclImportReport());
+		emailMsg.append("\n" + DctmType.getDetailedTypeImportReport());
+		emailMsg.append("\n" + DctmFormat.getDetailedFormatImportReport());
+		emailMsg.append("\n" + DctmFolder.getDetailedFolderImportReport());
+		emailMsg.append("\n" + DctmDocument.getDetailedDocumentImportReport());
+		emailMsg.append("\n" + DctmReferenceDocument.getDetailedReferenceDocumentImportReport());
+
+		try {
+			CMSMFUtils.postCmsmfMail("CMSMF detailed Import Report", emailMsg.toString());
+		} catch (MessagingException e) {
+			this.logger.error("Error sending CMSMF detailed Import report", e);
+		}
 	}
 
 	/**
@@ -140,9 +213,11 @@ public class CMSMFMain_import extends CMSMFMain {
 		// Make sure that all of the fileStores that we need exists in the target repository
 		try {
 			RepositoryConfiguration srcRepoConfig = DctmObjectReader.readSrcRepoConfig();
-			List<String> fileStores = srcRepoConfig.getFileStores();
-			if (doesFileStoresExist(fileStores)) {
-				isItSafeToImport = true;
+			if (srcRepoConfig != null) {
+				List<String> fileStores = srcRepoConfig.getFileStores();
+				if (doesFileStoresExist(fileStores)) {
+					isItSafeToImport = true;
+				}
 			}
 		} catch (CMSMFException e) {
 			this.logger.error("Error reading source repository configuration file.", e);
@@ -236,6 +311,9 @@ public class CMSMFMain_import extends CMSMFMain {
 					RunTimeProperties.getRunTimePropertiesInstance().incrementImportProcessErrorCount();
 
 					int importErrorThreshold = PropertiesManager.getProperty(CMSMFProperties.IMPORT_MAX_ERRORS, 0);
+					this.logger.warn("Total nbr of errors happened so far: "
+						+ RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount()
+						+ ". Error threshold is set to: " + importErrorThreshold);
 					if (RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount() >= importErrorThreshold) {
 						// Raise the cmsmf fatal exception.
 						throw (new CMSMFFatalException(
@@ -280,5 +358,4 @@ public class CMSMFMain_import extends CMSMFMain {
 	private Object readDctmObject(DctmObjectTypesEnum dctmObjectType) throws CMSMFException, IOException {
 		return DctmObjectReader.readObject(dctmObjectType);
 	}
-
 }
