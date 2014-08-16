@@ -85,6 +85,7 @@ public class ObjectAttributes {
 		this.id = object.getObjectId().getId();
 		this.type = object.getType().getName();
 
+		// TODO: Are there attributes we need to store that wouldn't be fetched "normally"?
 		String fileStore = null;
 		if (object instanceof IDfSysObject) {
 			final IDfSysObject sysObject = IDfSysObject.class.cast(object);
