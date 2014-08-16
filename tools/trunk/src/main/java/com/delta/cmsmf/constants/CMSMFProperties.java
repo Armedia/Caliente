@@ -4,6 +4,7 @@ public enum CMSMFProperties {
 	//
 	COMPRESSDATA_FLAG("cmsmf.app.compressdata.flag"),
 	EXPORT_QUERY_PREDICATE("cmsmf.app.export.query.predicate"),
+	ADHOC_QUERY_WHERE_CLAUSE("cmsmf.app.export.adhoc_query.whereclause"),
 	IMPORT_MAX_ERRORS("cmsmf.app.import.errorcount.threshold"),
 	CONTENT_DIRECTORY("cmsmf.app.importexport.content.directory"),
 	STREAMS_DIRECTORY("cmsmf.app.importexport.directory"),

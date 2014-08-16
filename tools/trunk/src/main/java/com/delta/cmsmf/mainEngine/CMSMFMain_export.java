@@ -2,6 +2,7 @@ package com.delta.cmsmf.mainEngine;
 
 import java.io.IOException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 
 import com.delta.cmsmf.cmsobjects.DctmObject;
@@ -13,6 +14,7 @@ import com.delta.cmsmf.filestreams.FileStreamsManager;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.serialization.DctmObjectWriter;
+import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -65,18 +67,18 @@ public class CMSMFMain_export extends CMSMFMain {
 		fsm.deleteStreamFiles();
 
 		// Build the query that will determine what objects will be exported
-		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
-		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.EXPORT_QUERY_PREDICATE, "");
+		String exportDQLQuery = buildExportQueryString();
 
 		IDfQuery dqlQry = new DfClientX().getQuery();
-		dqlQry.setDQL(selectClause + fromWhereClause);
+		dqlQry.setDQL(exportDQLQuery);
 		dqlQry.setBatchSize(20000);
 		if (this.logger.isEnabledFor(Level.DEBUG)) {
-			this.logger.debug("Export DQL Query is: " + selectClause + fromWhereClause);
+			this.logger.debug("Export DQL Query is: " + exportDQLQuery);
 		}
 
+		IDfCollection resultCol = null;
 		try {
-			IDfCollection resultCol = dqlQry.execute(this.dctmSession, IDfQuery.READ_QUERY);
+			resultCol = dqlQry.execute(this.dctmSession, IDfQuery.READ_QUERY);
 			while (resultCol.next()) {
 				String objID = resultCol.getId("r_object_id").getId();
 				// get the object
@@ -90,13 +92,14 @@ public class CMSMFMain_export extends CMSMFMain {
 				DctmObjectRetriever dctmObjRetriever = new DctmObjectRetriever(this.dctmSession);
 				DctmObject dctmObj;
 				try {
-					dctmObj = dctmObjRetriever.retrieveObject(prsstntObj);
-					DctmObjectWriter.writeBinaryObject(dctmObj);
-					// dctmObjWriter.writeXMLObject(xmlEncoder);
+					if (prsstntObj != null) {
+						dctmObj = dctmObjRetriever.retrieveObject(prsstntObj);
+						DctmObjectWriter.writeBinaryObject(dctmObj);
+						// dctmObjWriter.writeXMLObject(xmlEncoder);
+					}
 				} catch (CMSMFException e) {
 					// If for some reason object is not retrieved from the system, or written to the
-					// filesystem,
-					// write to an error log and continue on
+					// filesystem, write to an error log and continue on
 					this.logger.error("Couldn't retrieve object information from repository for id: " + objID, e);
 				} catch (IOException e) {
 					// If there is IOException, log the error and exit out
@@ -110,7 +113,6 @@ public class CMSMFMain_export extends CMSMFMain {
 					throw (e);
 				}
 			} // while (resultCol.next())
-			resultCol.close();
 
 			// Export source repository configuration information
 			try {
@@ -120,8 +122,16 @@ public class CMSMFMain_export extends CMSMFMain {
 			}
 		} catch (DfException e) {
 			// If there is a DfException while running the export query, log the error and exit out
-			this.logger.fatal("Export Query failed to run. Query is:  " + selectClause + fromWhereClause, e);
+			this.logger.fatal("Export Query failed to run. Query is:  " + exportDQLQuery, e);
 		} finally {
+			try {
+				if (resultCol != null) {
+					resultCol.close();
+				}
+			} catch (DfException e) {
+				this.logger.error("Couldn't close the query collection", e);
+			}
+
 			// close all of the file streams
 			try {
 				fsm.closeAllStreams();
@@ -133,8 +143,49 @@ public class CMSMFMain_export extends CMSMFMain {
 		// print the counters to see how many objects were processed
 		AppCounter.getObjectCounter().printCounters();
 
+		// email the counters to see how many objects were processed
+		AppCounter.getObjectCounter().emailCounters("Export", exportDQLQuery);
+
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("##### Export Process Finished #####");
 		}
 	}
+
+	private String buildExportQueryString() {
+
+		String exportDQLQuery = "";
+
+		// First check to see if addhoc query property has any value. If it does have some value in
+// it,
+		// use it to build the query string. If this value is blank, look into the source repository
+// to see
+		// when was the last export run and pick up the sysobjects modified since then.
+
+		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
+		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.ADHOC_QUERY_WHERE_CLAUSE, "");
+		if (StringUtils.isNotBlank(fromWhereClause)) {
+			exportDQLQuery = selectClause + " " + fromWhereClause;
+		} else {
+			// Try to locate a object in source repository that represents a last successful export
+			// to a target repository.
+			// NOTE : We will create a cabinet named 'CMSMF_SYNC' in source repository. We will
+// create a
+			// a folder for each target repository in this cabinet, the name of the folder will be
+// the name
+			// of a target repository. In this folder we will create an object named
+// 'cmsmf_last_export' and
+
+			// first get the last export date from the source repository
+			String lastExportRunDate = CMSMFUtils.getLastExportDate(this.dctmSession);
+			exportDQLQuery = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE + " "
+				+ CMSMFAppConstants.AUTO_EXPORT_QUERY_FROM_WHERE_CLAUSE;
+			if (StringUtils.isNotBlank(lastExportRunDate)) {
+				String modifiedWhereCondition = " and r_modify_date >= DATE('" + lastExportRunDate + "')";
+				exportDQLQuery = exportDQLQuery + modifiedWhereCondition;
+			}
+		}
+
+		return exportDQLQuery;
+	}
+
 }

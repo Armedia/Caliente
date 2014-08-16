@@ -17,6 +17,7 @@ public enum CLIParam {
 	password(null, true, "The password to connect with"),
 	log4j(null, true, "The Log4j configuration (XML format) to use instead of the default"),
 	predicate(CMSMFProperties.EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
+	adhoc_where(CMSMFProperties.ADHOC_QUERY_WHERE_CLAUSE, true, "The DQL 'where' clause to use for ad-hoc exports"),
 	buffer(CMSMFProperties.CONTENT_READ_BUFFER_SIZE, true, "The size of the read buffer"),
 	streams(CMSMFProperties.STREAMS_DIRECTORY, true, "The Streams directory to use"),
 	content(CMSMFProperties.CONTENT_DIRECTORY, true, "The Content directory to use"),
