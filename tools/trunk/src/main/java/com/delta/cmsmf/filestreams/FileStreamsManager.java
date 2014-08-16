@@ -324,6 +324,9 @@ public class FileStreamsManager {
 					}
 					returnIS = this.dctmFrmtsFileIS;
 					break;
+				default:
+					FileStreamsManager.logger.warn("Trying to get input stream for invalid object type!");
+					break;
 			}
 		} catch (CMSMFIOException e) {
 			throw (new CMSMFIOException("Couldn't create object output stream for " + dctmObjectType + " file.", e));
