@@ -11,15 +11,16 @@ import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
-import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfId;
 
 /**
  * This class exists to gather up all of the objects that are intended to be exported. This
@@ -208,23 +209,31 @@ public class DctmExporter {
 		addObject(DctmObjectTypesEnum.DCTM_FOLDER, folderId);
 	}
 
+	private void storeDocument(IDfSession session, String objectId) throws DfException {
+		// Custom type, we need to store itself, and its hierarchy
+		IDfPersistentObject obj = session.getObjectByQualification(String.format(
+			"dm_document where r_object_id = '%s'", objectId));
+		if (obj == null) { throw new DfException(String.format(String.format(
+			"Failed to locate the referenced document [%s]", objectId))); }
+		IDfDocument document = IDfDocument.class.cast(obj);
+
+		storeUser(session, document.getOwnerName());
+		storeGroup(session, document.getGroupName());
+		storeFormat(session, document.getFormat().getName());
+		storeAcl(session, document.getACLDomain(), document.getACLName());
+
+		// TODO: since we've already pulled it, we should store the actual object
+		addObject(DctmObjectTypesEnum.DCTM_FOLDER, objectId);
+	}
+
+	private void storeContent(IDfSession session, String objectId) throws DfException {
+
+	}
+
 	private void resolveDependencies(IDfSession session, String type, String id) throws DfException {
-		// First, get the object's base attributes:
-		// "select ${dependency_attributes} from ${type} where r_object_id = ${id}"
-
-		IDfCollection item = null;
-		if (!item.next()) {
-			// BAD ID!!
-			return;
-		}
-
-		IDfTypedObject typedObj = item.getTypedObject();
-		if (!(typedObj instanceof IDfPersistentObject)) {
-			// Problem... we don't support this
-			return;
-		}
-
-		IDfPersistentObject obj = IDfPersistentObject.class.cast(typedObj);
+		IDfPersistentObject obj = session.getObject(new DfId(id));
+		if (obj == null) { throw new DfException(String.format(String.format(
+			"Failed to locate the referenced object [%s]", id))); }
 
 		// Read all the attributes in
 		ObjectAttributes attributes = new ObjectAttributes(obj);
@@ -249,7 +258,7 @@ public class DctmExporter {
 		// * ACL
 		String aclAtt = "acl_name"; // TODO: Get this from the actual type
 		String aclDom = "acl_domain"; // TODO: Get this from the actual type
-		if ((aclAtt != null) && (aclDom != null) && obj.hasAttr(aclAtt) && obj.hasAttr(aclDom)) {
+		if ((aclAtt != null) && obj.hasAttr(aclAtt) && (aclDom != null) && obj.hasAttr(aclDom)) {
 			for (int i = 0; i < obj.getValueCount(aclAtt); i++) {
 				storeAcl(session, obj.getRepeatingString(aclDom, i), obj.getRepeatingString(aclAtt, i));
 			}
