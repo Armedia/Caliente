@@ -1,5 +1,8 @@
 package com.delta.cmsmf.cmsobjects;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * The DctmObjectTypesEnum class holds enumerations for various documentum object types that are
  * handled by cmsmf application.
@@ -21,5 +24,29 @@ public enum DctmObjectTypesEnum {
 	/** The enum for dm_folder type. */
 	DCTM_FOLDER,
 	/** The enum for dm_document type. */
-	DCTM_DOCUMENT
+	DCTM_DOCUMENT;
+
+	private final String dmType;
+
+	private DctmObjectTypesEnum() {
+		this.dmType = name().toLowerCase().replaceAll("^dctm_", "dm_");
+	}
+
+	public String getDocumentumType() {
+		return this.dmType;
+	}
+
+	private static Map<String, DctmObjectTypesEnum> DECODER = null;
+
+	public static DctmObjectTypesEnum decode(String str) {
+		synchronized (DctmObjectTypesEnum.class) {
+			if (DctmObjectTypesEnum.DECODER == null) {
+				DctmObjectTypesEnum.DECODER = new HashMap<String, DctmObjectTypesEnum>();
+				for (DctmObjectTypesEnum t : DctmObjectTypesEnum.values()) {
+					DctmObjectTypesEnum.DECODER.put(t.dmType, t);
+				}
+			}
+		}
+		return DctmObjectTypesEnum.DECODER.get(str);
+	}
 }
