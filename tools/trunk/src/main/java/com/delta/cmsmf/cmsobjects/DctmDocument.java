@@ -63,13 +63,13 @@ public class DctmDocument extends DctmObject {
 
 	// Static variables used to see how many documents were created, skipped, updated
 	/** Keeps track of nbr of document versions read from file during import process. */
-	public static int docs_read = 0;
+	private static int docs_read = 0;
 	/** Keeps track of nbr of document versions skipped due to duplicates during import process. */
-	public static int docs_skipped = 0;
+	private static int docs_skipped = 0;
 	/** Keeps track of nbr of document versions updated in CMS during import process. */
-	public static int docs_updated = 0;
+	private static int docs_updated = 0;
 	/** Keeps track of nbr of document versions created in CMS during import process. */
-	public static int docs_created = 0;
+	private static int docs_created = 0;
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmDocument.class);
@@ -89,7 +89,7 @@ public class DctmDocument extends DctmObject {
 	 * 
 	 * @return the list of all content renditions
 	 */
-	private List<DctmContent> getContentList() {
+	public List<DctmContent> getContentList() {
 		return this.contentList;
 	}
 
@@ -104,14 +104,14 @@ public class DctmDocument extends DctmObject {
 	}
 
 	/** The list that contains folder paths where the document is linked. */
-	private List<String> folderLocations = new ArrayList<String>();
+	protected List<String> folderLocations = new ArrayList<String>();
 
 	/**
 	 * Gets the list of folder locations.
 	 * 
 	 * @return the folder locations
 	 */
-	private List<String> getFolderLocations() {
+	protected List<String> getFolderLocations() {
 		return this.folderLocations;
 	}
 
@@ -137,7 +137,7 @@ public class DctmDocument extends DctmObject {
 	 * 
 	 * @return the version tree
 	 */
-	private List<DctmDocument> getVersionTree() {
+	protected List<DctmDocument> getVersionTree() {
 		return this.versionTree;
 	}
 
@@ -205,6 +205,7 @@ public class DctmDocument extends DctmObject {
 			DctmDocument.logger.info("Started creating dctm dm_document in repository");
 		}
 
+		// Create the version tree in CMS
 		createMultiVersionDocument();
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Finished creating dctm dm_document in repository");
@@ -226,6 +227,22 @@ public class DctmDocument extends DctmObject {
 	}
 
 	/**
+	 * Gets the detailed document import report.
+	 * 
+	 * @return the detailed document import report
+	 */
+	public static String getDetailedDocumentImportReport() {
+		StringBuffer importReport = new StringBuffer();
+		importReport.append("\nNo. of document object versions read from file: " + DctmDocument.docs_read + ".");
+		importReport.append("\nNo. of document object versions skipped due to duplicates: " + DctmDocument.docs_skipped
+			+ ".");
+		importReport.append("\nNo. of document object versions updated: " + DctmDocument.docs_updated + ".");
+		importReport.append("\nNo. of document object versions created: " + DctmDocument.docs_created + ".");
+
+		return importReport.toString();
+	}
+
+	/**
 	 * Creates the multi version document in the repository. It first checks to see if an identical
 	 * document
 	 * already exists in the repository, if not it also checks to see if out dated version exists
@@ -240,7 +257,7 @@ public class DctmDocument extends DctmObject {
 	 *             Signals that an I/O exception has occurred.
 	 */
 	private void createMultiVersionDocument() throws DfException, IOException {
-// isThisATest = true;
+		// isThisATest = true;
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started creating dctm dm_document with multiple versions in repository");
 		}
@@ -248,6 +265,11 @@ public class DctmDocument extends DctmObject {
 		// Begin transaction
 		this.dctmSession.beginTrans();
 
+		// list of objects whose i_is_deleted attribute needs to be updated after
+		// creating the version tree.
+		List<String> updateIsDeletedObjects = new ArrayList<String>();
+		List<String> linkedUnLinkedParentIDs = new ArrayList<String>();
+		List<restoreOldACLInfo> restoreACLObjectList = new ArrayList<restoreOldACLInfo>();
 		try {
 			// This hash map is maintained throughout all of the versions to keep track of newly
 // created
@@ -266,18 +288,48 @@ public class DctmDocument extends DctmObject {
 				}
 				DctmAttribute iAntecedentID = dctmVerDoc.findAttribute(DctmAttrNameConstants.I_ANTECEDENT_ID);
 				boolean isRootVersion = false;
+				IDfSysObject antecedentVersion = null;
 				if (iAntecedentID == null) {
 					isRootVersion = true;
+				} else {
+					// find the antecedent object in target repository
+					String antecedentVersionID = oldNewDocuments.get(iAntecedentID.getSingleValue());
+					if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+						DctmDocument.logger.debug("Looking for antecedent id " + antecedentVersionID
+							+ " from target repo for id: " + iAntecedentID.getSingleValue());
+					}
+					antecedentVersion = (IDfSysObject) this.dctmSession.getObject(new DfId(antecedentVersionID));
+					if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+						DctmDocument.logger.debug("Found antecedent id " + antecedentVersionID
+							+ " from target repo for id: " + iAntecedentID.getSingleValue());
+					}
 				}
+
 				boolean doesDuplicateObjectExists = false;
 				boolean branchCreated = false;
 				boolean doesExistingObjectNeedsUpdate = false;
+				boolean permitChangedFlag = false;
+				boolean isImmutableChangedFlag = false;
+				int curPermit = 0;
 
 				String objectType = dctmVerDoc.getStrSingleAttrValue(DctmAttrNameConstants.R_OBJECT_TYPE);
 
 				// before creating this document check to see if identical object already exist in
-// CMS
+				// CMS
 				IDfSysObject existingDoc = retrieveIdenticalObjectFromCMS(dctmVerDoc);
+
+				if ((existingDoc == null) && (antecedentVersion != null)) {
+					// NOTE: If the object name of the version is changed, it will not find the
+					// matching object. Check the antecedent version to see if it has any
+					// descendants. If it does, try to locate it. Make sure that it has same version
+					// label.
+					String doesAntecedentHasAnyDescendant = antecedentVersion.getDirectDescendant();
+					if (doesAntecedentHasAnyDescendant.equals("T")) {
+						// Try to locate the matching document in target repository
+						existingDoc = retrieveSimilarDescendantFromCMS(dctmVerDoc, antecedentVersion);
+					}
+				}
+
 				IDfSysObject sysObject = null;
 				if (existingDoc == null) {
 					// Matching document does not exist in target repository
@@ -285,22 +337,26 @@ public class DctmDocument extends DctmObject {
 						DctmDocument.logger.debug("Duplicate object does not exist!");
 					}
 					// Check if we need to create a new object or checkout/branch old version
-					if (isRootVersion) {
+					if (isRootVersion) { // Create new object if it is a root version
 						sysObject = (IDfSysObject) this.dctmSession.newObject(objectType);
 					} else {
-						// find the antecedent object in target repository, check it out or branch
-// it
-						String antecedentVersionID = oldNewDocuments.get(iAntecedentID.getSingleValue());
-						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-							DctmDocument.logger.debug("Looking for antecedent id " + antecedentVersionID
-								+ " from target repo for id: " + iAntecedentID.getSingleValue());
-						}
-
-						IDfSysObject antecedentVersion = (IDfSysObject) this.dctmSession.getObject(new DfId(
-							antecedentVersionID));
-						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-							DctmDocument.logger.debug("Found antecedent id " + antecedentVersionID
-								+ " from target repo for id: " + iAntecedentID.getSingleValue());
+						// Checkout or branch the antecedent version
+						// First make sure that you have version permissions.
+						// If you don't, grant it. Reset it later on.
+						int ancstrCurPermit = antecedentVersion.getPermit();
+						if (ancstrCurPermit < IDfACL.DF_PERMIT_VERSION) {
+							// Grant version permission and save the object
+							this.dctmSession.flushCache(false);
+							antecedentVersion.fetch(null);
+							IDfACL parentFldrACL = antecedentVersion.getACL();
+							String aclName = parentFldrACL.getObjectName();
+							String aclDomain = parentFldrACL.getDomain();
+							int vStamp = antecedentVersion.getVStamp();
+							antecedentVersion
+								.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_VERSION, null);
+							antecedentVersion.save();
+							restoreACLObjectList.add(new restoreOldACLInfo(aclName, aclDomain, antecedentVersion
+								.getObjectId().getId(), vStamp));
 						}
 
 						String antecedentVersionImplicitVersionLabel = antecedentVersion.getImplicitVersionLabel();
@@ -330,6 +386,20 @@ public class DctmDocument extends DctmObject {
 							dctmVerDoc.removeRepeatingAttrValue(DctmAttrNameConstants.R_VERSION_LABEL,
 								dctmVerDocImplicitVersionLabel);
 							branchCreated = true;
+							// If branching document object, make sure that you have write
+// permissions.
+							// If you don't, grant it. The ACL will be updated later on.
+							curPermit = antecedentVersion.getPermit();
+							if (curPermit < IDfACL.DF_PERMIT_WRITE) {
+								// Grant write permission and save the object
+								antecedentVersion.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE,
+									null);
+								antecedentVersion.save();
+								// We don't need to change the permit later on since acl attributes
+// will be
+								// saved later on.
+								// permitChangedFlag = true;
+							}
 						} else {
 							if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 								DctmDocument.logger.debug("Checking out a version." + "Antecedent Implicit VrsnLbl: "
@@ -338,7 +408,8 @@ public class DctmDocument extends DctmObject {
 							}
 							// checkout
 							antecedentVersion.checkout();
-// antecedentVersion.checkoutEx(antecedentVersionImplicitVersionLabel, "", "");
+							// antecedentVersion.checkoutEx(antecedentVersionImplicitVersionLabel,
+							// "", "");
 						}
 						sysObject = antecedentVersion;
 					}
@@ -366,6 +437,25 @@ public class DctmDocument extends DctmObject {
 						}
 					} else {
 						doesExistingObjectNeedsUpdate = true;
+						// If updating an existing document object, make sure that you have write
+// permissions.
+						// If you don't, grant it. Reset it later on.
+						curPermit = sysObject.getPermit();
+						if (curPermit < IDfACL.DF_PERMIT_WRITE) {
+							// Grant write permission and save the object
+							sysObject.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
+							sysObject.save();
+							permitChangedFlag = true;
+						}
+
+						// Check the immutable flag of the document version object. Set to False if
+// it is not
+						// and revert it back later.
+						if (sysObject.isImmutable()) {
+							sysObject.setBoolean(DctmAttrNameConstants.R_IMMUTABLE_FLAG, false);
+							sysObject.save();
+							isImmutableChangedFlag = true;
+						}
 					}
 				}
 				// update/create new document if duplicate doesn't exist
@@ -378,7 +468,12 @@ public class DctmDocument extends DctmObject {
 					// NOTE If we do not remove the existing links and try to link the document to
 // same
 					// location, you get dfc exception
-					DctmObject.removeAllLinks(sysObject);
+					List<String> unLinkedParentIDs = DctmObject.removeAllLinks(sysObject);
+					for (String unlinkedParentID : unLinkedParentIDs) {
+						if (!linkedUnLinkedParentIDs.contains(unlinkedParentID)) {
+							linkedUnLinkedParentIDs.add(unlinkedParentID);
+						}
+					}
 					List<String> folderLocations = dctmVerDoc.getFolderLocations();
 					for (String fldrLoc : folderLocations) {
 						if (DctmDocument.isThisATest) {
@@ -395,15 +490,53 @@ public class DctmDocument extends DctmObject {
 						// if exception is other than that, throw it.
 						try {
 							sysObject.link(fldrLoc);
+							// Add the object id of parent folders where we are trying to link the
+// object in
+							// the list
+							// which we need to check the permissions
+							IDfFolder parentFldr = this.dctmSession.getFolderByPath(fldrLoc);
+							if (!linkedUnLinkedParentIDs.contains(parentFldr.getObjectId().getId())) {
+								linkedUnLinkedParentIDs.add(parentFldr.getObjectId().getId());
+							}
 						} catch (DfException dfe) {
 							if (dfe.getMessageId().equals(CMSMFAppConstants.DM_SYSOBJECT_E_ALREADY_LINKED_MESSAGE_ID)) {
 								if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 									DctmDocument.logger.debug("Sysobject already Linked error ignored");
 								}
-								DctmDocument.logger.warn("Already Linked error ignored");
 							} else {
 								throw (dfe);
 							}
+						}
+					}
+
+					for (String parentFldrID : linkedUnLinkedParentIDs) {
+						// Check the permit on all of the parent folders from where you are
+// unlinking or
+						// linking.
+						IDfSysObject parentFldr = (IDfSysObject) this.dctmSession.getObject(new DfId(parentFldrID));
+
+						// if permit is less than write, modify the acl temporarily.
+						if (parentFldr.getPermit() < IDfACL.DF_PERMIT_WRITE) {
+							// Flush and ReFatch the parent folder
+							this.dctmSession.flush("persistentobjcache", null);
+							this.dctmSession.flushObject(parentFldr.getObjectId());
+							this.dctmSession.flushCache(false);
+							parentFldr = (IDfSysObject) this.dctmSession.getObject(new DfId(parentFldrID));
+							parentFldr.fetch(null);
+							IDfACL parentFldrACL = parentFldr.getACL();
+							String aclName = parentFldrACL.getObjectName();
+							String aclDomain = parentFldrACL.getDomain();
+							int vStamp = parentFldr.getVStamp();
+							if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+								DctmDocument.logger.debug("Permission for parent folder "
+									+ parentFldr.getObjectId().getId()
+									+ " needs to be modified. Current info about parent folder is: acl name: "
+									+ aclName + " acl domain: " + aclDomain + " vStamp: " + vStamp);
+							}
+							parentFldr.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
+							parentFldr.save();
+							restoreACLObjectList.add(new restoreOldACLInfo(aclName, aclDomain, parentFldr.getObjectId()
+								.getId(), vStamp));
 						}
 					}
 
@@ -419,6 +552,16 @@ public class DctmDocument extends DctmObject {
 					// save or checkin document accordingly
 					if (branchCreated || isRootVersion || doesExistingObjectNeedsUpdate) {
 						sysObject.save();
+						// Revert back the r_immutable_flag if it was modified previously
+						if (isImmutableChangedFlag) {
+							sysObject.setBoolean(DctmAttrNameConstants.R_IMMUTABLE_FLAG, true);
+							sysObject.save();
+						}
+						// Revert back the permission on the document if it was modified previously
+						if (permitChangedFlag) {
+							sysObject.grant(this.dctmSession.getLoginUserName(), curPermit, null);
+							sysObject.save();
+						}
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 							DctmDocument.logger.debug("Saved the document with id: " + sysObject.getObjectId().getId()
 								+ " and name: " + sysObject.getObjectName());
@@ -464,18 +607,45 @@ public class DctmDocument extends DctmObject {
 					// Update internal attributes like creation/modify date and creators/modifiers
 					updateSystemAttributes(sysObject, dctmVerDoc);
 
+					// Update set_file, set_client and set_time attributes of newly added content.
+					updateContentAttributes(sysObject, dctmVerDoc);
 				} // if (!doesDuplicateObjectExists)
+
+				// Check to see if we need to update i_is_deleted attribute to True in target repo
+				if (dctmVerDoc.getBoolSingleAttrValue(DctmAttrNameConstants.I_IS_DELETED)) {
+					// If the object in source repo is marked as deleted but not the corresponding
+// one
+					// in target, add target object id in the list of objects whose i_is_deleted
+// will
+					// updated to true later on.
+					if (!sysObject.isDeleted() && !updateIsDeletedObjects.contains(sysObject.getObjectId().getId())) {
+						updateIsDeletedObjects.add(sysObject.getObjectId().getId());
+						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+							DctmDocument.logger.debug("I_IS_DELETED need to be set to true in target repo with id: "
+								+ sysObject.getObjectId().getId() + " and name: " + sysObject.getObjectName());
+						}
+					}
+				}
 
 				// Store source repo object id and target repo objectid in a map to build up version
 // history
 				// in target repo identical to source repo.
 				oldNewDocuments.put(dctmVerDoc.getSrcObjectID(), sysObject.getObjectId().getId());
-				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-					DctmDocument.logger.debug("Created/Located document with id " + sysObject.getObjectId().getId()
+				if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
+					DctmDocument.logger.info("Created/Located document with id " + sysObject.getObjectId().getId()
 						+ " in target repo for object id " + dctmVerDoc.getSrcObjectID() + " of source repo.");
 				}
 
 			} // for (DctmDocument dctmVerDoc : getVersionTree())
+
+			// Restore ACL of any parent folders that was changed during the import process.
+			restoreACLOfParentFolders(restoreACLObjectList);
+
+			// Update i_is_deleted attribute of documents if needed.
+			if (!updateIsDeletedObjects.isEmpty()) {
+				updateIsDeletedAttribute(updateIsDeletedObjects);
+			}
+
 			if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 				DctmDocument.logger.info("Finished creating dctm dm_document with multiple versions in repository");
 			}
@@ -489,6 +659,46 @@ public class DctmDocument extends DctmObject {
 		this.dctmSession.commitTrans();
 	}
 
+	private IDfSysObject retrieveSimilarDescendantFromCMS(DctmDocument dctmVerDoc, IDfSysObject antecedentVersion) {
+		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
+			DctmDocument.logger.info("Started retrieving similar descendant version document from target cms.");
+		}
+
+		StringBuffer objLookUpQry = new StringBuffer(50);
+		try {
+			String antecendentVersionId = antecedentVersion.getObjectId().getId();
+			String srcObjVersionLabel = dctmVerDoc.implicitVersionLabel;
+			String objectType = dctmVerDoc.getStrSingleAttrValue(DctmAttrNameConstants.R_OBJECT_TYPE);
+			// Date creationDate =
+// dctmVerDoc.getDateSingleAttrValue(DctmAttrNameConstants.R_CREATION_DATE);
+			// String dctmDateTimePattern = CMSMFAppConstants.DCTM_DATETIME_PATTERN;
+			// IDfTime createDate = new DfTime(creationDate);
+
+			// NOTE: MODIFY THIS NOTE
+
+			// Build a query for ex: " dm_document where i_antecedent_id='XXXX' and any
+// r_version_label
+			// ='XXXX';
+			objLookUpQry.append(objectType);
+			objLookUpQry.append(" (ALL) where i_antecedent_id='");
+			objLookUpQry.append(antecendentVersionId);
+			objLookUpQry.append("' and any r_version_label='");
+			objLookUpQry.append(srcObjVersionLabel);
+			objLookUpQry.append("'");
+			// objLookUpQry.append("') and r_creation_date=DATE('");
+			// objLookUpQry.append(createDate.asString(dctmDateTimePattern));
+			// objLookUpQry.append("')");
+			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+				DctmDocument.logger.debug("Query to lookup descendant version is: " + objLookUpQry.toString());
+			}
+			// Retrieve the object using the query
+			return (IDfSysObject) this.dctmSession.getObjectByQualification(objLookUpQry.toString());
+		} catch (DfException e) {
+			DctmDocument.logger.error("Lookup of object failed with query: " + objLookUpQry, e);
+			return null;
+		}
+	}
+
 	/**
 	 * Tries to retrieve identical object from cms.
 	 * 
@@ -498,6 +708,9 @@ public class DctmDocument extends DctmObject {
 	 */
 	private IDfSysObject retrieveIdenticalObjectFromCMS(DctmDocument dctmVerDoc) {
 
+		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
+			DctmDocument.logger.info("Started retrieving Identical version document from target cms.");
+		}
 		String objectName = dctmVerDoc.getStrSingleAttrValue(DctmAttrNameConstants.OBJECT_NAME);
 		// If object name contains single quote, replace it with 2 single quotes for DQL
 		objectName = objectName.replaceAll("'", "''");
@@ -516,22 +729,48 @@ public class DctmDocument extends DctmObject {
 		// If folder location contains single quote, replace it with 2 single quotes for DQL
 		fldrLoc = fldrLoc.replaceAll("'", "''");
 
-		// Build a query for ex: " dm_document where object_name='xxx' and
-		// folder('/xxx/xxx') and r_creation_date=DATE('xxxxxx')
-		StringBuffer objLookUpQry = new StringBuffer(50);
-		objLookUpQry.append(objectType);
-		objLookUpQry.append(" (ALL) where object_name='");
-		objLookUpQry.append(objectName);
-		objLookUpQry.append("' and folder('");
-		objLookUpQry.append(fldrLoc);
-		objLookUpQry.append("') and r_creation_date=DATE('");
-		objLookUpQry.append(createDate.asString(dctmDateTimePattern));
-		objLookUpQry.append("')");
-		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-			DctmDocument.logger.debug("Query to lookup duplicate document is: " + objLookUpQry.toString());
-		}
+		// NOTE: Check the i_is_deleted flag. If the object is marked as deleted, the dql will never
+		// find the matching document. Marked as deleted objects need to be queried by going
+// directly
+		// against the dm_sysobject_s table. When you use dm_sysobject_s table in from clause, you
+// can't
+		// use folder predicate. Find out the r_object_id of the /Temp cabinet and use it in the
+// query.
 
+		boolean isDeleted = dctmVerDoc.getBoolSingleAttrValue(DctmAttrNameConstants.I_IS_DELETED);
+		StringBuffer objLookUpQry = new StringBuffer(50);
 		try {
+			if (isDeleted) {
+				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+					DctmDocument.logger.debug("Document is marked as deleted: " + objectName);
+				}
+				IDfFolder tempCabinet = this.dctmSession.getFolderByPath("/Temp");
+				String tempCabinetId = tempCabinet.getObjectId().getId();
+				objLookUpQry.append("dm_sysobject_s where object_name='");
+				objLookUpQry.append(objectName);
+				objLookUpQry.append("' and i_cabinet_id='");
+				objLookUpQry.append(tempCabinetId);
+				objLookUpQry.append("' and r_creation_date=DATE('");
+				objLookUpQry.append(createDate.asString(dctmDateTimePattern));
+				objLookUpQry.append("')");
+
+			} else {
+				// Build a query for ex: " dm_document where object_name='xxx' and
+				// folder('/xxx/xxx') and r_creation_date=DATE('xxxxxx')
+				objLookUpQry.append(objectType);
+				objLookUpQry.append(" (ALL) where object_name='");
+				objLookUpQry.append(objectName);
+				objLookUpQry.append("' and folder('");
+				objLookUpQry.append(fldrLoc);
+				objLookUpQry.append("') and r_creation_date=DATE('");
+				objLookUpQry.append(createDate.asString(dctmDateTimePattern));
+				objLookUpQry.append("')");
+			}
+			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+				DctmDocument.logger.debug("Query to lookup duplicate document is: " + objLookUpQry.toString());
+			}
+
+			// Retrieve the object using the query
 			return (IDfSysObject) this.dctmSession.getObjectByQualification(objLookUpQry.toString());
 		} catch (DfException e) {
 			DctmDocument.logger.error("Lookup of object failed with query: " + objLookUpQry, e);
@@ -598,43 +837,34 @@ public class DctmDocument extends DctmObject {
 			DctmDocument.logger.info("Started setting content files of document with name: "
 				+ sysObject.getObjectName());
 		}
+
+		String aContentType = dctmDoc.getStrSingleAttrValue(DctmAttrNameConstants.A_CONTENT_TYPE);
+
 		List<DctmContent> contentList = dctmDoc.getContentList();
-		DctmDocument.logger.info("Content files nbr: " + contentList.size());
-		// int lastPageNbr = -1;
 		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
 		for (DctmContent dctmContent : contentList) {
-			// if (dctmContent.getPageNbr() != lastPageNbr) {
-			// ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			// baos.write(dctmContent.getContentByteArray());
-			// baos.close();
-			// sysObject.setContentEx(baos, dctmContent.getContentFormat(),
-// dctmContent.getPageNbr());
-			// } else {
-			// File tempFile = File.createTempFile("dctmImport", ".tmp");
-			// FileOutputStream fos = new FileOutputStream(tempFile);
-			// fos.write(dctmContent.getContentByteArray());
-			// fos.close();
-			// sysObject.addRenditionEx(tempFile.getAbsolutePath(), dctmContent.getContentFormat(),
-			// dctmContent
-			// .getPageNbr(), null, false);
-			// tempFile.deleteOnExit();
-			// }
-			// lastPageNbr = dctmContent.getPageNbr();
-
 			File contentFullPath = new File(contentExportRootDir, dctmContent.getRelativeContentFileLocation());
 			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 				DctmDocument.logger.debug("Content File Location in fileSystem is: "
 					+ contentFullPath.getAbsolutePath());
 			}
-			if (dctmContent.getRenditionNbr() == 0) {
-				sysObject.setFileEx(contentFullPath.getAbsolutePath(), dctmContent.getContentFormat(),
-					dctmContent.getPageNbr(), null);
+			if (dctmContent.getIntSingleAttrValue(DctmAttrNameConstants.RENDITION) == 0) {
+				String dmrContentFullFormat = dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.FULL_FORMAT);
+				if (!(dmrContentFullFormat.equals(aContentType))) {
+					DctmDocument.logger.warn("The value " + aContentType
+						+ "  in a_content_type attr does not match with value " + dmrContentFullFormat
+						+ " in full_format attr of corresponding contentObject");
+
+					dmrContentFullFormat = aContentType;
+					dctmContent.findAttribute(DctmAttrNameConstants.FULL_FORMAT).setSingleValue(dmrContentFullFormat);
+				}
+				sysObject.setFileEx(contentFullPath.getAbsolutePath(), dmrContentFullFormat, dctmContent.getPageNbr(),
+					null);
 			} else {
-				sysObject.addRenditionEx2(contentFullPath.getAbsolutePath(), dctmContent.getContentFormat(),
-					dctmContent.getPageNbr(), dctmContent.getPageModifier(), null, false, false, false);
+				sysObject.addRenditionEx2(contentFullPath.getAbsolutePath(),
+					dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.FULL_FORMAT), dctmContent.getPageNbr(),
+					dctmContent.getPageModifier(), null, false, false, false);
 			}
-			// We don't want to save it here, it will be saved in or checked in later
-// sysObject.save();
 		}
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Finished setting content files of document with name: "
@@ -877,7 +1107,9 @@ public class DctmDocument extends DctmObject {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	private void getContentFilesFromCMS(DctmDocument dctmDocument, IDfSysObject sysObj, String srcObjID)
+	@SuppressWarnings("unused")
+	@Deprecated
+	private void getContentFilesFromCMS_old(DctmDocument dctmDocument, IDfSysObject sysObj, String srcObjID)
 		throws CMSMFException {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started retrieving content files from repository for document with id: "
@@ -893,7 +1125,8 @@ public class DctmDocument extends DctmObject {
 				// Run a query to find out all dmr_content objects linked to the sysobject
 				StringBuffer contentDQLBuffer = new StringBuffer(
 					"select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, ");
-				contentDQLBuffer.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.data_ticket ");
+				contentDQLBuffer
+					.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
 				contentDQLBuffer.append("from dmr_content_r  dcr, dmr_content_s dcs ");
 				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
 				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
@@ -909,14 +1142,90 @@ public class DctmDocument extends DctmObject {
 				IDfCollection contentColl = contentQuery.execute(this.dctmSession, IDfQuery.READ_QUERY);
 				while (contentColl.next()) {
 					DctmContent dctmContent = new DctmContent();
-					dctmContent.setContentFormat(contentColl.getString(DctmAttrNameConstants.FULL_FORMAT));
+					// Set various attributes of dctmContent object
+					// dctmContent.setContentFormat(contentColl.getString(DctmAttrNameConstants.FULL_FORMAT));
 					dctmContent.setPageNbr(contentColl.getInt(DctmAttrNameConstants.PAGE));
 					dctmContent.setPageModifier(contentColl.getString(DctmAttrNameConstants.PAGE_MODIFIER));
-					dctmContent.setRenditionNbr(contentColl.getInt(DctmAttrNameConstants.RENDITION));
-					int contentDataTicket = contentColl.getInt(DctmAttrNameConstants.DATA_TICKET);
-					dctmContent.setRelativeContentFileLocation(getContent(sysObj, contentColl.getId("r_object_id")
-						.getId(), dctmContent.getContentFormat(), dctmContent.getPageNbr(), dctmContent
-						.getPageModifier(), contentDataTicket));
+					// dctmContent.setSetFile(contentColl.getString(DctmAttrNameConstants.SET_FILE));
+					// dctmContent.setSetClient(contentColl.getString(DctmAttrNameConstants.SET_CLIENT));
+					// dctmContent.setSetTime(contentColl.getTime(DctmAttrNameConstants.SET_TIME).getDate());
+					// dctmContent.setRenditionNbr(contentColl.getInt(DctmAttrNameConstants.RENDITION));
+					// int contentDataTicket =
+// contentColl.getInt(DctmAttrNameConstants.DATA_TICKET);
+					// dctmContent.setRelativeContentFileLocation(getContent(sysObj,
+					// contentColl.getId("r_object_id")
+					// .getId(), dctmContent.getContentFormat(), dctmContent.getPageNbr(),
+// dctmContent
+					// .getPageModifier(), contentDataTicket));
+					dctmDocument.addContent(dctmContent);
+				}
+				contentColl.close();
+			}
+		} catch (DfException e) {
+			throw (new CMSMFException("Couldn't retrieve all content files from dctm document with id: " + srcObjID, e));
+			// } catch (IOException e) {
+			// throw (new
+// CMSMFException("Couldn't read content file streams from dctm document with id: " +
+			// srcObjID, e));
+		}
+
+		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
+			DctmDocument.logger.info("Finished retrieving content files from repository for document with id: "
+				+ srcObjID);
+		}
+	}
+
+	/**
+	 * Gets the content files from repository for an object and sets as the content file list of an
+	 * dctm
+	 * object.
+	 * 
+	 * @param dctmDocument
+	 *            the dctm document
+	 * @param sysObj
+	 *            the sys obj
+	 * @param srcObjID
+	 *            the src obj id
+	 * @throws CMSMFException
+	 *             the cMSMF exception
+	 */
+	private void getContentFilesFromCMS(DctmDocument dctmDocument, IDfSysObject sysObj, String srcObjID)
+		throws CMSMFException {
+		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
+			DctmDocument.logger.info("Started retrieving content files from repository for document with id: "
+				+ srcObjID);
+		}
+
+		try {
+			int pageCnt = sysObj.getPageCount();
+			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+				DctmDocument.logger.debug("object with id " + srcObjID + " has page count: " + pageCnt);
+			}
+			for (int i = 0; i < pageCnt; i++) {
+				// Run a query to find out all dmr_content objects linked to the sysobject for given
+// page_cnt
+				StringBuffer contentDQLBuffer = new StringBuffer(
+					"select dcs.r_object_id, dcr.page, dcr.page_modifier from dmr_content_r  dcr, dmr_content_s dcs ");
+				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
+				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
+				contentDQLBuffer.append("and page = ");
+				contentDQLBuffer.append(i);
+				contentDQLBuffer.append(" order by rendition");
+
+				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+					DctmDocument.logger.debug("DQL Query to locate content is: " + contentDQLBuffer.toString());
+				}
+				IDfQuery contentQuery = new DfClientX().getQuery();
+				contentQuery.setDQL(contentDQLBuffer.toString());
+				IDfCollection contentColl = contentQuery.execute(this.dctmSession, IDfQuery.READ_QUERY);
+				while (contentColl.next()) {
+					IDfPersistentObject contentObject = this.dctmSession.getObject(contentColl
+						.getId(DctmAttrNameConstants.R_OBJECT_ID));
+					DctmContent dctmContent = new DctmContent(this.dctmSession);
+					dctmContent = (DctmContent) dctmContent.getFromCMS(contentObject);
+					dctmContent.setPageNbr(contentColl.getInt(DctmAttrNameConstants.PAGE));
+					dctmContent.setPageModifier(contentColl.getString(DctmAttrNameConstants.PAGE_MODIFIER));
+					dctmContent.setRelativeContentFileLocation(getContent(sysObj, dctmContent));
 					dctmDocument.addContent(dctmContent);
 				}
 				contentColl.close();
@@ -933,7 +1242,88 @@ public class DctmDocument extends DctmObject {
 		}
 	}
 
-	private String getContent(IDfSysObject sysObj, String contentObjID, String contentFormat, int pageNbr,
+	/**
+	 * Gets the content from cms using getfile.
+	 * 
+	 * @param sysObj
+	 *            the sys obj
+	 * @param dctmContent
+	 *            the dctm content object
+	 * @return the content
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @throws DfException
+	 *             the df exception
+	 */
+	private String getContent(IDfSysObject sysObj, DctmContent dctmContent) throws IOException, DfException {
+
+		String contentObjID = dctmContent.getSrcObjectID();
+		String contentFormat = dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.FULL_FORMAT);
+		int pageNbr = dctmContent.getPageNbr();
+		String pageModifier = dctmContent.getPageModifier();
+		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+			DctmDocument.logger
+				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+					+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
+		}
+		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
+// ByteArrayInputStream
+		// but ran into out of memory (OutOfMemoryError: Java heap space) for large documents. So,
+// now
+		// using getFileEx2 instead.
+		@SuppressWarnings("unused")
+		int bufferSize = PropertiesManager.getProperty(CMSMFProperties.CONTENT_READ_BUFFER_SIZE,
+			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
+		String contentExportRootDir = PropertiesManager.getProperty(CMSMFProperties.CONTENT_DIRECTORY, "");
+		// Make sure the content export location exists
+		FileUtils.forceMkdir(new File(contentExportRootDir));
+		String relativeContentFileLocation = CMSMFUtils.getContentPathFromContentID(contentObjID);
+
+		// Make sure that the content file folder location exists
+		FileUtils.forceMkdir(new File(contentExportRootDir + File.separator + relativeContentFileLocation));
+
+		// Prepare the file name for the content
+		String contentFileName = contentObjID + "_" + contentFormat + "_" + pageNbr;
+		if (StringUtils.isNotBlank(pageModifier)) {
+			contentFileName = contentFileName + "_" + pageModifier;
+		}
+
+		// Prepare the full filesystem file name
+		String fullFileSystemFileName = contentExportRootDir + File.separator + relativeContentFileLocation
+			+ File.separator + contentFileName;
+
+		// Get the content files
+		sysObj.getFileEx2(fullFileSystemFileName, contentFormat, pageNbr, pageModifier, false);
+		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
+			DctmDocument.logger.debug("Finished getting content file to filesystem. Relative file location is: "
+				+ relativeContentFileLocation + File.separator + contentFileName);
+		}
+		return relativeContentFileLocation + File.separator + contentFileName;
+	}
+
+	/**
+	 * Gets the content.
+	 * 
+	 * @param sysObj
+	 *            the sys obj
+	 * @param contentObjID
+	 *            the content obj id
+	 * @param contentFormat
+	 *            the content format
+	 * @param pageNbr
+	 *            the page nbr
+	 * @param pageModifier
+	 *            the page modifier
+	 * @param contentDataTicket
+	 *            the content data ticket
+	 * @return the content
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 * @throws DfException
+	 *             the df exception
+	 */
+	@SuppressWarnings("unused")
+	private String getContent2(IDfSysObject sysObj, String contentObjID, String contentFormat, int pageNbr,
 		String pageModifier, int contentDataTicket) throws IOException, DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
@@ -960,7 +1350,7 @@ public class DctmDocument extends DctmObject {
 		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
 		// Make sure the content export location exists
 		FileUtils.forceMkdir(contentExportRootDir);
-		String relativeContentFileLocation = CMSMFUtils.GetContentPathFromContentID(contentObjID);
+		String relativeContentFileLocation = CMSMFUtils.getContentPathFromContentID(contentObjID);
 
 		// Make sure that the content file folder location exists
 		FileUtils.forceMkdir(new File(contentExportRootDir, relativeContentFileLocation));
@@ -991,6 +1381,7 @@ public class DctmDocument extends DctmObject {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
+	@Deprecated
 	protected byte[] getByteData(ByteArrayInputStream contentStream) throws IOException {
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger.debug("Started converting content input stream to byte[]");

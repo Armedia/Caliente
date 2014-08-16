@@ -50,16 +50,16 @@ public class DctmType extends DctmObject {
 
 	// Static variables used to see how many Types were created, skipped, updated
 	/** Keeps track of nbr of type objects read from file during import process. */
-	public static int types_read = 0;
+	private static int types_read = 0;
 	/** Keeps track of nbr of type objects skipped due to duplicates during import process. */
-	public static int types_skipped = 0;
+	private static int types_skipped = 0;
 	/** Keeps track of nbr of type objects updated in CMS during import process. */
-	public static int types_updated = 0;
+	private static int types_updated = 0;
 	/** Keeps track of nbr of type objects created in CMS during import process. */
-	public static int types_created = 0;
+	private static int types_created = 0;
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(DctmType.class);
+	private static Logger logger = Logger.getLogger(DctmType.class);
 
 	/**
 	 * Instantiates a new DctmType object.
@@ -208,7 +208,6 @@ public class DctmType extends DctmObject {
 				dqlString.append(", ");
 			}
 		}
-		DctmType.logger.debug(dqlString);
 
 		// Add the supertype phrase if needed
 		superTypeName = (superTypeName.length() > 0) ? superTypeName : "Null ";
@@ -249,6 +248,21 @@ public class DctmType extends DctmObject {
 		DctmType.logger.info("No. of type objects skipped due to duplicates: " + DctmType.types_skipped);
 		DctmType.logger.info("No. of type objects updated: " + DctmType.types_updated);
 		DctmType.logger.info("No. of type objects created: " + DctmType.types_created);
+	}
+
+	/**
+	 * Gets the detailed type import report.
+	 * 
+	 * @return the detailed type import report
+	 */
+	public static String getDetailedTypeImportReport() {
+		StringBuffer importReport = new StringBuffer();
+		importReport.append("\nNo. of type objects read from file: " + DctmType.types_read + ".");
+		importReport.append("\nNo. of type objects skipped due to duplicates: " + DctmType.types_skipped + ".");
+		importReport.append("\nNo. of type objects updated: " + DctmType.types_updated + ".");
+		importReport.append("\nNo. of type objects created: " + DctmType.types_created + ".");
+
+		return importReport.toString();
 	}
 
 	/*

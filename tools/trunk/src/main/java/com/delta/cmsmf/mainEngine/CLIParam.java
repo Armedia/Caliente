@@ -4,7 +4,7 @@ import org.apache.commons.cli.Option;
 
 import com.delta.cmsmf.constants.CMSMFProperties;
 
-enum CLIParam {
+public enum CLIParam {
 	//
 	help(null, false, "This help message"),
 	test(null, false, "Enable test mode"),
@@ -24,7 +24,13 @@ enum CLIParam {
 	attributes(CMSMFProperties.OWNER_ATTRIBUTES, true, "The attributes to check for"),
 	errorCount(CMSMFProperties.IMPORT_MAX_ERRORS, true, "The number of errors to accept before aborting an import"),
 	defaultPassword(CMSMFProperties.DEFAULT_USER_PASSWORD, true,
-		"The default password to use for users being copied over (leave blank to use the same login name)");
+		"The default password to use for users being copied over (leave blank to use the same login name)"),
+	mailTo(CMSMFProperties.MAIL_RECIPIENTS, true, "The comma-separated list of recipients for the status e-mails"),
+	mailFrom(CMSMFProperties.MAIL_FROM_ADDX, true, "The e-mail address to use as the sender for the status e-mails"),
+	smtpHost(CMSMFProperties.MAIL_SMTP_HOST, true, "The SMTP server through which e-mail must be sent"),
+	skip_users(CMSMFProperties.SKIP_USERS, false, "Skip exporting users"),
+	skip_groups(CMSMFProperties.SKIP_GROUPS, false, "Skip exporting groups"),
+	skip_acls(CMSMFProperties.SKIP_ACLS, false, "Skip exporting acls");
 
 	public final CMSMFProperties property;
 	public final Option option;

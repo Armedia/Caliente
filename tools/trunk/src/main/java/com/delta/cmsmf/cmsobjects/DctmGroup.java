@@ -37,16 +37,16 @@ public class DctmGroup extends DctmObject {
 
 	// Static variables used to see how many groups were created, skipped, updated
 	/** Keeps track of nbr of group objects read from file during import process. */
-	public static int grps_read = 0;
+	private static int grps_read = 0;
 	/** Keeps track of nbr of group objects skipped due to duplicates during import process. */
-	public static int grps_skipped = 0;
+	private static int grps_skipped = 0;
 	/** Keeps track of nbr of group objects updated in CMS during import process. */
-	public static int grps_updated = 0;
+	private static int grps_updated = 0;
 	/** Keeps track of nbr of group objects created in CMS during import process. */
-	public static int grps_created = 0;
+	private static int grps_created = 0;
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(DctmGroup.class);
+	private static Logger logger = Logger.getLogger(DctmGroup.class);
 
 	/**
 	 * Instantiates a new DctmGroup object.
@@ -69,7 +69,7 @@ public class DctmGroup extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
@@ -163,9 +163,24 @@ public class DctmGroup extends DctmObject {
 		DctmGroup.logger.info("No. of group objects created: " + DctmGroup.grps_created);
 	}
 
+	/**
+	 * Gets the detailed group import report.
+	 * 
+	 * @return the detailed group import report
+	 */
+	public static String getDetailedGroupImportReport() {
+		StringBuffer importReport = new StringBuffer();
+		importReport.append("\nNo. of group objects read from file: " + DctmGroup.grps_read + ".");
+		importReport.append("\nNo. of group objects skipped due to duplicates: " + DctmGroup.grps_skipped + ".");
+		importReport.append("\nNo. of group objects updated: " + DctmGroup.grps_updated + ".");
+		importReport.append("\nNo. of group objects created: " + DctmGroup.grps_created + ".");
+
+		return importReport.toString();
+	}
+
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override

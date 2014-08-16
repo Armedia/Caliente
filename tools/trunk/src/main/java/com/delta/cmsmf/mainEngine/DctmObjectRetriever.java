@@ -7,11 +7,13 @@ import com.delta.cmsmf.cmsobjects.DctmDocument;
 import com.delta.cmsmf.cmsobjects.DctmFolder;
 import com.delta.cmsmf.cmsobjects.DctmGroup;
 import com.delta.cmsmf.cmsobjects.DctmObject;
+import com.delta.cmsmf.cmsobjects.DctmReferenceDocument;
 import com.delta.cmsmf.cmsobjects.DctmUser;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 
 /**
@@ -71,7 +73,13 @@ public class DctmObjectRetriever {
 			String objTypeName = prsstntObj.getType().getName();
 			if (objTypeName.equals(DctmTypeConstants.DM_DOCUMENT)
 				|| prsstntObj.getType().isSubTypeOf(DctmTypeConstants.DM_DOCUMENT)) {
-				dctmObject = new DctmDocument();
+				if (((IDfSysObject) prsstntObj).isReference()) {
+					// This is a reference object. Handle it differently
+					dctmObject = new DctmReferenceDocument();
+				} else {
+					// This is a regular dm_document object
+					dctmObject = new DctmDocument();
+				}
 			} else if (objTypeName.equals(DctmTypeConstants.DM_FOLDER)
 				|| prsstntObj.getType().isSubTypeOf(DctmTypeConstants.DM_FOLDER)) {
 				dctmObject = new DctmFolder();

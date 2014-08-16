@@ -88,8 +88,7 @@ public class RunTimeProperties {
 	@SuppressWarnings("unchecked")
 	public List<String> getAttrsToCheckForRepoOperatorName() {
 		if (this.attrsToCheckForRepoOperatorName == null) {
-			String attrsToCheck = PropertiesManager.getProperty(
-				CMSMFProperties.OWNER_ATTRIBUTES, "");
+			String attrsToCheck = PropertiesManager.getProperty(CMSMFProperties.OWNER_ATTRIBUTES, "");
 			StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
 			this.attrsToCheckForRepoOperatorName = strTokenizer.getTokenList();
 		}

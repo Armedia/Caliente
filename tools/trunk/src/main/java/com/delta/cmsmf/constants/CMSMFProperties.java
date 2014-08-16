@@ -10,7 +10,13 @@ public enum CMSMFProperties {
 	DEFAULT_USER_PASSWORD("cmsmf.app.inlinepassworduser.passwordvalue"),
 	// CMSMF_APP_PASSWORDS_ENCRYPTED_FLAG("cmsmf.app.passwords.encrypted.flag"),
 	OWNER_ATTRIBUTES("cmsmf.app.repositoryowner.attributestocheck"),
-	CONTENT_READ_BUFFER_SIZE("content_read_buffer_size");
+	CONTENT_READ_BUFFER_SIZE("content_read_buffer_size"),
+	MAIL_RECIPIENTS("cmsmf.app.mail.recipients"),
+	MAIL_FROM_ADDX("cmsmf.app.mail.fromAddress"),
+	MAIL_SMTP_HOST("cmsmf.app.mail.smtphost"),
+	SKIP_ACLS("cmsmf.app.export.skip.acls"),
+	SKIP_USERS("cmsmf.app.export.skip.users"),
+	SKIP_GROUPS("cmsmf.app.export.skip.groups");
 
 	public final String name;
 

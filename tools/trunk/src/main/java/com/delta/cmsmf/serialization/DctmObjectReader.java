@@ -80,12 +80,12 @@ public class DctmObjectReader {
 			srcRepoConfig = (RepositoryConfiguration) ((ObjectInputStream) is).readObject();
 		} catch (CMSMFFileNotFoundException e) {
 			// If ACLs stream file is not found, record it in the log
-			DctmObjectReader.logger.warn("The ACLs file does not exist. No ACLs will be imported.");
+			DctmObjectReader.logger.warn("The Source Repo Config file does not exist. Process can not continue.");
 		} catch (EOFException e) {
 			// Do nothing if you get a end of file exception
-			DctmObjectReader.logger.info("Reached the end of the file for ACL objects.");
+			DctmObjectReader.logger.info("Reached the end of the file for Source Repo Config file.");
 		} catch (ClassNotFoundException e) {
-			throw (new CMSMFException("Couldn't read ACL object from filesystem.", e));
+			throw (new CMSMFException("Couldn't read Repo Config object from filesystem.", e));
 		}
 		return srcRepoConfig;
 	}

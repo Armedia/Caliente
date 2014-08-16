@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -35,9 +36,9 @@ import com.documentum.fc.common.IDfTime;
 /**
  * The DctmObject class is an abstract base class for other object types.
  * 
- * This class is equivalent to IDfPersistentObject of DFC. This class contains 2 abstract
- * methods that has to be implemented by all extending classes. The method getFromCMS() retrieves
- * an object from the repository and method createInCMS() creates a object in the repository.
+ * This class is equivalent to IDfPersistentObject of DFC. This class contains 2 abstract methods
+ * that has to be implemented by all extending classes. The method getFromCMS() retrieves an object
+ * from the repository and method createInCMS() creates a object in the repository.
  * <p>
  * This class contains attributes map that contains attribute name, value pair. Attribute value can
  * be a single type or repeating type. This class also contains several methods to get attributes
@@ -201,6 +202,22 @@ public abstract class DctmObject implements Serializable {
 	}
 
 	/**
+	 * Gets the value of single value type attribute, whose data type is Boolean.
+	 * 
+	 * @param attrName
+	 *            the attribute name
+	 * @return the boolean value of the attribute
+	 */
+	public boolean getBoolSingleAttrValue(String attrName) {
+		boolean returnVal = false;
+		DctmAttribute singleAttr = this.attrMap.get(attrName);
+		if (singleAttr != null) {
+			returnVal = (Boolean) singleAttr.getSingleValue();
+		}
+		return returnVal;
+	}
+
+	/**
 	 * Gets the value of single value type attribute, whose data type is Date/Time.
 	 * 
 	 * @param attrName
@@ -261,17 +278,21 @@ public abstract class DctmObject implements Serializable {
 				+ sysObject.getObjectName());
 		}
 		// prepare sql to be executed
-		IDfTime modifyDate = new DfTime((Date) dctmObj.findAttribute(DctmAttrNameConstants.R_MODIFY_DATE)
-			.getSingleValue());
-		IDfTime creationDate = new DfTime((Date) dctmObj.findAttribute(DctmAttrNameConstants.R_CREATION_DATE)
-			.getSingleValue());
+		IDfTime modifyDate = new DfTime(dctmObj.getDateSingleAttrValue(DctmAttrNameConstants.R_MODIFY_DATE));
+		IDfTime creationDate = new DfTime(dctmObj.getDateSingleAttrValue(DctmAttrNameConstants.R_CREATION_DATE));
 		int vStamp = dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
 
 		// if a value in acl_domain or r_creator_name or r_modifier attributes
 		// of the system object is "dm_dbo", change it to target repository operator name
 		String aclDomain = dctmObj.getStrSingleAttrValue(DctmAttrNameConstants.ACL_DOMAIN);
 		String creatorName = dctmObj.getStrSingleAttrValue(DctmAttrNameConstants.R_CREATOR_NAME);
+		// If creator name contains single quote in its name, to escape it, replace it with 4 single
+		// quotes.
+		creatorName = creatorName.replaceAll("'", "''''");
 		String modifier = dctmObj.getStrSingleAttrValue(DctmAttrNameConstants.R_MODIFIER);
+		// If modifier contains single quote in its name, to escape it, replace it with 4 single
+		// quotes.
+		modifier = modifier.replaceAll("'", "''''");
 		if (aclDomain.equals(CMSMFAppConstants.DM_DBO) || creatorName.equals(CMSMFAppConstants.DM_DBO)
 			|| modifier.equals(CMSMFAppConstants.DM_DBO)) {
 			String targetRepoOperatorName = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
@@ -321,8 +342,7 @@ public abstract class DctmObject implements Serializable {
 
 		String objType = prsstntObject.getType().getName();
 		// prepare sql to be executed
-		IDfTime modifyDate = new DfTime((Date) dctmObj.findAttribute(DctmAttrNameConstants.R_MODIFY_DATE)
-			.getSingleValue());
+		IDfTime modifyDate = new DfTime(dctmObj.getDateSingleAttrValue(DctmAttrNameConstants.R_MODIFY_DATE));
 		int vStamp = dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
 
 		String sqlStr = "UPDATE " + objType + "_s " + "SET r_modify_date = TO_DATE(''"
@@ -334,6 +354,93 @@ public abstract class DctmObject implements Serializable {
 
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Finished updating modify date of object");
+		}
+	}
+
+	/**
+	 * Update set_file, set_client and set_time attributes for all of the associated content
+	 * objects.
+	 * 
+	 * @param prsstntObject
+	 *            the DFC persistentObject representing an object in repository
+	 * @param dctmObj
+	 *            the CMSMF DctmObject that has internal/system attributes.
+	 * @throws DfException
+	 *             Signals that Dctm Server error has occurred.
+	 */
+	protected void updateContentAttributes(IDfPersistentObject prsstntObject, DctmObject dctmObj) throws DfException {
+		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
+			DctmObject.logger.info("Started updating attributes of content objects");
+		}
+
+		String parentID = prsstntObject.getObjectId().getId();
+		List<DctmContent> contentList = ((DctmDocument) dctmObj).getContentList();
+		for (DctmContent dctmContent : contentList) {
+			String setFile = dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.SET_FILE);
+			if (StringUtils.isBlank(setFile)) {
+				setFile = " ";
+			}
+			// If setFile contains single quote in its contents, to escape it, replace it with 4
+			// single quotes.
+			setFile = setFile.replaceAll("'", "''''");
+			String setClient = dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.SET_CLIENT);
+			if (StringUtils.isBlank(setClient)) {
+				setClient = " ";
+			}
+			IDfTime setTime = new DfTime(dctmContent.getDateSingleAttrValue(DctmAttrNameConstants.SET_TIME));
+
+			String pageModifierStr = "";
+			if (!StringUtils.isBlank(dctmContent.getPageModifier())) {
+				pageModifierStr = " and dcr.page_modifier = ''" + dctmContent.getPageModifier() + "''";
+			}
+
+			// Prepare the sql to be executed
+			String sqlStr = "UPDATE dmr_content_s SET set_file = ''" + setFile + "'', set_client = ''" + setClient
+				+ "'', set_time = TO_DATE(''" + setTime.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
+				+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN
+				+ "'') WHERE r_object_id = (select dcs.r_object_id from dmr_content_s dcs, dmr_content_r dcr "
+				+ "where dcr.parent_id = ''" + parentID + "'' " + " and dcs.r_object_id = dcr.r_object_id "
+				+ "and dcs.rendition = " + dctmContent.getIntSingleAttrValue(DctmAttrNameConstants.RENDITION)
+				+ pageModifierStr + " and dcr.page = " + dctmContent.getPageNbr() + " and dcs.full_format = ''"
+				+ dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.FULL_FORMAT) + "'')";
+
+			// Run the exec sql
+			runExecSQL(prsstntObject.getSession(), sqlStr);
+		}
+
+		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
+			DctmObject.logger.info("Finished updating attributes of content objects");
+		}
+	}
+
+	/**
+	 * Update i_is_deleted attribute of objects.
+	 * 
+	 * @param updateIsDeletedObjects
+	 *            the list of objects whose i_is_deleted needs to be set to true
+	 * @throws DfException
+	 *             the df exception
+	 */
+	protected void updateIsDeletedAttribute(List<String> updateIsDeletedObjects) throws DfException {
+		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
+			DctmObject.logger.info("Started updating i_is_deleted attribute of objects");
+		}
+
+		// Prepare list of object ids for IN clause
+		String objectIDList = "";
+		for (String objectID : updateIsDeletedObjects) {
+			objectIDList = objectIDList + "''" + objectID + "'',";
+		}
+		// Remove last comma ',' character
+		objectIDList = StringUtils.removeEnd(objectIDList, ",");
+
+		// prepare sql to be executed
+		String sqlStr = "UPDATE dm_sysobject_s SET i_is_deleted = 1 WHERE r_object_id IN (" + objectIDList + ")";
+
+		runExecSQL(this.dctmSession, sqlStr);
+
+		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
+			DctmObject.logger.info("Finished updating i_is_deleted attribute of objects");
 		}
 	}
 
@@ -357,6 +464,41 @@ public abstract class DctmObject implements Serializable {
 		int vStamp = dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
 
 		String sqlStr = "UPDATE " + objType + "_s " + "SET i_vstamp = " + vStamp + " WHERE r_object_id = ''"
+			+ prsstntObject.getObjectId().getId() + "''";
+
+		runExecSQL(prsstntObject.getSession(), sqlStr);
+
+		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
+			DctmObject.logger.info("Finished updating vStamp of object");
+		}
+	}
+
+	/**
+	 * Updates vStamp attribute of an persistent object using execsql.
+	 * 
+	 * @param prsstntObject
+	 *            the DFC persistentObject representing an object in repository
+	 * @param tableName
+	 *            the table name to be used in update clause
+	 * @param vStamp
+	 *            the vStamp
+	 * @throws DfException
+	 *             Signals that Dctm Server error has occurred.
+	 */
+	protected void updateVStamp(IDfPersistentObject prsstntObject, String tableName, int vStamp) throws DfException {
+		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
+			DctmObject.logger.info("Started updating vStamp of an object");
+		}
+
+		int oldVstamp = prsstntObject.getVStamp();
+
+		if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
+			DctmObject.logger.debug("Current vstamp of the object with id: " + prsstntObject.getObjectId().getId()
+				+ " is: " + oldVstamp + " it will be updated to: " + vStamp);
+		}
+
+		// prepare sql to be executed
+		String sqlStr = "UPDATE " + tableName + " SET i_vstamp = " + vStamp + " WHERE r_object_id = ''"
 			+ prsstntObject.getObjectId().getId() + "''";
 
 		runExecSQL(prsstntObject.getSession(), sqlStr);
@@ -411,17 +553,22 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected static void removeAllLinks(IDfSysObject sysObj) throws DfException {
+	protected static List<String> removeAllLinks(IDfSysObject sysObj) throws DfException {
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started removing all links for object with id: " + sysObj.getObjectId().getId());
 		}
+		List<String> unLinkedObjectIDList = new ArrayList<String>();
 		int folderIdCount = sysObj.getFolderIdCount();
 		for (int i = folderIdCount - 1; i >= 0; i--) {
+			if (!unLinkedObjectIDList.contains(sysObj.getFolderId(i).getId())) {
+				unLinkedObjectIDList.add(sysObj.getFolderId(i).getId());
+			}
 			sysObj.unlink(sysObj.getFolderId(i).getId());
 		}
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Finished removing all links for object with id: " + sysObj.getObjectId().getId());
 		}
+		return unLinkedObjectIDList;
 	}
 
 	/**
@@ -457,8 +604,8 @@ public abstract class DctmObject implements Serializable {
 		}
 
 		if (isUpdate) {
-			// If an object is being updated, clear out all of the attributes that are not part
-			// of attribute map in dctmObj.
+			// If an existing object is being updated, clear out all of its attributes that are not
+			// part of attribute map in dctmObj.
 			// NOTE Only clear non internal and not system attributes
 			// NOTE Do not clear group_name attribute for dm_group object
 			// NOTE Do not clear home_docbase attribute for dm_user object
@@ -770,7 +917,7 @@ public abstract class DctmObject implements Serializable {
 					break;
 				case IDfAttr.DM_ID:
 					IDfId idVal = prsstntObj.getId(idfAttr.getName());
-					if ((idVal != null) && !idVal.isNull() && !idVal.getId().isEmpty()) {
+					if ((idVal != null) && !idVal.isNull() && (idVal.getId().length() != 0)) {
 						dctmAttr.setSingleValue(idVal.getId());
 						isValueEmpty = false;
 					}
@@ -802,7 +949,7 @@ public abstract class DctmObject implements Serializable {
 								+ dctmObj.getSrcObjectID() + " to dm_dbo.");
 						}
 					}
-					if ((strVal != null) && !strVal.isEmpty()) {
+					if ((strVal != null) && (strVal.length() != 0)) {
 						dctmAttr.setSingleValue(strVal);
 						isValueEmpty = false;
 					}
@@ -847,7 +994,7 @@ public abstract class DctmObject implements Serializable {
 							break;
 						case IDfAttr.DM_ID:
 							IDfId idVal = prsstntObj.getRepeatingId(attrName, i);
-							if ((idVal != null) && !idVal.isNull() && !idVal.getId().isEmpty()) {
+							if ((idVal != null) && !idVal.isNull() && (idVal.getId().length() != 0)) {
 								attrValueList.add(idVal.getId());
 							}
 							break;
@@ -874,7 +1021,7 @@ public abstract class DctmObject implements Serializable {
 										+ " attribute of object with id: " + dctmObj.getSrcObjectID() + " to dm_dbo.");
 								}
 							}
-							if ((strVal != null) && !strVal.isEmpty()) {
+							if ((strVal != null) && (strVal.length() != 0)) {
 								attrValueList.add(strVal);
 							}
 							break;
@@ -933,4 +1080,62 @@ public abstract class DctmObject implements Serializable {
 		}
 	}
 
+	/**
+	 * The static Inner Class restoreOldACLInfo.
+	 */
+	protected static class restoreOldACLInfo {
+		private String aclName;
+		private String aclDomain;
+		private String objectID;
+		private int vStamp;
+
+		/**
+		 * Instantiates a new restore old acl info.
+		 * 
+		 * @param aclName
+		 *            the acl name
+		 * @param aclDomain
+		 *            the acl domain
+		 * @param objectID
+		 *            the object id
+		 * @param vStamp
+		 *            the v stamp
+		 */
+		public restoreOldACLInfo(String aclName, String aclDomain, String objectID, int vStamp) {
+			super();
+			this.aclName = aclName;
+			this.aclDomain = aclDomain;
+			this.objectID = objectID;
+			this.vStamp = vStamp;
+		}
+	}
+
+	/**
+	 * Restore acl of parent folders.
+	 * 
+	 * @param restoreACLObjectList
+	 *            the restore acl object list
+	 * @throws DfException
+	 *             the df exception
+	 */
+	protected void restoreACLOfParentFolders(List<restoreOldACLInfo> restoreACLObjectList) throws DfException {
+		for (restoreOldACLInfo aclInfo : restoreACLObjectList) {
+			IDfSysObject parentFolder = (IDfSysObject) this.dctmSession.getObject(new DfId(aclInfo.objectID));
+			if (parentFolder != null) {
+				parentFolder.setACLName(aclInfo.aclName);
+				parentFolder.setACLDomain(aclInfo.aclDomain);
+				parentFolder.save();
+
+				// Update the vStamp attribute of the parent folder
+				updateVStamp(parentFolder, "dm_sysobject_s", aclInfo.vStamp);
+
+				// Flush this object out
+				this.dctmSession.flushObject(parentFolder.getObjectId());
+			}
+		}
+
+		// Flush the persistent object cache to avoid version mismatch errors.
+		this.dctmSession.flush("persistentobjcache", null);
+		this.dctmSession.flushCache(false);
+	}
 }

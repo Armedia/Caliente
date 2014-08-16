@@ -28,6 +28,9 @@ public class DctmAttrNameConstants {
 	/** The r_creator_name attribute of dm_sysobject. */
 	public static final String R_CREATOR_NAME = "r_creator_name";
 
+	/** The r_immutable_flag attribute of dm_sysobject. */
+	public static final String R_IMMUTABLE_FLAG = "r_immutable_flag";
+
 	/** The i_antecedent_id attribute of dm_sysobject. */
 	public static final String I_ANTECEDENT_ID = "i_antecedent_id";
 
@@ -51,6 +54,12 @@ public class DctmAttrNameConstants {
 
 	/** The i_folder_id attribute of dm_sysobject. */
 	public static final String I_FOLDER_ID = "i_folder_id";
+
+	/** The a_content_type attribute of dm_sysobject. */
+	public static final String A_CONTENT_TYPE = "a_content_type";
+
+	/** The i_is_deleted attribute of dm_sysobject. */
+	public static final String I_IS_DELETED = "i_is_deleted";
 
 	// dm_folder Attributes
 	/** The r_folder_path attribute of dm_folder. */
@@ -159,6 +168,15 @@ public class DctmAttrNameConstants {
 	/** The data_ticket attribute of dmr_content. */
 	public static final String DATA_TICKET = "data_ticket";
 
+	/** The set_file attribute of dmr_content. */
+	public static final String SET_FILE = "set_file";
+
+	/** The set_client attribute of dmr_content. */
+	public static final String SET_CLIENT = "set_client";
+
+	/** The set_time attribute of dmr_content. */
+	public static final String SET_TIME = "set_time";
+
 	// dm_server_config Attributes
 	/** The operator_name attribute of dm_server_config. */
 	public static final String OPERATOR_NAME = "operator_name";
@@ -185,6 +203,9 @@ public class DctmAttrNameConstants {
 	// Connection config Attributes
 	/** The r_docbase_name attribute of connection config. */
 	public static final String R_DOCBASE_NAME = "r_docbase_name";
+
+	// dm_job attributes
+	public static final String RUN_NOW = "run_now";
 
 	// Various query collection column names
 	/** The groups_names column name of getGroupsNames collection. */

@@ -1,6 +1,7 @@
 package com.delta.cmsmf.cmsobjects;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -23,6 +24,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfId;
 
 /**
  * The DctmFolder class contains methods to export/import dm_folder type (or its subtype) of objects
@@ -40,13 +42,13 @@ public class DctmFolder extends DctmObject {
 
 	// Static variables used to see how many folders were created, skipped, updated
 	/** Keeps track of nbr of folder objects read from file during import process. */
-	public static int fldrs_read = 0;
+	private static int fldrs_read = 0;
 	/** Keeps track of nbr of folder objects skipped due to duplicates during import process. */
-	public static int fldrs_skipped = 0;
+	private static int fldrs_skipped = 0;
 	/** Keeps track of nbr of folder objects updated in CMS during import process. */
-	public static int fldrs_updated = 0;
+	private static int fldrs_updated = 0;
 	/** Keeps track of nbr of folder objects created in CMS during import process. */
-	public static int fldrs_created = 0;
+	private static int fldrs_created = 0;
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmFolder.class);
@@ -99,15 +101,23 @@ public class DctmFolder extends DctmObject {
 			List<Object> rFolderPathList = findAttribute(DctmAttrNameConstants.R_FOLDER_PATH).getRepeatingValues();
 			String rFldrPathStr = (String) rFolderPathList.get(0);
 
+			IDfSysObject cmsFldrObjet = null;
+			String objectType = getStrSingleAttrValue(DctmAttrNameConstants.R_OBJECT_TYPE);
 			if (DctmFolder.isThisATest) { // for testing purposes, we are creating everything under
 // /Replications cabinet
 				rFldrPathStr = "/Replications" + rFldrPathStr;
+				// cabinet
+				if (objectType.equals(DctmTypeConstants.DM_CABINET)) {
+					objectType = DctmTypeConstants.DM_FOLDER;
+				}
+				// remove is_private attribute
+				getAttrMap().remove(DctmAttrNameConstants.IS_PRIVATE);
 			}
 
-			IDfSysObject sysObject = null;
-			String objectType = "";
-
 			boolean doesFolderNeedUpdate = false;
+			boolean doesFldrNameEndsWithBlank = false;
+			boolean permitChangedFlag = false;
+			int curPermit = 0;
 
 			IDfFolder fldr = this.dctmSession.getFolderByPath(rFldrPathStr);
 			if (fldr != null) { // we found the folder
@@ -120,7 +130,17 @@ public class DctmFolder extends DctmObject {
 							+ " already exist in target repository but needs to be updated.");
 					}
 					doesFolderNeedUpdate = true;
-					sysObject = fldr;
+					cmsFldrObjet = fldr;
+					// If updating an existing folder object, make sure that you have write
+// permissions.
+					// If you don't, grant it. Reset it later on.
+					curPermit = cmsFldrObjet.getPermit();
+					if (curPermit < IDfACL.DF_PERMIT_WRITE) {
+						// Grant write permission and save the object
+						cmsFldrObjet.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
+						cmsFldrObjet.save();
+						permitChangedFlag = true;
+					}
 				} else { // identical folder exists, exit this method
 					if (DctmFolder.logger.isEnabledFor(Level.DEBUG)) {
 						DctmFolder.logger.debug("Identical folder/cabinet by path " + rFldrPathStr
@@ -132,29 +152,35 @@ public class DctmFolder extends DctmObject {
 				}
 			} else { // folder doesn't exist in repo, create one
 				objectType = getStrSingleAttrValue(DctmAttrNameConstants.R_OBJECT_TYPE);
-				if (DctmFolder.isThisATest) { // for testing purpose, we are creating everything
-// under
-// /Replications
-					// cabinet
-					if (objectType.equals(DctmTypeConstants.DM_CABINET)) {
-						objectType = DctmTypeConstants.DM_FOLDER;
-					}
-					// remove is_private attribute
-					getAttrMap().remove(DctmAttrNameConstants.IS_PRIVATE);
-				}
 				if (DctmFolder.logger.isEnabledFor(Level.DEBUG)) {
 					DctmFolder.logger.debug("Creating folder/cabinet " + rFldrPathStr
 						+ " in target repository with object type " + objectType + ".");
 				}
-				sysObject = (IDfSysObject) this.dctmSession.newObject(objectType);
+				cmsFldrObjet = (IDfSysObject) this.dctmSession.newObject(objectType);
 			}
 
+			// Check to see if the object name contains trailing blanks, if it does, trim the object
+// name and
+			// create the folder object. DFC throws an exception if you try to create an folder with
+// spaces at
+			// the end. Update the object name later on when system attributes are updated. If you
+// are
+			// updating an existing folder object, no need to check this condition
+			String origFldrName = getStrSingleAttrValue(DctmAttrNameConstants.OBJECT_NAME);
+			if (fldr == null) {
+				String modifiedFldrName = origFldrName.trim();
+				if (!(modifiedFldrName.equals(origFldrName))) {
+					findAttribute(DctmAttrNameConstants.OBJECT_NAME).setSingleValue(modifiedFldrName);
+					doesFldrNameEndsWithBlank = true;
+				}
+			}
 			// set various attributes
-			setAllAttributesInCMS(sysObject, this, false, doesFolderNeedUpdate);
-
+			setAllAttributesInCMS(cmsFldrObjet, this, false, doesFolderNeedUpdate);
+			List<String> linkedUnLinkedParentIDs = null;
+			List<restoreOldACLInfo> restoreACLObjectList = new ArrayList<restoreOldACLInfo>();
 			if (!objectType.equals(DctmTypeConstants.DM_CABINET)) {
 				// Remove existing links and then Link the folder appropriately
-				DctmObject.removeAllLinks(sysObject);
+				linkedUnLinkedParentIDs = DctmObject.removeAllLinks(cmsFldrObjet);
 
 				// Find where to create the folder
 				for (Object rFldrPath : rFolderPathList) {
@@ -172,27 +198,103 @@ public class DctmFolder extends DctmObject {
 // that, throw
 					// it.
 					try {
-						sysObject.link(parentFldrPath);
+						cmsFldrObjet.link(parentFldrPath);
+						// Add the object id of parent folders where we are trying to link the
+// object in the
+						// list
+						// which we need to check the permissions
+						IDfFolder parentFldr = this.dctmSession.getFolderByPath(parentFldrPath);
+						if (!linkedUnLinkedParentIDs.contains(parentFldr.getObjectId().getId())) {
+							linkedUnLinkedParentIDs.add(parentFldr.getObjectId().getId());
+						}
 					} catch (DfException dfe) {
 						if (dfe.getMessageId().equals(CMSMFAppConstants.DM_SYSOBJECT_E_ALREADY_LINKED_MESSAGE_ID)) {
-							if (DctmFolder.logger.isEnabledFor(Level.DEBUG)) {
-								DctmFolder.logger.debug("Sysobject already Linked error ignored");
+							if (DctmFolder.logger.isEnabledFor(Level.INFO)) {
+								DctmFolder.logger.debug("Sysobject already Linked error handled");
 							}
-							DctmFolder.logger.warn("Already Linked error ignored");
 						} else {
 							throw (dfe);
 						}
 					}
 				}
+
+				// Check to see if we have write permission on parent folders
+				// Only for dm_folders and not for dm_cabinets
+				for (String parentFldrID : linkedUnLinkedParentIDs) {
+					// Check the permit on all of the parent folders from where you are unlinking or
+// linking.
+					IDfSysObject parentFldr = (IDfSysObject) this.dctmSession.getObject(new DfId(parentFldrID));
+
+					// if you do not have write permit, add write permit. This will assign internal
+// acl to the
+					// parent folder. Keep track of the old acl of the parent folder and later on
+// restore this
+					// acl.
+					if (parentFldr.getPermit() < IDfACL.DF_PERMIT_WRITE) {
+						// Flush and ReFatch the parent folder
+						this.dctmSession.flush("persistentobjcache", null);
+						this.dctmSession.flushObject(parentFldr.getObjectId());
+						this.dctmSession.flushCache(false);
+						parentFldr = (IDfSysObject) this.dctmSession.getObject(new DfId(parentFldrID));
+						parentFldr.fetch(null);
+						IDfACL parentFldrACL = parentFldr.getACL();
+						String aclName = parentFldrACL.getObjectName();
+						String aclDomain = parentFldrACL.getDomain();
+						int vStamp = parentFldr.getVStamp();
+						if (DctmFolder.logger.isEnabledFor(Level.DEBUG)) {
+							DctmFolder.logger.debug("Permission for parent folder " + parentFldr.getObjectId().getId()
+								+ " needs to be modified. Current info about parent folder is: acl name: " + aclName
+								+ " acl domain: " + aclDomain + " vStamp: " + vStamp);
+						}
+						parentFldr.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
+						parentFldr.save();
+						restoreACLObjectList.add(new restoreOldACLInfo(aclName, aclDomain, parentFldr.getObjectId()
+							.getId(), vStamp));
+					}
+				}
 			}
-			// Save the folder object
-			sysObject.save();
-			if (doesFolderNeedUpdate) {
-				DctmFolder.fldrs_updated++;
-			} else {
+
+			if (!doesFolderNeedUpdate) { // Creating new folder object
+				// Save the folder object if creating a new one
+				cmsFldrObjet.save();
+				// Also check if we need to update the folder name
+				if (doesFldrNameEndsWithBlank) {
+					curPermit = cmsFldrObjet.getPermit();
+					// Update the folder name but first check for the write permission
+					if (curPermit < IDfACL.DF_PERMIT_WRITE) {
+						// Grant write permission and save the object
+						cmsFldrObjet.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
+						cmsFldrObjet.save();
+						permitChangedFlag = true;
+					}
+					// set the object name and save
+					cmsFldrObjet.setObjectName(origFldrName);
+					cmsFldrObjet.save();
+					// Revert back the permission on the system object and save
+					if (permitChangedFlag) {
+						cmsFldrObjet.grant(this.dctmSession.getLoginUserName(), curPermit, null);
+						cmsFldrObjet.save();
+					}
+				}
+
 				DctmFolder.fldrs_created++;
+			} else { // Updating existing folder object
+				// save the folder object
+				cmsFldrObjet.save();
+				// Revert back the permission on the folder if it was modified previously
+				if (permitChangedFlag) {
+					cmsFldrObjet.grant(this.dctmSession.getLoginUserName(), curPermit, null);
+					cmsFldrObjet.save();
+				}
+				DctmFolder.fldrs_updated++;
 			}
-			updateSystemAttributes(sysObject, this);
+
+			// Update system attributes like r_creator_name, r_modifier, r_creation_date etc.
+			updateSystemAttributes(cmsFldrObjet, this);
+
+			// Restore ACL of any parent folders that was changed during the import process.
+			restoreACLOfParentFolders(restoreACLObjectList);
+
 			if (DctmFolder.logger.isEnabledFor(Level.INFO)) {
 				DctmFolder.logger.info("Finished creating dctm dm_folder in repository with path: " + rFldrPathStr);
 			}
@@ -216,6 +318,21 @@ public class DctmFolder extends DctmObject {
 		DctmFolder.logger.info("No. of folder objects skipped due to duplicates: " + DctmFolder.fldrs_skipped);
 		DctmFolder.logger.info("No. of folder objects updated: " + DctmFolder.fldrs_updated);
 		DctmFolder.logger.info("No. of folder objects created: " + DctmFolder.fldrs_created);
+	}
+
+	/**
+	 * Gets the detailed folder import report.
+	 * 
+	 * @return the detailed folder import report
+	 */
+	public static String getDetailedFolderImportReport() {
+		StringBuffer importReport = new StringBuffer();
+		importReport.append("\nNo. of folder objects read from file: " + DctmFolder.fldrs_read + ".");
+		importReport.append("\nNo. of folder objects skipped due to duplicates: " + DctmFolder.fldrs_skipped + ".");
+		importReport.append("\nNo. of folder objects updated: " + DctmFolder.fldrs_updated + ".");
+		importReport.append("\nNo. of folder objects created: " + DctmFolder.fldrs_created + ".");
+
+		return importReport.toString();
 	}
 
 	/*

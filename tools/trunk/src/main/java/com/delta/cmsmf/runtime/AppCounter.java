@@ -1,9 +1,12 @@
 package com.delta.cmsmf.runtime;
 
+import javax.mail.MessagingException;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.utils.CMSMFUtils;
 
 /**
  * The Class AppCounter keeps running tab of number of various types of objects processed during
@@ -44,7 +47,7 @@ public class AppCounter {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#clone()
 	 */
 	@Override
@@ -151,6 +154,34 @@ public class AppCounter {
 		AppCounter.logger.info("Total nbr of acls processed: " + this.aclCounter);
 		AppCounter.logger.info("Total nbr of types processed: " + this.typeCounter);
 		AppCounter.logger.info("Total nbr of formats processed: " + this.formatCounter);
+	}
+
+	/**
+	 * Email counters.
+	 * 
+	 * @param exportDQLQuery
+	 */
+	public void emailCounters(String exportImportStep, String exportDQLQuery) {
+		StringBuffer emailMsg = new StringBuffer("Following is a report from " + exportImportStep + " step. \n");
+
+		// If this is a export step, email the dql query used in the export.
+		if (exportImportStep.equals("Export")) {
+			emailMsg.append("\n The export query used was: " + exportDQLQuery + "\n");
+		}
+
+		emailMsg.append("\n\t Total nbr of documents processed: " + this.documentCounter);
+		emailMsg.append("\n\t Total nbr of folders processed: " + this.folderCounter);
+		emailMsg.append("\n\t Total nbr of users processed: " + this.userCounter);
+		emailMsg.append("\n\t Total nbr of groups processed: " + this.groupCounter);
+		emailMsg.append("\n\t Total nbr of acls processed: " + this.aclCounter);
+		emailMsg.append("\n\t Total nbr of types processed: " + this.typeCounter);
+		emailMsg.append("\n\t Total nbr of formats processed: " + this.formatCounter);
+
+		try {
+			CMSMFUtils.postCmsmfMail("CMSMF " + exportImportStep + " Report", emailMsg.toString());
+		} catch (MessagingException e) {
+			AppCounter.logger.error("Error sending CMSMF " + exportImportStep + " report", e);
+		}
 	}
 
 	/**

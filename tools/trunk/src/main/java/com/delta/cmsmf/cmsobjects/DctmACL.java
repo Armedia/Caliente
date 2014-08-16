@@ -35,16 +35,16 @@ public class DctmACL extends DctmObject {
 
 	// Static variables used to see how many ACLs were created, skipped, updated
 	/** Keeps track of nbr of acl objects read from file during import process. */
-	public static int acls_read = 0;
+	private static int acls_read = 0;
 	/** Keeps track of nbr of acl objects skipped due to duplicates during import process. */
-	public static int acls_skipped = 0;
+	private static int acls_skipped = 0;
 	/** Keeps track of nbr of acl objects updated in CMS during import process. */
-	public static int acls_updated = 0;
+	private static int acls_updated = 0;
 	/** Keeps track of nbr of acl objects created in CMS during import process. */
-	public static int acls_created = 0;
+	private static int acls_created = 0;
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(DctmACL.class);
+	private static Logger logger = Logger.getLogger(DctmACL.class);
 
 	/** The list that stores extended permission names for this ACL object. */
 	private List<String> accessorXPermitNames = new ArrayList<String>();
@@ -70,7 +70,7 @@ public class DctmACL extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
@@ -162,6 +162,21 @@ public class DctmACL extends DctmObject {
 	}
 
 	/**
+	 * Gets the detailed acl import report.
+	 * 
+	 * @return the detailed acl import report
+	 */
+	public static String getDetailedAclImportReport() {
+		StringBuffer importReport = new StringBuffer();
+		importReport.append("\nNo. of ACL objects read from file: " + DctmACL.acls_read + ".");
+		importReport.append("\nNo. of ACL objects skipped due to duplicates: " + DctmACL.acls_skipped + ".");
+		importReport.append("\nNo. of ACL objects updated: " + DctmACL.acls_updated + ".");
+		importReport.append("\nNo. of ACL objects created: " + DctmACL.acls_created + ".");
+
+		return importReport.toString();
+	}
+
+	/**
 	 * Sets the accessor permissions of an acl object in the CMS.
 	 * 
 	 * @param aclObj
@@ -193,7 +208,7 @@ public class DctmACL extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override

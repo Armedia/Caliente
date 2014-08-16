@@ -24,7 +24,9 @@ public enum DctmObjectTypesEnum {
 	/** The enum for dm_folder type. */
 	DCTM_FOLDER,
 	/** The enum for dm_document type. */
-	DCTM_DOCUMENT;
+	DCTM_DOCUMENT,
+	/** The enum for dmr_content type. */
+	DCTM_CONTENT;
 
 	private final String dmType;
 

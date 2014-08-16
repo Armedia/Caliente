@@ -1,6 +1,13 @@
 package com.delta.cmsmf.cmsobjects;
 
-import java.io.Serializable;
+import java.io.IOException;
+
+import org.apache.log4j.Level;
+
+import com.delta.cmsmf.exception.CMSMFException;
+import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.common.DfException;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -10,53 +17,28 @@ import java.io.Serializable;
  * 
  * @author Shridev Makim 6/15/2010
  */
-public class DctmContent implements Serializable {
+public class DctmContent extends DctmObject {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
-	/** The content format of a content file. */
-	private String contentFormat;
-
 	/**
-	 * Gets the content format of a content file.
-	 * 
-	 * @return the content format
+	 * Instantiates a new DctmContent object.
 	 */
-	public String getContentFormat() {
-		return this.contentFormat;
+	public DctmContent() {
+		super();
+		// set dctmObjectType to dctm_format
+		this.dctmObjectType = DctmObjectTypesEnum.DCTM_CONTENT;
 	}
 
 	/**
-	 * Sets the content format of a content file.
+	 * Instantiates a DctmContent object with new CMS session.
 	 * 
-	 * @param contentFormat
-	 *            the new content format
+	 * @param dctmSession
+	 *            the existing documentum CMS session
 	 */
-	public void setContentFormat(String contentFormat) {
-		this.contentFormat = contentFormat;
-	}
-
-	/** The rendition nbr. */
-	private int renditionNbr;
-
-	/**
-	 * Gets the rendition nbr.
-	 * 
-	 * @return the rendition nbr
-	 */
-	public int getRenditionNbr() {
-		return this.renditionNbr;
-	}
-
-	/**
-	 * Sets the rendition nbr.
-	 * 
-	 * @param renditionNbr
-	 *            the new rendition nbr
-	 */
-	public void setRenditionNbr(int renditionNbr) {
-		this.renditionNbr = renditionNbr;
+	public DctmContent(IDfSession dctmSession) {
+		super(dctmSession);
 	}
 
 	/** The page nbr of a content file. */
@@ -103,28 +85,6 @@ public class DctmContent implements Serializable {
 		this.pageModifier = pageModifier;
 	}
 
-	/** The set_file attribute of a content file. */
-	private String setFile;
-
-	/**
-	 * Gets the set_file attribute of a content file.
-	 * 
-	 * @return the set_file attribute
-	 */
-	public String getSetFile() {
-		return this.setFile;
-	}
-
-	/**
-	 * Sets the set_file attribute of a content file.
-	 * 
-	 * @param setFile
-	 *            the new set_file attribute
-	 */
-	public void setSetFile(String setFile) {
-		this.setFile = setFile;
-	}
-
 	/** The content byte array that stores the content file in binary format. */
 	private byte[] contentByteArray;
 
@@ -167,5 +127,33 @@ public class DctmContent implements Serializable {
 	 */
 	public void setRelativeContentFileLocation(String relativeContentFileLocation) {
 		this.relativeContentFileLocation = relativeContentFileLocation;
+	}
+
+	@Override
+	public void createInCMS() throws DfException, IOException {
+		// This method is left empty intentionally. We will create the content
+		// objects within the dctmdocument createInCMS() method.
+	}
+
+	@Override
+	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
+			DctmObject.logger.info("Started getting dctm dmr_content object from repository");
+		}
+		String contentID = "";
+		try {
+			contentID = prsstntObj.getObjectId().getId();
+
+			DctmContent dctmContent = new DctmContent();
+			getAllAttributesFromCMS(dctmContent, prsstntObj, contentID);
+			if (DctmObject.logger.isEnabledFor(Level.INFO)) {
+				DctmObject.logger
+					.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
+			}
+
+			return dctmContent;
+		} catch (DfException e) {
+			throw (new CMSMFException("Error retrieving format in repository with id: " + contentID, e));
+		}
 	}
 }

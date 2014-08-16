@@ -46,16 +46,16 @@ public class DctmUser extends DctmObject {
 
 	// Static variables used to see how many groups were created, skipped, updated
 	/** Keeps track of nbr of user objects read from file during import process. */
-	public static int usrs_read = 0;
+	private static int usrs_read = 0;
 	/** Keeps track of nbr of user objects skipped due to duplicates during import process. */
-	public static int usrs_skipped = 0;
+	private static int usrs_skipped = 0;
 	/** Keeps track of nbr of user objects updated in CMS during import process. */
-	public static int usrs_updated = 0;
+	private static int usrs_updated = 0;
 	/** Keeps track of nbr of user objects created in CMS during import process. */
-	public static int usrs_created = 0;
+	private static int usrs_created = 0;
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(DctmUser.class);
+	private static Logger logger = Logger.getLogger(DctmUser.class);
 
 	/** The boolean flag to see if user has internal acl. */
 	private boolean doesUserHaveInternalACL;
@@ -260,6 +260,22 @@ public class DctmUser extends DctmObject {
 		DctmUser.logger.info("No. of user objects skipped due to duplicates: " + DctmUser.usrs_skipped);
 		DctmUser.logger.info("No. of user objects updated: " + DctmUser.usrs_updated);
 		DctmUser.logger.info("No. of user objects created: " + DctmUser.usrs_created);
+	}
+
+	/**
+	 * 
+	 * Gets the detailed user import report.
+	 * 
+	 * @return the detailed user import report
+	 */
+	public static String getDetailedUserImportReport() {
+		StringBuffer importReport = new StringBuffer();
+		importReport.append("\nNo. of user objects read from file: " + DctmUser.usrs_read + ".");
+		importReport.append("\nNo. of user objects skipped due to duplicates: " + DctmUser.usrs_skipped + ".");
+		importReport.append("\nNo. of user objects updated: " + DctmUser.usrs_updated + ".");
+		importReport.append("\nNo. of user objects created: " + DctmUser.usrs_created + ".");
+
+		return importReport.toString();
 	}
 
 	/**

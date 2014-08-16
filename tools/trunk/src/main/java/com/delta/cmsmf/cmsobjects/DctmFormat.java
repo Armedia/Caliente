@@ -28,16 +28,16 @@ public class DctmFormat extends DctmObject {
 
 	// Static variables used to see how many formats were created, skipped, updated
 	/** Keeps track of nbr of format objects read from file during import process. */
-	public static int formats_read = 0;
+	private static int formats_read = 0;
 	/** Keeps track of nbr of format objects skipped due to duplicates during import process. */
-	public static int formats_skipped = 0;
+	private static int formats_skipped = 0;
 	/** Keeps track of nbr of format objects updated in CMS during import process. */
-	public static int formats_updated = 0;
+	private static int formats_updated = 0;
 	/** Keeps track of nbr of format objects created in CMS during import process. */
-	public static int formats_created = 0;
+	private static int formats_created = 0;
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(DctmFormat.class);
+	private static Logger logger = Logger.getLogger(DctmFormat.class);
 
 	/**
 	 * Instantiates a new DctmFormat object.
@@ -60,7 +60,7 @@ public class DctmFormat extends DctmObject {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
@@ -154,9 +154,24 @@ public class DctmFormat extends DctmObject {
 		DctmFormat.logger.info("No. of format objects created: " + DctmFormat.formats_created);
 	}
 
+	/**
+	 * Gets the detailed format import report.
+	 * 
+	 * @return the detailed format import report
+	 */
+	public static String getDetailedFormatImportReport() {
+		StringBuffer importReport = new StringBuffer();
+		importReport.append("\nNo. of format objects read from file: " + DctmFormat.formats_read + ".");
+		importReport.append("\nNo. of format objects skipped due to duplicates: " + DctmFormat.formats_skipped + ".");
+		importReport.append("\nNo. of format objects updated: " + DctmFormat.formats_updated + ".");
+		importReport.append("\nNo. of format objects created: " + DctmFormat.formats_created + ".");
+
+		return importReport.toString();
+	}
+
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
@@ -189,5 +204,4 @@ public class DctmFormat extends DctmObject {
 
 		return null;
 	}
-
 }
