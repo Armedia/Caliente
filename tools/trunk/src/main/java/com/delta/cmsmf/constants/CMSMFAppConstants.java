@@ -3,7 +3,7 @@ package com.delta.cmsmf.constants;
 /**
  * The Class CMSMFAppConstants. This class contains various constant values used throughout
  * the CMSMF application.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFAppConstants {
@@ -32,8 +32,7 @@ public class CMSMFAppConstants {
 	 * clause
 	 * specified here.
 	 */
-	public static final String EXPORT_QUERY_SELECT_CLAUSE = "select r_object_id, i_vstamp, r_object_type, "
-		+ "r_aspect_name, i_is_replica, i_is_reference ";
+	public static final String EXPORT_QUERY_SELECT_CLAUSE = "select distinct r_object_id";
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
