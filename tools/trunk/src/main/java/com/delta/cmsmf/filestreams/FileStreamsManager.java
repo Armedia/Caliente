@@ -41,25 +41,25 @@ public class FileStreamsManager {
 	static Logger logger = Logger.getLogger(FileStreamsManager.class);
 
 	/** The Constant DOCUMENTS_FILE_NAME. */
-	private static final String DOCUMENTS_FILE_NAME = "DCTMDocsFile.cmsmf";
+	private static final String DOCUMENTS_FILE_NAME = "document";
 
 	/** The Constant FOLDERS_FILE_NAME. */
-	private static final String FOLDERS_FILE_NAME = "DCTMFldrsFile.cmsmf";
+	private static final String FOLDERS_FILE_NAME = "folder";
 
 	/** The Constant USERS_FILE_NAME. */
-	private static final String USERS_FILE_NAME = "DCTMUsrsFile.cmsmf";
+	private static final String USERS_FILE_NAME = "user";
 
 	/** The Constant GROUPS_FILE_NAME. */
-	private static final String GROUPS_FILE_NAME = "DCTMGrpsFile.cmsmf";
+	private static final String GROUPS_FILE_NAME = "group";
 
 	/** The Constant ACLS_FILE_NAME. */
-	private static final String ACLS_FILE_NAME = "DCTMACLsFile.cmsmf";
+	private static final String ACLS_FILE_NAME = "acl";
 
 	/** The Constant TYPES_FILE_NAME. */
-	private static final String TYPES_FILE_NAME = "DCTMTypsFile.cmsmf";
+	private static final String TYPES_FILE_NAME = "type";
 
 	/** The Constant FORMATS_FILE_NAME. */
-	private static final String FORMATS_FILE_NAME = "DCTMFrmtsFile.cmsmf";
+	private static final String FORMATS_FILE_NAME = "format";
 
 	/** The Constant SRC_REPO_CONFIG_FILE_NAME. */
 	private static final String SRC_REPO_CONFIG_FILE_NAME = "SrcRepoConfigFile.cmsmf";
@@ -332,6 +332,14 @@ public class FileStreamsManager {
 			throw (new CMSMFIOException("Couldn't create object output stream for " + dctmObjectType + " file.", e));
 		}
 		return returnIS;
+	}
+
+	public File getBaseFolderForType(DctmObjectTypesEnum dctmObjectType, long id) throws IOException {
+		File baseFolder = dctmObjectType.getBaseFolder();
+		// Now we calculate the subfolder in which the object shall live...use the ID to get its
+		// location
+
+		return baseFolder;
 	}
 
 	/**

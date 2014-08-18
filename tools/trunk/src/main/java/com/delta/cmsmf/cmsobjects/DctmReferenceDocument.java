@@ -34,7 +34,7 @@ import com.documentum.fc.common.IDfId;
  * during import step.
  * <p>
  * <b> NOTE: Virtual documents are not handled currently.</b>
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmReferenceDocument extends DctmDocument {
@@ -67,7 +67,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Gets the binding condition.
-	 * 
+	 *
 	 * @return the binding condition
 	 */
 	public String getBindingCondition() {
@@ -76,7 +76,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Sets the binding condition.
-	 * 
+	 *
 	 * @param bindingCondition
 	 *            the new binding condition
 	 */
@@ -89,7 +89,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Gets the binding label.
-	 * 
+	 *
 	 * @return the binding label
 	 */
 	public String getBindingLabel() {
@@ -98,7 +98,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Sets the binding label.
-	 * 
+	 *
 	 * @param bindingLabel
 	 *            the new binding label
 	 */
@@ -111,7 +111,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Gets the reference repository name.
-	 * 
+	 *
 	 * @return the reference repository name
 	 */
 	public String getReferenceDbName() {
@@ -120,7 +120,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Sets the reference db name.
-	 * 
+	 *
 	 * @param referenceDbName
 	 *            the new reference db name
 	 */
@@ -133,7 +133,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Gets the id of the referenced object in remote repository.
-	 * 
+	 *
 	 * @return the reference by id
 	 */
 	public String getReferenceById() {
@@ -142,7 +142,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Sets the id of the referenced object in remote repository.
-	 * 
+	 *
 	 * @param referenceById
 	 *            the new reference by id
 	 */
@@ -162,7 +162,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Instantiates a DctmDocument object with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -221,7 +221,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Creates the mirror document in target repository.
-	 * 
+	 *
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
@@ -254,14 +254,17 @@ public class DctmReferenceDocument extends DctmDocument {
 				DctmReferenceDocument.logger.warn(
 					"Unable to locate a remote object while creating reference using target repository session.", e);
 				// if that fails, try to locate the remote object using source repository session
+				IDfSession session = null;
 				try {
-					remoteObj = (IDfSysObject) CMSMFMain.getInstance().getSession()
-						.getObject(new DfId(getReferenceById()));
-				} catch (DfException e1) {
+					session = CMSMFMain.getInstance().getSession();
+					remoteObj = (IDfSysObject) session.getObject(new DfId(getReferenceById()));
+				} catch (Exception e1) {
 					DctmReferenceDocument.logger.warn(
 						"Unable to locate a remote object while creating reference using source repository session.",
 						e1);
 					this.dctmSession.abortTrans();
+				} finally {
+					CMSMFMain.getInstance().closeSession(session);
 				}
 			}
 			if (remoteObj != null) {
@@ -298,7 +301,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Tries to retrieve identical mirror object from cms.
-	 * 
+	 *
 	 * @param dctmRefDoc
 	 *            the dctm reference doc
 	 * @return the sysobject that is identical to object being imported
@@ -396,7 +399,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Gets the reference document attributes from cms.
-	 * 
+	 *
 	 * @param dctmReferenceDocument
 	 *            the dctm reference document
 	 * @param prsstntObj
@@ -435,7 +438,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Exports supporting objects of this document. It exports document owner, acl, object type etc.
-	 * 
+	 *
 	 * @param sysObj
 	 *            the sys obj
 	 * @throws DfException
@@ -455,7 +458,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	/**
 	 * Export parent folders where an document is linked.
-	 * 
+	 *
 	 * @param dctmDocument
 	 *            the dctm document
 	 * @param sysObj

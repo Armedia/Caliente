@@ -16,6 +16,8 @@ public enum CLIParam {
 	user(null, true, "The username to connect with"),
 	password(null, true, "The password to connect with"),
 	log4j(null, true, "The Log4j configuration (XML format) to use instead of the default"),
+	batch(null, true, "The batch size to use when exporting objects from Documentum"),
+	threads(null, true, "The number of threads to use while importing or exporting"),
 	post_process(CMSMFProperties.POST_PROCESS_IMPORT, false, "Whether to post-process the imported content"),
 	predicate(CMSMFProperties.EXPORT_QUERY_PREDICATE, true, "The DQL Predicate to use for exporting"),
 	adhoc_where(CMSMFProperties.ADHOC_QUERY_WHERE_CLAUSE, true, "The DQL 'where' clause to use for ad-hoc exports"),

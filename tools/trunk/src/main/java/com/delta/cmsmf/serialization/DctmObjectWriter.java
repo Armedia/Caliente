@@ -1,7 +1,9 @@
 package com.delta.cmsmf.serialization;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -45,6 +47,30 @@ public class DctmObjectWriter {
 
 			// Export the dctmobject to outputstream
 			fsm.exportObject(os, dctmObj);
+
+			// Update appropriate counter
+			AppCounter.getObjectCounter().incrementCounter(dctmObj.dctmObjectType);
+
+			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
+				DctmObjectWriter.logger.info("Finished serializing the object to filesystem "
+					+ dctmObj.getSrcObjectID());
+			}
+		}
+	}
+
+	public static void writeBinaryObject(DctmObject dctmObj, ZipOutputStream zip) throws CMSMFException, IOException {
+		if (dctmObj != null) {
+			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
+				DctmObjectWriter.logger
+					.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
+			}
+
+			ObjectOutputStream out = new ObjectOutputStream(zip);
+			try {
+				out.writeObject(dctmObj);
+			} finally {
+				out.flush();
+			}
 
 			// Update appropriate counter
 			AppCounter.getObjectCounter().incrementCounter(dctmObj.dctmObjectType);

@@ -53,7 +53,7 @@ import com.documentum.fc.common.IDfTime;
  * during import step.
  * <p>
  * <b> NOTE: Virtual documents are not handled currently.</b>
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmDocument extends DctmObject {
@@ -86,7 +86,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets the list of content rendition files for this document.
-	 * 
+	 *
 	 * @return the list of all content renditions
 	 */
 	public List<DctmContent> getContentList() {
@@ -95,7 +95,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Adds the content to the content list of this document.
-	 * 
+	 *
 	 * @param content
 	 *            the content
 	 */
@@ -108,7 +108,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets the list of folder locations.
-	 * 
+	 *
 	 * @return the folder locations
 	 */
 	protected List<String> getFolderLocations() {
@@ -117,7 +117,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Adds the folder location to the folder location list.
-	 * 
+	 *
 	 * @param fldrLocation
 	 *            the fldr location
 	 */
@@ -134,7 +134,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets the list that contains version tree of this document.
-	 * 
+	 *
 	 * @return the version tree
 	 */
 	protected List<DctmDocument> getVersionTree() {
@@ -143,7 +143,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Adds the version to the version list of this document.
-	 * 
+	 *
 	 * @param dctmDoc
 	 *            the dctm doc
 	 */
@@ -156,7 +156,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets the implicit version label.
-	 * 
+	 *
 	 * @return the implicit version label
 	 */
 	public String getImplicitVersionLabel() {
@@ -165,7 +165,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Sets the implicit version label.
-	 * 
+	 *
 	 * @param implicitVersionLabel
 	 *            the new implicit version label
 	 */
@@ -185,7 +185,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Instantiates a DctmDocument object with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -228,7 +228,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets the detailed document import report.
-	 * 
+	 *
 	 * @return the detailed document import report
 	 */
 	public static String getDetailedDocumentImportReport() {
@@ -250,7 +250,7 @@ public class DctmDocument extends DctmObject {
 	 * it if needed. It also checks to see if there is a need to branching. This method builds the
 	 * complete
 	 * version tree as it existed in the source repository.
-	 * 
+	 *
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 * @throws IOException
@@ -701,7 +701,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Tries to retrieve identical object from cms.
-	 * 
+	 *
 	 * @param dctmVerDoc
 	 *            the dctm ver doc
 	 * @return the i df sys object
@@ -781,7 +781,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Creates the simple document.
-	 * 
+	 *
 	 * @throws DfException
 	 *             Signals that Documentum Server error has occurred.
 	 * @throws IOException
@@ -821,7 +821,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Sets all content renditions of an sysobject in repository from content list of dctm document.
-	 * 
+	 *
 	 * @param sysObject
 	 *            the sys object
 	 * @param dctmDoc
@@ -885,7 +885,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets the dctm document.
-	 * 
+	 *
 	 * @param prsstntObj
 	 *            the sys obj
 	 * @param isVersionBeingProcessed
@@ -954,7 +954,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Exports supporting objects of this document. It exports document owner, acl, object type etc.
-	 * 
+	 *
 	 * @param sysObj
 	 *            the sys obj
 	 * @throws DfException
@@ -992,7 +992,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets all of the versions of an document from repository and builds the version tree.
-	 * 
+	 *
 	 * @param dctmDocument
 	 *            the dctm document
 	 * @param sysObj
@@ -1057,7 +1057,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Export parent folders where an document is linked.
-	 * 
+	 *
 	 * @param dctmDocument
 	 *            the dctm document
 	 * @param sysObj
@@ -1093,11 +1093,19 @@ public class DctmDocument extends DctmObject {
 		}
 	}
 
+	private static final String CONTENT_FILES_DQL = //
+	"         select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, dcs.content_size, dcs.set_file, dcs.set_time, dcs.data_ticket "
+		+ "     from dmr_content_r  dcr, dmr_content_s dcs " //
+		+ "    where dcr.parent_id = '%s' " //
+		+ "      and dcr.r_object_id = dcs.r_object_id" //
+		+ "      and page = %d" //
+		+ " order by rendition";
+
 	/**
 	 * Gets the content files from repository for an object and sets as the content file list of an
 	 * dctm
 	 * object.
-	 * 
+	 *
 	 * @param dctmDocument
 	 *            the dctm document
 	 * @param sysObj
@@ -1123,22 +1131,13 @@ public class DctmDocument extends DctmObject {
 			}
 			for (int i = 0; i < pageCnt; i++) {
 				// Run a query to find out all dmr_content objects linked to the sysobject
-				StringBuffer contentDQLBuffer = new StringBuffer(
-					"select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, ");
-				contentDQLBuffer
-					.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
-				contentDQLBuffer.append("from dmr_content_r  dcr, dmr_content_s dcs ");
-				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
-				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
-				contentDQLBuffer.append("and page = ");
-				contentDQLBuffer.append(i);
-				contentDQLBuffer.append(" order by rendition");
+				String contentDql = String.format(DctmDocument.CONTENT_FILES_DQL, sysObj.getObjectId().getId());
 
 				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-					DctmDocument.logger.debug("DQL Query to locate content is: " + contentDQLBuffer.toString());
+					DctmDocument.logger.debug("DQL Query to locate content is: " + contentDql);
 				}
 				IDfQuery contentQuery = new DfClientX().getQuery();
-				contentQuery.setDQL(contentDQLBuffer.toString());
+				contentQuery.setDQL(contentDql);
 				IDfCollection contentColl = contentQuery.execute(this.dctmSession, IDfQuery.READ_QUERY);
 				while (contentColl.next()) {
 					DctmContent dctmContent = new DctmContent();
@@ -1179,7 +1178,7 @@ public class DctmDocument extends DctmObject {
 	 * Gets the content files from repository for an object and sets as the content file list of an
 	 * dctm
 	 * object.
-	 * 
+	 *
 	 * @param dctmDocument
 	 *            the dctm document
 	 * @param sysObj
@@ -1244,7 +1243,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets the content from cms using getfile.
-	 * 
+	 *
 	 * @param sysObj
 	 *            the sys obj
 	 * @param dctmContent
@@ -1303,7 +1302,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Gets the content.
-	 * 
+	 *
 	 * @param sysObj
 	 *            the sys obj
 	 * @param contentObjID
@@ -1346,7 +1345,7 @@ public class DctmDocument extends DctmObject {
 /*
 		int bufferSize = PropertiesManager.getProperty("content_read_buffer_size",
 			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
-*/
+ */
 		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
 		// Make sure the content export location exists
 		FileUtils.forceMkdir(contentExportRootDir);
@@ -1374,7 +1373,7 @@ public class DctmDocument extends DctmObject {
 
 	/**
 	 * Reads the content from a byte array input stream and stores it into a byte array.
-	 * 
+	 *
 	 * @param contentStream
 	 *            the content stream
 	 * @return the byte data

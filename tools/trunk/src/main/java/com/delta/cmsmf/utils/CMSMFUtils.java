@@ -37,7 +37,7 @@ public class CMSMFUtils {
 
 	/**
 	 * Gets the content path from content id.
-	 * 
+	 *
 	 * @param contentObjID
 	 *            the content obj id
 	 * @return the content path from content id
@@ -64,7 +64,7 @@ public class CMSMFUtils {
 
 	/**
 	 * Runs a dctm job by given name.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the dctm session
 	 * @param jobName
@@ -82,14 +82,14 @@ public class CMSMFUtils {
 
 	/**
 	 * Gets the last export date.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the dctm session
 	 * @return the last export date
 	 */
 	public static String getLastExportDate(IDfSession dctmSession) {
 		String lastExportDate = "";
-		String targetDocbaseName = CMSMFLauncher.getParsedCliArgs().get(CLIParam.docbase);
+		String targetDocbaseName = CMSMFLauncher.getParameter(CLIParam.docbase);
 		String lastExportObjParentPath = CMSMFUtils.cmsmfSyncCabinetName + "/" + targetDocbaseName;
 		String lastExportObjPath = lastExportObjParentPath + "/" + CMSMFUtils.cmsmfLastExportObjName;
 
@@ -138,14 +138,14 @@ public class CMSMFUtils {
 
 	/**
 	 * Sets the last export date.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the dctm session
 	 * @param exportDate
 	 *            the export date
 	 */
 	public static void setLastExportDate(IDfSession dctmSession, String exportDate) {
-		String targetDocbaseName = CMSMFLauncher.getParsedCliArgs().get(CLIParam.docbase);
+		String targetDocbaseName = CMSMFLauncher.getParameter(CLIParam.docbase);
 		String lastExportObjParentPath = CMSMFUtils.cmsmfSyncCabinetName + "/" + targetDocbaseName;
 		String lastExportObjPath = lastExportObjParentPath + "/" + CMSMFUtils.cmsmfLastExportObjName;
 
@@ -188,7 +188,7 @@ public class CMSMFUtils {
 
 	/**
 	 * Creates the target docbase folder.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the dctm session
 	 * @param targetDocbaseName
@@ -207,7 +207,7 @@ public class CMSMFUtils {
 
 	/**
 	 * Post mail.
-	 * 
+	 *
 	 * @param recipients
 	 *            the recipients
 	 * @param subject
@@ -255,7 +255,7 @@ public class CMSMFUtils {
 
 	/**
 	 * Post cmsmf mail.
-	 * 
+	 *
 	 * @param subject
 	 *            the subject of the email message
 	 * @param message
