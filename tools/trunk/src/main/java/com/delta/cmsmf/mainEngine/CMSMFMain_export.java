@@ -184,6 +184,7 @@ public class CMSMFMain_export extends CMSMFMain {
 			try {
 				resultCol = dqlQry.execute(session, IDfQuery.READ_QUERY);
 				while (resultCol.next()) {
+					new Worker(fsm, resultCol.getId("r_object_id").getId()).run();
 					queueWork(new Worker(fsm, resultCol.getId("r_object_id").getId()));
 				} // while (resultCol.next())
 
@@ -230,7 +231,7 @@ public class CMSMFMain_export extends CMSMFMain {
 		// If this is auto run type of an export instead of an adhoc query export, store the value
 		// of the current export date in the repository. This value will be looked up in the next
 		// run
-		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.ADHOC_QUERY_WHERE_CLAUSE, "");
+		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.EXPORT_PREDICATE, "");
 		if (StringUtils.isBlank(fromWhereClause)) {
 			// This is indeed an auto run type of export
 			String dateTimePattern = CMSMFAppConstants.LAST_EXPORT_DATE_PATTERN;
@@ -251,9 +252,9 @@ public class CMSMFMain_export extends CMSMFMain {
 		// when was the last export run and pick up the sysobjects modified since then.
 
 		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
-		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.ADHOC_QUERY_WHERE_CLAUSE, "");
-		if (StringUtils.isNotBlank(fromWhereClause)) {
-			exportDQLQuery = selectClause + " " + fromWhereClause;
+		String predicate = PropertiesManager.getProperty(CMSMFProperties.EXPORT_PREDICATE, "");
+		if (StringUtils.isNotBlank(predicate)) {
+			exportDQLQuery = selectClause + " " + predicate;
 		} else {
 			// Try to locate a object in source repository that represents a last successful export
 			// to a target repository.
@@ -266,8 +267,7 @@ public class CMSMFMain_export extends CMSMFMain {
 
 			// first get the last export date from the source repository
 			String lastExportRunDate = CMSMFUtils.getLastExportDate(session);
-			exportDQLQuery = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE + " "
-				+ CMSMFAppConstants.AUTO_EXPORT_QUERY_FROM_WHERE_CLAUSE;
+			exportDQLQuery = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE + " " + CMSMFAppConstants.DEFAULT_PREDICATE;
 			if (StringUtils.isNotBlank(lastExportRunDate)) {
 				String modifiedWhereCondition = " and r_modify_date >= DATE('" + lastExportRunDate + "')";
 				exportDQLQuery = exportDQLQuery + modifiedWhereCondition;

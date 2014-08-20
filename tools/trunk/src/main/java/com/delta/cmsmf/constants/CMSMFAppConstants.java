@@ -43,7 +43,7 @@ public class CMSMFAppConstants {
 	 * case the
 	 * from and where clauses are specified in the properties file.
 	 */
-	public static final String AUTO_EXPORT_QUERY_FROM_WHERE_CLAUSE = "from dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
+	public static final String DEFAULT_PREDICATE = "from dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
 		+ "and not folder('/System', descend)"; // and r_modify_date >= DATE('XX_PLACE_HOLDER_XX')";
 
 	/** The file name and path of the properties file used in CMSMF application. */
@@ -74,6 +74,6 @@ public class CMSMFAppConstants {
 	public static final String IMPORT_LOCK_FILE_NAME = "_cmsmf_import.lck";
 
 	// CMSMF Last Export Related constants
-	public static final String LAST_EXPORT_SYNC_CABINET = "/CMSMF_SYNC";
+	public static final String LAST_EXPORT_SYNC_CABINET = "CMSMF_SYNC";
 	public static final String LAST_EXPORT_OBJ_NAME = "cmsmf_last_export";
 }
