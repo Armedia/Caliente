@@ -17,7 +17,7 @@ import com.documentum.fc.common.DfException;
  * during the execution of cmsmf application. These properties are used internally by the
  * application and not
  * set by the user in properties file.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class RunTimeProperties {
@@ -32,7 +32,7 @@ public class RunTimeProperties {
 
 	/**
 	 * Gets the singleton instance of the run time properties class.
-	 * 
+	 *
 	 * @return the run time properties instance
 	 */
 	public static synchronized RunTimeProperties getRunTimePropertiesInstance() {
@@ -62,7 +62,7 @@ public class RunTimeProperties {
 
 	/**
 	 * Gets the target repository operator name.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing docbase session
 	 * @return the target repository operator name
@@ -82,7 +82,7 @@ public class RunTimeProperties {
 
 	/**
 	 * Gets the list of attribute names to check for repository operator name.
-	 * 
+	 *
 	 * @return the list of attribute names to check for repository operator name
 	 */
 	@SuppressWarnings("unchecked")
@@ -100,7 +100,7 @@ public class RunTimeProperties {
 
 	/**
 	 * Gets the current import process error count.
-	 * 
+	 *
 	 * @return the import process error count
 	 */
 	public int getImportProcessErrorCount() {

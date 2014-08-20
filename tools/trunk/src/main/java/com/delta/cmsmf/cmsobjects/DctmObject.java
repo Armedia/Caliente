@@ -35,7 +35,7 @@ import com.documentum.fc.common.IDfTime;
 
 /**
  * The DctmObject class is an abstract base class for other object types.
- * 
+ *
  * This class is equivalent to IDfPersistentObject of DFC. This class contains 2 abstract methods
  * that has to be implemented by all extending classes. The method getFromCMS() retrieves an object
  * from the repository and method createInCMS() creates a object in the repository.
@@ -44,7 +44,7 @@ import com.documentum.fc.common.IDfTime;
  * be a single type or repeating type. This class also contains several methods to get attributes
  * from repository and set attributes in the repository. It also contains several utility methods to
  * get attribute values from attributes map.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public abstract class DctmObject implements Serializable {
@@ -59,7 +59,7 @@ public abstract class DctmObject implements Serializable {
 	 * The dctm object type enumeration.
 	 * This type will be set by individual object types during initialization
 	 * within the class constructors.
-	 * 
+	 *
 	 * @see DctmObjectTypesEnum
 	 */
 	public DctmObjectTypesEnum dctmObjectType = null;
@@ -73,7 +73,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Instantiates a new dctm object with documentum session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the documentum session
 	 */
@@ -87,7 +87,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Sets the documentum repository session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the new documentum repository session
 	 */
@@ -100,7 +100,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Gets the attributes map.
-	 * 
+	 *
 	 * @return the attributes map
 	 */
 	public Map<String, DctmAttribute> getAttrMap() {
@@ -109,7 +109,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Adds the attribute to the attributes map.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attribute name
 	 * @param dctmAttr
@@ -122,7 +122,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Finds attribute by name from attributes map.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attr name
 	 * @return the CMSMF DctmAttribute that stores attribute information and value.
@@ -136,7 +136,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Checks if an attribute exist in the attributes map.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attribute name
 	 * @return true, if attributes map contains the attribute
@@ -147,7 +147,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Removes the attribute from the attributes map.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attribute name
 	 */
@@ -157,7 +157,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Removes the repeating attribute value for an attribute.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attribute name
 	 * @param attrValue
@@ -171,7 +171,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Gets the value of single value type attribute, whose data type is String.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attribute name
 	 * @return the string value of the attribute
@@ -187,7 +187,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Gets the value of single value type attribute, whose data type is Integer.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attribute name
 	 * @return the int value of the attribute
@@ -203,7 +203,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Gets the value of single value type attribute, whose data type is Boolean.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attribute name
 	 * @return the boolean value of the attribute
@@ -219,7 +219,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Gets the value of single value type attribute, whose data type is Date/Time.
-	 * 
+	 *
 	 * @param attrName
 	 *            the attribute name
 	 * @return the date value of the attribute
@@ -234,7 +234,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Gets the source repository object id.
-	 * 
+	 *
 	 * @return the source repository object id
 	 */
 	public String getSrcObjectID() {
@@ -243,7 +243,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Sets the source repository object id.
-	 * 
+	 *
 	 * @param srcObjectID
 	 *            the source repository object id
 	 */
@@ -253,7 +253,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Creates the object in target repository.
-	 * 
+	 *
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 * @throws IOException
@@ -264,7 +264,7 @@ public abstract class DctmObject implements Serializable {
 	/**
 	 * Updates system attributes of an object using execsql. This method is used to
 	 * update various system and internal attributes of an object during the import step.
-	 * 
+	 *
 	 * @param sysObject
 	 *            the DFC sysObject representing an object in repository.
 	 * @param dctmObj
@@ -327,7 +327,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Updates modify date attribute of an persistent object using execsql.
-	 * 
+	 *
 	 * @param prsstntObject
 	 *            the DFC persistentObject representing an object in repository
 	 * @param dctmObj
@@ -360,7 +360,7 @@ public abstract class DctmObject implements Serializable {
 	/**
 	 * Update set_file, set_client and set_time attributes for all of the associated content
 	 * objects.
-	 * 
+	 *
 	 * @param prsstntObject
 	 *            the DFC persistentObject representing an object in repository
 	 * @param dctmObj
@@ -415,7 +415,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Update i_is_deleted attribute of objects.
-	 * 
+	 *
 	 * @param updateIsDeletedObjects
 	 *            the list of objects whose i_is_deleted needs to be set to true
 	 * @throws DfException
@@ -446,7 +446,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Updates vStamp attribute of an persistent object using execsql.
-	 * 
+	 *
 	 * @param prsstntObject
 	 *            the DFC persistentObject representing an object in repository
 	 * @param dctmObj
@@ -475,7 +475,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Updates vStamp attribute of an persistent object using execsql.
-	 * 
+	 *
 	 * @param prsstntObject
 	 *            the DFC persistentObject representing an object in repository
 	 * @param tableName
@@ -510,7 +510,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Runs execsql query that can be used to update various system/internal attributes.
-	 * 
+	 *
 	 * @param session
 	 *            the repository session
 	 * @param sqlQueryString
@@ -547,7 +547,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Removes all links of an object in CMS.
-	 * 
+	 *
 	 * @param sysObj
 	 *            the DFC sysObject who is being unlinked
 	 * @throws DfException
@@ -573,7 +573,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Sets all attributes of an object in CMS.
-	 * 
+	 *
 	 * @param prsstntObj
 	 *            the DFC persistent object in CMS
 	 * @param dctmObj
@@ -659,7 +659,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Clears the value of an attribute in cms.
-	 * 
+	 *
 	 * @param prsstntObj
 	 *            the persistent object
 	 * @param attrName
@@ -708,7 +708,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Sets the attribute in cms.
-	 * 
+	 *
 	 * @param prsstntObj
 	 *            the DFC persistentObject for which the attribute is being updated
 	 * @param attrName
@@ -792,7 +792,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = (String) dctmAttribute.getSingleValue();
 					if (strVal.equals(CMSMFAppConstants.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(attrName)) {
+						.contains(attrName)) {
 						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 							this.dctmSession);
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -811,7 +811,7 @@ public abstract class DctmObject implements Serializable {
 						String strVal = (String) attrVal;
 						if (strVal.equals(CMSMFAppConstants.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-								.contains(attrName)) {
+							.contains(attrName)) {
 							strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 								this.dctmSession);
 							if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -841,7 +841,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Gets the object from CMS.
-	 * 
+	 *
 	 * @param prsstntObj
 	 *            the DFC Persistent Object
 	 * @return the DctmObject that represents a persistent object in CMS
@@ -853,7 +853,7 @@ public abstract class DctmObject implements Serializable {
 	/**
 	 * Gets all attributes from CMS and sets them in an attribute map of an instance of DctmObject
 	 * class.
-	 * 
+	 *
 	 * @param dctmObject
 	 *            the CMSMF DctmObject whose attributes map will be loaded
 	 * @param prsstntObj
@@ -890,7 +890,7 @@ public abstract class DctmObject implements Serializable {
 	/**
 	 * Gets a single attribute from the CMS and adds to the attributes map of DctmObject.
 	 * This method handles single value attribute as well as repeating attributes
-	 * 
+	 *
 	 * @param dctmObj
 	 *            the CMSMF DctmObject to which the retrieved attribute will be added
 	 * @param prsstntObj
@@ -942,7 +942,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = prsstntObj.getString(idfAttr.getName());
 					if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(idfAttr.getName())) {
+						.contains(idfAttr.getName())) {
 						strVal = CMSMFAppConstants.DM_DBO;
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + idfAttr.getName() + " attribute of object with id: "
@@ -1014,7 +1014,7 @@ public abstract class DctmObject implements Serializable {
 							String strVal = prsstntObj.getRepeatingString(idfAttr.getName(), i);
 							if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 								&& RunTimeProperties.getRunTimePropertiesInstance()
-									.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
+								.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
 								strVal = CMSMFAppConstants.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()
@@ -1049,7 +1049,7 @@ public abstract class DctmObject implements Serializable {
 	/**
 	 * Updates acl domain attribute.
 	 * This method is no longer used and is deprecated.
-	 * 
+	 *
 	 * @param dctmObj
 	 *            the dctm obj
 	 */
@@ -1091,7 +1091,7 @@ public abstract class DctmObject implements Serializable {
 
 		/**
 		 * Instantiates a new restore old acl info.
-		 * 
+		 *
 		 * @param aclName
 		 *            the acl name
 		 * @param aclDomain
@@ -1112,7 +1112,7 @@ public abstract class DctmObject implements Serializable {
 
 	/**
 	 * Restore acl of parent folders.
-	 * 
+	 *
 	 * @param restoreACLObjectList
 	 *            the restore acl object list
 	 * @throws DfException

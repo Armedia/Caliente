@@ -12,13 +12,13 @@ import org.apache.log4j.Logger;
  * instance of this class during execution. This class is used through out the application to
  * prevent
  * serializing duplicate folders/groups/users/types/acls/formats objects.
- * 
+ *
  * The class maintains a Map for already processed objects for each type. Map is used instead of
  * list to
  * facilitate faster lookup. The object id of already processed object is stored as the key in the
  * map and to
  * conserve space, a simple byte is stored in a value in {@code <key, value>} pair of the map.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DuplicateChecker {
@@ -36,7 +36,7 @@ public class DuplicateChecker {
 
 	/**
 	 * Gets the singleton instance of the duplicate checker class.
-	 * 
+	 *
 	 * @return the duplicate checker singleton instance
 	 */
 	public static synchronized DuplicateChecker getDuplicateChecker() {
@@ -67,7 +67,7 @@ public class DuplicateChecker {
 	/**
 	 * Checks if the folder is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
-	 * 
+	 *
 	 * @param folderID
 	 *            the folder id
 	 * @param addFlag
@@ -91,7 +91,7 @@ public class DuplicateChecker {
 	/**
 	 * Checks if the user is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
-	 * 
+	 *
 	 * @param userID
 	 *            the user id
 	 * @return true, if the user is already processed
@@ -113,7 +113,7 @@ public class DuplicateChecker {
 	/**
 	 * Checks if the group is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
-	 * 
+	 *
 	 * @param groupID
 	 *            the group id
 	 * @param addFlag
@@ -137,7 +137,7 @@ public class DuplicateChecker {
 	/**
 	 * Checks if the ACL is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
-	 * 
+	 *
 	 * @param aclID
 	 *            the acl id
 	 * @return true, if the ACL is already processed
@@ -159,7 +159,7 @@ public class DuplicateChecker {
 	/**
 	 * Checks if the format is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
-	 * 
+	 *
 	 * @param formatID
 	 *            the format id
 	 * @return true, if the format is already processed
@@ -181,7 +181,7 @@ public class DuplicateChecker {
 	/**
 	 * Checks if the type is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
-	 * 
+	 *
 	 * @param typeID
 	 *            the type id
 	 * @return true, if the type is already processed

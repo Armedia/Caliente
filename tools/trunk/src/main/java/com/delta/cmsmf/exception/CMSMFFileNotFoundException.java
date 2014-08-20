@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 /**
  * The Class CMSMFException. This is a CMSMF application exception thrown
  * to suggest that the file being opened does not exist.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFFileNotFoundException extends FileNotFoundException {
@@ -21,7 +21,7 @@ public class CMSMFFileNotFoundException extends FileNotFoundException {
 
 	/**
 	 * Instantiates a new CMSMF file not found exception.
-	 * 
+	 *
 	 * @param message
 	 *            the message
 	 */

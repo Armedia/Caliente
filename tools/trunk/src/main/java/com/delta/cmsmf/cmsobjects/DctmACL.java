@@ -25,7 +25,7 @@ import com.documentum.fc.common.IDfList;
  * are needed to replicate a dm_acl object in target repository.
  * <p>
  * <b> NOTE: we are not handling aliases currently. </b>
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmACL extends DctmObject {
@@ -60,7 +60,7 @@ public class DctmACL extends DctmObject {
 
 	/**
 	 * Instantiates a new DctmACL object with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -163,7 +163,7 @@ public class DctmACL extends DctmObject {
 
 	/**
 	 * Gets the detailed acl import report.
-	 * 
+	 *
 	 * @return the detailed acl import report
 	 */
 	public static String getDetailedAclImportReport() {
@@ -178,7 +178,7 @@ public class DctmACL extends DctmObject {
 
 	/**
 	 * Sets the accessor permissions of an acl object in the CMS.
-	 * 
+	 *
 	 * @param aclObj
 	 *            the DFC ACL object for which permissions are being set
 	 * @param doesACLNeedUpdate
@@ -263,7 +263,7 @@ public class DctmACL extends DctmObject {
 	/**
 	 * Populates extended permission names to a given CMSMF DctmACL object from a given
 	 * acl object in a CMS.
-	 * 
+	 *
 	 * @param dctmACL
 	 *            the CMSMF DctmACL object whose extended permissions list needs to be populated
 	 * @param aclObj
@@ -283,7 +283,7 @@ public class DctmACL extends DctmObject {
 
 	/**
 	 * Exports supporting objects of this acl object. It exports accessor names of an acl object.
-	 * 
+	 *
 	 * @param aclObj
 	 *            the ACL object in CMS
 	 * @throws CMSMFException

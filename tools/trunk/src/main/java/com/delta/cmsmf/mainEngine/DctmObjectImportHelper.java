@@ -14,7 +14,7 @@ import com.documentum.fc.common.IDfId;
 /**
  * The Class DctmObjectImportHelper contains several utility methods that are used
  * during import step.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmObjectImportHelper {
@@ -25,7 +25,7 @@ public class DctmObjectImportHelper {
 	/**
 	 * Creates the folder in a given repository. This method creates the cabinets and
 	 * other parent folders if they do not exist in the repository.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum repository session
 	 * @param fldrPath
@@ -97,7 +97,7 @@ public class DctmObjectImportHelper {
 	 * Gets the object id of the sysobject for given folder path. This
 	 * method runs a dql query to get the object id. It can return object id
 	 * of folders as well as cabinets in documentum reposotiry.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum repository session
 	 * @param fldrPath

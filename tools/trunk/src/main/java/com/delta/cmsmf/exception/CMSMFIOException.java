@@ -5,7 +5,7 @@ import java.io.IOException;
 /**
  * The Class CMSMFException. This is a CMSMF application exception thrown
  * to suggest that I/O error of some sort has occurred.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFIOException extends IOException {
@@ -21,7 +21,7 @@ public class CMSMFIOException extends IOException {
 
 	/**
 	 * Instantiates a new cMSMFIO exception.
-	 * 
+	 *
 	 * @param arg0
 	 *            the arg0
 	 * @param arg1
@@ -33,7 +33,7 @@ public class CMSMFIOException extends IOException {
 
 	/**
 	 * Instantiates a new cMSMFIO exception.
-	 * 
+	 *
 	 * @param arg0
 	 *            the arg0
 	 */
@@ -43,7 +43,7 @@ public class CMSMFIOException extends IOException {
 
 	/**
 	 * Instantiates a new cMSMFIO exception.
-	 * 
+	 *
 	 * @param arg0
 	 *            the arg0
 	 */

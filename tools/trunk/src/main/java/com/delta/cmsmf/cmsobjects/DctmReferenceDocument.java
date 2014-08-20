@@ -210,7 +210,7 @@ public class DctmReferenceDocument extends DctmDocument {
 	public static String getDetailedReferenceDocumentImportReport() {
 		StringBuffer importReport = new StringBuffer();
 		importReport
-			.append("\nNo. of reference documents read from file: " + DctmReferenceDocument.ref_docs_read + ".");
+		.append("\nNo. of reference documents read from file: " + DctmReferenceDocument.ref_docs_read + ".");
 		importReport.append("\nNo. of reference documents skipped due to duplicates: "
 			+ DctmReferenceDocument.ref_docs_skipped + ".");
 		importReport.append("\nNo. of reference documents updated: " + DctmReferenceDocument.ref_docs_updated + ".");
@@ -254,17 +254,14 @@ public class DctmReferenceDocument extends DctmDocument {
 				DctmReferenceDocument.logger.warn(
 					"Unable to locate a remote object while creating reference using target repository session.", e);
 				// if that fails, try to locate the remote object using source repository session
-				IDfSession session = null;
 				try {
-					session = CMSMFMain.getInstance().getSession();
-					remoteObj = (IDfSysObject) session.getObject(new DfId(getReferenceById()));
-				} catch (Exception e1) {
+					remoteObj = (IDfSysObject) CMSMFMain.getInstance().getSession()
+						.getObject(new DfId(getReferenceById()));
+				} catch (DfException e1) {
 					DctmReferenceDocument.logger.warn(
 						"Unable to locate a remote object while creating reference using source repository session.",
 						e1);
 					this.dctmSession.abortTrans();
-				} finally {
-					CMSMFMain.getInstance().closeSession(session);
 				}
 			}
 			if (remoteObj != null) {
@@ -358,7 +355,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Started exporting dctm mirror dm_document and supporting objects from repository");
+			.info("Started exporting dctm mirror dm_document and supporting objects from repository");
 		}
 
 		// NOTE: Mirror objects do not have content associated with them. They merely point to
@@ -391,8 +388,8 @@ public class DctmReferenceDocument extends DctmDocument {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Finished exporting dctm mirror dm_document and supporting objects from repository for ID: "
-					+ srcObjID);
+			.info("Finished exporting dctm mirror dm_document and supporting objects from repository for ID: "
+				+ srcObjID);
 		}
 		return dctmReferenceDocument;
 	}
@@ -413,8 +410,8 @@ public class DctmReferenceDocument extends DctmDocument {
 		IDfPersistentObject prsstntObj, String srcObjID) throws CMSMFException {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Started retrieving dctm mirror object attributes from repository for object with id: "
-					+ srcObjID);
+			.info("Started retrieving dctm mirror object attributes from repository for object with id: "
+				+ srcObjID);
 		}
 		try {
 			// Set object id
@@ -430,8 +427,8 @@ public class DctmReferenceDocument extends DctmDocument {
 		}
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Finished retrieving dctm mirror object attributes from repository for object with id: "
-					+ srcObjID);
+			.info("Finished retrieving dctm mirror object attributes from repository for object with id: "
+				+ srcObjID);
 		}
 
 	}
@@ -472,7 +469,7 @@ public class DctmReferenceDocument extends DctmDocument {
 		throws CMSMFException {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Started retrieving parent folders from repository for document with id: " + srcObjID);
+			.info("Started retrieving parent folders from repository for document with id: " + srcObjID);
 		}
 		try {
 			List<Object> folderIDs = dctmDocument.findAttribute(DctmAttrNameConstants.I_FOLDER_ID).getRepeatingValues();
@@ -490,7 +487,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Finished retrieving parent folders from repository for document with id: " + srcObjID);
+			.info("Finished retrieving parent folders from repository for document with id: " + srcObjID);
 		}
 	}
 

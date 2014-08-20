@@ -24,7 +24,7 @@ import com.delta.cmsmf.constants.CMSMFProperties;
  * through out the execution.
  * <p>
  * This class uses Apache commons configuration library to manage the properties.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class PropertiesManager {
@@ -63,8 +63,6 @@ public class PropertiesManager {
 
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
-		if (!propertyFile.exists()) { return; }
-		if (!propertyFile.canRead()) { return; }
 		PropertiesConfiguration cfg = new PropertiesConfiguration();
 		PropertiesManager.configure(cfg);
 		cfg.load(propertyFile);
@@ -94,7 +92,7 @@ public class PropertiesManager {
 
 	/**
 	 * Gets a string property value for a given proprty name from a property configuration.
-	 * 
+	 *
 	 * @param propName
 	 *            the prop name
 	 * @param defaultValue
@@ -107,7 +105,7 @@ public class PropertiesManager {
 
 	/**
 	 * Gets a integer property value for a given property name from a property configuration.
-	 * 
+	 *
 	 * @param propName
 	 *            the prop name
 	 * @param defaultValue

@@ -3,7 +3,7 @@ package com.delta.cmsmf.constants;
 /**
  * The Class DctmTypeConstants. This class contains various values
  * of object types in documentum CMS used in CMSMF application.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public final class DctmTypeConstants {

@@ -32,7 +32,7 @@ import com.documentum.fc.common.DfException;
  * <p>
  * <b> NOTE: During import process, if the user name is dmadmin or starts with "dm_",it will be
  * ignore and will not be created them in the repository.</b>
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmUser extends DctmObject {
@@ -71,7 +71,7 @@ public class DctmUser extends DctmObject {
 
 	/**
 	 * Instantiates a new DctmUser object with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -170,8 +170,8 @@ public class DctmUser extends DctmObject {
 					if (usr.getUserName().equals(getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME))) {
 						if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 							DctmUser.logger
-								.debug("User name will not be updated because it's same as before. Currently in target repo: "
-									+ usr.getUserName());
+							.debug("User name will not be updated because it's same as before. Currently in target repo: "
+								+ usr.getUserName());
 						}
 						removeAttribute(DctmAttrNameConstants.USER_NAME);
 					}
@@ -263,9 +263,9 @@ public class DctmUser extends DctmObject {
 	}
 
 	/**
-	 * 
+	 *
 	 * Gets the detailed user import report.
-	 * 
+	 *
 	 * @return the detailed user import report
 	 */
 	public static String getDetailedUserImportReport() {
@@ -280,7 +280,7 @@ public class DctmUser extends DctmObject {
 
 	/**
 	 * Updates internal acl of a given user object.
-	 * 
+	 *
 	 * @param prsstntObj
 	 *            the persistent object that represents user object in cms.
 	 * @param defaultACLName
@@ -333,7 +333,7 @@ public class DctmUser extends DctmObject {
 	 * This method creates default folder, default group and default acl in repository
 	 * during import process if they do not exist. These objects will be updated later on
 	 * when the import process imports group, acls and folders.
-	 * 
+	 *
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
@@ -383,7 +383,7 @@ public class DctmUser extends DctmObject {
 			if (userDefaultACL == null) {
 				if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 					DctmUser.logger
-						.debug("The user's default Internal ACL does not exist and acl related attributes will be removed");
+					.debug("The user's default Internal ACL does not exist and acl related attributes will be removed");
 				}
 				removeAttribute(DctmAttrNameConstants.ACL_NAME);
 				removeAttribute(DctmAttrNameConstants.ACL_DOMAIN);
@@ -463,7 +463,7 @@ public class DctmUser extends DctmObject {
 	 * Exports various user defaults for a given user.
 	 * This method exports default folder, default group and default acl
 	 * of an user object.
-	 * 
+	 *
 	 * @param dctmUser
 	 *            the dctm user
 	 * @throws CMSMFException

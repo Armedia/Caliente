@@ -27,7 +27,7 @@ import com.documentum.fc.common.DfException;
  * <p>
  * <b> NOTE: For every group in documentum cms, there is a corresponding dm_user object; We are not
  * exporting this user object currently. </b>
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmGroup extends DctmObject {
@@ -59,7 +59,7 @@ public class DctmGroup extends DctmObject {
 
 	/**
 	 * Instantiates a new DctmGroup object with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -165,7 +165,7 @@ public class DctmGroup extends DctmObject {
 
 	/**
 	 * Gets the detailed group import report.
-	 * 
+	 *
 	 * @return the detailed group import report
 	 */
 	public static String getDetailedGroupImportReport() {
@@ -225,7 +225,7 @@ public class DctmGroup extends DctmObject {
 
 	/**
 	 * Export supporting objects.
-	 * 
+	 *
 	 * @param groupObj
 	 *            the group obj
 	 * @throws CMSMFException
@@ -244,7 +244,7 @@ public class DctmGroup extends DctmObject {
 
 	/**
 	 * Exports child users of a given group object.
-	 * 
+	 *
 	 * @param parentGroup
 	 *            the parent group
 	 * @throws CMSMFException
@@ -287,7 +287,7 @@ public class DctmGroup extends DctmObject {
 	 * Exports child groups of given group object.
 	 * This method calls itself recursively to traverse
 	 * all of the child groups before exporting itself.
-	 * 
+	 *
 	 * @param groupName
 	 *            the group name
 	 * @throws CMSMFException

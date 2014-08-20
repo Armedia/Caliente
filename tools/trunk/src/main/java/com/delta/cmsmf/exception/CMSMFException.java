@@ -2,7 +2,7 @@ package com.delta.cmsmf.exception;
 
 /**
  * The Class CMSMFException. This is a CMSMF application exception.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFException extends Exception {
@@ -19,7 +19,7 @@ public class CMSMFException extends Exception {
 
 	/**
 	 * Instantiates a new cMSMF exception.
-	 * 
+	 *
 	 * @param message
 	 *            the message
 	 * @param cause
@@ -31,7 +31,7 @@ public class CMSMFException extends Exception {
 
 	/**
 	 * Instantiates a new CMSMF exception.
-	 * 
+	 *
 	 * @param message
 	 *            the exception message
 	 */
@@ -41,7 +41,7 @@ public class CMSMFException extends Exception {
 
 	/**
 	 * Instantiates a new CMSMF exception.
-	 * 
+	 *
 	 * @param cause
 	 *            the cause
 	 */

@@ -353,7 +353,7 @@ public class DctmDocument extends DctmObject {
 							String aclDomain = parentFldrACL.getDomain();
 							int vStamp = antecedentVersion.getVStamp();
 							antecedentVersion
-								.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_VERSION, null);
+							.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_VERSION, null);
 							antecedentVersion.save();
 							restoreACLObjectList.add(new restoreOldACLInfo(aclName, aclDomain, antecedentVersion
 								.getObjectId().getId(), vStamp));
@@ -432,8 +432,8 @@ public class DctmDocument extends DctmObject {
 						DctmDocument.docs_skipped++;
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 							DctmDocument.logger
-								.debug("Identical version of document already exist in target repo with id: "
-									+ sysObject.getObjectId().getId() + " and name: " + sysObject.getObjectName());
+							.debug("Identical version of document already exist in target repo with id: "
+								+ sysObject.getObjectId().getId() + " and name: " + sysObject.getObjectName());
 						}
 					} else {
 						doesExistingObjectNeedsUpdate = true;
@@ -832,7 +832,7 @@ public class DctmDocument extends DctmObject {
 	 *             Signals that DFC Exception has occurred.
 	 */
 	private static void setContentFilesInCMS(IDfSysObject sysObject, DctmDocument dctmDoc) throws IOException,
-		DfException {
+	DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started setting content files of document with name: "
 				+ sysObject.getObjectName());
@@ -947,7 +947,7 @@ public class DctmDocument extends DctmObject {
 
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger
-				.info("Finished exporting dctm dm_document and supporting objects from repository for ID: " + srcObjID);
+			.info("Finished exporting dctm dm_document and supporting objects from repository for ID: " + srcObjID);
 		}
 		return dctmDocument;
 	}
@@ -1093,14 +1093,6 @@ public class DctmDocument extends DctmObject {
 		}
 	}
 
-	private static final String CONTENT_FILES_DQL = //
-	"         select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, dcs.content_size, dcs.set_file, dcs.set_time, dcs.data_ticket "
-		+ "     from dmr_content_r  dcr, dmr_content_s dcs " //
-		+ "    where dcr.parent_id = '%s' " //
-		+ "      and dcr.r_object_id = dcs.r_object_id" //
-		+ "      and page = %d" //
-		+ " order by rendition";
-
 	/**
 	 * Gets the content files from repository for an object and sets as the content file list of an
 	 * dctm
@@ -1131,13 +1123,22 @@ public class DctmDocument extends DctmObject {
 			}
 			for (int i = 0; i < pageCnt; i++) {
 				// Run a query to find out all dmr_content objects linked to the sysobject
-				String contentDql = String.format(DctmDocument.CONTENT_FILES_DQL, sysObj.getObjectId().getId());
+				StringBuffer contentDQLBuffer = new StringBuffer(
+					"select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, ");
+				contentDQLBuffer
+				.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
+				contentDQLBuffer.append("from dmr_content_r  dcr, dmr_content_s dcs ");
+				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
+				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
+				contentDQLBuffer.append("and page = ");
+				contentDQLBuffer.append(i);
+				contentDQLBuffer.append(" order by rendition");
 
 				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-					DctmDocument.logger.debug("DQL Query to locate content is: " + contentDql);
+					DctmDocument.logger.debug("DQL Query to locate content is: " + contentDQLBuffer.toString());
 				}
 				IDfQuery contentQuery = new DfClientX().getQuery();
-				contentQuery.setDQL(contentDql);
+				contentQuery.setDQL(contentDQLBuffer.toString());
 				IDfCollection contentColl = contentQuery.execute(this.dctmSession, IDfQuery.READ_QUERY);
 				while (contentColl.next()) {
 					DctmContent dctmContent = new DctmContent();
@@ -1262,8 +1263,8 @@ public class DctmDocument extends DctmObject {
 		String pageModifier = dctmContent.getPageModifier();
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
-				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
-					+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
+			.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+				+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
 		}
 		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
 // ByteArrayInputStream
@@ -1326,16 +1327,16 @@ public class DctmDocument extends DctmObject {
 		String pageModifier, int contentDataTicket) throws IOException, DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
-				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
-					+ contentObjID
-					+ ", "
-					+ contentFormat
-					+ ", "
-					+ pageNbr
-					+ ", "
-					+ pageModifier
-					+ ", "
-					+ contentDataTicket + ">");
+			.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+				+ contentObjID
+				+ ", "
+				+ contentFormat
+				+ ", "
+				+ pageNbr
+				+ ", "
+				+ pageModifier
+				+ ", "
+				+ contentDataTicket + ">");
 		}
 		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
 // ByteArrayInputStream

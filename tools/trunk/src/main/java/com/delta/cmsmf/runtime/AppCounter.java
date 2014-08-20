@@ -16,7 +16,7 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  * out the execution.
  * <p>
  * This class contains a counter for each type of object that cmsmf application is able to handle.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class AppCounter {
@@ -34,7 +34,7 @@ public class AppCounter {
 
 	/**
 	 * Gets the singleton instance of App counter class.
-	 * 
+	 *
 	 * @return the object counter
 	 */
 	public static synchronized AppCounter getObjectCounter() {
@@ -82,7 +82,7 @@ public class AppCounter {
 
 	/**
 	 * Gets the document counter.
-	 * 
+	 *
 	 * @return the document counter
 	 */
 	public int getDocumentCounter() {
@@ -91,7 +91,7 @@ public class AppCounter {
 
 	/**
 	 * Gets the folder counter.
-	 * 
+	 *
 	 * @return the folder counter
 	 */
 	public int getFolderCounter() {
@@ -100,7 +100,7 @@ public class AppCounter {
 
 	/**
 	 * Gets the user counter.
-	 * 
+	 *
 	 * @return the user counter
 	 */
 	public int getUserCounter() {
@@ -109,7 +109,7 @@ public class AppCounter {
 
 	/**
 	 * Gets the group counter.
-	 * 
+	 *
 	 * @return the group counter
 	 */
 	public int getGroupCounter() {
@@ -118,7 +118,7 @@ public class AppCounter {
 
 	/**
 	 * Gets the acl counter.
-	 * 
+	 *
 	 * @return the acl counter
 	 */
 	public int getAclCounter() {
@@ -127,7 +127,7 @@ public class AppCounter {
 
 	/**
 	 * Gets the type counter.
-	 * 
+	 *
 	 * @return the type counter
 	 */
 	public int getTypeCounter() {
@@ -136,7 +136,7 @@ public class AppCounter {
 
 	/**
 	 * Gets the format counter.
-	 * 
+	 *
 	 * @return the format counter
 	 */
 	public int getFormatCounter() {
@@ -158,7 +158,7 @@ public class AppCounter {
 
 	/**
 	 * Email counters.
-	 * 
+	 *
 	 * @param exportDQLQuery
 	 */
 	public void emailCounters(String exportImportStep, String exportDQLQuery) {
@@ -186,7 +186,7 @@ public class AppCounter {
 
 	/**
 	 * Increments a counter for a gievn object type.
-	 * 
+	 *
 	 * @param dctmObjectType
 	 *            the dctm object type
 	 */

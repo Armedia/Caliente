@@ -14,7 +14,7 @@ import com.documentum.fc.common.DfException;
  * The DctmContent class represents a content file of a dm_document object from CMS.
  * This class contains fields to store the file format and page number of a content file.
  * The contentByteArray field stores the entire content file in byte[] format.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmContent extends DctmObject {
@@ -33,7 +33,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Instantiates a DctmContent object with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -46,7 +46,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Gets the page nbr of a content file.
-	 * 
+	 *
 	 * @return the page nbr
 	 */
 	public int getPageNbr() {
@@ -55,7 +55,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Sets the page nbr of a content file.
-	 * 
+	 *
 	 * @param pageNbr
 	 *            the new page nbr
 	 */
@@ -68,7 +68,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Gets the page modifier of a content file.
-	 * 
+	 *
 	 * @return the page modifier
 	 */
 	public String getPageModifier() {
@@ -77,7 +77,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Sets the page modifier of a content file.
-	 * 
+	 *
 	 * @param pageModifier
 	 *            the new page modifier
 	 */
@@ -90,7 +90,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Gets the content byte array of a content file.
-	 * 
+	 *
 	 * @return the content byte array
 	 */
 	public byte[] getContentByteArray() {
@@ -99,7 +99,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Sets the content byte array of a content file.
-	 * 
+	 *
 	 * @param contentByteArray
 	 *            the new content byte array
 	 */
@@ -112,7 +112,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Gets the relative content file location.
-	 * 
+	 *
 	 * @return the relative content file location
 	 */
 	public String getRelativeContentFileLocation() {
@@ -121,7 +121,7 @@ public class DctmContent extends DctmObject {
 
 	/**
 	 * Sets the relative content file location.
-	 * 
+	 *
 	 * @param relativeContentFileLocation
 	 *            the new relative content file location
 	 */
@@ -148,7 +148,7 @@ public class DctmContent extends DctmObject {
 			getAllAttributesFromCMS(dctmContent, prsstntObj, contentID);
 			if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 				DctmObject.logger
-					.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
+				.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
 			}
 
 			return dctmContent;

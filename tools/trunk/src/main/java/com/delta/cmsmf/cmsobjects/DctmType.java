@@ -33,7 +33,7 @@ import com.documentum.fc.common.IDfId;
  * <b> NOTE: Type object updates can not be performed at moment because it would be extremely
  * difficult to see what had changed in either repository (source or target). It would take
  * considerable amount of effort to come up with the Alter Table dql necessary.</b>
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmType extends DctmObject {
@@ -72,7 +72,7 @@ public class DctmType extends DctmObject {
 
 	/**
 	 * Instantiates a new DctmType object with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -149,7 +149,7 @@ public class DctmType extends DctmObject {
 	 * Creates the dm_type object in cms that corresponds to this object. This method builds
 	 * required
 	 * "Create Type" dql statement and executes it in order to create appropriate dm_type object.
-	 * 
+	 *
 	 * @throws DfException
 	 *             the df exception
 	 */
@@ -252,7 +252,7 @@ public class DctmType extends DctmObject {
 
 	/**
 	 * Gets the detailed type import report.
-	 * 
+	 *
 	 * @return the detailed type import report
 	 */
 	public static String getDetailedTypeImportReport() {
@@ -308,7 +308,7 @@ public class DctmType extends DctmObject {
 	 * Exports super type objects of given type object.
 	 * This method calls itself recursively in order to export
 	 * all of its supertypes first before exporting itself.
-	 * 
+	 *
 	 * @param typeObj
 	 *            the DFC IDfType object
 	 * @throws CMSMFException

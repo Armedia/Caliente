@@ -32,7 +32,7 @@ import com.delta.cmsmf.properties.PropertiesManager;
  * contains methods to create inputstreams so that application can read CMS
  * objects during import process. This class maintains one filestream for each object
  * type.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class FileStreamsManager {
@@ -41,25 +41,25 @@ public class FileStreamsManager {
 	static Logger logger = Logger.getLogger(FileStreamsManager.class);
 
 	/** The Constant DOCUMENTS_FILE_NAME. */
-	private static final String DOCUMENTS_FILE_NAME = "document";
+	private static final String DOCUMENTS_FILE_NAME = "DCTMDocsFile.cmsmf";
 
 	/** The Constant FOLDERS_FILE_NAME. */
-	private static final String FOLDERS_FILE_NAME = "folder";
+	private static final String FOLDERS_FILE_NAME = "DCTMFldrsFile.cmsmf";
 
 	/** The Constant USERS_FILE_NAME. */
-	private static final String USERS_FILE_NAME = "user";
+	private static final String USERS_FILE_NAME = "DCTMUsrsFile.cmsmf";
 
 	/** The Constant GROUPS_FILE_NAME. */
-	private static final String GROUPS_FILE_NAME = "group";
+	private static final String GROUPS_FILE_NAME = "DCTMGrpsFile.cmsmf";
 
 	/** The Constant ACLS_FILE_NAME. */
-	private static final String ACLS_FILE_NAME = "acl";
+	private static final String ACLS_FILE_NAME = "DCTMACLsFile.cmsmf";
 
 	/** The Constant TYPES_FILE_NAME. */
-	private static final String TYPES_FILE_NAME = "type";
+	private static final String TYPES_FILE_NAME = "DCTMTypsFile.cmsmf";
 
 	/** The Constant FORMATS_FILE_NAME. */
-	private static final String FORMATS_FILE_NAME = "format";
+	private static final String FORMATS_FILE_NAME = "DCTMFrmtsFile.cmsmf";
 
 	/** The Constant SRC_REPO_CONFIG_FILE_NAME. */
 	private static final String SRC_REPO_CONFIG_FILE_NAME = "SrcRepoConfigFile.cmsmf";
@@ -127,7 +127,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Gets the file stream manager singleton instance.
-	 * 
+	 *
 	 * @return the file stream manager
 	 */
 	public static synchronized FileStreamsManager getFileStreamManager() {
@@ -161,7 +161,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Sets the strems diretory path where the files will be created.
-	 * 
+	 *
 	 * @param streamsDirectoryPath
 	 *            the new strems diretory path
 	 */
@@ -179,7 +179,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Sets the content directory path where the content files will be created.
-	 * 
+	 *
 	 * @param contentDirectoryPath
 	 *            the new content directory path
 	 */
@@ -199,7 +199,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Returns the OutputStream for given object type.
-	 * 
+	 *
 	 * @param dctmObjectType
 	 *            the dctm object type
 	 * @return the OutputStream corresponding to the object type
@@ -266,7 +266,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Returns the InputStream for given object type.
-	 * 
+	 *
 	 * @param dctmObjectType
 	 *            the dctm object type
 	 * @return the InputStream corresponding to the object type
@@ -276,7 +276,7 @@ public class FileStreamsManager {
 	 *             in the event of files that does not exist are being opened
 	 */
 	public InputStream getInputStreamForType(DctmObjectTypesEnum dctmObjectType) throws CMSMFIOException,
-		CMSMFFileNotFoundException {
+	CMSMFFileNotFoundException {
 
 		InputStream returnIS = null;
 
@@ -334,17 +334,9 @@ public class FileStreamsManager {
 		return returnIS;
 	}
 
-	public File getBaseFolderForType(DctmObjectTypesEnum dctmObjectType, long id) throws IOException {
-		File baseFolder = dctmObjectType.getBaseFolder();
-		// Now we calculate the subfolder in which the object shall live...use the ID to get its
-		// location
-
-		return baseFolder;
-	}
-
 	/**
 	 * Returns the OutputStream to export source repository information.
-	 * 
+	 *
 	 * @return the OutputStream for source repository configuration
 	 * @throws CMSMFIOException
 	 *             the cMSMFIO exception
@@ -364,7 +356,7 @@ public class FileStreamsManager {
 	/**
 	 * Creates the object output stream for a given filename. It checks the compress data flag in
 	 * properties file to see if the data exported to the file system needs to be compressed or not.
-	 * 
+	 *
 	 * @param fileName
 	 *            the file name
 	 * @return the object output stream
@@ -403,7 +395,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Returns the InputStream from which to import source repository information.
-	 * 
+	 *
 	 * @return the InputStream for source repository configuration
 	 * @throws CMSMFIOException
 	 *             the cMSMFIO exception
@@ -425,7 +417,7 @@ public class FileStreamsManager {
 	 * Creates the input stream on a given file name and returns it. It checks the compress data
 	 * flag in
 	 * properties file to see if the data stored in the file system is compressed or not.
-	 * 
+	 *
 	 * @param fileName
 	 *            the file name excluding the path
 	 * @return the input stream
@@ -455,7 +447,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Closes all streams that may be open during application execution.
-	 * 
+	 *
 	 * @throws CMSMFIOException
 	 *             the CMSMFIO exception
 	 */
@@ -484,7 +476,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Closes output stream.
-	 * 
+	 *
 	 * @param os
 	 *            the os
 	 * @throws CMSMFIOException
@@ -502,7 +494,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Closes input stream.
-	 * 
+	 *
 	 * @param is
 	 *            the is
 	 * @throws CMSMFIOException
@@ -550,7 +542,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Exports given object to a given output stream.
-	 * 
+	 *
 	 * @param os
 	 *            the OutputStream where the object will be written
 	 * @param object
@@ -573,7 +565,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Imports an object from a given input stream.
-	 * 
+	 *
 	 * @param is
 	 *            the inputstream from which the object is read
 	 * @return the object

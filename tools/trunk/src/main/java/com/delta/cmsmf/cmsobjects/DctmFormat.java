@@ -18,7 +18,7 @@ import com.documentum.fc.common.DfException;
  * The DctmFormat class contains methods to export/import dm_format type of objects from/to
  * Documentum CMS. It also contains methods to export any supporting objects that
  * are needed to replicate a dm_format object in target repository.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmFormat extends DctmObject {
@@ -50,7 +50,7 @@ public class DctmFormat extends DctmObject {
 
 	/**
 	 * Instantiates a DctmFormat object with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -156,7 +156,7 @@ public class DctmFormat extends DctmObject {
 
 	/**
 	 * Gets the detailed format import report.
-	 * 
+	 *
 	 * @return the detailed format import report
 	 */
 	public static String getDetailedFormatImportReport() {

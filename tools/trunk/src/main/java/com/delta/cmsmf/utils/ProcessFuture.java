@@ -22,7 +22,7 @@ import org.apache.commons.lang.SystemUtils;
 
 /**
  * @author diego.rivera@armedia.com
- * 
+ *
  */
 public class ProcessFuture {
 

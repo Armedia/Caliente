@@ -4,7 +4,7 @@ package com.delta.cmsmf.exception;
  * The Class CMSMFException. This is a CMSMF application exception thrown
  * to suggest there is some fatal error condition has occurred. The application
  * will exit gracefully in the event this exception is thrown.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFFatalException extends Exception {
@@ -21,7 +21,7 @@ public class CMSMFFatalException extends Exception {
 
 	/**
 	 * Instantiates a new cMSMF exception.
-	 * 
+	 *
 	 * @param message
 	 *            the message
 	 * @param cause
@@ -33,7 +33,7 @@ public class CMSMFFatalException extends Exception {
 
 	/**
 	 * Instantiates a new CMSMF exception.
-	 * 
+	 *
 	 * @param message
 	 *            the exception message
 	 */
@@ -43,7 +43,7 @@ public class CMSMFFatalException extends Exception {
 
 	/**
 	 * Instantiates a new CMSMF exception.
-	 * 
+	 *
 	 * @param cause
 	 *            the cause
 	 */

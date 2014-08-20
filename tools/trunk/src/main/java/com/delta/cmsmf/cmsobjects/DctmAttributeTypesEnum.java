@@ -2,7 +2,7 @@ package com.delta.cmsmf.cmsobjects;
 
 /**
  * The DctmAttributeTypesEnum class holds enumerations for various attribute types of CMS.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public enum DctmAttributeTypesEnum {

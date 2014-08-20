@@ -4,7 +4,7 @@ package com.delta.cmsmf.constants;
 /**
  * The Class DctmAttrNameConstants. This class contains various constant values for
  * attribute names and column names used in CMSMF application.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmAttrNameConstants {

@@ -34,7 +34,7 @@ import com.documentum.fc.common.DfId;
  * The Class DctmObjectExportHelper is a helper class used extensively during export operation
  * in CMSMF application. This class contains various static methods to serialize several types
  * of objects from documentum repository.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmObjectExportHelper {
@@ -44,7 +44,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a folder by given folder path from CMS.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param fldrPath
@@ -75,7 +75,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a folder by given DFC folder object from CMS.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the the existing documentum session
 	 * @param folder
@@ -115,7 +115,7 @@ public class DctmObjectExportHelper {
 	 * Serializes a user or a group by given name. This method first tries to locate a group by
 	 * given name
 	 * and then if it can't find the group, it will try to locate a user by given name.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param userGroupName
@@ -158,7 +158,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a user by given user name.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param userName
@@ -197,7 +197,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a user by given user object from CMS.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param user
@@ -236,7 +236,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a group by given group name.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param groupName
@@ -275,7 +275,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a group by given DFC group object from CMS.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param group
@@ -314,7 +314,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes an acl by given acl name.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param aclName
@@ -358,7 +358,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes an acl by given DFC acl object from CMS.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param acl
@@ -396,7 +396,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a type by given type name.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param typeName
@@ -427,7 +427,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a type by given DFC type object from CMS.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param type
@@ -465,7 +465,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a format by given format name.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param formatName
@@ -496,7 +496,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a format by given DFC format object from CMS.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param format
@@ -559,7 +559,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a document by given DFC document object from CMS.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum session
 	 * @param docObj

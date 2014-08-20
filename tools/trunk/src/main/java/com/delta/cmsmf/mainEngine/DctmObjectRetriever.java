@@ -19,7 +19,7 @@ import com.documentum.fc.common.DfException;
 /**
  * The Class DctmObjectRetriever is a utility class that contains a method to
  * retrieve a persistent object from the documentum CMS.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmObjectRetriever {
@@ -32,7 +32,7 @@ public class DctmObjectRetriever {
 
 	/**
 	 * Sets the dctm session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the new dctm session
 	 */
@@ -42,7 +42,7 @@ public class DctmObjectRetriever {
 
 	/**
 	 * Instantiates a new dctm object retriever.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing dctm repository session
 	 */
@@ -57,7 +57,7 @@ public class DctmObjectRetriever {
 	 * calls getFromCMS() method to retrieve the object. Method getFromCMS() may export any
 	 * supporting
 	 * objects referenced by given persistent object.
-	 * 
+	 *
 	 * @param prsstntObj
 	 *            the prsstnt obj
 	 * @return the dctm object

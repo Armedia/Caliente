@@ -17,7 +17,7 @@ import com.delta.cmsmf.runtime.AppCounter;
 /**
  * The Class DctmObjectReader contains methods to read various types of objects
  * from file during import process.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmObjectReader {
@@ -27,7 +27,7 @@ public class DctmObjectReader {
 
 	/**
 	 * Reads an object of given type from filesystem.
-	 * 
+	 *
 	 * @param dctmObjType
 	 *            the dctm obj type
 	 * @return the object
@@ -66,7 +66,7 @@ public class DctmObjectReader {
 
 	/**
 	 * Reads repository configuration information from file system and returns it.
-	 * 
+	 *
 	 * @return the repository configuration
 	 * @throws CMSMFException
 	 *             the cMSMF exception

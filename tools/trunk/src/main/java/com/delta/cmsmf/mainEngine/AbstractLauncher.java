@@ -44,11 +44,7 @@ abstract class AbstractLauncher {
 		Map<CLIParam, String> cliParams = new EnumMap<CLIParam, String>(CLIParam.class);
 		for (CLIParam p : CLIParam.values()) {
 			if (cli.hasOption(p.option.getLongOpt())) {
-				String value = cli.getOptionValue(p.option.getLongOpt());
-				if (value == null) {
-					value = Boolean.TRUE.toString();
-				}
-				cliParams.put(p, value);
+				cliParams.put(p, cli.getOptionValue(p.option.getLongOpt()));
 			}
 		}
 		AbstractLauncher.CLI_ARGS = args.clone();

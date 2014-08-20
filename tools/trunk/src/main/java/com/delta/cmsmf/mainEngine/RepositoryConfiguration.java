@@ -24,7 +24,7 @@ import com.documentum.fc.common.DfException;
  * export step. During import step, this instance is read from the file system and the application
  * checks to see if all of the file stores that were exported during export step exists in the
  * target repository. If they do exist then only the import process continues.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class RepositoryConfiguration implements Serializable {
@@ -45,7 +45,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the singleton instance of the repository configuration class.
-	 * 
+	 *
 	 * @return the repository configuration instance
 	 */
 	public static synchronized RepositoryConfiguration getRepositoryConfiguration() {
@@ -75,7 +75,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the operator name.
-	 * 
+	 *
 	 * @return the operator name
 	 */
 	public String getOperatorName() {
@@ -84,7 +84,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the operator name.
-	 * 
+	 *
 	 * @param operatorName
 	 *            the new operator name
 	 */
@@ -97,7 +97,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the install owner.
-	 * 
+	 *
 	 * @return the install owner
 	 */
 	public String getInstallOwner() {
@@ -106,7 +106,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the install owner.
-	 * 
+	 *
 	 * @param installOwner
 	 *            the new install owner
 	 */
@@ -119,7 +119,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the server version.
-	 * 
+	 *
 	 * @return the server version
 	 */
 	public String getServerVersion() {
@@ -128,7 +128,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the server version.
-	 * 
+	 *
 	 * @param serverVersion
 	 *            the new server version
 	 */
@@ -141,7 +141,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the host name.
-	 * 
+	 *
 	 * @return the host name
 	 */
 	public String getHostName() {
@@ -150,7 +150,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the host name.
-	 * 
+	 *
 	 * @param hostName
 	 *            the new host name
 	 */
@@ -164,7 +164,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the database name.
-	 * 
+	 *
 	 * @return the database name
 	 */
 	public String getDbmsName() {
@@ -173,7 +173,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the database name.
-	 * 
+	 *
 	 * @param dbmsName
 	 *            the new database name
 	 */
@@ -186,7 +186,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the security mode.
-	 * 
+	 *
 	 * @return the security mode
 	 */
 	public String getSecurityMode() {
@@ -195,7 +195,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the security mode.
-	 * 
+	 *
 	 * @param securityMode
 	 *            the new security mode
 	 */
@@ -208,7 +208,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the docbase id.
-	 * 
+	 *
 	 * @return the docbase id
 	 */
 	public String getDocbaseID() {
@@ -217,7 +217,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the docbase id.
-	 * 
+	 *
 	 * @param docbaseID
 	 *            the new docbase id
 	 */
@@ -231,7 +231,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the docbase name.
-	 * 
+	 *
 	 * @return the docbase name
 	 */
 	public String getDocbaseName() {
@@ -240,7 +240,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the docbase name.
-	 * 
+	 *
 	 * @param docbaseName
 	 *            the new docbase name
 	 */
@@ -256,7 +256,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Gets the list of file stores.
-	 * 
+	 *
 	 * @return the file stores
 	 */
 	public List<String> getFileStores() {
@@ -265,7 +265,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Sets the file stores.
-	 * 
+	 *
 	 * @param fileStores
 	 *            the new file stores
 	 */
@@ -275,7 +275,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Adds the file store.
-	 * 
+	 *
 	 * @param fileStoreName
 	 *            the file store name
 	 */
@@ -287,7 +287,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Loads various repository configuration parameters using given docbase session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the dctm session
 	 * @throws DfException
@@ -328,7 +328,7 @@ public class RepositoryConfiguration implements Serializable {
 
 	/**
 	 * Returns the repository configuration as a String.
-	 * 
+	 *
 	 * @return the string
 	 */
 	public String printRepositoryConfiguration() {

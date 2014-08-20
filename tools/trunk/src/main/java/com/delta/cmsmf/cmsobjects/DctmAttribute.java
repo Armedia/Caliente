@@ -8,7 +8,7 @@ import java.util.List;
  * This class contains fields to contain value of single value type or repeating value
  * type of attributes. Field attrValueType determines whether the type of attribute is
  * single value or repeating value. Repeating values are stored in a List structure.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmAttribute implements Serializable {
@@ -25,7 +25,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Instantiates a new dctm attribute.
-	 * 
+	 *
 	 * @param attrValType
 	 *            the attribute value type
 	 */
@@ -38,7 +38,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Gets the repeating values of this attribute.
-	 * 
+	 *
 	 * @return the repeating values
 	 */
 	public List<Object> getRepeatingValues() {
@@ -47,7 +47,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Sets the repeating values of this attribute.
-	 * 
+	 *
 	 * @param repeatingValues
 	 *            the new repeating values
 	 */
@@ -60,7 +60,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Gets the single value of this attribute.
-	 * 
+	 *
 	 * @return the single value
 	 */
 	public Object getSingleValue() {
@@ -69,7 +69,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Sets the single value of this attribute.
-	 * 
+	 *
 	 * @param singleValue
 	 *            the new single value
 	 */
@@ -82,7 +82,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Gets the attr value type.
-	 * 
+	 *
 	 * @return the attribute value type
 	 */
 	public DctmAttributeTypesEnum getAttrValueType() {
@@ -91,7 +91,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Sets the attribute value type.
-	 * 
+	 *
 	 * @param attrType
 	 *            the new attribute value type
 	 */
@@ -101,7 +101,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Removes the repeating attribute value from the value list of this attribute.
-	 * 
+	 *
 	 * @param attrValue
 	 *            the attribute value that needs to be removed
 	 * @return true, if successful
@@ -116,7 +116,7 @@ public class DctmAttribute implements Serializable {
 
 	/**
 	 * Gets the repeating values of this attribute in comma separated string format.
-	 * 
+	 *
 	 * @return the repeating values as comma separated string
 	 */
 	public String getRepeatingValuesAsCommaSeparatedString() {

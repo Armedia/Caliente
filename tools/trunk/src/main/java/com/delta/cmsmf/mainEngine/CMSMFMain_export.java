@@ -23,7 +23,6 @@ import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
-import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 
@@ -33,64 +32,6 @@ import com.documentum.fc.common.DfId;
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFMain_export extends CMSMFMain {
-
-	private class Worker implements Runnable {
-
-		private final String objectId;
-		private final FileStreamsManager fsm;
-
-		private Worker(FileStreamsManager fsm, String objectId) {
-			this.objectId = objectId;
-			this.fsm = fsm;
-		}
-
-		@Override
-		public void run() {
-			// get the object
-			IDfSession session = null;
-			try {
-				session = getSession();
-			} catch (Throwable t) {
-				throw new RuntimeException("Failed to obtain a working session");
-			}
-			IDfPersistentObject prsstntObj = null;
-			try {
-				prsstntObj = session.getObject(new DfId(this.objectId));
-			} catch (DfException e) {
-				CMSMFMain_export.this.logger.error("Couldn't retrieve object by ID: " + this.objectId, e);
-			}
-
-			DctmObjectRetriever dctmObjRetriever = new DctmObjectRetriever(session);
-			DctmObject dctmObj;
-			try {
-				if (prsstntObj != null) {
-					dctmObj = dctmObjRetriever.retrieveObject(prsstntObj);
-					DctmObjectWriter.writeBinaryObject(dctmObj);
-					// dctmObjWriter.writeXMLObject(xmlEncoder);
-				}
-			} catch (CMSMFException e) {
-				// If for some reason object is not retrieved from the system, or written to
-// the
-				// filesystem, write to an error log and continue on
-				CMSMFMain_export.this.logger.error("Couldn't retrieve object information from repository for id: "
-					+ this.objectId, e);
-			} catch (IOException e) {
-				// If there is IOException, log the error and exit out
-				CMSMFMain_export.this.logger.fatal("Couldn't serialize an object to the filesystem for id: "
-					+ this.objectId, e);
-				// close all of the file streams
-				try {
-					this.fsm.closeAllStreams();
-				} catch (CMSMFIOException e2) {
-					CMSMFMain_export.this.logger.error("Couldn't close all of the filestreams", e2);
-				}
-				throw new RuntimeException(String.format("Failed to serialize object [%s] to the filesystem",
-					this.objectId), e);
-			} finally {
-				closeSession(session);
-			}
-		}
-	}
 
 	CMSMFMain_export() throws Throwable {
 		super();
@@ -129,94 +70,98 @@ public class CMSMFMain_export extends CMSMFMain {
 			this.logger.info("##### Export Process Started #####");
 		}
 
-		IDfSession session;
-		try {
-			session = getSession();
-		} catch (Throwable t) {
-			throw new RuntimeException("Failed to get the query session", t);
-		}
-		String exportDQLQuery = buildExportQueryString(session);
-
 		// Load source repository configuration information
+		RepositoryConfiguration srcRepoConfig = RepositoryConfiguration.getRepositoryConfiguration();
 		try {
-			RepositoryConfiguration srcRepoConfig = RepositoryConfiguration.getRepositoryConfiguration();
-			try {
-				srcRepoConfig.loadRepositoryConfiguration(session);
-			} catch (DfException e1) {
-				this.logger.fatal("Couldn't retrieve repository configuration information", e1);
-			}
+			srcRepoConfig.loadRepositoryConfiguration(this.dctmSession);
+		} catch (DfException e1) {
+			this.logger.fatal("Couldn't retrieve repository configuration information", e1);
+		}
 
-			// reset the counters that keeps track of how many objects are exported
-			AppCounter.getObjectCounter().resetCounters();
+		// reset the counters that keeps track of how many objects are exported
+		AppCounter.getObjectCounter().resetCounters();
 
-			// First set the directory path where all of the files will be created
-			FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-			fsm.setStreamsDirectoryPath(this.streamFilesDirectoryLocation);
-			fsm.setContentDirectoryPath(this.contentFilesDirectoryLocation);
+		// First set the directory path where all of the files will be created
+		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
+		fsm.setStreamsDirectoryPath(this.streamFilesDirectoryLocation);
+		fsm.setContentDirectoryPath(this.contentFilesDirectoryLocation);
 
-			// Delete existing cmsmf stream files before export process
-			fsm.deleteStreamFiles();
+		// Delete existing cmsmf stream files before export process
+		fsm.deleteStreamFiles();
 
-			// Build the query that will determine what objects will be exported
-			String strBatchSize = CMSMFLauncher.getParameter(CLIParam.batch);
-			int batchSize = CMSMFAppConstants.BATCH_SIZE;
-			if (strBatchSize != null) {
+		// Build the query that will determine what objects will be exported
+		String exportDQLQuery = buildExportQueryString();
+
+		IDfQuery dqlQry = new DfClientX().getQuery();
+		dqlQry.setDQL(exportDQLQuery);
+		dqlQry.setBatchSize(20000);
+		if (this.logger.isEnabledFor(Level.DEBUG)) {
+			this.logger.debug("Export DQL Query is: " + exportDQLQuery);
+		}
+
+		IDfCollection resultCol = null;
+		try {
+			resultCol = dqlQry.execute(this.dctmSession, IDfQuery.READ_QUERY);
+			while (resultCol.next()) {
+				String objID = resultCol.getId("r_object_id").getId();
+				// get the object
+				IDfPersistentObject prsstntObj = null;
 				try {
-					batchSize = Integer.valueOf(strBatchSize);
-					if (batchSize <= 0) {
-						this.logger.warn(String.format("Illegal batch size [%d] - using the default value", batchSize));
-						batchSize = CMSMFAppConstants.BATCH_SIZE;
-					}
-				} catch (NumberFormatException e) {
-					this.logger.warn(String.format("Illegal batch size [%s] - using the default value", strBatchSize));
-					batchSize = CMSMFAppConstants.BATCH_SIZE;
+					prsstntObj = this.dctmSession.getObject(new DfId(objID));
+				} catch (DfException e) {
+					this.logger.error("Couldn't retrieve object by ID: " + objID, e);
 				}
-			}
 
-			IDfQuery dqlQry = new DfClientX().getQuery();
-			dqlQry.setDQL(exportDQLQuery);
-			dqlQry.setBatchSize(batchSize);
-			if (this.logger.isEnabledFor(Level.DEBUG)) {
-				this.logger.debug("Export DQL Query is: " + exportDQLQuery);
-			}
-
-			IDfCollection resultCol = null;
-			try {
-				resultCol = dqlQry.execute(session, IDfQuery.READ_QUERY);
-				while (resultCol.next()) {
-					new Worker(fsm, resultCol.getId("r_object_id").getId()).run();
-					queueWork(new Worker(fsm, resultCol.getId("r_object_id").getId()));
-				} // while (resultCol.next())
-
-				// Export source repository configuration information
+				DctmObjectRetriever dctmObjRetriever = new DctmObjectRetriever(this.dctmSession);
+				DctmObject dctmObj;
 				try {
-					DctmObjectWriter.writeBinaryObject(srcRepoConfig);
+					if (prsstntObj != null) {
+						dctmObj = dctmObjRetriever.retrieveObject(prsstntObj);
+						DctmObjectWriter.writeBinaryObject(dctmObj);
+						// dctmObjWriter.writeXMLObject(xmlEncoder);
+					}
 				} catch (CMSMFException e) {
-					this.logger.error("Couldn't retrieve source repository configuration information.", e);
+					// If for some reason object is not retrieved from the system, or written to the
+					// filesystem, write to an error log and continue on
+					this.logger.error("Couldn't retrieve object information from repository for id: " + objID, e);
+				} catch (IOException e) {
+					// If there is IOException, log the error and exit out
+					this.logger.fatal("Couldn't serialize an object to the filesystem for id: " + objID, e);
+					// close all of the file streams
+					try {
+						fsm.closeAllStreams();
+					} catch (CMSMFIOException e2) {
+						this.logger.error("Couldn't close all of the filestreams", e2);
+					}
+					throw (e);
+				}
+			} // while (resultCol.next())
+
+			// Export source repository configuration information
+			try {
+				DctmObjectWriter.writeBinaryObject(srcRepoConfig);
+			} catch (CMSMFException e) {
+				this.logger.error("Couldn't retrieve source repository configuration information.", e);
+			}
+		} catch (DfException e) {
+			// If there is a DfException while running the export query, log the error and exit out
+			this.logger.fatal("Export Query failed to run. Query is:  " + exportDQLQuery, e);
+		} finally {
+			try {
+				if (resultCol != null) {
+					resultCol.close();
 				}
 			} catch (DfException e) {
-				// If there is a DfException while running the export query, log the error and exit
-// out
-				this.logger.fatal("Export Query failed to run. Query is:  " + exportDQLQuery, e);
-			} finally {
-				try {
-					if (resultCol != null) {
-						resultCol.close();
-					}
-				} catch (DfException e) {
-					this.logger.error("Couldn't close the query collection", e);
-				}
-
-				// close all of the file streams
-				try {
-					fsm.closeAllStreams();
-				} catch (CMSMFIOException e) {
-					this.logger.error("Couldn't close all of the filestreams", e);
-				}
-				exportLockFile.delete();
+				this.logger.error("Couldn't close the query collection", e);
 			}
-		} finally {
-			closeSession(session);
+
+			// close all of the file streams
+			try {
+				fsm.closeAllStreams();
+			} catch (CMSMFIOException e) {
+				this.logger.error("Couldn't close all of the filestreams", e);
+			}
+			exportLockFile.delete();
 		}
 
 		// print the counters to see how many objects were processed
@@ -237,11 +182,11 @@ public class CMSMFMain_export extends CMSMFMain {
 			String dateTimePattern = CMSMFAppConstants.LAST_EXPORT_DATE_PATTERN;
 			String exportStartDateStr = DateFormatUtils.format(exportStartTime, dateTimePattern);
 
-			CMSMFUtils.setLastExportDate(session, exportStartDateStr);
+			CMSMFUtils.setLastExportDate(this.dctmSession, exportStartDateStr);
 		}
 	}
 
-	private String buildExportQueryString(IDfSession session) {
+	private String buildExportQueryString() {
 
 		String exportDQLQuery = "";
 
@@ -266,7 +211,7 @@ public class CMSMFMain_export extends CMSMFMain {
 // 'cmsmf_last_export' and
 
 			// first get the last export date from the source repository
-			String lastExportRunDate = CMSMFUtils.getLastExportDate(session);
+			String lastExportRunDate = CMSMFUtils.getLastExportDate(this.dctmSession);
 			exportDQLQuery = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE + " " + CMSMFAppConstants.DEFAULT_PREDICATE;
 			if (StringUtils.isNotBlank(lastExportRunDate)) {
 				String modifiedWhereCondition = " and r_modify_date >= DATE('" + lastExportRunDate + "')";

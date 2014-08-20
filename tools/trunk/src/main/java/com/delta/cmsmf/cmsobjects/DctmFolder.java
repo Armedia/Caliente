@@ -32,7 +32,7 @@ import com.documentum.fc.common.DfId;
  * Documentum CMS. It also contains methods to export any supporting objects that are needed to
  * replicate a
  * dm_folder object in target repository.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmFolder extends DctmObject {
@@ -71,7 +71,7 @@ public class DctmFolder extends DctmObject {
 
 	/**
 	 * Instantiates a new dctm folder with new CMS session.
-	 * 
+	 *
 	 * @param dctmSession
 	 *            the existing documentum CMS session
 	 */
@@ -322,7 +322,7 @@ public class DctmFolder extends DctmObject {
 
 	/**
 	 * Gets the detailed folder import report.
-	 * 
+	 *
 	 * @return the detailed folder import report
 	 */
 	public static String getDetailedFolderImportReport() {
@@ -389,7 +389,7 @@ public class DctmFolder extends DctmObject {
 	/**
 	 * Exports supporting objects of this folder object. It exports folder owner, acl, object type
 	 * etc.
-	 * 
+	 *
 	 * @param fldrObj
 	 *            the fldr obj
 	 * @throws CMSMFException
@@ -423,7 +423,7 @@ public class DctmFolder extends DctmObject {
 
 	/**
 	 * Exports parent folders of given folder object.
-	 * 
+	 *
 	 * @param sysObj
 	 *            the DFC sysobject that refers to folder object whose parent folders need to be
 	 *            exported

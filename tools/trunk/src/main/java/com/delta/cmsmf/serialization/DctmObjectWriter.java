@@ -1,9 +1,7 @@
 package com.delta.cmsmf.serialization;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -17,7 +15,7 @@ import com.delta.cmsmf.runtime.AppCounter;
 /**
  * The Class DctmObjectWriter contains methods to write various types of objects
  * to file system during export process.
- * 
+ *
  * @author Shridev Makim 6/15/2010
  */
 public class DctmObjectWriter {
@@ -27,7 +25,7 @@ public class DctmObjectWriter {
 
 	/**
 	 * Writes binary object to file system by opening appropriate output stream.
-	 * 
+	 *
 	 * @param dctmObj
 	 *            the dctm object that needs to be written
 	 * @throws CMSMFException
@@ -39,7 +37,7 @@ public class DctmObjectWriter {
 		if (dctmObj != null) {
 			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
 				DctmObjectWriter.logger
-					.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
+				.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
 			}
 			FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
 			// Get appropriate outputstream that corresponds to object type
@@ -58,33 +56,9 @@ public class DctmObjectWriter {
 		}
 	}
 
-	public static void writeBinaryObject(DctmObject dctmObj, ZipOutputStream zip) throws CMSMFException, IOException {
-		if (dctmObj != null) {
-			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
-				DctmObjectWriter.logger
-					.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
-			}
-
-			ObjectOutputStream out = new ObjectOutputStream(zip);
-			try {
-				out.writeObject(dctmObj);
-			} finally {
-				out.flush();
-			}
-
-			// Update appropriate counter
-			AppCounter.getObjectCounter().incrementCounter(dctmObj.dctmObjectType);
-
-			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
-				DctmObjectWriter.logger.info("Finished serializing the object to filesystem "
-					+ dctmObj.getSrcObjectID());
-			}
-		}
-	}
-
 	/**
 	 * Writes repository configuration object to the file system.
-	 * 
+	 *
 	 * @param repoConfigObject
 	 *            the repository configuration object that needs to be written
 	 * @throws CMSMFException
