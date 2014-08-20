@@ -24,6 +24,14 @@
 		<url>http://www.armedia.com</url>
 	</organization>
 
+	<distributionManagement>
+		<repository>
+			<id>armedia-nexus</id>
+			<name>Armedia Nexus Repository</name>
+			<url>https://project.armedia.com/nexus/content/repositories/armedia.release/</url>
+		</repository>
+	</distributionManagement>
+
 	<repositories>
 		<repository>
 			<id>Armedia Repository</id>
