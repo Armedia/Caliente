@@ -51,7 +51,7 @@ public abstract class CMSMFMain {
 		Properties parameters = new Properties();
 		for (CLIParam p : CLIParam.values()) {
 			String value = CMSMFLauncher.getParameter(p);
-			if (value != null) {
+			if ((value != null) && (p.property != null)) {
 				final String key = p.property.name;
 				if ((key != null) && (value != null)) {
 					parameters.setProperty(key, value);
