@@ -16,13 +16,12 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.CMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
-import com.delta.cmsmf.properties.PropertiesManager;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -1272,9 +1271,8 @@ public class DctmDocument extends DctmObject {
 // now
 		// using getFileEx2 instead.
 		@SuppressWarnings("unused")
-		int bufferSize = PropertiesManager.getProperty(CMSMFProperties.CONTENT_READ_BUFFER_SIZE,
-			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
-		String contentExportRootDir = PropertiesManager.getProperty(CMSMFProperties.CONTENT_DIRECTORY, "");
+		int bufferSize = CMSMFProperties.CONTENT_READ_BUFFER_SIZE.getInt();
+		String contentExportRootDir = CMSMFProperties.CONTENT_DIRECTORY.getString();
 		// Make sure the content export location exists
 		FileUtils.forceMkdir(new File(contentExportRootDir));
 		String relativeContentFileLocation = CMSMFUtils.getContentPathFromContentID(contentObjID);
@@ -1387,8 +1385,7 @@ public class DctmDocument extends DctmObject {
 			DctmDocument.logger.debug("Started converting content input stream to byte[]");
 		}
 
-		int bufferSize = PropertiesManager.getProperty(CMSMFProperties.CONTENT_READ_BUFFER_SIZE,
-			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
+		int bufferSize = CMSMFProperties.CONTENT_READ_BUFFER_SIZE.getInt();
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(bufferSize);
 		byte[] bytes = new byte[bufferSize];
 

@@ -5,9 +5,8 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrTokenizer;
 
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.properties.PropertiesManager;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
@@ -88,7 +87,7 @@ public class RunTimeProperties {
 	@SuppressWarnings("unchecked")
 	public List<String> getAttrsToCheckForRepoOperatorName() {
 		if (this.attrsToCheckForRepoOperatorName == null) {
-			String attrsToCheck = PropertiesManager.getProperty(CMSMFProperties.OWNER_ATTRIBUTES, "");
+			String attrsToCheck = CMSMFProperties.OWNER_ATTRIBUTES.getString();
 			StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
 			this.attrsToCheckForRepoOperatorName = strTokenizer.getTokenList();
 		}

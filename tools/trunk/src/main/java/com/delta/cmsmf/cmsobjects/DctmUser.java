@@ -8,13 +8,12 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.DctmObjectImportHelper;
-import com.delta.cmsmf.properties.PropertiesManager;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.runtime.DuplicateChecker;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfGroup;
@@ -128,8 +127,8 @@ public class DctmUser extends DctmObject {
 				CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
 				// Default the password to the user's login name, if one hasn't been selected
 				// for global use
-				final String inlinePasswordValue = PropertiesManager.getProperty(CMSMFProperties.DEFAULT_USER_PASSWORD,
-					getStrSingleAttrValue(DctmAttrNameConstants.USER_LOGIN_NAME));
+				final String inlinePasswordValue = CMSMFProperties.DEFAULT_USER_PASSWORD
+					.getString(DctmAttrNameConstants.USER_LOGIN_NAME);
 				findAttribute(DctmAttrNameConstants.USER_PASSWORD).setSingleValue(inlinePasswordValue);
 
 			} else {
@@ -170,8 +169,8 @@ public class DctmUser extends DctmObject {
 					if (usr.getUserName().equals(getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME))) {
 						if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 							DctmUser.logger
-							.debug("User name will not be updated because it's same as before. Currently in target repo: "
-								+ usr.getUserName());
+								.debug("User name will not be updated because it's same as before. Currently in target repo: "
+									+ usr.getUserName());
 						}
 						removeAttribute(DctmAttrNameConstants.USER_NAME);
 					}

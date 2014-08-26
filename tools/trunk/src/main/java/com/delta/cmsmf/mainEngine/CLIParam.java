@@ -2,7 +2,7 @@ package com.delta.cmsmf.mainEngine;
 
 import org.apache.commons.cli.Option;
 
-import com.delta.cmsmf.constants.CMSMFProperties;
+import com.delta.cmsmf.properties.CMSMFProperties;
 
 public enum CLIParam {
 	//

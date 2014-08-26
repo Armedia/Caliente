@@ -16,12 +16,11 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.mainEngine.CLIParam;
 import com.delta.cmsmf.mainEngine.CMSMFLauncher;
-import com.delta.cmsmf.properties.PropertiesManager;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
@@ -32,7 +31,7 @@ public class CMSMFUtils {
 	/** The logger object used for logging. */
 	static Logger logger = Logger.getLogger(CMSMFUtils.class);
 
-	private static String cmsmfSyncCabinetName = CMSMFAppConstants.LAST_EXPORT_SYNC_CABINET;
+	private static String cmsmfSyncCabinetName = CMSMFProperties.STATE_CABINET_NAME.getString();
 	private static String cmsmfLastExportObjName = CMSMFAppConstants.LAST_EXPORT_OBJ_NAME;
 
 	/**
@@ -265,13 +264,13 @@ public class CMSMFUtils {
 	 */
 	public static void postCmsmfMail(String subject, String message) throws MessagingException {
 
-		String mailRecipients = PropertiesManager.getProperty(CMSMFProperties.MAIL_RECIPIENTS, "");
+		String mailRecipients = CMSMFProperties.MAIL_RECIPIENTS.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(mailRecipients);
 		String[] recipients = strTokenizer.getTokenArray();
 
-		String mailFromAddress = PropertiesManager.getProperty(CMSMFProperties.MAIL_FROM_ADDX, "");
+		String mailFromAddress = CMSMFProperties.MAIL_FROM_ADDX.getString();
 
-		String smtpHostAddress = PropertiesManager.getProperty(CMSMFProperties.MAIL_SMTP_HOST, "");
+		String smtpHostAddress = CMSMFProperties.MAIL_SMTP_HOST.getString();
 
 		if ((recipients.length == 0) || StringUtils.isBlank(mailFromAddress) || StringUtils.isBlank(smtpHostAddress)) {
 			CMSMFUtils.logger.error("Please check recipients, mail from address or smtp host address"

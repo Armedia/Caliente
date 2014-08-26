@@ -79,6 +79,5 @@ public class CMSMFAppConstants {
 	public static final String IMPORT_LOCK_FILE_NAME = "_cmsmf_import.lck";
 
 	// CMSMF Last Export Related constants
-	public static final String LAST_EXPORT_SYNC_CABINET = "CMSMF_SYNC";
 	public static final String LAST_EXPORT_OBJ_NAME = "cmsmf_last_export";
 }

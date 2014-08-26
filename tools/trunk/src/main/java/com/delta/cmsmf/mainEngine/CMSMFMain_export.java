@@ -10,12 +10,11 @@ import org.apache.log4j.Level;
 
 import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
-import com.delta.cmsmf.properties.PropertiesManager;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.serialization.DctmObjectWriter;
 import com.delta.cmsmf.utils.CMSMFUtils;
@@ -176,7 +175,7 @@ public class CMSMFMain_export extends CMSMFMain {
 		// If this is auto run type of an export instead of an adhoc query export, store the value
 		// of the current export date in the repository. This value will be looked up in the next
 		// run
-		String fromWhereClause = PropertiesManager.getProperty(CMSMFProperties.EXPORT_PREDICATE, "");
+		String fromWhereClause = CMSMFProperties.EXPORT_PREDICATE.getString();
 		if (StringUtils.isBlank(fromWhereClause)) {
 			// This is indeed an auto run type of export
 			String dateTimePattern = CMSMFAppConstants.LAST_EXPORT_DATE_PATTERN;
@@ -197,7 +196,7 @@ public class CMSMFMain_export extends CMSMFMain {
 		// when was the last export run and pick up the sysobjects modified since then.
 
 		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
-		String predicate = PropertiesManager.getProperty(CMSMFProperties.EXPORT_PREDICATE, "");
+		String predicate = CMSMFProperties.EXPORT_PREDICATE.getString("");
 		if (StringUtils.isNotBlank(predicate)) {
 			exportDQLQuery = selectClause + " " + predicate;
 		} else {
@@ -214,7 +213,7 @@ public class CMSMFMain_export extends CMSMFMain {
 			String lastExportRunDate = CMSMFUtils.getLastExportDate(this.dctmSession);
 			exportDQLQuery = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE + " " + CMSMFAppConstants.DEFAULT_PREDICATE;
 			if (StringUtils.isNotBlank(lastExportRunDate)) {
-				String modifiedWhereCondition = " and r_modify_date >= DATE('" + lastExportRunDate + "')";
+				String modifiedWhereCondition = " AND r_modify_date >= DATE('" + lastExportRunDate + "')";
 				exportDQLQuery = exportDQLQuery + modifiedWhereCondition;
 			}
 		}

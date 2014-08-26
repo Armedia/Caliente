@@ -15,14 +15,12 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.exception.CMSMFFileNotFoundException;
 import com.delta.cmsmf.exception.CMSMFIOException;
-import com.delta.cmsmf.properties.PropertiesManager;
+import com.delta.cmsmf.properties.CMSMFProperties;
 
 /**
  * The Class FileStreamsManager is facilitates access to various file system
@@ -121,8 +119,7 @@ public class FileStreamsManager {
 	 */
 	private FileStreamsManager() {
 		// no code here; this is a singleton class so private constructor
-		String compressDataFlag = PropertiesManager.getProperty(CMSMFProperties.COMPRESSDATA_FLAG, "");
-		this.compressStreams = (StringUtils.startsWithIgnoreCase(compressDataFlag, "y"));
+		this.compressStreams = CMSMFProperties.COMPRESSDATA_FLAG.getBoolean();
 	}
 
 	/**
@@ -276,7 +273,7 @@ public class FileStreamsManager {
 	 *             in the event of files that does not exist are being opened
 	 */
 	public InputStream getInputStreamForType(DctmObjectTypesEnum dctmObjectType) throws CMSMFIOException,
-	CMSMFFileNotFoundException {
+		CMSMFFileNotFoundException {
 
 		InputStream returnIS = null;
 

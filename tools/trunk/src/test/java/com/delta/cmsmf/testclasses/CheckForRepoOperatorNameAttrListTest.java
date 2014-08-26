@@ -9,7 +9,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.delta.cmsmf.constants.CMSMFProperties;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.delta.cmsmf.runtime.RunTimeProperties;
 

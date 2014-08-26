@@ -21,13 +21,12 @@ import com.delta.cmsmf.cmsobjects.DctmReferenceDocument;
 import com.delta.cmsmf.cmsobjects.DctmType;
 import com.delta.cmsmf.cmsobjects.DctmUser;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
-import com.delta.cmsmf.properties.PropertiesManager;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.delta.cmsmf.serialization.DctmObjectReader;
@@ -139,7 +138,7 @@ public class CMSMFMain_import extends CMSMFMain {
 			this.logger.info("##### Import Process Finished #####");
 		}
 
-		if (PropertiesManager.getProperty(CMSMFProperties.POST_PROCESS_IMPORT, false)) {
+		if (CMSMFProperties.POST_PROCESS_IMPORT.getBoolean()) {
 			postProcessImport();
 		}
 	}
@@ -310,7 +309,7 @@ public class CMSMFMain_import extends CMSMFMain {
 					// of the file streams
 					RunTimeProperties.getRunTimePropertiesInstance().incrementImportProcessErrorCount();
 
-					int importErrorThreshold = PropertiesManager.getProperty(CMSMFProperties.IMPORT_MAX_ERRORS, 0);
+					int importErrorThreshold = CMSMFProperties.IMPORT_MAX_ERRORS.getInt();
 					this.logger.warn("Total nbr of errors happened so far: "
 						+ RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount()
 						+ ". Error threshold is set to: " + importErrorThreshold);

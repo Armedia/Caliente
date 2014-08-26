@@ -8,8 +8,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.exception.CMSMFFatalException;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.documentum.fc.client.DfClient;
 import com.documentum.fc.client.IDfClient;
@@ -79,13 +79,11 @@ public abstract class CMSMFMain {
 		this.testMode = (CMSMFLauncher.getParameter(CLIParam.test) != null);
 
 		// Set the filesystem location where files will be created or read from
-		this.streamFilesDirectoryLocation = new File(PropertiesManager.getProperty(CMSMFProperties.STREAMS_DIRECTORY,
-			"")).getCanonicalFile();
+		this.streamFilesDirectoryLocation = new File(CMSMFProperties.STREAMS_DIRECTORY.getString()).getCanonicalFile();
 		this.logger.info(String.format("Using streams directory: [%s]", this.contentFilesDirectoryLocation));
 
 		// Set the filesystem location where the content files will be created or read from
-		this.contentFilesDirectoryLocation = new File(PropertiesManager.getProperty(CMSMFProperties.CONTENT_DIRECTORY,
-			"")).getCanonicalFile();
+		this.contentFilesDirectoryLocation = new File(CMSMFProperties.CONTENT_DIRECTORY.getString()).getCanonicalFile();
 		this.logger.info(String.format("Using content directory: [%s]", this.contentFilesDirectoryLocation));
 
 		start(CMSMFLauncher.getParameter(CLIParam.docbase), CMSMFLauncher.getParameter(CLIParam.user),

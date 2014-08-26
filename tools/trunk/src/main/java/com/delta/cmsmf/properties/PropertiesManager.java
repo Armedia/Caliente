@@ -15,8 +15,6 @@ import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.constants.CMSMFProperties;
-
 /**
  * The Class PropertiesManager reads the properties from cmsmf properties file and makes them
  * available during
@@ -117,8 +115,8 @@ public class PropertiesManager {
 	 *            the default value
 	 * @return the string
 	 */
-	public static String getProperty(CMSMFProperties propName, String defaultValue) {
-		return PropertiesManager.CFG.getString(propName.name, defaultValue);
+	static String getProperty(String propName, String defaultValue) {
+		return PropertiesManager.CFG.getString(propName, defaultValue);
 	}
 
 	/**
@@ -130,12 +128,12 @@ public class PropertiesManager {
 	 *            the default value
 	 * @return the int
 	 */
-	public static int getProperty(CMSMFProperties propName, int defaultValue) {
-		return PropertiesManager.CFG.getInt(propName.name, defaultValue);
+	static int getProperty(String propName, int defaultValue) {
+		return PropertiesManager.CFG.getInt(propName, defaultValue);
 	}
 
-	public static boolean getProperty(CMSMFProperties propName, boolean defaultValue) {
-		return PropertiesManager.CFG.getBoolean(propName.name, defaultValue);
+	static boolean getProperty(String propName, boolean defaultValue) {
+		return PropertiesManager.CFG.getBoolean(propName, defaultValue);
 	}
 
 	public static List<Configuration> getConfigurations() {

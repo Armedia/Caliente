@@ -8,11 +8,11 @@ import com.delta.cmsmf.cmsobjects.DctmFolder;
 import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.properties.PropertiesManager;
 import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.serialization.DctmObjectReader;
@@ -24,7 +24,7 @@ public class DctmFolderTest {
 
 	/**
 	 * The main method.
-	 * 
+	 *
 	 * @param args
 	 *            the arguments
 	 * @throws DfException
@@ -37,8 +37,7 @@ public class DctmFolderTest {
 		PropertiesManager.addPropertySource(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
 		PropertiesManager.init();
 		// Set the filesystem location where files will be created or read from
-		String streamFilesDirectoryLocation = PropertiesManager.getProperty(
-			CMSMFProperties.STREAMS_DIRECTORY, "");
+		String streamFilesDirectoryLocation = CMSMFProperties.STREAMS_DIRECTORY.getString();
 
 		// First set the directory path where all of the files will be created
 		FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();

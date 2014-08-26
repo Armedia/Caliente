@@ -14,10 +14,9 @@ import com.delta.cmsmf.cmsobjects.DctmGroup;
 import com.delta.cmsmf.cmsobjects.DctmObject;
 import com.delta.cmsmf.cmsobjects.DctmType;
 import com.delta.cmsmf.cmsobjects.DctmUser;
-import com.delta.cmsmf.constants.CMSMFProperties;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.properties.PropertiesManager;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.serialization.DctmObjectWriter;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -172,8 +171,7 @@ public class DctmObjectExportHelper {
 		}
 		try {
 			// First check if the property is set to export the users
-			boolean skipUsersFlag = PropertiesManager.getProperty(CMSMFProperties.SKIP_USERS, false);
-			if (!skipUsersFlag) {
+			if (!CMSMFProperties.SKIP_USERS.getBoolean()) {
 				// check if user exists by name provided
 				IDfUser user = dctmSession.getUser(userName);
 				if (user != null) {
@@ -213,8 +211,7 @@ public class DctmObjectExportHelper {
 		String userName = "";
 		try {
 			DctmObject exportObject = null;
-			boolean skipUsersFlag = PropertiesManager.getProperty(CMSMFProperties.SKIP_USERS, false);
-			if ((user != null) && skipUsersFlag) {
+			if ((user != null) && CMSMFProperties.SKIP_USERS.getBoolean()) {
 				userName = user.getUserName();
 				// get the user and serialize it
 				DctmUser dctmUser = new DctmUser(dctmSession);
@@ -250,8 +247,7 @@ public class DctmObjectExportHelper {
 		}
 		try {
 			// First check if the property is set to export the groups
-			boolean skipGroupsFlag = PropertiesManager.getProperty(CMSMFProperties.SKIP_GROUPS, false);
-			if (!skipGroupsFlag) {
+			if (!CMSMFProperties.SKIP_GROUPS.getBoolean()) {
 				// check if group exists by name provided
 				IDfGroup group = dctmSession.getGroup(groupName);
 				if (group != null) {
@@ -290,9 +286,8 @@ public class DctmObjectExportHelper {
 		// check to see if group exists
 		String groupName = "";
 		try {
-			boolean skipGroupsFlag = PropertiesManager.getProperty(CMSMFProperties.SKIP_GROUPS, false);
 			DctmObject exportObject = null;
-			if ((group != null) && !skipGroupsFlag) {
+			if ((group != null) && !CMSMFProperties.SKIP_GROUPS.getBoolean()) {
 				groupName = group.getGroupName();
 				// get the group and serialize it
 				DctmGroup dctmGroup = new DctmGroup(dctmSession);
@@ -332,8 +327,7 @@ public class DctmObjectExportHelper {
 		try {
 			// check if acl exists by name provided
 			// First check if the property is set to export the groups
-			boolean skipACLsFlag = PropertiesManager.getProperty(CMSMFProperties.SKIP_ACLS, false);
-			if (!skipACLsFlag) {
+			if (!CMSMFProperties.SKIP_ACLS.getBoolean()) {
 				IDfACL acl = dctmSession.getACL(aclDomain, aclName);
 				if (acl != null) {
 					DctmObjectExportHelper.serializeACL(dctmSession, acl);
