@@ -31,7 +31,7 @@ public enum CMSMFProperties {
 		this.name = name;
 	}
 
-	private static final String DEFAULT_PROPERTIES = "defaults.properties";
+	private static final String DEFAULT_PROPERTIES = "default.properties";
 
 	static final Configuration DEFAULTS;
 
