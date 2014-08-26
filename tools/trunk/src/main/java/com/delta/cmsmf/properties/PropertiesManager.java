@@ -13,6 +13,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFProperties;
 
@@ -28,6 +29,8 @@ import com.delta.cmsmf.constants.CMSMFProperties;
  * @author Shridev Makim 6/15/2010
  */
 public class PropertiesManager {
+
+	protected static final Logger logger = Logger.getLogger(PropertiesManager.class);
 
 	/**
 	 * Instantiates a new properties manager. Private constructor to prevent
@@ -63,6 +66,21 @@ public class PropertiesManager {
 
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
+		if (!propertyFile.exists()) {
+			PropertiesManager.logger.warn(String.format("Property file [%s] does not exist, ignoring",
+				propertyFile.getAbsolutePath()));
+			return;
+		}
+		if (!propertyFile.isFile()) {
+			PropertiesManager.logger.warn(String.format("Property file [%s] is not a regular file, ignoring",
+				propertyFile.getAbsolutePath()));
+			return;
+		}
+		if (!propertyFile.canRead()) {
+			PropertiesManager.logger.warn(String.format("Property file [%s] can't be read, ignoring",
+				propertyFile.getAbsolutePath()));
+			return;
+		}
 		PropertiesConfiguration cfg = new PropertiesConfiguration();
 		PropertiesManager.configure(cfg);
 		cfg.load(propertyFile);
