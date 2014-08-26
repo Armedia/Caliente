@@ -78,13 +78,13 @@ public class CMSMFUtils {
 		oJob.save();
 	}
 
-	private static IDfSysObject getCmsmfStateObject(IDfSession dctmSession) throws DfException {
+	private static IDfSysObject getCmsmfStateObject(IDfSession dctmSession, boolean createIfMissing) throws DfException {
 		final String targetDocbaseName = CMSMFLauncher.getParameter(CLIParam.docbase);
 		final String cabinetPath = "/" + CMSMFUtils.cmsmfSyncCabinetName;
 		final String folderPath = cabinetPath + "/" + targetDocbaseName;
 		final String documentPath = folderPath + "/" + CMSMFUtils.cmsmfLastExportObjName;
 		IDfSysObject lstExportObj = (IDfSysObject) dctmSession.getObjectByPath(documentPath);
-		if (lstExportObj == null) {
+		if ((lstExportObj == null) && createIfMissing) {
 			// Object does not exist, create one.
 			// try to locate a folder for a target repository and create one if it doesn't exist
 			IDfFolder trgtDocbaseFolder = dctmSession.getFolderByPath(folderPath);
@@ -128,10 +128,16 @@ public class CMSMFUtils {
 		String lastExportDate = "";
 		try {
 			// Try to locate the last export object to read the date from subject attribute
-			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession);
-			lastExportDate = lstExportObj.getSubject();
+			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession, false);
+			final String message;
+			if (lstExportObj != null) {
+				lastExportDate = lstExportObj.getSubject();
+				message = String.format("The last export date was [%s]", lastExportDate);
+			} else {
+				message = "No previous export date";
+			}
 			if (CMSMFUtils.logger.isInfoEnabled()) {
-				CMSMFUtils.logger.info(String.format("The last export date was [%s]", lastExportDate));
+				CMSMFUtils.logger.info(message);
 			}
 			return lastExportDate;
 		} catch (DfException e) {
@@ -151,7 +157,7 @@ public class CMSMFUtils {
 	public static void setLastExportDate(IDfSession dctmSession, String exportDate) {
 		try {
 			// Try to locate the last export object to read the date from subject attribute
-			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession);
+			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession, true);
 			lstExportObj.setSubject(exportDate);
 			lstExportObj.save();
 			if (CMSMFUtils.logger.isInfoEnabled()) {
