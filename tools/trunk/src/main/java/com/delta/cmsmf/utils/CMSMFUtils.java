@@ -12,7 +12,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrTokenizer;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
@@ -79,6 +78,45 @@ public class CMSMFUtils {
 		oJob.save();
 	}
 
+	private static IDfSysObject getCmsmfStateObject(IDfSession dctmSession) throws DfException {
+		final String targetDocbaseName = CMSMFLauncher.getParameter(CLIParam.docbase);
+		final String cabinetPath = "/" + CMSMFUtils.cmsmfSyncCabinetName;
+		final String folderPath = cabinetPath + "/" + targetDocbaseName;
+		final String documentPath = folderPath + "/" + CMSMFUtils.cmsmfLastExportObjName;
+		IDfSysObject lstExportObj = (IDfSysObject) dctmSession.getObjectByPath(documentPath);
+		if (lstExportObj == null) {
+			// Object does not exist, create one.
+			// try to locate a folder for a target repository and create one if it doesn't exist
+			IDfFolder trgtDocbaseFolder = dctmSession.getFolderByPath(folderPath);
+			if (trgtDocbaseFolder == null) {
+				// target folder does not exist, create one.
+				// try to locate the cmsmf_sync cabinet and create one if it doesn't exist
+				IDfFolder cmsmfSyncCabinet = dctmSession.getFolderByPath(cabinetPath);
+				if (cmsmfSyncCabinet == null) {
+					CMSMFUtils.logger.info("Creating cabinet: " + CMSMFUtils.cmsmfSyncCabinetName
+						+ " in source repository");
+					// create the cabinet and folder underneath
+					cmsmfSyncCabinet = (IDfFolder) dctmSession.newObject(DctmTypeConstants.DM_CABINET);
+					cmsmfSyncCabinet.setObjectName(CMSMFUtils.cmsmfSyncCabinetName);
+					cmsmfSyncCabinet.setHidden(true);
+					cmsmfSyncCabinet.save();
+				}
+
+				// create a folder for a target repository in this cabinet.
+				trgtDocbaseFolder = (IDfFolder) dctmSession.newObject(DctmTypeConstants.DM_FOLDER);
+				trgtDocbaseFolder.setObjectName(targetDocbaseName);
+				trgtDocbaseFolder.link(cmsmfSyncCabinet.getObjectId().getId());
+				trgtDocbaseFolder.save();
+			}
+			// Create the object
+			lstExportObj = (IDfSysObject) dctmSession.newObject(DctmTypeConstants.DM_DOCUMENT);
+			lstExportObj.setObjectName(CMSMFUtils.cmsmfLastExportObjName);
+			lstExportObj.link(trgtDocbaseFolder.getObjectId().getId());
+			lstExportObj.save();
+		}
+		return lstExportObj;
+	}
+
 	/**
 	 * Gets the last export date.
 	 *
@@ -88,49 +126,16 @@ public class CMSMFUtils {
 	 */
 	public static String getLastExportDate(IDfSession dctmSession) {
 		String lastExportDate = "";
-		String targetDocbaseName = CMSMFLauncher.getParameter(CLIParam.docbase);
-		String lastExportObjParentPath = CMSMFUtils.cmsmfSyncCabinetName + "/" + targetDocbaseName;
-		String lastExportObjPath = lastExportObjParentPath + "/" + CMSMFUtils.cmsmfLastExportObjName;
-
 		try {
 			// Try to locate the last export object to read the date from subject attribute
-			IDfSysObject lstExportObj = (IDfSysObject) dctmSession.getObjectByPath(lastExportObjPath);
-			if (lstExportObj != null) {
-				lastExportDate = lstExportObj.getSubject();
-			} else {
-				// Object does not exist, create one.
-				// try to locate a folder for a target repository and create one if it doesn't exist
-				IDfFolder trgtDocbaseFolder = dctmSession.getFolderByPath(lastExportObjParentPath);
-				if (trgtDocbaseFolder == null) {
-					// target folder does not exist, create one.
-					// try to locate the cmsmf_sync cabinet and create one if it doesn't exist
-					IDfFolder cmsmfSyncCabinet = dctmSession.getFolderByPath(CMSMFUtils.cmsmfSyncCabinetName);
-					if (cmsmfSyncCabinet == null) {
-						CMSMFUtils.logger.info("Creating cabinet: " + CMSMFUtils.cmsmfSyncCabinetName
-							+ " in source repository");
-						// create the cabinet and folder underneath
-						cmsmfSyncCabinet = (IDfFolder) dctmSession.newObject(DctmTypeConstants.DM_CABINET);
-						cmsmfSyncCabinet.setObjectName(CMSMFUtils.cmsmfSyncCabinetName);
-						cmsmfSyncCabinet.setHidden(true);
-						cmsmfSyncCabinet.save();
-					}
-
-					// create a folder for a target repository in this cabinet.
-					CMSMFUtils.createTargetDocbaseFolder(dctmSession, targetDocbaseName);
-				}
-				// Create the object
-				lstExportObj = (IDfSysObject) dctmSession.newObject(DctmTypeConstants.DM_DOCUMENT);
-				lstExportObj.setObjectName(CMSMFUtils.cmsmfLastExportObjName);
-				lstExportObj.link(CMSMFUtils.cmsmfSyncCabinetName + "/" + targetDocbaseName);
-				lstExportObj.save();
+			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession);
+			lastExportDate = lstExportObj.getSubject();
+			if (CMSMFUtils.logger.isInfoEnabled()) {
+				CMSMFUtils.logger.info(String.format("The last export date was [%s]", lastExportDate));
 			}
-
+			return lastExportDate;
 		} catch (DfException e) {
 			CMSMFUtils.logger.error("Error occured while retrieving last export run date", e);
-		}
-
-		if (CMSMFUtils.logger.isEnabledFor(Level.INFO)) {
-			CMSMFUtils.logger.info("The last export date was: " + lastExportDate);
 		}
 		return lastExportDate;
 	}
@@ -144,64 +149,17 @@ public class CMSMFUtils {
 	 *            the export date
 	 */
 	public static void setLastExportDate(IDfSession dctmSession, String exportDate) {
-		String targetDocbaseName = CMSMFLauncher.getParameter(CLIParam.docbase);
-		String lastExportObjParentPath = CMSMFUtils.cmsmfSyncCabinetName + "/" + targetDocbaseName;
-		String lastExportObjPath = lastExportObjParentPath + "/" + CMSMFUtils.cmsmfLastExportObjName;
-
 		try {
 			// Try to locate the last export object to read the date from subject attribute
-			IDfSysObject lstExportObj = (IDfSysObject) dctmSession.getObjectByPath(lastExportObjPath);
-			if (lstExportObj == null) {
-				// Object does not exist, create one.
-				// try to locate a folder for a target repository and create one if it doesn't exist
-				IDfFolder trgtDocbaseFolder = dctmSession.getFolderByPath(lastExportObjParentPath);
-				if (trgtDocbaseFolder == null) {
-					// target folder does not exist, create one.
-					// try to locate the cmsmf_sync cabinet and create one if it doesn't exist
-					IDfFolder cmsmfSyncCabinet = dctmSession.getFolderByPath(CMSMFUtils.cmsmfSyncCabinetName);
-					if (cmsmfSyncCabinet == null) {
-						CMSMFUtils.logger.info("Creating cabinet: " + CMSMFUtils.cmsmfSyncCabinetName
-							+ " in source repository");
-						// create the cabinet and folder underneath
-						cmsmfSyncCabinet = (IDfFolder) dctmSession.newObject(DctmTypeConstants.DM_CABINET);
-						cmsmfSyncCabinet.setObjectName(CMSMFUtils.cmsmfSyncCabinetName);
-						cmsmfSyncCabinet.setHidden(true);
-						cmsmfSyncCabinet.save();
-					}
-
-					// create a folder for a target repository in this cabinet.
-					CMSMFUtils.createTargetDocbaseFolder(dctmSession, targetDocbaseName);
-				}
-				// Create the object
-				lstExportObj = (IDfSysObject) dctmSession.newObject(DctmTypeConstants.DM_DOCUMENT);
-				lstExportObj.setObjectName(CMSMFUtils.cmsmfLastExportObjName);
-				lstExportObj.link(CMSMFUtils.cmsmfSyncCabinetName + "/" + targetDocbaseName);
-				lstExportObj.save();
-			}
+			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession);
 			lstExportObj.setSubject(exportDate);
 			lstExportObj.save();
+			if (CMSMFUtils.logger.isInfoEnabled()) {
+				CMSMFUtils.logger.info(String.format("Last export date set to [%s]", exportDate));
+			}
 		} catch (DfException e) {
 			CMSMFUtils.logger.error("Error occured while setting last export run date", e);
 		}
-	}
-
-	/**
-	 * Creates the target docbase folder.
-	 *
-	 * @param dctmSession
-	 *            the dctm session
-	 * @param targetDocbaseName
-	 *            the target docbase name
-	 * @throws DfException
-	 *             the df exception
-	 */
-	private static void createTargetDocbaseFolder(IDfSession dctmSession, String targetDocbaseName) throws DfException {
-		CMSMFUtils.logger.info("Creating folder: " + targetDocbaseName + " in cabinet: "
-			+ CMSMFUtils.cmsmfSyncCabinetName + " in source repository");
-		IDfFolder trgtDocbaseFolder = (IDfFolder) dctmSession.newObject(DctmTypeConstants.DM_FOLDER);
-		trgtDocbaseFolder.setObjectName(targetDocbaseName);
-		trgtDocbaseFolder.link(CMSMFUtils.cmsmfSyncCabinetName);
-		trgtDocbaseFolder.save();
 	}
 
 	/**
