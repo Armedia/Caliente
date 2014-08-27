@@ -10,6 +10,7 @@ import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.CMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
+import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -254,14 +255,16 @@ public class DctmReferenceDocument extends DctmDocument {
 				DctmReferenceDocument.logger.warn(
 					"Unable to locate a remote object while creating reference using target repository session.", e);
 				// if that fails, try to locate the remote object using source repository session
+				final IDfSession session = DctmConnectionPool.acquireSession();
 				try {
-					remoteObj = (IDfSysObject) CMSMFMain.getInstance().getSession()
-						.getObject(new DfId(getReferenceById()));
+					remoteObj = (IDfSysObject) session.getObject(new DfId(getReferenceById()));
 				} catch (DfException e1) {
 					DctmReferenceDocument.logger.warn(
 						"Unable to locate a remote object while creating reference using source repository session.",
 						e1);
 					this.dctmSession.abortTrans();
+				} finally {
+					DctmConnectionPool.releaseSession(session);
 				}
 			}
 			if (remoteObj != null) {

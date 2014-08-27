@@ -28,12 +28,14 @@ import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
 import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.runtime.AppCounter;
+import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.delta.cmsmf.serialization.DctmObjectReader;
 import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
+import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
 /**
@@ -147,14 +149,17 @@ public class CMSMFMain_import extends CMSMFMain {
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("Started executing import post process jobs");
 		}
+		IDfSession session = DctmConnectionPool.acquireSession();
 		try {
 			// Run a dm_clean job to clean up any unwanted internal acls created
-			CMSMFUtils.runDctmJob(this.dctmSession, "dm_DMClean");
+			CMSMFUtils.runDctmJob(session, "dm_DMClean");
 
 			// Run a UpdateStats job
-			CMSMFUtils.runDctmJob(this.dctmSession, "dm_UpdateStats");
+			CMSMFUtils.runDctmJob(session, "dm_UpdateStats");
 		} catch (DfException e) {
 			this.logger.error("Error running a post import process steps.", e);
+		} finally {
+			DctmConnectionPool.releaseSession(session);
 		}
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("Finished executing import post process jobs");
@@ -239,12 +244,13 @@ public class CMSMFMain_import extends CMSMFMain {
 		boolean doesFileStoresExistInTargetRepo = false;
 
 		// Query the target repository to get names of all filestores
+		final IDfSession session = DctmConnectionPool.acquireSession();
 		List<String> targetRepoFileStores = new ArrayList<String>();
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		try {
 			String fileStoreQry = "select distinct name from dm_store";
 			dqlQry.setDQL(fileStoreQry);
-			IDfCollection resultCol = dqlQry.execute(this.dctmSession, IDfQuery.READ_QUERY);
+			IDfCollection resultCol = dqlQry.execute(session, IDfQuery.READ_QUERY);
 			while (resultCol.next()) {
 				String fileStoreName = resultCol.getString(DctmAttrNameConstants.NAME);
 				if (this.logger.isEnabledFor(Level.DEBUG)) {
@@ -257,6 +263,8 @@ public class CMSMFMain_import extends CMSMFMain {
 			resultCol.close();
 		} catch (DfException e) {
 			throw (new CMSMFException("Couldn't retrieve file store names from target repository ", e));
+		} finally {
+			DctmConnectionPool.releaseSession(session);
 		}
 
 		// Check to see if target file store names contains all of the file stores that are needed
@@ -289,6 +297,7 @@ public class CMSMFMain_import extends CMSMFMain {
 			this.logger.debug("Started Importing: " + dctmObjectType);
 		}
 
+		final IDfSession session = DctmConnectionPool.acquireSession();
 		try {
 			DctmObject dctmObject = (DctmObject) readDctmObject(dctmObjectType);
 
@@ -296,7 +305,7 @@ public class CMSMFMain_import extends CMSMFMain {
 
 				try {
 					// Create appropriate object in target repository
-					dctmObject.setDctmSession(this.dctmSession);
+					dctmObject.setDctmSession(session);
 					dctmObject.createInCMS();
 				} catch (DfException e) {
 					// log the error and continue on with next object
@@ -317,7 +326,7 @@ public class CMSMFMain_import extends CMSMFMain {
 						// Raise the cmsmf fatal exception.
 						throw (new CMSMFFatalException(
 							"Total nbr of errors during import exceeds the error threshold of " + importErrorThreshold
-							+ " specified in properties file"));
+								+ " specified in properties file"));
 					}
 
 				}
@@ -336,6 +345,8 @@ public class CMSMFMain_import extends CMSMFMain {
 		} catch (CMSMFException e) {
 			// log the error and continue on with next object
 			this.logger.error("Error reading " + dctmObjectType + " object from file.", e);
+		} finally {
+			DctmConnectionPool.releaseSession(session);
 		}
 
 		if (this.logger.isEnabledFor(Level.DEBUG)) {

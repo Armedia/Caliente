@@ -11,14 +11,6 @@ import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.properties.PropertiesManager;
-import com.documentum.fc.client.DfClient;
-import com.documentum.fc.client.IDfClient;
-import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.client.IDfSessionManager;
-import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.DfLoginInfo;
-import com.documentum.fc.common.IDfLoginInfo;
-import com.documentum.fc.tools.RegistryPasswordUtils;
 
 /**
  * The main method of this class is an entry point for the cmsmf application.
@@ -31,9 +23,6 @@ public abstract class CMSMFMain {
 	protected final Logger logger = Logger.getLogger(getClass());
 
 	private static CMSMFMain instance = null;
-
-	/** The dctm session. */
-	protected IDfSession dctmSession = null;
 
 	/** The directory location where stream files will be created. */
 	protected final File streamFilesDirectoryLocation;
@@ -86,8 +75,7 @@ public abstract class CMSMFMain {
 		this.contentFilesDirectoryLocation = new File(CMSMFProperties.CONTENT_DIRECTORY.getString()).getCanonicalFile();
 		this.logger.info(String.format("Using content directory: [%s]", this.contentFilesDirectoryLocation));
 
-		start(CMSMFLauncher.getParameter(CLIParam.docbase), CMSMFLauncher.getParameter(CLIParam.user),
-			CMSMFLauncher.getParameter(CLIParam.password));
+		start();
 	}
 
 	public static CMSMFMain getInstance() {
@@ -106,10 +94,6 @@ public abstract class CMSMFMain {
 		return this.testMode;
 	}
 
-	public IDfSession getSession() {
-		return this.dctmSession;
-	}
-
 	protected abstract void run() throws IOException, CMSMFFatalException;
 
 	/**
@@ -120,61 +104,7 @@ public abstract class CMSMFMain {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void start(String docbaseName, String docbaseUser, String passTmp) throws Throwable {
-		if (this.logger.isEnabledFor(Level.INFO)) {
-			this.logger.info("##### CMS Migration Process Started #####");
-		}
-
-		final IDfClient dfClient;
-		try {
-			dfClient = DfClient.getLocalClient();
-			if (dfClient == null) {
-				// If I don't have a local client then something was not
-				// installed
-				// correctly so throw an error
-				String msg = "No local client was established.  You may want to check the installation of "
-					+ "Documentum or this application on this machine.";
-				this.logger.error(msg);
-				throw new RuntimeException(msg);
-			}
-		} catch (DfException e) {
-			String msg = "No local client was established.  You may want to check the installation of "
-				+ "Documentum or this application on this machine.";
-			this.logger.error(msg);
-			throw new RuntimeException(msg, e);
-		}
-
-		if (passTmp != null) {
-			try {
-				passTmp = RegistryPasswordUtils.decrypt(passTmp);
-				if (this.logger.isEnabledFor(Level.INFO)) {
-					this.logger.info(String.format("Password decrypted successfully"));
-				}
-			} catch (Throwable t) {
-				// Not encrypted, use literal
-				if (this.logger.isEnabledFor(Level.INFO)) {
-					this.logger.info(String.format("Password decryption failed, using as literal"));
-				}
-			}
-		}
-		final String docbasePassword = passTmp;
-
-		// get a local client
-		// Prepare login object
-		IDfLoginInfo li = new DfLoginInfo();
-		if (docbaseUser != null) {
-			li.setUser(docbaseUser);
-		}
-		if (docbasePassword != null) {
-			li.setPassword(docbasePassword);
-		}
-		li.setDomain(null);
-
-		// Get a documentum session using session manager
-		IDfSessionManager sessionManager = dfClient.newSessionManager();
-		sessionManager.setIdentity(docbaseName, li);
-		this.dctmSession = sessionManager.getSession(docbaseName);
-
+	private void start() throws Throwable {
 		run();
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.debug("##### CMS Migration Process finished #####");
