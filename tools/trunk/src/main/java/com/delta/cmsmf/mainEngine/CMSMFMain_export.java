@@ -93,9 +93,10 @@ public class CMSMFMain_export extends CMSMFMain {
 
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		dqlQry.setDQL(exportDQLQuery);
-		dqlQry.setBatchSize(20000);
+		dqlQry.setBatchSize(CMSMFProperties.EXPORT_BATCH_SIZE.getInt());
 		if (this.logger.isEnabledFor(Level.DEBUG)) {
-			this.logger.debug("Export DQL Query is: " + exportDQLQuery);
+			this.logger.debug("Export DQL Query is: " + dqlQry.getDQL());
+			this.logger.debug("Export DQL batch size is: " + dqlQry.getBatchSize());
 		}
 
 		IDfCollection resultCol = null;

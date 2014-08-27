@@ -23,7 +23,8 @@ public enum CMSMFProperties {
 	SKIP_USERS("cmsmf.app.export.skip.users"),
 	SKIP_GROUPS("cmsmf.app.export.skip.groups"),
 	POST_PROCESS_IMPORT("cmsmf.app.import.postprocess.flag"),
-	STATE_CABINET_NAME("cmsmf.app.state.cabinet");
+	STATE_CABINET_NAME("cmsmf.app.state.cabinet"),
+	EXPORT_BATCH_SIZE("cmsmf.app.export.batch.size");
 
 	public final String name;
 
