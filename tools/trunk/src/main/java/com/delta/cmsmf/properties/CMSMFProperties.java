@@ -24,7 +24,11 @@ public enum CMSMFProperties {
 	SKIP_GROUPS("cmsmf.app.export.skip.groups"),
 	POST_PROCESS_IMPORT("cmsmf.app.import.postprocess.flag"),
 	STATE_CABINET_NAME("cmsmf.app.state.cabinet"),
-	EXPORT_BATCH_SIZE("cmsmf.app.export.batch.size");
+	EXPORT_BATCH_SIZE("cmsmf.app.export.batch.size"),
+	JDBC_DRIVER("cmsmf.app.jdbc.driver"),
+	JDBC_URL("cmsmf.app.jdbc.url"),
+	JDBC_USER("cmsmf.app.jdbc.user"),
+	JDBC_PASSWORD("cmsmf.app.jdbc.password");
 
 	public final String name;
 

@@ -54,7 +54,7 @@
       <operations public="true" package="true" protected="true" private="true"/>    
     </display>  
   </class>  
-  <class corner="BOTTOM_RIGHT" language="java" name="com.delta.cmsmf.mainEngine.CMSMFMain" 
+  <class corner="BOTTOM_RIGHT" language="java" name="com.delta.cmsmf.mainEngine.AbstractCMSMFMain" 
     project="CMSMigrationFramework" file="/CMSMigrationFramework/src/com/delta/cmsmf/mainEngine/CMSMFMain.java" 
     binary="false">    
     <position x="1039" y="458" width="-1" height="-1"/>    

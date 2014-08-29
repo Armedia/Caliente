@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.mainEngine.CMSMFMain;
+import com.delta.cmsmf.mainEngine.AbstractCMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.documentum.fc.client.IDfACL;
@@ -61,7 +61,7 @@ public class DctmReferenceDocument extends DctmDocument {
 	 * properties file.
 	 * If the value is true, the documents and folders are created in /Replications cabinet.
 	 */
-	private static boolean isThisATest = CMSMFMain.getInstance().isTestMode();
+	private static boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
 
 	/** The binding condition. */
 	private String bindingCondition;

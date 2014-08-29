@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+	<changeSet author="master" id="1">
+		<!-- The main objects table -->
+		<createTable tableName="dctm_object" remarks="The documentum objects">
+			<column name="object_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="object_type" type="varchar2(32)"
+				remarks="The official department name as registered on the internal website.">
+				<constraints nullable="false" />
+			</column>
+			<column name="has_content" type="boolean">
+				<constraints nullable="false" />
+			</column>
+			<column name="content_path" type="varchar(256)" />
+		</createTable>
+		<addPrimaryKey tableName="dctm_object" columnNames="object_id" />
+		<createIndex tableName="dctm_object" indexName="idx_dctm_object_type">
+			<column name="object_type" />
+		</createIndex>
+		<createIndex tableName="dctm_object" indexName="idx_dctm_object_content">
+			<column name="has_content" />
+		</createIndex>
+		<createIndex tableName="dctm_object" indexName="idx_dctm_object_path">
+			<column name="content_path" />
+		</createIndex>
+
+		<!-- The dependency relationships table -->
+		<createTable tableName="dctm_dependency">
+			<column name="object_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="dependency_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="dctm_dependency" columnNames="object_id, dependency_id" />
+		<addForeignKeyConstraint constraintName="fk_dctm_dependency_object"
+			baseTableName="dctm_dependency" baseColumnNames="object_id"
+			referencedTableName="dctm_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addForeignKeyConstraint constraintName="fk_dctm_dependency_dependency"
+			baseTableName="dctm_dependency" baseColumnNames="dependency_id"
+			referencedTableName="dctm_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="dctm_dependency" indexName="idx_dctm_dependency_reverse">
+			<column name="dependency_id" />
+			<column name="object_id" />
+		</createIndex>
+
+		<!-- The attribute descriptor table -->
+		<createTable tableName="dctm_attribute">
+			<column name="object_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="attribute_name" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="attribute_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="attribute_type" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="attribute_length" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_internal" type="boolean">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_qualifiable" type="boolean">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_repeating" type="boolean">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="dctm_attribute" columnNames="object_id, attribute_name" />
+		<addForeignKeyConstraint constraintName="fk_dctm_attribute_object"
+			baseTableName="dctm_attribute" baseColumnNames="object_id"
+			referencedTableName="dctm_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<!-- The attribute values table -->
+		<createTable tableName="dctm_attribute_value">
+			<column name="object_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="attribute_name" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="value_number" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_null" type="boolean">
+				<constraints nullable="false" />
+			</column>
+			<column name="data" type="text" />
+		</createTable>
+		<addPrimaryKey tableName="dctm_attribute_value"
+			columnNames="object_id, attribute_name, value_number" />
+		<addForeignKeyConstraint constraintName="fk_dctm_attribute_value_attribute"
+			baseTableName="dctm_attribute" baseColumnNames="object_id"
+			referencedTableName="dctm_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+	</changeSet>
+</databaseChangeLog>

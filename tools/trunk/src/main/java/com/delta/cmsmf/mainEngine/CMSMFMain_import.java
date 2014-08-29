@@ -43,7 +43,7 @@ import com.documentum.fc.common.DfException;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_import extends CMSMFMain {
+public class CMSMFMain_import extends AbstractCMSMFMain {
 
 	CMSMFMain_import() throws Throwable {
 		super();
@@ -59,7 +59,7 @@ public class CMSMFMain_import extends CMSMFMain {
 	 * @throws CMSMFFatalException
 	 */
 	@Override
-	protected void run() throws IOException, CMSMFFatalException {
+	public void run() throws IOException, CMSMFFatalException {
 		File exportLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.EXPORT_LOCK_FILE_NAME);
 		if (exportLockFile.exists()) {
 			String msg = "_cmsmf_export.lck file exists in the export directory. Unsafe to continue with the import.";
@@ -326,7 +326,7 @@ public class CMSMFMain_import extends CMSMFMain {
 						// Raise the cmsmf fatal exception.
 						throw (new CMSMFFatalException(
 							"Total nbr of errors during import exceeds the error threshold of " + importErrorThreshold
-								+ " specified in properties file"));
+							+ " specified in properties file"));
 					}
 
 				}

@@ -5,6 +5,8 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.delta.cmsmf.exception.CMSMFFatalException;
+import com.documentum.fc.common.DfException;
 import com.documentum.fc.tools.RegistryPasswordUtils;
 
 /**
@@ -12,9 +14,10 @@ import com.documentum.fc.tools.RegistryPasswordUtils;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_encrypt {
+public class CMSMFMain_encrypt implements CMSMFMain {
 
-	CMSMFMain_encrypt() throws Throwable {
+	@Override
+	public void run() throws IOException, CMSMFFatalException {
 		final Console console = System.console();
 		String password = null;
 		if (console != null) {
@@ -30,7 +33,21 @@ public class CMSMFMain_encrypt {
 				throw e;
 			}
 		}
-		System.out.printf("%s%s%n", (console != null ? "The encrypted password is: " : ""),
-			RegistryPasswordUtils.encrypt(password));
+		try {
+			System.out.printf("%s%s%n", (console != null ? "The encrypted password is: " : ""),
+				RegistryPasswordUtils.encrypt(password));
+		} catch (DfException e) {
+			throw new CMSMFFatalException("Failed to decrypt the password", e);
+		}
+	}
+
+	@Override
+	public boolean requiresDataStore() {
+		return false;
+	}
+
+	@Override
+	public boolean requiresCleanData() {
+		return false;
 	}
 }

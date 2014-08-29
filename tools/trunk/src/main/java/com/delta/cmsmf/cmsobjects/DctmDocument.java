@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.mainEngine.CMSMFMain;
+import com.delta.cmsmf.mainEngine.AbstractCMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.properties.CMSMFProperties;
@@ -81,7 +81,7 @@ public class DctmDocument extends DctmObject {
 	 * properties file.
 	 * If the value is true, the documents and folders are created in /Replications cabinet.
 	 */
-	private static boolean isThisATest = CMSMFMain.getInstance().isTestMode();
+	private static boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
 
 	/**
 	 * Gets the list of content rendition files for this document.
@@ -840,7 +840,7 @@ public class DctmDocument extends DctmObject {
 		String aContentType = dctmDoc.getStrSingleAttrValue(DctmAttrNameConstants.A_CONTENT_TYPE);
 
 		List<DctmContent> contentList = dctmDoc.getContentList();
-		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
+		File contentExportRootDir = AbstractCMSMFMain.getInstance().getContentFilesDirectory();
 		for (DctmContent dctmContent : contentList) {
 			File contentFullPath = new File(contentExportRootDir, dctmContent.getRelativeContentFileLocation());
 			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
@@ -1345,7 +1345,7 @@ public class DctmDocument extends DctmObject {
 		int bufferSize = PropertiesManager.getProperty("content_read_buffer_size",
 			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
  */
-		File contentExportRootDir = CMSMFMain.getInstance().getContentFilesDirectory();
+		File contentExportRootDir = AbstractCMSMFMain.getInstance().getContentFilesDirectory();
 		// Make sure the content export location exists
 		FileUtils.forceMkdir(contentExportRootDir);
 		String relativeContentFileLocation = CMSMFUtils.getContentPathFromContentID(contentObjID);

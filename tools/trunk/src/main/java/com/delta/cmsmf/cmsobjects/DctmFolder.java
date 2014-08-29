@@ -13,7 +13,7 @@ import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.mainEngine.CMSMFMain;
+import com.delta.cmsmf.mainEngine.AbstractCMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.runtime.DuplicateChecker;
@@ -58,7 +58,7 @@ public class DctmFolder extends DctmObject {
 	 * properties file.
 	 * If the value is true, the documents and folders are created in /Replications cabinet.
 	 */
-	private static boolean isThisATest = CMSMFMain.getInstance().isTestMode();
+	private static boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
 
 	/**
 	 * Instantiates a new dctm folder.

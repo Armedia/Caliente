@@ -32,7 +32,7 @@ import com.documentum.fc.common.DfId;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_export extends CMSMFMain {
+public class CMSMFMain_export extends AbstractCMSMFMain {
 
 	CMSMFMain_export() throws Throwable {
 		super();
@@ -47,7 +47,7 @@ public class CMSMFMain_export extends CMSMFMain {
 	 *             Signals that an I/O exception has occurred.
 	 */
 	@Override
-	protected void run() throws IOException, CMSMFFatalException {
+	public void run() throws IOException, CMSMFFatalException {
 		// First check to see if import.lock file exists, if it does, that means import didn't
 // finish
 		// cleanly. In that case do not start the export.
@@ -238,4 +238,8 @@ public class CMSMFMain_export extends CMSMFMain {
 		return exportDQLQuery;
 	}
 
+	@Override
+	public boolean requiresCleanData() {
+		return true;
+	}
 }

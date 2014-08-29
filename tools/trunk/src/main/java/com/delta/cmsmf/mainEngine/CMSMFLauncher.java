@@ -7,8 +7,13 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.log4j.xml.DOMConfigurator;
+
+import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.datastore.DataStore;
+import com.delta.cmsmf.properties.PropertiesManager;
 
 public class CMSMFLauncher extends AbstractLauncher {
 
@@ -127,10 +132,51 @@ public class CMSMFLauncher extends AbstractLauncher {
 
 		CMSMFLauncher.patchClasspath(cliParams);
 
+		// Now, convert the command-line parameters into configuration properties
+		Properties parameters = new Properties();
+		for (CLIParam p : CLIParam.values()) {
+			String value = CMSMFLauncher.getParameter(p);
+			if ((value != null) && (p.property != null)) {
+				final String key = p.property.name;
+				if ((key != null) && (value != null)) {
+					parameters.setProperty(key, value);
+				}
+			}
+		}
+
+		// If we have command-line parameters, these supersede all other configurations, even if
+		// we have a configuration file explicitly listed.
+		if (!parameters.isEmpty()) {
+			PropertiesManager.addPropertySource(parameters);
+		}
+
+		// A configuration file has been specifed, so use its values ahead of the defaults
+		if (CMSMFLauncher.getParameter(CLIParam.cfg) != null) {
+			PropertiesManager.addPropertySource(CMSMFLauncher.getParameter(CLIParam.cfg));
+		}
+
+		// Now, the catch-all, default configuration
+		PropertiesManager.addPropertySource(CMSMFAppConstants.FULLY_QUALIFIED_CONFIG_FILE_NAME);
+
+		// And we start up the configuration engine...
+		PropertiesManager.init();
+
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
 		String mode = cliParams.get(CLIParam.mode);
-		Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode)).newInstance();
+		Class<?> klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode));
+		CMSMFMain main = null;
+		if (CMSMFMain.class.isAssignableFrom(klass)) {
+			main = CMSMFMain.class.cast(klass.newInstance());
+		} else {
+			throw new RuntimeException(String.format("Class [%s] is not a valid AbstractCMSMFMain class",
+				klass.getName()));
+		}
+
+		if (main.requiresDataStore()) {
+			DataStore.init(main.requiresCleanData());
+		}
+		main.run();
 	}
 }
