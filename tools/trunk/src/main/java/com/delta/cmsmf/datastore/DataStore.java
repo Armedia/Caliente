@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
 
 import javax.sql.DataSource;
 
@@ -36,12 +35,8 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.DfId;
-import com.documentum.fc.common.DfTime;
-import com.documentum.fc.common.DfValue;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
-import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -56,90 +51,6 @@ public class DataStore {
 	private static final String INSERT_DEPENDENCY_SQL = "insert into dctm_dependency (object_id, dependency_id) values (?, ?)";
 	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, attribute_name, attribute_id, attribute_type, attribute_length, is_internal, is_qualifiable, is_repeating) values (?, ?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, attribute_name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
-
-	private enum Converter {
-
-		DF_BOOLEAN {
-			@Override
-			public IDfValue doDecode(String value) {
-				return new DfValue(Boolean.valueOf(value), IDfValue.DF_BOOLEAN);
-			}
-		},
-		DF_INTEGER {
-			@Override
-			public IDfValue doDecode(String value) {
-				return new DfValue(Integer.parseInt(value), IDfValue.DF_INTEGER);
-			}
-		},
-		DF_STRING {
-			@Override
-			public IDfValue doDecode(String value) {
-				return new DfValue(value, IDfValue.DF_STRING);
-			}
-		},
-		DF_ID {
-			@Override
-			public String doEncode(IDfValue value) {
-				IDfId id = value.asId();
-				return (id.isNull() ? null : id.getId());
-			}
-
-			@Override
-			public IDfValue doDecode(String value) {
-				return new DfValue(new DfId(value), IDfValue.DF_ID);
-			}
-		},
-		DF_TIME {
-			@Override
-			public String doEncode(IDfValue value) {
-				IDfTime t = value.asTime();
-				return String.format("%d", t.getDate().getTime());
-			}
-
-			@Override
-			public IDfValue doDecode(String value) {
-				return new DfValue(new DfTime(new Date(Long.parseLong(value))));
-			}
-		},
-		DF_DOUBLE {
-			@Override
-			public String doEncode(IDfValue value) {
-				return String.format("%d", Double.doubleToRawLongBits(value.asDouble()));
-			}
-
-			@Override
-			public IDfValue doDecode(String value) {
-				return new DfValue(Long.parseLong(value), IDfValue.DF_DOUBLE);
-			}
-		},
-		DF_UNDEFINED {
-			@Override
-			public String doEncode(IDfValue value) {
-				throw new RuntimeException("Can't handle DF_UNDEFINED");
-			}
-
-			@Override
-			public IDfValue doDecode(String value) {
-				throw new RuntimeException("Can't handle DF_UNDEFINED");
-			}
-		};
-
-		public final String encode(IDfValue value) {
-			if (value == null) { return null; }
-			return doEncode(value);
-		}
-
-		protected String doEncode(IDfValue value) {
-			return value.asString();
-		}
-
-		public final IDfValue decode(String value) {
-			if (value == null) { return null; }
-			return doDecode(value);
-		}
-
-		protected abstract IDfValue doDecode(String value);
-	}
 
 	private static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
 		@Override
@@ -323,10 +234,10 @@ public class DataStore {
 				final String name = att.getName();
 				final boolean repeating = att.isRepeating();
 				final int type = att.getDataType();
-				final Converter cvt = Converter.values()[type];
+				final DataType cvt = DataType.fromDfConstant(type);
 
 				// DO NOT process "undefined" attribute values
-				if (cvt == Converter.DF_UNDEFINED) {
+				if (cvt == DataType.DF_UNDEFINED) {
 					DataStore.LOG.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]", objectId, name));
 					continue;
 				}
@@ -369,7 +280,7 @@ public class DataStore {
 				DbUtils.commitAndClose(c);
 			} else {
 				DataStore.LOG
-				.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
+					.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
 				DbUtils.rollbackAndClose(c);
 			}
 		}
