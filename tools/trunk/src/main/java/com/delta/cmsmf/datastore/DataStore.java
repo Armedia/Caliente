@@ -31,6 +31,7 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -281,6 +282,86 @@ public class DataStore {
 			} else {
 				DataStore.LOG
 					.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
+				DbUtils.rollbackAndClose(c);
+			}
+		}
+	}
+
+	public static void serializeObject(DataObject object) throws SQLException, DfException {
+		// First...is the object
+		// Put the object and its attributes into the state database
+		boolean ok = false;
+
+		// First, make sure no "left behind" garbage gets committed
+		final String objectId = object.getId();
+		final DctmObjectTypesEnum objectType = object.getType();
+		final boolean hasContent = object.isContentHolder();
+		final String contentPath = object.getContentPath();
+
+		Connection c = DataStore.DATA_SOURCE.getConnection();
+		c.rollback();
+		c.setAutoCommit(false);
+		try {
+			QueryRunner qr = DataStore.getQueryRunner();
+			if (qr.query(c, DataStore.CHECK_IF_OBJECT_EXISTS_SQL, DataStore.HANDLER_EXISTS, objectId)) {
+				// Object is already there, so do nothing
+				return;
+			}
+
+			// Not there, insert the actual object
+			qr.insert(c, DataStore.INSERT_OBJECT_SQL, DataStore.HANDLER_NULL, objectId, objectType.name(), hasContent,
+				contentPath);
+
+			// Then, insert its attributes
+			Object[] attData = new Object[8];
+			Object[] attValue = new Object[5];
+			attData[0] = objectId; // This should never change within the loop
+			attValue[0] = objectId; // This should never change within the loop
+			for (DataAttribute attribute : object) {
+				final String name = attribute.getName();
+				final boolean repeating = attribute.isRepeating();
+				final DataType type = attribute.getType();
+
+				// DO NOT process "undefined" attribute values
+				if (type == DataType.DF_UNDEFINED) {
+					DataStore.LOG.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]", objectId, name));
+					continue;
+				}
+
+				attData[1] = name;
+				attData[2] = attribute.getId();
+				attData[3] = type.name();
+				attData[4] = attribute.getLength();
+				attData[5] = false; // TODO: is_internal?
+				attData[6] = attribute.isQualifiable();
+				attData[7] = repeating;
+
+				// Insert the attribute
+				qr.insert(c, DataStore.INSERT_ATTRIBUTE_SQL, DataStore.HANDLER_NULL, attData);
+
+				attValue[1] = name; // This never changes inside this next loop
+				Object[][] values = new Object[attribute.getValueCount()][];
+				int v = 0;
+				// No special treatment, simply dump out all the values
+				for (IDfValue value : attribute) {
+					attValue[2] = v;
+					attValue[3] = ((value == null) || (value.asString() == null));
+					attValue[4] = type.encode(value);
+					values[v] = attValue.clone();
+					v++;
+				}
+				// Insert the values, as a batch
+				qr.insertBatch(c, DataStore.INSERT_ATTRIBUTE_VALUE_SQL, DataStore.HANDLER_NULL, values);
+			}
+			ok = true;
+		} finally {
+			if (ok) {
+				if (DataStore.LOG.isDebugEnabled()) {
+					DataStore.LOG.debug(String.format("Committing insert transaction for [%s]", objectId));
+				}
+				DbUtils.commitAndClose(c);
+			} else {
+				DataStore.LOG.warn(String.format("Rolling back insert transaction for [%s]", objectId));
 				DbUtils.rollbackAndClose(c);
 			}
 		}
