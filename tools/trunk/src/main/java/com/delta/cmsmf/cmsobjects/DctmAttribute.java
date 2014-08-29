@@ -1,7 +1,12 @@
 package com.delta.cmsmf.cmsobjects;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.delta.cmsmf.datastore.DataAttribute;
+import com.delta.cmsmf.datastore.DataType;
+import com.documentum.fc.common.IDfValue;
 
 /**
  * The DctmUser DctmAttribute represents an attribute or a property of any object in CMS.
@@ -16,11 +21,34 @@ public class DctmAttribute implements Serializable {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
+	/** The repeating values. */
+	private List<Object> repeatingValues;
+
+	/** The single value. */
+	private Object singleValue;
+
+	/** The attribute value type. */
+	private DctmAttributeTypesEnum attrValueType;
+
 	/**
 	 * Instantiates a new dctm attribute.
 	 */
 	public DctmAttribute() {
-		super();
+	}
+
+	DctmAttribute(DataAttribute attribute) {
+		this.attrValueType = attribute.isRepeating() ? DctmAttributeTypesEnum.REPEATING_VALUE_TYPE_ATTRIBUTE
+			: DctmAttributeTypesEnum.SINGLE_VALUE_TYPE_ATTRIBUTE;
+		DataType type = attribute.getType();
+		if (attribute.isRepeating()) {
+			this.repeatingValues = new ArrayList<Object>(attribute.getValueCount());
+			for (IDfValue v : attribute) {
+				this.repeatingValues.add(type.getValue(v));
+			}
+		} else {
+			this.singleValue = type.getValue(attribute.getValue(0));
+			this.repeatingValues = null;
+		}
 	}
 
 	/**
@@ -32,9 +60,6 @@ public class DctmAttribute implements Serializable {
 	public DctmAttribute(DctmAttributeTypesEnum attrValType) {
 		this.attrValueType = attrValType;
 	}
-
-	/** The repeating values. */
-	private List<Object> repeatingValues;
 
 	/**
 	 * Gets the repeating values of this attribute.
@@ -55,9 +80,6 @@ public class DctmAttribute implements Serializable {
 		this.repeatingValues = repeatingValues;
 	}
 
-	/** The single value. */
-	private Object singleValue;
-
 	/**
 	 * Gets the single value of this attribute.
 	 *
@@ -76,9 +98,6 @@ public class DctmAttribute implements Serializable {
 	public void setSingleValue(Object singleValue) {
 		this.singleValue = singleValue;
 	}
-
-	/** The attribute value type. */
-	private DctmAttributeTypesEnum attrValueType;
 
 	/**
 	 * Gets the attr value type.

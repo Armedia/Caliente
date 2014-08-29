@@ -16,17 +16,32 @@ public enum DataType {
 		public IDfValue doDecode(String value) {
 			return new DfValue(Boolean.valueOf(value), IDfValue.DF_BOOLEAN);
 		}
+
+		@Override
+		protected Object doGetValue(IDfValue value) {
+			return value.asBoolean();
+		}
 	},
 	DF_INTEGER(IDfValue.DF_INTEGER) {
 		@Override
 		public IDfValue doDecode(String value) {
 			return new DfValue(Integer.parseInt(value), IDfValue.DF_INTEGER);
 		}
+
+		@Override
+		protected Object doGetValue(IDfValue value) {
+			return value.asInteger();
+		}
 	},
 	DF_STRING(IDfValue.DF_STRING) {
 		@Override
 		public IDfValue doDecode(String value) {
 			return new DfValue(value, IDfValue.DF_STRING);
+		}
+
+		@Override
+		protected Object doGetValue(IDfValue value) {
+			return value.asString();
 		}
 	},
 	DF_ID(IDfValue.DF_ID) {
@@ -40,6 +55,11 @@ public enum DataType {
 		public IDfValue doDecode(String value) {
 			return new DfValue(new DfId(value), IDfValue.DF_ID);
 		}
+
+		@Override
+		protected Object doGetValue(IDfValue value) {
+			return value.asId();
+		}
 	},
 	DF_TIME(IDfValue.DF_TIME) {
 		@Override
@@ -52,6 +72,11 @@ public enum DataType {
 		public IDfValue doDecode(String value) {
 			return new DfValue(new DfTime(new Date(Long.parseLong(value))));
 		}
+
+		@Override
+		protected Object doGetValue(IDfValue value) {
+			return value.asTime();
+		}
 	},
 	DF_DOUBLE(IDfValue.DF_DOUBLE) {
 		@Override
@@ -63,6 +88,11 @@ public enum DataType {
 		public IDfValue doDecode(String value) {
 			return new DfValue(Long.parseLong(value), IDfValue.DF_DOUBLE);
 		}
+
+		@Override
+		protected Object doGetValue(IDfValue value) {
+			return value.asDouble();
+		}
 	},
 	DF_UNDEFINED(IDfValue.DF_UNDEFINED) {
 		@Override
@@ -72,6 +102,11 @@ public enum DataType {
 
 		@Override
 		public IDfValue doDecode(String value) {
+			throw new RuntimeException("Can't handle DF_UNDEFINED");
+		}
+
+		@Override
+		protected Object doGetValue(IDfValue value) {
 			throw new RuntimeException("Can't handle DF_UNDEFINED");
 		}
 	};
@@ -101,6 +136,13 @@ public enum DataType {
 	}
 
 	protected abstract IDfValue doDecode(String value);
+
+	public final Object getValue(IDfValue value) {
+		if (value == null) { return null; }
+		return doGetValue(value);
+	}
+
+	protected abstract Object doGetValue(IDfValue value);
 
 	public static DataType fromDfConstant(int constant) {
 		// We do this just to be safe, but we could also use the constant as an array index

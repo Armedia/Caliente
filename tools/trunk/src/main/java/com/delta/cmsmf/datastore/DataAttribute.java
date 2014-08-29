@@ -9,14 +9,20 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
+import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfValue;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 public class DataAttribute implements Iterable<IDfValue> {
 
 	public static final DataAttributeEncoder DEFAULT_ENCODER = new DataAttributeEncoder();
+
+	private static final IDfValue DM_DBO = new DfValue(CMSMFAppConstants.DM_DBO);
 
 	private final String name;
 	private final String id;
@@ -68,8 +74,25 @@ public class DataAttribute implements Iterable<IDfValue> {
 		this.qualifiable = attr.isQualifiable();
 		final int valueCount = obj.getValueCount(this.name);
 		this.values = new ArrayList<IDfValue>(valueCount);
+
+		final boolean checkForDbo;
+		final String operatorName;
+		if (this.type == DataType.DF_STRING) {
+			// This only applies for string values
+			checkForDbo = RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
+				.contains(attr.getName());
+			operatorName = RepositoryConfiguration.getRepositoryConfiguration().getOperatorName();
+		} else {
+			checkForDbo = false;
+			operatorName = null;
+		}
 		for (int i = 0; i < valueCount; i++) {
-			this.values.add(obj.getRepeatingValue(this.name, i));
+			IDfValue value = obj.getRepeatingValue(this.name, i);
+			// If this is the operator name, we replace the value
+			if (checkForDbo && (value != null) && operatorName.equals(value.asString())) {
+				value = DataAttribute.DM_DBO;
+			}
+			this.values.add(value);
 		}
 		this.valuesLoaded = true;
 	}
@@ -159,6 +182,11 @@ public class DataAttribute implements Iterable<IDfValue> {
 	public IDfValue getValue(int idx) {
 		if ((idx < 0) || (idx >= this.values.size())) { throw new ArrayIndexOutOfBoundsException(idx); }
 		return this.values.get(idx);
+	}
+
+	public IDfValue getValue() {
+		if (this.values.isEmpty()) { return null; }
+		return getValue(0);
 	}
 
 	@Override

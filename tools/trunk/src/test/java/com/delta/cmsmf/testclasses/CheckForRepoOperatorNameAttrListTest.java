@@ -3,6 +3,7 @@ package com.delta.cmsmf.testclasses;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -33,7 +34,7 @@ public class CheckForRepoOperatorNameAttrListTest extends BaseTest {
 		PropertiesManager.addPropertySource(props);
 		PropertiesManager.init();
 
-		List<String> actual = RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName();
+		Set<String> actual = RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName();
 		Assert.assertEquals(expected, actual);
 	}
 }

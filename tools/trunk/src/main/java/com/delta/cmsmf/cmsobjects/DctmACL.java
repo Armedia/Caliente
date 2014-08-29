@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
+import com.delta.cmsmf.datastore.DataObject;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.runtime.DuplicateChecker;
@@ -48,7 +49,7 @@ public class DctmACL extends DctmObject {
 	private static Logger logger = Logger.getLogger(DctmACL.class);
 
 	/** The list that stores extended permission names for this ACL object. */
-	private List<String> accessorXPermitNames = new ArrayList<String>();
+	private final List<String> accessorXPermitNames = new ArrayList<String>();
 
 	/**
 	 * Instantiates a new DctmACL object.
@@ -214,6 +215,12 @@ public class DctmACL extends DctmObject {
 	 */
 	@Override
 	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+		try {
+			DataObject dataObject = new DataObject(prsstntObj);
+			DctmACL.logger.debug(dataObject);
+		} catch (DfException e) {
+			throw new CMSMFException("Failed to create a DataObject", e);
+		}
 		if (DctmACL.logger.isEnabledFor(Level.INFO)) {
 			DctmACL.logger.info("Started getting dctm dm_acl from repository");
 		}

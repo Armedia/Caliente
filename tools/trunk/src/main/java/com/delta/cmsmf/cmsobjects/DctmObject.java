@@ -17,6 +17,8 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
+import com.delta.cmsmf.datastore.DataAttribute;
+import com.delta.cmsmf.datastore.DataObject;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.runtime.RunTimeProperties;
@@ -53,7 +55,10 @@ public abstract class DctmObject implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(DctmObject.class);
+	protected static final Logger logger = Logger.getLogger(DctmObject.class);
+
+	/** The documentum repository session. */
+	protected transient IDfSession dctmSession = null;
 
 	/**
 	 * The dctm object type enumeration.
@@ -64,11 +69,8 @@ public abstract class DctmObject implements Serializable {
 	 */
 	public DctmObjectTypesEnum dctmObjectType = null;
 
-	/** The documentum repository session. */
-	protected transient IDfSession dctmSession = null;
-
 	/** The attributes map. */
-	private Map<String, DctmAttribute> attrMap = new HashMap<String, DctmAttribute>();
+	private final Map<String, DctmAttribute> attrMap = new HashMap<String, DctmAttribute>();
 
 	/** The object id of the object in source repository. It is populated during the export step. */
 	private String srcObjectID;
@@ -792,7 +794,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = (String) dctmAttribute.getSingleValue();
 					if (strVal.equals(CMSMFAppConstants.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(attrName)) {
+						.contains(attrName)) {
 						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 							this.dctmSession);
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -811,7 +813,7 @@ public abstract class DctmObject implements Serializable {
 						String strVal = (String) attrVal;
 						if (strVal.equals(CMSMFAppConstants.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-								.contains(attrName)) {
+							.contains(attrName)) {
 							strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 								this.dctmSession);
 							if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -872,11 +874,9 @@ public abstract class DctmObject implements Serializable {
 		try {
 			// Set object id
 			dctmObject.setSrcObjectID(srcObjID);
-
-			Enumeration<?> attrs = prsstntObj.enumAttrs();
-			while (attrs.hasMoreElements()) {
-				IDfAttr idfAttr = (IDfAttr) attrs.nextElement();
-				getAttributeFromCMS(dctmObject, prsstntObj, idfAttr);
+			final int attCount = prsstntObj.getAttrCount();
+			for (int i = 0; i < attCount; i++) {
+				getAttributeFromCMS(dctmObject, prsstntObj, prsstntObj.getAttr(i));
 			}
 		} catch (DfException e) {
 			throw (new CMSMFException("Couldn't read all attributes from dctm object with id: " + srcObjID, e));
@@ -940,9 +940,9 @@ public abstract class DctmObject implements Serializable {
 					// check the value of the attribute and replace it with dm_dbo
 					// if it is indeed equal to repository owner (operator) name.
 					String strVal = prsstntObj.getString(idfAttr.getName());
-					if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
-						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(idfAttr.getName())) {
+					if (RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
+						.contains(idfAttr.getName())
+						&& strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())) {
 						strVal = CMSMFAppConstants.DM_DBO;
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + idfAttr.getName() + " attribute of object with id: "
@@ -1012,9 +1012,10 @@ public abstract class DctmObject implements Serializable {
 							// check the value of the attribute and replace it with dm_dbo
 							// if it is indeed equal to repository owner (operator) name.
 							String strVal = prsstntObj.getRepeatingString(idfAttr.getName(), i);
-							if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
-								&& RunTimeProperties.getRunTimePropertiesInstance()
-									.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
+							if (RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
+								.contains(idfAttr.getName())
+								&& strVal
+								.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())) {
 								strVal = CMSMFAppConstants.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()
@@ -1137,5 +1138,17 @@ public abstract class DctmObject implements Serializable {
 		// Flush the persistent object cache to avoid version mismatch errors.
 		this.dctmSession.flush("persistentobjcache", null);
 		this.dctmSession.flushCache(false);
+	}
+
+	public DataObject toDataObject() {
+		return null;
+	}
+
+	public DctmObject(DataObject dataObject) {
+		this.srcObjectID = dataObject.getId();
+		this.dctmObjectType = dataObject.getType();
+		for (DataAttribute attribute : dataObject) {
+			this.attrMap.put(attribute.getName(), new DctmAttribute(attribute));
+		}
 	}
 }

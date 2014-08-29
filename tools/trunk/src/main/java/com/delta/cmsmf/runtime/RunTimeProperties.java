@@ -1,6 +1,7 @@
 package com.delta.cmsmf.runtime;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrTokenizer;
@@ -77,7 +78,7 @@ public class RunTimeProperties {
 	}
 
 	/** The list of attribute names whose value should be checked for repository operator name. */
-	public List<String> attrsToCheckForRepoOperatorName = null;
+	public Set<String> attrsToCheckForRepoOperatorName = null;
 
 	/**
 	 * Gets the list of attribute names to check for repository operator name.
@@ -85,11 +86,11 @@ public class RunTimeProperties {
 	 * @return the list of attribute names to check for repository operator name
 	 */
 	@SuppressWarnings("unchecked")
-	public List<String> getAttrsToCheckForRepoOperatorName() {
+	public Set<String> getAttrsToCheckForRepoOperatorName() {
 		if (this.attrsToCheckForRepoOperatorName == null) {
 			String attrsToCheck = CMSMFProperties.OWNER_ATTRIBUTES.getString();
 			StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
-			this.attrsToCheckForRepoOperatorName = strTokenizer.getTokenList();
+			this.attrsToCheckForRepoOperatorName = new HashSet<String>(strTokenizer.getTokenList());
 		}
 		return this.attrsToCheckForRepoOperatorName;
 	}
