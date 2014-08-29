@@ -2,6 +2,7 @@ package com.delta.cmsmf.cmsobjects;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -50,13 +51,13 @@ public class DctmType extends DctmObject {
 
 	// Static variables used to see how many Types were created, skipped, updated
 	/** Keeps track of nbr of type objects read from file during import process. */
-	private static int types_read = 0;
+	private static AtomicInteger types_read = new AtomicInteger(0);
 	/** Keeps track of nbr of type objects skipped due to duplicates during import process. */
-	private static int types_skipped = 0;
+	private static AtomicInteger types_skipped = new AtomicInteger(0);
 	/** Keeps track of nbr of type objects updated in CMS during import process. */
-	private static int types_updated = 0;
+	private static AtomicInteger types_updated = new AtomicInteger(0);
 	/** Keeps track of nbr of type objects created in CMS during import process. */
-	private static int types_created = 0;
+	private static AtomicInteger types_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmType.class);
@@ -87,7 +88,7 @@ public class DctmType extends DctmObject {
 	 */
 	@Override
 	public void createInCMS() throws DfException, IOException {
-		DctmType.types_read++;
+		DctmType.types_read.incrementAndGet();
 
 		if (DctmType.logger.isEnabledFor(Level.INFO)) {
 			DctmType.logger.info("Started creating dctm dm_type in repository");
@@ -106,7 +107,7 @@ public class DctmType extends DctmObject {
 						+ " was not created in cms. It appears to be a system type");
 				}
 				// exit out
-				DctmType.types_skipped++;
+				DctmType.types_skipped.incrementAndGet();
 				return;
 			}
 
@@ -122,14 +123,14 @@ public class DctmType extends DctmObject {
 					if (DctmType.logger.isEnabledFor(Level.INFO)) {
 						DctmType.logger.info("Identical format " + typeName + " already exists in target repository.");
 					}
-					DctmType.types_skipped++;
+					DctmType.types_skipped.incrementAndGet();
 					return;
 				}
 			} else { // type doesn't exist in repo, create one
 				if (DctmType.logger.isEnabledFor(Level.INFO)) {
 					DctmType.logger.info("Creating type " + typeName + " in target repository.");
 				}
-				DctmType.types_created++;
+				DctmType.types_created.incrementAndGet();
 				CreateTypeInCMS();
 
 				// update vStamp of the type object that was just created

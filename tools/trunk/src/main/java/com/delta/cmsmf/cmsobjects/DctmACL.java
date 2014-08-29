@@ -3,6 +3,7 @@ package com.delta.cmsmf.cmsobjects;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -35,13 +36,13 @@ public class DctmACL extends DctmObject {
 
 	// Static variables used to see how many ACLs were created, skipped, updated
 	/** Keeps track of nbr of acl objects read from file during import process. */
-	private static int acls_read = 0;
+	private static AtomicInteger acls_read = new AtomicInteger(0);
 	/** Keeps track of nbr of acl objects skipped due to duplicates during import process. */
-	private static int acls_skipped = 0;
+	private static AtomicInteger acls_skipped = new AtomicInteger(0);
 	/** Keeps track of nbr of acl objects updated in CMS during import process. */
-	private static int acls_updated = 0;
+	private static AtomicInteger acls_updated = new AtomicInteger(0);
 	/** Keeps track of nbr of acl objects created in CMS during import process. */
-	private static int acls_created = 0;
+	private static AtomicInteger acls_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmACL.class);
@@ -75,7 +76,7 @@ public class DctmACL extends DctmObject {
 	 */
 	@Override
 	public void createInCMS() throws DfException, IOException {
-		DctmACL.acls_read++;
+		DctmACL.acls_read.incrementAndGet();
 
 		if (DctmACL.logger.isEnabledFor(Level.INFO)) {
 			DctmACL.logger.info("Started creating dctm dm_acl in repository");
@@ -110,7 +111,7 @@ public class DctmACL extends DctmObject {
 						DctmACL.logger.debug("Identical acl " + aclName + " already exists in target repository.");
 					}
 					this.dctmSession.abortTrans();
-					DctmACL.acls_skipped++;
+					DctmACL.acls_skipped.incrementAndGet();
 					return;
 				}
 			} else { // acl doesn't exist in repo, create one
@@ -129,9 +130,9 @@ public class DctmACL extends DctmObject {
 			// save the ACL object
 			prsstntObj.save();
 			if (doesACLNeedUpdate) {
-				DctmACL.acls_updated++;
+				DctmACL.acls_updated.incrementAndGet();
 			} else {
-				DctmACL.acls_created++;
+				DctmACL.acls_created.incrementAndGet();
 			}
 
 			// update vStamp of the acl object

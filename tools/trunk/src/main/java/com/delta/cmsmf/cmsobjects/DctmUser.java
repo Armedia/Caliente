@@ -2,6 +2,7 @@ package com.delta.cmsmf.cmsobjects;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
@@ -45,13 +46,13 @@ public class DctmUser extends DctmObject {
 
 	// Static variables used to see how many groups were created, skipped, updated
 	/** Keeps track of nbr of user objects read from file during import process. */
-	private static int usrs_read = 0;
+	private static AtomicInteger usrs_read = new AtomicInteger(0);
 	/** Keeps track of nbr of user objects skipped due to duplicates during import process. */
-	private static int usrs_skipped = 0;
+	private static AtomicInteger usrs_skipped = new AtomicInteger(0);
 	/** Keeps track of nbr of user objects updated in CMS during import process. */
-	private static int usrs_updated = 0;
+	private static AtomicInteger usrs_updated = new AtomicInteger(0);
 	/** Keeps track of nbr of user objects created in CMS during import process. */
-	private static int usrs_created = 0;
+	private static AtomicInteger usrs_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmUser.class);
@@ -85,7 +86,7 @@ public class DctmUser extends DctmObject {
 	 */
 	@Override
 	public void createInCMS() throws DfException, IOException {
-		DctmUser.usrs_read++;
+		DctmUser.usrs_read.incrementAndGet();
 
 		if (DctmUser.logger.isEnabledFor(Level.INFO)) {
 			DctmUser.logger.info("Started creating dctm dm_user in repository");
@@ -112,7 +113,7 @@ public class DctmUser extends DctmObject {
 				}
 				// abort the transaction and exit out
 				this.dctmSession.abortTrans();
-				DctmUser.usrs_skipped++;
+				DctmUser.usrs_skipped.incrementAndGet();
 				return;
 			}
 
@@ -183,7 +184,7 @@ public class DctmUser extends DctmObject {
 							+ " already exist in target repository.");
 					}
 					this.dctmSession.abortTrans();
-					DctmUser.usrs_skipped++;
+					DctmUser.usrs_skipped.incrementAndGet();
 					return;
 				}
 			} else { // user doesn't exist in repo, create one
@@ -221,9 +222,9 @@ public class DctmUser extends DctmObject {
 			// save the user object
 			prsstntObj.save();
 			if (doesUserNeedUpdate) {
-				DctmUser.usrs_updated++;
+				DctmUser.usrs_updated.incrementAndGet();
 			} else {
-				DctmUser.usrs_created++;
+				DctmUser.usrs_created.incrementAndGet();
 			}
 
 			// if user had internal acl, check to see if its name needs to be updated

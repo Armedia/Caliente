@@ -2,6 +2,7 @@ package com.delta.cmsmf.cmsobjects;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -45,13 +46,13 @@ public class DctmReferenceDocument extends DctmDocument {
 
 	// Static variables used to see how many documents were created, skipped, updated
 	/** Keeps track of nbr of reference documents read from file during import process. */
-	private static int ref_docs_read = 0;
+	private static AtomicInteger ref_docs_read = new AtomicInteger(0);
 	/** Keeps track of nbr of reference documents skipped due to duplicates during import process. */
-	private static int ref_docs_skipped = 0;
+	private static AtomicInteger ref_docs_skipped = new AtomicInteger(0);
 	/** Keeps track of nbr of reference documents updated in CMS during import process. */
-	private static int ref_docs_updated = 0;
+	private static AtomicInteger ref_docs_updated = new AtomicInteger(0);
 	/** Keeps track of nbr of reference documents created in CMS during import process. */
-	private static int ref_docs_created = 0;
+	private static AtomicInteger ref_docs_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmReferenceDocument.class);
@@ -230,7 +231,7 @@ public class DctmReferenceDocument extends DctmDocument {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger.info("Started creating dctm dm_document with multiple versions in repository");
 		}
-		DctmReferenceDocument.ref_docs_read++;
+		DctmReferenceDocument.ref_docs_read.incrementAndGet();
 
 		// Begin transaction
 		this.dctmSession.beginTrans();
@@ -283,7 +284,7 @@ public class DctmReferenceDocument extends DctmDocument {
 					if (DctmReferenceDocument.logger.isEnabledFor(Level.DEBUG)) {
 						DctmReferenceDocument.logger.debug("reference ID is: " + referenceObjId.getId());
 					}
-					DctmReferenceDocument.ref_docs_created++;
+					DctmReferenceDocument.ref_docs_created.incrementAndGet();
 					this.dctmSession.commitTrans();
 				}
 			} else {
@@ -292,7 +293,7 @@ public class DctmReferenceDocument extends DctmDocument {
 			}
 		} else {
 			this.dctmSession.abortTrans();
-			DctmReferenceDocument.ref_docs_skipped++;
+			DctmReferenceDocument.ref_docs_skipped.incrementAndGet();
 			if (DctmReferenceDocument.logger.isEnabledFor(Level.DEBUG)) {
 				DctmReferenceDocument.logger.debug("Duplicate mirror object DOES exist!");
 			}

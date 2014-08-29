@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
@@ -42,13 +43,13 @@ public class DctmFolder extends DctmObject {
 
 	// Static variables used to see how many folders were created, skipped, updated
 	/** Keeps track of nbr of folder objects read from file during import process. */
-	private static int fldrs_read = 0;
+	private static AtomicInteger fldrs_read = new AtomicInteger(0);
 	/** Keeps track of nbr of folder objects skipped due to duplicates during import process. */
-	private static int fldrs_skipped = 0;
+	private static AtomicInteger fldrs_skipped = new AtomicInteger(0);
 	/** Keeps track of nbr of folder objects updated in CMS during import process. */
-	private static int fldrs_updated = 0;
+	private static AtomicInteger fldrs_updated = new AtomicInteger(0);
 	/** Keeps track of nbr of folder objects created in CMS during import process. */
-	private static int fldrs_created = 0;
+	private static AtomicInteger fldrs_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmFolder.class);
@@ -86,7 +87,7 @@ public class DctmFolder extends DctmObject {
 	 */
 	@Override
 	public void createInCMS() throws DfException, IOException {
-		DctmFolder.fldrs_read++;
+		DctmFolder.fldrs_read.incrementAndGet();
 
 		if (DctmFolder.logger.isEnabledFor(Level.INFO)) {
 			DctmFolder.logger.info("Started creating dctm dm_folder in repository");
@@ -147,7 +148,7 @@ public class DctmFolder extends DctmObject {
 							+ " already exist in target repository.");
 					}
 					this.dctmSession.abortTrans();
-					DctmFolder.fldrs_skipped++;
+					DctmFolder.fldrs_skipped.incrementAndGet();
 					return;
 				}
 			} else { // folder doesn't exist in repo, create one
@@ -277,7 +278,7 @@ public class DctmFolder extends DctmObject {
 					}
 				}
 
-				DctmFolder.fldrs_created++;
+				DctmFolder.fldrs_created.incrementAndGet();
 			} else { // Updating existing folder object
 				// save the folder object
 				cmsFldrObjet.save();
@@ -286,7 +287,7 @@ public class DctmFolder extends DctmObject {
 					cmsFldrObjet.grant(this.dctmSession.getLoginUserName(), curPermit, null);
 					cmsFldrObjet.save();
 				}
-				DctmFolder.fldrs_updated++;
+				DctmFolder.fldrs_updated.incrementAndGet();
 			}
 
 			// Update system attributes like r_creator_name, r_modifier, r_creation_date etc.

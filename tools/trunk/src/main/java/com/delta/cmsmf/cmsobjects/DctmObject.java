@@ -64,6 +64,15 @@ public abstract class DctmObject implements Serializable {
 	 */
 	public DctmObjectTypesEnum dctmObjectType = null;
 
+	/** The documentum repository session. */
+	protected transient IDfSession dctmSession = null;
+
+	/** The attributes map. */
+	private Map<String, DctmAttribute> attrMap = new HashMap<String, DctmAttribute>();
+
+	/** The object id of the object in source repository. It is populated during the export step. */
+	private String srcObjectID;
+
 	/**
 	 * Instantiates a new dctm object.
 	 */
@@ -82,9 +91,6 @@ public abstract class DctmObject implements Serializable {
 		this.dctmSession = dctmSession;
 	}
 
-	/** The documentum repository session. */
-	protected transient IDfSession dctmSession = null;
-
 	/**
 	 * Sets the documentum repository session.
 	 *
@@ -94,9 +100,6 @@ public abstract class DctmObject implements Serializable {
 	public void setDctmSession(IDfSession dctmSession) {
 		this.dctmSession = dctmSession;
 	}
-
-	/** The attributes map. */
-	private Map<String, DctmAttribute> attrMap = new HashMap<String, DctmAttribute>();
 
 	/**
 	 * Gets the attributes map.
@@ -228,9 +231,6 @@ public abstract class DctmObject implements Serializable {
 		DctmAttribute singleAttr = this.attrMap.get(attrName);
 		return (Date) singleAttr.getSingleValue();
 	}
-
-	/** The object id of the object in source repository. It is populated during the export step. */
-	private String srcObjectID;
 
 	/**
 	 * Gets the source repository object id.
@@ -792,7 +792,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = (String) dctmAttribute.getSingleValue();
 					if (strVal.equals(CMSMFAppConstants.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-						.contains(attrName)) {
+							.contains(attrName)) {
 						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 							this.dctmSession);
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -811,7 +811,7 @@ public abstract class DctmObject implements Serializable {
 						String strVal = (String) attrVal;
 						if (strVal.equals(CMSMFAppConstants.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(attrName)) {
+								.contains(attrName)) {
 							strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 								this.dctmSession);
 							if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -942,7 +942,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = prsstntObj.getString(idfAttr.getName());
 					if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-						.contains(idfAttr.getName())) {
+							.contains(idfAttr.getName())) {
 						strVal = CMSMFAppConstants.DM_DBO;
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + idfAttr.getName() + " attribute of object with id: "
@@ -1014,7 +1014,7 @@ public abstract class DctmObject implements Serializable {
 							String strVal = prsstntObj.getRepeatingString(idfAttr.getName(), i);
 							if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 								&& RunTimeProperties.getRunTimePropertiesInstance()
-								.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
+									.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
 								strVal = CMSMFAppConstants.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()

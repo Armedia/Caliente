@@ -29,9 +29,15 @@ public enum DctmObjectTypesEnum {
 	DCTM_CONTENT;
 
 	private final String dmType;
+	private final String name;
 
 	private DctmObjectTypesEnum() {
 		this.dmType = name().toLowerCase().replaceAll("^dctm_", "dm_");
+		this.name = name().toLowerCase().replaceAll("^dctm_", "");
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 	public String getDocumentumType() {

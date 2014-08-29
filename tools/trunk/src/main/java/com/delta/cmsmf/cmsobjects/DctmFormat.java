@@ -1,6 +1,7 @@
 package com.delta.cmsmf.cmsobjects;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -28,13 +29,13 @@ public class DctmFormat extends DctmObject {
 
 	// Static variables used to see how many formats were created, skipped, updated
 	/** Keeps track of nbr of format objects read from file during import process. */
-	private static int formats_read = 0;
+	private static AtomicInteger formats_read = new AtomicInteger(0);
 	/** Keeps track of nbr of format objects skipped due to duplicates during import process. */
-	private static int formats_skipped = 0;
+	private static AtomicInteger formats_skipped = new AtomicInteger(0);
 	/** Keeps track of nbr of format objects updated in CMS during import process. */
-	private static int formats_updated = 0;
+	private static AtomicInteger formats_updated = new AtomicInteger(0);
 	/** Keeps track of nbr of format objects created in CMS during import process. */
-	private static int formats_created = 0;
+	private static AtomicInteger formats_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmFormat.class);
@@ -65,7 +66,7 @@ public class DctmFormat extends DctmObject {
 	 */
 	@Override
 	public void createInCMS() throws DfException, IOException {
-		DctmFormat.formats_read++;
+		DctmFormat.formats_read.incrementAndGet();
 
 		if (DctmFormat.logger.isEnabledFor(Level.INFO)) {
 			DctmFormat.logger.info("Started creating dctm dm_format in repository");
@@ -105,7 +106,7 @@ public class DctmFormat extends DctmObject {
 							+ " already exists in target repository.");
 					}
 					this.dctmSession.abortTrans();
-					DctmFormat.formats_skipped++;
+					DctmFormat.formats_skipped.incrementAndGet();
 					return;
 				}
 			} else { // format doesn't exist in repo, create one
@@ -121,9 +122,9 @@ public class DctmFormat extends DctmObject {
 			// save the format object
 			prsstntObj.save();
 			if (doesFormatNeedUpdate) {
-				DctmFormat.formats_updated++;
+				DctmFormat.formats_updated.incrementAndGet();
 			} else {
-				DctmFormat.formats_created++;
+				DctmFormat.formats_created.incrementAndGet();
 			}
 
 			// update vStamp of the format object

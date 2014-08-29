@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -62,13 +63,13 @@ public class DctmDocument extends DctmObject {
 
 	// Static variables used to see how many documents were created, skipped, updated
 	/** Keeps track of nbr of document versions read from file during import process. */
-	private static int docs_read = 0;
+	private static AtomicInteger docs_read = new AtomicInteger(0);
 	/** Keeps track of nbr of document versions skipped due to duplicates during import process. */
-	private static int docs_skipped = 0;
+	private static AtomicInteger docs_skipped = new AtomicInteger(0);
 	/** Keeps track of nbr of document versions updated in CMS during import process. */
-	private static int docs_updated = 0;
+	private static AtomicInteger docs_updated = new AtomicInteger(0);
 	/** Keeps track of nbr of document versions created in CMS during import process. */
-	private static int docs_created = 0;
+	private static AtomicInteger docs_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmDocument.class);
@@ -278,7 +279,7 @@ public class DctmDocument extends DctmObject {
 			Map<String, String> oldNewDocuments = new HashMap<String, String>();
 
 			for (DctmDocument dctmVerDoc : getVersionTree()) {
-				DctmDocument.docs_read++;
+				DctmDocument.docs_read.incrementAndGet();
 				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 					DctmDocument.logger.debug("Object name is: "
 						+ dctmVerDoc.getStrSingleAttrValue(DctmAttrNameConstants.OBJECT_NAME));
@@ -428,7 +429,7 @@ public class DctmDocument extends DctmObject {
 // and
 						// return
 						doesDuplicateObjectExists = true;
-						DctmDocument.docs_skipped++;
+						DctmDocument.docs_skipped.incrementAndGet();
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 							DctmDocument.logger
 							.debug("Identical version of document already exist in target repo with id: "
@@ -598,9 +599,9 @@ public class DctmDocument extends DctmObject {
 					}
 
 					if (doesExistingObjectNeedsUpdate) {
-						DctmDocument.docs_updated++;
+						DctmDocument.docs_updated.incrementAndGet();
 					} else {
-						DctmDocument.docs_created++;
+						DctmDocument.docs_created.incrementAndGet();
 					}
 
 					// Update internal attributes like creation/modify date and creators/modifiers

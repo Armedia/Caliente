@@ -2,6 +2,7 @@ package com.delta.cmsmf.cmsobjects;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -37,13 +38,13 @@ public class DctmGroup extends DctmObject {
 
 	// Static variables used to see how many groups were created, skipped, updated
 	/** Keeps track of nbr of group objects read from file during import process. */
-	private static int grps_read = 0;
+	private static AtomicInteger grps_read = new AtomicInteger(0);
 	/** Keeps track of nbr of group objects skipped due to duplicates during import process. */
-	private static int grps_skipped = 0;
+	private static AtomicInteger grps_skipped = new AtomicInteger(0);
 	/** Keeps track of nbr of group objects updated in CMS during import process. */
-	private static int grps_updated = 0;
+	private static AtomicInteger grps_updated = new AtomicInteger(0);
 	/** Keeps track of nbr of group objects created in CMS during import process. */
-	private static int grps_created = 0;
+	private static AtomicInteger grps_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
 	private static Logger logger = Logger.getLogger(DctmGroup.class);
@@ -74,7 +75,7 @@ public class DctmGroup extends DctmObject {
 	 */
 	@Override
 	public void createInCMS() throws DfException, IOException {
-		DctmGroup.grps_read++;
+		DctmGroup.grps_read.incrementAndGet();
 
 		if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
 			DctmGroup.logger.info("Started creating dctm dm_group in repository");
@@ -114,7 +115,7 @@ public class DctmGroup extends DctmObject {
 							+ " already exist in target repository.");
 					}
 					this.dctmSession.abortTrans();
-					DctmGroup.grps_skipped++;
+					DctmGroup.grps_skipped.incrementAndGet();
 					return;
 				}
 			} else { // group doesn't exist in repo, create one
@@ -130,9 +131,9 @@ public class DctmGroup extends DctmObject {
 			// save the group object
 			prsstntObj.save();
 			if (doesGroupNeedUpdate) {
-				DctmGroup.grps_updated++;
+				DctmGroup.grps_updated.incrementAndGet();
 			} else {
-				DctmGroup.grps_created++;
+				DctmGroup.grps_created.incrementAndGet();
 			}
 
 			// update modify date of the group object

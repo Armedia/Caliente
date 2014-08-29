@@ -22,6 +22,18 @@ public class DctmContent extends DctmObject {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
+	/** The page nbr of a content file. */
+	private int pageNbr;
+
+	/** The page modifier of a content file. */
+	private String pageModifier;
+
+	/** The content byte array that stores the content file in binary format. */
+	private byte[] contentByteArray;
+
+	/** The relative content file location. */
+	private String relativeContentFileLocation;
+
 	/**
 	 * Instantiates a new DctmContent object.
 	 */
@@ -40,9 +52,6 @@ public class DctmContent extends DctmObject {
 	public DctmContent(IDfSession dctmSession) {
 		super(dctmSession);
 	}
-
-	/** The page nbr of a content file. */
-	private int pageNbr;
 
 	/**
 	 * Gets the page nbr of a content file.
@@ -63,9 +72,6 @@ public class DctmContent extends DctmObject {
 		this.pageNbr = pageNbr;
 	}
 
-	/** The page modifier of a content file. */
-	private String pageModifier;
-
 	/**
 	 * Gets the page modifier of a content file.
 	 *
@@ -85,9 +91,6 @@ public class DctmContent extends DctmObject {
 		this.pageModifier = pageModifier;
 	}
 
-	/** The content byte array that stores the content file in binary format. */
-	private byte[] contentByteArray;
-
 	/**
 	 * Gets the content byte array of a content file.
 	 *
@@ -106,9 +109,6 @@ public class DctmContent extends DctmObject {
 	public void setContentByteArray(byte[] contentByteArray) {
 		this.contentByteArray = contentByteArray;
 	}
-
-	/** The relative content file location. */
-	private String relativeContentFileLocation;
 
 	/**
 	 * Gets the relative content file location.
@@ -148,7 +148,7 @@ public class DctmContent extends DctmObject {
 			getAllAttributesFromCMS(dctmContent, prsstntObj, contentID);
 			if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 				DctmObject.logger
-				.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
+					.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
 			}
 
 			return dctmContent;
