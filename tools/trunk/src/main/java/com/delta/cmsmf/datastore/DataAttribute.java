@@ -5,7 +5,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
@@ -14,13 +16,15 @@ import com.documentum.fc.common.IDfValue;
 
 public class DataAttribute implements Iterable<IDfValue> {
 
+	public static final DataAttributeEncoder DEFAULT_ENCODER = new DataAttributeEncoder();
+
 	private final String name;
 	private final String id;
 	private final DataType type;
 	private final boolean repeating;
 	private final boolean qualifiable;
 	private final int length;
-	private final ArrayList<IDfValue> values;
+	private final List<IDfValue> values;
 	private boolean valuesLoaded = false;
 
 	DataAttribute(ResultSet rs) throws SQLException {
@@ -70,6 +74,32 @@ public class DataAttribute implements Iterable<IDfValue> {
 		this.valuesLoaded = true;
 	}
 
+	public DataAttribute(IDfPersistentObject obj, IDfAttr attr, IDfValue... values) throws DfException {
+		this(obj, attr, Arrays.asList(values));
+	}
+
+	public DataAttribute(IDfPersistentObject obj, IDfAttr attr, Collection<IDfValue> values) throws DfException {
+		if (values == null) {
+			values = Collections.emptyList();
+		}
+		this.name = attr.getName();
+		this.id = attr.getId();
+		this.type = DataType.fromDfConstant(attr.getDataType());
+		this.length = attr.getLength();
+		this.repeating = attr.isRepeating();
+		this.qualifiable = attr.isQualifiable();
+		final int valueCount = (this.repeating ? values.size() : 1);
+		this.values = new ArrayList<IDfValue>(valueCount);
+		for (IDfValue o : values) {
+			this.values.add(o);
+			// If not repeating, only add the first value
+			if (this.repeating) {
+				break;
+			}
+		}
+		this.valuesLoaded = true;
+	}
+
 	public DataAttribute(String name, String id, DataType type, int length, boolean repeating, boolean qualifiable,
 		IDfValue... values) {
 		this(name, id, type, length, repeating, qualifiable, Arrays.asList(values));
@@ -77,6 +107,9 @@ public class DataAttribute implements Iterable<IDfValue> {
 
 	public DataAttribute(String name, String id, DataType type, int length, boolean repeating, boolean qualifiable,
 		Collection<IDfValue> values) {
+		if (values == null) {
+			values = Collections.emptyList();
+		}
 		this.name = name;
 		this.id = id;
 		this.type = type;
@@ -87,6 +120,10 @@ public class DataAttribute implements Iterable<IDfValue> {
 		this.values = new ArrayList<IDfValue>(valueCount);
 		for (IDfValue o : values) {
 			this.values.add(o);
+			// If not repeating, only add the first value
+			if (this.repeating) {
+				break;
+			}
 		}
 		this.valuesLoaded = true;
 	}
@@ -126,6 +163,32 @@ public class DataAttribute implements Iterable<IDfValue> {
 
 	@Override
 	public Iterator<IDfValue> iterator() {
-		return this.values.iterator();
+		return new Iterator<IDfValue>() {
+			private final Iterator<IDfValue> it = DataAttribute.this.values.iterator();
+
+			@Override
+			public boolean hasNext() {
+				return this.it.hasNext();
+			}
+
+			@Override
+			public IDfValue next() {
+				return this.it.next();
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
+	}
+
+	@Override
+	public String toString() {
+		return String
+			.format(
+				"DataAttribute [name=%s, id=%s, type=%s, repeating=%s, qualifiable=%s, length=%s, valuesLoaded=%s, values=%s]",
+				this.name, this.id, this.type, this.repeating, this.qualifiable, this.length, this.valuesLoaded,
+				this.values);
 	}
 }

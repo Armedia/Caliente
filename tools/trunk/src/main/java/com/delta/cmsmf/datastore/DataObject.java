@@ -50,14 +50,21 @@ public class DataObject implements Iterable<DataAttribute> {
 	}
 
 	public DataObject(IDfPersistentObject object) throws DfException {
+		this(object, null);
+	}
+
+	public DataObject(IDfPersistentObject object, DataAttributeEncoder dataAttributeEncoder) throws DfException {
+		if (dataAttributeEncoder == null) {
+			dataAttributeEncoder = DataAttribute.DEFAULT_ENCODER;
+		}
 		this.id = object.getObjectId().getId();
 		this.type = DctmObjectTypesEnum.decode(object.getType().getName());
 		this.contentHolder = false; // TODO: how to tell?
 		this.contentPath = null; // TODO: how to calculate?
 		final int attCount = object.getAttrCount();
-		this.attributes = new HashMap<String, DataAttribute>(this.attributes.size());
+		this.attributes = new HashMap<String, DataAttribute>(object.getAttrCount());
 		for (int i = 0; i < attCount; i++) {
-			DataAttribute attribute = new DataAttribute(object, object.getAttr(i));
+			DataAttribute attribute = dataAttributeEncoder.encode(object, object.getAttr(i));
 			this.attributes.put(attribute.getName(), attribute);
 		}
 		this.attributesLoaded = true;
@@ -130,5 +137,12 @@ public class DataObject implements Iterable<DataAttribute> {
 				throw new UnsupportedOperationException();
 			}
 		};
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+			"DataObject [type=%s, id=%s, contentHolder=%s, contentPath=%s, attributesLoaded=%s, attributes=%s]",
+			this.type, this.id, this.contentHolder, this.contentPath, this.attributesLoaded, this.attributes.values());
 	}
 }
