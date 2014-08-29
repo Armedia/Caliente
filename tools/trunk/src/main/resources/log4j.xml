@@ -14,7 +14,7 @@
 		<param name="Append" value="false"/>
 		<param name="Threshold" value="trace"/>
 		<param name="MaxBackupIndex" value="10"/>
-		<param name="MaxFileSize" value="10MB"/>
+		<param name="MaxFileSize" value="1024MB"/>
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
 		</layout>
@@ -32,7 +32,7 @@
 		<param name="Append" value="false"/>
 		<param name="Threshold" value="warn"/>
 		<param name="MaxBackupIndex" value="10"/>
-		<param name="MaxFileSize" value="10MB"/>
+		<param name="MaxFileSize" value="1024MB"/>
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
 		</layout>
@@ -51,7 +51,7 @@
 	</logger>
 
 	<logger name="com.delta.cmsmf.cmsobjects.DctmObject">
-		<level value="DEBUG"/>
+		<level value="INFO"/>
 	</logger>
 
 	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
