@@ -1,10 +1,14 @@
 package com.delta.cmsmf.runtime;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+
+import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
 
 /**
  * The Class DuplicateChecker. This class implements singleton design pattern and maintains exactly
@@ -27,14 +31,6 @@ public class DuplicateChecker {
 	static Logger logger = Logger.getLogger(DuplicateChecker.class);
 
 	/**
-	 * Instantiates a new duplicate checker. Private constructor to prevent
-	 * new instances being created.
-	 */
-	private DuplicateChecker() {
-		// no code here; this is a singleton class so private constructor
-	}
-
-	/**
 	 * Gets the singleton instance of the duplicate checker class.
 	 *
 	 * @return the duplicate checker singleton instance
@@ -47,157 +43,102 @@ public class DuplicateChecker {
 		return DuplicateChecker.singletonInstance;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#clone()
-	 */
-	@Override
-	public Object clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException();
-		// prevent generation of a clone
-	}
-
 	/** The singleton instance. */
 	private static DuplicateChecker singletonInstance;
 
-	/** The map of unique folder IDs. */
-	private Map<String, Byte> uniqueFolderIDs = new HashMap<String, Byte>();
+	private final Map<DctmObjectTypesEnum, Set<String>> uniqueIds;
+
+	/**
+	 * Instantiates a new duplicate checker. Private constructor to prevent
+	 * new instances being created.
+	 */
+	private DuplicateChecker() {
+		Map<DctmObjectTypesEnum, Set<String>> uniqueIds = new EnumMap<DctmObjectTypesEnum, Set<String>>(
+			DctmObjectTypesEnum.class);
+		for (DctmObjectTypesEnum v : DctmObjectTypesEnum.values()) {
+			uniqueIds.put(v, Collections.synchronizedSet(new HashSet<String>()));
+		}
+		this.uniqueIds = Collections.unmodifiableMap(uniqueIds);
+	}
+
+	private boolean isProcessed(DctmObjectTypesEnum type, String id) {
+		return this.uniqueIds.get(type).add(id);
+	}
 
 	/**
 	 * Checks if the folder is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
 	 *
-	 * @param folderID
+	 * @param id
 	 *            the folder id
 	 * @param addFlag
 	 *            the add flag
 	 * @return true, if the folder is already processed
 	 */
-	public boolean isFolderProcessed(String folderID, boolean addFlag) {
-		boolean isFolderProcessed = false;
-		if (this.uniqueFolderIDs.containsKey(folderID)) {
-			isFolderProcessed = true;
-		} else if (addFlag) {
-			this.uniqueFolderIDs.put(folderID, new Byte((byte) 0));
-		}
-
-		return isFolderProcessed;
+	public boolean isFolderProcessed(String id, boolean addFlag) {
+		return isProcessed(DctmObjectTypesEnum.DCTM_FOLDER, id);
 	}
-
-	/** The map of unique user IDs. */
-	private Map<String, Byte> uniqueUserIDs = new HashMap<String, Byte>();
 
 	/**
 	 * Checks if the user is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
 	 *
-	 * @param userID
+	 * @param id
 	 *            the user id
 	 * @return true, if the user is already processed
 	 */
-	public boolean isUserProcessed(String userID) {
-		boolean isUserProcessed = false;
-		if (this.uniqueUserIDs.containsKey(userID)) {
-			isUserProcessed = true;
-		} else {
-			this.uniqueUserIDs.put(userID, new Byte((byte) 0));
-		}
-
-		return isUserProcessed;
+	public boolean isUserProcessed(String id) {
+		return isProcessed(DctmObjectTypesEnum.DCTM_USER, id);
 	}
-
-	/** The map of unique group IDs. */
-	private Map<String, Byte> uniqueGroupIDs = new HashMap<String, Byte>();
 
 	/**
 	 * Checks if the group is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
 	 *
-	 * @param groupID
+	 * @param id
 	 *            the group id
 	 * @param addFlag
 	 *            the add flag
 	 * @return true, if the group is already processed
 	 */
-	public boolean isGroupProcessed(String groupID, boolean addFlag) {
-		boolean isGroupProcessed = false;
-		if (this.uniqueGroupIDs.containsKey(groupID)) {
-			isGroupProcessed = true;
-		} else if (addFlag) {
-			this.uniqueGroupIDs.put(groupID, new Byte((byte) 0));
-		}
-
-		return isGroupProcessed;
+	public boolean isGroupProcessed(String id, boolean addFlag) {
+		return isProcessed(DctmObjectTypesEnum.DCTM_GROUP, id);
 	}
-
-	/** The map of unique acl ids. */
-	private Map<String, Byte> uniqueACLIDs = new HashMap<String, Byte>();
 
 	/**
 	 * Checks if the ACL is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
 	 *
-	 * @param aclID
+	 * @param id
 	 *            the acl id
 	 * @return true, if the ACL is already processed
 	 */
-	public boolean isACLProcessed(String aclID) {
-		boolean isACLProcessed = false;
-		if (this.uniqueACLIDs.containsKey(aclID)) {
-			isACLProcessed = true;
-		} else {
-			this.uniqueACLIDs.put(aclID, new Byte((byte) 0));
-		}
-
-		return isACLProcessed;
+	public synchronized boolean isACLProcessed(String id) {
+		return isProcessed(DctmObjectTypesEnum.DCTM_ACL, id);
 	}
-
-	/** The map of unique format ids. */
-	private Map<String, Byte> uniqueFormatIDs = new HashMap<String, Byte>();
 
 	/**
 	 * Checks if the format is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
 	 *
-	 * @param formatID
+	 * @param id
 	 *            the format id
 	 * @return true, if the format is already processed
 	 */
-	public boolean isFormatProcessed(String formatID) {
-		boolean isFormatProcessed = false;
-		if (this.uniqueFormatIDs.containsKey(formatID)) {
-			isFormatProcessed = true;
-		} else {
-			this.uniqueFormatIDs.put(formatID, new Byte((byte) 0));
-		}
-
-		return isFormatProcessed;
+	public synchronized boolean isFormatProcessed(String id) {
+		return isProcessed(DctmObjectTypesEnum.DCTM_FORMAT, id);
 	}
-
-	/** The map of unique type ids. */
-	private Map<String, Byte> uniqueTypeIDs = new HashMap<String, Byte>();
 
 	/**
 	 * Checks if the type is already processed. Returns True if it is, otherwise it adds it to
 	 * the already processed map and returns False.
 	 *
-	 * @param typeID
+	 * @param id
 	 *            the type id
 	 * @return true, if the type is already processed
 	 */
-	public boolean isTypeProcessed(String typeID) {
-		boolean isTypeProcessed = false;
-		if (this.uniqueTypeIDs.containsKey(typeID)) {
-			isTypeProcessed = true;
-		} else {
-			this.uniqueTypeIDs.put(typeID, new Byte((byte) 0));
-			if (DuplicateChecker.logger.isEnabledFor(Level.INFO)) {
-				DuplicateChecker.logger.info("TypeID " + typeID + " was now processed and added to the processed list");
-			}
-		}
-
-		return isTypeProcessed;
+	public boolean isTypeProcessed(String id) {
+		return isProcessed(DctmObjectTypesEnum.DCTM_TYPE, id);
 	}
 
 }
