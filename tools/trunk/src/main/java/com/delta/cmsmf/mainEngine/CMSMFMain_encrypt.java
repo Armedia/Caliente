@@ -21,11 +21,11 @@ public class CMSMFMain_encrypt implements CMSMFMain {
 		final Console console = System.console();
 		String password = null;
 		if (console != null) {
-			// Don't output a prompt
 			char[] pass = console
 				.readPassword("Enter the password that you would like to encrypt (it will not be shown): ");
 			password = new String(pass);
 		} else {
+			// Don't output a prompt
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			try {
 				password = br.readLine();
