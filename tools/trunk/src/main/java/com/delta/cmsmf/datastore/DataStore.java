@@ -5,6 +5,7 @@
 package com.delta.cmsmf.datastore;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -227,13 +228,27 @@ public class DataStore {
 			Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(c));
 			Liquibase liquibase = new Liquibase("db.changelog.xml", new ClassLoaderResourceAccessor(), database);
 			if (clearData) {
-				// TODO: Delete all records...can't use dropAll() b/c that also drops liquibase
+				DatabaseMetaData dmd = c.getMetaData();
+				ResultSet rs = null;
+				try {
+					rs = dmd.getTables(null, null, "DCTM_OBJECT", new String[] {
+						"TABLE"
+					});
+					QueryRunner qr = new QueryRunner();
+					if (rs.next()) {
+						qr.update(c, "delete from dctm_object");
+					}
+				} finally {
+					DbUtils.closeQuietly(rs);
+				}
 			}
 			liquibase.update((String) null);
 			ok = true;
 		} catch (DatabaseException e) {
 			throw new CMSMFException("Failed to generate the SQL schema", e);
 		} catch (LiquibaseException e) {
+			throw new CMSMFException("Failed to generate the SQL schema", e);
+		} catch (SQLException e) {
 			throw new CMSMFException("Failed to generate the SQL schema", e);
 		} finally {
 			if (ok) {
@@ -354,7 +369,7 @@ public class DataStore {
 				DbUtils.commitAndClose(c);
 			} else {
 				DataStore.LOG
-					.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
+				.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
 				DbUtils.rollbackAndClose(c);
 			}
 		}
