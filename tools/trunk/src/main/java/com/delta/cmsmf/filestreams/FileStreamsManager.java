@@ -273,7 +273,7 @@ public class FileStreamsManager {
 	 *             in the event of files that does not exist are being opened
 	 */
 	public InputStream getInputStreamForType(DctmObjectTypesEnum dctmObjectType) throws CMSMFIOException,
-		CMSMFFileNotFoundException {
+	CMSMFFileNotFoundException {
 
 		InputStream returnIS = null;
 
@@ -550,10 +550,11 @@ public class FileStreamsManager {
 	public void exportObject(OutputStream os, Object object) throws IOException {
 		if (os != null) {
 			if (os instanceof ObjectOutputStream) {
-				((ObjectOutputStream) os).writeObject(object);
-// ((ObjectOutputStream) os).writeUnshared(object);
-				((ObjectOutputStream) os).reset();
-
+				synchronized (os) {
+					((ObjectOutputStream) os).writeObject(object);
+					((ObjectOutputStream) os).reset();
+					os.notify();
+				}
 			}
 		} else {
 			throw (new CMSMFIOException("OutputStream is null. Could not write object to outputstream."));
@@ -574,7 +575,10 @@ public class FileStreamsManager {
 	public Object importObject(InputStream is) throws IOException, ClassNotFoundException {
 		Object returnObject = null;
 		if (is instanceof ObjectInputStream) {
-			returnObject = ((ObjectInputStream) is).readObject();
+			synchronized (is) {
+				returnObject = ((ObjectInputStream) is).readObject();
+				is.notify();
+			}
 		}
 		return returnObject;
 	}
