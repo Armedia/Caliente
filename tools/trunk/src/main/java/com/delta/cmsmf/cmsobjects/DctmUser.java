@@ -170,8 +170,8 @@ public class DctmUser extends DctmObject {
 					if (usr.getUserName().equals(getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME))) {
 						if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 							DctmUser.logger
-								.debug("User name will not be updated because it's same as before. Currently in target repo: "
-									+ usr.getUserName());
+							.debug("User name will not be updated because it's same as before. Currently in target repo: "
+								+ usr.getUserName());
 						}
 						removeAttribute(DctmAttrNameConstants.USER_NAME);
 					}
@@ -383,7 +383,7 @@ public class DctmUser extends DctmObject {
 			if (userDefaultACL == null) {
 				if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 					DctmUser.logger
-					.debug("The user's default Internal ACL does not exist and acl related attributes will be removed");
+						.debug("The user's default Internal ACL does not exist and acl related attributes will be removed");
 				}
 				removeAttribute(DctmAttrNameConstants.ACL_NAME);
 				removeAttribute(DctmAttrNameConstants.ACL_DOMAIN);
@@ -421,7 +421,7 @@ public class DctmUser extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 		if (DctmUser.logger.isEnabledFor(Level.INFO)) {
 			DctmUser.logger.info("Started getting dctm dm_user from repository");
 		}

@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
-import com.delta.cmsmf.datastore.DataObject;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.runtime.DuplicateChecker;
@@ -214,13 +213,7 @@ public class DctmACL extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
-		try {
-			DataObject dataObject = new DataObject(prsstntObj);
-			DctmACL.logger.debug(dataObject);
-		} catch (DfException e) {
-			throw new CMSMFException("Failed to create a DataObject", e);
-		}
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 		if (DctmACL.logger.isEnabledFor(Level.INFO)) {
 			DctmACL.logger.info("Started getting dctm dm_acl from repository");
 		}

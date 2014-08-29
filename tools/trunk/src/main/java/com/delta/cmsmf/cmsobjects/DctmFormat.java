@@ -176,7 +176,7 @@ public class DctmFormat extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 		if (DctmFormat.logger.isEnabledFor(Level.INFO)) {
 			DctmFormat.logger.info("Started getting dctm dm_format from repository");
 		}

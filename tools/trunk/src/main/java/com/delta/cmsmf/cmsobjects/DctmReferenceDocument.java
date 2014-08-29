@@ -212,7 +212,7 @@ public class DctmReferenceDocument extends DctmDocument {
 	public static String getDetailedReferenceDocumentImportReport() {
 		StringBuffer importReport = new StringBuffer();
 		importReport
-		.append("\nNo. of reference documents read from file: " + DctmReferenceDocument.ref_docs_read + ".");
+			.append("\nNo. of reference documents read from file: " + DctmReferenceDocument.ref_docs_read + ".");
 		importReport.append("\nNo. of reference documents skipped due to duplicates: "
 			+ DctmReferenceDocument.ref_docs_skipped + ".");
 		importReport.append("\nNo. of reference documents updated: " + DctmReferenceDocument.ref_docs_updated + ".");
@@ -355,11 +355,11 @@ public class DctmReferenceDocument extends DctmDocument {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-			.info("Started exporting dctm mirror dm_document and supporting objects from repository");
+				.info("Started exporting dctm mirror dm_document and supporting objects from repository");
 		}
 
 		// NOTE: Mirror objects do not have content associated with them. They merely point to
@@ -392,8 +392,8 @@ public class DctmReferenceDocument extends DctmDocument {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-			.info("Finished exporting dctm mirror dm_document and supporting objects from repository for ID: "
-				+ srcObjID);
+				.info("Finished exporting dctm mirror dm_document and supporting objects from repository for ID: "
+					+ srcObjID);
 		}
 		return dctmReferenceDocument;
 	}
@@ -414,8 +414,8 @@ public class DctmReferenceDocument extends DctmDocument {
 		IDfPersistentObject prsstntObj, String srcObjID) throws CMSMFException {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-			.info("Started retrieving dctm mirror object attributes from repository for object with id: "
-				+ srcObjID);
+				.info("Started retrieving dctm mirror object attributes from repository for object with id: "
+					+ srcObjID);
 		}
 		try {
 			// Set object id
@@ -431,8 +431,8 @@ public class DctmReferenceDocument extends DctmDocument {
 		}
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-			.info("Finished retrieving dctm mirror object attributes from repository for object with id: "
-				+ srcObjID);
+				.info("Finished retrieving dctm mirror object attributes from repository for object with id: "
+					+ srcObjID);
 		}
 
 	}
@@ -473,7 +473,7 @@ public class DctmReferenceDocument extends DctmDocument {
 		throws CMSMFException {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-			.info("Started retrieving parent folders from repository for document with id: " + srcObjID);
+				.info("Started retrieving parent folders from repository for document with id: " + srcObjID);
 		}
 		try {
 			List<Object> folderIDs = dctmDocument.findAttribute(DctmAttrNameConstants.I_FOLDER_ID).getRepeatingValues();
@@ -491,7 +491,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-			.info("Finished retrieving parent folders from repository for document with id: " + srcObjID);
+				.info("Finished retrieving parent folders from repository for document with id: " + srcObjID);
 		}
 	}
 

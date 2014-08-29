@@ -75,6 +75,8 @@ public abstract class DctmObject implements Serializable {
 	/** The object id of the object in source repository. It is populated during the export step. */
 	private String srcObjectID;
 
+	private transient DataObject dataObject;
+
 	/**
 	 * Instantiates a new dctm object.
 	 */
@@ -850,7 +852,16 @@ public abstract class DctmObject implements Serializable {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	public abstract DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException;
+	public final DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+		try {
+			this.dataObject = new DataObject(prsstntObj);
+		} catch (DfException e) {
+			throw new CMSMFException("Failed to introspect the object", e);
+		}
+		return doGetFromCMS(prsstntObj);
+	}
+
+	protected abstract DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException;
 
 	/**
 	 * Gets all attributes from CMS and sets them in an attribute map of an instance of DctmObject
@@ -865,8 +876,16 @@ public abstract class DctmObject implements Serializable {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	protected void getAllAttributesFromCMS(DctmObject dctmObject, IDfPersistentObject prsstntObj, String srcObjID)
+	protected final void getAllAttributesFromCMS(DctmObject dctmObject, IDfPersistentObject prsstntObj, String srcObjID)
 		throws CMSMFException {
+		if (dctmObject.dataObject == null) {
+			try {
+				dctmObject.dataObject = new DataObject(prsstntObj);
+			} catch (DfException e) {
+				throw new CMSMFException("Failed to introspect the object into a DataObject instance", e);
+			}
+		}
+
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started retrieving dctm object attributes from repository for object with id: "
 				+ srcObjID);
@@ -1140,8 +1159,8 @@ public abstract class DctmObject implements Serializable {
 		this.dctmSession.flushCache(false);
 	}
 
-	public DataObject toDataObject() {
-		return null;
+	public DataObject getDataObject() {
+		return this.dataObject;
 	}
 
 	public DctmObject(DataObject dataObject) {
@@ -1150,5 +1169,6 @@ public abstract class DctmObject implements Serializable {
 		for (DataAttribute attribute : dataObject) {
 			this.attrMap.put(attribute.getName(), new DctmAttribute(attribute));
 		}
+		this.dataObject = dataObject;
 	}
 }

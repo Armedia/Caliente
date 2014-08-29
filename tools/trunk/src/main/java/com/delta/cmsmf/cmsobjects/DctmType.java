@@ -272,7 +272,7 @@ public class DctmType extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 		if (DctmType.logger.isEnabledFor(Level.INFO)) {
 			DctmType.logger.info("Started getting dctm dm_type from repository");
 		}

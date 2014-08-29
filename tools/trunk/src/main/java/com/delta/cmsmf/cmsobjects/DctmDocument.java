@@ -879,7 +879,7 @@ public class DctmDocument extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 		return getDctmDocument(prsstntObj, false);
 	}
 
@@ -940,8 +940,6 @@ public class DctmDocument extends DctmObject {
 			}
 
 		} catch (DfException e) {
-			throw (new CMSMFException("Couldn't retrieve object from cms with id: " + srcObjID, e));
-		} catch (CMSMFException e) {
 			throw (new CMSMFException("Couldn't retrieve object from cms with id: " + srcObjID, e));
 		}
 

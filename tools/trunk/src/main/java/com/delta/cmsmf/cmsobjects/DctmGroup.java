@@ -185,7 +185,7 @@ public class DctmGroup extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 		if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
 			DctmGroup.logger.info("Started getting dctm dm_group from repository");
 		}

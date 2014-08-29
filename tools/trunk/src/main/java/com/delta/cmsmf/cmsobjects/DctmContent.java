@@ -136,7 +136,7 @@ public class DctmContent extends DctmObject {
 	}
 
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started getting dctm dmr_content object from repository");
 		}
@@ -148,7 +148,7 @@ public class DctmContent extends DctmObject {
 			getAllAttributesFromCMS(dctmContent, prsstntObj, contentID);
 			if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 				DctmObject.logger
-					.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
+				.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
 			}
 
 			return dctmContent;

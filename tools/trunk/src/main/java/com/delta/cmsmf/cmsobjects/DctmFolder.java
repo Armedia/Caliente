@@ -342,7 +342,7 @@ public class DctmFolder extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	public DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
 		if (DctmFolder.logger.isEnabledFor(Level.INFO)) {
 			DctmFolder.logger.info("Started getting dctm dm_folder and parent folders from repository");
 		}
