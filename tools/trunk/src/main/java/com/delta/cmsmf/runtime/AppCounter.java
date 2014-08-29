@@ -1,5 +1,15 @@
 package com.delta.cmsmf.runtime;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import javax.mail.MessagingException;
 
 import org.apache.log4j.Level;
@@ -22,14 +32,35 @@ import com.delta.cmsmf.utils.CMSMFUtils;
 public class AppCounter {
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(AppCounter.class);
+	private final Logger logger = Logger.getLogger(getClass());
+
+	/** The singleton instance. */
+	private static AppCounter INSTANCE;
+
+	private final ReadWriteLock lock = new ReentrantReadWriteLock();
+	private final Map<DctmObjectTypesEnum, AtomicInteger> counters;
+	private final List<DctmObjectTypesEnum> reportingOrder;
 
 	/**
 	 * Instantiates a new App counter. Private constructor to prevent
 	 * new instances being created.
 	 */
 	private AppCounter() {
-		// no code here; this is a singleton class so private constructor
+		Map<DctmObjectTypesEnum, AtomicInteger> counters = new EnumMap<DctmObjectTypesEnum, AtomicInteger>(
+			DctmObjectTypesEnum.class);
+		for (DctmObjectTypesEnum v : DctmObjectTypesEnum.values()) {
+			counters.put(v, new AtomicInteger(0));
+		}
+		this.counters = Collections.unmodifiableMap(counters);
+		List<DctmObjectTypesEnum> reportingOrder = new ArrayList<DctmObjectTypesEnum>(this.counters.size());
+		reportingOrder.add(DctmObjectTypesEnum.DCTM_DOCUMENT);
+		reportingOrder.add(DctmObjectTypesEnum.DCTM_FOLDER);
+		reportingOrder.add(DctmObjectTypesEnum.DCTM_USER);
+		reportingOrder.add(DctmObjectTypesEnum.DCTM_GROUP);
+		reportingOrder.add(DctmObjectTypesEnum.DCTM_ACL);
+		reportingOrder.add(DctmObjectTypesEnum.DCTM_TYPE);
+		reportingOrder.add(DctmObjectTypesEnum.DCTM_FORMAT);
+		this.reportingOrder = Collections.unmodifiableList(reportingOrder);
 	}
 
 	/**
@@ -37,123 +68,37 @@ public class AppCounter {
 	 *
 	 * @return the object counter
 	 */
-	public static synchronized AppCounter getObjectCounter() {
-		if (AppCounter.singletonInstance == null) {
-			// we can call this private constructor
-			AppCounter.singletonInstance = new AppCounter();
+	public synchronized static AppCounter getObjectCounter() {
+		if (AppCounter.INSTANCE == null) {
+			AppCounter.INSTANCE = new AppCounter();
 		}
-		return AppCounter.singletonInstance;
+		return AppCounter.INSTANCE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#clone()
-	 */
-	@Override
-	public Object clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException();
-		// prevent generation of a clone
-	}
-
-	/** The singleton instance. */
-	private static AppCounter singletonInstance;
-
-	/** The document counter. */
-	private int documentCounter = 0;
-
-	/** The folder counter. */
-	private int folderCounter = 0;
-
-	/** The user counter. */
-	private int userCounter = 0;
-
-	/** The group counter. */
-	private int groupCounter = 0;
-
-	/** The acl counter. */
-	private int aclCounter = 0;
-
-	/** The type counter. */
-	private int typeCounter = 0;
-
-	/** The format counter. */
-	private int formatCounter = 0;
-
-	/**
-	 * Gets the document counter.
-	 *
-	 * @return the document counter
-	 */
-	public int getDocumentCounter() {
-		return this.documentCounter;
-	}
-
-	/**
-	 * Gets the folder counter.
-	 *
-	 * @return the folder counter
-	 */
-	public int getFolderCounter() {
-		return this.folderCounter;
-	}
-
-	/**
-	 * Gets the user counter.
-	 *
-	 * @return the user counter
-	 */
-	public int getUserCounter() {
-		return this.userCounter;
-	}
-
-	/**
-	 * Gets the group counter.
-	 *
-	 * @return the group counter
-	 */
-	public int getGroupCounter() {
-		return this.groupCounter;
-	}
-
-	/**
-	 * Gets the acl counter.
-	 *
-	 * @return the acl counter
-	 */
-	public int getAclCounter() {
-		return this.aclCounter;
-	}
-
-	/**
-	 * Gets the type counter.
-	 *
-	 * @return the type counter
-	 */
-	public int getTypeCounter() {
-		return this.typeCounter;
-	}
-
-	/**
-	 * Gets the format counter.
-	 *
-	 * @return the format counter
-	 */
-	public int getFormatCounter() {
-		return this.formatCounter;
+	private AtomicInteger getAtomic(DctmObjectTypesEnum type) {
+		if (type == null) { throw new IllegalArgumentException("Must provide a type to retrieve the counter for"); }
+		final Lock lock = this.lock.readLock();
+		lock.lock();
+		try {
+			return this.counters.get(type);
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
 	 * Prints the counters to a log file.
 	 */
 	public void printCounters() {
-		AppCounter.logger.info("Total nbr of documents processed: " + this.documentCounter);
-		AppCounter.logger.info("Total nbr of folders processed: " + this.folderCounter);
-		AppCounter.logger.info("Total nbr of users processed: " + this.userCounter);
-		AppCounter.logger.info("Total nbr of groups processed: " + this.groupCounter);
-		AppCounter.logger.info("Total nbr of acls processed: " + this.aclCounter);
-		AppCounter.logger.info("Total nbr of types processed: " + this.typeCounter);
-		AppCounter.logger.info("Total nbr of formats processed: " + this.formatCounter);
+		final Lock lock = this.lock.readLock();
+		lock.lock();
+		try {
+			for (DctmObjectTypesEnum t : this.reportingOrder) {
+				this.logger.info(String.format("Total nbr of %ss processed: %d", t.getName(), getAtomic(t).get()));
+			}
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -162,25 +107,26 @@ public class AppCounter {
 	 * @param exportDQLQuery
 	 */
 	public void emailCounters(String exportImportStep, String exportDQLQuery) {
-		StringBuffer emailMsg = new StringBuffer("Following is a report from " + exportImportStep + " step. \n");
-
-		// If this is a export step, email the dql query used in the export.
-		if (exportImportStep.equals("Export")) {
-			emailMsg.append("\n The export query used was: " + exportDQLQuery + "\n");
-		}
-
-		emailMsg.append("\n\t Total nbr of documents processed: " + this.documentCounter);
-		emailMsg.append("\n\t Total nbr of folders processed: " + this.folderCounter);
-		emailMsg.append("\n\t Total nbr of users processed: " + this.userCounter);
-		emailMsg.append("\n\t Total nbr of groups processed: " + this.groupCounter);
-		emailMsg.append("\n\t Total nbr of acls processed: " + this.aclCounter);
-		emailMsg.append("\n\t Total nbr of types processed: " + this.typeCounter);
-		emailMsg.append("\n\t Total nbr of formats processed: " + this.formatCounter);
-
+		final Lock lock = this.lock.readLock();
+		lock.lock();
 		try {
-			CMSMFUtils.postCmsmfMail("CMSMF " + exportImportStep + " Report", emailMsg.toString());
-		} catch (MessagingException e) {
-			AppCounter.logger.error("Error sending CMSMF " + exportImportStep + " report", e);
+			StringBuffer emailMsg = new StringBuffer("Following is a report from " + exportImportStep + " step. \n");
+
+			// If this is a export step, email the dql query used in the export.
+			if (exportImportStep.equals("Export")) {
+				emailMsg.append("\n The export query used was: " + exportDQLQuery + "\n");
+			}
+			for (DctmObjectTypesEnum t : this.reportingOrder) {
+				emailMsg.append(String.format("%n\t Total nbr of %ss processed: %d", t.getName(), getAtomic(t).get()));
+			}
+
+			try {
+				CMSMFUtils.postCmsmfMail("CMSMF " + exportImportStep + " Report", emailMsg.toString());
+			} catch (MessagingException e) {
+				this.logger.error("Error sending CMSMF " + exportImportStep + " report", e);
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
@@ -190,50 +136,37 @@ public class AppCounter {
 	 * @param dctmObjectType
 	 *            the dctm object type
 	 */
-	public void incrementCounter(DctmObjectTypesEnum dctmObjectType) {
-		switch (dctmObjectType) {
-			case DCTM_DOCUMENT:
-				this.documentCounter++;
-				if ((this.documentCounter % 100) == 0) {
-					if (AppCounter.logger.isEnabledFor(Level.INFO)) {
-						AppCounter.logger.info("INFO:: Processed " + this.documentCounter + " documents so far.");
+	public int incrementCounter(DctmObjectTypesEnum dctmObjectType) {
+		final Lock lock = this.lock.readLock();
+		lock.lock();
+		try {
+			AtomicInteger counter = getAtomic(dctmObjectType);
+			int count = counter.incrementAndGet();
+			if (dctmObjectType == DctmObjectTypesEnum.DCTM_DOCUMENT) {
+				if ((count % 100) == 0) {
+					if (this.logger.isEnabledFor(Level.INFO)) {
+						this.logger.info("INFO:: Processed " + count + " documents so far.");
 					}
 				}
-				break;
-			case DCTM_FOLDER:
-				this.folderCounter++;
-				break;
-			case DCTM_USER:
-				this.userCounter++;
-				break;
-			case DCTM_GROUP:
-				this.groupCounter++;
-				break;
-			case DCTM_ACL:
-				this.aclCounter++;
-				break;
-			case DCTM_TYPE:
-				this.typeCounter++;
-				break;
-			case DCTM_FORMAT:
-				this.formatCounter++;
-				break;
-			default:
-				AppCounter.logger.warn("Trying to increment invalid dctm type counter!");
+			}
+			return count;
+		} finally {
+			lock.unlock();
 		}
-
 	}
 
 	/**
 	 * Resets all of the counters to 0.
 	 */
 	public void resetCounters() {
-		this.documentCounter = 0;
-		this.folderCounter = 0;
-		this.userCounter = 0;
-		this.groupCounter = 0;
-		this.aclCounter = 0;
-		this.typeCounter = 0;
-		this.formatCounter = 0;
+		final Lock lock = this.lock.writeLock();
+		lock.lock();
+		try {
+			for (DctmObjectTypesEnum v : DctmObjectTypesEnum.values()) {
+				getAtomic(v).set(0);
+			}
+		} finally {
+			lock.unlock();
+		}
 	}
 }
