@@ -12,6 +12,9 @@
 				remarks="The official department name as registered on the internal website.">
 				<constraints nullable="false" />
 			</column>
+			<column name="object_number" type="long" remarks="The insertion ordinal number of the object">
+				<constraints nullable="false" unique="true"/>
+			</column>
 			<column name="has_content" type="boolean">
 				<constraints nullable="false" />
 			</column>
@@ -20,6 +23,7 @@
 		<addPrimaryKey tableName="dctm_object" columnNames="object_id" />
 		<createIndex tableName="dctm_object" indexName="idx_dctm_object_type">
 			<column name="object_type" />
+			<column name="object_number" />
 		</createIndex>
 		<createIndex tableName="dctm_object" indexName="idx_dctm_object_content">
 			<column name="has_content" />
@@ -27,6 +31,7 @@
 		<createIndex tableName="dctm_object" indexName="idx_dctm_object_path">
 			<column name="content_path" />
 		</createIndex>
+		<addAutoIncrement tableName="dctm_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>
 
 		<!-- The dependency relationships table -->
 		<createTable tableName="dctm_dependency">
