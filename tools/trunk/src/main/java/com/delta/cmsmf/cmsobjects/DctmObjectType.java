@@ -15,6 +15,9 @@ import com.delta.cmsmf.datastore.DataObject;
  */
 public enum DctmObjectType {
 
+	// IMPORTANT: The object types must be declared in the proper import order
+	// otherwise that operation will fail.
+
 	/** The enum for dm_user type. */
 	DCTM_USER(DctmUser.class),
 	/** The enum for dm_group type. */
