@@ -5,8 +5,6 @@ import java.util.Date;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
-import com.documentum.fc.common.IDfId;
-import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public enum DataType {
@@ -47,8 +45,7 @@ public enum DataType {
 	DF_ID(IDfValue.DF_ID) {
 		@Override
 		public String doEncode(IDfValue value) {
-			IDfId id = value.asId();
-			return (id.isNull() ? null : id.getId());
+			return value.asId().getId();
 		}
 
 		@Override
@@ -62,15 +59,41 @@ public enum DataType {
 		}
 	},
 	DF_TIME(IDfValue.DF_TIME) {
+		private final String NULL_DATE = "{NULL_DATE}";
+		private final IDfValue NULL_VALUE = new DfValue(new DfTime((Date) null));
+
+		@Override
+		protected boolean isNullEncoding(String value) {
+			return ((value == null) || this.NULL_DATE.equals(value));
+		}
+
+		@Override
+		protected String getNullEncoding() {
+			return this.NULL_DATE;
+		}
+
+		@Override
+		protected boolean isNullValue(IDfValue value) {
+			return ((value == null) || value.asTime().isNullDate());
+		}
+
+		@Override
+		protected IDfValue getNullValue() {
+			return this.NULL_VALUE;
+		}
+
 		@Override
 		public String doEncode(IDfValue value) {
-			IDfTime t = value.asTime();
-			return String.format("%d", t.getDate().getTime());
+			return String.format("%d", value.asTime().getDate().getTime());
 		}
 
 		@Override
 		public IDfValue doDecode(String value) {
-			return new DfValue(new DfTime(new Date(Long.parseLong(value))));
+			Date date = null;
+			if (!this.NULL_DATE.equalsIgnoreCase(value)) {
+				date = new Date(Long.parseLong(value));
+			}
+			return new DfValue(new DfTime(date));
 		}
 
 		@Override
@@ -121,8 +144,24 @@ public enum DataType {
 		return this.dfConstant;
 	}
 
+	protected String getNullEncoding() {
+		return null;
+	}
+
+	protected boolean isNullValue(IDfValue value) {
+		return (value == null);
+	}
+
+	protected IDfValue getNullValue() {
+		return null;
+	}
+
+	protected boolean isNullEncoding(String value) {
+		return (value == null);
+	}
+
 	public final String encode(IDfValue value) {
-		if (value == null) { return null; }
+		if (isNullValue(value)) { return getNullEncoding(); }
 		return doEncode(value);
 	}
 
@@ -131,14 +170,14 @@ public enum DataType {
 	}
 
 	public final IDfValue decode(String value) {
-		if (value == null) { return null; }
+		if (isNullEncoding(value)) { return getNullValue(); }
 		return doDecode(value);
 	}
 
 	protected abstract IDfValue doDecode(String value);
 
 	public final Object getValue(IDfValue value) {
-		if (value == null) { return null; }
+		if (isNullValue(value)) { return getNullValue(); }
 		return doGetValue(value);
 	}
 
