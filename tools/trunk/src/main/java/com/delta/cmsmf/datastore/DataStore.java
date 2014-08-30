@@ -202,15 +202,17 @@ public class DataStore {
 		return null;
 	}
 
-	public static void serializeObject(IDfPersistentObject object) throws SQLException, DfException {
-		DataStore.serializeObject(object, (String) null);
+	public static boolean serializeObject(IDfPersistentObject object) throws SQLException, DfException {
+		return DataStore.serializeObject(object, (String) null);
 	}
 
-	public static void serializeObject(IDfPersistentObject object, IDfId dependentId) throws SQLException, DfException {
-		DataStore.serializeObject(object, (dependentId == null ? null : dependentId.getId()));
+	public static boolean serializeObject(IDfPersistentObject object, IDfId dependentId) throws SQLException,
+		DfException {
+		return DataStore.serializeObject(object, (dependentId == null ? null : dependentId.getId()));
 	}
 
-	public static void serializeObject(IDfPersistentObject object, String dependentId) throws SQLException, DfException {
+	public static boolean serializeObject(IDfPersistentObject object, String dependentId) throws SQLException,
+		DfException {
 		// First...is the object
 		// Put the object and its attributes into the state database
 		boolean ok = false;
@@ -227,7 +229,7 @@ public class DataStore {
 			QueryRunner qr = DataStore.getQueryRunner();
 			if (qr.query(c, DataStore.CHECK_IF_OBJECT_EXISTS_SQL, DataStore.HANDLER_EXISTS, objectId)) {
 				// Object is already there, so do nothing
-				return;
+				return false;
 			}
 
 			// Not there, insert the actual object
@@ -288,6 +290,7 @@ public class DataStore {
 				qr.insertBatch(c, DataStore.INSERT_ATTRIBUTE_VALUE_SQL, DataStore.HANDLER_NULL, values);
 			}
 			ok = true;
+			return true;
 		} finally {
 			if (ok) {
 				if (DataStore.LOG.isDebugEnabled()) {
@@ -303,7 +306,7 @@ public class DataStore {
 		}
 	}
 
-	public static void serializeObject(DataObject object) throws SQLException, DfException {
+	public static boolean serializeObject(DataObject object) throws SQLException, DfException {
 		// First...is the object
 		// Put the object and its attributes into the state database
 		boolean ok = false;
@@ -321,7 +324,7 @@ public class DataStore {
 			QueryRunner qr = DataStore.getQueryRunner();
 			if (qr.query(c, DataStore.CHECK_IF_OBJECT_EXISTS_SQL, DataStore.HANDLER_EXISTS, objectId)) {
 				// Object is already there, so do nothing
-				return;
+				return false;
 			}
 
 			// Not there, insert the actual object
@@ -370,6 +373,7 @@ public class DataStore {
 				qr.insertBatch(c, DataStore.INSERT_ATTRIBUTE_VALUE_SQL, DataStore.HANDLER_NULL, values);
 			}
 			ok = true;
+			return true;
 		} finally {
 			if (ok) {
 				if (DataStore.LOG.isDebugEnabled()) {
