@@ -6,7 +6,7 @@ import org.apache.commons.configuration.ConfigurationException;
 
 import com.delta.cmsmf.cmsobjects.DctmGroup;
 import com.delta.cmsmf.cmsobjects.DctmObject;
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -68,7 +68,7 @@ public class DctmGroupTest {
 		AppCounter.getObjectCounter().resetCounters();
 
 		DctmObject dctmObject = null;
-		dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_GROUP);
+		dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectType.DCTM_GROUP);
 
 		while (dctmObject != null) {
 
@@ -81,7 +81,7 @@ public class DctmGroupTest {
 			dctmObject.findAttribute(DctmAttrNameConstants.GROUP_DISPLAY_NAME).setSingleValue(groupDisplayName);
 
 			// Increment appropriate counter
-			AppCounter.getObjectCounter().incrementCounter(DctmObjectTypesEnum.DCTM_GROUP);
+			AppCounter.getObjectCounter().incrementCounter(DctmObjectType.DCTM_GROUP);
 			try {
 				// Create appropriate object in target repository
 				dctmObject.setDctmSession(dctmSession);
@@ -90,7 +90,7 @@ public class DctmGroupTest {
 				e.printStackTrace();
 			}
 			// Read next object from the file until you reach end of the file
-			dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_GROUP);
+			dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectType.DCTM_GROUP);
 		}
 
 		// Print groups import report

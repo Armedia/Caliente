@@ -15,7 +15,7 @@ import javax.mail.MessagingException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 /**
@@ -38,28 +38,28 @@ public class AppCounter {
 	private static AppCounter INSTANCE;
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
-	private final Map<DctmObjectTypesEnum, AtomicInteger> counters;
-	private final List<DctmObjectTypesEnum> reportingOrder;
+	private final Map<DctmObjectType, AtomicInteger> counters;
+	private final List<DctmObjectType> reportingOrder;
 
 	/**
 	 * Instantiates a new App counter. Private constructor to prevent
 	 * new instances being created.
 	 */
 	private AppCounter() {
-		Map<DctmObjectTypesEnum, AtomicInteger> counters = new EnumMap<DctmObjectTypesEnum, AtomicInteger>(
-			DctmObjectTypesEnum.class);
-		for (DctmObjectTypesEnum v : DctmObjectTypesEnum.values()) {
+		Map<DctmObjectType, AtomicInteger> counters = new EnumMap<DctmObjectType, AtomicInteger>(
+			DctmObjectType.class);
+		for (DctmObjectType v : DctmObjectType.values()) {
 			counters.put(v, new AtomicInteger(0));
 		}
 		this.counters = Collections.unmodifiableMap(counters);
-		List<DctmObjectTypesEnum> reportingOrder = new ArrayList<DctmObjectTypesEnum>(this.counters.size());
-		reportingOrder.add(DctmObjectTypesEnum.DCTM_DOCUMENT);
-		reportingOrder.add(DctmObjectTypesEnum.DCTM_FOLDER);
-		reportingOrder.add(DctmObjectTypesEnum.DCTM_USER);
-		reportingOrder.add(DctmObjectTypesEnum.DCTM_GROUP);
-		reportingOrder.add(DctmObjectTypesEnum.DCTM_ACL);
-		reportingOrder.add(DctmObjectTypesEnum.DCTM_TYPE);
-		reportingOrder.add(DctmObjectTypesEnum.DCTM_FORMAT);
+		List<DctmObjectType> reportingOrder = new ArrayList<DctmObjectType>(this.counters.size());
+		reportingOrder.add(DctmObjectType.DCTM_DOCUMENT);
+		reportingOrder.add(DctmObjectType.DCTM_FOLDER);
+		reportingOrder.add(DctmObjectType.DCTM_USER);
+		reportingOrder.add(DctmObjectType.DCTM_GROUP);
+		reportingOrder.add(DctmObjectType.DCTM_ACL);
+		reportingOrder.add(DctmObjectType.DCTM_TYPE);
+		reportingOrder.add(DctmObjectType.DCTM_FORMAT);
 		this.reportingOrder = Collections.unmodifiableList(reportingOrder);
 	}
 
@@ -75,7 +75,7 @@ public class AppCounter {
 		return AppCounter.INSTANCE;
 	}
 
-	private AtomicInteger getAtomic(DctmObjectTypesEnum type) {
+	private AtomicInteger getAtomic(DctmObjectType type) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to retrieve the counter for"); }
 		final Lock lock = this.lock.readLock();
 		lock.lock();
@@ -93,7 +93,7 @@ public class AppCounter {
 		final Lock lock = this.lock.readLock();
 		lock.lock();
 		try {
-			for (DctmObjectTypesEnum t : this.reportingOrder) {
+			for (DctmObjectType t : this.reportingOrder) {
 				this.logger.info(String.format("Total nbr of %ss processed: %d", t.getName(), getAtomic(t).get()));
 			}
 		} finally {
@@ -116,7 +116,7 @@ public class AppCounter {
 			if (exportImportStep.equals("Export")) {
 				emailMsg.append("\n The export query used was: " + exportDQLQuery + "\n");
 			}
-			for (DctmObjectTypesEnum t : this.reportingOrder) {
+			for (DctmObjectType t : this.reportingOrder) {
 				emailMsg.append(String.format("%n\t Total nbr of %ss processed: %d", t.getName(), getAtomic(t).get()));
 			}
 
@@ -136,13 +136,13 @@ public class AppCounter {
 	 * @param dctmObjectType
 	 *            the dctm object type
 	 */
-	public int incrementCounter(DctmObjectTypesEnum dctmObjectType) {
+	public int incrementCounter(DctmObjectType dctmObjectType) {
 		final Lock lock = this.lock.readLock();
 		lock.lock();
 		try {
 			AtomicInteger counter = getAtomic(dctmObjectType);
 			int count = counter.incrementAndGet();
-			if (dctmObjectType == DctmObjectTypesEnum.DCTM_DOCUMENT) {
+			if (dctmObjectType == DctmObjectType.DCTM_DOCUMENT) {
 				if ((count % 100) == 0) {
 					if (this.logger.isEnabledFor(Level.INFO)) {
 						this.logger.info("INFO:: Processed " + count + " documents so far.");
@@ -162,7 +162,7 @@ public class AppCounter {
 		final Lock lock = this.lock.writeLock();
 		lock.lock();
 		try {
-			for (DctmObjectTypesEnum v : DctmObjectTypesEnum.values()) {
+			for (DctmObjectType v : DctmObjectType.values()) {
 				getAtomic(v).set(0);
 			}
 		} finally {

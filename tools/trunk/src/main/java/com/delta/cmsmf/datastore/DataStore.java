@@ -35,7 +35,7 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -207,12 +207,12 @@ public class DataStore {
 	}
 
 	public static boolean serializeObject(IDfPersistentObject object, IDfId dependentId) throws SQLException,
-		DfException {
+	DfException {
 		return DataStore.serializeObject(object, (dependentId == null ? null : dependentId.getId()));
 	}
 
 	public static boolean serializeObject(IDfPersistentObject object, String dependentId) throws SQLException,
-		DfException {
+	DfException {
 		// First...is the object
 		// Put the object and its attributes into the state database
 		boolean ok = false;
@@ -300,7 +300,7 @@ public class DataStore {
 				DbUtils.commitAndClose(c);
 			} else {
 				DataStore.LOG
-					.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
+				.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
 				DbUtils.rollbackAndClose(c);
 			}
 		}
@@ -313,7 +313,7 @@ public class DataStore {
 
 		// First, make sure no "left behind" garbage gets committed
 		final String objectId = object.getId();
-		final DctmObjectTypesEnum objectType = object.getType();
+		final DctmObjectType objectType = object.getType();
 		final boolean hasContent = object.isContentHolder();
 		final String contentPath = object.getContentPath();
 

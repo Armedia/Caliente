@@ -7,7 +7,8 @@ import java.io.ObjectInputStream;
 
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObject;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFileNotFoundException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
@@ -36,15 +37,30 @@ public class DctmObjectReader {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	public static Object readObject(DctmObjectTypesEnum dctmObjType) throws IOException, CMSMFException {
-		Object returnObject = null;
-
+	public static DctmObject readObject(DctmObjectType dctmObjType) throws IOException, CMSMFException {
+		DctmObject returnObject = null;
+		/*
+		try {
+			DataObject dataObject = DataStore.deserializeObject(dctmObjType);
+			if (dataObject != null) {
+				returnObject = dctmObjType.newInstance(dataObject);
+			} else {
+				DctmObjectReader.logger.info(String.format("Loaded the last object of type %s", dctmObjType));
+			}
+		} catch (InstantiationException e) {
+			throw new CMSMFException(String.format("Failed to deserialize an object of type %s", dctmObjType), e);
+		} catch (IllegalAccessException e) {
+			throw new CMSMFException(String.format("Failed to deserialize an object of type %s", dctmObjType), e);
+		} catch (InvocationTargetException e) {
+			throw new CMSMFException(String.format("Failed to deserialize an object of type %s", dctmObjType), e);
+		}
+		 */
 		try {
 			FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
 			// get appropriate input stream corresponding to object type
 			InputStream is = fsm.getInputStreamForType(dctmObjType);
 			// read the object from input stream
-			returnObject = fsm.importObject(is);
+			returnObject = DctmObject.class.cast(fsm.importObject(is));
 
 			// increment appropriate type counter
 			if (returnObject != null) {
@@ -60,7 +76,6 @@ public class DctmObjectReader {
 			// Do nothing if you get a end of file exception
 			DctmObjectReader.logger.info("Reached the end of the file for " + dctmObjType + " document objects.");
 		}
-
 		return returnObject;
 	}
 

@@ -6,7 +6,7 @@ import org.apache.commons.configuration.ConfigurationException;
 
 import com.delta.cmsmf.cmsobjects.DctmACL;
 import com.delta.cmsmf.cmsobjects.DctmObject;
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -68,7 +68,7 @@ public class DctmACLTest {
 		AppCounter.getObjectCounter().resetCounters();
 
 		DctmObject dctmObject = null;
-		dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_ACL);
+		dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectType.DCTM_ACL);
 
 		while (dctmObject != null) {
 			// add 1 at the end of acl name
@@ -76,7 +76,7 @@ public class DctmACLTest {
 			dctmObject.findAttribute(DctmAttrNameConstants.OBJECT_NAME).setSingleValue(aclName);
 
 			// Increment appropriate counter
-			AppCounter.getObjectCounter().incrementCounter(DctmObjectTypesEnum.DCTM_ACL);
+			AppCounter.getObjectCounter().incrementCounter(DctmObjectType.DCTM_ACL);
 			try {
 				// Create appropriate object in target repository
 				dctmObject.setDctmSession(dctmSession);
@@ -85,7 +85,7 @@ public class DctmACLTest {
 				e.printStackTrace();
 			}
 			// Read next object from the file until you reach end of the file
-			dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_ACL);
+			dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectType.DCTM_ACL);
 		}
 
 		// Print acls import report

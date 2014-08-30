@@ -68,7 +68,7 @@ public class DctmType extends DctmObject {
 	public DctmType() {
 		super();
 		// set dctmObjectType to dctm_type
-		this.dctmObjectType = DctmObjectTypesEnum.DCTM_TYPE;
+		this.dctmObjectType = DctmObjectType.DCTM_TYPE;
 	}
 
 	/**

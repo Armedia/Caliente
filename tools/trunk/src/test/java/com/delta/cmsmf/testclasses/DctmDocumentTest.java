@@ -6,7 +6,7 @@ import org.apache.commons.configuration.ConfigurationException;
 
 import com.delta.cmsmf.cmsobjects.DctmDocument;
 import com.delta.cmsmf.cmsobjects.DctmObject;
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -74,7 +74,7 @@ public class DctmDocumentTest {
 		AppCounter.getObjectCounter().resetCounters();
 
 		DctmObject dctmObject = null;
-		dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_DOCUMENT);
+		dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectType.DCTM_DOCUMENT);
 
 		while (dctmObject != null) {
 			// add 1 at the end of document name
@@ -82,7 +82,7 @@ public class DctmDocumentTest {
 			dctmObject.findAttribute(DctmAttrNameConstants.OBJECT_NAME).setSingleValue(docName);
 
 			// Increment appropriate counter
-			AppCounter.getObjectCounter().incrementCounter(DctmObjectTypesEnum.DCTM_DOCUMENT);
+			AppCounter.getObjectCounter().incrementCounter(DctmObjectType.DCTM_DOCUMENT);
 			try {
 				// Create appropriate object in target repository
 				dctmObject.setDctmSession(dctmSession);
@@ -91,7 +91,7 @@ public class DctmDocumentTest {
 				e.printStackTrace();
 			}
 			// Read next object from the file until you reach end of the file
-			dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_DOCUMENT);
+			dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectType.DCTM_DOCUMENT);
 		}
 
 		// Print documents import report

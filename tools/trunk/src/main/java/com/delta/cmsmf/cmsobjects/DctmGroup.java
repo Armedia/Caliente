@@ -55,7 +55,7 @@ public class DctmGroup extends DctmObject {
 	public DctmGroup() {
 		super();
 		// set dctmObjectType to dctm_group
-		this.dctmObjectType = DctmObjectTypesEnum.DCTM_GROUP;
+		this.dctmObjectType = DctmObjectType.DCTM_GROUP;
 	}
 
 	/**

@@ -67,7 +67,7 @@ public class DctmFolder extends DctmObject {
 	public DctmFolder() {
 		super();
 		// set dctmObjectType to dctm_folder
-		this.dctmObjectType = DctmObjectTypesEnum.DCTM_FOLDER;
+		this.dctmObjectType = DctmObjectType.DCTM_FOLDER;
 	}
 
 	/**

@@ -180,7 +180,7 @@ public class DctmDocument extends DctmObject {
 		super();
 
 		// set dctmObjectType to dctm_document
-		this.dctmObjectType = DctmObjectTypesEnum.DCTM_DOCUMENT;
+		this.dctmObjectType = DctmObjectType.DCTM_DOCUMENT;
 	}
 
 	/**

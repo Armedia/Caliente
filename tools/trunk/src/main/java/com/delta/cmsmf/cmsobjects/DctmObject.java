@@ -65,9 +65,9 @@ public abstract class DctmObject implements Serializable {
 	 * This type will be set by individual object types during initialization
 	 * within the class constructors.
 	 *
-	 * @see DctmObjectTypesEnum
+	 * @see DctmObjectType
 	 */
-	public DctmObjectTypesEnum dctmObjectType = null;
+	public DctmObjectType dctmObjectType = null;
 
 	/** The attributes map. */
 	private final Map<String, DctmAttribute> attrMap = new HashMap<String, DctmAttribute>();

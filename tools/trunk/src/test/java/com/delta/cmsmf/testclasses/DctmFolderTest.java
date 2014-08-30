@@ -6,7 +6,7 @@ import org.apache.commons.configuration.ConfigurationException;
 
 import com.delta.cmsmf.cmsobjects.DctmFolder;
 import com.delta.cmsmf.cmsobjects.DctmObject;
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
@@ -67,12 +67,12 @@ public class DctmFolderTest {
 		AppCounter.getObjectCounter().resetCounters();
 
 		DctmObject dctmObject = null;
-		dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_FOLDER);
+		dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectType.DCTM_FOLDER);
 
 		while (dctmObject != null) {
 
 			// Increment appropriate counter
-			AppCounter.getObjectCounter().incrementCounter(DctmObjectTypesEnum.DCTM_FOLDER);
+			AppCounter.getObjectCounter().incrementCounter(DctmObjectType.DCTM_FOLDER);
 			try {
 				// Create appropriate object in target repository
 				dctmObject.setDctmSession(dctmSession);
@@ -81,7 +81,7 @@ public class DctmFolderTest {
 				e.printStackTrace();
 			}
 			// Read next object from the file until you reach end of the file
-			dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectTypesEnum.DCTM_FOLDER);
+			dctmObject = (DctmObject) DctmObjectReader.readObject(DctmObjectType.DCTM_FOLDER);
 		}
 
 		// Print folsers import report

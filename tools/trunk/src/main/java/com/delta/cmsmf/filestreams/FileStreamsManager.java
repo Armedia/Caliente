@@ -17,7 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.exception.CMSMFFileNotFoundException;
 import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.properties.CMSMFProperties;
@@ -203,7 +203,7 @@ public class FileStreamsManager {
 	 * @throws CMSMFIOException
 	 *             the cMSMFIO exception
 	 */
-	public OutputStream getOutputStreamForType(DctmObjectTypesEnum dctmObjectType) throws CMSMFIOException {
+	public OutputStream getOutputStreamForType(DctmObjectType dctmObjectType) throws CMSMFIOException {
 
 		OutputStream returnOS = null;
 
@@ -272,7 +272,7 @@ public class FileStreamsManager {
 	 * @throws CMSMFFileNotFoundException
 	 *             in the event of files that does not exist are being opened
 	 */
-	public InputStream getInputStreamForType(DctmObjectTypesEnum dctmObjectType) throws CMSMFIOException,
+	public InputStream getInputStreamForType(DctmObjectType dctmObjectType) throws CMSMFIOException,
 	CMSMFFileNotFoundException {
 
 		InputStream returnIS = null;

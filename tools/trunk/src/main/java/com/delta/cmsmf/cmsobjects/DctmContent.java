@@ -40,7 +40,7 @@ public class DctmContent extends DctmObject {
 	public DctmContent() {
 		super();
 		// set dctmObjectType to dctm_format
-		this.dctmObjectType = DctmObjectTypesEnum.DCTM_CONTENT;
+		this.dctmObjectType = DctmObjectType.DCTM_CONTENT;
 	}
 
 	/**

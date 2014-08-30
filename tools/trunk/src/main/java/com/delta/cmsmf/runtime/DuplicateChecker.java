@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 
 /**
  * The Class DuplicateChecker. This class implements singleton design pattern and maintains exactly
@@ -46,22 +46,22 @@ public class DuplicateChecker {
 	/** The singleton instance. */
 	private static DuplicateChecker singletonInstance;
 
-	private final Map<DctmObjectTypesEnum, Set<String>> uniqueIds;
+	private final Map<DctmObjectType, Set<String>> uniqueIds;
 
 	/**
 	 * Instantiates a new duplicate checker. Private constructor to prevent
 	 * new instances being created.
 	 */
 	private DuplicateChecker() {
-		Map<DctmObjectTypesEnum, Set<String>> uniqueIds = new EnumMap<DctmObjectTypesEnum, Set<String>>(
-			DctmObjectTypesEnum.class);
-		for (DctmObjectTypesEnum v : DctmObjectTypesEnum.values()) {
+		Map<DctmObjectType, Set<String>> uniqueIds = new EnumMap<DctmObjectType, Set<String>>(
+			DctmObjectType.class);
+		for (DctmObjectType v : DctmObjectType.values()) {
 			uniqueIds.put(v, Collections.synchronizedSet(new HashSet<String>()));
 		}
 		this.uniqueIds = Collections.unmodifiableMap(uniqueIds);
 	}
 
-	private boolean isProcessed(DctmObjectTypesEnum type, String id) {
+	private boolean isProcessed(DctmObjectType type, String id) {
 		return !this.uniqueIds.get(type).add(id);
 	}
 
@@ -76,7 +76,7 @@ public class DuplicateChecker {
 	 * @return true, if the folder is already processed
 	 */
 	public boolean isFolderProcessed(String id, boolean addFlag) {
-		return isProcessed(DctmObjectTypesEnum.DCTM_FOLDER, id);
+		return isProcessed(DctmObjectType.DCTM_FOLDER, id);
 	}
 
 	/**
@@ -88,7 +88,7 @@ public class DuplicateChecker {
 	 * @return true, if the user is already processed
 	 */
 	public boolean isUserProcessed(String id) {
-		return isProcessed(DctmObjectTypesEnum.DCTM_USER, id);
+		return isProcessed(DctmObjectType.DCTM_USER, id);
 	}
 
 	/**
@@ -102,7 +102,7 @@ public class DuplicateChecker {
 	 * @return true, if the group is already processed
 	 */
 	public boolean isGroupProcessed(String id, boolean addFlag) {
-		return isProcessed(DctmObjectTypesEnum.DCTM_GROUP, id);
+		return isProcessed(DctmObjectType.DCTM_GROUP, id);
 	}
 
 	/**
@@ -114,7 +114,7 @@ public class DuplicateChecker {
 	 * @return true, if the ACL is already processed
 	 */
 	public synchronized boolean isACLProcessed(String id) {
-		return isProcessed(DctmObjectTypesEnum.DCTM_ACL, id);
+		return isProcessed(DctmObjectType.DCTM_ACL, id);
 	}
 
 	/**
@@ -126,7 +126,7 @@ public class DuplicateChecker {
 	 * @return true, if the format is already processed
 	 */
 	public synchronized boolean isFormatProcessed(String id) {
-		return isProcessed(DctmObjectTypesEnum.DCTM_FORMAT, id);
+		return isProcessed(DctmObjectType.DCTM_FORMAT, id);
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class DuplicateChecker {
 	 * @return true, if the type is already processed
 	 */
 	public boolean isTypeProcessed(String id) {
-		return isProcessed(DctmObjectTypesEnum.DCTM_TYPE, id);
+		return isProcessed(DctmObjectType.DCTM_TYPE, id);
 	}
 
 }

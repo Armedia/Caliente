@@ -46,7 +46,7 @@ public class DctmFormat extends DctmObject {
 	public DctmFormat() {
 		super();
 		// set dctmObjectType to dctm_format
-		this.dctmObjectType = DctmObjectTypesEnum.DCTM_FORMAT;
+		this.dctmObjectType = DctmObjectType.DCTM_FORMAT;
 	}
 
 	/**

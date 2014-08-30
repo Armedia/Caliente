@@ -10,13 +10,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 
 public class DataObject implements Iterable<DataAttribute> {
 
-	private final DctmObjectTypesEnum type;
+	private final DctmObjectType type;
 	private final String id;
 	private final boolean contentHolder;
 	private final String contentPath;
@@ -25,7 +25,7 @@ public class DataObject implements Iterable<DataAttribute> {
 
 	DataObject(ResultSet rs) throws SQLException {
 		this.id = rs.getString("object_id");
-		this.type = DctmObjectTypesEnum.valueOf(rs.getString("object_type"));
+		this.type = DctmObjectType.valueOf(rs.getString("object_type"));
 		this.contentHolder = rs.getBoolean("has_content");
 		this.contentPath = rs.getString("content_path");
 		this.attributes = new HashMap<String, DataAttribute>();
@@ -58,7 +58,7 @@ public class DataObject implements Iterable<DataAttribute> {
 			dataAttributeEncoder = DataAttribute.DEFAULT_ENCODER;
 		}
 		this.id = object.getObjectId().getId();
-		this.type = DctmObjectTypesEnum.decode(object.getType().getName());
+		this.type = DctmObjectType.decode(object.getType().getName());
 		this.contentHolder = false; // TODO: how to tell?
 		this.contentPath = null; // TODO: how to calculate?
 		final int attCount = object.getAttrCount();
@@ -70,12 +70,12 @@ public class DataObject implements Iterable<DataAttribute> {
 		this.attributesLoaded = true;
 	}
 
-	public DataObject(DctmObjectTypesEnum type, String id, boolean contentHolder, String contentPath,
+	public DataObject(DctmObjectType type, String id, boolean contentHolder, String contentPath,
 		DataAttribute... attributes) {
 		this(type, id, contentHolder, contentPath, Arrays.asList(attributes));
 	}
 
-	public DataObject(DctmObjectTypesEnum type, String id, boolean contentHolder, String contentPath,
+	public DataObject(DctmObjectType type, String id, boolean contentHolder, String contentPath,
 		Collection<DataAttribute> attributes) {
 		this.type = type;
 		this.id = id;
@@ -88,7 +88,7 @@ public class DataObject implements Iterable<DataAttribute> {
 		this.attributesLoaded = true;
 	}
 
-	public DctmObjectTypesEnum getType() {
+	public DctmObjectType getType() {
 		return this.type;
 	}
 

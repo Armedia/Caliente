@@ -16,7 +16,7 @@ import com.delta.cmsmf.cmsobjects.DctmFolder;
 import com.delta.cmsmf.cmsobjects.DctmFormat;
 import com.delta.cmsmf.cmsobjects.DctmGroup;
 import com.delta.cmsmf.cmsobjects.DctmObject;
-import com.delta.cmsmf.cmsobjects.DctmObjectTypesEnum;
+import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.cmsobjects.DctmReferenceDocument;
 import com.delta.cmsmf.cmsobjects.DctmType;
 import com.delta.cmsmf.cmsobjects.DctmUser;
@@ -94,25 +94,25 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 
 		try {
 			// Import user objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_USER);
+			readAndImportDctmObjects(DctmObjectType.DCTM_USER);
 
 			// Import group objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_GROUP);
+			readAndImportDctmObjects(DctmObjectType.DCTM_GROUP);
 
 			// Import ACL objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_ACL);
+			readAndImportDctmObjects(DctmObjectType.DCTM_ACL);
 
 			// Import Type objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_TYPE);
+			readAndImportDctmObjects(DctmObjectType.DCTM_TYPE);
 
 			// Import format objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_FORMAT);
+			readAndImportDctmObjects(DctmObjectType.DCTM_FORMAT);
 
 			// Import folder objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_FOLDER);
+			readAndImportDctmObjects(DctmObjectType.DCTM_FOLDER);
 
 			// Import document objects
-			readAndImportDctmObjects(DctmObjectTypesEnum.DCTM_DOCUMENT);
+			readAndImportDctmObjects(DctmObjectType.DCTM_DOCUMENT);
 
 		} catch (CMSMFFatalException e) {
 			this.logger.error(e.getMessage());
@@ -292,7 +292,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	 *             Signals that an I/O exception has occurred.
 	 * @throws CMSMFFatalException
 	 */
-	private void readAndImportDctmObjects(DctmObjectTypesEnum dctmObjectType) throws IOException, CMSMFFatalException {
+	private void readAndImportDctmObjects(DctmObjectType dctmObjectType) throws IOException, CMSMFFatalException {
 		if (this.logger.isEnabledFor(Level.DEBUG)) {
 			this.logger.debug("Started Importing: " + dctmObjectType);
 		}
@@ -365,7 +365,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private Object readDctmObject(DctmObjectTypesEnum dctmObjectType) throws CMSMFException, IOException {
+	private Object readDctmObject(DctmObjectType dctmObjectType) throws CMSMFException, IOException {
 		return DctmObjectReader.readObject(dctmObjectType);
 	}
 }

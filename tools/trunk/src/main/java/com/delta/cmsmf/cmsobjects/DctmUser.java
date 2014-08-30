@@ -66,7 +66,7 @@ public class DctmUser extends DctmObject {
 	public DctmUser() {
 		super();
 		// set dctmObjectType to dctm_user
-		this.dctmObjectType = DctmObjectTypesEnum.DCTM_USER;
+		this.dctmObjectType = DctmObjectType.DCTM_USER;
 	}
 
 	/**

@@ -56,7 +56,7 @@ public class DctmACL extends DctmObject {
 	public DctmACL() {
 		super();
 		// set dctmObjectType to dctm_acl
-		this.dctmObjectType = DctmObjectTypesEnum.DCTM_ACL;
+		this.dctmObjectType = DctmObjectType.DCTM_ACL;
 	}
 
 	/**
