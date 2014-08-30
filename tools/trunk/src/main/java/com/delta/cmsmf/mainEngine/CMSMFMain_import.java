@@ -3,6 +3,7 @@ package com.delta.cmsmf.mainEngine;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -218,8 +219,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 		try {
 			RepositoryConfiguration srcRepoConfig = DctmObjectReader.readSrcRepoConfig();
 			if (srcRepoConfig != null) {
-				List<String> fileStores = srcRepoConfig.getFileStores();
-				if (doesFileStoresExist(fileStores)) {
+				if (doesFileStoresExist(srcRepoConfig.getFileStores())) {
 					isItSafeToImport = true;
 				}
 			}
@@ -239,7 +239,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	private boolean doesFileStoresExist(List<String> srcRepoFileStores) throws CMSMFException {
+	private boolean doesFileStoresExist(Collection<String> srcRepoFileStores) throws CMSMFException {
 
 		boolean doesFileStoresExistInTargetRepo = false;
 
@@ -326,7 +326,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 						// Raise the cmsmf fatal exception.
 						throw (new CMSMFFatalException(
 							"Total nbr of errors during import exceeds the error threshold of " + importErrorThreshold
-							+ " specified in properties file"));
+								+ " specified in properties file"));
 					}
 
 				}

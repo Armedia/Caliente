@@ -1,8 +1,9 @@
 package com.delta.cmsmf.mainEngine;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -73,6 +74,35 @@ public class RepositoryConfiguration implements Serializable {
 	/** The operator name. */
 	private String operatorName;
 
+	/** The install owner. */
+	private String installOwner;
+
+	/** The server version. */
+	private String serverVersion;
+
+	/** The host name. */
+	private String hostName;
+
+	// From docbase config
+	/** The database name. */
+	private String dbmsName;
+
+	/** The security mode. */
+	private String securityMode;
+
+	/** The docbase id. */
+	private String docbaseID;
+
+	// From connection config
+	/** The docbase name. */
+	private String docbaseName;
+
+	/**
+	 * The list of file stores that are used by the objects exported during
+	 * export step.
+	 */
+	private Set<String> fileStores = new HashSet<String>();
+
 	/**
 	 * Gets the operator name.
 	 *
@@ -91,9 +121,6 @@ public class RepositoryConfiguration implements Serializable {
 	public void setOperatorName(String operatorName) {
 		this.operatorName = operatorName;
 	}
-
-	/** The install owner. */
-	private String installOwner;
 
 	/**
 	 * Gets the install owner.
@@ -114,9 +141,6 @@ public class RepositoryConfiguration implements Serializable {
 		this.installOwner = installOwner;
 	}
 
-	/** The server version. */
-	private String serverVersion;
-
 	/**
 	 * Gets the server version.
 	 *
@@ -135,9 +159,6 @@ public class RepositoryConfiguration implements Serializable {
 	public void setServerVersion(String serverVersion) {
 		this.serverVersion = serverVersion;
 	}
-
-	/** The host name. */
-	private String hostName;
 
 	/**
 	 * Gets the host name.
@@ -158,10 +179,6 @@ public class RepositoryConfiguration implements Serializable {
 		this.hostName = hostName;
 	}
 
-	// From docbase config
-	/** The database name. */
-	private String dbmsName;
-
 	/**
 	 * Gets the database name.
 	 *
@@ -180,9 +197,6 @@ public class RepositoryConfiguration implements Serializable {
 	public void setDbmsName(String dbmsName) {
 		this.dbmsName = dbmsName;
 	}
-
-	/** The security mode. */
-	private String securityMode;
 
 	/**
 	 * Gets the security mode.
@@ -203,9 +217,6 @@ public class RepositoryConfiguration implements Serializable {
 		this.securityMode = securityMode;
 	}
 
-	/** The docbase id. */
-	private String docbaseID;
-
 	/**
 	 * Gets the docbase id.
 	 *
@@ -224,10 +235,6 @@ public class RepositoryConfiguration implements Serializable {
 	public void setDocbaseID(String docbaseID) {
 		this.docbaseID = docbaseID;
 	}
-
-	// From connection config
-	/** The docbase name. */
-	private String docbaseName;
 
 	/**
 	 * Gets the docbase name.
@@ -249,17 +256,11 @@ public class RepositoryConfiguration implements Serializable {
 	}
 
 	/**
-	 * The list of file stores that are used by the objects exported during
-	 * export step.
-	 */
-	private List<String> fileStores = new ArrayList<String>();
-
-	/**
 	 * Gets the list of file stores.
 	 *
 	 * @return the file stores
 	 */
-	public List<String> getFileStores() {
+	public Set<String> getFileStores() {
 		return this.fileStores;
 	}
 
@@ -269,8 +270,12 @@ public class RepositoryConfiguration implements Serializable {
 	 * @param fileStores
 	 *            the new file stores
 	 */
-	public void setFileStores(List<String> fileStores) {
-		this.fileStores = fileStores;
+	public void setFileStores(Collection<String> fileStores) {
+		if (fileStores == null) {
+			this.fileStores = new HashSet<String>();
+		} else {
+			this.fileStores = new HashSet<String>(fileStores);
+		}
 	}
 
 	/**
@@ -280,9 +285,7 @@ public class RepositoryConfiguration implements Serializable {
 	 *            the file store name
 	 */
 	public void addFileStore(String fileStoreName) {
-		if (!this.fileStores.contains(fileStoreName)) {
-			this.fileStores.add(fileStoreName);
-		}
+		this.fileStores.add(fileStoreName);
 	}
 
 	/**
