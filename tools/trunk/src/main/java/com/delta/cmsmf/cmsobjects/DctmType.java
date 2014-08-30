@@ -318,13 +318,14 @@ public class DctmType extends DctmObject {
 	private void exportSuperTypes(IDfType typeObj) throws CMSMFException {
 		try {
 			if (DctmType.logger.isEnabledFor(Level.INFO)) {
-				DctmType.logger.info("Started serializing super types for dm_type object with name: "
-					+ typeObj.getName());
+				DctmType.logger.info(String.format(
+					"Started serializing super types for dm_type object with name [%s] (id=%s)", typeObj.getName(),
+					typeObj.getObjectId().getId()));
 			}
 
-			// First process the supertypes and then process itself
+			// First process the supertypes and then process itself...avoid looping...
 			IDfType superType = typeObj.getSuperType();
-			if (superType != null) {
+			if ((superType != null) && !typeObj.getObjectId().equals(superType.getObjectId())) {
 				exportSuperTypes(superType);
 			}
 
@@ -338,5 +339,4 @@ public class DctmType extends DctmObject {
 			throw (new CMSMFException("Couldn't retrieve all super types for dctm type", e));
 		}
 	}
-
 }
