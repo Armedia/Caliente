@@ -4,10 +4,13 @@
 
 package com.delta.cmsmf.datastore;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
 
 import javax.sql.DataSource;
 
@@ -27,6 +30,7 @@ import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
@@ -104,7 +108,19 @@ public class DataStore {
 			DataStore.LOG.debug(String.format("JDBC driver class [%s] is loaded and valid", driverName));
 		}
 
-		final String jdbcUrl = CMSMFProperties.JDBC_URL.getString();
+		String jdbcUrl = CMSMFProperties.JDBC_URL.getString();
+		String targetPath = CMSMFProperties.STREAMS_DIRECTORY.getString();
+
+		File targetDirectory = null;
+		try {
+			targetDirectory = new File(targetPath).getCanonicalFile();
+		} catch (IOException e) {
+			throw new CMSMFException(String.format("Failed to canonicalize the path [%s]", targetPath), e);
+		}
+
+		// Replace variables in the URL
+		jdbcUrl = StrSubstitutor
+			.replace(jdbcUrl, Collections.singletonMap("target", targetDirectory.getAbsolutePath()));
 		if (DataStore.LOG.isInfoEnabled()) {
 			DataStore.LOG.info(String.format("State database will be stored at [%s]", jdbcUrl));
 		}

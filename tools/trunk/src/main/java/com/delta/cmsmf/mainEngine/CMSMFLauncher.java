@@ -11,7 +11,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class CMSMFLauncher extends AbstractLauncher {
@@ -123,6 +122,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 	}
 
 	public static void main(String[] args) throws Throwable {
+		System.setProperty("logName", "cmsmf-startup");
 		Map<CLIParam, String> cliParams = AbstractLauncher.parseArguments(args);
 		if (cliParams == null) { return; }
 
@@ -145,9 +145,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 			}
 			System.setProperty("logName", logName);
 		}
-		// Just make sure it's initialized
-		Logger.getLogger(CMSMFLauncher.class);
 
+		// Just make sure it's initialized
 		CMSMFLauncher.patchClasspath(cliParams);
 
 		// Now, convert the command-line parameters into configuration properties
@@ -164,7 +163,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
-
 		Class<?> klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode));
 		CMSMFMain main = null;
 		if (CMSMFMain.class.isAssignableFrom(klass)) {
