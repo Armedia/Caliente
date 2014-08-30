@@ -127,12 +127,15 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 						}
 					} catch (CMSMFException e) {
 						// If for some reason object is not retrieved from the system, or written to
-// the
-						// filesystem, write to an error log and continue on
-						this.logger.error("Couldn't retrieve object information from repository for id: " + objID, e);
+						// the filesystem, write to an error log and continue on
+						this.logger.error(String.format(
+							"Couldn't retrieve object information from repository for %s with id [%s]", prsstntObj
+								.getType().getName(), objID), e);
 					} catch (IOException e) {
 						// If there is IOException, log the error and exit out
-						this.logger.fatal("Couldn't serialize an object to the filesystem for id: " + objID, e);
+						this.logger.fatal(String.format(
+							"Couldn't serialize a %s object with id [%s] to the data store", prsstntObj.getType()
+							.getName(), objID), e);
 						// close all of the file streams
 						try {
 							fsm.closeAllStreams();
@@ -147,7 +150,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 				try {
 					DctmObjectWriter.writeBinaryObject(srcRepoConfig);
 				} catch (CMSMFException e) {
-					this.logger.error("Couldn't retrieve source repository configuration information.", e);
+					this.logger.error("Couldn't serialize the source repository configuration information.", e);
 				}
 			} catch (DfException e) {
 				// If there is a DfException while running the export query, log the error and exit
