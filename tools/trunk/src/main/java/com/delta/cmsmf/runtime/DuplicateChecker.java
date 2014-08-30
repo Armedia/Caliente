@@ -62,7 +62,7 @@ public class DuplicateChecker {
 	}
 
 	private boolean isProcessed(DctmObjectTypesEnum type, String id) {
-		return this.uniqueIds.get(type).add(id);
+		return !this.uniqueIds.get(type).add(id);
 	}
 
 	/**
