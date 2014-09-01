@@ -236,7 +236,7 @@ public class DctmACL extends DctmObject {
 				// Extended permissions. But to recreate this set in target cms, you have to provide
 				// coma separated String values in Grant() method in IDfACL. So store this string
 				// representation here.
-				DctmACL.populateAccessorXPermitNames(dctmACL, (IDfACL) prsstntObj);
+				populateAccessorXPermitNames(IDfACL.class.cast(prsstntObj));
 
 				((IDfACL) prsstntObj).isInternal();
 
@@ -270,12 +270,12 @@ public class DctmACL extends DctmObject {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private static void populateAccessorXPermitNames(DctmACL dctmACL, IDfACL aclObj) throws DfException {
+	private void populateAccessorXPermitNames(IDfACL aclObj) throws DfException {
 		int accessorCount = aclObj.getAccessorCount();
 
 		if (accessorCount > 0) {
 			for (int i = 0; i < accessorCount; i++) {
-				dctmACL.accessorXPermitNames.add(aclObj.getAccessorXPermitNames(i));
+				this.accessorXPermitNames.add(aclObj.getAccessorXPermitNames(i));
 			}
 		}
 	}
