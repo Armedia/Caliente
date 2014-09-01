@@ -2,9 +2,14 @@ package com.delta.cmsmf.mainEngine;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 
@@ -23,6 +28,8 @@ import com.delta.cmsmf.cmsobjects.DctmType;
 import com.delta.cmsmf.cmsobjects.DctmUser;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
+import com.delta.cmsmf.datastore.DataObject;
+import com.delta.cmsmf.datastore.DataStore;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.exception.CMSMFIOException;
@@ -93,31 +100,15 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 			return;
 		}
 
+		final ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 16, 30, TimeUnit.SECONDS,
+			new LinkedBlockingQueue<Runnable>());
+
 		try {
-			// Import user objects
-			readAndImportDctmObjects(DctmObjectType.DCTM_USER);
-
-			// Import group objects
-			readAndImportDctmObjects(DctmObjectType.DCTM_GROUP);
-
-			// Import ACL objects
-			readAndImportDctmObjects(DctmObjectType.DCTM_ACL);
-
-			// Import Type objects
-			readAndImportDctmObjects(DctmObjectType.DCTM_TYPE);
-
-			// Import format objects
-			readAndImportDctmObjects(DctmObjectType.DCTM_FORMAT);
-
-			// Import folder objects
-			readAndImportDctmObjects(DctmObjectType.DCTM_FOLDER);
-
-			// Import document objects
-			readAndImportDctmObjects(DctmObjectType.DCTM_DOCUMENT);
-
-		} catch (CMSMFFatalException e) {
-			this.logger.error(e.getMessage());
-			throw (e);
+			// IMPORTANT: The object types must be declared in the proper import order
+			// otherwise this may fail.
+			for (DctmObjectType type : DctmObjectType.values()) {
+				readAndImportDctmObjects(executor, type);
+			}
 		} finally {
 			// close all of the file streams
 			try {
@@ -292,80 +283,56 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	 *             Signals that an I/O exception has occurred.
 	 * @throws CMSMFFatalException
 	 */
-	private void readAndImportDctmObjects(DctmObjectType dctmObjectType) throws IOException, CMSMFFatalException {
+	private void readAndImportDctmObjects(final ExecutorService executor, final DctmObjectType dctmObjectType)
+		throws IOException {
 		if (this.logger.isEnabledFor(Level.DEBUG)) {
 			this.logger.debug("Started Importing: " + dctmObjectType);
 		}
 
-		final IDfSession session = DctmConnectionPool.acquireSession();
 		try {
-			DctmObject dctmObject = (DctmObject) readDctmObject(dctmObjectType);
+			DataStore.deserializeObjects(dctmObjectType, new DataStore.ImportHandler() {
+				@Override
+				public boolean handle(final DataObject dataObject) throws Exception {
+					final DctmObject dctmObject = dctmObjectType.newInstance(dataObject);
+					final RunTimeProperties runtimeProps = RunTimeProperties.getRunTimePropertiesInstance();
 
-			while (dctmObject != null) {
+					final IDfSession session = DctmConnectionPool.acquireSession();
+					try {
+						dctmObject.setDctmSession(session);
+						dctmObject.createInCMS();
+						return true;
+					} catch (DfException e) {
+						// log the error and continue on with next object
+						CMSMFMain_import.this.logger.error(String.format(
+							"Error creating/Updating %s with id [%s] in the target repository.", dctmObjectType,
+							dataObject.getId()), e);
 
-				try {
-					// Create appropriate object in target repository
-					dctmObject.setDctmSession(session);
-					dctmObject.createInCMS();
-				} catch (DfException e) {
-					// log the error and continue on with next object
-					this.logger.error("Error creating/Updating " + dctmObjectType + " in dctm repository.", e);
+						// increment import process error count; If the error count is more
+						// than the error threshold specified in the properties file, quit
+						// the import process after closing all of the file streams
+						runtimeProps.incrementImportProcessErrorCount();
 
-					// increment import process error count; If the error count is more than the
-// error
-					// threshold specified in the properties file, quit the import process after
-// closing all
-					// of the file streams
-					RunTimeProperties.getRunTimePropertiesInstance().incrementImportProcessErrorCount();
-
-					int importErrorThreshold = CMSMFProperties.IMPORT_MAX_ERRORS.getInt();
-					this.logger.warn("Total nbr of errors happened so far: "
-						+ RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount()
-						+ ". Error threshold is set to: " + importErrorThreshold);
-					if (RunTimeProperties.getRunTimePropertiesInstance().getImportProcessErrorCount() >= importErrorThreshold) {
-						// Raise the cmsmf fatal exception.
-						throw (new CMSMFFatalException(
-							"Total nbr of errors during import exceeds the error threshold of " + importErrorThreshold
-								+ " specified in properties file"));
+						int importErrorThreshold = CMSMFProperties.IMPORT_MAX_ERRORS.getInt();
+						CMSMFMain_import.this.logger.warn(String.format(
+							"Total nbr of errors detected so far: %d of %d allowed",
+							runtimeProps.getImportProcessErrorCount(), importErrorThreshold));
+						return false;
+					} finally {
+						DctmConnectionPool.releaseSession(session);
 					}
-
 				}
-				// Read next object from the file until you reach end of the file
-				dctmObject = (DctmObject) readDctmObject(dctmObjectType);
-			}
-		} catch (IOException e) {
-			// If there is IOException, close all of the streams, log the error and exit out
-			try {
-				FileStreamsManager.getFileStreamManager().closeAllStreams();
-			} catch (CMSMFIOException e1) {
-				this.logger.error("Couldn't close all of the filestreams", e1);
-			}
-			this.logger.fatal("Couldn't deserialize " + dctmObjectType + " object from the filesystem.", e);
-			throw (e);
+			});
+		} catch (SQLException e) {
+			// Something happened....
+			this.logger.fatal(String.format("SQL Error reading the %s objects", dctmObjectType), e);
 		} catch (CMSMFException e) {
-			// log the error and continue on with next object
-			this.logger.error("Error reading " + dctmObjectType + " object from file.", e);
+			this.logger.fatal(String.format("CMSMF Error reading the %s objects", dctmObjectType), e);
 		} finally {
-			DctmConnectionPool.releaseSession(session);
+			FileStreamsManager.getFileStreamManager().closeAllStreams();
 		}
 
 		if (this.logger.isEnabledFor(Level.DEBUG)) {
 			this.logger.debug("Finished Importing: " + dctmObjectType);
 		}
-	}
-
-	/**
-	 * Reads and returns dctm object of given type from stream file.
-	 *
-	 * @param dctmObjectType
-	 *            the dctm object type
-	 * @return the dctm object
-	 * @throws CMSMFException
-	 *             the CMSMF exception
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
-	 */
-	private Object readDctmObject(DctmObjectType dctmObjectType) throws CMSMFException, IOException {
-		return DctmObjectReader.readObject(dctmObjectType);
 	}
 }

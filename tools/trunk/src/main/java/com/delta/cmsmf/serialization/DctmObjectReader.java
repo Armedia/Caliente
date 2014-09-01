@@ -7,13 +7,10 @@ import java.io.ObjectInputStream;
 
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cmsobjects.DctmObject;
-import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFileNotFoundException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
-import com.delta.cmsmf.runtime.AppCounter;
 
 /**
  * The Class DctmObjectReader contains methods to read various types of objects
@@ -37,11 +34,11 @@ public class DctmObjectReader {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
+	/*
 	public static DctmObject readObject(DctmObjectType dctmObjType) throws IOException, CMSMFException {
 		DctmObject returnObject = null;
-		/*
 		try {
-			DataObject dataObject = DataStore.deserializeObject(dctmObjType);
+			DataObject dataObject = DataStore.deserializeNextObject(dctmObjType);
 			if (dataObject != null) {
 				returnObject = dctmObjType.newInstance(dataObject);
 			} else {
@@ -54,30 +51,9 @@ public class DctmObjectReader {
 		} catch (InvocationTargetException e) {
 			throw new CMSMFException(String.format("Failed to deserialize an object of type %s", dctmObjType), e);
 		}
-		 */
-		try {
-			FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-			// get appropriate input stream corresponding to object type
-			InputStream is = fsm.getInputStreamForType(dctmObjType);
-			// read the object from input stream
-			returnObject = DctmObject.class.cast(fsm.importObject(is));
-
-			// increment appropriate type counter
-			if (returnObject != null) {
-				AppCounter.getObjectCounter().incrementCounter(dctmObjType);
-			}
-		} catch (CMSMFFileNotFoundException e) {
-			// If input stream file is not found, record it in the log
-			DctmObjectReader.logger.warn("The file containing " + dctmObjType
-				+ " objects does not exist. No objects of type " + dctmObjType + "  will be imported.");
-		} catch (ClassNotFoundException e) {
-			throw (new CMSMFException("Couldn't read object or type " + dctmObjType + " from filesystem.", e));
-		} catch (EOFException e) {
-			// Do nothing if you get a end of file exception
-			DctmObjectReader.logger.info("Reached the end of the file for " + dctmObjType + " document objects.");
-		}
 		return returnObject;
 	}
+	 */
 
 	/**
 	 * Reads repository configuration information from file system and returns it.

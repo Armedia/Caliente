@@ -40,7 +40,7 @@ public class DctmObjectWriter {
 		if (dctmObj != null) {
 			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
 				DctmObjectWriter.logger
-					.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
+				.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
 			}
 
 			try {
@@ -56,15 +56,6 @@ public class DctmObjectWriter {
 			} catch (DfException e) {
 				throw new CMSMFException(String.format("Failed to serialize object [%s]", dctmObj.getSrcObjectID()), e);
 			}
-
-			/*
-			FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-			// Get appropriate outputstream that corresponds to object type
-			OutputStream os = fsm.getOutputStreamForType(dctmObj.dctmObjectType);
-
-			// Export the dctmobject to outputstream
-			fsm.exportObject(os, dctmObj);
-			 */
 
 			// Update appropriate counter
 			AppCounter.getObjectCounter().incrementCounter(dctmObj.dctmObjectType);

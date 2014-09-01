@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -50,12 +51,45 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DataStore {
 
+	public static interface ImportHandler {
+		public boolean handle(DataObject dataObject) throws Exception;
+	}
+
 	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from dctm_object where object_id = ?";
 
 	private static final String INSERT_OBJECT_SQL = "insert into dctm_object (object_id, object_type, has_content, content_path) values (?, ?, ?, ?)";
 	private static final String INSERT_DEPENDENCY_SQL = "insert into dctm_dependency (object_id, dependency_id) values (?, ?)";
 	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, attribute_name, attribute_id, attribute_type, attribute_length, is_internal, is_qualifiable, is_repeating) values (?, ?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, attribute_name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
+	/*
+	private static final String LOAD_EVERYTHING_SQL = //
+		"    select o.*, a.*, v.* " + //
+		"  from dctm_object o, dctm_attribute a, dctm_value v " + //
+		" where o.object_type = ? " + //
+		"   and o.object_id = a.object_id " + //
+		"   and a.object_id = v.object_id " + //
+		"   and a.attribute_name = v.attribute_name " + //
+		" order by o.object_number, v.value_number";
+	 */
+
+	private static final String LOAD_OBJECTS_SQL = //
+	"    select * " + //
+		"  from dctm_object " + //
+		" where object_type = ? " + //
+		" order by object_number";
+
+	private static final String LOAD_ATTRIBUTES_SQL = //
+	"    select * " + //
+		"  from dctm_attribute " + //
+		" where object_id = ? " + //
+		" order by attribute_name";
+
+	private static final String LOAD_VALUES_SQL = //
+	"    select * " + //
+		"  from dctm_attribute_value " + //
+		" where object_id = ? " + //
+		"   and attribute_name = ? " + //
+		" order by value_number";
 
 	private static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
 		@Override
@@ -207,12 +241,12 @@ public class DataStore {
 	}
 
 	public static boolean serializeObject(IDfPersistentObject object, IDfId dependentId) throws SQLException,
-	DfException {
+		DfException {
 		return DataStore.serializeObject(object, (dependentId == null ? null : dependentId.getId()));
 	}
 
 	public static boolean serializeObject(IDfPersistentObject object, String dependentId) throws SQLException,
-	DfException {
+		DfException {
 		// First...is the object
 		// Put the object and its attributes into the state database
 		boolean ok = false;
@@ -300,7 +334,7 @@ public class DataStore {
 				DbUtils.commitAndClose(c);
 			} else {
 				DataStore.LOG
-				.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
+					.warn(String.format("Rolling back insert transaction for [%s::%s]", objectId, dependentId));
 				DbUtils.rollbackAndClose(c);
 			}
 		}
@@ -385,5 +419,115 @@ public class DataStore {
 				DbUtils.rollbackAndClose(c);
 			}
 		}
+	}
+
+	public static void deserializeObjects(DctmObjectType type, ImportHandler handler) throws SQLException,
+	CMSMFException {
+		Connection objConn = null;
+		Connection attConn = null;
+		Connection valConn = null;
+
+		try {
+			objConn = DataStore.DATA_SOURCE.getConnection();
+			attConn = DataStore.DATA_SOURCE.getConnection();
+			valConn = DataStore.DATA_SOURCE.getConnection();
+
+			PreparedStatement objPS = null;
+			PreparedStatement attPS = null;
+			PreparedStatement valPS = null;
+			try {
+				objPS = objConn.prepareStatement(DataStore.LOAD_OBJECTS_SQL);
+				attPS = attConn.prepareStatement(DataStore.LOAD_ATTRIBUTES_SQL);
+				valPS = valConn.prepareStatement(DataStore.LOAD_VALUES_SQL);
+
+				ResultSet objRS = null;
+				ResultSet attRS = null;
+				ResultSet valRS = null;
+
+				objPS.setString(1, type.name());
+				objRS = objPS.executeQuery();
+				try {
+					while (objRS.next()) {
+						final int objNum = objRS.getInt("object_number");
+						DataObject obj = new DataObject(objRS);
+						if (DataStore.LOG.isTraceEnabled()) {
+							DataStore.LOG.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
+						} else if (DataStore.LOG.isDebugEnabled()) {
+							DataStore.LOG.trace(String.format("De-serialized %s object #%d with ID [%s]", type, objNum,
+								obj.getId()));
+						}
+
+						attPS.clearParameters();
+						attPS.setString(1, obj.getId());
+						attRS = attPS.executeQuery();
+						try {
+							obj.loadAttributes(attRS);
+						} finally {
+							DbUtils.closeQuietly(attRS);
+						}
+
+						valPS.clearParameters();
+						valPS.setString(1, obj.getId());
+						for (DataAttribute att : obj) {
+							valPS.setString(2, att.getName());
+							valRS = valPS.executeQuery();
+							try {
+								att.loadValues(valRS);
+							} finally {
+								DbUtils.closeQuietly(valRS);
+							}
+						}
+
+						try {
+							if (!handler.handle(obj)) {
+								break;
+							}
+						} catch (Exception e) {
+							throw new CMSMFException(String.format(
+								"Failed to properly import %s object with ID [%s] (#%d)", type, obj.getId(), objNum), e);
+						}
+					}
+				} finally {
+					DbUtils.closeQuietly(objRS);
+				}
+			} finally {
+				DbUtils.closeQuietly(valPS);
+				DbUtils.closeQuietly(attPS);
+				DbUtils.closeQuietly(objPS);
+			}
+		} finally {
+			DbUtils.rollbackAndCloseQuietly(valConn);
+			DbUtils.rollbackAndCloseQuietly(attConn);
+			DbUtils.rollbackAndCloseQuietly(objConn);
+		}
+
+		/*
+		final QueryRunner qr = new QueryRunner(DataStore.DATA_SOURCE);
+		qr.query(DataStore.LOAD_OBJECTS_SQL, new ResultSetHandler<Void>() {
+			@Override
+			public Void handle(ResultSet objectRs) throws SQLException {
+				while (objectRs.next()) {
+					final DataObject obj = new DataObject(objectRs);
+					qr.query(DataStore.LOAD_ATTRIBUTES_SQL, new ResultSetHandler<Void>() {
+						@Override
+						public Void handle(ResultSet attributeRs) throws SQLException {
+							obj.loadAttributes(attributeRs);
+							for (final DataAttribute attribute : obj) {
+								qr.query(DataStore.LOAD_VALUES_SQL, new ResultSetHandler<Void>() {
+									@Override
+									public Void handle(ResultSet valueRs) throws SQLException {
+										attribute.loadValues(valueRs);
+										return null;
+									}
+								}, obj.getId(), attribute.getName());
+							}
+							return null;
+						}
+					}, obj.getId());
+				}
+				return null;
+			}
+		}, type.name());
+		 */
 	}
 }
