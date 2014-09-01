@@ -54,9 +54,7 @@ public class DctmACL extends DctmObject {
 	 * Instantiates a new DctmACL object.
 	 */
 	public DctmACL() {
-		super();
-		// set dctmObjectType to dctm_acl
-		this.dctmObjectType = DctmObjectType.DCTM_ACL;
+		super(DctmObjectType.DCTM_ACL);
 	}
 
 	/**
@@ -66,7 +64,7 @@ public class DctmACL extends DctmObject {
 	 *            the existing documentum CMS session
 	 */
 	public DctmACL(IDfSession dctmSession) {
-		super(dctmSession);
+		super(dctmSession, DctmObjectType.DCTM_ACL);
 	}
 
 	/*

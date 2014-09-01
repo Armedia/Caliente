@@ -72,17 +72,44 @@ public class DctmDocument extends DctmObject {
 	private static AtomicInteger docs_created = new AtomicInteger(0);
 
 	/** The logger object used for logging. */
-	private static Logger logger = Logger.getLogger(DctmDocument.class);
+	private static final Logger logger = Logger.getLogger(DctmDocument.class);
 
 	/** An ArrayList that holds all of the content rendition files for this document. */
 	private List<DctmContent> contentList = new ArrayList<DctmContent>();
+
+	/** The list that contains folder paths where the document is linked. */
+	protected List<String> folderLocations = new ArrayList<String>();
+
+	/**
+	 * The list that contains all of the version tree. It stores the version in the order from
+	 * oldest to
+	 * newest
+	 */
+	private List<DctmDocument> versionTree = new ArrayList<DctmDocument>();
 
 	/**
 	 * The isThisATest is used for testing purposes. The value for this attribute is set from
 	 * properties file.
 	 * If the value is true, the documents and folders are created in /Replications cabinet.
 	 */
-	private static boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
+	private static final boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
+
+	/**
+	 * Instantiates a new dctm document.
+	 */
+	public DctmDocument() {
+		super(DctmObjectType.DCTM_DOCUMENT);
+	}
+
+	/**
+	 * Instantiates a DctmDocument object with new CMS session.
+	 *
+	 * @param dctmSession
+	 *            the existing documentum CMS session
+	 */
+	public DctmDocument(IDfSession dctmSession) {
+		super(dctmSession, DctmObjectType.DCTM_DOCUMENT);
+	}
 
 	/**
 	 * Gets the list of content rendition files for this document.
@@ -103,9 +130,6 @@ public class DctmDocument extends DctmObject {
 		this.contentList.add(content);
 	}
 
-	/** The list that contains folder paths where the document is linked. */
-	protected List<String> folderLocations = new ArrayList<String>();
-
 	/**
 	 * Gets the list of folder locations.
 	 *
@@ -124,13 +148,6 @@ public class DctmDocument extends DctmObject {
 	public void addFolderLocation(String fldrLocation) {
 		this.folderLocations.add(fldrLocation);
 	}
-
-	/**
-	 * The list that contains all of the version tree. It stores the version in the order from
-	 * oldest to
-	 * newest
-	 */
-	private List<DctmDocument> versionTree = new ArrayList<DctmDocument>();
 
 	/**
 	 * Gets the list that contains version tree of this document.
@@ -171,26 +188,6 @@ public class DctmDocument extends DctmObject {
 	 */
 	public void setImplicitVersionLabel(String implicitVersionLabel) {
 		this.implicitVersionLabel = implicitVersionLabel;
-	}
-
-	/**
-	 * Instantiates a new dctm document.
-	 */
-	public DctmDocument() {
-		super();
-
-		// set dctmObjectType to dctm_document
-		this.dctmObjectType = DctmObjectType.DCTM_DOCUMENT;
-	}
-
-	/**
-	 * Instantiates a DctmDocument object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmDocument(IDfSession dctmSession) {
-		super(dctmSession);
 	}
 
 	/*
@@ -353,7 +350,7 @@ public class DctmDocument extends DctmObject {
 							String aclDomain = parentFldrACL.getDomain();
 							int vStamp = antecedentVersion.getVStamp();
 							antecedentVersion
-								.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_VERSION, null);
+							.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_VERSION, null);
 							antecedentVersion.save();
 							restoreACLObjectList.add(new restoreOldACLInfo(aclName, aclDomain, antecedentVersion
 								.getObjectId().getId(), vStamp));
@@ -432,8 +429,8 @@ public class DctmDocument extends DctmObject {
 						DctmDocument.docs_skipped.incrementAndGet();
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 							DctmDocument.logger
-								.debug("Identical version of document already exist in target repo with id: "
-									+ sysObject.getObjectId().getId() + " and name: " + sysObject.getObjectName());
+							.debug("Identical version of document already exist in target repo with id: "
+								+ sysObject.getObjectId().getId() + " and name: " + sysObject.getObjectName());
 						}
 					} else {
 						doesExistingObjectNeedsUpdate = true;
@@ -832,7 +829,7 @@ public class DctmDocument extends DctmObject {
 	 *             Signals that DFC Exception has occurred.
 	 */
 	private static void setContentFilesInCMS(IDfSysObject sysObject, DctmDocument dctmDoc) throws IOException,
-		DfException {
+	DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started setting content files of document with name: "
 				+ sysObject.getObjectName());
@@ -945,7 +942,7 @@ public class DctmDocument extends DctmObject {
 
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger
-				.info("Finished exporting dctm dm_document and supporting objects from repository for ID: " + srcObjID);
+			.info("Finished exporting dctm dm_document and supporting objects from repository for ID: " + srcObjID);
 		}
 		return dctmDocument;
 	}
@@ -1124,7 +1121,7 @@ public class DctmDocument extends DctmObject {
 				StringBuffer contentDQLBuffer = new StringBuffer(
 					"select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, ");
 				contentDQLBuffer
-					.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
+				.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
 				contentDQLBuffer.append("from dmr_content_r  dcr, dmr_content_s dcs ");
 				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
 				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
@@ -1261,8 +1258,8 @@ public class DctmDocument extends DctmObject {
 		String pageModifier = dctmContent.getPageModifier();
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
-				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
-					+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
+			.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+				+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
 		}
 		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
 // ByteArrayInputStream
@@ -1324,16 +1321,16 @@ public class DctmDocument extends DctmObject {
 		String pageModifier, int contentDataTicket) throws IOException, DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
-				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
-					+ contentObjID
-					+ ", "
-					+ contentFormat
-					+ ", "
-					+ pageNbr
-					+ ", "
-					+ pageModifier
-					+ ", "
-					+ contentDataTicket + ">");
+			.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+				+ contentObjID
+				+ ", "
+				+ contentFormat
+				+ ", "
+				+ pageNbr
+				+ ", "
+				+ pageModifier
+				+ ", "
+				+ contentDataTicket + ">");
 		}
 		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
 // ByteArrayInputStream

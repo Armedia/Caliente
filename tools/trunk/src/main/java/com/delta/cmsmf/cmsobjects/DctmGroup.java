@@ -53,9 +53,7 @@ public class DctmGroup extends DctmObject {
 	 * Instantiates a new DctmGroup object.
 	 */
 	public DctmGroup() {
-		super();
-		// set dctmObjectType to dctm_group
-		this.dctmObjectType = DctmObjectType.DCTM_GROUP;
+		super(DctmObjectType.DCTM_GROUP);
 	}
 
 	/**
@@ -65,7 +63,7 @@ public class DctmGroup extends DctmObject {
 	 *            the existing documentum CMS session
 	 */
 	public DctmGroup(IDfSession dctmSession) {
-		super(dctmSession);
+		super(dctmSession, DctmObjectType.DCTM_GROUP);
 	}
 
 	/*

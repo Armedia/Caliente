@@ -40,7 +40,7 @@ public class DctmObjectWriter {
 		if (dctmObj != null) {
 			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
 				DctmObjectWriter.logger
-				.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
+					.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
 			}
 
 			try {
@@ -58,7 +58,7 @@ public class DctmObjectWriter {
 			}
 
 			// Update appropriate counter
-			AppCounter.getObjectCounter().incrementCounter(dctmObj.dctmObjectType);
+			AppCounter.getObjectCounter().incrementCounter(dctmObj.getObjectType());
 
 			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
 				DctmObjectWriter.logger.info("Finished serializing the object to filesystem "

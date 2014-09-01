@@ -157,9 +157,6 @@ public class DctmReferenceDocument extends DctmDocument {
 	 */
 	public DctmReferenceDocument() {
 		super();
-
-		// set dctmObjectType to dctm_document
-		this.dctmObjectType = DctmObjectType.DCTM_DOCUMENT;
 	}
 
 	/**

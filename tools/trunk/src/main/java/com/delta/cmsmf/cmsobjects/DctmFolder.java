@@ -65,9 +65,7 @@ public class DctmFolder extends DctmObject {
 	 * Instantiates a new dctm folder.
 	 */
 	public DctmFolder() {
-		super();
-		// set dctmObjectType to dctm_folder
-		this.dctmObjectType = DctmObjectType.DCTM_FOLDER;
+		super(DctmObjectType.DCTM_FOLDER);
 	}
 
 	/**
@@ -77,7 +75,7 @@ public class DctmFolder extends DctmObject {
 	 *            the existing documentum CMS session
 	 */
 	public DctmFolder(IDfSession dctmSession) {
-		super(dctmSession);
+		super(dctmSession, DctmObjectType.DCTM_FOLDER);
 	}
 
 	/*

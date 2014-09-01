@@ -67,7 +67,7 @@ public abstract class DctmObject implements Serializable {
 	 *
 	 * @see DctmObjectType
 	 */
-	public DctmObjectType dctmObjectType = null;
+	private final DctmObjectType dctmObjectType;
 
 	/** The attributes map. */
 	private final Map<String, DctmAttribute> attrMap = new HashMap<String, DctmAttribute>();
@@ -80,8 +80,8 @@ public abstract class DctmObject implements Serializable {
 	/**
 	 * Instantiates a new dctm object.
 	 */
-	public DctmObject() {
-		super();
+	public DctmObject(DctmObjectType type) {
+		this.dctmObjectType = type;
 	}
 
 	/**
@@ -90,9 +90,13 @@ public abstract class DctmObject implements Serializable {
 	 * @param dctmSession
 	 *            the documentum session
 	 */
-	public DctmObject(IDfSession dctmSession) {
-		super();
+	public DctmObject(IDfSession dctmSession, DctmObjectType type) {
+		this(type);
 		this.dctmSession = dctmSession;
+	}
+
+	public final DctmObjectType getObjectType() {
+		return this.dctmObjectType;
 	}
 
 	/**

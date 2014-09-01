@@ -66,9 +66,7 @@ public class DctmType extends DctmObject {
 	 * Instantiates a new DctmType object.
 	 */
 	public DctmType() {
-		super();
-		// set dctmObjectType to dctm_type
-		this.dctmObjectType = DctmObjectType.DCTM_TYPE;
+		super(DctmObjectType.DCTM_TYPE);
 	}
 
 	/**
@@ -78,7 +76,7 @@ public class DctmType extends DctmObject {
 	 *            the existing documentum CMS session
 	 */
 	public DctmType(IDfSession dctmSession) {
-		super(dctmSession);
+		super(dctmSession, DctmObjectType.DCTM_TYPE);
 	}
 
 	/*

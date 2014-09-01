@@ -38,9 +38,7 @@ public class DctmContent extends DctmObject {
 	 * Instantiates a new DctmContent object.
 	 */
 	public DctmContent() {
-		super();
-		// set dctmObjectType to dctm_format
-		this.dctmObjectType = DctmObjectType.DCTM_CONTENT;
+		super(DctmObjectType.DCTM_CONTENT);
 	}
 
 	/**
@@ -50,7 +48,7 @@ public class DctmContent extends DctmObject {
 	 *            the existing documentum CMS session
 	 */
 	public DctmContent(IDfSession dctmSession) {
-		super(dctmSession);
+		super(dctmSession, DctmObjectType.DCTM_CONTENT);
 	}
 
 	/**

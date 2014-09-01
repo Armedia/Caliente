@@ -44,9 +44,7 @@ public class DctmFormat extends DctmObject {
 	 * Instantiates a new DctmFormat object.
 	 */
 	public DctmFormat() {
-		super();
-		// set dctmObjectType to dctm_format
-		this.dctmObjectType = DctmObjectType.DCTM_FORMAT;
+		super(DctmObjectType.DCTM_FORMAT);
 	}
 
 	/**
@@ -56,7 +54,7 @@ public class DctmFormat extends DctmObject {
 	 *            the existing documentum CMS session
 	 */
 	public DctmFormat(IDfSession dctmSession) {
-		super(dctmSession);
+		super(dctmSession, DctmObjectType.DCTM_FORMAT);
 	}
 
 	/*
