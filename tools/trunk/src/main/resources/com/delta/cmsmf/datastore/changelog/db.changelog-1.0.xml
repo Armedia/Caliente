@@ -21,7 +21,7 @@
 			<column name="content_path" type="varchar(256)" />
 		</createTable>
 		<addPrimaryKey tableName="dctm_object" columnNames="object_id" />
-		<createIndex tableName="dctm_object" indexName="idx_dctm_object_type">
+		<createIndex tableName="dctm_object" indexName="idx_dctm_object_type" unique="true">
 			<column name="object_type" />
 			<column name="object_number" />
 		</createIndex>
@@ -34,6 +34,7 @@
 		<addAutoIncrement tableName="dctm_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>
 
 		<!-- The dependency relationships table -->
+		<!--
 		<createTable tableName="dctm_dependency">
 			<column name="object_id" type="varchar(32)">
 				<constraints nullable="false" />
@@ -55,6 +56,7 @@
 			<column name="dependency_id" />
 			<column name="object_id" />
 		</createIndex>
+		-->
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="dctm_attribute">
@@ -108,8 +110,8 @@
 		<addPrimaryKey tableName="dctm_attribute_value"
 			columnNames="object_id, attribute_name, value_number" />
 		<addForeignKeyConstraint constraintName="fk_dctm_attribute_value_attribute"
-			baseTableName="dctm_attribute" baseColumnNames="object_id"
-			referencedTableName="dctm_object" referencedColumnNames="object_id"
+			baseTableName="dctm_attribute_value" baseColumnNames="object_id, attribute_name"
+			referencedTableName="dctm_attribute" referencedColumnNames="object_id, attribute_name"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>
