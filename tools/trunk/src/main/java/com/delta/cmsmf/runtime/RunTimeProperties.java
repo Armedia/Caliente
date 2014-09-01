@@ -2,6 +2,7 @@ package com.delta.cmsmf.runtime;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrTokenizer;
@@ -21,6 +22,18 @@ import com.documentum.fc.common.DfException;
  * @author Shridev Makim 6/15/2010
  */
 public class RunTimeProperties {
+
+	/** The singleton instance. */
+	private static RunTimeProperties singletonInstance;
+
+	/** The target repository operator name. */
+	private String targetRepoOperatorName = "";
+
+	/** The list of attribute names whose value should be checked for repository operator name. */
+	public Set<String> attrsToCheckForRepoOperatorName = null;
+
+	/** The import process error count. */
+	private AtomicInteger importProcessErrorCount = new AtomicInteger(0);
 
 	/**
 	 * Instantiates a new run time properties. Private constructor to prevent
@@ -43,23 +56,6 @@ public class RunTimeProperties {
 		return RunTimeProperties.singletonInstance;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#clone()
-	 */
-	@Override
-	public Object clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException();
-		// prevent generation of a clone
-	}
-
-	/** The singleton instance. */
-	private static RunTimeProperties singletonInstance;
-
-	/** The target repository operator name. */
-	private String targetRepoOperatorName = "";
-
 	/**
 	 * Gets the target repository operator name.
 	 *
@@ -77,9 +73,6 @@ public class RunTimeProperties {
 		return this.targetRepoOperatorName;
 	}
 
-	/** The list of attribute names whose value should be checked for repository operator name. */
-	public Set<String> attrsToCheckForRepoOperatorName = null;
-
 	/**
 	 * Gets the list of attribute names to check for repository operator name.
 	 *
@@ -95,23 +88,20 @@ public class RunTimeProperties {
 		return this.attrsToCheckForRepoOperatorName;
 	}
 
-	/** The import process error count. */
-	private int importProcessErrorCount = 0;
-
 	/**
 	 * Gets the current import process error count.
 	 *
 	 * @return the import process error count
 	 */
 	public int getImportProcessErrorCount() {
-		return this.importProcessErrorCount;
+		return this.importProcessErrorCount.get();
 	}
 
 	/**
 	 * Increments import process error count by 1.
 	 */
-	public void incrementImportProcessErrorCount() {
-		this.importProcessErrorCount++;
+	public int incrementImportProcessErrorCount() {
+		return this.importProcessErrorCount.incrementAndGet();
 	}
 
 }
