@@ -2,7 +2,6 @@ package com.delta.cmsmf.datastore;
 
 import java.util.Date;
 
-import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
 import com.documentum.fc.common.IDfValue;
@@ -12,7 +11,7 @@ public enum DataType {
 	DF_BOOLEAN(IDfValue.DF_BOOLEAN) {
 		@Override
 		public IDfValue doDecode(String value) {
-			return new DfValue(Boolean.valueOf(value), IDfValue.DF_BOOLEAN);
+			return new DfValue(value, IDfValue.DF_BOOLEAN);
 		}
 
 		@Override
@@ -23,7 +22,7 @@ public enum DataType {
 	DF_INTEGER(IDfValue.DF_INTEGER) {
 		@Override
 		public IDfValue doDecode(String value) {
-			return new DfValue(Integer.parseInt(value), IDfValue.DF_INTEGER);
+			return new DfValue(value, IDfValue.DF_INTEGER);
 		}
 
 		@Override
@@ -50,7 +49,7 @@ public enum DataType {
 
 		@Override
 		public IDfValue doDecode(String value) {
-			return new DfValue(new DfId(value), IDfValue.DF_ID);
+			return new DfValue(value, IDfValue.DF_ID);
 		}
 
 		@Override
@@ -104,12 +103,12 @@ public enum DataType {
 	DF_DOUBLE(IDfValue.DF_DOUBLE) {
 		@Override
 		public String doEncode(IDfValue value) {
-			return String.format("%d", Double.doubleToRawLongBits(value.asDouble()));
+			return Double.toHexString(value.asDouble());
 		}
 
 		@Override
 		public IDfValue doDecode(String value) {
-			return new DfValue(Long.parseLong(value), IDfValue.DF_DOUBLE);
+			return new DfValue(value, IDfValue.DF_DOUBLE);
 		}
 
 		@Override
