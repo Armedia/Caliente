@@ -36,7 +36,7 @@ public class DataAttribute implements Iterable<IDfValue> {
 	DataAttribute(ResultSet rs) throws SQLException {
 		this.name = rs.getString("attribute_name");
 		this.id = rs.getString("attribute_id");
-		this.type = DataType.values()[rs.getInt("attribute_type")];
+		this.type = DataType.valueOf(rs.getString("attribute_type"));
 		this.repeating = rs.getBoolean("is_repeating");
 		this.qualifiable = rs.getBoolean("is_qualifiable");
 		this.length = rs.getInt("attribute_length");
