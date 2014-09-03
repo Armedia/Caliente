@@ -20,8 +20,10 @@ public class DataObject implements Iterable<DataAttribute> {
 	private final String id;
 	private final boolean contentHolder;
 	private final String contentPath;
-	private final Map<String, DataAttribute> attributes;
 	private boolean attributesLoaded = false;
+	private final Map<String, DataAttribute> attributes;
+	private boolean propertiesLoaded = false;
+	private final Map<String, DataProperty> properties;
 
 	DataObject(ResultSet rs) throws SQLException {
 		this.id = rs.getString("object_id");
@@ -29,6 +31,7 @@ public class DataObject implements Iterable<DataAttribute> {
 		this.contentHolder = rs.getBoolean("has_content");
 		this.contentPath = rs.getString("content_path");
 		this.attributes = new HashMap<String, DataAttribute>();
+		this.properties = new HashMap<String, DataProperty>();
 	}
 
 	void loadAttributes(ResultSet rs) throws SQLException {
@@ -46,6 +49,24 @@ public class DataObject implements Iterable<DataAttribute> {
 				this.attributes.clear();
 			}
 			this.attributesLoaded = ok;
+		}
+	}
+
+	void loadProperties(ResultSet rs) throws SQLException {
+		if (this.propertiesLoaded) { throw new IllegalArgumentException(String.format(
+			"The properties for object [%s] have already been loaded", this.id)); }
+		boolean ok = false;
+		try {
+			while (rs.next()) {
+				DataProperty property = new DataProperty(rs);
+				this.properties.put(property.getName(), property);
+			}
+			ok = true;
+		} finally {
+			if (!ok) {
+				this.properties.clear();
+			}
+			this.propertiesLoaded = ok;
 		}
 	}
 
@@ -68,6 +89,8 @@ public class DataObject implements Iterable<DataAttribute> {
 			this.attributes.put(attribute.getName(), attribute);
 		}
 		this.attributesLoaded = true;
+		this.properties = new HashMap<String, DataProperty>();
+		this.propertiesLoaded = true;
 	}
 
 	public DataObject(DctmObjectType type, String id, boolean contentHolder, String contentPath,
@@ -86,6 +109,8 @@ public class DataObject implements Iterable<DataAttribute> {
 			this.attributes.put(attribute.getName(), attribute);
 		}
 		this.attributesLoaded = true;
+		this.properties = new HashMap<String, DataProperty>();
+		this.propertiesLoaded = true;
 	}
 
 	public DctmObjectType getType() {
@@ -114,6 +139,28 @@ public class DataObject implements Iterable<DataAttribute> {
 
 	public int getAttributeCount() {
 		return this.attributes.size();
+	}
+
+	public DataProperty getProperty(String name) {
+		return this.properties.get(name);
+	}
+
+	public Set<String> getPropertyNames() {
+		return Collections.unmodifiableSet(this.properties.keySet());
+	}
+
+	public int getPropertyCount() {
+		return this.properties.size();
+	}
+
+	public DataProperty removeProperty(String name) {
+		if (name == null) { throw new IllegalArgumentException("Property name must not be null"); }
+		return this.properties.remove(name);
+	}
+
+	public DataProperty setProperty(DataProperty property) {
+		if (property == null) { throw new IllegalArgumentException("Property must not be null"); }
+		return this.properties.put(property.getName(), property);
 	}
 
 	@Override

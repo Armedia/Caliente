@@ -75,9 +75,6 @@
 			<column name="attribute_length" type="integer">
 				<constraints nullable="false" />
 			</column>
-			<column name="is_internal" type="boolean">
-				<constraints nullable="false" />
-			</column>
 			<column name="is_qualifiable" type="boolean">
 				<constraints nullable="false" />
 			</column>
@@ -112,6 +109,50 @@
 		<addForeignKeyConstraint constraintName="fk_dctm_attribute_value_attribute"
 			baseTableName="dctm_attribute_value" baseColumnNames="object_id, attribute_name"
 			referencedTableName="dctm_attribute" referencedColumnNames="object_id, attribute_name"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<!-- The property descriptor table -->
+		<createTable tableName="dctm_property">
+			<column name="object_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="property_name" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="property_type" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_repeating" type="boolean">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="dctm_property" columnNames="object_id, property_name" />
+		<addForeignKeyConstraint constraintName="fk_dctm_property_object"
+			baseTableName="dctm_property" baseColumnNames="object_id"
+			referencedTableName="dctm_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<!-- The property values table -->
+		<createTable tableName="dctm_property_value">
+			<column name="object_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="property_name" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="value_number" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="is_null" type="boolean">
+				<constraints nullable="false" />
+			</column>
+			<column name="data" type="text" />
+		</createTable>
+		<addPrimaryKey tableName="dctm_property_value"
+			columnNames="object_id, property_name, value_number" />
+		<addForeignKeyConstraint constraintName="fk_dctm_property_value_property"
+			baseTableName="dctm_property_value" baseColumnNames="object_id, property_name"
+			referencedTableName="dctm_property" referencedColumnNames="object_id, property_name"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>

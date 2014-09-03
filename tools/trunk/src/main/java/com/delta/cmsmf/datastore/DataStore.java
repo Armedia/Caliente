@@ -11,6 +11,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Collections;
 
 import javax.sql.DataSource;
@@ -55,12 +56,33 @@ public class DataStore {
 		public boolean handle(DataObject dataObject) throws Exception;
 	}
 
+	public static interface PropertyReader {
+		public boolean handleAsProperty(String attributeName);
+
+		public Collection<DataProperty> readProperties(IDfPersistentObject obj) throws DfException;
+	}
+
+	private static final PropertyReader NULL_PROPERTY_READER = new PropertyReader() {
+
+		@Override
+		public Collection<DataProperty> readProperties(IDfPersistentObject obj) throws DfException {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public boolean handleAsProperty(String attributeName) {
+			return false;
+		}
+	};
+
 	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from dctm_object where object_id = ?";
 
 	private static final String INSERT_OBJECT_SQL = "insert into dctm_object (object_id, object_type, has_content, content_path) values (?, ?, ?, ?)";
 	private static final String INSERT_DEPENDENCY_SQL = "insert into dctm_dependency (object_id, dependency_id) values (?, ?)";
-	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, attribute_name, attribute_id, attribute_type, attribute_length, is_internal, is_qualifiable, is_repeating) values (?, ?, ?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, attribute_name, attribute_id, attribute_type, attribute_length, is_qualifiable, is_repeating) values (?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, attribute_name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, property_name, property_type, is_repeating) values (?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, property_name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
 	/*
 	private static final String LOAD_EVERYTHING_SQL = //
 		"    select o.*, a.*, v.* " + //
@@ -237,16 +259,37 @@ public class DataStore {
 	}
 
 	public static boolean serializeObject(IDfPersistentObject object) throws SQLException, DfException {
-		return DataStore.serializeObject(object, (String) null);
+		return DataStore.serializeObject(object, (String) null, DataStore.NULL_PROPERTY_READER);
+	}
+
+	public static boolean serializeObject(IDfPersistentObject object, PropertyReader propertyReader)
+		throws SQLException, DfException {
+		return DataStore.serializeObject(object, (String) null, propertyReader);
 	}
 
 	public static boolean serializeObject(IDfPersistentObject object, IDfId dependentId) throws SQLException,
 		DfException {
-		return DataStore.serializeObject(object, (dependentId == null ? null : dependentId.getId()));
+		return DataStore.serializeObject(object, (dependentId == null ? null : dependentId.getId()),
+			DataStore.NULL_PROPERTY_READER);
+	}
+
+	public static boolean serializeObject(IDfPersistentObject object, IDfId dependentId, PropertyReader propertyReader)
+		throws SQLException, DfException {
+		return DataStore.serializeObject(object, (dependentId == null ? null : dependentId.getId()), propertyReader);
 	}
 
 	public static boolean serializeObject(IDfPersistentObject object, String dependentId) throws SQLException,
-		DfException {
+	DfException {
+		return DataStore.serializeObject(object, dependentId, DataStore.NULL_PROPERTY_READER);
+	}
+
+	public static boolean serializeObject(IDfPersistentObject object, String dependentId, PropertyReader propertyReader)
+		throws SQLException, DfException {
+		if (propertyReader == null) {
+			// Safeguard...
+			propertyReader = DataStore.NULL_PROPERTY_READER;
+		}
+
 		// First...is the object
 		// Put the object and its attributes into the state database
 		boolean ok = false;
@@ -285,6 +328,11 @@ public class DataStore {
 			for (int i = 0; i < attCount; i++) {
 				final IDfAttr att = object.getAttr(i);
 				final String name = att.getName();
+				// If this attribute is to be handled as a property, then we
+				// avoid storing it so it won't cause problems later on
+				if (propertyReader.handleAsProperty(name)) {
+					continue;
+				}
 				final boolean repeating = att.isRepeating();
 				final int type = att.getDataType();
 				final DataType cvt = DataType.fromDfConstant(type);
@@ -322,6 +370,45 @@ public class DataStore {
 				}
 				// Insert the values, as a batch
 				qr.insertBatch(c, DataStore.INSERT_ATTRIBUTE_VALUE_SQL, DataStore.HANDLER_NULL, values);
+			}
+
+			Object[] propData = new Object[4];
+			propData[0] = objectId;
+			Collection<DataProperty> properties = propertyReader.readProperties(object);
+			if ((properties != null) && !properties.isEmpty()) {
+				for (final DataProperty prop : properties) {
+					final String name = prop.getName();
+					final boolean repeating = prop.isRepeating();
+					final DataType type = prop.getType();
+
+					// DO NOT process "undefined" attribute values
+					if (type == DataType.DF_UNDEFINED) {
+						DataStore.LOG.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]", objectId,
+							name));
+						continue;
+					}
+
+					propData[1] = name;
+					propData[2] = type;
+					propData[3] = repeating;
+
+					// Insert the property
+					qr.insert(c, DataStore.INSERT_PROPERTY_SQL, DataStore.HANDLER_NULL, propData);
+
+					attValue[1] = name; // This never changes inside this next loop
+
+					Object[][] values = new Object[prop.getValueCount()][];
+					int v = 0;
+					for (IDfValue value : prop) {
+						attValue[2] = v;
+						attValue[3] = ((value == null) || (value.asString() == null));
+						attValue[4] = type.encode(value);
+						values[v] = attValue.clone();
+						v++;
+					}
+					// Insert the values, as a batch
+					qr.insertBatch(c, DataStore.INSERT_PROPERTY_VALUE_SQL, DataStore.HANDLER_NULL, values);
+				}
 			}
 			ok = true;
 			return true;
@@ -367,10 +454,12 @@ public class DataStore {
 
 			// Then, insert its attributes
 			Object[] attData = new Object[8];
+			Object[] propData = new Object[4];
 			Object[] attValue = new Object[5];
 			attData[0] = objectId; // This should never change within the loop
+			propData[0] = objectId; // This should never change within the loop
 			attValue[0] = objectId; // This should never change within the loop
-			for (DataAttribute attribute : object) {
+			for (final DataAttribute attribute : object) {
 				final String name = attribute.getName();
 				final boolean repeating = attribute.isRepeating();
 				final DataType type = attribute.getType();
@@ -405,6 +494,40 @@ public class DataStore {
 				}
 				// Insert the values, as a batch
 				qr.insertBatch(c, DataStore.INSERT_ATTRIBUTE_VALUE_SQL, DataStore.HANDLER_NULL, values);
+			}
+
+			// Then, the properties
+			for (final String name : object.getPropertyNames()) {
+				final DataProperty property = object.getProperty(name);
+				final boolean repeating = property.isRepeating();
+				final DataType type = property.getType();
+
+				// DO NOT process "undefined" property values
+				if (type == DataType.DF_UNDEFINED) {
+					DataStore.LOG.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]", objectId, name));
+					continue;
+				}
+
+				attData[1] = name;
+				attData[2] = type.name();
+				attData[3] = repeating;
+
+				// Insert the attribute
+				qr.insert(c, DataStore.INSERT_PROPERTY_SQL, DataStore.HANDLER_NULL, attData);
+
+				attValue[1] = name; // This never changes inside this next loop
+				Object[][] values = new Object[property.getValueCount()][];
+				int v = 0;
+				// No special treatment, simply dump out all the values
+				for (IDfValue value : property) {
+					attValue[2] = v;
+					attValue[3] = ((value == null) || (value.asString() == null));
+					attValue[4] = type.encode(value);
+					values[v] = attValue.clone();
+					v++;
+				}
+				// Insert the values, as a batch
+				qr.insertBatch(c, DataStore.INSERT_PROPERTY_VALUE_SQL, DataStore.HANDLER_NULL, values);
 			}
 			ok = true;
 			return true;
