@@ -184,7 +184,7 @@ public class DataAttribute implements Iterable<IDfValue> {
 		return this.values.get(idx);
 	}
 
-	public IDfValue getValue() {
+	public IDfValue getSingleValue() {
 		if (this.values.isEmpty()) { return null; }
 		return getValue(0);
 	}
