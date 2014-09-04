@@ -60,6 +60,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>utilities</artifactId>
+			<version>0.2.6</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>commons-collections</groupId>
 			<artifactId>commons-collections</artifactId>
 			<version>3.2.1</version>
