@@ -2,6 +2,7 @@ package com.delta.cmsmf.datastore;
 
 import java.util.Date;
 
+import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
 import com.documentum.fc.common.IDfValue;
@@ -9,6 +10,8 @@ import com.documentum.fc.common.IDfValue;
 public enum DataType {
 
 	DF_BOOLEAN(IDfValue.DF_BOOLEAN) {
+		private final IDfValue clearValue = DfValueFactory.newBooleanValue(false);
+
 		@Override
 		public IDfValue doDecode(String value) {
 			return new DfValue(value, IDfValue.DF_BOOLEAN);
@@ -18,8 +21,15 @@ public enum DataType {
 		protected Object doGetValue(IDfValue value) {
 			return value.asBoolean();
 		}
+
+		@Override
+		public IDfValue getClearingValue() {
+			return this.clearValue;
+		}
 	},
 	DF_INTEGER(IDfValue.DF_INTEGER) {
+		private final IDfValue clearValue = DfValueFactory.newIntValue(0);
+
 		@Override
 		public IDfValue doDecode(String value) {
 			return new DfValue(value, IDfValue.DF_INTEGER);
@@ -29,8 +39,15 @@ public enum DataType {
 		protected Object doGetValue(IDfValue value) {
 			return value.asInteger();
 		}
+
+		@Override
+		public IDfValue getClearingValue() {
+			return this.clearValue;
+		}
 	},
 	DF_STRING(IDfValue.DF_STRING) {
+		private final IDfValue clearValue = DfValueFactory.newStringValue("");
+
 		@Override
 		public IDfValue doDecode(String value) {
 			return new DfValue(value, IDfValue.DF_STRING);
@@ -40,8 +57,15 @@ public enum DataType {
 		protected Object doGetValue(IDfValue value) {
 			return value.asString();
 		}
+
+		@Override
+		public IDfValue getClearingValue() {
+			return this.clearValue;
+		}
 	},
 	DF_ID(IDfValue.DF_ID) {
+		private final IDfValue clearValue = DfValueFactory.newIdValue(DfId.DF_NULLID);
+
 		@Override
 		public String doEncode(IDfValue value) {
 			return value.asId().getId();
@@ -56,19 +80,25 @@ public enum DataType {
 		protected Object doGetValue(IDfValue value) {
 			return value.asId();
 		}
+
+		@Override
+		public IDfValue getClearingValue() {
+			return this.clearValue;
+		}
 	},
 	DF_TIME(IDfValue.DF_TIME) {
-		private final String NULL_DATE = "{NULL_DATE}";
-		private final IDfValue NULL_VALUE = new DfValue(new DfTime((Date) null));
+		private final String nullDate = "{NULL_DATE}";
+		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
+		private final IDfValue clearValue = this.nullValue;
 
 		@Override
 		protected boolean isNullEncoding(String value) {
-			return ((value == null) || this.NULL_DATE.equals(value));
+			return ((value == null) || this.nullDate.equals(value));
 		}
 
 		@Override
 		protected String getNullEncoding() {
-			return this.NULL_DATE;
+			return this.nullDate;
 		}
 
 		@Override
@@ -78,7 +108,7 @@ public enum DataType {
 
 		@Override
 		protected IDfValue getNullValue() {
-			return this.NULL_VALUE;
+			return this.nullValue;
 		}
 
 		@Override
@@ -88,19 +118,23 @@ public enum DataType {
 
 		@Override
 		public IDfValue doDecode(String value) {
-			Date date = null;
-			if (!this.NULL_DATE.equalsIgnoreCase(value)) {
-				date = new Date(Long.parseLong(value));
-			}
-			return new DfValue(new DfTime(date));
+			if (this.nullDate.equalsIgnoreCase(value)) { return getNullValue(); }
+			return new DfValue(new DfTime(new Date(Long.parseLong(value))));
 		}
 
 		@Override
 		protected Object doGetValue(IDfValue value) {
 			return value.asTime();
 		}
+
+		@Override
+		public IDfValue getClearingValue() {
+			return this.clearValue;
+		}
 	},
 	DF_DOUBLE(IDfValue.DF_DOUBLE) {
+		private final IDfValue clearValue = DfValueFactory.newDoubleValue(0.0);
+
 		@Override
 		public String doEncode(IDfValue value) {
 			return Double.toHexString(value.asDouble());
@@ -115,21 +149,35 @@ public enum DataType {
 		protected Object doGetValue(IDfValue value) {
 			return value.asDouble();
 		}
+
+		@Override
+		public IDfValue getClearingValue() {
+			return this.clearValue;
+		}
 	},
 	DF_UNDEFINED(IDfValue.DF_UNDEFINED) {
+		private <T> T fail() {
+			throw new RuntimeException("Can't handle DF_UNDEFINED");
+		}
+
 		@Override
 		public String doEncode(IDfValue value) {
-			throw new RuntimeException("Can't handle DF_UNDEFINED");
+			return fail();
 		}
 
 		@Override
 		public IDfValue doDecode(String value) {
-			throw new RuntimeException("Can't handle DF_UNDEFINED");
+			return fail();
 		}
 
 		@Override
 		protected Object doGetValue(IDfValue value) {
-			throw new RuntimeException("Can't handle DF_UNDEFINED");
+			return fail();
+		}
+
+		@Override
+		public IDfValue getClearingValue() {
+			return fail();
 		}
 	};
 
@@ -142,6 +190,8 @@ public enum DataType {
 	public final int getDfConstant() {
 		return this.dfConstant;
 	}
+
+	public abstract IDfValue getClearingValue();
 
 	protected String getNullEncoding() {
 		return null;
