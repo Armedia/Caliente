@@ -188,6 +188,14 @@ public class DataProperty implements Iterable<IDfValue> {
 		return getValue(0);
 	}
 
+	public boolean isSame(DataProperty other) {
+		if (other == null) { return false; }
+		if (!this.name.equals(other.name)) { return false; }
+		if (this.type != other.type) { return false; }
+		if (this.repeating != other.repeating) { return false; }
+		return true;
+	}
+
 	@Override
 	public Iterator<IDfValue> iterator() {
 		return new Iterator<IDfValue>() {

@@ -193,6 +193,17 @@ public class DataAttribute implements Iterable<IDfValue> {
 		return Collections.unmodifiableList(this.values);
 	}
 
+	public boolean isSame(DataAttribute other) {
+		if (other == null) { return false; }
+		if (other == this) { return true; }
+		if (!this.name.equals(other.name)) { return false; }
+		if (this.type != other.type) { return false; }
+		if (this.repeating != other.repeating) { return false; }
+		if (this.qualifiable != other.qualifiable) { return false; }
+		if (this.length != other.length) { return false; }
+		return true;
+	}
+
 	@Override
 	public Iterator<IDfValue> iterator() {
 		return new Iterator<IDfValue>() {
