@@ -163,7 +163,7 @@ public class DctmReferenceDocument extends DctmDocument {
 	public static String getDetailedReferenceDocumentImportReport() {
 		StringBuffer importReport = new StringBuffer();
 		importReport
-			.append("\nNo. of reference documents read from file: " + DctmReferenceDocument.ref_docs_read + ".");
+		.append("\nNo. of reference documents read from file: " + DctmReferenceDocument.ref_docs_read + ".");
 		importReport.append("\nNo. of reference documents skipped due to duplicates: "
 			+ DctmReferenceDocument.ref_docs_skipped + ".");
 		importReport.append("\nNo. of reference documents updated: " + DctmReferenceDocument.ref_docs_updated + ".");
@@ -310,7 +310,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Started exporting dctm mirror dm_document and supporting objects from repository");
+			.info("Started exporting dctm mirror dm_document and supporting objects from repository");
 		}
 
 		// NOTE: Mirror objects do not have content associated with them. They merely point to
@@ -343,8 +343,8 @@ public class DctmReferenceDocument extends DctmDocument {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Finished exporting dctm mirror dm_document and supporting objects from repository for ID: "
-					+ srcObjID);
+			.info("Finished exporting dctm mirror dm_document and supporting objects from repository for ID: "
+				+ srcObjID);
 		}
 		return dctmReferenceDocument;
 	}
@@ -384,8 +384,8 @@ public class DctmReferenceDocument extends DctmDocument {
 	private void getReferenceAttributesFromCMS(IDfDocument doc, String srcObjID) throws CMSMFException {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Started retrieving dctm mirror object attributes from repository for object with id: "
-					+ srcObjID);
+			.info("Started retrieving dctm mirror object attributes from repository for object with id: "
+				+ srcObjID);
 		}
 		IDfSession session = doc.getSession();
 		try {
@@ -396,19 +396,18 @@ public class DctmReferenceDocument extends DctmDocument {
 			final DataType type = DataType.DF_STRING;
 			DataObject dataObject = getDataObject();
 
-			DataProperty prop = new DataProperty("binding_condition", type, false, new DfValue(
+			DataProperty prop = new DataProperty("binding_condition", type, new DfValue(
 				this.bindingCondition = ref.getBindingCondition()));
 			dataObject.setProperty(prop);
 
-			prop = new DataProperty("binding_label", type, false,
-				new DfValue(this.bindingLabel = ref.getBindingLabel()));
+			prop = new DataProperty("binding_label", type, new DfValue(this.bindingLabel = ref.getBindingLabel()));
 			dataObject.setProperty(prop);
 
-			prop = new DataProperty("reference_by_id", type, false, new DfValue(this.referenceById = ref
-				.getReferenceById().getId()));
+			prop = new DataProperty("reference_by_id", type, new DfValue(this.referenceById = ref.getReferenceById()
+				.getId()));
 			dataObject.setProperty(prop);
 
-			prop = new DataProperty("reference_db_name", type, false, new DfValue(
+			prop = new DataProperty("reference_db_name", type, new DfValue(
 				this.referenceDbName = ref.getReferenceDbName()));
 			dataObject.setProperty(prop);
 		} catch (DfException e) {
@@ -416,8 +415,8 @@ public class DctmReferenceDocument extends DctmDocument {
 		}
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Finished retrieving dctm mirror object attributes from repository for object with id: "
-					+ srcObjID);
+			.info("Finished retrieving dctm mirror object attributes from repository for object with id: "
+				+ srcObjID);
 		}
 
 	}
@@ -459,7 +458,7 @@ public class DctmReferenceDocument extends DctmDocument {
 		throws CMSMFException {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Started retrieving parent folders from repository for document with id: " + srcObjID);
+			.info("Started retrieving parent folders from repository for document with id: " + srcObjID);
 		}
 		IDfSession session = sysObj.getSession();
 		try {
@@ -478,7 +477,7 @@ public class DctmReferenceDocument extends DctmDocument {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
-				.info("Finished retrieving parent folders from repository for document with id: " + srcObjID);
+			.info("Finished retrieving parent folders from repository for document with id: " + srcObjID);
 		}
 	}
 

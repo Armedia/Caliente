@@ -15,8 +15,6 @@ import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfAttr;
-import com.documentum.fc.common.IDfValue;
 
 /**
  * @author diego
@@ -29,27 +27,9 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	private static synchronized void initHandlers() {
 		if (CmsGroup.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
-
-			@Override
-			public Collection<IDfValue> getImportableValues(IDfPersistentObject object, DataAttribute attribute)
-				throws DfException {
-				return null;
-			}
-
-			@Override
-			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-				throws DfException {
-				return null;
-			}
-
 			@Override
 			public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
 				return false;
-			}
-
-			@Override
-			public boolean includeInExport(IDfPersistentObject object, IDfAttr attr) throws DfException {
-				return true;
 			}
 		};
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, DataType.DF_STRING,

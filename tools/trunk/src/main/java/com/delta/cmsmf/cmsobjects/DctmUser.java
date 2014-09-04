@@ -163,8 +163,8 @@ public class DctmUser extends DctmObject<IDfUser> {
 					if (usr.getUserName().equals(getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME))) {
 						if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 							DctmUser.logger
-							.debug("User name will not be updated because it's same as before. Currently in target repo: "
-								+ usr.getUserName());
+								.debug("User name will not be updated because it's same as before. Currently in target repo: "
+									+ usr.getUserName());
 						}
 						removeAttribute(DctmAttrNameConstants.USER_NAME);
 					}
@@ -376,7 +376,7 @@ public class DctmUser extends DctmObject<IDfUser> {
 			if (userDefaultACL == null) {
 				if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 					DctmUser.logger
-						.debug("The user's default Internal ACL does not exist and acl related attributes will be removed");
+					.debug("The user's default Internal ACL does not exist and acl related attributes will be removed");
 				}
 				removeAttribute(DctmAttrNameConstants.ACL_NAME);
 				removeAttribute(DctmAttrNameConstants.ACL_DOMAIN);
@@ -436,7 +436,7 @@ public class DctmUser extends DctmObject<IDfUser> {
 				IDfACL userDefaultACL = prsstntObj.getSession().getACL(user.getACLDomain(), user.getACLName());
 				dctmUser.doesUserHaveInternalACL = userDefaultACL.isInternal();
 				final DataType type = DataType.DF_BOOLEAN;
-				DataProperty prop = new DataProperty(DctmAttrNameConstants.ACL_NAME, type, false, new DfValue(
+				DataProperty prop = new DataProperty(DctmAttrNameConstants.ACL_NAME, type, new DfValue(
 					String.valueOf(dctmUser.doesUserHaveInternalACL), type.getDfConstant()));
 				getDataObject().setProperty(prop);
 

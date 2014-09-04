@@ -2,7 +2,6 @@ package com.delta.cmsmf.serialization;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.sql.SQLException;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -40,7 +39,7 @@ public class DctmObjectWriter {
 		if (dctmObj != null) {
 			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
 				DctmObjectWriter.logger
-				.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
+					.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
 			}
 
 			try {
@@ -51,8 +50,6 @@ public class DctmObjectWriter {
 					DctmObjectWriter.logger.warn(String.format("Object [%s] already serialized in the database",
 						dctmObj.getSrcObjectID()));
 				}
-			} catch (SQLException e) {
-				throw new CMSMFException(String.format("Failed to serialize object [%s]", dctmObj.getSrcObjectID()), e);
 			} catch (DfException e) {
 				throw new CMSMFException(String.format("Failed to serialize object [%s]", dctmObj.getSrcObjectID()), e);
 			}

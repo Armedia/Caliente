@@ -280,7 +280,7 @@ public class DctmACL extends DctmObject<IDfACL> {
 		int accessorCount = aclObj.getAccessorCount();
 
 		if (accessorCount > 0) {
-			DataProperty prop = new DataProperty(DctmAttrNameConstants.R_ACCESSOR_XPERMIT, DataType.DF_STRING, true);
+			DataProperty prop = new DataProperty(DctmAttrNameConstants.R_ACCESSOR_XPERMIT, DataType.DF_STRING);
 			getDataObject().setProperty(prop);
 			for (int i = 0; i < accessorCount; i++) {
 				this.accessorXPermitNames.add(aclObj.getAccessorXPermitNames(i));

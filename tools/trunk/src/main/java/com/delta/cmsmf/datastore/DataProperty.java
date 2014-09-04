@@ -103,11 +103,11 @@ public class DataProperty implements Iterable<IDfValue> {
 		this.valuesLoaded = true;
 	}
 
-	public DataProperty(String name, DataType type, boolean repeating, IDfValue... values) {
-		this(name, type, repeating, Arrays.asList(values));
+	public DataProperty(String name, DataType type, IDfValue... values) {
+		this(name, type, Arrays.asList(values));
 	}
 
-	public DataProperty(String name, DataType type, boolean repeating, Collection<IDfValue> values) {
+	public DataProperty(String name, DataType type, Collection<IDfValue> values) {
 		if (values == null) {
 			values = Collections.emptyList();
 		}
