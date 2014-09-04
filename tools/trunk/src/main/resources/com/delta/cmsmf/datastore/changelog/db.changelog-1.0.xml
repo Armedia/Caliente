@@ -34,7 +34,6 @@
 		<addAutoIncrement tableName="dctm_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>
 
 		<!-- The dependency relationships table -->
-		<!--
 		<createTable tableName="dctm_dependency">
 			<column name="object_id" type="varchar(32)">
 				<constraints nullable="false" />
@@ -56,7 +55,6 @@
 			<column name="dependency_id" />
 			<column name="object_id" />
 		</createIndex>
-		-->
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="dctm_attribute">
@@ -154,5 +152,23 @@
 			baseTableName="dctm_property_value" baseColumnNames="object_id, property_name"
 			referencedTableName="dctm_property" referencedColumnNames="object_id, property_name"
 			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<!-- The ID mapping table -->
+		<createTable tableName="dctm_mapper">
+			<column name="source_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="target_id" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="dctm_mapper" columnNames="source_id" />
+		<addForeignKeyConstraint constraintName="fk_dctm_mapper_object"
+			baseTableName="dctm_mapper" baseColumnNames="source_id"
+			referencedTableName="dctm_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="dctm_mapper" indexName="idx_dctm_mapper_reverse" unique="true">
+			<column name="target_id" />
+		</createIndex>
 	</changeSet>
 </databaseChangeLog>
