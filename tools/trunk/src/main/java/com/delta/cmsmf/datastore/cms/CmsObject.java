@@ -61,7 +61,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -135,7 +135,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			"Expected an object of type %s, but got one of type %s", this.type, type)); }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new IllegalArgumentException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 
 		this.id = object.getObjectId().getId();
 		this.contentPath = calculateContentPath(object);
@@ -162,6 +162,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		List<DataProperty> properties = new ArrayList<DataProperty>();
 		getDataProperties(properties, object);
 		for (DataProperty property : properties) {
+			// This mechanism overwrites properties, and intentionally so
 			this.properties.put(property.getName(), property);
 		}
 	}
@@ -225,6 +226,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					setAttributeInCMS(object, attribute);
 				}
 			}
+			applyDataProperties(getPropertyNames(), object);
 		} finally {
 			if (ok) {
 				session.commitTrans();
@@ -260,7 +262,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		IDfPersistentObject object = session.newObject(this.type.getDocumentumType());
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -268,7 +270,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -287,6 +289,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	protected void getDataProperties(Collection<DataProperty> properties, T object) throws DfException {
+	}
+
+	protected void applyDataProperties(Set<String> propertyNames, T object) throws DfException {
 	}
 
 	protected DataAttribute getSqlFilteredAttribute(IDfPersistentObject object, IDfAttr attribute) throws DfException {
@@ -310,7 +315,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 *             Signals that Dctm Server error has occurred.
 	 */
 	protected void setAttributesInCMS(T object, boolean updateVersionLabels, boolean isUpdate) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("Started setting attributes of persistent object");
 		}
