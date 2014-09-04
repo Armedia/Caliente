@@ -34,6 +34,10 @@ public class CmsUser extends CmsObject<IDfUser> {
 			DctmAttrNameConstants.USER_NAME, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
 			DctmAttrNameConstants.HOME_DOCBASE, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+			DctmAttrNameConstants.ACL_DOMAIN, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+			DctmAttrNameConstants.ACL_NAME, handler);
 		CmsUser.HANDLERS_READY = true;
 	}
 
