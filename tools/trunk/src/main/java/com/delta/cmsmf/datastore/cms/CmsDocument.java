@@ -6,12 +6,10 @@ package com.delta.cmsmf.datastore.cms;
 
 import java.util.Collection;
 
-import com.delta.cmsmf.datastore.DataAttribute;
 import com.delta.cmsmf.datastore.DataProperty;
 import com.documentum.fc.client.IDfDocument;
-import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfAttr;
 
 /**
  * @author diego
@@ -28,13 +26,8 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected DataAttribute getFilteredAttribute(boolean toCms, IDfPersistentObject object, IDfAttr attribute)
-		throws DfException {
-		return null;
-	}
-
-	@Override
-	protected AttributeMode getAttributeMode(String attributeName) {
+	protected IDfDocument locateInCms(IDfSession session) throws DfException {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

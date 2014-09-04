@@ -15,6 +15,7 @@ import java.util.Set;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cmsobjects.DctmAttribute;
 import com.delta.cmsmf.cmsobjects.DctmFormat;
 import com.delta.cmsmf.cmsobjects.DctmGroup;
@@ -24,6 +25,10 @@ import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataAttribute;
 import com.delta.cmsmf.datastore.DataProperty;
 import com.delta.cmsmf.datastore.DataType;
+import com.delta.cmsmf.datastore.DfValueFactory;
+import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
+import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -40,14 +45,6 @@ import com.documentum.fc.common.IDfValue;
 public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	protected final Logger logger = Logger.getLogger(getClass());
-
-	protected static enum AttributeMode {
-		//
-		COPY, // straight copy, no mod
-		FILTER_TO_SQL, // apply a filter to the value on the way to SQL
-		FILTER_TO_CMS, // apply a filter to the value on the way to CMS
-		IGNORE, // ignore the value - do not export as an attribute
-	}
 
 	private final CmsObjectType type;
 	private final Class<T> dfClass;
@@ -147,21 +144,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		for (int i = 0; i < attCount; i++) {
 			final IDfAttr attr = object.getAttr(i);
 			final String name = attr.getName();
-			switch (getAttributeMode(name)) {
-				case IGNORE:
-					// Do nothing
-					continue;
-
-				case FILTER_TO_SQL:
-					// Apply the outgoing filter
-					this.attributes.put(name, getFilteredAttribute(false, object, attr));
-					break;
-
-				case COPY:
-				case FILTER_TO_CMS: // this filter isn't applied here
-				default:
-					this.attributes.put(name, new DataAttribute(object, attr));
-					break;
+			AttributeHandler handler = CmsAttributeHandlers.getAttributeHandler(object, attr);
+			// Get the attribute handler
+			if (handler.includeInExport(object, attr)) {
+				DataAttribute attribute = new DataAttribute(object, attr, handler.getExportableValues(object, attr));
+				this.attributes.put(name, attribute);
 			}
 		}
 
@@ -177,8 +164,122 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
-	public final void saveToCMS(IDfSession session) throws DfException {
+	public final void saveToCMS(IDfSession session) throws DfException, CMSMFException {
+		if (this.logger.isEnabledFor(Level.INFO)) {
+			this.logger.info("Started setting attributes of persistent object");
+		}
+
+		boolean ok = false;
+		session.beginTrans();
+		try {
+			T object = locateInCms(session);
+			final boolean isUpdate = (object != null);
+			final boolean updateVersionLabels = isVersionable(object);
+			if (object == null) {
+				// Create a new object
+				object = newObject(session);
+			} else {
+				if (!isSameObject(object)) { return; }
+			}
+
+			if (isUpdate) {
+				// If an existing object is being updated, clear out all of its attributes that are
+				// not part of our attribute set
+				// NOTE Only clear non internal and not system attributes
+				// NOTE Do not clear group_name attribute for dm_group object
+				// NOTE Do not clear home_docbase attribute for dm_user object
+				// NOTE Do not clear user_name attribute for dm_user object
+				// NOTE Do not clear name attribute for dm_format object
+				Set<String> attributesBeingUpdated = getAttributeNames();
+				final int attributeCount = object.getAttrCount();
+				for (int i = 0; i < attributeCount; i++) {
+					final IDfAttr attr = object.getAttr(i);
+					final String name = attr.getName();
+					final DataAttribute dataAttribute = getAttribute(name);
+
+					// Skip stuff we didn't export
+					if (dataAttribute == null) {
+						continue;
+					}
+
+					AttributeHandler handler = getAttributeHandler(attr);
+					if (!name.startsWith("r_") && !name.startsWith("i_") && !attributesBeingUpdated.contains(name)
+						&& handler.includeInImport(object, getAttribute(name))) {
+						clearAttributeInCMS(object, dataAttribute);
+					}
+				}
+			}
+
+			// We remove the version labels as well
+			if (updateVersionLabels) {
+				object.removeAll(DctmAttrNameConstants.R_VERSION_LABEL);
+			}
+
+			// Set attributes
+			for (DataAttribute attribute : getAllAttributes()) {
+				// TODO check to see if we need to set any internal or system attributes of various
+				// types
+				final String name = attribute.getName();
+				final AttributeHandler handler = getAttributeHandler(attribute);
+
+				// for now ignore setting internal and system attributes
+				boolean doSet = (!name.startsWith("r_") && !name.startsWith("i_"));
+				// but process r_version_lebel
+				doSet |= (name.equals(DctmAttrNameConstants.R_VERSION_LABEL) && updateVersionLabels);
+				// allow for a last-minute interception...
+				doSet &= handler.includeInImport(object, attribute);
+
+				if (doSet) {
+					clearAttributeInCMS(object, attribute);
+					setAttributeInCMS(object, attribute);
+				}
+			}
+		} finally {
+			if (ok) {
+				session.commitTrans();
+			} else {
+				session.abortTrans();
+			}
+		}
 	}
+
+	protected final AttributeHandler getAttributeHandler(IDfAttr attr) {
+		return CmsAttributeHandlers.getAttributeHandler(this.type, attr);
+	}
+
+	protected final AttributeHandler getAttributeHandler(DataAttribute attr) {
+		return CmsAttributeHandlers.getAttributeHandler(this.type, attr);
+	}
+
+	protected boolean isVersionable(T object) throws DfException {
+		return false;
+	}
+
+	protected boolean isSameObject(T object) throws DfException {
+		DataAttribute dateAttribute = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE);
+		IDfValue objectDate = object.getValue(DctmAttrNameConstants.R_MODIFY_DATE);
+		IDfValue thisDate = dateAttribute.getSingleValue();
+		DataType type = dateAttribute.getType();
+		return Tools.equals(type.getValue(objectDate), type.getValue(thisDate));
+	}
+
+	protected final T newObject(IDfSession session) throws DfException {
+		IDfPersistentObject object = session.newObject(this.type.getDocumentumType());
+		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
+			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
+			.getClass().getCanonicalName())); }
+		return this.dfClass.cast(object);
+	}
+
+	protected final T castObject(IDfPersistentObject object) throws DfException {
+		if (object == null) { return null; }
+		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
+			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
+			.getClass().getCanonicalName())); }
+		return this.dfClass.cast(object);
+	}
+
+	protected abstract T locateInCms(IDfSession session) throws DfException;
 
 	public final String getId() {
 		return this.id;
@@ -195,13 +296,12 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	protected void getDataProperties(Collection<DataProperty> properties, T object) throws DfException {
 	}
 
-	protected DataAttribute getFilteredAttribute(boolean toCms, IDfPersistentObject object, IDfAttr attribute)
-		throws DfException {
+	protected DataAttribute getSqlFilteredAttribute(IDfPersistentObject object, IDfAttr attribute) throws DfException {
 		return new DataAttribute(object, attribute);
 	}
 
-	protected AttributeMode getAttributeMode(String attributeName) {
-		return AttributeMode.COPY;
+	protected DataAttribute getCmsFilteredAttribute(DataAttribute attribute) throws DfException {
+		return attribute;
 	}
 
 	/**
@@ -216,7 +316,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected void setAllAttributesInCMS(T object, boolean updateVersionLabels, boolean isUpdate) throws DfException {
+	protected void setAttributesInCMS(T object, boolean updateVersionLabels, boolean isUpdate) throws DfException,
+	CMSMFException {
 		if (this.logger.isEnabledFor(Level.INFO)) {
 			this.logger.info("Started setting attributes of persistent object");
 		}
@@ -235,13 +336,22 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			for (int i = 0; i < attributeCount; i++) {
 				final IDfAttr attr = object.getAttr(i);
 				final String name = attr.getName();
+				final DataAttribute dataAttribute = getAttribute(name);
+
+				if (dataAttribute == null) {
+					// We can safely ignore this because we won't be overwriting
+					// the value, *at all*
+					continue;
+				}
+
+				final AttributeHandler handler = CmsAttributeHandlers.getAttributeHandler(this.type, dataAttribute);
 
 				// Skip clearing system and internal attributess
 				// Skip clearing group_name attribute if dealing with group object
 				// Skip clearing user_name attribute if dealing with user object
 				// Skip clearing home_docbase attribute if dealing with user object
 				// Skip clearing name attribute if dealing with format object
-				if (!name.startsWith("r_") && !name.startsWith("i_")
+				if (!name.startsWith("r_") && !name.startsWith("i_") && handler.includeInImport(object, dataAttribute)
 					&& !(name.equals(DctmAttrNameConstants.GROUP_NAME) && (object instanceof DctmGroup))
 					&& !(name.equals(DctmAttrNameConstants.USER_NAME) && (object instanceof DctmUser))
 					&& !(name.equals(DctmAttrNameConstants.HOME_DOCBASE) && (object instanceof DctmUser))
@@ -258,7 +368,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 
 		// Set attributes
-		for (final DataAttribute attribute : getAllAttributes()) {
+		for (DataAttribute attribute : getAllAttributes()) {
 			// TODO check to see if we need to set any internal or system attributes of various
 			// types
 			final String name = attribute.getName();
@@ -269,7 +379,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			doSet |= (name.equals("r_version_label") && updateVersionLabels);
 
 			if (doSet) {
-				setAttributeInCMS(object, attribute, isUpdate);
+				clearAttributeInCMS(object, attribute);
+				setAttributeInCMS(object, attribute);
 			}
 		}
 
@@ -285,80 +396,54 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 *            the DFC persistentObject for which the attribute is being updated
 	 * @param attribute
 	 *            the attribute
-	 * @param isUpdate
-	 *            true if an existing object is being updated
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 * @see DctmAttribute
 	 */
-	protected void setAttributeInCMS(T object, DataAttribute attribute, boolean isUpdate) throws DfException {
+	protected void setAttributeInCMS(T object, DataAttribute attribute) throws DfException {
 		// If an existing object is being updated, first clear repeating values if the attribute
 		// being set is repeating type.
-		final String attrName = attribute.getName();
-		if (isUpdate) {
-			object.removeAll(attrName);
+		clearAttributeInCMS(object, attribute);
+		Collection<IDfValue> values = getAlternateImportValues(object, attribute);
+		if (values == null) {
+			values = attribute.getAllValues();
 		}
-
-		// TODO: String values that are in the repository operator name should be filtered
-		/*
-					String strVal = (String) dctmAttribute.getSingleValue();
-					if (strVal.equals(CMSMFAppConstants.DM_DBO)
-						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-						.contains(attrName)) {
-						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(session);
-						if (this.logger.isEnabledFor(Level.INFO)) {
-							this.logger.info("Updated " + attrName
-								+ " attribute of object to repository operator name.");
-						}
-					}
-					object.setString(attrName, strVal);
-
-		 */
-		final IDfAttr attr = object.getAttr(object.findAttrIndex(attrName));
-		for (IDfValue value : attribute) {
-			clearAttributeInCMS(object, attr);
+		final String attrName = attribute.getName();
+		for (IDfValue value : values) {
 			if (attribute.isRepeating()) {
 				object.appendValue(attrName, value);
 			} else {
-				// I wonder if appendValue() can also be used for non-repeating attributes
+				// I wonder if appendValue() can also be used for non-repeating attributes...
 				object.setValue(attrName, value);
 			}
 		}
 	}
 
-	/**
-	 * Clears the value of an attribute in cms.
-	 *
-	 * @param object
-	 *            the persistent object
-	 * @param attr
-	 *            the attribute
-	 * @throws DfException
-	 *             the DfException
-	 */
-	protected void clearAttributeInCMS(T object, IDfAttr attr) throws DfException {
-		final String attrName = attr.getName();
-		if (attr.isRepeating()) {
+	protected final void clearAttributeInCMS(T object, String attrName, DataType dataType, boolean repeating)
+		throws DfException {
+		if (repeating) {
 			object.removeAll(attrName);
 		} else {
 			// I wonder what happens if we apply removeAll() to non-repeating attributes
 			// object.removeAll(attrName);
-			DataType dataType = DataType.fromDfConstant(attr.getDataType());
 			object.setValue(attrName, dataType.getClearingValue());
 		}
 	}
 
-	/**
-	 * Clears the value of an attribute in cms.
-	 *
-	 * @param object
-	 *            the persistent object
-	 * @param attr
-	 *            the attribute
-	 * @throws DfException
-	 *             the DfException
-	 */
-	protected void clearAttributeInCMS(T object, String attr) throws DfException {
+	protected final void clearAttributeInCMS(T object, String attrName, int dataType, boolean repeating)
+		throws DfException {
+		clearAttributeInCMS(object, attrName, DataType.fromDfConstant(dataType), repeating);
+	}
+
+	protected final void clearAttributeInCMS(T object, DataAttribute attribute) throws DfException {
+		clearAttributeInCMS(object, attribute.getName(), attribute.getType(), attribute.isRepeating());
+	}
+
+	protected final void clearAttributeInCMS(T object, IDfAttr attr) throws DfException {
+		clearAttributeInCMS(object, attr.getName(), attr.getDataType(), attr.isRepeating());
+	}
+
+	protected final void clearAttributeInCMS(T object, String attr) throws DfException {
 		clearAttributeInCMS(object, object.getAttr(object.findAttrIndex(attr)));
 	}
 
@@ -408,6 +493,41 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		final String objId = obj.getObjectId().getId();
 		runExecSQL(obj.getSession(),
 			String.format("UPDATE %s SET i_vstamp = %d WHERE r_object_id = ''%s''", tableName, vStamp, objId));
+	}
+
+	/**
+	 * <p>
+	 * Provides a substitute set of values which are to e used upon import for the given attribute,
+	 * based on system rules.
+	 * </p>
+	 *
+	 * @param object
+	 * @param attribute
+	 * @return the alternate values to use
+	 * @throws DfException
+	 */
+	protected Collection<IDfValue> getAlternateImportValues(IDfPersistentObject object, DataAttribute attribute)
+		throws DfException {
+
+		if (attribute.getType() == DataType.DF_STRING) {
+
+			if (!attribute.isRepeating()) {
+
+				// Is this an operator attribute that needs interception?
+				Set<String> operatorNameAttributes = RunTimeProperties.getRunTimePropertiesInstance()
+					.getAttrsToCheckForRepoOperatorName();
+				if (operatorNameAttributes.contains(attribute.getName())) {
+					if (CMSMFAppConstants.DM_DBO.equals(attribute.getSingleValue().asString())) {
+						String alternate = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
+							object.getSession());
+						return Collections.singletonList(DfValueFactory.newStringValue(alternate));
+					}
+				}
+			}
+		}
+
+		// The default return
+		return null;
 	}
 
 	/**

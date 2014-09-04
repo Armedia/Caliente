@@ -26,14 +26,12 @@ public class DataProperty implements Iterable<IDfValue> {
 
 	private final String name;
 	private final DataType type;
-	private final boolean repeating;
 	private final List<IDfValue> values;
 	private boolean valuesLoaded = false;
 
 	DataProperty(ResultSet rs) throws SQLException {
 		this.name = rs.getString("property_name");
 		this.type = DataType.valueOf(rs.getString("property_type"));
-		this.repeating = rs.getBoolean("is_repeating");
 		this.values = new ArrayList<IDfValue>();
 	}
 
@@ -62,7 +60,6 @@ public class DataProperty implements Iterable<IDfValue> {
 	public DataProperty(IDfPersistentObject obj, IDfAttr attr) throws DfException {
 		this.name = attr.getName();
 		this.type = DataType.fromDfConstant(attr.getDataType());
-		this.repeating = attr.isRepeating();
 		final int valueCount = obj.getValueCount(this.name);
 		this.values = new ArrayList<IDfValue>(valueCount);
 
@@ -98,15 +95,10 @@ public class DataProperty implements Iterable<IDfValue> {
 		}
 		this.name = attr.getName();
 		this.type = DataType.fromDfConstant(attr.getDataType());
-		this.repeating = attr.isRepeating();
-		final int valueCount = (this.repeating ? values.size() : 1);
+		final int valueCount = values.size();
 		this.values = new ArrayList<IDfValue>(valueCount);
 		for (IDfValue o : values) {
 			this.values.add(o);
-			// If not repeating, only add the first value
-			if (this.repeating) {
-				break;
-			}
 		}
 		this.valuesLoaded = true;
 	}
@@ -121,25 +113,16 @@ public class DataProperty implements Iterable<IDfValue> {
 		}
 		this.name = name;
 		this.type = type;
-		this.repeating = repeating;
 		final int valueCount = values.size();
 		this.values = new ArrayList<IDfValue>(valueCount);
 		for (IDfValue o : values) {
 			this.values.add(o);
-			// If not repeating, only add the first value
-			if (this.repeating) {
-				break;
-			}
 		}
 		this.valuesLoaded = true;
 	}
 
 	public DataType getType() {
 		return this.type;
-	}
-
-	public boolean isRepeating() {
-		return this.repeating;
 	}
 
 	public String getName() {
@@ -192,7 +175,6 @@ public class DataProperty implements Iterable<IDfValue> {
 		if (other == null) { return false; }
 		if (!this.name.equals(other.name)) { return false; }
 		if (this.type != other.type) { return false; }
-		if (this.repeating != other.repeating) { return false; }
 		return true;
 	}
 
@@ -220,7 +202,7 @@ public class DataProperty implements Iterable<IDfValue> {
 
 	@Override
 	public String toString() {
-		return String.format("DataProperty [name=%s, type=%s, repeating=%s, valuesLoaded=%s, values=%s]", this.name,
-			this.type, this.repeating, this.valuesLoaded, this.values);
+		return String.format("DataProperty [name=%s, type=%s, valuesLoaded=%s, values=%s]", this.name, this.type,
+			this.valuesLoaded, this.values);
 	}
 }

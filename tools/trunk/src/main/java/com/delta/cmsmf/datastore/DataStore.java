@@ -83,6 +83,11 @@ public class DataStore {
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, attribute_name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, property_name, property_type, is_repeating) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, property_name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
+	private static final String FIND_SOURCE_ID_SQL = "select source_id from dctm_mapper where target_id = ?";
+	private static final String FIND_TARGET_ID_SQL = "select target_id from dctm_mapper where source_id = ?";
+	private static final String INSERT_MAPPING_SQL = "insert into dctm_mapper (source_id, target_id) values (?, ?)";
+	private static final String DELETE_MAPPING_SQL = "delete from dctm_mapper where source_id = ?";
+
 	/*
 	private static final String LOAD_EVERYTHING_SQL = //
 		"    select o.*, a.*, v.* " + //
@@ -345,7 +350,7 @@ public class DataStore {
 
 				attData[1] = name;
 				attData[2] = att.getId();
-				attData[3] = type;
+				attData[3] = cvt.name();
 				attData[4] = att.getLength();
 				attData[5] = false; // TODO: is_internal?
 				attData[6] = att.isQualifiable();
@@ -372,13 +377,12 @@ public class DataStore {
 				qr.insertBatch(c, DataStore.INSERT_ATTRIBUTE_VALUE_SQL, DataStore.HANDLER_NULL, values);
 			}
 
-			Object[] propData = new Object[4];
+			Object[] propData = new Object[3];
 			propData[0] = objectId;
 			Collection<DataProperty> properties = propertyReader.readProperties(object);
 			if ((properties != null) && !properties.isEmpty()) {
 				for (final DataProperty prop : properties) {
 					final String name = prop.getName();
-					final boolean repeating = prop.isRepeating();
 					final DataType type = prop.getType();
 
 					// DO NOT process "undefined" attribute values
@@ -389,8 +393,7 @@ public class DataStore {
 					}
 
 					propData[1] = name;
-					propData[2] = type;
-					propData[3] = repeating;
+					propData[2] = type.name();
 
 					// Insert the property
 					qr.insert(c, DataStore.INSERT_PROPERTY_SQL, DataStore.HANDLER_NULL, propData);
@@ -454,10 +457,8 @@ public class DataStore {
 
 			// Then, insert its attributes
 			Object[] attData = new Object[8];
-			Object[] propData = new Object[4];
 			Object[] attValue = new Object[5];
 			attData[0] = objectId; // This should never change within the loop
-			propData[0] = objectId; // This should never change within the loop
 			attValue[0] = objectId; // This should never change within the loop
 			for (final DataAttribute attribute : object) {
 				final String name = attribute.getName();
@@ -497,9 +498,10 @@ public class DataStore {
 			}
 
 			// Then, the properties
+			Object[] propData = new Object[3];
+			propData[0] = objectId; // This should never change within the loop
 			for (final String name : object.getPropertyNames()) {
 				final DataProperty property = object.getProperty(name);
-				final boolean repeating = property.isRepeating();
 				final DataType type = property.getType();
 
 				// DO NOT process "undefined" property values
@@ -508,12 +510,11 @@ public class DataStore {
 					continue;
 				}
 
-				attData[1] = name;
-				attData[2] = type.name();
-				attData[3] = repeating;
+				propData[1] = name;
+				propData[2] = type.name();
 
 				// Insert the attribute
-				qr.insert(c, DataStore.INSERT_PROPERTY_SQL, DataStore.HANDLER_NULL, attData);
+				qr.insert(c, DataStore.INSERT_PROPERTY_SQL, DataStore.HANDLER_NULL, propData);
 
 				attValue[1] = name; // This never changes inside this next loop
 				Object[][] values = new Object[property.getValueCount()][];
@@ -652,5 +653,79 @@ public class DataStore {
 			}
 		}, type.name());
 		 */
+	}
+
+	/**
+	 * <p>
+	 * Assigns the given targetId as the new ID for the object with the given source ID
+	 * </p>
+	 *
+	 * @param sourceId
+	 * @throws SQLException
+	 */
+	public static void setIdMapping(String sourceId, String targetId) throws SQLException {
+		final QueryRunner qr = new QueryRunner(DataStore.DATA_SOURCE);
+		qr.insert(DataStore.INSERT_MAPPING_SQL, DataStore.HANDLER_NULL, sourceId, targetId);
+	}
+
+	/**
+	 * <p>
+	 * Removes any ID mappings for the given source object ID.
+	 * </p>
+	 *
+	 * @param sourceId
+	 * @throws SQLException
+	 */
+	public static void clearIdMapping(String sourceId) throws SQLException {
+		final QueryRunner qr = new QueryRunner(DataStore.DATA_SOURCE);
+		qr.update(DataStore.DELETE_MAPPING_SQL, DataStore.HANDLER_NULL, sourceId);
+	}
+
+	private static String getMappedId(boolean source, String id) throws SQLException {
+		if (id == null) { throw new IllegalArgumentException("Must provide a valid ID to search against"); }
+		final String sql = (source ? DataStore.FIND_SOURCE_ID_SQL : DataStore.FIND_TARGET_ID_SQL);
+		final QueryRunner qr = new QueryRunner(DataStore.DATA_SOURCE);
+		ResultSetHandler<String> h = new ResultSetHandler<String>() {
+			@Override
+			public String handle(ResultSet rs) throws SQLException {
+				if (!rs.next()) { return null; }
+				return rs.getString(1);
+			}
+		};
+		return qr.query(sql, h, id);
+	}
+
+	/**
+	 * <p>
+	 * Retrieves the target ID for the object with the given source ID
+	 * </p>
+	 * <p>
+	 * In particular, for a given target ID {@code tgtId} that has already been mapped to a source
+	 * ID, the invocation {@code getTargetId(getSourceId(tgtId)).equals(tgtId)} <b><i>must</i></b>
+	 * return {@code true}.
+	 * </p>
+	 *
+	 * @param sourceId
+	 * @throws SQLException
+	 */
+	public static String getTargetId(String sourceId) throws SQLException {
+		return DataStore.getMappedId(false, sourceId);
+	}
+
+	/**
+	 * <p>
+	 * Retrieves the source ID for the object with the given target ID.
+	 * </p>
+	 * <p>
+	 * In particular, for a given source ID {@code srcId} that has already been mapped to a target
+	 * ID, the invocation {@code getSourceId(getTargetId(srcId)).equals(srcId)} <b><i>must</i></b>
+	 * return {@code true}.
+	 * </p>
+	 *
+	 * @param targetId
+	 * @throws SQLException
+	 */
+	public static String getSourceId(String targetId) throws SQLException {
+		return DataStore.getMappedId(true, targetId);
 	}
 }
