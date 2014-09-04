@@ -117,8 +117,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 						this.logger.error("Couldn't retrieve object by ID: " + objID, e);
 					}
 
-					DctmObjectRetriever dctmObjRetriever = new DctmObjectRetriever(session);
-					DctmObject dctmObj;
+					DctmObjectRetriever dctmObjRetriever = new DctmObjectRetriever();
+					DctmObject<?> dctmObj;
 					try {
 						if (prsstntObj != null) {
 							dctmObj = dctmObjRetriever.retrieveObject(prsstntObj);

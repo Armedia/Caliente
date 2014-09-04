@@ -11,7 +11,6 @@ import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.runtime.DuplicateChecker;
 import com.documentum.fc.client.IDfFormat;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
@@ -22,7 +21,7 @@ import com.documentum.fc.common.DfException;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class DctmFormat extends DctmObject {
+public class DctmFormat extends DctmObject<IDfFormat> {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -44,17 +43,7 @@ public class DctmFormat extends DctmObject {
 	 * Instantiates a new DctmFormat object.
 	 */
 	public DctmFormat() {
-		super(DctmObjectType.DCTM_FORMAT);
-	}
-
-	/**
-	 * Instantiates a DctmFormat object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmFormat(IDfSession dctmSession) {
-		super(dctmSession, DctmObjectType.DCTM_FORMAT);
+		super(DctmObjectType.DCTM_FORMAT, IDfFormat.class);
 	}
 
 	/*
@@ -63,7 +52,7 @@ public class DctmFormat extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
-	public void createInCMS() throws DfException, IOException {
+	public void createInCMS(IDfSession session) throws DfException, IOException {
 		DctmFormat.formats_read.incrementAndGet();
 
 		if (DctmFormat.logger.isEnabledFor(Level.INFO)) {
@@ -71,19 +60,19 @@ public class DctmFormat extends DctmObject {
 		}
 
 		// Begin transaction
-		this.dctmSession.beginTrans();
+		session.beginTrans();
 
 		try {
 			boolean doesFormatNeedUpdate = false;
-			IDfPersistentObject prsstntObj = null;
 			// First check to see if the Format already exist; if it does, check to see if we need
-// to update it
-			String formatName = getStrSingleAttrValue(DctmAttrNameConstants.NAME);
+			// to update it
+			final String formatName = getStrSingleAttrValue(DctmAttrNameConstants.NAME);
+			final int newVStamp = getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
 
-			IDfFormat format = this.dctmSession.getFormat(formatName);
+			IDfFormat format = session.getFormat(formatName);
 			if (format != null) { // we found existing format
-				int versionStamp = format.getVStamp();
-				if (versionStamp != getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP)) {
+				final int existingVStamp = format.getVStamp();
+				if (existingVStamp != newVStamp) {
 					// We need to update the format
 					if (DctmFormat.logger.isEnabledFor(Level.DEBUG)) {
 						DctmFormat.logger.debug("Format by name " + formatName
@@ -95,15 +84,15 @@ public class DctmFormat extends DctmObject {
 					// "Failed to save format object -- format with name %s already exists"
 					removeAttribute(DctmAttrNameConstants.NAME);
 
-					prsstntObj = format;
 					doesFormatNeedUpdate = true;
-				} else { // Identical format exists in the target repository, abort the transaction
-// and quit
+				} else {
+					// Identical format exists in the target repository, abort the transaction
+					// and quit
 					if (DctmFormat.logger.isEnabledFor(Level.DEBUG)) {
 						DctmFormat.logger.debug("Identical format " + formatName
 							+ " already exists in target repository.");
 					}
-					this.dctmSession.abortTrans();
+					session.abortTrans();
 					DctmFormat.formats_skipped.incrementAndGet();
 					return;
 				}
@@ -111,14 +100,14 @@ public class DctmFormat extends DctmObject {
 				if (DctmFormat.logger.isEnabledFor(Level.DEBUG)) {
 					DctmFormat.logger.debug("Creating format " + formatName + " in target repository.");
 				}
-				prsstntObj = this.dctmSession.newObject(DctmTypeConstants.DM_FORMAT);
+				format = castPersistentObject(session.newObject(DctmTypeConstants.DM_FORMAT));
 			}
 
 			// set various attributes
-			setAllAttributesInCMS(prsstntObj, this, false, doesFormatNeedUpdate);
+			setAllAttributesInCMS(format, this, false, doesFormatNeedUpdate);
 
 			// save the format object
-			prsstntObj.save();
+			format.save();
 			if (doesFormatNeedUpdate) {
 				DctmFormat.formats_updated.incrementAndGet();
 			} else {
@@ -126,19 +115,19 @@ public class DctmFormat extends DctmObject {
 			}
 
 			// update vStamp of the format object
-			updateVStamp(prsstntObj, this);
+			updateVStamp(format, newVStamp);
 
 			if (DctmFormat.logger.isEnabledFor(Level.INFO)) {
 				DctmFormat.logger.info("Finished creating dctm dm_format in repository with name: " + formatName);
 			}
 		} catch (DfException e) {
 			// Abort the transaction in case of DfException
-			this.dctmSession.abortTrans();
+			session.abortTrans();
 			throw (e);
 		}
 
 		// Commit the transaction
-		this.dctmSession.commitTrans();
+		session.commitTrans();
 	}
 
 	/**
@@ -174,19 +163,19 @@ public class DctmFormat extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmFormat doGetFromCMS(IDfFormat format) throws CMSMFException {
 		if (DctmFormat.logger.isEnabledFor(Level.INFO)) {
 			DctmFormat.logger.info("Started getting dctm dm_format from repository");
 		}
 		String formatID = "";
 		try {
-			formatID = prsstntObj.getObjectId().getId();
-			String formatName = prsstntObj.getString(DctmAttrNameConstants.NAME);
+			formatID = format.getObjectId().getId();
+			String formatName = format.getString(DctmAttrNameConstants.NAME);
 			// Check if this format has already been exported, if not, add to processed list
 			if (!DuplicateChecker.getDuplicateChecker().isFormatProcessed(formatID)) {
 
 				DctmFormat dctmFormat = new DctmFormat();
-				getAllAttributesFromCMS(dctmFormat, prsstntObj, formatID);
+				dctmFormat.getAllAttributesFromCMS(format, formatID);
 
 				return dctmFormat;
 			} else {

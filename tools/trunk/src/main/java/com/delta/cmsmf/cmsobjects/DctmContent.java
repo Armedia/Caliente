@@ -5,8 +5,8 @@ import java.io.IOException;
 import org.apache.log4j.Level;
 
 import com.delta.cmsmf.exception.CMSMFException;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.common.DfException;
 
 // TODO: Auto-generated Javadoc
@@ -17,7 +17,7 @@ import com.documentum.fc.common.DfException;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class DctmContent extends DctmObject {
+public class DctmContent extends DctmObject<IDfContent> {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -38,17 +38,7 @@ public class DctmContent extends DctmObject {
 	 * Instantiates a new DctmContent object.
 	 */
 	public DctmContent() {
-		super(DctmObjectType.DCTM_CONTENT);
-	}
-
-	/**
-	 * Instantiates a DctmContent object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmContent(IDfSession dctmSession) {
-		super(dctmSession, DctmObjectType.DCTM_CONTENT);
+		super(DctmObjectType.DCTM_CONTENT, IDfContent.class);
 	}
 
 	/**
@@ -128,22 +118,22 @@ public class DctmContent extends DctmObject {
 	}
 
 	@Override
-	public void createInCMS() throws DfException, IOException {
+	public void createInCMS(IDfSession session) throws DfException, IOException {
 		// This method is left empty intentionally. We will create the content
 		// objects within the dctmdocument createInCMS() method.
 	}
 
 	@Override
-	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmContent doGetFromCMS(IDfContent content) throws CMSMFException {
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started getting dctm dmr_content object from repository");
 		}
 		String contentID = "";
 		try {
-			contentID = prsstntObj.getObjectId().getId();
+			contentID = content.getObjectId().getId();
 
 			DctmContent dctmContent = new DctmContent();
-			getAllAttributesFromCMS(dctmContent, prsstntObj, contentID);
+			dctmContent.getAllAttributesFromCMS(content, contentID);
 			if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 				DctmObject.logger
 				.info("Finished getting dctm dmr_content object from repository with id: " + contentID);

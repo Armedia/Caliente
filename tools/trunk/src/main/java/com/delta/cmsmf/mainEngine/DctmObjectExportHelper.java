@@ -19,11 +19,11 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.serialization.DctmObjectWriter;
 import com.documentum.fc.client.IDfACL;
+import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
@@ -89,11 +89,11 @@ public class DctmObjectExportHelper {
 		// check to see if user exists
 		String folderName = "";
 		try {
-			DctmObject exportObject = null;
+			DctmObject<IDfFolder> exportObject = null;
 			if (folder != null) {
 				folderName = folder.getObjectName();
 				// get the folder and serialize it
-				DctmObject dctmFldrObject = new DctmFolder(dctmSession);
+				DctmFolder dctmFldrObject = new DctmFolder();
 				exportObject = dctmFldrObject.getFromCMS(folder);
 				DctmObjectWriter.writeBinaryObject(exportObject);
 				if ((exportObject != null) & DctmObjectExportHelper.logger.isEnabledFor(Level.DEBUG)) {
@@ -210,11 +210,11 @@ public class DctmObjectExportHelper {
 		// check to see if user exists
 		String userName = "";
 		try {
-			DctmObject exportObject = null;
-			if ((user != null) && CMSMFProperties.SKIP_USERS.getBoolean()) {
+			DctmObject<IDfUser> exportObject = null;
+			if ((user != null) && !CMSMFProperties.SKIP_USERS.getBoolean()) {
 				userName = user.getUserName();
 				// get the user and serialize it
-				DctmUser dctmUser = new DctmUser(dctmSession);
+				DctmUser dctmUser = new DctmUser();
 				exportObject = dctmUser.getFromCMS(user);
 				DctmObjectWriter.writeBinaryObject(exportObject);
 				if (DctmObjectExportHelper.logger.isEnabledFor(Level.DEBUG)) {
@@ -286,11 +286,11 @@ public class DctmObjectExportHelper {
 		// check to see if group exists
 		String groupName = "";
 		try {
-			DctmObject exportObject = null;
+			DctmObject<IDfGroup> exportObject = null;
 			if ((group != null) && !CMSMFProperties.SKIP_GROUPS.getBoolean()) {
 				groupName = group.getGroupName();
 				// get the group and serialize it
-				DctmGroup dctmGroup = new DctmGroup(dctmSession);
+				DctmGroup dctmGroup = new DctmGroup();
 				exportObject = dctmGroup.getFromCMS(group);
 				DctmObjectWriter.writeBinaryObject(exportObject);
 				if (DctmObjectExportHelper.logger.isEnabledFor(Level.DEBUG)) {
@@ -367,11 +367,11 @@ public class DctmObjectExportHelper {
 		// check to see if acl exists
 		String aclName = "";
 		try {
-			DctmObject exportObject = null;
+			DctmObject<IDfACL> exportObject = null;
 			if (acl != null) {
 				aclName = acl.getObjectName();
 				// get the acl and serialize it
-				DctmACL dctmACL = new DctmACL(dctmSession);
+				DctmACL dctmACL = new DctmACL();
 				exportObject = dctmACL.getFromCMS(acl);
 				DctmObjectWriter.writeBinaryObject(exportObject);
 				if (DctmObjectExportHelper.logger.isEnabledFor(Level.DEBUG)) {
@@ -436,11 +436,11 @@ public class DctmObjectExportHelper {
 		// check to see if type exists
 		String typeName = "";
 		try {
-			DctmObject exportObject = null;
+			DctmObject<IDfType> exportObject = null;
 			if (type != null) {
 				typeName = type.getName();
 				// get the type and serialize it
-				DctmType dctmType = new DctmType(dctmSession);
+				DctmType dctmType = new DctmType();
 				exportObject = dctmType.getFromCMS(type);
 				DctmObjectWriter.writeBinaryObject(exportObject);
 				if (DctmObjectExportHelper.logger.isEnabledFor(Level.DEBUG)) {
@@ -505,11 +505,11 @@ public class DctmObjectExportHelper {
 		// check to see if format exists
 		String formatName = "";
 		try {
-			DctmObject exportObject = null;
+			DctmObject<IDfFormat> exportObject = null;
 			if (format != null) {
 				formatName = format.getName();
 				// get the format and serialize it
-				DctmFormat dctmFormat = new DctmFormat(dctmSession);
+				DctmFormat dctmFormat = new DctmFormat();
 				exportObject = dctmFormat.getFromCMS(format);
 				DctmObjectWriter.writeBinaryObject(exportObject);
 				if (DctmObjectExportHelper.logger.isEnabledFor(Level.DEBUG)) {
@@ -533,7 +533,7 @@ public class DctmObjectExportHelper {
 		try {
 			// check if document exists by ID provided
 			if (StringUtils.isNotBlank(docObjID)) {
-				IDfSysObject docObj = (IDfSysObject) dctmSession.getObject(new DfId(docObjID));
+				IDfDocument docObj = IDfDocument.class.cast(dctmSession.getObject(new DfId(docObjID)));
 				if ((docObj != null)
 					&& (docObj.getType().getName().equals(DctmTypeConstants.DM_DOCUMENT) || docObj.getType()
 						.isSubTypeOf(DctmTypeConstants.DM_DOCUMENT))) {
@@ -561,18 +561,18 @@ public class DctmObjectExportHelper {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	public static void serializeDocument(IDfSession dctmSession, IDfSysObject docObj) throws CMSMFException {
+	public static void serializeDocument(IDfSession dctmSession, IDfDocument docObj) throws CMSMFException {
 		if (DctmObjectExportHelper.logger.isEnabledFor(Level.INFO)) {
 			DctmObjectExportHelper.logger.info("Started serializing Format.");
 		}
 		// check to see if document exists
 		String documentName = "";
 		try {
-			DctmObject exportObject = null;
+			DctmObject<IDfDocument> exportObject = null;
 			if (docObj != null) {
 				documentName = docObj.getObjectName();
 				// get the format and serialize it
-				DctmDocument dctmDocument = new DctmDocument(dctmSession);
+				DctmDocument dctmDocument = new DctmDocument();
 				exportObject = dctmDocument.getFromCMS(docObj);
 				DctmObjectWriter.writeBinaryObject(exportObject);
 				if (DctmObjectExportHelper.logger.isEnabledFor(Level.DEBUG)) {

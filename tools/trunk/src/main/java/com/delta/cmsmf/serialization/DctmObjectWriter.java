@@ -36,11 +36,11 @@ public class DctmObjectWriter {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	public static void writeBinaryObject(DctmObject dctmObj) throws CMSMFException, IOException {
+	public static void writeBinaryObject(DctmObject<?> dctmObj) throws CMSMFException, IOException {
 		if (dctmObj != null) {
 			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
 				DctmObjectWriter.logger
-					.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
+				.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
 			}
 
 			try {

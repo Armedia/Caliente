@@ -37,7 +37,7 @@ import com.documentum.fc.common.IDfId;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class DctmType extends DctmObject {
+public class DctmType extends DctmObject<IDfType> {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -66,17 +66,7 @@ public class DctmType extends DctmObject {
 	 * Instantiates a new DctmType object.
 	 */
 	public DctmType() {
-		super(DctmObjectType.DCTM_TYPE);
-	}
-
-	/**
-	 * Instantiates a new DctmType object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmType(IDfSession dctmSession) {
-		super(dctmSession, DctmObjectType.DCTM_TYPE);
+		super(DctmObjectType.DCTM_TYPE, IDfType.class);
 	}
 
 	/*
@@ -85,7 +75,7 @@ public class DctmType extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
-	public void createInCMS() throws DfException, IOException {
+	public void createInCMS(IDfSession session) throws DfException, IOException {
 		DctmType.types_read.incrementAndGet();
 
 		if (DctmType.logger.isEnabledFor(Level.INFO)) {
@@ -93,9 +83,9 @@ public class DctmType extends DctmObject {
 		}
 
 		try {
-			IDfPersistentObject prsstntObj = null;
+			IDfPersistentObject newObject = null;
 			// First check to see if the type already exist; if it does, check to see if we need to
-// update it
+			// update it
 			String typeName = getStrSingleAttrValue(DctmAttrNameConstants.NAME);
 
 			// Skip messing with documentum internal types (types starting with dm_)
@@ -109,10 +99,11 @@ public class DctmType extends DctmObject {
 				return;
 			}
 
-			IDfType type = this.dctmSession.getType(typeName);
+			final int newVStamp = getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
+			IDfType type = session.getType(typeName);
 			if (type != null) { // we found existing type
-				int versionStamp = type.getVStamp();
-				if (versionStamp != getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP)) {
+				int existingVStamp = type.getVStamp();
+				if (existingVStamp != newVStamp) {
 					// NOTE We need to update the type but we can't yet, so raise the error
 					DctmType.logger.error("Type by name " + typeName
 						+ " already exist in target repository but needs to be updated.");
@@ -129,11 +120,12 @@ public class DctmType extends DctmObject {
 					DctmType.logger.info("Creating type " + typeName + " in target repository.");
 				}
 				DctmType.types_created.incrementAndGet();
-				CreateTypeInCMS();
+				createTypeInCMS(session);
 
 				// update vStamp of the type object that was just created
-				prsstntObj = this.dctmSession.getType(typeName);
-				updateVStamp(prsstntObj, this);
+				newObject = session.getType(typeName);
+				type = castPersistentObject(newObject);
+				updateVStamp(type, newVStamp);
 			}
 
 			if (DctmType.logger.isEnabledFor(Level.INFO)) {
@@ -152,7 +144,7 @@ public class DctmType extends DctmObject {
 	 * @throws DfException
 	 *             the df exception
 	 */
-	private void CreateTypeInCMS() throws DfException {
+	private void createTypeInCMS(IDfSession session) throws DfException {
 
 		// Build the DQL string needed to create the type object
 		StringBuffer dqlString = new StringBuffer(32);
@@ -220,7 +212,7 @@ public class DctmType extends DctmObject {
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		try {
 			dqlQry.setDQL(dqlString.toString());
-			IDfCollection resultCol = dqlQry.execute(this.dctmSession, IDfQuery.DF_EXECREAD_QUERY);
+			IDfCollection resultCol = dqlQry.execute(session, IDfQuery.DF_EXECREAD_QUERY);
 			while (resultCol.next()) {
 				IDfId newTypeId = resultCol.getId(DctmAttrNameConstants.NEW_OBJECT_ID);
 				if (DctmType.logger.isEnabledFor(Level.DEBUG)) {
@@ -270,7 +262,7 @@ public class DctmType extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmType doGetFromCMS(IDfType prsstntObj) throws CMSMFException {
 		if (DctmType.logger.isEnabledFor(Level.INFO)) {
 			DctmType.logger.info("Started getting dctm dm_type from repository");
 		}
@@ -282,10 +274,10 @@ public class DctmType extends DctmObject {
 			if (!DuplicateChecker.getDuplicateChecker().isTypeProcessed(typeID)) {
 
 				// First export the supertypes
-				exportSuperTypes((IDfType) prsstntObj);
+				exportSuperTypes(prsstntObj);
 
 				DctmType dctmType = new DctmType();
-				getAllAttributesFromCMS(dctmType, prsstntObj, typeID);
+				dctmType.getAllAttributesFromCMS(prsstntObj, typeID);
 
 				return dctmType;
 			} else {
@@ -314,6 +306,7 @@ public class DctmType extends DctmObject {
 	 *             the cMSMF exception
 	 */
 	private void exportSuperTypes(IDfType typeObj) throws CMSMFException {
+		IDfSession session = typeObj.getSession();
 		try {
 			if (DctmType.logger.isEnabledFor(Level.INFO)) {
 				DctmType.logger.info(String.format(
@@ -328,7 +321,7 @@ public class DctmType extends DctmObject {
 			}
 
 			// Export the type object
-			DctmObjectExportHelper.serializeType(this.dctmSession, typeObj);
+			DctmObjectExportHelper.serializeType(session, typeObj);
 			if (DctmType.logger.isEnabledFor(Level.INFO)) {
 				DctmType.logger.info("Finished serializing super types for dm_type object with name: "
 					+ typeObj.getName());

@@ -293,13 +293,13 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 			DataStore.deserializeObjects(dctmObjectType, new DataStore.ImportHandler() {
 				@Override
 				public boolean handle(final DataObject dataObject) throws Exception {
-					final DctmObject dctmObject = dctmObjectType.newInstance(dataObject);
+					final DctmObject<?> dctmObject = dctmObjectType.newInstance();
+					dctmObject.loadFrom(dataObject);
 					final RunTimeProperties runtimeProps = RunTimeProperties.getRunTimePropertiesInstance();
 
 					final IDfSession session = DctmConnectionPool.acquireSession();
 					try {
-						dctmObject.setDctmSession(session);
-						dctmObject.createInCMS();
+						dctmObject.createInCMS(session);
 						return true;
 					} catch (DfException e) {
 						// log the error and continue on with next object

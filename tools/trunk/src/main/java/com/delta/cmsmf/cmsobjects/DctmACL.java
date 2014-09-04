@@ -10,6 +10,9 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
+import com.delta.cmsmf.datastore.DataObject;
+import com.delta.cmsmf.datastore.DataProperty;
+import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.runtime.DuplicateChecker;
@@ -18,7 +21,9 @@ import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfValue;
 import com.documentum.fc.common.IDfList;
+import com.documentum.fc.common.IDfValue;
 
 /**
  * The DctmACL class contains methods to export/import dm_acl type of objects from/to
@@ -29,7 +34,7 @@ import com.documentum.fc.common.IDfList;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class DctmACL extends DctmObject {
+public class DctmACL extends DctmObject<IDfACL> {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -54,17 +59,16 @@ public class DctmACL extends DctmObject {
 	 * Instantiates a new DctmACL object.
 	 */
 	public DctmACL() {
-		super(DctmObjectType.DCTM_ACL);
+		super(DctmObjectType.DCTM_ACL, IDfACL.class);
 	}
 
-	/**
-	 * Instantiates a new DctmACL object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmACL(IDfSession dctmSession) {
-		super(dctmSession, DctmObjectType.DCTM_ACL);
+	@Override
+	protected void doLoadFrom(DataObject dataObject) {
+		DataProperty prop = dataObject.getProperty(DctmAttrNameConstants.R_ACCESSOR_XPERMIT);
+		this.accessorXPermitNames.clear();
+		for (IDfValue value : prop) {
+			this.accessorXPermitNames.add(value.asString());
+		}
 	}
 
 	/*
@@ -73,7 +77,7 @@ public class DctmACL extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
-	public void createInCMS() throws DfException, IOException {
+	public void createInCMS(IDfSession session) throws DfException, IOException {
 		DctmACL.acls_read.incrementAndGet();
 
 		if (DctmACL.logger.isEnabledFor(Level.INFO)) {
@@ -81,34 +85,36 @@ public class DctmACL extends DctmObject {
 		}
 
 		// Begin transaction
-		this.dctmSession.beginTrans();
+		session.beginTrans();
 
 		try {
 			boolean doesACLNeedUpdate = false;
-			IDfPersistentObject prsstntObj = null;
+			IDfPersistentObject newObject = null;
 			// First check to see if the ACL already exist; if it does, check to see if we need to
-// update it
+			// update it
 			String aclName = getStrSingleAttrValue(DctmAttrNameConstants.OBJECT_NAME);
 
 			String aclDomainName = getStrSingleAttrValue(DctmAttrNameConstants.OWNER_NAME);
-			IDfACL acl = this.dctmSession.getACL(aclDomainName, aclName);
+			final int newVStamp = getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
+			IDfACL acl = session.getACL(aclDomainName, aclName);
 			if (acl != null) { // we found existing acl
-				int versionStamp = acl.getVStamp();
-				if (versionStamp != getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP)) {
+				int existingVStamp = acl.getVStamp();
+				if (existingVStamp != newVStamp) {
 					// We need to update the ACL
 					if (DctmACL.logger.isEnabledFor(Level.DEBUG)) {
 						DctmACL.logger.debug("ACL by name " + aclName
 							+ " already exist in target repository but needs to be updated.");
 					}
 
-					prsstntObj = acl;
+					newObject = acl;
 					doesACLNeedUpdate = true;
-				} else { // Identical ACL exists in the target repository, abort the transaction and
-// quit
+				} else {
+					// Identical ACL exists in the target repository, abort the transaction and
+					// quit
 					if (DctmACL.logger.isEnabledFor(Level.DEBUG)) {
 						DctmACL.logger.debug("Identical acl " + aclName + " already exists in target repository.");
 					}
-					this.dctmSession.abortTrans();
+					session.abortTrans();
 					DctmACL.acls_skipped.incrementAndGet();
 					return;
 				}
@@ -116,17 +122,18 @@ public class DctmACL extends DctmObject {
 				if (DctmACL.logger.isEnabledFor(Level.DEBUG)) {
 					DctmACL.logger.debug("Creating acl " + aclName + " in target repository.");
 				}
-				prsstntObj = this.dctmSession.newObject(DctmTypeConstants.DM_ACL);
+				newObject = session.newObject(DctmTypeConstants.DM_ACL);
+				acl = castPersistentObject(newObject);
 			}
 
 			// set various attributes
-			setAllAttributesInCMS(prsstntObj, this, false, doesACLNeedUpdate);
+			setAllAttributesInCMS(acl, this, false, doesACLNeedUpdate);
 
 			// Set Accessor Permissions
-			setAccessorPermissions((IDfACL) prsstntObj, doesACLNeedUpdate);
+			setAccessorPermissions(acl, doesACLNeedUpdate);
 
 			// save the ACL object
-			prsstntObj.save();
+			acl.save();
 			if (doesACLNeedUpdate) {
 				DctmACL.acls_updated.incrementAndGet();
 			} else {
@@ -134,19 +141,19 @@ public class DctmACL extends DctmObject {
 			}
 
 			// update vStamp of the acl object
-			updateVStamp(prsstntObj, this);
+			updateVStamp(acl, newVStamp);
 
 			if (DctmACL.logger.isEnabledFor(Level.INFO)) {
 				DctmACL.logger.info("Finished creating dctm dm_acl in repository with name: " + aclName);
 			}
 		} catch (DfException e) {
 			// Abort the transaction in case of DfException
-			this.dctmSession.abortTrans();
+			session.abortTrans();
 			throw (e);
 		}
 
 		// Commit the transaction
-		this.dctmSession.commitTrans();
+		session.commitTrans();
 	}
 
 	/**
@@ -211,37 +218,36 @@ public class DctmACL extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmACL doGetFromCMS(IDfACL acl) throws CMSMFException {
 		if (DctmACL.logger.isEnabledFor(Level.INFO)) {
 			DctmACL.logger.info("Started getting dctm dm_acl from repository");
 		}
 		String aclID = "";
 		try {
-			aclID = prsstntObj.getObjectId().getId();
-			String aclName = prsstntObj.getString(DctmAttrNameConstants.OBJECT_NAME);
+			aclID = acl.getObjectId().getId();
+			String aclName = acl.getString(DctmAttrNameConstants.OBJECT_NAME);
 			// Check if this acl has already been exported, if not, add to processed list
 			if (!DuplicateChecker.getDuplicateChecker().isACLProcessed(aclID)) {
 
 				DctmACL dctmACL = new DctmACL();
-				getAllAttributesFromCMS(dctmACL, prsstntObj, aclID);
+				dctmACL.getAllAttributesFromCMS(acl, aclID);
 
 				// Update ACL Domain attribute value if needed
 				// No need to do this here anymore, it is handled in getAllAttributesFromCMS()
-// itself.
-// updateACLDomainAttribute(dctmACL);
+				// itself.
+				// updateACLDomainAttribute(dctmACL);
 
 				// populate Accessor Extended Permission Names
 				// NOTE Accessor Extended Permissions are stored in some type of int representation
-// of various
-				// Extended permissions. But to recreate this set in target cms, you have to provide
-				// coma separated String values in Grant() method in IDfACL. So store this string
-				// representation here.
-				populateAccessorXPermitNames(IDfACL.class.cast(prsstntObj));
+				// of various Extended permissions. But to recreate this set in target cms, you have
+				// to provide coma separated String values in Grant() method in IDfACL. So store
+				// this string representation here.
+				populateAccessorXPermitNames(acl);
 
-				((IDfACL) prsstntObj).isInternal();
+				acl.isInternal();
 
 				// Export other supporting objects
-				exportSupportingObjects((IDfACL) prsstntObj);
+				exportSupportingObjects(acl);
 
 				return dctmACL;
 			} else {
@@ -274,8 +280,11 @@ public class DctmACL extends DctmObject {
 		int accessorCount = aclObj.getAccessorCount();
 
 		if (accessorCount > 0) {
+			DataProperty prop = new DataProperty(DctmAttrNameConstants.R_ACCESSOR_XPERMIT, DataType.DF_STRING, true);
+			getDataObject().setProperty(prop);
 			for (int i = 0; i < accessorCount; i++) {
 				this.accessorXPermitNames.add(aclObj.getAccessorXPermitNames(i));
+				prop.addValue(new DfValue(aclObj.getAccessorXPermitNames(i)));
 			}
 		}
 	}
@@ -292,12 +301,13 @@ public class DctmACL extends DctmObject {
 	 */
 	private void exportSupportingObjects(IDfACL aclObj) throws CMSMFException, DfException {
 		// Export accessor names except dm_world and dm_owner
+		final IDfSession session = aclObj.getSession();
 		for (int i = 0; i < aclObj.getAccessorCount(); i++) {
 			String accessorName = aclObj.getAccessorName(i);
 			if (!accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_WORLD)
 				&& !accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_OWNER)
 				&& !accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_GROUP)) {
-				DctmObjectExportHelper.serializeUserOrGroupByName(this.dctmSession, accessorName);
+				DctmObjectExportHelper.serializeUserOrGroupByName(session, accessorName);
 			}
 		}
 	}

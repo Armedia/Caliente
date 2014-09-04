@@ -31,7 +31,7 @@ import com.documentum.fc.common.DfException;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class DctmGroup extends DctmObject {
+public class DctmGroup extends DctmObject<IDfGroup> {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -53,17 +53,7 @@ public class DctmGroup extends DctmObject {
 	 * Instantiates a new DctmGroup object.
 	 */
 	public DctmGroup() {
-		super(DctmObjectType.DCTM_GROUP);
-	}
-
-	/**
-	 * Instantiates a new DctmGroup object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmGroup(IDfSession dctmSession) {
-		super(dctmSession, DctmObjectType.DCTM_GROUP);
+		super(DctmObjectType.DCTM_GROUP, IDfGroup.class);
 	}
 
 	/*
@@ -72,7 +62,7 @@ public class DctmGroup extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
-	public void createInCMS() throws DfException, IOException {
+	public void createInCMS(IDfSession session) throws DfException, IOException {
 		DctmGroup.grps_read.incrementAndGet();
 
 		if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
@@ -80,16 +70,16 @@ public class DctmGroup extends DctmObject {
 		}
 
 		// Begin transaction
-		this.dctmSession.beginTrans();
+		session.beginTrans();
 
 		try {
 			boolean doesGroupNeedUpdate = false;
-			IDfPersistentObject prsstntObj = null;
+			IDfPersistentObject newObject = null;
 			// First check to see if the group already exist; if it does, check to see if we need to
 // update it
 			String groupName = getStrSingleAttrValue(DctmAttrNameConstants.GROUP_NAME);
 
-			IDfGroup group = this.dctmSession.getGroup(groupName);
+			IDfGroup group = session.getGroup(groupName);
 			if (group != null) { // we found existing group
 				Date curGrpModifyDate = group.getModifyDate().getDate();
 				if (!curGrpModifyDate.equals(findAttribute(DctmAttrNameConstants.R_MODIFY_DATE).getSingleValue())) {
@@ -105,14 +95,14 @@ public class DctmGroup extends DctmObject {
 					// "Cannot save group %s because a group already exists with the same name"
 					removeAttribute(DctmAttrNameConstants.GROUP_NAME);
 
-					prsstntObj = group;
+					newObject = group;
 					doesGroupNeedUpdate = true;
 				} else { // identical group exists, exit this method
 					if (DctmGroup.logger.isEnabledFor(Level.DEBUG)) {
 						DctmGroup.logger.debug("Identical group by name " + groupName
 							+ " already exist in target repository.");
 					}
-					this.dctmSession.abortTrans();
+					session.abortTrans();
 					DctmGroup.grps_skipped.incrementAndGet();
 					return;
 				}
@@ -120,14 +110,15 @@ public class DctmGroup extends DctmObject {
 				if (DctmGroup.logger.isEnabledFor(Level.DEBUG)) {
 					DctmGroup.logger.debug("Creating group " + groupName + " in target repository.");
 				}
-				prsstntObj = this.dctmSession.newObject(DctmTypeConstants.DM_GROUP);
+				newObject = session.newObject(DctmTypeConstants.DM_GROUP);
+				group = castPersistentObject(newObject);
 			}
 
 			// set various attributes
-			setAllAttributesInCMS(prsstntObj, this, false, doesGroupNeedUpdate);
+			setAllAttributesInCMS(group, this, false, doesGroupNeedUpdate);
 
 			// save the group object
-			prsstntObj.save();
+			group.save();
 			if (doesGroupNeedUpdate) {
 				DctmGroup.grps_updated.incrementAndGet();
 			} else {
@@ -135,19 +126,19 @@ public class DctmGroup extends DctmObject {
 			}
 
 			// update modify date of the group object
-			updateModifyDate(prsstntObj, this);
+			updateModifyDate(group, this);
 
 			if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
 				DctmGroup.logger.info("Finished creating dctm dm_group in repository with name: " + groupName);
 			}
 		} catch (DfException e) {
 			// Abort the transaction in case of DfException
-			this.dctmSession.abortTrans();
+			session.abortTrans();
 			throw (e);
 		}
 
 		// Commit the transaction
-		this.dctmSession.commitTrans();
+		session.commitTrans();
 	}
 
 	/**
@@ -183,28 +174,29 @@ public class DctmGroup extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmGroup doGetFromCMS(IDfGroup group) throws CMSMFException {
 		if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
 			DctmGroup.logger.info("Started getting dctm dm_group from repository");
 		}
+		IDfSession session = group.getSession();
 		String groupID = "";
 		try {
-			groupID = prsstntObj.getObjectId().getId();
-			String groupName = ((IDfGroup) prsstntObj).getGroupName();
+			groupID = group.getObjectId().getId();
+			String groupName = group.getGroupName();
 			// Check if this group has already been exported, if not, add to processed list
 			if (!DuplicateChecker.getDuplicateChecker().isGroupProcessed(groupID, true)) {
 
 				// First export all of the child groups recursively
-				exportChildGroups(groupName);
+				exportChildGroups(session, groupName);
 
 				// Export all of the child users
-				exportChildUsers((IDfGroup) prsstntObj);
+				exportChildUsers(group);
 
 				DctmGroup dctmGroup = new DctmGroup();
-				getAllAttributesFromCMS(dctmGroup, prsstntObj, groupID);
+				dctmGroup.getAllAttributesFromCMS(group, groupID);
 
 				// Export other supporting objects
-				exportSupportingObjects((IDfGroup) prsstntObj);
+				exportSupportingObjects(group);
 
 				return dctmGroup;
 			} else {
@@ -234,11 +226,12 @@ public class DctmGroup extends DctmObject {
 	 */
 	private void exportSupportingObjects(IDfGroup groupObj) throws CMSMFException, DfException {
 		// Export group admin and group owner
+		IDfSession session = groupObj.getSession();
 		String groupAdmin = groupObj.getGroupAdmin();
-		DctmObjectExportHelper.serializeUserOrGroupByName(this.dctmSession, groupAdmin);
+		DctmObjectExportHelper.serializeUserOrGroupByName(session, groupAdmin);
 
 		String groupOwner = groupObj.getOwnerName();
-		DctmObjectExportHelper.serializeUserOrGroupByName(this.dctmSession, groupOwner);
+		DctmObjectExportHelper.serializeUserOrGroupByName(session, groupOwner);
 	}
 
 	/**
@@ -253,6 +246,7 @@ public class DctmGroup extends DctmObject {
 		if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
 			DctmGroup.logger.info("Started serializing child users for group");
 		}
+		IDfSession session = parentGroup.getSession();
 		String groupName = "";
 		try {
 			if (parentGroup != null) {
@@ -262,7 +256,7 @@ public class DctmGroup extends DctmObject {
 				while (childUsersNames.next()) {
 					String childUserName = childUsersNames.getString(DctmAttrNameConstants.USERS_NAMES);
 					try {
-						DctmObjectExportHelper.serializeUserByName(this.dctmSession, childUserName);
+						DctmObjectExportHelper.serializeUserByName(session, childUserName);
 					} catch (CMSMFException e) {
 						// if for some reason user is not serialized, catch the exception and
 // continue on
@@ -292,12 +286,12 @@ public class DctmGroup extends DctmObject {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	private void exportChildGroups(String groupName) throws CMSMFException {
+	private void exportChildGroups(IDfSession session, String groupName) throws CMSMFException {
 		if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
 			DctmGroup.logger.info("Started serializing child groups for dm_group with name: " + groupName);
 		}
 		try {
-			IDfGroup parentGroup = this.dctmSession.getGroup(groupName);
+			IDfGroup parentGroup = session.getGroup(groupName);
 
 			if (parentGroup != null) {
 				String parentGroupID = parentGroup.getObjectId().getId();
@@ -306,13 +300,13 @@ public class DctmGroup extends DctmObject {
 				IDfCollection childGroupsNames = parentGroup.getGroupsNames();
 				while (childGroupsNames.next()) {
 					String childGroupName = childGroupsNames.getString(DctmAttrNameConstants.GROUPS_NAMES);
-					IDfGroup childGroup = this.dctmSession.getGroup(childGroupName);
+					IDfGroup childGroup = session.getGroup(childGroupName);
 					if (childGroup != null) {
 						String childGroupID = childGroup.getObjectId().getId();
 						// Go Depth first, Process Child groups recursively if not processed yet
 						// But do not add the group to processed list yet
 						if (!DuplicateChecker.getDuplicateChecker().isGroupProcessed(childGroupID, false)) {
-							exportChildGroups(childGroupName);
+							exportChildGroups(session, childGroupName);
 						}
 					}
 				}
@@ -327,7 +321,7 @@ public class DctmGroup extends DctmObject {
 
 					// export the group object
 					DctmGroup dctmGroup = new DctmGroup();
-					getAllAttributesFromCMS(dctmGroup, parentGroup, parentGroupID);
+					dctmGroup.getAllAttributesFromCMS(parentGroup, parentGroupID);
 					DctmObjectWriter.writeBinaryObject(dctmGroup);
 
 					// export child users

@@ -8,19 +8,23 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
+import com.delta.cmsmf.datastore.DataObject;
+import com.delta.cmsmf.datastore.DataProperty;
+import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.AbstractCMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.documentum.fc.client.IDfACL;
+import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.distributed.impl.IReference;
 import com.documentum.fc.client.distributed.impl.ReferenceFinder;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
+import com.documentum.fc.common.DfValue;
 import com.documentum.fc.common.IDfId;
 
 /**
@@ -62,10 +66,26 @@ public class DctmReferenceDocument extends DctmDocument {
 	 * properties file.
 	 * If the value is true, the documents and folders are created in /Replications cabinet.
 	 */
-	private static boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
+	private static final boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
 
 	/** The binding condition. */
 	private String bindingCondition;
+
+	/** The binding label. */
+	private String bindingLabel;
+
+	/** The reference repository name. */
+	private String referenceDbName;
+
+	/** The id of the referenced object in remote repository. */
+	private String referenceById;
+
+	/**
+	 * Instantiates a new dctm document.
+	 */
+	public DctmReferenceDocument() {
+		super(DctmObjectType.DCTM_REFERENCE_DOCUMENT);
+	}
 
 	/**
 	 * Gets the binding condition.
@@ -77,19 +97,6 @@ public class DctmReferenceDocument extends DctmDocument {
 	}
 
 	/**
-	 * Sets the binding condition.
-	 *
-	 * @param bindingCondition
-	 *            the new binding condition
-	 */
-	public void setBindingCondition(String bindingCondition) {
-		this.bindingCondition = bindingCondition;
-	}
-
-	/** The binding label. */
-	private String bindingLabel;
-
-	/**
 	 * Gets the binding label.
 	 *
 	 * @return the binding label
@@ -97,19 +104,6 @@ public class DctmReferenceDocument extends DctmDocument {
 	public String getBindingLabel() {
 		return this.bindingLabel;
 	}
-
-	/**
-	 * Sets the binding label.
-	 *
-	 * @param bindingLabel
-	 *            the new binding label
-	 */
-	public void setBindingLabel(String bindingLabel) {
-		this.bindingLabel = bindingLabel;
-	}
-
-	/** The reference repository name. */
-	private String referenceDbName;
 
 	/**
 	 * Gets the reference repository name.
@@ -121,19 +115,6 @@ public class DctmReferenceDocument extends DctmDocument {
 	}
 
 	/**
-	 * Sets the reference db name.
-	 *
-	 * @param referenceDbName
-	 *            the new reference db name
-	 */
-	public void setReferenceDbName(String referenceDbName) {
-		this.referenceDbName = referenceDbName;
-	}
-
-	/** The id of the referenced object in remote repository. */
-	private String referenceById;
-
-	/**
 	 * Gets the id of the referenced object in remote repository.
 	 *
 	 * @return the reference by id
@@ -142,47 +123,20 @@ public class DctmReferenceDocument extends DctmDocument {
 		return this.referenceById;
 	}
 
-	/**
-	 * Sets the id of the referenced object in remote repository.
-	 *
-	 * @param referenceById
-	 *            the new reference by id
-	 */
-	public void setReferenceById(String referenceById) {
-		this.referenceById = referenceById;
-	}
-
-	/**
-	 * Instantiates a new dctm document.
-	 */
-	public DctmReferenceDocument() {
-		super();
-	}
-
-	/**
-	 * Instantiates a DctmDocument object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmReferenceDocument(IDfSession dctmSession) {
-		super(dctmSession);
-	}
-
 	/*
 	 * (non-Javadoc)
 	 *
 	 * @see com.delta.cmsmf.repoSync.DctmObject#createInCMS()
 	 */
 	@Override
-	public void createInCMS() throws DfException, IOException {
+	public void createInCMS(IDfSession session) throws DfException, IOException {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger.info("Started creating dctm dm_document in repository");
 		}
 
 		// Create a mirror object in target repository
-		createMirrorDocument();
+		createMirrorDocument(session);
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger.info("Finished creating dctm dm_document in repository");
@@ -224,17 +178,17 @@ public class DctmReferenceDocument extends DctmDocument {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private void createMirrorDocument() throws DfException {
+	private void createMirrorDocument(IDfSession session) throws DfException {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger.info("Started creating dctm dm_document with multiple versions in repository");
 		}
 		DctmReferenceDocument.ref_docs_read.incrementAndGet();
 
 		// Begin transaction
-		this.dctmSession.beginTrans();
+		session.beginTrans();
 
 		// before creating this document check to see if identical object already exist in CMS
-		IDfSysObject existingMirrorDoc = retrieveIdenticalObjectFromCMS(this);
+		IDfDocument existingMirrorDoc = retrieveIdenticalObjectFromCMS(session, this);
 
 		if (existingMirrorDoc == null) {
 			// Matching mirror document does not exist in target repository
@@ -248,21 +202,21 @@ public class DctmReferenceDocument extends DctmDocument {
 			// session with source repository
 			IDfSysObject remoteObj = null;
 			try {
-				remoteObj = (IDfSysObject) this.dctmSession.getObject(new DfId(getReferenceById()));
+				remoteObj = (IDfSysObject) session.getObject(new DfId(getReferenceById()));
 			} catch (DfException e) {
 				DctmReferenceDocument.logger.warn(
 					"Unable to locate a remote object while creating reference using target repository session.", e);
 				// if that fails, try to locate the remote object using source repository session
-				final IDfSession session = DctmConnectionPool.acquireSession();
+				final IDfSession otherSession = DctmConnectionPool.acquireSession();
 				try {
-					remoteObj = (IDfSysObject) session.getObject(new DfId(getReferenceById()));
+					remoteObj = (IDfSysObject) otherSession.getObject(new DfId(getReferenceById()));
 				} catch (DfException e1) {
 					DctmReferenceDocument.logger.warn(
 						"Unable to locate a remote object while creating reference using source repository session.",
 						e1);
-					this.dctmSession.abortTrans();
+					session.abortTrans();
 				} finally {
-					DctmConnectionPool.releaseSession(session);
+					DctmConnectionPool.releaseSession(otherSession);
 				}
 			}
 			if (remoteObj != null) {
@@ -273,7 +227,7 @@ public class DctmReferenceDocument extends DctmDocument {
 					parentFolderLocation = "/Replications" + parentFolderLocation;
 				}
 
-				IDfSysObject parentFolder = this.dctmSession.getFolderByPath(parentFolderLocation);
+				IDfSysObject parentFolder = session.getFolderByPath(parentFolderLocation);
 				if (parentFolder != null) {
 					// Add reference in the parent folder for a remote object
 					IDfId referenceObjId = remoteObj.addReference(parentFolder.getObjectId(), getBindingCondition(),
@@ -282,14 +236,14 @@ public class DctmReferenceDocument extends DctmDocument {
 						DctmReferenceDocument.logger.debug("reference ID is: " + referenceObjId.getId());
 					}
 					DctmReferenceDocument.ref_docs_created.incrementAndGet();
-					this.dctmSession.commitTrans();
+					session.commitTrans();
 				}
 			} else {
 				DctmReferenceDocument.logger.warn("Unable to locate a remote object while creating a mirror object");
-				this.dctmSession.abortTrans();
+				session.abortTrans();
 			}
 		} else {
-			this.dctmSession.abortTrans();
+			session.abortTrans();
 			DctmReferenceDocument.ref_docs_skipped.incrementAndGet();
 			if (DctmReferenceDocument.logger.isEnabledFor(Level.DEBUG)) {
 				DctmReferenceDocument.logger.debug("Duplicate mirror object DOES exist!");
@@ -304,7 +258,7 @@ public class DctmReferenceDocument extends DctmDocument {
 	 *            the dctm reference doc
 	 * @return the sysobject that is identical to object being imported
 	 */
-	private IDfSysObject retrieveIdenticalObjectFromCMS(DctmReferenceDocument dctmRefDoc) {
+	private IDfDocument retrieveIdenticalObjectFromCMS(IDfSession session, DctmReferenceDocument dctmRefDoc) {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger.info("Started retrieving Identical mirror document from target cms.");
@@ -339,7 +293,7 @@ public class DctmReferenceDocument extends DctmDocument {
 					+ objLookUpQry.toString());
 			}
 			// Retrieve the object using the query
-			return (IDfSysObject) this.dctmSession.getObjectByQualification(objLookUpQry.toString());
+			return castPersistentObject(session.getObjectByQualification(objLookUpQry.toString()));
 		} catch (DfException e) {
 			DctmReferenceDocument.logger.error("Lookup of object failed with query: " + objLookUpQry, e);
 			return null;
@@ -352,7 +306,7 @@ public class DctmReferenceDocument extends DctmDocument {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmReferenceDocument doGetFromCMS(IDfDocument doc) throws CMSMFException {
 
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
@@ -367,19 +321,19 @@ public class DctmReferenceDocument extends DctmDocument {
 		DctmReferenceDocument dctmReferenceDocument = new DctmReferenceDocument();
 		String srcObjID = null;
 		try {
-			srcObjID = prsstntObj.getObjectId().getId();
+			srcObjID = doc.getObjectId().getId();
 
 			// Get all of the attributes
-			getAllAttributesFromCMS(dctmReferenceDocument, prsstntObj, srcObjID);
+			dctmReferenceDocument.getAllAttributesFromCMS(doc, srcObjID);
 
 			// Get reference attributes
-			getReferenceAttributesFromCMS(dctmReferenceDocument, prsstntObj, srcObjID);
+			dctmReferenceDocument.getReferenceAttributesFromCMS(doc, srcObjID);
 
 			// Export other supporting objects
 			// exportSupportingObjects((IDfSysObject) prsstntObj);
 
 			// Process folders and write where this document is linked
-			exportParentFolders(dctmReferenceDocument, (IDfSysObject) prsstntObj, srcObjID);
+			exportParentFolders(dctmReferenceDocument, doc, srcObjID);
 
 		} catch (DfException e) {
 			throw (new CMSMFException("Couldn't retrieve mirror object from cms with id: " + srcObjID, e));
@@ -395,6 +349,26 @@ public class DctmReferenceDocument extends DctmDocument {
 		return dctmReferenceDocument;
 	}
 
+	@Override
+	protected void doLoadFrom(DataObject dataObject) {
+		super.doLoadFrom(dataObject);
+
+		DataProperty prop = null;
+
+		// Now, restore ("deserialize") the internal state
+		prop = dataObject.getProperty("binding_condition");
+		this.bindingCondition = prop.getSingleValue().asString();
+
+		prop = dataObject.getProperty("binding_label");
+		this.bindingLabel = prop.getSingleValue().asString();
+
+		prop = dataObject.getProperty("reference_by_id");
+		this.referenceById = prop.getSingleValue().asString();
+
+		prop = dataObject.getProperty("reference_db_name");
+		this.referenceDbName = prop.getSingleValue().asString();
+	}
+
 	/**
 	 * Gets the reference document attributes from cms.
 	 *
@@ -407,22 +381,36 @@ public class DctmReferenceDocument extends DctmDocument {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	private void getReferenceAttributesFromCMS(DctmReferenceDocument dctmReferenceDocument,
-		IDfPersistentObject prsstntObj, String srcObjID) throws CMSMFException {
+	private void getReferenceAttributesFromCMS(IDfDocument doc, String srcObjID) throws CMSMFException {
 		if (DctmReferenceDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmReferenceDocument.logger
 				.info("Started retrieving dctm mirror object attributes from repository for object with id: "
 					+ srcObjID);
 		}
+		IDfSession session = doc.getSession();
 		try {
 			// Set object id
-			dctmReferenceDocument.setSrcObjectID(srcObjID);
+			setSrcObjectID(srcObjID);
 
-			IReference ref = ReferenceFinder.getForMirrorId(new DfId(srcObjID), this.dctmSession);
-			dctmReferenceDocument.setBindingCondition(ref.getBindingCondition());
-			dctmReferenceDocument.setBindingLabel(ref.getBindingLabel());
-			dctmReferenceDocument.setReferenceById(ref.getReferenceById().getId());
-			dctmReferenceDocument.setReferenceDbName(ref.getReferenceDbName());
+			IReference ref = ReferenceFinder.getForMirrorId(new DfId(srcObjID), session);
+			final DataType type = DataType.DF_STRING;
+			DataObject dataObject = getDataObject();
+
+			DataProperty prop = new DataProperty("binding_condition", type, false, new DfValue(
+				this.bindingCondition = ref.getBindingCondition()));
+			dataObject.setProperty(prop);
+
+			prop = new DataProperty("binding_label", type, false,
+				new DfValue(this.bindingLabel = ref.getBindingLabel()));
+			dataObject.setProperty(prop);
+
+			prop = new DataProperty("reference_by_id", type, false, new DfValue(this.referenceById = ref
+				.getReferenceById().getId()));
+			dataObject.setProperty(prop);
+
+			prop = new DataProperty("reference_db_name", type, false, new DfValue(
+				this.referenceDbName = ref.getReferenceDbName()));
+			dataObject.setProperty(prop);
 		} catch (DfException e) {
 			throw (new CMSMFException("Couldn't read all attributes from dctm object with id: " + srcObjID, e));
 		}
@@ -448,10 +436,11 @@ public class DctmReferenceDocument extends DctmDocument {
 	private void exportSupportingObjects(IDfSysObject sysObj) throws DfException, CMSMFException {
 		// NOTE: For reference documents, we do not need to export owner and group objects, type,
 		// format etc. We only need to export the acl
+		IDfSession session = sysObj.getSession();
 
 		// Export the acl
 		IDfACL acl = sysObj.getACL();
-		DctmObjectExportHelper.serializeACL(this.dctmSession, acl);
+		DctmObjectExportHelper.serializeACL(session, acl);
 	}
 
 	/**
@@ -472,6 +461,7 @@ public class DctmReferenceDocument extends DctmDocument {
 			DctmReferenceDocument.logger
 				.info("Started retrieving parent folders from repository for document with id: " + srcObjID);
 		}
+		IDfSession session = sysObj.getSession();
 		try {
 			List<Object> folderIDs = dctmDocument.findAttribute(DctmAttrNameConstants.I_FOLDER_ID).getRepeatingValues();
 			for (Object folderID : folderIDs) {
@@ -479,7 +469,7 @@ public class DctmReferenceDocument extends DctmDocument {
 				dctmDocument.addFolderLocation(folder.getFolderPath(0));
 
 				// Export the folder object
-				DctmObjectExportHelper.serializeFolder(this.dctmSession, folder);
+				DctmObjectExportHelper.serializeFolder(session, folder);
 			}
 		} catch (DfException e) {
 			throw (new CMSMFException("Couldn't retrieve related folder objects from repository for object with id: "

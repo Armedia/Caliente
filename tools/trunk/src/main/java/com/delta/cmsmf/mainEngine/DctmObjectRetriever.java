@@ -12,7 +12,6 @@ import com.delta.cmsmf.cmsobjects.DctmUser;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 
@@ -25,30 +24,14 @@ import com.documentum.fc.common.DfException;
 public class DctmObjectRetriever {
 
 	/** The logger object used for logging. */
-	static Logger logger = Logger.getLogger(DctmObjectRetriever.class);
-
-	/** The dctm session. */
-	private IDfSession dctmSession = null;
-
-	/**
-	 * Sets the dctm session.
-	 *
-	 * @param dctmSession
-	 *            the new dctm session
-	 */
-	public void setDctmSession(IDfSession dctmSession) {
-		this.dctmSession = dctmSession;
-	}
+	private static final Logger logger = Logger.getLogger(DctmObjectRetriever.class);
 
 	/**
 	 * Instantiates a new dctm object retriever.
 	 *
-	 * @param dctmSession
-	 *            the existing dctm repository session
+	 * the existing dctm repository session
 	 */
-	public DctmObjectRetriever(IDfSession dctmSession) {
-		super();
-		this.dctmSession = dctmSession;
+	public DctmObjectRetriever() {
 	}
 
 	/**
@@ -58,22 +41,22 @@ public class DctmObjectRetriever {
 	 * supporting
 	 * objects referenced by given persistent object.
 	 *
-	 * @param prsstntObj
+	 * @param obj
 	 *            the prsstnt obj
 	 * @return the dctm object
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	public DctmObject retrieveObject(IDfPersistentObject prsstntObj) throws CMSMFException {
+	public DctmObject<?> retrieveObject(IDfPersistentObject obj) throws CMSMFException {
 
-		DctmObject dctmObject = null;
-		DctmObject exportObject = null;
+		DctmObject<?> dctmObject = null;
+		DctmObject<?> exportObject = null;
 
 		try {
-			String objTypeName = prsstntObj.getType().getName();
+			String objTypeName = obj.getType().getName();
 			if (objTypeName.equals(DctmTypeConstants.DM_DOCUMENT)
-				|| prsstntObj.getType().isSubTypeOf(DctmTypeConstants.DM_DOCUMENT)) {
-				if (((IDfSysObject) prsstntObj).isReference()) {
+				|| obj.getType().isSubTypeOf(DctmTypeConstants.DM_DOCUMENT)) {
+				if (((IDfSysObject) obj).isReference()) {
 					// This is a reference object. Handle it differently
 					dctmObject = new DctmReferenceDocument();
 				} else {
@@ -81,27 +64,26 @@ public class DctmObjectRetriever {
 					dctmObject = new DctmDocument();
 				}
 			} else if (objTypeName.equals(DctmTypeConstants.DM_FOLDER)
-				|| prsstntObj.getType().isSubTypeOf(DctmTypeConstants.DM_FOLDER)) {
+				|| obj.getType().isSubTypeOf(DctmTypeConstants.DM_FOLDER)) {
 				dctmObject = new DctmFolder();
 			} else if (objTypeName.equals(DctmTypeConstants.DM_USER)
-				|| prsstntObj.getType().isSubTypeOf(DctmTypeConstants.DM_USER)) {
+				|| obj.getType().isSubTypeOf(DctmTypeConstants.DM_USER)) {
 				dctmObject = new DctmUser();
 			} else if (objTypeName.equals(DctmTypeConstants.DM_GROUP)
-				|| prsstntObj.getType().isSubTypeOf(DctmTypeConstants.DM_GROUP)) {
+				|| obj.getType().isSubTypeOf(DctmTypeConstants.DM_GROUP)) {
 				dctmObject = new DctmGroup();
 			} else if (objTypeName.equals(DctmTypeConstants.DM_ACL)
-				|| prsstntObj.getType().isSubTypeOf(DctmTypeConstants.DM_ACL)) {
+				|| obj.getType().isSubTypeOf(DctmTypeConstants.DM_ACL)) {
 				dctmObject = new DctmACL();
 			}
 
 			if (dctmObject != null) {
-				dctmObject.setDctmSession(this.dctmSession);
-				exportObject = dctmObject.getFromCMS(prsstntObj);
+				exportObject = dctmObject.getFromCMS(obj);
 			}
 		} catch (DfException e) {
 			String sysObjID = "";
 			try {
-				sysObjID = prsstntObj.getObjectId().getId();
+				sysObjID = obj.getObjectId().getId();
 			} catch (DfException e1) {
 				DctmObjectRetriever.logger.error("Couldn't get object id for dm_sysobject", e1);
 			}

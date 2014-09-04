@@ -35,7 +35,7 @@ public class DctmObjectReader {
 	 *             the cMSMF exception
 	 */
 	/*
-	public static DctmObject readObject(DctmObjectType dctmObjType) throws IOException, CMSMFException {
+	public static DctmObject readObject(CmsObjectType dctmObjType) throws IOException, CMSMFException {
 		DctmObject returnObject = null;
 		try {
 			DataObject dataObject = DataStore.deserializeNextObject(dctmObjType);

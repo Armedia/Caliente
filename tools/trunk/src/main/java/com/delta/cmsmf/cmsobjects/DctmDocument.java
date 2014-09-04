@@ -27,6 +27,7 @@ import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -56,7 +57,7 @@ import com.documentum.fc.common.IDfTime;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class DctmDocument extends DctmObject {
+public class DctmDocument extends DctmObject<IDfDocument> {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -94,21 +95,15 @@ public class DctmDocument extends DctmObject {
 	 */
 	private static final boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
 
+	protected DctmDocument(DctmObjectType type) {
+		super(type, IDfDocument.class);
+	}
+
 	/**
 	 * Instantiates a new dctm document.
 	 */
 	public DctmDocument() {
-		super(DctmObjectType.DCTM_DOCUMENT);
-	}
-
-	/**
-	 * Instantiates a DctmDocument object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmDocument(IDfSession dctmSession) {
-		super(dctmSession, DctmObjectType.DCTM_DOCUMENT);
+		super(DctmObjectType.DCTM_DOCUMENT, IDfDocument.class);
 	}
 
 	/**
@@ -196,14 +191,14 @@ public class DctmDocument extends DctmObject {
 	 * @see com.delta.cmsmf.repoSync.DctmObject#createInCMS()
 	 */
 	@Override
-	public void createInCMS() throws DfException, IOException {
+	public void createInCMS(IDfSession session) throws DfException, IOException {
 
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started creating dctm dm_document in repository");
 		}
 
 		// Create the version tree in CMS
-		createMultiVersionDocument();
+		createMultiVersionDocument(session);
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Finished creating dctm dm_document in repository");
 		}
@@ -253,14 +248,14 @@ public class DctmDocument extends DctmObject {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	private void createMultiVersionDocument() throws DfException, IOException {
+	private void createMultiVersionDocument(IDfSession session) throws DfException, IOException {
 		// isThisATest = true;
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started creating dctm dm_document with multiple versions in repository");
 		}
 
 		// Begin transaction
-		this.dctmSession.beginTrans();
+		session.beginTrans();
 
 		// list of objects whose i_is_deleted attribute needs to be updated after
 		// creating the version tree.
@@ -285,7 +280,7 @@ public class DctmDocument extends DctmObject {
 				}
 				DctmAttribute iAntecedentID = dctmVerDoc.findAttribute(DctmAttrNameConstants.I_ANTECEDENT_ID);
 				boolean isRootVersion = false;
-				IDfSysObject antecedentVersion = null;
+				IDfDocument antecedentVersion = null;
 				if (iAntecedentID == null) {
 					isRootVersion = true;
 				} else {
@@ -295,7 +290,7 @@ public class DctmDocument extends DctmObject {
 						DctmDocument.logger.debug("Looking for antecedent id " + antecedentVersionID
 							+ " from target repo for id: " + iAntecedentID.getSingleValue());
 					}
-					antecedentVersion = (IDfSysObject) this.dctmSession.getObject(new DfId(antecedentVersionID));
+					antecedentVersion = castPersistentObject(session.getObject(new DfId(antecedentVersionID)));
 					if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 						DctmDocument.logger.debug("Found antecedent id " + antecedentVersionID
 							+ " from target repo for id: " + iAntecedentID.getSingleValue());
@@ -313,7 +308,7 @@ public class DctmDocument extends DctmObject {
 
 				// before creating this document check to see if identical object already exist in
 				// CMS
-				IDfSysObject existingDoc = retrieveIdenticalObjectFromCMS(dctmVerDoc);
+				IDfDocument existingDoc = retrieveIdenticalObjectFromCMS(session, dctmVerDoc);
 
 				if ((existingDoc == null) && (antecedentVersion != null)) {
 					// NOTE: If the object name of the version is changed, it will not find the
@@ -327,7 +322,6 @@ public class DctmDocument extends DctmObject {
 					}
 				}
 
-				IDfSysObject sysObject = null;
 				if (existingDoc == null) {
 					// Matching document does not exist in target repository
 					if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
@@ -335,7 +329,7 @@ public class DctmDocument extends DctmObject {
 					}
 					// Check if we need to create a new object or checkout/branch old version
 					if (isRootVersion) { // Create new object if it is a root version
-						sysObject = (IDfSysObject) this.dctmSession.newObject(objectType);
+						existingDoc = castPersistentObject(session.newObject(objectType));
 					} else {
 						// Checkout or branch the antecedent version
 						// First make sure that you have version permissions.
@@ -343,14 +337,13 @@ public class DctmDocument extends DctmObject {
 						int ancstrCurPermit = antecedentVersion.getPermit();
 						if (ancstrCurPermit < IDfACL.DF_PERMIT_VERSION) {
 							// Grant version permission and save the object
-							this.dctmSession.flushCache(false);
+							session.flushCache(false);
 							antecedentVersion.fetch(null);
 							IDfACL parentFldrACL = antecedentVersion.getACL();
 							String aclName = parentFldrACL.getObjectName();
 							String aclDomain = parentFldrACL.getDomain();
 							int vStamp = antecedentVersion.getVStamp();
-							antecedentVersion
-							.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_VERSION, null);
+							antecedentVersion.grant(session.getLoginUserName(), IDfACL.DF_PERMIT_VERSION, null);
 							antecedentVersion.save();
 							restoreACLObjectList.add(new restoreOldACLInfo(aclName, aclDomain, antecedentVersion
 								.getObjectId().getId(), vStamp));
@@ -378,23 +371,21 @@ public class DctmDocument extends DctmObject {
 									+ " vrsnLbl of current Object: " + dctmVerDocImplicitVersionLabel);
 							}
 							IDfId branchID = antecedentVersion.branch(antecedentVersionImplicitVersionLabel);
-							antecedentVersion = (IDfSysObject) this.dctmSession.getObject(branchID);
+							antecedentVersion = castPersistentObject(session.getObject(branchID));
 							// remove branch versionlabel from repeating attributes
 							dctmVerDoc.removeRepeatingAttrValue(DctmAttrNameConstants.R_VERSION_LABEL,
 								dctmVerDocImplicitVersionLabel);
 							branchCreated = true;
 							// If branching document object, make sure that you have write
-// permissions.
+							// permissions.
 							// If you don't, grant it. The ACL will be updated later on.
 							curPermit = antecedentVersion.getPermit();
 							if (curPermit < IDfACL.DF_PERMIT_WRITE) {
 								// Grant write permission and save the object
-								antecedentVersion.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE,
-									null);
+								antecedentVersion.grant(session.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
 								antecedentVersion.save();
 								// We don't need to change the permit later on since acl attributes
-// will be
-								// saved later on.
+								// will be saved later on.
 								// permitChangedFlag = true;
 							}
 						} else {
@@ -408,49 +399,45 @@ public class DctmDocument extends DctmObject {
 							// antecedentVersion.checkoutEx(antecedentVersionImplicitVersionLabel,
 							// "", "");
 						}
-						sysObject = antecedentVersion;
+						existingDoc = antecedentVersion;
 					}
 				} // if (existingDoc == null)
 				else {
 					// Matching document exist in target repository. Compare modify dates to see if
-// we need to
+					// we need to
 					// update the document in repo or skip this document.
 					if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 						DctmDocument.logger.debug("Possible duplicate object DOES exist!");
 					}
-					sysObject = existingDoc;
 					// Check modify date to see if we need to update the document in CMS
-					if (sysObject.getModifyDate().getDate()
+					if (existingDoc.getModifyDate().getDate()
 						.equals(dctmVerDoc.getDateSingleAttrValue(DctmAttrNameConstants.R_MODIFY_DATE))) {
 						// duplicate document already exist in target CMS, add the object id in map
-// and
-						// return
+						// and return
 						doesDuplicateObjectExists = true;
 						DctmDocument.docs_skipped.incrementAndGet();
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 							DctmDocument.logger
-							.debug("Identical version of document already exist in target repo with id: "
-								+ sysObject.getObjectId().getId() + " and name: " + sysObject.getObjectName());
+								.debug("Identical version of document already exist in target repo with id: "
+									+ existingDoc.getObjectId().getId() + " and name: " + existingDoc.getObjectName());
 						}
 					} else {
 						doesExistingObjectNeedsUpdate = true;
 						// If updating an existing document object, make sure that you have write
-// permissions.
-						// If you don't, grant it. Reset it later on.
-						curPermit = sysObject.getPermit();
+						// permissions. If you don't, grant it. Reset it later on.
+						curPermit = existingDoc.getPermit();
 						if (curPermit < IDfACL.DF_PERMIT_WRITE) {
 							// Grant write permission and save the object
-							sysObject.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
-							sysObject.save();
+							existingDoc.grant(session.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
+							existingDoc.save();
 							permitChangedFlag = true;
 						}
 
 						// Check the immutable flag of the document version object. Set to False if
-// it is not
-						// and revert it back later.
-						if (sysObject.isImmutable()) {
-							sysObject.setBoolean(DctmAttrNameConstants.R_IMMUTABLE_FLAG, false);
-							sysObject.save();
+						// it is not and revert it back later.
+						if (existingDoc.isImmutable()) {
+							existingDoc.setBoolean(DctmAttrNameConstants.R_IMMUTABLE_FLAG, false);
+							existingDoc.save();
 							isImmutableChangedFlag = true;
 						}
 					}
@@ -459,13 +446,12 @@ public class DctmDocument extends DctmObject {
 				if (!doesDuplicateObjectExists) {
 
 					// Set content files
-					DctmDocument.setContentFilesInCMS(sysObject, dctmVerDoc);
+					DctmDocument.setContentFilesInCMS(existingDoc, dctmVerDoc);
 
 					// Remove existing links and then Link the document appropriately
 					// NOTE If we do not remove the existing links and try to link the document to
-// same
-					// location, you get dfc exception
-					List<String> unLinkedParentIDs = DctmObject.removeAllLinks(sysObject);
+					// same location, you get dfc exception
+					List<String> unLinkedParentIDs = DctmObject.removeAllLinks(existingDoc);
 					for (String unlinkedParentID : unLinkedParentIDs) {
 						if (!linkedUnLinkedParentIDs.contains(unlinkedParentID)) {
 							linkedUnLinkedParentIDs.add(unlinkedParentID);
@@ -486,12 +472,12 @@ public class DctmDocument extends DctmObject {
 // ignore it,
 						// if exception is other than that, throw it.
 						try {
-							sysObject.link(fldrLoc);
+							existingDoc.link(fldrLoc);
 							// Add the object id of parent folders where we are trying to link the
 // object in
 							// the list
 							// which we need to check the permissions
-							IDfFolder parentFldr = this.dctmSession.getFolderByPath(fldrLoc);
+							IDfFolder parentFldr = session.getFolderByPath(fldrLoc);
 							if (!linkedUnLinkedParentIDs.contains(parentFldr.getObjectId().getId())) {
 								linkedUnLinkedParentIDs.add(parentFldr.getObjectId().getId());
 							}
@@ -510,15 +496,15 @@ public class DctmDocument extends DctmObject {
 						// Check the permit on all of the parent folders from where you are
 // unlinking or
 						// linking.
-						IDfSysObject parentFldr = (IDfSysObject) this.dctmSession.getObject(new DfId(parentFldrID));
+						IDfSysObject parentFldr = (IDfSysObject) session.getObject(new DfId(parentFldrID));
 
 						// if permit is less than write, modify the acl temporarily.
 						if (parentFldr.getPermit() < IDfACL.DF_PERMIT_WRITE) {
 							// Flush and ReFatch the parent folder
-							this.dctmSession.flush("persistentobjcache", null);
-							this.dctmSession.flushObject(parentFldr.getObjectId());
-							this.dctmSession.flushCache(false);
-							parentFldr = (IDfSysObject) this.dctmSession.getObject(new DfId(parentFldrID));
+							session.flush("persistentobjcache", null);
+							session.flushObject(parentFldr.getObjectId());
+							session.flushCache(false);
+							parentFldr = (IDfSysObject) session.getObject(new DfId(parentFldrID));
 							parentFldr.fetch(null);
 							IDfACL parentFldrACL = parentFldr.getACL();
 							String aclName = parentFldrACL.getObjectName();
@@ -530,7 +516,7 @@ public class DctmDocument extends DctmObject {
 									+ " needs to be modified. Current info about parent folder is: acl name: "
 									+ aclName + " acl domain: " + aclDomain + " vStamp: " + vStamp);
 							}
-							parentFldr.grant(this.dctmSession.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
+							parentFldr.grant(session.getLoginUserName(), IDfACL.DF_PERMIT_WRITE, null);
 							parentFldr.save();
 							restoreACLObjectList.add(new restoreOldACLInfo(aclName, aclDomain, parentFldr.getObjectId()
 								.getId(), vStamp));
@@ -541,27 +527,27 @@ public class DctmDocument extends DctmObject {
 // read object
 					// If root version, update version label otherwise not
 					if (isRootVersion) {
-						setAllAttributesInCMS(sysObject, dctmVerDoc, true, doesExistingObjectNeedsUpdate);
+						setAllAttributesInCMS(existingDoc, dctmVerDoc, true, doesExistingObjectNeedsUpdate);
 					} else {
-						setAllAttributesInCMS(sysObject, dctmVerDoc, false, doesExistingObjectNeedsUpdate);
+						setAllAttributesInCMS(existingDoc, dctmVerDoc, false, doesExistingObjectNeedsUpdate);
 					}
 
 					// save or checkin document accordingly
 					if (branchCreated || isRootVersion || doesExistingObjectNeedsUpdate) {
-						sysObject.save();
+						existingDoc.save();
 						// Revert back the r_immutable_flag if it was modified previously
 						if (isImmutableChangedFlag) {
-							sysObject.setBoolean(DctmAttrNameConstants.R_IMMUTABLE_FLAG, true);
-							sysObject.save();
+							existingDoc.setBoolean(DctmAttrNameConstants.R_IMMUTABLE_FLAG, true);
+							existingDoc.save();
 						}
 						// Revert back the permission on the document if it was modified previously
 						if (permitChangedFlag) {
-							sysObject.grant(this.dctmSession.getLoginUserName(), curPermit, null);
-							sysObject.save();
+							existingDoc.grant(session.getLoginUserName(), curPermit, null);
+							existingDoc.save();
 						}
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-							DctmDocument.logger.debug("Saved the document with id: " + sysObject.getObjectId().getId()
-								+ " and name: " + sysObject.getObjectName());
+							DctmDocument.logger.debug("Saved the document with id: "
+								+ existingDoc.getObjectId().getId() + " and name: " + existingDoc.getObjectName());
 						}
 					} else {
 						// otherwise checkin
@@ -585,13 +571,13 @@ public class DctmDocument extends DctmObject {
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 							DctmDocument.logger.debug("Setting version labels to: " + versionLabels);
 							DctmDocument.logger.debug("Checking in the document with id: "
-								+ sysObject.getObjectId().getId() + " and name: " + sysObject.getObjectName());
+								+ existingDoc.getObjectId().getId() + " and name: " + existingDoc.getObjectName());
 						}
-						IDfId newVersionID = sysObject.checkin(false, versionLabels);
-						sysObject = (IDfSysObject) this.dctmSession.getObject(newVersionID);
+						IDfId newVersionID = existingDoc.checkin(false, versionLabels);
+						existingDoc = castPersistentObject(session.getObject(newVersionID));
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-							DctmDocument.logger.debug("The new version id is " + sysObject.getObjectId().getId()
-								+ " and name: " + sysObject.getObjectName());
+							DctmDocument.logger.debug("The new version id is " + existingDoc.getObjectId().getId()
+								+ " and name: " + existingDoc.getObjectName());
 						}
 					}
 
@@ -602,10 +588,10 @@ public class DctmDocument extends DctmObject {
 					}
 
 					// Update internal attributes like creation/modify date and creators/modifiers
-					updateSystemAttributes(sysObject, dctmVerDoc);
+					updateSystemAttributes(existingDoc, dctmVerDoc);
 
 					// Update set_file, set_client and set_time attributes of newly added content.
-					updateContentAttributes(sysObject, dctmVerDoc);
+					updateContentAttributes(existingDoc, dctmVerDoc);
 				} // if (!doesDuplicateObjectExists)
 
 				// Check to see if we need to update i_is_deleted attribute to True in target repo
@@ -615,11 +601,11 @@ public class DctmDocument extends DctmObject {
 					// in target, add target object id in the list of objects whose i_is_deleted
 // will
 					// updated to true later on.
-					if (!sysObject.isDeleted() && !updateIsDeletedObjects.contains(sysObject.getObjectId().getId())) {
-						updateIsDeletedObjects.add(sysObject.getObjectId().getId());
+					if (!existingDoc.isDeleted() && !updateIsDeletedObjects.contains(existingDoc.getObjectId().getId())) {
+						updateIsDeletedObjects.add(existingDoc.getObjectId().getId());
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 							DctmDocument.logger.debug("I_IS_DELETED need to be set to true in target repo with id: "
-								+ sysObject.getObjectId().getId() + " and name: " + sysObject.getObjectName());
+								+ existingDoc.getObjectId().getId() + " and name: " + existingDoc.getObjectName());
 						}
 					}
 				}
@@ -627,20 +613,20 @@ public class DctmDocument extends DctmObject {
 				// Store source repo object id and target repo objectid in a map to build up version
 // history
 				// in target repo identical to source repo.
-				oldNewDocuments.put(dctmVerDoc.getSrcObjectID(), sysObject.getObjectId().getId());
+				oldNewDocuments.put(dctmVerDoc.getSrcObjectID(), existingDoc.getObjectId().getId());
 				if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
-					DctmDocument.logger.info("Created/Located document with id " + sysObject.getObjectId().getId()
+					DctmDocument.logger.info("Created/Located document with id " + existingDoc.getObjectId().getId()
 						+ " in target repo for object id " + dctmVerDoc.getSrcObjectID() + " of source repo.");
 				}
 
 			} // for (DctmDocument dctmVerDoc : getVersionTree())
 
 			// Restore ACL of any parent folders that was changed during the import process.
-			restoreACLOfParentFolders(restoreACLObjectList);
+			restoreACLOfParentFolders(session, restoreACLObjectList);
 
 			// Update i_is_deleted attribute of documents if needed.
 			if (!updateIsDeletedObjects.isEmpty()) {
-				updateIsDeletedAttribute(updateIsDeletedObjects);
+				updateIsDeletedAttribute(session, updateIsDeletedObjects);
 			}
 
 			if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
@@ -648,18 +634,19 @@ public class DctmDocument extends DctmObject {
 			}
 		} catch (DfException e) {
 			// Abort the transaction in case of DfException
-			this.dctmSession.abortTrans();
+			session.abortTrans();
 			throw (e);
 		}
 
 		// Commit the transaction
-		this.dctmSession.commitTrans();
+		session.commitTrans();
 	}
 
-	private IDfSysObject retrieveSimilarDescendantFromCMS(DctmDocument dctmVerDoc, IDfSysObject antecedentVersion) {
+	private IDfDocument retrieveSimilarDescendantFromCMS(DctmDocument dctmVerDoc, IDfSysObject antecedentVersion) {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started retrieving similar descendant version document from target cms.");
 		}
+		IDfSession session = antecedentVersion.getSession();
 
 		StringBuffer objLookUpQry = new StringBuffer(50);
 		try {
@@ -689,7 +676,7 @@ public class DctmDocument extends DctmObject {
 				DctmDocument.logger.debug("Query to lookup descendant version is: " + objLookUpQry.toString());
 			}
 			// Retrieve the object using the query
-			return (IDfSysObject) this.dctmSession.getObjectByQualification(objLookUpQry.toString());
+			return castPersistentObject(session.getObjectByQualification(objLookUpQry.toString()));
 		} catch (DfException e) {
 			DctmDocument.logger.error("Lookup of object failed with query: " + objLookUpQry, e);
 			return null;
@@ -703,7 +690,7 @@ public class DctmDocument extends DctmObject {
 	 *            the dctm ver doc
 	 * @return the i df sys object
 	 */
-	private IDfSysObject retrieveIdenticalObjectFromCMS(DctmDocument dctmVerDoc) {
+	private IDfDocument retrieveIdenticalObjectFromCMS(IDfSession session, DctmDocument dctmVerDoc) {
 
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started retrieving Identical version document from target cms.");
@@ -741,7 +728,7 @@ public class DctmDocument extends DctmObject {
 				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 					DctmDocument.logger.debug("Document is marked as deleted: " + objectName);
 				}
-				IDfFolder tempCabinet = this.dctmSession.getFolderByPath("/Temp");
+				IDfFolder tempCabinet = session.getFolderByPath("/Temp");
 				String tempCabinetId = tempCabinet.getObjectId().getId();
 				objLookUpQry.append("dm_sysobject_s where object_name='");
 				objLookUpQry.append(objectName);
@@ -768,51 +755,11 @@ public class DctmDocument extends DctmObject {
 			}
 
 			// Retrieve the object using the query
-			return (IDfSysObject) this.dctmSession.getObjectByQualification(objLookUpQry.toString());
+			return castPersistentObject(session.getObjectByQualification(objLookUpQry.toString()));
 		} catch (DfException e) {
 			DctmDocument.logger.error("Lookup of object failed with query: " + objLookUpQry, e);
 			return null;
 		}
-
-	}
-
-	/**
-	 * Creates the simple document.
-	 *
-	 * @throws DfException
-	 *             Signals that Documentum Server error has occurred.
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
-	 */
-	@SuppressWarnings("unused")
-	@Deprecated
-	private void createSimpleDocument() throws DfException, IOException {
-
-		// First check to see if the document already exist in the repo and then
-		// check if it needs to
-		// be updated
-		// IDfSysObject existingDocument = checkIfDocumentExist(dctmDoc);
-
-		String objectType = getStrSingleAttrValue(DctmAttrNameConstants.R_OBJECT_TYPE);
-		IDfSysObject sysObject = (IDfSysObject) this.dctmSession.newObject(objectType);
-
-		// set all of the attributes of this new sysobject from a read object
-		setAllAttributesInCMS(sysObject, this, true, false);
-
-		// Set content
-		DctmDocument.setContentFilesInCMS(sysObject, this);
-
-		// Link the document appropriately
-		List<String> folderLocations = getFolderLocations();
-		for (String fldrLoc : folderLocations) {
-			if (DctmDocument.isThisATest) {
-				fldrLoc = "/Replications" + fldrLoc;
-			}
-
-			sysObject.link(fldrLoc);
-		}
-		sysObject.save();
-		updateSystemAttributes(sysObject, this);
 
 	}
 
@@ -829,7 +776,7 @@ public class DctmDocument extends DctmObject {
 	 *             Signals that DFC Exception has occurred.
 	 */
 	private static void setContentFilesInCMS(IDfSysObject sysObject, DctmDocument dctmDoc) throws IOException,
-	DfException {
+		DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started setting content files of document with name: "
 				+ sysObject.getObjectName());
@@ -876,8 +823,8 @@ public class DctmDocument extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
-		return getDctmDocument(prsstntObj, false);
+	protected DctmDocument doGetFromCMS(IDfDocument doc) throws CMSMFException {
+		return getDctmDocument(doc, false);
 	}
 
 	/**
@@ -891,8 +838,7 @@ public class DctmDocument extends DctmObject {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	private DctmObject getDctmDocument(IDfPersistentObject prsstntObj, boolean isVersionBeingProcessed)
-		throws CMSMFException {
+	private DctmDocument getDctmDocument(IDfDocument doc, boolean isVersionBeingProcessed) throws CMSMFException {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started exporting dctm dm_document and supporting objects from repository");
 		}
@@ -900,40 +846,37 @@ public class DctmDocument extends DctmObject {
 		DctmDocument dctmDocument = new DctmDocument();
 		String srcObjID = null;
 		try {
-			srcObjID = prsstntObj.getObjectId().getId();
+			srcObjID = doc.getObjectId().getId();
 
 			// Get all of the attributes
-			getAllAttributesFromCMS(dctmDocument, prsstntObj, srcObjID);
+			dctmDocument.getAllAttributesFromCMS(doc, srcObjID);
 
 			// Update ACL Domain attribute value if needed
 			// No need to do this here anymore, it is handled in getAllAttributesFromCMS() itself.
 			// updateACLDomainAttribute(dctmDocument);
 
 			// Set implicit version label
-			dctmDocument.setImplicitVersionLabel(((IDfSysObject) prsstntObj).getImplicitVersionLabel());
+			dctmDocument.setImplicitVersionLabel(doc.getImplicitVersionLabel());
 
 			// Set content files
 			// NOTE The content files should only be retrieved if you are processing versions. Not
-// when
-			// this method is called from prepareObject().
+			// when this method is called from prepareObject().
 			if (isVersionBeingProcessed) {
-				getContentFilesFromCMS(dctmDocument, (IDfSysObject) prsstntObj, srcObjID);
+				getContentFilesFromCMS(dctmDocument, doc, srcObjID);
 			}
 
 			// Export other supporting objects
-			exportSupportingObjects((IDfSysObject) prsstntObj);
+			exportSupportingObjects(doc);
 
 			// Process folders and write where this document is linked
-			exportParentFolders(dctmDocument, (IDfSysObject) prsstntObj, srcObjID);
+			dctmDocument.exportParentFolders(doc, srcObjID);
 
 			// If processing a version, do not call getVersions method otherwise it will end up in
-// never
-			// ending loop. You want to call this method only the 1st time the prepareDctmDocument()
-// method is
-			// called from prepareObject() method.
+			// never ending loop. You want to call this method only the 1st time the
+			// prepareDctmDocument() method is called from prepareObject() method.
 			if (!isVersionBeingProcessed) {
 				// Set all of the versions of the document
-				getVersions(dctmDocument, (IDfSysObject) prsstntObj, srcObjID);
+				getVersions(dctmDocument, doc, srcObjID);
 			}
 
 		} catch (DfException e) {
@@ -942,7 +885,7 @@ public class DctmDocument extends DctmObject {
 
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger
-			.info("Finished exporting dctm dm_document and supporting objects from repository for ID: " + srcObjID);
+				.info("Finished exporting dctm dm_document and supporting objects from repository for ID: " + srcObjID);
 		}
 		return dctmDocument;
 	}
@@ -958,25 +901,26 @@ public class DctmDocument extends DctmObject {
 	 *             the cMSMF exception
 	 */
 	private void exportSupportingObjects(IDfSysObject sysObj) throws DfException, CMSMFException {
+		IDfSession session = sysObj.getSession();
 		// Export document owner
 		String owner = sysObj.getOwnerName();
-		DctmObjectExportHelper.serializeUserOrGroupByName(this.dctmSession, owner);
+		DctmObjectExportHelper.serializeUserOrGroupByName(session, owner);
 
 		// Export document group name
 		String groupName = sysObj.getGroupName();
-		DctmObjectExportHelper.serializeUserOrGroupByName(this.dctmSession, groupName);
+		DctmObjectExportHelper.serializeUserOrGroupByName(session, groupName);
 
 		// Export the acl
 		IDfACL acl = sysObj.getACL();
-		DctmObjectExportHelper.serializeACL(this.dctmSession, acl);
+		DctmObjectExportHelper.serializeACL(session, acl);
 
 		// Export the object type
 		IDfType objType = sysObj.getType();
-		DctmObjectExportHelper.serializeType(this.dctmSession, objType);
+		DctmObjectExportHelper.serializeType(session, objType);
 
 		// Export the format object
 		IDfFormat format = sysObj.getFormat();
-		DctmObjectExportHelper.serializeFormat(this.dctmSession, format);
+		DctmObjectExportHelper.serializeFormat(session, format);
 
 		// Record the file store name in source repo configuration object
 		String aStorageType = sysObj.getStorageType();
@@ -1002,6 +946,7 @@ public class DctmDocument extends DctmObject {
 			DctmDocument.logger.info("Started retrieving all versions from repository for document with id: "
 				+ srcObjID);
 		}
+		IDfSession session = sysObj.getSession();
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		try {
 			String chronicalID = sysObj.getChronicleId().getId();
@@ -1009,15 +954,10 @@ public class DctmDocument extends DctmObject {
 				"Select distinct r_object_id, r_creation_date from dm_sysobject_s where i_chronicle_id = '");
 			versionsQry.append(chronicalID);
 			// NOTE Previously the versions were retrieved in order by r_object_id but it was
-// discovered that
-			// in cobsi docbase we had some objects who had their chronicle ids higher than their
-// own object
-			// id.
-			// It is believed that Dump n Load may have created the versioned objects in reverse
-// order (from
-			// newer
-			// to older) instead of (older to newer). Hence the query looks up in the order by
-// creation date.
+			// discovered that in cobsi docbase we had some objects who had their chronicle ids
+			// higher than their own object id. It is believed that Dump n Load may have created the
+			// versioned objects in reverse order (from newer to older) instead of (older to newer).
+			// Hence the query looks up in the order by creation date.
 			// versionsQry.append("' order by r_object_id");
 			versionsQry.append("' order by r_creation_date");
 			if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
@@ -1031,8 +971,8 @@ public class DctmDocument extends DctmObject {
 				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 					DctmDocument.logger.debug("Retrieving older version with id: " + versionID);
 				}
-				IDfSysObject verObj = (IDfSysObject) this.dctmSession.getObject(new DfId(versionID));
-				DctmDocument verDctmDoc = (DctmDocument) getDctmDocument(verObj, true);
+				IDfDocument verObj = castPersistentObject(session.getObject(new DfId(versionID)));
+				DctmDocument verDctmDoc = getDctmDocument(verObj, true);
 				dctmDocument.addVersion(verDctmDoc);
 				versionCnt++;
 			}
@@ -1062,20 +1002,20 @@ public class DctmDocument extends DctmObject {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	private void exportParentFolders(DctmDocument dctmDocument, IDfSysObject sysObj, String srcObjID)
-		throws CMSMFException {
+	private void exportParentFolders(IDfSysObject sysObj, String srcObjID) throws CMSMFException {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started retrieving parent folders from repository for document with id: "
 				+ srcObjID);
 		}
+		IDfSession session = sysObj.getSession();
 		try {
-			List<Object> folderIDs = dctmDocument.findAttribute(DctmAttrNameConstants.I_FOLDER_ID).getRepeatingValues();
+			List<Object> folderIDs = findAttribute(DctmAttrNameConstants.I_FOLDER_ID).getRepeatingValues();
 			for (Object folderID : folderIDs) {
 				IDfFolder folder = (IDfFolder) sysObj.getSession().getObject(new DfId((String) folderID));
-				dctmDocument.addFolderLocation(folder.getFolderPath(0));
+				addFolderLocation(folder.getFolderPath(0));
 
 				// Export the folder object
-				DctmObjectExportHelper.serializeFolder(this.dctmSession, folder);
+				DctmObjectExportHelper.serializeFolder(session, folder);
 			}
 		} catch (DfException e) {
 			throw (new CMSMFException("Couldn't retrieve related folder objects from repository for object with id: "
@@ -1111,6 +1051,7 @@ public class DctmDocument extends DctmObject {
 				+ srcObjID);
 		}
 
+		IDfSession session = sysObj.getSession();
 		try {
 			int pageCnt = sysObj.getPageCount();
 			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
@@ -1121,7 +1062,7 @@ public class DctmDocument extends DctmObject {
 				StringBuffer contentDQLBuffer = new StringBuffer(
 					"select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, ");
 				contentDQLBuffer
-				.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
+					.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
 				contentDQLBuffer.append("from dmr_content_r  dcr, dmr_content_s dcs ");
 				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
 				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
@@ -1134,7 +1075,7 @@ public class DctmDocument extends DctmObject {
 				}
 				IDfQuery contentQuery = new DfClientX().getQuery();
 				contentQuery.setDQL(contentDQLBuffer.toString());
-				IDfCollection contentColl = contentQuery.execute(this.dctmSession, IDfQuery.READ_QUERY);
+				IDfCollection contentColl = contentQuery.execute(session, IDfQuery.READ_QUERY);
 				while (contentColl.next()) {
 					DctmContent dctmContent = new DctmContent();
 					// Set various attributes of dctmContent object
@@ -1191,6 +1132,8 @@ public class DctmDocument extends DctmObject {
 				+ srcObjID);
 		}
 
+		IDfSession session = sysObj.getSession();
+
 		try {
 			int pageCnt = sysObj.getPageCount();
 			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
@@ -1212,11 +1155,11 @@ public class DctmDocument extends DctmObject {
 				}
 				IDfQuery contentQuery = new DfClientX().getQuery();
 				contentQuery.setDQL(contentDQLBuffer.toString());
-				IDfCollection contentColl = contentQuery.execute(this.dctmSession, IDfQuery.READ_QUERY);
+				IDfCollection contentColl = contentQuery.execute(session, IDfQuery.READ_QUERY);
 				while (contentColl.next()) {
-					IDfPersistentObject contentObject = this.dctmSession.getObject(contentColl
+					IDfPersistentObject contentObject = session.getObject(contentColl
 						.getId(DctmAttrNameConstants.R_OBJECT_ID));
-					DctmContent dctmContent = new DctmContent(this.dctmSession);
+					DctmContent dctmContent = new DctmContent();
 					dctmContent = (DctmContent) dctmContent.getFromCMS(contentObject);
 					dctmContent.setPageNbr(contentColl.getInt(DctmAttrNameConstants.PAGE));
 					dctmContent.setPageModifier(contentColl.getString(DctmAttrNameConstants.PAGE_MODIFIER));
@@ -1258,8 +1201,8 @@ public class DctmDocument extends DctmObject {
 		String pageModifier = dctmContent.getPageModifier();
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
-			.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
-				+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
+				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+					+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
 		}
 		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
 // ByteArrayInputStream
@@ -1321,16 +1264,16 @@ public class DctmDocument extends DctmObject {
 		String pageModifier, int contentDataTicket) throws IOException, DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
-			.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
-				+ contentObjID
-				+ ", "
-				+ contentFormat
-				+ ", "
-				+ pageNbr
-				+ ", "
-				+ pageModifier
-				+ ", "
-				+ contentDataTicket + ">");
+				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+					+ contentObjID
+					+ ", "
+					+ contentFormat
+					+ ", "
+					+ pageNbr
+					+ ", "
+					+ pageModifier
+					+ ", "
+					+ contentDataTicket + ">");
 		}
 		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
 // ByteArrayInputStream

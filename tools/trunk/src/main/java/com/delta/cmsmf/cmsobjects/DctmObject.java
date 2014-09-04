@@ -19,6 +19,7 @@ import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataAttribute;
 import com.delta.cmsmf.datastore.DataObject;
+import com.delta.cmsmf.datastore.cms.CmsObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.runtime.RunTimeProperties;
@@ -49,7 +50,7 @@ import com.documentum.fc.common.IDfTime;
  *
  * @author Shridev Makim 6/15/2010
  */
-public abstract class DctmObject implements Serializable {
+public abstract class DctmObject<T extends IDfPersistentObject> implements Serializable {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -57,17 +58,16 @@ public abstract class DctmObject implements Serializable {
 	/** The logger object used for logging. */
 	protected static final Logger logger = Logger.getLogger(DctmObject.class);
 
-	/** The documentum repository session. */
-	protected transient IDfSession dctmSession = null;
-
 	/**
 	 * The dctm object type enumeration.
 	 * This type will be set by individual object types during initialization
 	 * within the class constructors.
 	 *
-	 * @see DctmObjectType
+	 * @see CmsObjectType
 	 */
 	private final DctmObjectType dctmObjectType;
+
+	private final Class<T> dctmObjectClass;
 
 	/** The attributes map. */
 	private final Map<String, DctmAttribute> attrMap = new HashMap<String, DctmAttribute>();
@@ -80,33 +80,28 @@ public abstract class DctmObject implements Serializable {
 	/**
 	 * Instantiates a new dctm object.
 	 */
-	public DctmObject(DctmObjectType type) {
+	public DctmObject(DctmObjectType type, Class<T> dctmObjectClass) {
 		this.dctmObjectType = type;
-	}
-
-	/**
-	 * Instantiates a new dctm object with documentum session.
-	 *
-	 * @param dctmSession
-	 *            the documentum session
-	 */
-	public DctmObject(IDfSession dctmSession, DctmObjectType type) {
-		this(type);
-		this.dctmSession = dctmSession;
+		this.dctmObjectClass = dctmObjectClass;
 	}
 
 	public final DctmObjectType getObjectType() {
 		return this.dctmObjectType;
 	}
 
-	/**
-	 * Sets the documentum repository session.
-	 *
-	 * @param dctmSession
-	 *            the new documentum repository session
-	 */
-	public void setDctmSession(IDfSession dctmSession) {
-		this.dctmSession = dctmSession;
+	public final void loadFrom(DataObject dataObject) {
+		if (dataObject == null) { throw new IllegalArgumentException(); }
+		if (dataObject.getType() != this.dctmObjectType) { throw new IllegalArgumentException(String.format(
+			"Expected a DataObject of type %s but got type %s", this.dctmObjectType, dataObject.getType())); }
+		this.dataObject = dataObject;
+		this.srcObjectID = dataObject.getId();
+		for (DataAttribute attribute : dataObject) {
+			this.attrMap.put(attribute.getName(), new DctmAttribute(attribute));
+		}
+	}
+
+	protected void doLoadFrom(DataObject dataObject) {
+		// Do any additional work
 	}
 
 	/**
@@ -267,7 +262,7 @@ public abstract class DctmObject implements Serializable {
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	public abstract void createInCMS() throws DfException, IOException;
+	public abstract void createInCMS(IDfSession session) throws DfException, IOException;
 
 	/**
 	 * Updates system attributes of an object using execsql. This method is used to
@@ -280,7 +275,8 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected void updateSystemAttributes(IDfSysObject sysObject, DctmObject dctmObj) throws DfException {
+	protected void updateSystemAttributes(IDfSysObject sysObject, DctmObject<T> dctmObj) throws DfException {
+		IDfSession session = sysObject.getSession();
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started updating system attributes of object with name: "
 				+ sysObject.getObjectName());
@@ -304,7 +300,7 @@ public abstract class DctmObject implements Serializable {
 		if (aclDomain.equals(CMSMFAppConstants.DM_DBO) || creatorName.equals(CMSMFAppConstants.DM_DBO)
 			|| modifier.equals(CMSMFAppConstants.DM_DBO)) {
 			String targetRepoOperatorName = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
-				this.dctmSession);
+				session);
 			if (aclDomain.equals(CMSMFAppConstants.DM_DBO)) {
 				aclDomain = targetRepoOperatorName;
 			}
@@ -325,7 +321,7 @@ public abstract class DctmObject implements Serializable {
 			+ dctmObj.getStrSingleAttrValue(DctmAttrNameConstants.ACL_NAME) + "'', acl_domain = ''" + aclDomain
 			+ "'' WHERE r_object_id = ''" + sysObject.getObjectId().getId() + "''";
 
-		runExecSQL(sysObject.getSession(), sqlStr);
+		DctmObject.runExecSQL(sysObject.getSession(), sqlStr);
 
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Finished updating system attributes of object with name: "
@@ -343,7 +339,7 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected void updateModifyDate(IDfPersistentObject prsstntObject, DctmObject dctmObj) throws DfException {
+	protected void updateModifyDate(T prsstntObject, DctmObject<T> dctmObj) throws DfException {
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started updating modify date of object");
 		}
@@ -358,7 +354,7 @@ public abstract class DctmObject implements Serializable {
 			+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN + "''), i_vstamp = " + vStamp + " WHERE r_object_id = ''"
 			+ prsstntObject.getObjectId().getId() + "''";
 
-		runExecSQL(prsstntObject.getSession(), sqlStr);
+		DctmObject.runExecSQL(prsstntObject.getSession(), sqlStr);
 
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Finished updating modify date of object");
@@ -376,7 +372,7 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected void updateContentAttributes(IDfPersistentObject prsstntObject, DctmObject dctmObj) throws DfException {
+	protected void updateContentAttributes(T prsstntObject, DctmObject<T> dctmObj) throws DfException {
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started updating attributes of content objects");
 		}
@@ -413,7 +409,7 @@ public abstract class DctmObject implements Serializable {
 				+ dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.FULL_FORMAT) + "'')";
 
 			// Run the exec sql
-			runExecSQL(prsstntObject.getSession(), sqlStr);
+			DctmObject.runExecSQL(prsstntObject.getSession(), sqlStr);
 		}
 
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -429,7 +425,7 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             the df exception
 	 */
-	protected void updateIsDeletedAttribute(List<String> updateIsDeletedObjects) throws DfException {
+	protected void updateIsDeletedAttribute(IDfSession session, List<String> updateIsDeletedObjects) throws DfException {
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started updating i_is_deleted attribute of objects");
 		}
@@ -445,7 +441,7 @@ public abstract class DctmObject implements Serializable {
 		// prepare sql to be executed
 		String sqlStr = "UPDATE dm_sysobject_s SET i_is_deleted = 1 WHERE r_object_id IN (" + objectIDList + ")";
 
-		runExecSQL(this.dctmSession, sqlStr);
+		DctmObject.runExecSQL(session, sqlStr);
 
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Finished updating i_is_deleted attribute of objects");
@@ -455,64 +451,40 @@ public abstract class DctmObject implements Serializable {
 	/**
 	 * Updates vStamp attribute of an persistent object using execsql.
 	 *
-	 * @param prsstntObject
+	 * @param obj
 	 *            the DFC persistentObject representing an object in repository
-	 * @param dctmObj
-	 *            the CMSMF DctmObject that has internal/system attributes.
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected void updateVStamp(IDfPersistentObject prsstntObject, DctmObject dctmObj) throws DfException {
-		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
-			DctmObject.logger.info("Started updating vStamp of object");
-		}
-
-		String objType = prsstntObject.getType().getName();
-		// prepare sql to be executed
-		int vStamp = dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
-
-		String sqlStr = "UPDATE " + objType + "_s " + "SET i_vstamp = " + vStamp + " WHERE r_object_id = ''"
-			+ prsstntObject.getObjectId().getId() + "''";
-
-		runExecSQL(prsstntObject.getSession(), sqlStr);
-
-		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
-			DctmObject.logger.info("Finished updating vStamp of object");
-		}
+	protected void updateVStamp(IDfPersistentObject obj, int vStamp) throws DfException {
+		updateVStamp(obj, String.format("%s_s", obj.getType().getName()), vStamp);
 	}
 
 	/**
 	 * Updates vStamp attribute of an persistent object using execsql.
 	 *
-	 * @param prsstntObject
+	 * @param obj
 	 *            the DFC persistentObject representing an object in repository
 	 * @param tableName
 	 *            the table name to be used in update clause
-	 * @param vStamp
-	 *            the vStamp
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected void updateVStamp(IDfPersistentObject prsstntObject, String tableName, int vStamp) throws DfException {
+	protected void updateVStamp(IDfPersistentObject obj, String tableName, int vStamp) throws DfException {
+		final String objId = obj.getObjectId().getId();
+		final int oldVstamp = obj.getVStamp();
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
-			DctmObject.logger.info("Started updating vStamp of an object");
+			DctmObject.logger.info(String.format(
+				"Started updating vStamp of a %s object with ID = [%s] from [%d] to [%d] on table [%s]", obj.getType()
+				.getName(), objId, oldVstamp, vStamp, tableName));
 		}
 
-		int oldVstamp = prsstntObject.getVStamp();
-
-		if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
-			DctmObject.logger.debug("Current vstamp of the object with id: " + prsstntObject.getObjectId().getId()
-				+ " is: " + oldVstamp + " it will be updated to: " + vStamp);
-		}
-
-		// prepare sql to be executed
-		String sqlStr = "UPDATE " + tableName + " SET i_vstamp = " + vStamp + " WHERE r_object_id = ''"
-			+ prsstntObject.getObjectId().getId() + "''";
-
-		runExecSQL(prsstntObject.getSession(), sqlStr);
+		String sqlStr = String.format("UPDATE %s SET i_vstamp = %d WHERE r_object_id = ''%s''", tableName, vStamp,
+			objId);
+		DctmObject.runExecSQL(obj.getSession(), sqlStr);
 
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
-			DctmObject.logger.info("Finished updating vStamp of object");
+			DctmObject.logger.info(String.format("Finished updating vStamp of object with ID[%s]", objId));
 		}
 	}
 
@@ -526,7 +498,7 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private void runExecSQL(IDfSession session, String sqlQueryString) throws DfException {
+	private static void runExecSQL(IDfSession session, String sqlQueryString) throws DfException {
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
 			DctmObject.logger.debug("Running exec_sql dql with query: " + sqlQueryString);
@@ -593,8 +565,8 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected void setAllAttributesInCMS(IDfPersistentObject prsstntObj, DctmObject dctmObj,
-		boolean updateVersionLabels, boolean isUpdate) throws DfException {
+	protected void setAllAttributesInCMS(T prsstntObj, DctmObject<T> dctmObj, boolean updateVersionLabels,
+		boolean isUpdate) throws DfException {
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started setting attributes of persistent object");
 		}
@@ -675,7 +647,7 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             the DfException
 	 */
-	protected void clearAttributeInCMS(IDfPersistentObject prsstntObj, String attrName) throws DfException {
+	protected void clearAttributeInCMS(T prsstntObj, String attrName) throws DfException {
 
 		if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
 			DctmObject.logger.debug("Clearing attribute with name: " + attrName + " from object with id: "
@@ -731,7 +703,7 @@ public abstract class DctmObject implements Serializable {
 	 */
 	protected void setAttributeInCMS(IDfPersistentObject prsstntObj, String attrName, DctmAttribute dctmAttribute,
 		boolean isUpdate) throws DfException {
-
+		final IDfSession session = prsstntObj.getSession();
 		if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
 			if (dctmAttribute.getAttrValueType() == DctmAttributeTypesEnum.SINGLE_VALUE_TYPE_ATTRIBUTE) {
 				DctmObject.logger.debug("Attribute <name, value> pair is: <" + attrName + ", "
@@ -743,7 +715,7 @@ public abstract class DctmObject implements Serializable {
 		}
 
 		// If an existing object is being updated, first clear repeating values if the attribute
-// being
+		// being
 		// set is repeating type.
 		if ((dctmAttribute.getAttrValueType() == DctmAttributeTypesEnum.REPEATING_VALUE_TYPE_ATTRIBUTE) && isUpdate) {
 			prsstntObj.removeAll(attrName);
@@ -801,8 +773,7 @@ public abstract class DctmObject implements Serializable {
 					if (strVal.equals(CMSMFAppConstants.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
 						.contains(attrName)) {
-						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
-							this.dctmSession);
+						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(session);
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + attrName
 								+ " attribute of object to repository operator name.");
@@ -820,8 +791,8 @@ public abstract class DctmObject implements Serializable {
 						if (strVal.equals(CMSMFAppConstants.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
 							.contains(attrName)) {
-							strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
-								this.dctmSession);
+							strVal = RunTimeProperties.getRunTimePropertiesInstance()
+								.getTargetRepoOperatorName(session);
 							if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 								DctmObject.logger.info("Updated " + attrName
 									+ " attribute of object to repository operator name.");
@@ -847,6 +818,13 @@ public abstract class DctmObject implements Serializable {
 
 	}
 
+	protected final T castPersistentObject(IDfPersistentObject obj) {
+		if (obj == null) { return null; }
+		if (this.dctmObjectClass.isAssignableFrom(obj.getClass())) { return this.dctmObjectClass.cast(obj); }
+		throw new ClassCastException(String.format("Cannot cast a %s as a %s", obj.getClass().getCanonicalName(),
+			this.dctmObjectClass.getCanonicalName()));
+	}
+
 	/**
 	 * Gets the object from CMS.
 	 *
@@ -856,23 +834,23 @@ public abstract class DctmObject implements Serializable {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	public final DctmObject getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	public final DctmObject<T> getFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+		if (prsstntObj == null) { return null; }
+		final T obj = castPersistentObject(prsstntObj);
 		try {
-			this.dataObject = new DataObject(prsstntObj);
+			this.dataObject = new DataObject(obj);
 		} catch (DfException e) {
 			throw new CMSMFException("Failed to introspect the object", e);
 		}
-		return doGetFromCMS(prsstntObj);
+		return doGetFromCMS(obj);
 	}
 
-	protected abstract DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException;
+	protected abstract DctmObject<T> doGetFromCMS(T prsstntObj) throws CMSMFException;
 
 	/**
 	 * Gets all attributes from CMS and sets them in an attribute map of an instance of DctmObject
 	 * class.
 	 *
-	 * @param dctmObject
-	 *            the CMSMF DctmObject whose attributes map will be loaded
 	 * @param prsstntObj
 	 *            the DFC persistentObject whose attributes will be fetched
 	 * @param srcObjID
@@ -880,11 +858,10 @@ public abstract class DctmObject implements Serializable {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	protected final void getAllAttributesFromCMS(DctmObject dctmObject, IDfPersistentObject prsstntObj, String srcObjID)
-		throws CMSMFException {
-		if (dctmObject.dataObject == null) {
+	protected final void getAllAttributesFromCMS(T prsstntObj, String srcObjID) throws CMSMFException {
+		if (this.dataObject == null) {
 			try {
-				dctmObject.dataObject = new DataObject(prsstntObj);
+				this.dataObject = new DataObject(prsstntObj);
 			} catch (DfException e) {
 				throw new CMSMFException("Failed to introspect the object into a DataObject instance", e);
 			}
@@ -896,10 +873,10 @@ public abstract class DctmObject implements Serializable {
 		}
 		try {
 			// Set object id
-			dctmObject.setSrcObjectID(srcObjID);
+			setSrcObjectID(srcObjID);
 			final int attCount = prsstntObj.getAttrCount();
 			for (int i = 0; i < attCount; i++) {
-				getAttributeFromCMS(dctmObject, prsstntObj, prsstntObj.getAttr(i));
+				getAttributeFromCMS(prsstntObj, prsstntObj.getAttr(i));
 			}
 		} catch (DfException e) {
 			throw (new CMSMFException("Couldn't read all attributes from dctm object with id: " + srcObjID, e));
@@ -923,8 +900,7 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private void getAttributeFromCMS(DctmObject dctmObj, IDfPersistentObject prsstntObj, IDfAttr idfAttr)
-		throws DfException {
+	private void getAttributeFromCMS(IDfPersistentObject prsstntObj, IDfAttr idfAttr) throws DfException {
 		if (!idfAttr.isRepeating()) {
 			// handle single value attribute
 			boolean isValueEmpty = true;
@@ -969,7 +945,7 @@ public abstract class DctmObject implements Serializable {
 						strVal = CMSMFAppConstants.DM_DBO;
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + idfAttr.getName() + " attribute of object with id: "
-								+ dctmObj.getSrcObjectID() + " to dm_dbo.");
+								+ getSrcObjectID() + " to dm_dbo.");
 						}
 					}
 					if ((strVal != null) && (strVal.length() != 0)) {
@@ -990,7 +966,7 @@ public abstract class DctmObject implements Serializable {
 			}
 			// Store the attribute value in the object only if it is not empty
 			if (!isValueEmpty) {
-				dctmObj.addAttribute(idfAttr.getName(), dctmAttr);
+				addAttribute(idfAttr.getName(), dctmAttr);
 				if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
 					DctmObject.logger.debug("Attribute <name, value> pair is: <" + idfAttr.getName() + ", "
 						+ dctmAttr.getSingleValue().toString() + ">");
@@ -1042,7 +1018,7 @@ public abstract class DctmObject implements Serializable {
 								strVal = CMSMFAppConstants.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()
-										+ " attribute of object with id: " + dctmObj.getSrcObjectID() + " to dm_dbo.");
+										+ " attribute of object with id: " + getSrcObjectID() + " to dm_dbo.");
 								}
 							}
 							if ((strVal != null) && (strVal.length() != 0)) {
@@ -1061,45 +1037,11 @@ public abstract class DctmObject implements Serializable {
 					}
 				}
 				dctmAttr.setRepeatingValues(attrValueList);
-				dctmObj.addAttribute(attrName, dctmAttr);
+				addAttribute(attrName, dctmAttr);
 				if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
 					DctmObject.logger.debug("Attribute <name, value> pair is: <" + idfAttr.getName() + ", "
 						+ dctmAttr.getRepeatingValues().toString() + ">");
 				}
-			}
-		}
-	}
-
-	/**
-	 * Updates acl domain attribute.
-	 * This method is no longer used and is deprecated.
-	 *
-	 * @param dctmObj
-	 *            the dctm obj
-	 */
-	@Deprecated
-	protected void updateACLDomainAttribute(DctmObject dctmObj) {
-		// NOTE for sysobjects, acl_domain attribute stores acl domain name while for
-		// dm_acl objects, it is stored in owner_name attribute
-		String aclDomainAttributeName = DctmAttrNameConstants.ACL_DOMAIN;
-		if (dctmObj instanceof DctmACL) {
-			aclDomainAttributeName = DctmAttrNameConstants.OWNER_NAME;
-		}
-
-		// Check the value of acl_domain attribute. If it same as value of Operator Name, then
-// replace
-		// the value with "dm_dbo".
-		String aclDomainVal = dctmObj.getStrSingleAttrValue(aclDomainAttributeName);
-		if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
-			DctmObject.logger.debug("Current acl_domain of object with id: " + dctmObj.getSrcObjectID() + " is: "
-				+ aclDomainVal + " Repo operatorName is: "
-				+ RepositoryConfiguration.getRepositoryConfiguration().getOperatorName());
-		}
-		if (aclDomainVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())) {
-			dctmObj.findAttribute(aclDomainAttributeName).setSingleValue(CMSMFAppConstants.DM_DBO);
-			if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
-				DctmObject.logger.debug("Updated acl_domain of object with id: " + dctmObj.getSrcObjectID()
-					+ " to dm_dbo.");
 			}
 		}
 	}
@@ -1142,9 +1084,10 @@ public abstract class DctmObject implements Serializable {
 	 * @throws DfException
 	 *             the df exception
 	 */
-	protected void restoreACLOfParentFolders(List<restoreOldACLInfo> restoreACLObjectList) throws DfException {
+	protected void restoreACLOfParentFolders(IDfSession session, List<restoreOldACLInfo> restoreACLObjectList)
+		throws DfException {
 		for (restoreOldACLInfo aclInfo : restoreACLObjectList) {
-			IDfSysObject parentFolder = (IDfSysObject) this.dctmSession.getObject(new DfId(aclInfo.objectID));
+			IDfSysObject parentFolder = (IDfSysObject) session.getObject(new DfId(aclInfo.objectID));
 			if (parentFolder != null) {
 				parentFolder.setACLName(aclInfo.aclName);
 				parentFolder.setACLDomain(aclInfo.aclDomain);
@@ -1154,25 +1097,16 @@ public abstract class DctmObject implements Serializable {
 				updateVStamp(parentFolder, "dm_sysobject_s", aclInfo.vStamp);
 
 				// Flush this object out
-				this.dctmSession.flushObject(parentFolder.getObjectId());
+				session.flushObject(parentFolder.getObjectId());
 			}
 		}
 
 		// Flush the persistent object cache to avoid version mismatch errors.
-		this.dctmSession.flush("persistentobjcache", null);
-		this.dctmSession.flushCache(false);
+		session.flush("persistentobjcache", null);
+		session.flushCache(false);
 	}
 
 	public DataObject getDataObject() {
 		return this.dataObject;
-	}
-
-	public DctmObject(DataObject dataObject) {
-		this.srcObjectID = dataObject.getId();
-		this.dctmObjectType = dataObject.getType();
-		for (DataAttribute attribute : dataObject) {
-			this.attrMap.put(attribute.getName(), new DctmAttribute(attribute));
-		}
-		this.dataObject = dataObject;
 	}
 }

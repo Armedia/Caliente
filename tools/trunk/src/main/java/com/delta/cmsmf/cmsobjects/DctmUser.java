@@ -11,6 +11,9 @@ import org.apache.log4j.Logger;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
+import com.delta.cmsmf.datastore.DataObject;
+import com.delta.cmsmf.datastore.DataProperty;
+import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.DctmObjectImportHelper;
@@ -22,6 +25,7 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfValue;
 
 /**
  * The DctmUser class contains methods to export/import dm_user type of objects from/to
@@ -35,7 +39,7 @@ import com.documentum.fc.common.DfException;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class DctmUser extends DctmObject {
+public class DctmUser extends DctmObject<IDfUser> {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -64,17 +68,7 @@ public class DctmUser extends DctmObject {
 	 * Instantiates a new DctmUser object.
 	 */
 	public DctmUser() {
-		super(DctmObjectType.DCTM_USER);
-	}
-
-	/**
-	 * Instantiates a new DctmUser object with new CMS session.
-	 *
-	 * @param dctmSession
-	 *            the existing documentum CMS session
-	 */
-	public DctmUser(IDfSession dctmSession) {
-		super(dctmSession, DctmObjectType.DCTM_USER);
+		super(DctmObjectType.DCTM_USER, IDfUser.class);
 	}
 
 	/*
@@ -83,7 +77,7 @@ public class DctmUser extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
-	public void createInCMS() throws DfException, IOException {
+	public void createInCMS(IDfSession session) throws DfException, IOException {
 		DctmUser.usrs_read.incrementAndGet();
 
 		if (DctmUser.logger.isEnabledFor(Level.INFO)) {
@@ -91,14 +85,15 @@ public class DctmUser extends DctmObject {
 		}
 
 		// Begin transaction
-		this.dctmSession.beginTrans();
+		session.beginTrans();
 
 		// First check to see if the user already exist; if it does check to see if we need to
 // update it
 		String userName;
 		try {
 			boolean doesUserNeedUpdate = false;
-			IDfPersistentObject prsstntObj = null;
+			IDfPersistentObject newObject = null;
+			IDfUser newUser = null;
 			userName = getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME);
 
 			// NOTE if the user name is dmadmin or starts with "dm_", ignore and do not create them
@@ -110,7 +105,7 @@ public class DctmUser extends DctmObject {
 						+ " was not created in cms. It appears to be a system user");
 				}
 				// abort the transaction and exit out
-				this.dctmSession.abortTrans();
+				session.abortTrans();
 				DctmUser.usrs_skipped.incrementAndGet();
 				return;
 			}
@@ -149,8 +144,8 @@ public class DctmUser extends DctmObject {
 			if (userLoginDomain.equals("")) {
 				userLoginDomain = null;
 			}
-			IDfUser usr = this.dctmSession.getUserByLoginName(userLoginName, userLoginDomain);
 
+			IDfUser usr = session.getUserByLoginName(userLoginName, userLoginDomain);
 			if (usr != null) { // we found existing user
 				Date curUsrModifyDate = usr.getModifyDate().getDate();
 				if (!curUsrModifyDate.equals(findAttribute(DctmAttrNameConstants.R_MODIFY_DATE).getSingleValue())) {
@@ -174,14 +169,15 @@ public class DctmUser extends DctmObject {
 						removeAttribute(DctmAttrNameConstants.USER_NAME);
 					}
 
-					prsstntObj = usr;
+					newObject = usr;
+					newUser = usr;
 					doesUserNeedUpdate = true;
 				} else { // identical user exists, exit this method
 					if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 						DctmUser.logger.debug("Identical user by name " + userName
 							+ " already exist in target repository.");
 					}
-					this.dctmSession.abortTrans();
+					session.abortTrans();
 					DctmUser.usrs_skipped.incrementAndGet();
 					return;
 				}
@@ -189,20 +185,18 @@ public class DctmUser extends DctmObject {
 				if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 					DctmUser.logger.debug("Creating user " + userName + " in target repository.");
 				}
-				prsstntObj = this.dctmSession.newObject(DctmTypeConstants.DM_USER);
+				newObject = session.newObject(DctmTypeConstants.DM_USER);
+				newUser = castPersistentObject(newObject);
 			}
 
 			// NOTE First make sure that the default group for the user exists, if not create a one
-// it will
-			// be updated later on, when the groups file will be imported.
-			createRequiredUserDefaults();
+			// it will be updated later on, when the groups file will be imported.
+			createRequiredUserDefaults(session);
 
 			// NOTE if you try to change a user home docbase by setting home_docbase attribute, dfc
-// throws
-			// an error that you need to use changeHomeDocbase() method of IDfUser. remove this
-// attribute
-			// from attribute map.
-			String existingHomeDocbase = ((IDfUser) prsstntObj).getHomeDocbase();
+			// throws an error that you need to use changeHomeDocbase() method of IDfUser. remove
+			// this attribute from attribute map.
+			String existingHomeDocbase = newUser.getHomeDocbase();
 			String newHomeDocbase = getStrSingleAttrValue(DctmAttrNameConstants.HOME_DOCBASE);
 			removeAttribute(DctmAttrNameConstants.HOME_DOCBASE);
 			if (doesUserNeedUpdate) {
@@ -210,15 +204,15 @@ public class DctmUser extends DctmObject {
 // it
 				// by calling changeHomeDocbase() method.
 				if (!newHomeDocbase.equals("") && !existingHomeDocbase.equals(newHomeDocbase)) {
-					((IDfUser) prsstntObj).changeHomeDocbase(newHomeDocbase, true);
+					newUser.changeHomeDocbase(newHomeDocbase, true);
 				}
 			}
 
 			// set various attributes
-			setAllAttributesInCMS(prsstntObj, this, false, doesUserNeedUpdate);
+			setAllAttributesInCMS(newUser, this, false, doesUserNeedUpdate);
 
 			// save the user object
-			prsstntObj.save();
+			newUser.save();
 			if (doesUserNeedUpdate) {
 				DctmUser.usrs_updated.incrementAndGet();
 			} else {
@@ -230,22 +224,22 @@ public class DctmUser extends DctmObject {
 // that.
 			if (this.doesUserHaveInternalACL && (findAttribute(DctmAttrNameConstants.ACL_NAME) != null)
 				&& (findAttribute(DctmAttrNameConstants.ACL_DOMAIN) != null)) {
-				updateInternalACL(prsstntObj, defaultACLName);
+				updateInternalACL(newUser, defaultACLName);
 			}
 			// update modify date of the user object
-			updateModifyDate(prsstntObj, this);
+			updateModifyDate(newUser, this);
 
 			if (DctmUser.logger.isEnabledFor(Level.INFO)) {
 				DctmUser.logger.info("Finished creating dctm dm_user in repository with name: " + userName);
 			}
 		} catch (DfException e) {
 			// Abort the transaction in case of DfException
-			this.dctmSession.abortTrans();
+			session.abortTrans();
 			throw (e);
 		}
 
 		// Commit the transaction
-		this.dctmSession.commitTrans();
+		session.commitTrans();
 
 	}
 
@@ -286,15 +280,16 @@ public class DctmUser extends DctmObject {
 	 * @throws DfException
 	 *             the df exception
 	 */
-	private void updateInternalACL(IDfPersistentObject prsstntObj, String defaultACLName) throws DfException {
-		String curUsrDefaultACLName = ((IDfUser) prsstntObj).getACLName();
+	private void updateInternalACL(IDfUser user, String defaultACLName) throws DfException {
+		String curUsrDefaultACLName = user.getACLName();
 
 		// Check if the user internal default acl is different from what was on the file
 		// if it is different, modify the current default acl and add back the new one as a default
 		// acl to the user.
+		IDfSession session = user.getSession();
 		if (!curUsrDefaultACLName.equals(defaultACLName)) {
 			String userACLDomainName = getStrSingleAttrValue(DctmAttrNameConstants.ACL_DOMAIN);
-			IDfACL curUsrDefaultACL = this.dctmSession.getACL(userACLDomainName, curUsrDefaultACLName);
+			IDfACL curUsrDefaultACL = session.getACL(userACLDomainName, curUsrDefaultACLName);
 
 			if (curUsrDefaultACL != null) {
 				// IDfId newACLID = curUsrDefaultACL.saveAsNew();
@@ -313,8 +308,8 @@ public class DctmUser extends DctmObject {
 						+ " was updated successfully.");
 				}
 				// add new acl as default acl for the user
-				((IDfUser) prsstntObj).setDefaultACLEx(userACLDomainName, defaultACLName);
-				prsstntObj.save();
+				user.setDefaultACLEx(userACLDomainName, defaultACLName);
+				user.save();
 				// NOTE if a user default folder was created using old acl name, it will be updated
 // later on
 				// when folders are processed
@@ -335,7 +330,7 @@ public class DctmUser extends DctmObject {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private void createRequiredUserDefaults() throws DfException {
+	private void createRequiredUserDefaults(IDfSession session) throws DfException {
 		if (DctmUser.logger.isEnabledFor(Level.INFO)) {
 			DctmUser.logger.info("Started checking if the default group and default acl for the user exists.");
 		}
@@ -343,15 +338,15 @@ public class DctmUser extends DctmObject {
 		// Create default folder for the user if it does not exist
 		if (doesAttributeExist(DctmAttrNameConstants.DEFAULT_FOLDER)) {
 			String defaultFolderNAme = getStrSingleAttrValue(DctmAttrNameConstants.DEFAULT_FOLDER);
-			DctmObjectImportHelper.createFolderByPath(this.dctmSession, defaultFolderNAme);
+			DctmObjectImportHelper.createFolderByPath(session, defaultFolderNAme);
 		}
 
 		// lookup default group for the user in repository, if it does not exist, create one
 		if (doesAttributeExist(DctmAttrNameConstants.USER_GROUP_NAME)) {
 			String userGroupName = getStrSingleAttrValue(DctmAttrNameConstants.USER_GROUP_NAME);
-			IDfGroup userDefaultGroup = this.dctmSession.getGroup(userGroupName);
+			IDfGroup userDefaultGroup = session.getGroup(userGroupName);
 			if (userDefaultGroup == null) {
-				IDfGroup defaultGroup = (IDfGroup) this.dctmSession.newObject(DctmTypeConstants.DM_GROUP);
+				IDfGroup defaultGroup = (IDfGroup) session.newObject(DctmTypeConstants.DM_GROUP);
 				defaultGroup.setGroupName(userGroupName);
 				defaultGroup.save();
 				if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
@@ -375,7 +370,7 @@ public class DctmUser extends DctmObject {
 			if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 				DctmUser.logger.debug("The user's default ACL is internal ACL");
 			}
-			IDfACL userDefaultACL = this.dctmSession.getACL(userDefaultACLDomainName, userDefaultACLName);
+			IDfACL userDefaultACL = session.getACL(userDefaultACLDomainName, userDefaultACLName);
 			// if internal acl does not exist, let the system create one and we will remove related
 			// attributes from the attribute map
 			if (userDefaultACL == null) {
@@ -394,9 +389,9 @@ public class DctmUser extends DctmObject {
 			userDefaultACLDomainName = getStrSingleAttrValue(DctmAttrNameConstants.ACL_DOMAIN);
 			// userDefaultACLDomainName = DctmAttrNameConstants.DM_DBO;
 			// findAttribute(DctmAttrNameConstants.ACL_DOMAIN).setSingleValue(userDefaultACLDomainName);
-			IDfACL userDefaultACL = this.dctmSession.getACL(userDefaultACLDomainName, userDefaultACLName);
+			IDfACL userDefaultACL = session.getACL(userDefaultACLDomainName, userDefaultACLName);
 			if (userDefaultACL == null) {
-				IDfACL defaultACL = (IDfACL) this.dctmSession.newObject(DctmTypeConstants.DM_ACL);
+				IDfACL defaultACL = (IDfACL) session.newObject(DctmTypeConstants.DM_ACL);
 				defaultACL.setObjectName(userDefaultACLName);
 				defaultACL.setDomain(userDefaultACLDomainName);
 				defaultACL.setDescription(CMSMFAppConstants.CMSMF_TEMP_ACL_DESCRIPTION);
@@ -419,31 +414,34 @@ public class DctmUser extends DctmObject {
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	@Override
-	protected DctmObject doGetFromCMS(IDfPersistentObject prsstntObj) throws CMSMFException {
+	protected DctmUser doGetFromCMS(IDfUser prsstntObj) throws CMSMFException {
 		if (DctmUser.logger.isEnabledFor(Level.INFO)) {
 			DctmUser.logger.info("Started getting dctm dm_user from repository");
 		}
-
+		IDfSession session = prsstntObj.getSession();
 		String userID = "";
 		try {
 			userID = prsstntObj.getObjectId().getId();
 			// Check if this user has already been exported
 			if (!DuplicateChecker.getDuplicateChecker().isUserProcessed(userID)) {
 				DctmUser dctmUser = new DctmUser();
-				getAllAttributesFromCMS(dctmUser, prsstntObj, userID);
+				dctmUser.getAllAttributesFromCMS(prsstntObj, userID);
 
 				// Update ACL Domain attribute value if needed
 				// No need to do this here anymore, it is handled in getAllAttributesFromCMS()
-// itself.
-// updateACLDomainAttribute(dctmUser);
+				// itself. updateACLDomainAttribute(dctmUser);
 
 				// Check to see if user's default acl is internal or not
-				IDfUser user = (IDfUser) prsstntObj;
+				IDfUser user = prsstntObj;
 				IDfACL userDefaultACL = prsstntObj.getSession().getACL(user.getACLDomain(), user.getACLName());
 				dctmUser.doesUserHaveInternalACL = userDefaultACL.isInternal();
+				final DataType type = DataType.DF_BOOLEAN;
+				DataProperty prop = new DataProperty(DctmAttrNameConstants.ACL_NAME, type, false, new DfValue(
+					String.valueOf(dctmUser.doesUserHaveInternalACL), type.getDfConstant()));
+				getDataObject().setProperty(prop);
 
 				// Get users default folder, group and acls.
-				exportUserDefaults(dctmUser);
+				exportUserDefaults(session, dctmUser);
 
 				return dctmUser;
 			}
@@ -457,6 +455,12 @@ public class DctmUser extends DctmObject {
 		return null;
 	}
 
+	@Override
+	protected void doLoadFrom(DataObject dataObject) {
+		DataProperty prop = getDataObject().getProperty(DctmAttrNameConstants.ACL_NAME);
+		this.doesUserHaveInternalACL = prop.getSingleValue().asBoolean();
+	}
+
 	/**
 	 * Exports various user defaults for a given user.
 	 * This method exports default folder, default group and default acl
@@ -467,7 +471,7 @@ public class DctmUser extends DctmObject {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	private void exportUserDefaults(DctmUser dctmUser) throws CMSMFException {
+	private void exportUserDefaults(IDfSession session, DctmUser dctmUser) throws CMSMFException {
 
 		String userName = dctmUser.getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME);
 
@@ -475,7 +479,7 @@ public class DctmUser extends DctmObject {
 		String defaultFolder = dctmUser.getStrSingleAttrValue(DctmAttrNameConstants.DEFAULT_FOLDER);
 		if (StringUtils.isNotBlank(defaultFolder)) {
 			try {
-				DctmObjectExportHelper.serializeFolderByPath(this.dctmSession, defaultFolder);
+				DctmObjectExportHelper.serializeFolderByPath(session, defaultFolder);
 			} catch (CMSMFException e) {
 
 				// NOTE if for some reason the default folder does not exist in the system,
@@ -492,7 +496,7 @@ public class DctmUser extends DctmObject {
 		String defaultGroup = dctmUser.getStrSingleAttrValue(DctmAttrNameConstants.USER_GROUP_NAME);
 		if (StringUtils.isNotBlank(defaultGroup)) {
 			try {
-				DctmObjectExportHelper.serializeGroupByName(this.dctmSession, defaultGroup);
+				DctmObjectExportHelper.serializeGroupByName(session, defaultGroup);
 			} catch (CMSMFException e) {
 				throw (new CMSMFException("Couldn't retrieve default group object from repository for user: "
 					+ userName + " group name: " + defaultGroup, e));
@@ -503,12 +507,11 @@ public class DctmUser extends DctmObject {
 		String aclDomain = dctmUser.getStrSingleAttrValue(DctmAttrNameConstants.ACL_DOMAIN);
 		if (StringUtils.isNotBlank(aclName) && StringUtils.isNotBlank(aclDomain)) {
 			try {
-				DctmObjectExportHelper.serializeACLByName(this.dctmSession, aclName, aclDomain);
+				DctmObjectExportHelper.serializeACLByName(session, aclName, aclDomain);
 			} catch (CMSMFException e) {
 				throw (new CMSMFException("Couldn't retrieve default acl object from repository for user: " + userName
 					+ " acl name: " + aclName + " acl domain: " + aclDomain, e));
 			}
 		}
 	}
-
 }
