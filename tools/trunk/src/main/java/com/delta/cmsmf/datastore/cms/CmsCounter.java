@@ -12,7 +12,8 @@ public final class CmsCounter {
 		READ,
 		SKIPPED,
 		CREATED,
-		UPDATED;
+		UPDATED,
+		FAILED;
 	}
 
 	private static final Map<CmsObjectType, Map<Result, AtomicInteger>> COUNTERS;
