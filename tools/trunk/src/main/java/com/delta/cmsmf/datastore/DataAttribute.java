@@ -75,6 +75,10 @@ public class DataAttribute implements Iterable<IDfValue> {
 		this.valuesLoaded = true;
 	}
 
+	public DataAttribute(IDfPersistentObject obj, IDfAttr attr, IDfValue... values) throws DfException {
+		this(obj, attr, Arrays.asList(values));
+	}
+
 	public DataAttribute(IDfPersistentObject obj, IDfAttr attr, Collection<IDfValue> values) throws DfException {
 		this.name = attr.getName();
 		this.id = attr.getId();
