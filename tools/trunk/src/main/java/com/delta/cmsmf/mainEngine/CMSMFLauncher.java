@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.log4j.LogManager;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class CMSMFLauncher extends AbstractLauncher {
@@ -133,11 +134,13 @@ public class CMSMFLauncher extends AbstractLauncher {
 		if (log4j != null) {
 			final File cfg = new File(log4j);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
+				LogManager.resetConfiguration();
 				DOMConfigurator.configure(cfg.toURI().toURL());
 				customLog4j = true;
 			}
 		}
 		if (!customLog4j) {
+			LogManager.resetConfiguration();
 			String logName = cliParams.get(CLIParam.log_name);
 			if (logName == null) {
 				String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
