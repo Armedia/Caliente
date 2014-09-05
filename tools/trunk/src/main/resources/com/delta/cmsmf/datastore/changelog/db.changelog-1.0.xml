@@ -61,16 +61,16 @@
 			<column name="object_id" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="attribute_name" type="varchar(32)">
+			<column name="name" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="attribute_id" type="varchar(32)">
+			<column name="data_type" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="attribute_type" type="varchar(32)">
+			<column name="id" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="attribute_length" type="integer">
+			<column name="length" type="integer">
 				<constraints nullable="false" />
 			</column>
 			<column name="is_qualifiable" type="boolean">
@@ -80,7 +80,7 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="dctm_attribute" columnNames="object_id, attribute_name" />
+		<addPrimaryKey tableName="dctm_attribute" columnNames="object_id, name" />
 		<addForeignKeyConstraint constraintName="fk_dctm_attribute_object"
 			baseTableName="dctm_attribute" baseColumnNames="object_id"
 			referencedTableName="dctm_object" referencedColumnNames="object_id"
@@ -91,7 +91,7 @@
 			<column name="object_id" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="attribute_name" type="varchar(32)">
+			<column name="name" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
 			<column name="value_number" type="integer">
@@ -103,10 +103,10 @@
 			<column name="data" type="text" />
 		</createTable>
 		<addPrimaryKey tableName="dctm_attribute_value"
-			columnNames="object_id, attribute_name, value_number" />
+			columnNames="object_id, name, value_number" />
 		<addForeignKeyConstraint constraintName="fk_dctm_attribute_value_attribute"
-			baseTableName="dctm_attribute_value" baseColumnNames="object_id, attribute_name"
-			referencedTableName="dctm_attribute" referencedColumnNames="object_id, attribute_name"
+			baseTableName="dctm_attribute_value" baseColumnNames="object_id, name"
+			referencedTableName="dctm_attribute" referencedColumnNames="object_id, name"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 
 		<!-- The property descriptor table -->
@@ -114,17 +114,14 @@
 			<column name="object_id" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="property_name" type="varchar(32)">
+			<column name="name" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="property_type" type="varchar(32)">
-				<constraints nullable="false" />
-			</column>
-			<column name="is_repeating" type="boolean">
+			<column name="data_type" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="dctm_property" columnNames="object_id, property_name" />
+		<addPrimaryKey tableName="dctm_property" columnNames="object_id, name" />
 		<addForeignKeyConstraint constraintName="fk_dctm_property_object"
 			baseTableName="dctm_property" baseColumnNames="object_id"
 			referencedTableName="dctm_object" referencedColumnNames="object_id"
@@ -135,7 +132,7 @@
 			<column name="object_id" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="property_name" type="varchar(32)">
+			<column name="name" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
 			<column name="value_number" type="integer">
@@ -147,10 +144,10 @@
 			<column name="data" type="text" />
 		</createTable>
 		<addPrimaryKey tableName="dctm_property_value"
-			columnNames="object_id, property_name, value_number" />
+			columnNames="object_id, name, value_number" />
 		<addForeignKeyConstraint constraintName="fk_dctm_property_value_property"
-			baseTableName="dctm_property_value" baseColumnNames="object_id, property_name"
-			referencedTableName="dctm_property" referencedColumnNames="object_id, property_name"
+			baseTableName="dctm_property_value" baseColumnNames="object_id, name"
+			referencedTableName="dctm_property" referencedColumnNames="object_id, name"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 
 		<!-- The ID mapping table -->
