@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -457,6 +458,7 @@ public class DataProperty implements Iterable<IDfValue> {
 		if (this.repeating) { return this.values.iterator(); }
 		return new Iterator<IDfValue>() {
 			boolean retrieved = false;
+			boolean removed = false;
 
 			@Override
 			public boolean hasNext() {
@@ -465,6 +467,7 @@ public class DataProperty implements Iterable<IDfValue> {
 
 			@Override
 			public IDfValue next() {
+				if (this.retrieved) { throw new NoSuchElementException(); }
 				this.retrieved = true;
 				return DataProperty.this.singleValue;
 			}
@@ -472,7 +475,9 @@ public class DataProperty implements Iterable<IDfValue> {
 			@Override
 			public void remove() {
 				if (!this.retrieved) { throw new IllegalStateException("No element to remove()"); }
+				if (this.removed) { throw new IllegalStateException("Element already removed"); }
 				DataProperty.this.singleValue = DataProperty.this.type.getNullValue();
+				this.removed = true;
 			}
 		};
 	}
