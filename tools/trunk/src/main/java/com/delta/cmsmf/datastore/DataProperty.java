@@ -35,6 +35,7 @@ public class DataProperty implements Iterable<IDfValue> {
 	 * @throws DfException
 	 */
 	DataProperty(ResultSet rs) throws SQLException {
+		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		this.name = rs.getString("name");
 		this.type = DataType.valueOf(rs.getString("type"));
 		this.repeating = rs.getBoolean("is_repeating");
@@ -54,6 +55,7 @@ public class DataProperty implements Iterable<IDfValue> {
 	 * @throws SQLException
 	 */
 	void loadValues(ResultSet rs) throws SQLException {
+		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		boolean ok = false;
 		try {
 			this.values.clear();
@@ -89,6 +91,9 @@ public class DataProperty implements Iterable<IDfValue> {
 	 * @throws DfException
 	 */
 	public DataProperty(IDfAttr attr, IDfPersistentObject obj) throws DfException {
+		if (attr == null) { throw new IllegalArgumentException("Must provide an attribute to take after"); }
+		if (obj == null) { throw new IllegalArgumentException(String.format(
+			"Must provide an object to read the %s attribute from", attr.getName())); }
 		this.name = attr.getName();
 		this.type = DataType.fromDfConstant(attr.getDataType());
 		final int valueCount = obj.getValueCount(this.name);
@@ -128,6 +133,7 @@ public class DataProperty implements Iterable<IDfValue> {
 	 */
 
 	public DataProperty(IDfAttr attr, Collection<IDfValue> values) throws DfException {
+		if (attr == null) { throw new IllegalArgumentException("Must provide an attribute to take after"); }
 		if (values == null) {
 			values = Collections.emptyList();
 		}
@@ -151,6 +157,8 @@ public class DataProperty implements Iterable<IDfValue> {
 	}
 
 	public DataProperty(String name, DataType type, boolean repeating, Collection<IDfValue> values) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a name"); }
+		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
 		if (values == null) {
 			values = Collections.emptyList();
 		}
@@ -215,7 +223,7 @@ public class DataProperty implements Iterable<IDfValue> {
 		if (idx < 0) {
 			idx = 0;
 		}
-		if ((!this.repeating && (idx > 0)) || (idx >= this.values.size())) { throw new ArrayIndexOutOfBoundsException(
+		if ((!this.repeating && (idx > 0)) || (this.repeating && (idx >= this.values.size()))) { throw new ArrayIndexOutOfBoundsException(
 			idx); }
 		return idx;
 	}
