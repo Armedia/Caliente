@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class CMSMFLauncher extends AbstractLauncher {
@@ -38,7 +40,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 			throw new RuntimeException("Failed to initialize access to the addURL() method in the system classloader",
 				t);
 		}
-		System.setProperty("mode", "startup");
 	}
 
 	private static void addToClassPath(URL u) throws IOException {
@@ -116,29 +117,39 @@ public class CMSMFLauncher extends AbstractLauncher {
 	}
 
 	public static void main(String[] args) throws Throwable {
+		System.setProperty("logName", "cmsmf-startup");
 		Map<CLIParam, String> cliParams = AbstractLauncher.parseArguments(args);
 		if (cliParams == null) { return; }
 
-		final String mode = cliParams.get(CLIParam.mode);
-
 		// Configure Log4J
-		System.setProperty("mode", mode);
+		final String mode = cliParams.get(CLIParam.mode);
 		String log4j = cliParams.get(CLIParam.log4j);
-		URL configUrl = null;
+		boolean customLog4j = false;
 		if (log4j != null) {
 			final File cfg = new File(log4j);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
-				configUrl = cfg.toURI().toURL();
+				LogManager.resetConfiguration();
+				DOMConfigurator.configure(cfg.toURI().toURL());
+				customLog4j = true;
 			}
 		}
-		if (configUrl == null) {
-			configUrl = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
+		if (!customLog4j) {
+			String logName = cliParams.get(CLIParam.log_name);
+			if (logName == null) {
+				String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+				logName = String.format("cmsmf-%s-%s", mode.toLowerCase(), runTime);
+			}
+			System.setProperty("logName", logName);
+			LogManager.resetConfiguration();
+			// Prefer XML
+			URL configUrl = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
+			if (configUrl != null) {
+				DOMConfigurator.configure(configUrl);
+			} else {
+				configUrl = Thread.currentThread().getContextClassLoader().getResource("log4j.properties");
+				PropertyConfigurator.configure(configUrl);
+			}
 		}
-		LogManager.resetConfiguration();
-		if (configUrl != null) {
-			DOMConfigurator.configure(configUrl);
-		}
-		Logger.getLogger(CMSMFLauncher.class);
 
 		CMSMFLauncher.patchClasspath(cliParams);
 
