@@ -5,7 +5,6 @@
 package com.delta.cmsmf.datastore.cms;
 
 import java.util.Collection;
-import java.util.Set;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataProperty;
@@ -55,11 +54,12 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	protected void applyDataProperties(Set<String> propertyNames, IDfACL acl) throws DfException {
-		if (propertyNames.contains(CmsACL.USERS_WITH_DEFAULT_ACL)) {
+	protected void applyCustomizations(IDfACL acl) throws DfException {
+		DataProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
+		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
 			final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getSingleValue();
-			for (IDfValue value : getProperty(CmsACL.USERS_WITH_DEFAULT_ACL)) {
+			for (IDfValue value : usersWithDefaultACL) {
 
 				// TODO: How do we decide if we should update the default ACL for this user?
 
