@@ -65,6 +65,14 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
+	protected boolean skipImport(IDfSession session) throws DfException {
+		IDfValue userNameValue = getAttribute(DctmAttrNameConstants.USER_NAME).getSingleValue();
+		final String userName = userNameValue.asString();
+		if (Tools.equals("dmadmin", userName) || userName.startsWith("dm_")) { return true; }
+		return super.skipImport(session);
+	}
+
+	@Override
 	protected void applyPostCustomizations(IDfUser user) throws DfException {
 
 		// First, set the username
