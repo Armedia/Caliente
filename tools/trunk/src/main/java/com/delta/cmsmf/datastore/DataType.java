@@ -10,7 +10,7 @@ import com.documentum.fc.common.IDfValue;
 public enum DataType {
 
 	DF_BOOLEAN(IDfValue.DF_BOOLEAN) {
-		private final IDfValue clearValue = DfValueFactory.newBooleanValue(false);
+		private final IDfValue clearValue = new DfValue(String.valueOf(false), IDfValue.DF_BOOLEAN);
 
 		@Override
 		public IDfValue doDecode(String value) {
@@ -28,7 +28,7 @@ public enum DataType {
 		}
 	},
 	DF_INTEGER(IDfValue.DF_INTEGER) {
-		private final IDfValue clearValue = DfValueFactory.newIntValue(0);
+		private final IDfValue clearValue = new DfValue(String.valueOf(0), IDfValue.DF_INTEGER);
 
 		@Override
 		public IDfValue doDecode(String value) {
@@ -46,7 +46,7 @@ public enum DataType {
 		}
 	},
 	DF_STRING(IDfValue.DF_STRING) {
-		private final IDfValue clearValue = DfValueFactory.newStringValue("");
+		private final IDfValue clearValue = new DfValue("", IDfValue.DF_STRING);
 
 		@Override
 		public IDfValue doDecode(String value) {
@@ -64,7 +64,7 @@ public enum DataType {
 		}
 	},
 	DF_ID(IDfValue.DF_ID) {
-		private final IDfValue clearValue = DfValueFactory.newIdValue(DfId.DF_NULLID);
+		private final IDfValue clearValue = new DfValue(DfId.DF_NULLID_STR, IDfValue.DF_ID);
 
 		@Override
 		public String doEncode(IDfValue value) {
@@ -133,7 +133,7 @@ public enum DataType {
 		}
 	},
 	DF_DOUBLE(IDfValue.DF_DOUBLE) {
-		private final IDfValue clearValue = DfValueFactory.newDoubleValue(0.0);
+		private final IDfValue clearValue = new DfValue(Double.toHexString(0.0), IDfValue.DF_DOUBLE);
 
 		@Override
 		public String doEncode(IDfValue value) {
