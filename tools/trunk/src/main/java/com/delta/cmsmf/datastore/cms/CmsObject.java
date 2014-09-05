@@ -13,14 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cmsobjects.DctmAttribute;
-import com.delta.cmsmf.cmsobjects.DctmFormat;
-import com.delta.cmsmf.cmsobjects.DctmGroup;
-import com.delta.cmsmf.cmsobjects.DctmUser;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataAttribute;
@@ -62,7 +58,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -136,7 +132,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			"Expected an object of type %s, but got one of type %s", this.type, type)); }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new IllegalArgumentException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 
 		this.id = object.getObjectId().getId();
 		this.contentPath = calculateContentPath(object);
@@ -242,6 +238,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				}
 			}
 			applyPostCustomizations(object);
+			updateModifyDate(object);
 			result = newResult;
 			ok = true;
 		} finally {
@@ -276,6 +273,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	protected boolean isSameObject(T object) throws DfException {
 		DataAttribute dateAttribute = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE);
+		if (dateAttribute == null) { return false; }
 		IDfValue objectDate = object.getValue(DctmAttrNameConstants.R_MODIFY_DATE);
 		IDfValue thisDate = dateAttribute.getSingleValue();
 		DataType type = dateAttribute.getType();
@@ -286,7 +284,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		IDfPersistentObject object = session.newObject(this.type.getDocumentumType());
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -294,7 +292,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -349,91 +347,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	protected DataAttribute getCmsFilteredAttribute(DataAttribute attribute) throws DfException {
 		return attribute;
-	}
-
-	/**
-	 * Sets all attributes of an object in CMS.
-	 *
-	 * @param object
-	 *            the DFC persistent object in CMS
-	 * @param updateVersionLabels
-	 *            if true, version labels are updated of an object
-	 * @param isUpdate
-	 *            true if existing object is being updated
-	 * @throws DfException
-	 *             Signals that Dctm Server error has occurred.
-	 */
-	protected void setAttributesInCMS(T object, boolean updateVersionLabels, boolean isUpdate) throws DfException,
-		CMSMFException {
-		if (this.logger.isEnabledFor(Level.INFO)) {
-			this.logger.info("Started setting attributes of persistent object");
-		}
-
-		// read the attributes
-		if (isUpdate) {
-			// If an existing object is being updated, clear out all of its attributes that are not
-			// part of attribute map
-			// NOTE Only clear non internal and not system attributes
-			// NOTE Do not clear group_name attribute for dm_group object
-			// NOTE Do not clear home_docbase attribute for dm_user object
-			// NOTE Do not clear user_name attribute for dm_user object
-			// NOTE Do not clear name attribute for dm_format object
-			Set<String> attributesBeingUpdated = getAttributeNames();
-			final int attributeCount = object.getAttrCount();
-			for (int i = 0; i < attributeCount; i++) {
-				final IDfAttr attr = object.getAttr(i);
-				final String name = attr.getName();
-				final DataAttribute dataAttribute = getAttribute(name);
-
-				if (dataAttribute == null) {
-					// We can safely ignore this because we won't be overwriting
-					// the value, *at all*
-					continue;
-				}
-
-				final AttributeHandler handler = CmsAttributeHandlers.getAttributeHandler(this.type, dataAttribute);
-
-				// Skip clearing system and internal attributess
-				// Skip clearing group_name attribute if dealing with group object
-				// Skip clearing user_name attribute if dealing with user object
-				// Skip clearing home_docbase attribute if dealing with user object
-				// Skip clearing name attribute if dealing with format object
-				if (!name.startsWith("r_") && !name.startsWith("i_") && handler.includeInImport(object, dataAttribute)
-					&& !(name.equals(DctmAttrNameConstants.GROUP_NAME) && (object instanceof DctmGroup))
-					&& !(name.equals(DctmAttrNameConstants.USER_NAME) && (object instanceof DctmUser))
-					&& !(name.equals(DctmAttrNameConstants.HOME_DOCBASE) && (object instanceof DctmUser))
-					&& !(name.equals(DctmAttrNameConstants.NAME) && (object instanceof DctmFormat))
-					&& !attributesBeingUpdated.contains(name)) {
-					clearAttributeInCMS(object, attr);
-				}
-			}
-		}
-
-		if (updateVersionLabels) {
-			// First remove version label attributes
-			object.removeAll("r_version_label");
-		}
-
-		// Set attributes
-		for (DataAttribute attribute : getAllAttributes()) {
-			// TODO check to see if we need to set any internal or system attributes of various
-			// types
-			final String name = attribute.getName();
-
-			// for now ignore setting internal and system attributes
-			boolean doSet = (!name.startsWith("r_") && !name.startsWith("i_"));
-			// but process r_version_lebel
-			doSet |= (name.equals("r_version_label") && updateVersionLabels);
-
-			if (doSet) {
-				clearAttributeInCMS(object, attribute);
-				setAttributeInCMS(object, attribute);
-			}
-		}
-
-		if (this.logger.isEnabledFor(Level.INFO)) {
-			this.logger.info("Finished setting attributes of persistent object.");
-		}
 	}
 
 	/**

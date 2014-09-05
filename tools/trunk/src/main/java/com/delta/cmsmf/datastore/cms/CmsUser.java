@@ -16,6 +16,7 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -42,14 +43,19 @@ public class CmsUser extends CmsObject<IDfUser> {
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
 			DctmAttrNameConstants.HOME_DOCBASE, handler);
 
-		// We avoid storing these two because it'll be the ACL's job to link back
-		// to the users for whom they're marked as default ACL. This is CRITICAL
-		// to allow us to do a one-pass import without having to circle back
-		// to resolve circular dependencies.
+		// We avoid storing these because it'll be the job of other classes to link back
+		// to the users to which they're related. This is CRITICAL to allow us to do a one-pass
+		// import without having to circle back to resolve circular dependencies, or getting
+		// ahead of ourselves in the object creation phase.
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
 			DctmAttrNameConstants.ACL_DOMAIN, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
 			DctmAttrNameConstants.ACL_NAME, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+			DctmAttrNameConstants.DEFAULT_FOLDER, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+			DctmAttrNameConstants.USER_GROUP_NAME, handler);
+
 		CmsUser.HANDLERS_READY = true;
 	}
 
@@ -60,8 +66,15 @@ public class CmsUser extends CmsObject<IDfUser> {
 
 	@Override
 	protected IDfUser locateInCms(IDfSession session) throws DfException {
+		// If that search failed, go by username
 		IDfValue userName = getAttribute(DctmAttrNameConstants.USER_NAME).getSingleValue();
-		return session.getUser(userName.asString());
+		IDfUser ret = session.getUser(userName.asString());
+		if (ret != null) { return ret; }
+
+		DataAttribute loginName = getAttribute(DctmAttrNameConstants.USER_LOGIN_NAME);
+		DataAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
+		return session.getUserByLoginName(loginName.getSingleValue().asString(), loginDomain != null ? loginDomain
+			.getSingleValue().asString() : null);
 	}
 
 	@Override
@@ -70,6 +83,19 @@ public class CmsUser extends CmsObject<IDfUser> {
 		final String userName = userNameValue.asString();
 		if (Tools.equals("dmadmin", userName) || userName.startsWith("dm_")) { return true; }
 		return super.skipImport(session);
+	}
+
+	@Override
+	protected void applyPreCustomizations(IDfUser user, boolean newObject) throws DfException {
+		// NOTE for some reason, 6.5 sp2 with ldap requires that user_login_domain be set
+		// workaround for [DM_USER_E_MUST_HAVE_LOGINDOMAIN] error
+		DataAttribute attribute = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
+		if (attribute == null) {
+			int idx = user.findAttrIndex(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
+			IDfAttr attr = user.getAttr(idx);
+			attribute = new DataAttribute(user, attr, DfValueFactory.newStringValue(""));
+			setAttribute(attribute);
+		}
 	}
 
 	@Override
