@@ -156,9 +156,7 @@ public class DctmUser extends DctmObject<IDfUser> {
 					}
 
 					// NOTE Remove the user_name attribute from attribute map to avoid following
-// error if it
-					// is the same as before
-					// [DM_USER_E_EXISTING_USER_NAME] error:
+					// error if it is the same as before [DM_USER_E_EXISTING_USER_NAME] error:
 					// "Cannot create user %s since its user_name already exists"
 					if (usr.getUserName().equals(getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME))) {
 						if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
