@@ -9,12 +9,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
-import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.DfValue;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
@@ -22,27 +18,23 @@ public class DataProperty implements Iterable<IDfValue> {
 
 	public static final DataAttributeEncoder DEFAULT_ENCODER = new DataAttributeEncoder();
 
-	private static final IDfValue DM_DBO = new DfValue(CMSMFAppConstants.DM_DBO);
-
 	private final String name;
 	private final DataType type;
 	private final List<IDfValue> values;
-	private boolean valuesLoaded = false;
 
 	DataProperty(ResultSet rs) throws SQLException {
-		this.name = rs.getString("property_name");
-		this.type = DataType.valueOf(rs.getString("property_type"));
+		this.name = rs.getString("name");
+		this.type = DataType.valueOf(rs.getString("type"));
 		this.values = new ArrayList<IDfValue>();
 	}
 
 	void loadValues(ResultSet rs) throws SQLException {
-		if (this.valuesLoaded) { throw new IllegalArgumentException(String.format(
-			"The values for property [%s] have already been loaded", this.name)); }
 		boolean ok = false;
 		try {
 			while (rs.next()) {
 				boolean nulled = rs.getBoolean("is_null");
 				if (nulled) {
+					// TODO: Should we add an IDfValue that represents null?
 					this.values.add(null);
 					continue;
 				}
@@ -53,7 +45,6 @@ public class DataProperty implements Iterable<IDfValue> {
 			if (!ok) {
 				this.values.clear();
 			}
-			this.valuesLoaded = ok;
 		}
 	}
 
@@ -62,27 +53,6 @@ public class DataProperty implements Iterable<IDfValue> {
 		this.type = DataType.fromDfConstant(attr.getDataType());
 		final int valueCount = obj.getValueCount(this.name);
 		this.values = new ArrayList<IDfValue>(valueCount);
-
-		final boolean checkForDbo;
-		final String operatorName;
-		if (this.type == DataType.DF_STRING) {
-			// This only applies for string values
-			checkForDbo = RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-				.contains(attr.getName());
-			operatorName = RepositoryConfiguration.getRepositoryConfiguration().getOperatorName();
-		} else {
-			checkForDbo = false;
-			operatorName = null;
-		}
-		for (int i = 0; i < valueCount; i++) {
-			IDfValue value = obj.getRepeatingValue(this.name, i);
-			// If this is the operator name, we replace the value
-			if (checkForDbo && (value != null) && operatorName.equals(value.asString())) {
-				value = DataProperty.DM_DBO;
-			}
-			this.values.add(value);
-		}
-		this.valuesLoaded = true;
 	}
 
 	public DataProperty(IDfPersistentObject obj, IDfAttr attr, IDfValue... values) throws DfException {
@@ -100,7 +70,6 @@ public class DataProperty implements Iterable<IDfValue> {
 		for (IDfValue o : values) {
 			this.values.add(o);
 		}
-		this.valuesLoaded = true;
 	}
 
 	public DataProperty(String name, DataType type, IDfValue... values) {
@@ -118,26 +87,25 @@ public class DataProperty implements Iterable<IDfValue> {
 		for (IDfValue o : values) {
 			this.values.add(o);
 		}
-		this.valuesLoaded = true;
 	}
 
-	public DataType getType() {
+	public final DataType getType() {
 		return this.type;
 	}
 
-	public String getName() {
+	public final String getName() {
 		return this.name;
 	}
 
-	public int getValueCount() {
+	public final int getValueCount() {
 		return this.values.size();
 	}
 
-	private void validateIndex(int idx) {
+	private final void validateIndex(int idx) {
 		if ((idx < 0) || (idx >= this.values.size())) { throw new ArrayIndexOutOfBoundsException(idx); }
 	}
 
-	public boolean hasValues() {
+	public final boolean hasValues() {
 		return !this.values.isEmpty();
 	}
 
@@ -148,61 +116,44 @@ public class DataProperty implements Iterable<IDfValue> {
 		}
 	}
 
-	public Collection<IDfValue> getAllValues() {
-		return Collections.unmodifiableList(this.values);
+	public final List<IDfValue> getAllValues() {
+		return this.values;
 	}
 
-	public void addValue(IDfValue value) {
+	public final void addValue(IDfValue value) {
 		this.values.add(value);
 	}
 
-	public IDfValue removeValue(int idx) {
+	public final IDfValue removeValue(int idx) {
 		validateIndex(idx);
 		return this.values.remove(idx);
 	}
 
-	public IDfValue getValue(int idx) {
+	public final IDfValue getValue(int idx) {
 		validateIndex(idx);
 		return this.values.get(idx);
 	}
 
-	public IDfValue getSingleValue() {
+	public final IDfValue getSingleValue() {
 		if (this.values.isEmpty()) { return null; }
 		return getValue(0);
 	}
 
 	public boolean isSame(DataProperty other) {
 		if (other == null) { return false; }
+		if (other == this) { return true; }
 		if (!this.name.equals(other.name)) { return false; }
 		if (this.type != other.type) { return false; }
 		return true;
 	}
 
 	@Override
-	public Iterator<IDfValue> iterator() {
-		return new Iterator<IDfValue>() {
-			private final Iterator<IDfValue> it = DataProperty.this.values.iterator();
-
-			@Override
-			public boolean hasNext() {
-				return this.it.hasNext();
-			}
-
-			@Override
-			public IDfValue next() {
-				return this.it.next();
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-			}
-		};
+	public final Iterator<IDfValue> iterator() {
+		return this.values.iterator();
 	}
 
 	@Override
 	public String toString() {
-		return String.format("DataProperty [name=%s, type=%s, valuesLoaded=%s, values=%s]", this.name, this.type,
-			this.valuesLoaded, this.values);
+		return String.format("DataProperty [name=%s, type=%s, values=%s]", this.name, this.type, this.values);
 	}
 }
