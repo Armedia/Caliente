@@ -18,25 +18,17 @@ public class DataObject implements Iterable<DataAttribute> {
 
 	private final DctmObjectType type;
 	private final String id;
-	private final boolean contentHolder;
-	private final String contentPath;
-	private boolean attributesLoaded = false;
 	private final Map<String, DataAttribute> attributes;
-	private boolean propertiesLoaded = false;
 	private final Map<String, DataProperty> properties;
 
 	DataObject(ResultSet rs) throws SQLException {
 		this.id = rs.getString("object_id");
 		this.type = DctmObjectType.valueOf(rs.getString("object_type"));
-		this.contentHolder = rs.getBoolean("has_content");
-		this.contentPath = rs.getString("content_path");
 		this.attributes = new HashMap<String, DataAttribute>();
 		this.properties = new HashMap<String, DataProperty>();
 	}
 
 	void loadAttributes(ResultSet rs) throws SQLException {
-		if (this.attributesLoaded) { throw new IllegalArgumentException(String.format(
-			"The attributes for object [%s] have already been loaded", this.id)); }
 		boolean ok = false;
 		try {
 			while (rs.next()) {
@@ -48,13 +40,10 @@ public class DataObject implements Iterable<DataAttribute> {
 			if (!ok) {
 				this.attributes.clear();
 			}
-			this.attributesLoaded = ok;
 		}
 	}
 
 	void loadProperties(ResultSet rs) throws SQLException {
-		if (this.propertiesLoaded) { throw new IllegalArgumentException(String.format(
-			"The properties for object [%s] have already been loaded", this.id)); }
 		boolean ok = false;
 		try {
 			while (rs.next()) {
@@ -66,7 +55,6 @@ public class DataObject implements Iterable<DataAttribute> {
 			if (!ok) {
 				this.properties.clear();
 			}
-			this.propertiesLoaded = ok;
 		}
 	}
 
@@ -80,37 +68,27 @@ public class DataObject implements Iterable<DataAttribute> {
 		}
 		this.id = object.getObjectId().getId();
 		this.type = DctmObjectType.decode(object.getType().getName());
-		this.contentHolder = false; // TODO: how to tell?
-		this.contentPath = null; // TODO: how to calculate?
 		final int attCount = object.getAttrCount();
 		this.attributes = new HashMap<String, DataAttribute>(object.getAttrCount());
 		for (int i = 0; i < attCount; i++) {
 			DataAttribute attribute = dataAttributeEncoder.encode(object, object.getAttr(i));
 			this.attributes.put(attribute.getName(), attribute);
 		}
-		this.attributesLoaded = true;
 		this.properties = new HashMap<String, DataProperty>();
-		this.propertiesLoaded = true;
 	}
 
-	public DataObject(DctmObjectType type, String id, boolean contentHolder, String contentPath,
-		DataAttribute... attributes) {
-		this(type, id, contentHolder, contentPath, Arrays.asList(attributes));
+	public DataObject(DctmObjectType type, String id, DataAttribute... attributes) {
+		this(type, id, Arrays.asList(attributes));
 	}
 
-	public DataObject(DctmObjectType type, String id, boolean contentHolder, String contentPath,
-		Collection<DataAttribute> attributes) {
+	public DataObject(DctmObjectType type, String id, Collection<DataAttribute> attributes) {
 		this.type = type;
 		this.id = id;
-		this.contentHolder = contentHolder;
-		this.contentPath = contentPath;
 		this.attributes = new HashMap<String, DataAttribute>(attributes.size());
 		for (DataAttribute attribute : attributes) {
 			this.attributes.put(attribute.getName(), attribute);
 		}
-		this.attributesLoaded = true;
 		this.properties = new HashMap<String, DataProperty>();
-		this.propertiesLoaded = true;
 	}
 
 	public DctmObjectType getType() {
@@ -119,14 +97,6 @@ public class DataObject implements Iterable<DataAttribute> {
 
 	public String getId() {
 		return this.id;
-	}
-
-	public boolean isContentHolder() {
-		return this.contentHolder;
-	}
-
-	public String getContentPath() {
-		return this.contentPath;
 	}
 
 	public DataAttribute getAttribute(String name) {
@@ -188,8 +158,7 @@ public class DataObject implements Iterable<DataAttribute> {
 
 	@Override
 	public String toString() {
-		return String.format(
-			"DataObject [type=%s, id=%s, contentHolder=%s, contentPath=%s, attributesLoaded=%s, attributes=%s]",
-			this.type, this.id, this.contentHolder, this.contentPath, this.attributesLoaded, this.attributes.values());
+		return String.format("DataObject [type=%s, id=%s, attributes=%s, properties=%s]", this.type, this.id,
+			this.attributes.values(), this.properties.values());
 	}
 }

@@ -55,10 +55,10 @@ public class DataStore {
 	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from dctm_object where object_id = ?";
 
 	private static final String INSERT_OBJECT_SQL = "insert into dctm_object (object_id, object_type) values (?, ?)";
-	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, attribute_name, attribute_id, attribute_type, attribute_length, is_qualifiable, is_repeating) values (?, ?, ?, ?, ?, ?, ?)";
-	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, attribute_name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
-	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, property_name, property_type, is_repeating) values (?, ?, ?, ?)";
-	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, property_name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, name, id, data_type, length, is_qualifiable, is_repeating) values (?, ?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, name, data_type, is_repeating) values (?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
 	private static final String FIND_SOURCE_ID_SQL = "select source_id from dctm_mapper where target_id = ?";
 	private static final String FIND_TARGET_ID_SQL = "select target_id from dctm_mapper where source_id = ?";
 	private static final String INSERT_MAPPING_SQL = "insert into dctm_mapper (source_id, target_id) values (?, ?)";
@@ -71,7 +71,7 @@ public class DataStore {
 		" where o.object_type = ? " + //
 		"   and o.object_id = a.object_id " + //
 		"   and a.object_id = v.object_id " + //
-		"   and a.attribute_name = v.attribute_name " + //
+		"   and a.name = v.name " + //
 		" order by o.object_number, v.value_number";
 	 */
 
@@ -85,13 +85,13 @@ public class DataStore {
 	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
-		" order by attribute_name";
+		" order by name";
 
 	private static final String LOAD_VALUES_SQL = //
 	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
-		"   and attribute_name = ? " + //
+		"   and name = ? " + //
 		" order by value_number";
 
 	private static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
@@ -385,7 +385,7 @@ public class DataStore {
 						if (DataStore.LOG.isTraceEnabled()) {
 							DataStore.LOG.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 						} else if (DataStore.LOG.isDebugEnabled()) {
-							DataStore.LOG.trace(String.format("De-serialized %s object #%d with ID [%s]", type, objNum,
+							DataStore.LOG.debug(String.format("De-serialized %s object #%d with ID [%s]", type, objNum,
 								obj.getId()));
 						}
 
