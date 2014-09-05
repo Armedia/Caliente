@@ -263,7 +263,7 @@ public class DataStore {
 				Object[] attValue = new Object[5];
 				attData[0] = objectId; // This should never change within the loop
 				attValue[0] = objectId; // This should never change within the loop
-				for (final DataAttribute attribute : object) {
+				for (final DataAttribute attribute : object.getAttributes()) {
 					final String name = attribute.getName();
 					final boolean repeating = attribute.isRepeating();
 					final DataType type = attribute.getType();
@@ -400,7 +400,7 @@ public class DataStore {
 
 						valPS.clearParameters();
 						valPS.setString(1, obj.getId());
-						for (DataAttribute att : obj) {
+						for (DataAttribute att : obj.getAttributes()) {
 							valPS.setString(2, att.getName());
 							valRS = valPS.executeQuery();
 							try {

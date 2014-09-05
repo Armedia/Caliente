@@ -73,19 +73,19 @@ public class CmsUser extends CmsObject<IDfUser> {
 	@Override
 	protected IDfUser locateInCms(IDfSession session) throws DfException {
 		// If that search failed, go by username
-		IDfValue userName = getAttribute(DctmAttrNameConstants.USER_NAME).getSingleValue();
+		IDfValue userName = getAttribute(DctmAttrNameConstants.USER_NAME).getValue();
 		IDfUser ret = session.getUser(userName.asString());
 		if (ret != null) { return ret; }
 
 		DataAttribute loginName = getAttribute(DctmAttrNameConstants.USER_LOGIN_NAME);
 		DataAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
-		return session.getUserByLoginName(loginName.getSingleValue().asString(), loginDomain != null ? loginDomain
-			.getSingleValue().asString() : null);
+		return session.getUserByLoginName(loginName.getValue().asString(), loginDomain != null ? loginDomain.getValue()
+			.asString() : null);
 	}
 
 	@Override
 	protected boolean skipImport(IDfSession session) throws DfException {
-		IDfValue userNameValue = getAttribute(DctmAttrNameConstants.USER_NAME).getSingleValue();
+		IDfValue userNameValue = getAttribute(DctmAttrNameConstants.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
 		if (Tools.equals("dmadmin", userName) || userName.startsWith("dm_")) { return true; }
 		return super.skipImport(session);
@@ -116,7 +116,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 
 			// Next, set the password
 			DataAttribute att = getAttribute(DctmAttrNameConstants.USER_SOURCE);
-			final IDfValue userSource = att.getSingleValue();
+			final IDfValue userSource = att.getValue();
 			if (Tools.equals(userSource.asString(), CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
@@ -127,7 +127,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 		}
 
 		// Next, set the home docbase
-		final IDfValue newHomeDocbase = getAttribute(DctmAttrNameConstants.HOME_DOCBASE).getSingleValue();
+		final IDfValue newHomeDocbase = getAttribute(DctmAttrNameConstants.HOME_DOCBASE).getValue();
 		final String docbase = newHomeDocbase.asString();
 		final String existingDocbase = user.getHomeDocbase();
 		if (!docbase.equals("") && !Tools.equals(docbase, existingDocbase)) {

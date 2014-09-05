@@ -1,16 +1,15 @@
 package com.delta.cmsmf.datastore;
 
-import java.util.Date;
-
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
+import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public enum DataType {
-
 	DF_BOOLEAN(IDfValue.DF_BOOLEAN) {
-		private final IDfValue clearValue = new DfValue(String.valueOf(false), IDfValue.DF_BOOLEAN);
+		private final String nullEncoding = String.valueOf(false);
+		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_BOOLEAN);
 
 		@Override
 		public IDfValue doDecode(String value) {
@@ -23,12 +22,18 @@ public enum DataType {
 		}
 
 		@Override
-		public IDfValue getClearingValue() {
-			return this.clearValue;
+		public IDfValue getNullValue() {
+			return this.nullValue;
+		}
+
+		@Override
+		protected String getNullEncoding() {
+			return this.nullEncoding;
 		}
 	},
 	DF_INTEGER(IDfValue.DF_INTEGER) {
-		private final IDfValue clearValue = new DfValue(String.valueOf(0), IDfValue.DF_INTEGER);
+		private final String nullEncoding = String.valueOf(0);
+		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_INTEGER);
 
 		@Override
 		public IDfValue doDecode(String value) {
@@ -41,12 +46,18 @@ public enum DataType {
 		}
 
 		@Override
-		public IDfValue getClearingValue() {
-			return this.clearValue;
+		public IDfValue getNullValue() {
+			return this.nullValue;
+		}
+
+		@Override
+		protected String getNullEncoding() {
+			return this.nullEncoding;
 		}
 	},
 	DF_STRING(IDfValue.DF_STRING) {
-		private final IDfValue clearValue = new DfValue("", IDfValue.DF_STRING);
+		private final String nullEncoding = "";
+		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_STRING);
 
 		@Override
 		public IDfValue doDecode(String value) {
@@ -59,12 +70,18 @@ public enum DataType {
 		}
 
 		@Override
-		public IDfValue getClearingValue() {
-			return this.clearValue;
+		public IDfValue getNullValue() {
+			return this.nullValue;
+		}
+
+		@Override
+		protected String getNullEncoding() {
+			return this.nullEncoding;
 		}
 	},
 	DF_ID(IDfValue.DF_ID) {
-		private final IDfValue clearValue = new DfValue(DfId.DF_NULLID_STR, IDfValue.DF_ID);
+		private final String nullEncoding = DfId.DF_NULLID_STR;
+		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_ID);
 
 		@Override
 		public String doEncode(IDfValue value) {
@@ -82,44 +99,30 @@ public enum DataType {
 		}
 
 		@Override
-		public IDfValue getClearingValue() {
-			return this.clearValue;
-		}
-	},
-	DF_TIME(IDfValue.DF_TIME) {
-		private final String nullDate = "{NULL_DATE}";
-		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
-		private final IDfValue clearValue = this.nullValue;
-
-		@Override
-		protected boolean isNullEncoding(String value) {
-			return ((value == null) || this.nullDate.equals(value));
-		}
-
-		@Override
-		protected String getNullEncoding() {
-			return this.nullDate;
-		}
-
-		@Override
-		protected boolean isNullValue(IDfValue value) {
-			return ((value == null) || value.asTime().isNullDate());
-		}
-
-		@Override
-		protected IDfValue getNullValue() {
+		public IDfValue getNullValue() {
 			return this.nullValue;
 		}
 
 		@Override
+		protected String getNullEncoding() {
+			return this.nullEncoding;
+		}
+	},
+	DF_TIME(IDfValue.DF_TIME) {
+		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
+		private final String nullDate = this.nullValue.asString();
+		private final String timePattern = IDfTime.DF_TIME_PATTERN46;
+
+		@Override
 		public String doEncode(IDfValue value) {
-			return String.format("%d", value.asTime().getDate().getTime());
+			if ((value == null) || value.asTime().isNullDate()) { return this.nullDate; }
+			return value.asTime().asString(this.timePattern);
 		}
 
 		@Override
 		public IDfValue doDecode(String value) {
-			if (this.nullDate.equalsIgnoreCase(value)) { return getNullValue(); }
-			return new DfValue(new DfTime(new Date(Long.parseLong(value))));
+			if (this.nullDate.equals(value)) { return getNullValue(); }
+			return new DfValue(new DfTime(value, this.timePattern));
 		}
 
 		@Override
@@ -128,12 +131,18 @@ public enum DataType {
 		}
 
 		@Override
-		public IDfValue getClearingValue() {
-			return this.clearValue;
+		public IDfValue getNullValue() {
+			return this.nullValue;
+		}
+
+		@Override
+		protected String getNullEncoding() {
+			return this.nullDate;
 		}
 	},
 	DF_DOUBLE(IDfValue.DF_DOUBLE) {
-		private final IDfValue clearValue = new DfValue(Double.toHexString(0.0), IDfValue.DF_DOUBLE);
+		private final String nullEncoding = Double.toHexString(0.0);
+		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_DOUBLE);
 
 		@Override
 		public String doEncode(IDfValue value) {
@@ -151,8 +160,13 @@ public enum DataType {
 		}
 
 		@Override
-		public IDfValue getClearingValue() {
-			return this.clearValue;
+		public IDfValue getNullValue() {
+			return this.nullValue;
+		}
+
+		@Override
+		protected String getNullEncoding() {
+			return this.nullEncoding;
 		}
 	},
 	DF_UNDEFINED(IDfValue.DF_UNDEFINED) {
@@ -176,7 +190,12 @@ public enum DataType {
 		}
 
 		@Override
-		public IDfValue getClearingValue() {
+		public IDfValue getNullValue() {
+			return fail();
+		}
+
+		@Override
+		protected String getNullEncoding() {
 			return fail();
 		}
 	};
@@ -191,42 +210,77 @@ public enum DataType {
 		return this.dfConstant;
 	}
 
-	public abstract IDfValue getClearingValue();
+	/**
+	 * <p>
+	 * Returns the string-form null-equivalent value for this data type. This will <b>never</b>
+	 * return {@code null}.
+	 *
+	 * @return the null-equivalent encoding for this data type
+	 */
+	protected abstract String getNullEncoding();
 
-	protected String getNullEncoding() {
-		return null;
-	}
+	/**
+	 * <p>
+	 * Returns the null-equivalent value for this data type. This will <b>never</b> return
+	 * {@code null}.
+	 * </p>
+	 *
+	 * @return the null-equivalent value for this data type
+	 */
+	public abstract IDfValue getNullValue();
 
-	protected boolean isNullValue(IDfValue value) {
-		return (value == null);
-	}
-
-	protected IDfValue getNullValue() {
-		return null;
-	}
-
-	protected boolean isNullEncoding(String value) {
-		return (value == null);
-	}
-
+	/**
+	 * <p>
+	 * Encode the value into a string, such that for a given value {@code A}, invoking
+	 * {@link #decode(String)} on that encoded string will result in a value {@code B}, such that
+	 * {@code A.equals(B)} returns {@code true}.
+	 * </p>
+	 *
+	 * @param value
+	 * @return the string-encoded value
+	 */
 	public final String encode(IDfValue value) {
-		if (isNullValue(value)) { return getNullEncoding(); }
+		if (value == null) { return getNullEncoding(); }
 		return doEncode(value);
 	}
 
+	/**
+	 * <p>
+	 * Perform the actual encoding
+	 * </p>
+	 *
+	 * @param value
+	 * @return the encoded value
+	 */
 	protected String doEncode(IDfValue value) {
 		return value.asString();
 	}
 
+	/**
+	 * <p>
+	 * Decode the string into an {@link IDfValue}, such that for a given string {@code A}, invoking
+	 * {@link #encode(IDfValue)} on that decoded {@link IDfValue} will result in a string {@code B},
+	 * such that {@code A.equals(B)} returns {@code true}.
+	 * </p>
+	 * <p>
+	 * The exception to this rule is the value {@code null}: this will get encoded into an
+	 * {@link IDfValue} instance as specified by {@link #getNullValue()}.
+	 * </p>
+	 *
+	 * @param value
+	 * @return the string-encoded value
+	 */
 	public final IDfValue decode(String value) {
-		if (isNullEncoding(value)) { return getNullValue(); }
+		if (value == null) { return getNullValue(); }
 		return doDecode(value);
 	}
 
 	protected abstract IDfValue doDecode(String value);
 
 	public final Object getValue(IDfValue value) {
-		if (isNullValue(value)) { return getNullValue(); }
+		if (value == null) {
+			value = getNullValue();
+		}
 		return doGetValue(value);
 	}
 

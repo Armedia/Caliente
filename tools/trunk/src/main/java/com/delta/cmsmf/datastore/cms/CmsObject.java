@@ -277,7 +277,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		DataAttribute dateAttribute = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE);
 		if (dateAttribute == null) { return false; }
 		IDfValue objectDate = object.getValue(DctmAttrNameConstants.R_MODIFY_DATE);
-		IDfValue thisDate = dateAttribute.getSingleValue();
+		IDfValue thisDate = dateAttribute.getValue();
 		DataType type = dateAttribute.getType();
 		return Tools.equals(type.getValue(objectDate), type.getValue(thisDate));
 	}
@@ -433,9 +433,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (repeating) {
 			object.removeAll(attrName);
 		} else {
-			// I wonder what happens if we apply removeAll() to non-repeating attributes
-			// object.removeAll(attrName);
-			object.setValue(attrName, dataType.getClearingValue());
+			object.setValue(attrName, dataType.getNullValue());
 		}
 	}
 
@@ -449,7 +447,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 */
 	protected final void updateModifyDate(T object) throws DfException {
 		final String objType = object.getType().getName();
-		final IDfValue modifyDate = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE).getSingleValue();
+		final IDfValue modifyDate = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE).getValue();
 		/*
 		final IDfValue vStamp = getAttribute(DctmAttrNameConstants.I_VSTAMP).getSingleValue();
 		final String sqlStr = String.format(

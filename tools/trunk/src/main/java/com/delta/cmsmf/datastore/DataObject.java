@@ -4,9 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,7 +12,7 @@ import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 
-public class DataObject implements Iterable<DataAttribute> {
+public class DataObject {
 
 	private final DctmObjectType type;
 	private final String id;
@@ -91,69 +89,64 @@ public class DataObject implements Iterable<DataAttribute> {
 		this.properties = new HashMap<String, DataProperty>();
 	}
 
-	public DctmObjectType getType() {
+	public final DctmObjectType getType() {
 		return this.type;
 	}
 
-	public String getId() {
+	public final String getId() {
 		return this.id;
 	}
 
-	public DataAttribute getAttribute(String name) {
+	public final DataAttribute getAttribute(String name) {
 		return this.attributes.get(name);
 	}
 
-	public Set<String> getAttributeNames() {
-		return Collections.unmodifiableSet(this.attributes.keySet());
+	public final Set<String> getAttributeNames() {
+		return this.attributes.keySet();
 	}
 
-	public int getAttributeCount() {
+	public final int getAttributeCount() {
 		return this.attributes.size();
 	}
 
-	public DataProperty getProperty(String name) {
+	public final DataAttribute removeAttribute(String name) {
+		if (name == null) { throw new IllegalArgumentException("Attribute name must not be null"); }
+		return this.attributes.remove(name);
+	}
+
+	public final DataAttribute setProperty(DataAttribute attribute) {
+		if (attribute == null) { throw new IllegalArgumentException("Attribute must not be null"); }
+		return this.attributes.put(attribute.getName(), attribute);
+	}
+
+	public final Collection<DataAttribute> getAttributes() {
+		return this.attributes.values();
+	}
+
+	public final DataProperty getProperty(String name) {
 		return this.properties.get(name);
 	}
 
-	public Set<String> getPropertyNames() {
-		return Collections.unmodifiableSet(this.properties.keySet());
+	public final Set<String> getPropertyNames() {
+		return this.properties.keySet();
 	}
 
-	public int getPropertyCount() {
+	public final int getPropertyCount() {
 		return this.properties.size();
 	}
 
-	public DataProperty removeProperty(String name) {
+	public final DataProperty removeProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Property name must not be null"); }
 		return this.properties.remove(name);
 	}
 
-	public DataProperty setProperty(DataProperty property) {
+	public final DataProperty setProperty(DataProperty property) {
 		if (property == null) { throw new IllegalArgumentException("Property must not be null"); }
 		return this.properties.put(property.getName(), property);
 	}
 
-	@Override
-	public Iterator<DataAttribute> iterator() {
-		return new Iterator<DataAttribute>() {
-
-			private final Iterator<DataAttribute> it = DataObject.this.attributes.values().iterator();
-
-			@Override
-			public boolean hasNext() {
-				return this.it.hasNext();
-			}
-
-			@Override
-			public DataAttribute next() {
-				return this.it.next();
-			}
-
-			@Override
-			public void remove() {
-				throw new UnsupportedOperationException();
-			}
-		};
+	public final Collection<DataProperty> getProperties() {
+		return this.properties.values();
 	}
 
 	@Override

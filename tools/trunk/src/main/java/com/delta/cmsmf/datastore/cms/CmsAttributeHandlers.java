@@ -34,7 +34,7 @@ class CmsAttributeHandlers {
 		 */
 		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, DataAttribute attribute)
 			throws DfException {
-			return attribute.getAllValues();
+			return attribute.getValues();
 		}
 
 		/**
@@ -93,7 +93,7 @@ class CmsAttributeHandlers {
 			throws DfException {
 			if (!attribute.isRepeating()) {
 				// Is this an operator attribute that needs interception?
-				if (CMSMFAppConstants.DM_DBO.equals(attribute.getSingleValue().asString())) {
+				if (CMSMFAppConstants.DM_DBO.equals(attribute.getValue().asString())) {
 					String alternate = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 						object.getSession());
 					return Collections.singletonList(DfValueFactory.newStringValue(alternate));

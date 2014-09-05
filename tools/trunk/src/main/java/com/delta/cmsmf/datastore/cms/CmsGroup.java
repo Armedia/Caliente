@@ -48,7 +48,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 	@Override
 	protected IDfGroup locateInCms(IDfSession session) throws DfException {
-		return session.getGroup(getAttribute(DctmAttrNameConstants.GROUP_NAME).getSingleValue().asString());
+		return session.getGroup(getAttribute(DctmAttrNameConstants.GROUP_NAME).getValue().asString());
 	}
 
 	/*

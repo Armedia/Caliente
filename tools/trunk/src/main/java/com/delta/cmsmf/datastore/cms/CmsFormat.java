@@ -48,7 +48,7 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 
 	@Override
 	protected IDfFormat locateInCms(IDfSession session) throws DfException {
-		IDfValue formatName = getAttribute(DctmAttrNameConstants.NAME).getSingleValue();
+		IDfValue formatName = getAttribute(DctmAttrNameConstants.NAME).getValue();
 		return session.getFormat(formatName.asString());
 	}
 }

@@ -58,7 +58,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		DataProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
-			final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getSingleValue();
+			final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getValue();
 			for (IDfValue value : usersWithDefaultACL) {
 
 				// TODO: How do we decide if we should update the default ACL for this user? What if
@@ -80,8 +80,8 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected IDfACL locateInCms(IDfSession session) throws DfException {
-		final IDfValue ownerName = getAttribute(DctmAttrNameConstants.OWNER_NAME).getSingleValue();
-		final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getSingleValue();
+		final IDfValue ownerName = getAttribute(DctmAttrNameConstants.OWNER_NAME).getValue();
+		final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getValue();
 		return session.getACL(ownerName != null ? ownerName.asString() : null, objectName.asString());
 	}
 }
