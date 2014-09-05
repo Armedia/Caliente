@@ -130,12 +130,12 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 						// the filesystem, write to an error log and continue on
 						this.logger.error(String.format(
 							"Couldn't retrieve object information from repository for %s with id [%s]", prsstntObj
-							.getType().getName(), objID), e);
+								.getType().getName(), objID), e);
 					} catch (IOException e) {
 						// If there is IOException, log the error and exit out
 						this.logger.fatal(String.format(
 							"Couldn't serialize a %s object with id [%s] to the data store", prsstntObj.getType()
-								.getName(), objID), e);
+							.getName(), objID), e);
 						// close all of the file streams
 						try {
 							fsm.closeAllStreams();
@@ -203,11 +203,10 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 
 		String exportDQLQuery = "";
 
-		// First check to see if addhoc query property has any value. If it does have some value in
-// it,
-		// use it to build the query string. If this value is blank, look into the source repository
-// to see
-		// when was the last export run and pick up the sysobjects modified since then.
+		// First check to see if ad-hoc query property has any value. If it does have some value in
+		// it, use it to build the query string. If this value is blank, look into the source
+		// repository to see when was the last export run and pick up the sysobjects modified since
+		// then.
 
 		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
 		String predicate = CMSMFProperties.EXPORT_PREDICATE.getString("");
