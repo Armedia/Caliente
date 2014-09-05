@@ -8,6 +8,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Map;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
 public class CMSMFLauncher extends AbstractLauncher {
@@ -36,6 +38,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			throw new RuntimeException("Failed to initialize access to the addURL() method in the system classloader",
 				t);
 		}
+		System.setProperty("mode", "startup");
 	}
 
 	private static void addToClassPath(URL u) throws IOException {
@@ -116,21 +119,32 @@ public class CMSMFLauncher extends AbstractLauncher {
 		Map<CLIParam, String> cliParams = AbstractLauncher.parseArguments(args);
 		if (cliParams == null) { return; }
 
+		final String mode = cliParams.get(CLIParam.mode);
+
 		// Configure Log4J
+		System.setProperty("mode", mode);
 		String log4j = cliParams.get(CLIParam.log4j);
+		URL configUrl = null;
 		if (log4j != null) {
 			final File cfg = new File(log4j);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
-				DOMConfigurator.configure(cfg.toURI().toURL());
+				configUrl = cfg.toURI().toURL();
 			}
 		}
+		if (configUrl == null) {
+			configUrl = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
+		}
+		LogManager.resetConfiguration();
+		if (configUrl != null) {
+			DOMConfigurator.configure(configUrl);
+		}
+		Logger.getLogger(CMSMFLauncher.class);
 
 		CMSMFLauncher.patchClasspath(cliParams);
 
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
-		String mode = cliParams.get(CLIParam.mode);
 		Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode)).newInstance();
 	}
 }
