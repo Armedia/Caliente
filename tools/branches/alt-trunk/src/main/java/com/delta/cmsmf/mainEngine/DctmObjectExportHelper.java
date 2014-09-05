@@ -211,7 +211,7 @@ public class DctmObjectExportHelper {
 		String userName = "";
 		try {
 			DctmObject exportObject = null;
-			if ((user != null) && CMSMFProperties.SKIP_USERS.getBoolean()) {
+			if ((user != null) && !CMSMFProperties.SKIP_USERS.getBoolean()) {
 				userName = user.getUserName();
 				// get the user and serialize it
 				DctmUser dctmUser = new DctmUser(dctmSession);
