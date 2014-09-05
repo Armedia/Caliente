@@ -127,6 +127,9 @@ public class CMSMFLauncher extends AbstractLauncher {
 		Map<CLIParam, String> cliParams = AbstractLauncher.parseArguments(args);
 		if (cliParams == null) { return; }
 
+		// Just make sure it's initialized
+		CMSMFLauncher.patchClasspath(cliParams);
+
 		// Configure Log4J
 		final String mode = cliParams.get(CLIParam.mode);
 		String log4j = cliParams.get(CLIParam.log4j);
@@ -148,9 +151,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 			}
 			System.setProperty("logName", logName);
 		}
-
-		// Just make sure it's initialized
-		CMSMFLauncher.patchClasspath(cliParams);
 
 		// Now, convert the command-line parameters into configuration properties
 		for (CLIParam p : CLIParam.values()) {
