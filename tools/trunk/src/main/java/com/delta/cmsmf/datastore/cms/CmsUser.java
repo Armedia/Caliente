@@ -65,7 +65,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected void applyCustomizations(IDfUser user) throws DfException {
+	protected void applyPostCustomizations(IDfUser user) throws DfException {
 
 		// First, set the username
 		final IDfValue userName = getAttribute(DctmAttrNameConstants.USER_NAME).getSingleValue();

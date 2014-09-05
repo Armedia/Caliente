@@ -54,7 +54,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	protected void applyCustomizations(IDfACL acl) throws DfException {
+	protected void applyPostCustomizations(IDfACL acl) throws DfException {
 		DataProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();

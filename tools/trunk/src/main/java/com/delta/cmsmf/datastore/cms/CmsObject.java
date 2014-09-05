@@ -201,6 +201,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			}
 			DataStore.setIdMapping(this.id, object.getObjectId().getId());
 
+			applyPreCustomizations(object, !isUpdate);
 			if (isUpdate) {
 				// If an existing object is being updated, clear out all of its attributes that are
 				// not part of our attribute set
@@ -240,7 +241,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					setAttributeInCMS(object, attribute);
 				}
 			}
-			applyCustomizations(object);
+			applyPostCustomizations(object);
 			result = newResult;
 			ok = true;
 		} finally {
@@ -314,7 +315,32 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	protected void getDataProperties(Collection<DataProperty> properties, T object) throws DfException {
 	}
 
-	protected void applyCustomizations(T object) throws DfException {
+	/**
+	 * <p>
+	 * Apply specific processing to the given object prior to the automatically-copied attributes
+	 * having been applied to it. That means that the object may still have its old attributes, and
+	 * thus only this instance's {@link DataAttribute} values should be trusted. The
+	 * {@code newObject} parameter indicates if this object was newly-created, or if it is an
+	 * already-existing object.
+	 * </p>
+	 *
+	 * @param object
+	 * @throws DfException
+	 */
+	protected void applyPreCustomizations(T object, boolean newObject) throws DfException {
+	}
+
+	/**
+	 * <p>
+	 * Apply specific processing to the given object after the automatically-copied attributes have
+	 * been applied to it. That means that the object should now reflect its intended new state,
+	 * pending only whatever changes this method will apply.
+	 * </p>
+	 *
+	 * @param object
+	 * @throws DfException
+	 */
+	protected void applyPostCustomizations(T object) throws DfException {
 	}
 
 	protected DataAttribute getSqlFilteredAttribute(IDfPersistentObject object, IDfAttr attribute) throws DfException {
