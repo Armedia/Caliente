@@ -476,7 +476,7 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info(String.format(
 				"Started updating vStamp of a %s object with ID = [%s] from [%d] to [%d] on table [%s]", obj.getType()
-				.getName(), objId, oldVstamp, vStamp, tableName));
+					.getName(), objId, oldVstamp, vStamp, tableName));
 		}
 
 		String sqlStr = String.format("UPDATE %s SET i_vstamp = %d WHERE r_object_id = ''%s''", tableName, vStamp,
@@ -772,7 +772,7 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 					String strVal = (String) dctmAttribute.getSingleValue();
 					if (strVal.equals(CMSMFAppConstants.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-						.contains(attrName)) {
+							.contains(attrName)) {
 						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(session);
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + attrName
@@ -790,7 +790,7 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 						String strVal = (String) attrVal;
 						if (strVal.equals(CMSMFAppConstants.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(attrName)) {
+								.contains(attrName)) {
 							strVal = RunTimeProperties.getRunTimePropertiesInstance()
 								.getTargetRepoOperatorName(session);
 							if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -1014,7 +1014,7 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 							if (RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
 								.contains(idfAttr.getName())
 								&& strVal
-								.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())) {
+									.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())) {
 								strVal = CMSMFAppConstants.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()

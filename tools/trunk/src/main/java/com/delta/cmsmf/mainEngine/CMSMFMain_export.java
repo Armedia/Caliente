@@ -130,12 +130,12 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 						// the filesystem, write to an error log and continue on
 						this.logger.error(String.format(
 							"Couldn't retrieve object information from repository for %s with id [%s]", prsstntObj
-								.getType().getName(), objID), e);
+							.getType().getName(), objID), e);
 					} catch (IOException e) {
 						// If there is IOException, log the error and exit out
 						this.logger.fatal(String.format(
 							"Couldn't serialize a %s object with id [%s] to the data store", prsstntObj.getType()
-							.getName(), objID), e);
+								.getName(), objID), e);
 						// close all of the file streams
 						try {
 							fsm.closeAllStreams();

@@ -136,7 +136,7 @@ public class DctmContent extends DctmObject<IDfContent> {
 			dctmContent.getAllAttributesFromCMS(content, contentID);
 			if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 				DctmObject.logger
-				.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
+					.info("Finished getting dctm dmr_content object from repository with id: " + contentID);
 			}
 
 			return dctmContent;

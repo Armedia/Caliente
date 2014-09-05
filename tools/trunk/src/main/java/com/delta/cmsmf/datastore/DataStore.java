@@ -76,19 +76,19 @@ public class DataStore {
 	 */
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by attribute_name";
 
 	private static final String LOAD_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and attribute_name = ? " + //
@@ -354,7 +354,7 @@ public class DataStore {
 	}
 
 	public static void deserializeObjects(DctmObjectType type, ImportHandler handler) throws SQLException,
-		CMSMFException {
+	CMSMFException {
 		Connection objConn = null;
 		Connection attConn = null;
 		Connection valConn = null;

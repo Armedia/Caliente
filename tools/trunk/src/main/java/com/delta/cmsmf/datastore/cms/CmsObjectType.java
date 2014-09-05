@@ -33,7 +33,7 @@ public enum CmsObjectType {
 	FORMAT(CmsFormat.class, IDfFormat.class),
 	FOLDER(CmsFolder.class, IDfFolder.class),
 	DOCUMENT(CmsDocument.class, IDfDocument.class) {
-	/*
+		/*
 	@Override
 	protected CmsObjectType getActualType(IDfPersistentObject obj) {
 	if (obj instanceof IDfDocument) {
@@ -42,7 +42,7 @@ public enum CmsObjectType {
 	}
 	return super.getActualType(obj);
 	}
-	 */
+		 */
 	},
 	// REFERENCE_DOCUMENT(CmsReferenceDocument.class, IDfDocument.class),
 	CONTENT(CmsContent.class, IDfContent.class);
@@ -84,7 +84,7 @@ public enum CmsObjectType {
 	}
 
 	public final CmsObject<?> newInstance() throws InstantiationException, IllegalAccessException,
-		InvocationTargetException {
+	InvocationTargetException {
 		return this.objectClass.newInstance();
 	}
 

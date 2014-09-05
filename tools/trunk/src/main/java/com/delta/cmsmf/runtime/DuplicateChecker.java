@@ -53,8 +53,7 @@ public class DuplicateChecker {
 	 * new instances being created.
 	 */
 	private DuplicateChecker() {
-		Map<DctmObjectType, Set<String>> uniqueIds = new EnumMap<DctmObjectType, Set<String>>(
-			DctmObjectType.class);
+		Map<DctmObjectType, Set<String>> uniqueIds = new EnumMap<DctmObjectType, Set<String>>(DctmObjectType.class);
 		for (DctmObjectType v : DctmObjectType.values()) {
 			uniqueIds.put(v, Collections.synchronizedSet(new HashSet<String>()));
 		}

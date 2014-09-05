@@ -70,7 +70,7 @@ public enum DctmObjectType {
 	}
 
 	public final DctmObject<?> newInstance() throws InstantiationException, IllegalAccessException,
-		InvocationTargetException {
+	InvocationTargetException {
 		return this.objectClass.newInstance();
 	}
 

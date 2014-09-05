@@ -88,7 +88,7 @@ public class DctmUser extends DctmObject<IDfUser> {
 		session.beginTrans();
 
 		// First check to see if the user already exist; if it does check to see if we need to
-// update it
+		// update it
 		String userName;
 		try {
 			boolean doesUserNeedUpdate = false;
@@ -97,8 +97,7 @@ public class DctmUser extends DctmObject<IDfUser> {
 			userName = getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME);
 
 			// NOTE if the user name is dmadmin or starts with "dm_", ignore and do not create them
-// in the
-			// repository
+			// in the repository
 			if (userName.equals("dmadmin") || userName.startsWith("dm_")) {
 				if (DctmUser.logger.isEnabledFor(Level.INFO)) {
 					DctmUser.logger.info("The user " + userName
@@ -161,8 +160,8 @@ public class DctmUser extends DctmObject<IDfUser> {
 					if (usr.getUserName().equals(getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME))) {
 						if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 							DctmUser.logger
-								.debug("User name will not be updated because it's same as before. Currently in target repo: "
-									+ usr.getUserName());
+							.debug("User name will not be updated because it's same as before. Currently in target repo: "
+								+ usr.getUserName());
 						}
 						removeAttribute(DctmAttrNameConstants.USER_NAME);
 					}
@@ -374,7 +373,7 @@ public class DctmUser extends DctmObject<IDfUser> {
 			if (userDefaultACL == null) {
 				if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 					DctmUser.logger
-					.debug("The user's default Internal ACL does not exist and acl related attributes will be removed");
+						.debug("The user's default Internal ACL does not exist and acl related attributes will be removed");
 				}
 				removeAttribute(DctmAttrNameConstants.ACL_NAME);
 				removeAttribute(DctmAttrNameConstants.ACL_DOMAIN);

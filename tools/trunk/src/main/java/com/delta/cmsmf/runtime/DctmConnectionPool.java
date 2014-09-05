@@ -173,9 +173,9 @@ public class DctmConnectionPool {
 			DctmConnectionPool.POOL.returnObject(session);
 		} catch (Exception e) {
 			DctmConnectionPool.LOG
-			.warn(
-				String.format("Exception caught returning session [%s] to the pool",
-					DctmConnectionPool.getId(session)), e);
+				.warn(
+					String.format("Exception caught returning session [%s] to the pool",
+						DctmConnectionPool.getId(session)), e);
 		}
 	}
 

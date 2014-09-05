@@ -273,7 +273,7 @@ public class FileStreamsManager {
 	 *             in the event of files that does not exist are being opened
 	 */
 	public InputStream getInputStreamForType(DctmObjectType dctmObjectType) throws CMSMFIOException,
-	CMSMFFileNotFoundException {
+		CMSMFFileNotFoundException {
 
 		InputStream returnIS = null;
 

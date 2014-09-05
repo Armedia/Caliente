@@ -46,8 +46,7 @@ public class AppCounter {
 	 * new instances being created.
 	 */
 	private AppCounter() {
-		Map<DctmObjectType, AtomicInteger> counters = new EnumMap<DctmObjectType, AtomicInteger>(
-			DctmObjectType.class);
+		Map<DctmObjectType, AtomicInteger> counters = new EnumMap<DctmObjectType, AtomicInteger>(DctmObjectType.class);
 		for (DctmObjectType v : DctmObjectType.values()) {
 			counters.put(v, new AtomicInteger(0));
 		}

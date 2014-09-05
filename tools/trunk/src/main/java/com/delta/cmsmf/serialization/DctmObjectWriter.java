@@ -39,7 +39,7 @@ public class DctmObjectWriter {
 		if (dctmObj != null) {
 			if (DctmObjectWriter.logger.isEnabledFor(Level.INFO)) {
 				DctmObjectWriter.logger
-					.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
+				.info("Started serializing the object to filesystem " + dctmObj.getSrcObjectID());
 			}
 
 			try {
