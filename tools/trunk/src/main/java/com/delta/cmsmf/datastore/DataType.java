@@ -171,7 +171,7 @@ public enum DataType {
 	},
 	DF_UNDEFINED(IDfValue.DF_UNDEFINED) {
 		private <T> T fail() {
-			throw new RuntimeException("Can't handle DF_UNDEFINED");
+			throw new UnsupportedOperationException("Can't handle DF_UNDEFINED");
 		}
 
 		@Override
