@@ -121,6 +121,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 		Map<CLIParam, String> cliParams = AbstractLauncher.parseArguments(args);
 		if (cliParams == null) { return; }
 
+		CMSMFLauncher.patchClasspath(cliParams);
+
 		// Configure Log4J
 		final String mode = cliParams.get(CLIParam.mode);
 		String log4j = cliParams.get(CLIParam.log4j);
@@ -150,8 +152,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 				PropertyConfigurator.configure(configUrl);
 			}
 		}
-
-		CMSMFLauncher.patchClasspath(cliParams);
 
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
