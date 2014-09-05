@@ -108,11 +108,11 @@ public class CmsUser extends CmsObject<IDfUser> {
 	protected void applyPostCustomizations(IDfUser user, boolean newObject) throws DfException {
 		// First, set the username - only do this for new objects!!
 		if (newObject) {
-			copyAttributeToCMS(user, DctmAttrNameConstants.USER_NAME);
+			copyAttributeToObject(DctmAttrNameConstants.USER_NAME, user);
 
 			// Login name + domain
-			copyAttributeToCMS(user, DctmAttrNameConstants.USER_LOGIN_DOMAIN);
-			copyAttributeToCMS(user, DctmAttrNameConstants.USER_LOGIN_NAME);
+			copyAttributeToObject(DctmAttrNameConstants.USER_LOGIN_DOMAIN, user);
+			copyAttributeToObject(DctmAttrNameConstants.USER_LOGIN_NAME, user);
 
 			// Next, set the password
 			DataAttribute att = getAttribute(DctmAttrNameConstants.USER_SOURCE);
@@ -121,8 +121,8 @@ public class CmsUser extends CmsObject<IDfUser> {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
 				final String inlinePasswordValue = CMSMFProperties.DEFAULT_USER_PASSWORD.getString(user.getUserName());
-				setAttributeInCMS(user, DctmAttrNameConstants.USER_PASSWORD,
-					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)));
+				setAttributeOnObject(DctmAttrNameConstants.USER_PASSWORD,
+					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)), user);
 			}
 		}
 

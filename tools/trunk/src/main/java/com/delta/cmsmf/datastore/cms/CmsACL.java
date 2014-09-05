@@ -61,21 +61,27 @@ public class CmsACL extends CmsObject<IDfACL> {
 			final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getSingleValue();
 			for (IDfValue value : usersWithDefaultACL) {
 
-				// TODO: How do we decide if we should update the default ACL for this user?
-
+				// TODO: How do we decide if we should update the default ACL for this user? What if
+				// the user's default ACL has been modified on the target CMS and we don't want to
+				// clobber that?
 				final IDfUser user = session.getUser(value.asString());
 				if (user == null) {
-					// TODO: Mark the error, but don't explode...
-				} else {
-					// Ok...so we relate this thing back to its owner as its internal ACL
-					user.setDefaultACLEx(value.asString(), objectName.asString());
+					this.logger.warn(String.format(
+						"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
+						acl.getDomain(), acl.getObjectName(), value.asString()));
+					continue;
 				}
+
+				// Ok...so we relate this thing back to its owner as its internal ACL
+				user.setDefaultACLEx(value.asString(), objectName.asString());
 			}
 		}
 	}
 
 	@Override
 	protected IDfACL locateInCms(IDfSession session) throws DfException {
-		return null;
+		final IDfValue ownerName = getAttribute(DctmAttrNameConstants.OWNER_NAME).getSingleValue();
+		final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getSingleValue();
+		return session.getACL(ownerName != null ? ownerName.asString() : null, objectName.asString());
 	}
 }
