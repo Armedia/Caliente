@@ -9,12 +9,12 @@
 	</appender>
 
 	<appender name="default" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="cmsmf-${mode}.log"/>
+		<param name="File" value="${logName}.log"/>
 		<param name="ImmediateFlush" value="true"/>
 		<param name="Append" value="false"/>
 		<param name="Threshold" value="trace"/>
 		<param name="MaxBackupIndex" value="10"/>
-		<param name="MaxFileSize" value="10MB"/>
+		<param name="MaxFileSize" value="1024MB"/>
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
 		</layout>
@@ -27,12 +27,12 @@
 	</appender>
 
 	<appender name="errors" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="cmsmf-${mode}.err"/>
+		<param name="File" value="${logName}.err"/>
 		<param name="ImmediateFlush" value="true"/>
 		<param name="Append" value="false"/>
 		<param name="Threshold" value="warn"/>
 		<param name="MaxBackupIndex" value="10"/>
-		<param name="MaxFileSize" value="10MB"/>
+		<param name="MaxFileSize" value="1024MB"/>
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
 		</layout>
