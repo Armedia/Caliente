@@ -12,8 +12,6 @@ import com.documentum.fc.common.IDfValue;
 
 public class DataAttribute extends DataProperty {
 
-	public static final DataAttributeEncoder DEFAULT_ENCODER = new DataAttributeEncoder();
-
 	private final String id;
 	private final boolean qualifiable;
 	private final int length;
@@ -25,24 +23,24 @@ public class DataAttribute extends DataProperty {
 		this.length = rs.getInt("length");
 	}
 
-	public DataAttribute(IDfPersistentObject obj, IDfAttr attr) throws DfException {
-		super(obj, attr);
+	public DataAttribute(IDfAttr attr, IDfPersistentObject obj) throws DfException {
+		super(attr, obj);
 		this.id = attr.getId();
 		this.length = attr.getLength();
 		this.qualifiable = attr.isQualifiable();
 		if (attr.isRepeating()) {
-			setValues(DfValueFactory.getAllRepeatingValues(obj, attr));
+			setValues(DfValueFactory.getAllRepeatingValues(attr, obj));
 		} else {
 			setValue(obj.getValue(attr.getName()));
 		}
 	}
 
-	public DataAttribute(IDfPersistentObject obj, IDfAttr attr, IDfValue... values) throws DfException {
-		this(obj, attr, Arrays.asList(values));
+	public DataAttribute(IDfAttr attr, IDfValue... values) throws DfException {
+		this(attr, Arrays.asList(values));
 	}
 
-	public DataAttribute(IDfPersistentObject obj, IDfAttr attr, Collection<IDfValue> values) throws DfException {
-		super(obj, attr, values);
+	public DataAttribute(IDfAttr attr, Collection<IDfValue> values) throws DfException {
+		super(attr, values);
 		this.id = attr.getId();
 		this.length = attr.getLength();
 		this.qualifiable = attr.isQualifiable();

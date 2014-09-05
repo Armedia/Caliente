@@ -99,7 +99,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 		if (attribute == null) {
 			int idx = user.findAttrIndex(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
 			IDfAttr attr = user.getAttr(idx);
-			attribute = new DataAttribute(user, attr, DfValueFactory.newStringValue(""));
+			attribute = new DataAttribute(attr, DfValueFactory.newStringValue(""));
 			setAttribute(attribute);
 		}
 	}

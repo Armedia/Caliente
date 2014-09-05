@@ -143,7 +143,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			AttributeHandler handler = CmsAttributeHandlers.getAttributeHandler(object, attr);
 			// Get the attribute handler
 			if (handler.includeInExport(object, attr)) {
-				DataAttribute attribute = new DataAttribute(object, attr, handler.getExportableValues(object, attr));
+				DataAttribute attribute = new DataAttribute(attr, handler.getExportableValues(object, attr));
 				this.attributes.put(name, attribute);
 			}
 		}
@@ -341,14 +341,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void applyPostCustomizations(T object, boolean newObject) throws DfException {
-	}
-
-	protected DataAttribute getSqlFilteredAttribute(IDfPersistentObject object, IDfAttr attribute) throws DfException {
-		return new DataAttribute(object, attribute);
-	}
-
-	protected DataAttribute getCmsFilteredAttribute(DataAttribute attribute) throws DfException {
-		return attribute;
 	}
 
 	protected final boolean copyAttributeToObject(String attrName, T object) throws DfException {

@@ -73,16 +73,16 @@ public final class DfValueFactory {
 		return new DfValue(Double.toHexString(v), type.getDfConstant());
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
-		return DfValueFactory.getAllRepeatingValues(object, attr.getName());
+	public static List<IDfValue> getAllRepeatingValues(IDfAttr attr, IDfPersistentObject object) throws DfException {
+		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(IDfPersistentObject object, DataAttribute attr)
+	public static List<IDfValue> getAllRepeatingValues(DataAttribute attr, IDfPersistentObject object)
 		throws DfException {
-		return DfValueFactory.getAllRepeatingValues(object, attr.getName());
+		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(IDfPersistentObject object, String attr) throws DfException {
+	public static List<IDfValue> getAllRepeatingValues(String attr, IDfPersistentObject object) throws DfException {
 		int valueCount = object.getValueCount(attr);
 		List<IDfValue> ret = new ArrayList<IDfValue>(valueCount);
 		for (int i = 0; i < valueCount; i++) {

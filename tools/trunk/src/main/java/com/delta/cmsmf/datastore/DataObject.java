@@ -57,19 +57,12 @@ public class DataObject {
 	}
 
 	public DataObject(IDfPersistentObject object) throws DfException {
-		this(object, null);
-	}
-
-	public DataObject(IDfPersistentObject object, DataAttributeEncoder dataAttributeEncoder) throws DfException {
-		if (dataAttributeEncoder == null) {
-			dataAttributeEncoder = DataAttribute.DEFAULT_ENCODER;
-		}
 		this.id = object.getObjectId().getId();
 		this.type = DctmObjectType.decode(object.getType().getName());
 		final int attCount = object.getAttrCount();
 		this.attributes = new HashMap<String, DataAttribute>(object.getAttrCount());
 		for (int i = 0; i < attCount; i++) {
-			DataAttribute attribute = dataAttributeEncoder.encode(object, object.getAttr(i));
+			DataAttribute attribute = new DataAttribute(object.getAttr(i), object);
 			this.attributes.put(attribute.getName(), attribute);
 		}
 		this.properties = new HashMap<String, DataProperty>();
