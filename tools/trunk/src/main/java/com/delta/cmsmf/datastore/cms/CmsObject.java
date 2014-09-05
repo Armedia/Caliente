@@ -16,7 +16,6 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cmsobjects.DctmAttribute;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataAttribute;
@@ -58,7 +57,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -132,7 +131,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			"Expected an object of type %s, but got one of type %s", this.type, type)); }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new IllegalArgumentException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 
 		this.id = object.getObjectId().getId();
 		this.contentPath = calculateContentPath(object);
@@ -233,11 +232,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				doSet &= handler.includeInImport(object, attribute);
 
 				if (doSet) {
-					clearAttributeInCMS(object, attribute);
-					setAttributeInCMS(object, attribute);
+					copyAttributeToCMS(object, attribute);
 				}
 			}
-			applyPostCustomizations(object);
+			applyPostCustomizations(object, !isUpdate);
 			updateModifyDate(object);
 			result = newResult;
 			ok = true;
@@ -263,6 +261,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return CmsAttributeHandlers.getAttributeHandler(this.type, attr);
 	}
 
+	protected final AttributeHandler getAttributeHandler(DataType dataType, String name) {
+		return CmsAttributeHandlers.getAttributeHandler(this.type, dataType, name);
+	}
+
 	protected boolean isVersionable(T object) throws DfException {
 		return false;
 	}
@@ -284,7 +286,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		IDfPersistentObject object = session.newObject(this.type.getDocumentumType());
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -292,7 +294,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -338,7 +340,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @param object
 	 * @throws DfException
 	 */
-	protected void applyPostCustomizations(T object) throws DfException {
+	protected void applyPostCustomizations(T object, boolean newObject) throws DfException {
 	}
 
 	protected DataAttribute getSqlFilteredAttribute(IDfPersistentObject object, IDfAttr attribute) throws DfException {
@@ -349,34 +351,80 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return attribute;
 	}
 
-	/**
-	 * Sets the attribute in cms.
-	 *
-	 * @param object
-	 *            the DFC persistentObject for which the attribute is being updated
-	 * @param attribute
-	 *            the attribute
-	 * @throws DfException
-	 *             Signals that Dctm Server error has occurred.
-	 * @see DctmAttribute
-	 */
-	protected void setAttributeInCMS(T object, DataAttribute attribute) throws DfException {
+	protected final boolean copyAttributeToCMS(T object, String attrName) throws DfException {
+		return copyAttributeToCMS(object, getAttribute(attrName));
+	}
+
+	protected final boolean copyAttributeToCMS(T object, DataAttribute attribute) throws DfException {
+		// Do nothing if there was no attribute
+		if (attribute == null) { return false; }
+		final AttributeHandler handler = getAttributeHandler(attribute);
+		return setAttributeInCMS(object, attribute, handler.getImportableValues(object, attribute));
+	}
+
+	protected final boolean setAttributeInCMS(T object, String attrName, Collection<IDfValue> values)
+		throws DfException {
+		// Do nothing if there was no attribute
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
+		if (attrName == null) { return false; }
+
+		DataAttribute dataAttr = getAttribute(attrName);
+		if (dataAttr != null) { return setAttributeInCMS(object, dataAttr, values); }
+
+		int idx = object.findAttrIndex(attrName);
+		IDfAttr attribute = object.getAttr(idx);
+		return setAttributeInCMS(object, attrName, attribute.isRepeating(), values);
+	}
+
+	protected final boolean setAttributeInCMS(T object, DataAttribute attribute, Collection<IDfValue> values)
+		throws DfException {
+		// Do nothing if there was no attribute
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
+		if (attribute == null) { return false; }
+		return setAttributeInCMS(object, attribute.getName(), attribute.isRepeating(), values);
+	}
+
+	private final boolean setAttributeInCMS(T object, String attName, boolean repeating, Collection<IDfValue> values)
+		throws DfException {
+		// Do nothing if there was no attribute
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
+		if (attName == null) { return false; }
+		if (values == null) {
+			values = Collections.emptyList();
+		}
 		// If an existing object is being updated, first clear repeating values if the attribute
 		// being set is repeating type.
-		clearAttributeInCMS(object, attribute);
-		Collection<IDfValue> values = getAlternateImportValues(object, attribute);
-		if (values == null) {
-			values = attribute.getAllValues();
-		}
-		final String attrName = attribute.getName();
+		clearAttributeInCMS(object, attName);
 		for (IDfValue value : values) {
-			if (attribute.isRepeating()) {
-				object.appendValue(attrName, value);
+			if (repeating) {
+				object.appendValue(attName, value);
 			} else {
 				// I wonder if appendValue() can also be used for non-repeating attributes...
-				object.setValue(attrName, value);
+				object.setValue(attName, value);
 			}
 		}
+		return true;
+	}
+
+	protected final void clearAttributeInCMS(T object, DataAttribute attribute) throws DfException {
+		clearAttributeInCMS(object, attribute.getName(), attribute.getType(), attribute.isRepeating());
+	}
+
+	protected final void clearAttributeInCMS(T object, String attr) throws DfException {
+		DataAttribute dataAttr = getAttribute(attr);
+		if (dataAttr != null) {
+			clearAttributeInCMS(object, dataAttr);
+		}
+		clearAttributeInCMS(object, object.getAttr(object.findAttrIndex(attr)));
+	}
+
+	protected final void clearAttributeInCMS(T object, IDfAttr attr) throws DfException {
+		clearAttributeInCMS(object, attr.getName(), attr.getDataType(), attr.isRepeating());
+	}
+
+	protected final void clearAttributeInCMS(T object, String attrName, int dataType, boolean repeating)
+		throws DfException {
+		clearAttributeInCMS(object, attrName, DataType.fromDfConstant(dataType), repeating);
 	}
 
 	protected final void clearAttributeInCMS(T object, String attrName, DataType dataType, boolean repeating)
@@ -388,23 +436,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			// object.removeAll(attrName);
 			object.setValue(attrName, dataType.getClearingValue());
 		}
-	}
-
-	protected final void clearAttributeInCMS(T object, String attrName, int dataType, boolean repeating)
-		throws DfException {
-		clearAttributeInCMS(object, attrName, DataType.fromDfConstant(dataType), repeating);
-	}
-
-	protected final void clearAttributeInCMS(T object, DataAttribute attribute) throws DfException {
-		clearAttributeInCMS(object, attribute.getName(), attribute.getType(), attribute.isRepeating());
-	}
-
-	protected final void clearAttributeInCMS(T object, IDfAttr attr) throws DfException {
-		clearAttributeInCMS(object, attr.getName(), attr.getDataType(), attr.isRepeating());
-	}
-
-	protected final void clearAttributeInCMS(T object, String attr) throws DfException {
-		clearAttributeInCMS(object, object.getAttr(object.findAttrIndex(attr)));
 	}
 
 	/**

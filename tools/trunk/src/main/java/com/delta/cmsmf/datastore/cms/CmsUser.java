@@ -4,6 +4,8 @@
 
 package com.delta.cmsmf.datastore.cms;
 
+import java.util.Collections;
+
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
@@ -40,6 +42,10 @@ public class CmsUser extends CmsObject<IDfUser> {
 			DctmAttrNameConstants.USER_NAME, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
 			DctmAttrNameConstants.USER_PASSWORD, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+			DctmAttrNameConstants.USER_LOGIN_DOMAIN, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+			DctmAttrNameConstants.USER_LOGIN_NAME, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
 			DctmAttrNameConstants.HOME_DOCBASE, handler);
 
@@ -99,19 +105,25 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected void applyPostCustomizations(IDfUser user) throws DfException {
+	protected void applyPostCustomizations(IDfUser user, boolean newObject) throws DfException {
+		// First, set the username - only do this for new objects!!
+		if (newObject) {
+			copyAttributeToCMS(user, DctmAttrNameConstants.USER_NAME);
 
-		// First, set the username
-		final IDfValue userName = getAttribute(DctmAttrNameConstants.USER_NAME).getSingleValue();
-		user.setValue(DctmAttrNameConstants.USER_NAME, userName);
+			// Login name + domain
+			copyAttributeToCMS(user, DctmAttrNameConstants.USER_LOGIN_DOMAIN);
+			copyAttributeToCMS(user, DctmAttrNameConstants.USER_LOGIN_NAME);
 
-		// Next, set the password
-		final IDfValue userSource = getAttribute(DctmAttrNameConstants.USER_SOURCE).getSingleValue();
-		if (Tools.equals(userSource.asString(), CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
-			// Default the password to the user's login name, if a specific value hasn't been
-			// selected for global use
-			final String inlinePasswordValue = CMSMFProperties.DEFAULT_USER_PASSWORD.getString(user.getUserName());
-			user.setValue(DctmAttrNameConstants.USER_PASSWORD, DfValueFactory.newStringValue(inlinePasswordValue));
+			// Next, set the password
+			DataAttribute att = getAttribute(DctmAttrNameConstants.USER_SOURCE);
+			final IDfValue userSource = att.getSingleValue();
+			if (Tools.equals(userSource.asString(), CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
+				// Default the password to the user's login name, if a specific value hasn't been
+				// selected for global use
+				final String inlinePasswordValue = CMSMFProperties.DEFAULT_USER_PASSWORD.getString(user.getUserName());
+				setAttributeInCMS(user, DctmAttrNameConstants.USER_PASSWORD,
+					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)));
+			}
 		}
 
 		// Next, set the home docbase
