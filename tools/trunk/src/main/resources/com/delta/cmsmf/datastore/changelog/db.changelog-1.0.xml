@@ -21,12 +21,6 @@
 			<column name="object_type" />
 			<column name="object_number" />
 		</createIndex>
-		<createIndex tableName="dctm_object" indexName="idx_dctm_object_content">
-			<column name="has_content" />
-		</createIndex>
-		<createIndex tableName="dctm_object" indexName="idx_dctm_object_path">
-			<column name="content_path" />
-		</createIndex>
 		<addAutoIncrement tableName="dctm_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>
 
 		<!-- The dependency relationships table -->
