@@ -55,9 +55,9 @@ public class DataStore {
 	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from dctm_object where object_id = ?";
 
 	private static final String INSERT_OBJECT_SQL = "insert into dctm_object (object_id, object_type) values (?, ?)";
-	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, name, id, data_type, length, is_qualifiable, is_repeating) values (?, ?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
-	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, name, data_type, is_repeating) values (?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
 	private static final String FIND_SOURCE_ID_SQL = "select source_id from dctm_mapper where target_id = ?";
 	private static final String FIND_TARGET_ID_SQL = "select target_id from dctm_mapper where source_id = ?";

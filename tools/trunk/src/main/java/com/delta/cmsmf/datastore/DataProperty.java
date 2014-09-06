@@ -39,7 +39,7 @@ public class DataProperty implements Iterable<IDfValue> {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		this.name = rs.getString("name");
 		this.type = DataType.valueOf(rs.getString("type"));
-		this.repeating = rs.getBoolean("is_repeating");
+		this.repeating = rs.getBoolean("repeating");
 		this.values = new ArrayList<IDfValue>();
 		if (!this.repeating) {
 			this.singleValue = this.type.getNullValue();
