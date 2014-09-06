@@ -3,7 +3,6 @@ package com.delta.cmsmf.datastore;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
-import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public enum DataType {
@@ -111,7 +110,7 @@ public enum DataType {
 	DF_TIME(IDfValue.DF_TIME) {
 		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
 		private final String nullDate = this.nullValue.asString();
-		private final String timePattern = IDfTime.DF_TIME_PATTERN46;
+		private final String timePattern = "yyyy/MM/dd HH:mm:ss";
 
 		@Override
 		public String doEncode(IDfValue value) {
