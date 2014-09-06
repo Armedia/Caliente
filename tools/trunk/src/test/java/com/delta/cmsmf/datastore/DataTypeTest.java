@@ -187,7 +187,8 @@ public class DataTypeTest {
 					Assert.fail(String.format("Unsupported type %s being tested", type));
 					continue;
 			}
-			Assert.assertEquals(String.format("Comparing %s nulls", type), N, type.getValue(n));
+			Assert.assertEquals(String.format("Comparing %s null values", type), N, type.getValue(n));
+			Assert.assertEquals(String.format("Comparing %s null", type), N, type.getValue(null));
 
 			for (IDfValue v : DataTypeTest.VALUE_LIST.get(type)) {
 				final Object expected;
@@ -259,6 +260,7 @@ public class DataTypeTest {
 	@Test
 	public void testDecode() {
 		for (DataType type : DataTypeTest.NULL_VALUE.keySet()) {
+			Assert.assertEquals(DataTypeTest.NULL_ENCODING.get(type), type.encode(DataTypeTest.NULL_VALUE.get(type)));
 			Assert.assertEquals(DataTypeTest.NULL_ENCODING.get(type), type.encode(null));
 			List<IDfValue> values = DataTypeTest.VALUE_LIST.get(type);
 			List<String> encodings = DataTypeTest.ENCODING_LIST.get(type);
@@ -274,7 +276,9 @@ public class DataTypeTest {
 	@Test
 	public void testEncodeDecode() {
 		for (DataType type : DataTypeTest.NULL_VALUE.keySet()) {
-			Assert.assertEquals(DataTypeTest.NULL_ENCODING.get(type), type.encode(null));
+			Assert.assertEquals(type.getValue(DataTypeTest.NULL_VALUE.get(type)),
+				type.getValue(type.decode(DataTypeTest.NULL_ENCODING.get(type))));
+			Assert.assertEquals(type.getValue(DataTypeTest.NULL_VALUE.get(type)), type.getValue(type.decode(null)));
 			List<IDfValue> values = DataTypeTest.VALUE_LIST.get(type);
 			List<String> encodings = DataTypeTest.ENCODING_LIST.get(type);
 			for (int i = 0; i < values.size(); i++) {
@@ -287,6 +291,54 @@ public class DataTypeTest {
 				final String E = type.encode(type.decode(e));
 				Assert.assertEquals(String.format("Comparing %s looped decoding", type), e, E);
 			}
+		}
+	}
+
+	@Test
+	public void testEncodeDF_UNDEFINED() {
+		final DataType type = DataType.DF_UNDEFINED;
+		final IDfValue NULL = DataTypeTest.NULL_VALUE.get(DataType.DF_STRING);
+		try {
+			type.encode(null);
+			Assert.fail("DF_UNDEFINED did not fail when encoding null");
+		} catch (UnsupportedOperationException e) {
+			// All is well
+		}
+		try {
+			type.encode(NULL);
+			Assert.fail("DF_UNDEFINED did not fail when encoding a non-null");
+		} catch (UnsupportedOperationException e) {
+			// All is well
+		}
+		try {
+			type.encode(null);
+			Assert.fail("DF_UNDEFINED did not fail when encoding null");
+		} catch (UnsupportedOperationException e) {
+			// All is well
+		}
+		try {
+			type.getNullEncoding();
+			Assert.fail("DF_UNDEFINED did not fail when retrieving the null encoding");
+		} catch (UnsupportedOperationException e) {
+			// All is well
+		}
+		try {
+			type.getNullValue();
+			Assert.fail("DF_UNDEFINED did not fail when retrieving the null value");
+		} catch (UnsupportedOperationException e) {
+			// All is well
+		}
+		try {
+			type.getValue(null);
+			Assert.fail("DF_UNDEFINED did not fail when calling getValue with null");
+		} catch (UnsupportedOperationException e) {
+			// All is well
+		}
+		try {
+			type.getValue(NULL);
+			Assert.fail("DF_UNDEFINED did not fail when calling getValue with non-null");
+		} catch (UnsupportedOperationException e) {
+			// All is well
 		}
 	}
 }
