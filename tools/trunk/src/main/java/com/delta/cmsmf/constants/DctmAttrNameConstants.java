@@ -117,6 +117,9 @@ public class DctmAttrNameConstants {
 	/** The r_accessor_xpermit attribute of dm_acl. */
 	public static final String R_ACCESSOR_XPERMIT = "r_accessor_xpermit";
 
+	/** The r_is_group attribute of dm_acl. */
+	public static final String R_IS_GROUP = "r_is_group";
+
 	/** The accessor_name_dm_world attribute of dm_acl. */
 	public static final String ACCESSOR_NAME_DM_WORLD = "dm_world";
 
