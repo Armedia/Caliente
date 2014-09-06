@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.documentum.fc.client.impl.typeddata.Attribute;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfValue;
@@ -221,23 +222,27 @@ public class DataTypeTest {
 	}
 
 	@Test
-	public void testFromDfConstant() {
-		Assert.assertEquals(DataType.DF_BOOLEAN, DataType.fromDfConstant(IDfValue.DF_BOOLEAN));
-		Assert.assertEquals(DataType.DF_INTEGER, DataType.fromDfConstant(IDfValue.DF_INTEGER));
-		Assert.assertEquals(DataType.DF_STRING, DataType.fromDfConstant(IDfValue.DF_STRING));
-		Assert.assertEquals(DataType.DF_ID, DataType.fromDfConstant(IDfValue.DF_ID));
-		Assert.assertEquals(DataType.DF_TIME, DataType.fromDfConstant(IDfValue.DF_TIME));
-		Assert.assertEquals(DataType.DF_DOUBLE, DataType.fromDfConstant(IDfValue.DF_DOUBLE));
-		Assert.assertEquals(DataType.DF_UNDEFINED, DataType.fromDfConstant(IDfValue.DF_UNDEFINED));
-		try {
-			DataType.fromDfConstant(-1);
-			Assert.fail("Did not fail with an illegal constant value");
-		} catch (IllegalArgumentException e) {
-			// All is well
+	public void testFromAttribute() {
+		for (DataType a : DataType.values()) {
+			Attribute A = new Attribute(a.name(), false, a.getDfConstant());
+			DataType tA = DataType.fromAttribute(A);
+			Assert.assertNotNull(tA);
+			Assert.assertEquals(a, tA);
+			for (DataType b : DataType.values()) {
+				Attribute B = new Attribute(a.name(), false, b.getDfConstant());
+				DataType tB = DataType.fromAttribute(B);
+				Assert.assertNotNull(tB);
+				if (a == b) {
+					// Make sure there are no collisions
+					Assert.assertEquals(a, tB);
+				} else {
+					Assert.assertEquals(b, tB);
+				}
+			}
 		}
 		try {
-			DataType.fromDfConstant(7);
-			Assert.fail("Did not fail with an illegal constant value");
+			DataType.fromAttribute(null);
+			Assert.fail("Did not fail with a null attribute");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}

@@ -27,6 +27,7 @@ import com.delta.cmsmf.datastore.cms.CmsCounter.Result;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -55,7 +56,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -129,7 +130,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			"Expected an object of type %s, but got one of type %s", this.type, type)); }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new IllegalArgumentException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 
 		this.id = object.getObjectId().getId();
 		this.contentPath = calculateContentPath(object);
@@ -162,13 +163,19 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final Result saveToCMS(IDfSession session) throws DfException, CMSMFException, SQLException {
+		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		CmsCounter.incrementCounter(this, Result.READ);
 		boolean transOpen = false;
 		boolean ok = false;
 
 		// We assume the worst, out of the gate
+		IDfLocalTransaction localTx = null;
 		try {
-			session.beginTrans();
+			if (session.isTransactionActive()) {
+				localTx = session.beginTransEx();
+			} else {
+				session.beginTrans();
+			}
 			transOpen = true;
 			if (skipImport(session)) { return Result.SKIPPED; }
 
@@ -235,11 +242,19 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		} finally {
 			if (transOpen) {
 				if (ok) {
-					session.commitTrans();
+					if (localTx != null) {
+						session.commitTransEx(localTx);
+					} else {
+						session.commitTrans();
+					}
 				} else {
 					// Clear the mapping
 					DataStore.clearIdMapping(this.id);
-					session.abortTrans();
+					if (localTx != null) {
+						session.abortTransEx(localTx);
+					} else {
+						session.abortTrans();
+					}
 				}
 			}
 		}
@@ -266,27 +281,23 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	protected boolean isSameObject(T object) throws DfException {
-		DataAttribute dateAttribute = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE);
-		if (dateAttribute == null) { return false; }
+		DataAttribute thisDate = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE);
+		if (thisDate == null) { return false; }
 		IDfValue objectDate = object.getValue(DctmAttrNameConstants.R_MODIFY_DATE);
-		IDfValue thisDate = dateAttribute.getValue();
-		DataType type = dateAttribute.getType();
-		return Tools.equals(type.getValue(objectDate), type.getValue(thisDate));
+		if (objectDate == null) { return false; }
+		DataType type = thisDate.getType(); // Should be DF_TIME, but this is the safe way to do it
+		return Tools.equals(type.getValue(objectDate), type.getValue(thisDate.getValue()));
 	}
 
 	protected final T newObject(IDfSession session) throws DfException {
-		IDfPersistentObject object = session.newObject(this.type.getDocumentumType());
-		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
-			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
-		return this.dfClass.cast(object);
+		return castObject(session.newObject(this.type.getDocumentumType()));
 	}
 
 	protected final T castObject(IDfPersistentObject object) throws DfException {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -340,83 +351,99 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	protected final boolean copyAttributeToObject(DataAttribute attribute, T object) throws DfException {
-		// Do nothing if there was no attribute
-		if (attribute == null) { return false; }
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
+		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set on the object"); }
 		final AttributeHandler handler = getAttributeHandler(attribute);
 		return setAttributeOnObject(attribute, handler.getImportableValues(object, attribute), object);
 	}
 
+	protected final boolean setAttributeOnObject(String attrName, IDfValue value, T object) throws DfException {
+		return setAttributeOnObject(attrName, Collections.singleton(value), object);
+	}
+
 	protected final boolean setAttributeOnObject(String attrName, Collection<IDfValue> values, T object)
 		throws DfException {
-		// Do nothing if there was no attribute
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
-		if (attrName == null) { return false; }
-
+		if (attrName == null) { throw new IllegalArgumentException(
+			"Must provide an attribute name to set on the object"); }
 		DataAttribute dataAttr = getAttribute(attrName);
 		if (dataAttr != null) { return setAttributeOnObject(dataAttr, values, object); }
 
 		int idx = object.findAttrIndex(attrName);
 		IDfAttr attribute = object.getAttr(idx);
-		return setAttributeOnObject(attrName, attribute.isRepeating(), values, object);
+		DataType dataType = DataType.fromAttribute(attribute);
+		return setAttributeOnObject(attrName, dataType, attribute.isRepeating(), values, object);
+	}
+
+	protected final boolean setAttributeOnObject(DataAttribute attribute, IDfValue value, T object) throws DfException {
+		return setAttributeOnObject(attribute, Collections.singleton(value), object);
 	}
 
 	protected final boolean setAttributeOnObject(DataAttribute attribute, Collection<IDfValue> values, T object)
 		throws DfException {
-		// Do nothing if there was no attribute
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
-		if (attribute == null) { return false; }
-		return setAttributeOnObject(attribute.getName(), attribute.isRepeating(), values, object);
+		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set on the object"); }
+		return setAttributeOnObject(attribute.getName(), attribute.getType(), attribute.isRepeating(), values, object);
 	}
 
-	private final boolean setAttributeOnObject(String attName, boolean repeating, Collection<IDfValue> values, T object)
-		throws DfException {
-		// Do nothing if there was no attribute
+	private final boolean setAttributeOnObject(String attrName, DataType dataType, boolean repeating,
+		Collection<IDfValue> values, T object) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
-		if (attName == null) { return false; }
+		if (attrName == null) { throw new IllegalArgumentException(
+			"Must provide an attribute name to set on the object"); }
 		if (values == null) {
 			values = Collections.emptyList();
 		}
 		// If an existing object is being updated, first clear repeating values if the attribute
 		// being set is repeating type.
-		clearAttributeFromObject(attName, object);
+		clearAttributeFromObject(attrName, object);
 		for (IDfValue value : values) {
+			if (value == null) {
+				value = dataType.getNullValue();
+			}
 			if (repeating) {
-				object.appendValue(attName, value);
+				object.appendValue(attrName, value);
 			} else {
 				// I wonder if appendValue() can also be used for non-repeating attributes...
-				object.setValue(attName, value);
+				object.setValue(attrName, value);
 			}
 		}
 		return true;
 	}
 
-	protected final void clearAttributeFromObject(DataAttribute attribute, T object) throws DfException {
-		clearAttributeFromObject(attribute.getName(), attribute.getType(), attribute.isRepeating(), object);
-	}
-
 	protected final void clearAttributeFromObject(String attr, T object) throws DfException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to clear the attribute from"); }
 		DataAttribute dataAttr = getAttribute(attr);
 		if (dataAttr != null) {
 			clearAttributeFromObject(dataAttr, object);
-			return;
+		} else {
+			clearAttributeFromObject(object.getAttr(object.findAttrIndex(attr)), object);
 		}
-		clearAttributeFromObject(object.getAttr(object.findAttrIndex(attr)), object);
 	}
 
-	protected final void clearAttributeFromObject(IDfAttr attr, T object) throws DfException {
-		clearAttributeFromObject(attr.getName(), attr.getDataType(), attr.isRepeating(), object);
+	protected final void clearAttributeFromObject(DataAttribute attribute, T object) throws DfException {
+		if (attribute == null) { throw new IllegalArgumentException(
+			"Must provide an attribute to clear from the object"); }
+		clearAttributeFromObject(attribute.getName(), attribute.getType(), attribute.isRepeating(), object);
 	}
 
-	protected final void clearAttributeFromObject(String attrName, int dataType, boolean repeating, T object)
-		throws DfException {
-		clearAttributeFromObject(attrName, DataType.fromDfConstant(dataType), repeating, object);
+	protected final void clearAttributeFromObject(IDfAttr attribute, T object) throws DfException {
+		if (attribute == null) { throw new IllegalArgumentException(
+			"Must provide an attribute to clear from the object"); }
+		clearAttributeFromObject(attribute.getName(), DataType.fromAttribute(attribute), attribute.isRepeating(),
+			object);
 	}
 
 	protected final void clearAttributeFromObject(String attrName, DataType dataType, boolean repeating, T object)
 		throws DfException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to clear the attribute from"); }
+		if (attrName == null) { throw new IllegalArgumentException(
+			"Must provide an attribute name to clear from object"); }
 		if (repeating) {
 			object.removeAll(attrName);
 		} else {
+			if (dataType == null) { throw new IllegalArgumentException(
+				"Must provide the data type for the attribute being cleared"); }
 			object.setValue(attrName, dataType.getNullValue());
 		}
 	}
@@ -443,7 +470,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		final String sqlStr = String.format(
 			"UPDATE %s_s SET r_modify_date = TO_DATE(''%s'', ''%s'') WHERE r_object_id = ''%s''", objType, modifyDate
-				.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN), CMSMFAppConstants.DCTM_DATETIME_PATTERN,
+			.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN), CMSMFAppConstants.DCTM_DATETIME_PATTERN,
 			object.getObjectId().getId());
 
 		runExecSQL(object.getSession(), sqlStr);

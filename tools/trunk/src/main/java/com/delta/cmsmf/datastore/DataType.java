@@ -3,6 +3,7 @@ package com.delta.cmsmf.datastore;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
+import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 public enum DataType {
@@ -285,9 +286,16 @@ public enum DataType {
 
 	protected abstract Object doGetValue(IDfValue value);
 
+	/*
 	public static DataType fromDfConstant(int constant) {
+	}
+	 */
+
+	public static DataType fromAttribute(IDfAttr attribute) {
+		if (attribute == null) { throw new IllegalArgumentException(
+			"Must provide an attribute to decode the data type from"); }
 		// We do this just to be safe, but we could also use the constant as an array index
-		switch (constant) {
+		switch (attribute.getDataType()) {
 			case IDfValue.DF_BOOLEAN:
 				return DF_BOOLEAN;
 			case IDfValue.DF_INTEGER:

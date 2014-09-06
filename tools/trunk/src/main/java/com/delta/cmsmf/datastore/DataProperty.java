@@ -96,7 +96,7 @@ public class DataProperty implements Iterable<IDfValue> {
 		if (obj == null) { throw new IllegalArgumentException(String.format(
 			"Must provide an object to read the %s attribute from", attr.getName())); }
 		this.name = attr.getName();
-		this.type = DataType.fromDfConstant(attr.getDataType());
+		this.type = DataType.fromAttribute(attr);
 		final int valueCount = obj.getValueCount(this.name);
 		this.repeating = attr.isRepeating();
 		this.values = new ArrayList<IDfValue>(valueCount);
@@ -139,7 +139,7 @@ public class DataProperty implements Iterable<IDfValue> {
 			values = Collections.emptyList();
 		}
 		this.name = attr.getName();
-		this.type = DataType.fromDfConstant(attr.getDataType());
+		this.type = DataType.fromAttribute(attr);
 		this.repeating = attr.isRepeating();
 		this.values = new ArrayList<IDfValue>(values.size());
 		setValues(values);

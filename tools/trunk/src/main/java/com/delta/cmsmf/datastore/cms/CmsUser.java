@@ -16,6 +16,7 @@ import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
@@ -98,14 +99,20 @@ public class CmsUser extends CmsObject<IDfUser> {
 
 	@Override
 	protected void prepareForConstruction(IDfUser user, boolean newObject) throws DfException {
+
+		DataAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
+		IDfTypedObject serverConfig = user.getSession().getServerConfig();
+		String serverVersion = serverConfig.getString(DctmAttrNameConstants.R_SERVER_VERSION);
+		DataAttribute userSourceAtt = getAttribute(DctmAttrNameConstants.USER_SOURCE);
+		String userSource = (userSourceAtt != null ? userSourceAtt.getValue().asString() : null);
+
 		// NOTE for some reason, 6.5 sp2 with ldap requires that user_login_domain be set
 		// workaround for [DM_USER_E_MUST_HAVE_LOGINDOMAIN] error
-		DataAttribute attribute = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
-		if (attribute == null) {
-			int idx = user.findAttrIndex(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
-			IDfAttr attr = user.getAttr(idx);
-			attribute = new DataAttribute(attr, DfValueFactory.newStringValue(""));
-			setAttribute(attribute);
+		// Only do this for Documentum 6.5-SP2
+		if ((loginDomain == null) && serverVersion.startsWith("6.5") && "LDAP".equalsIgnoreCase(userSource)) {
+			IDfAttr attr = user.getAttr(user.findAttrIndex(DctmAttrNameConstants.USER_LOGIN_DOMAIN));
+			loginDomain = new DataAttribute(attr, DfValueFactory.newStringValue(""));
+			setAttribute(loginDomain);
 		}
 	}
 
@@ -114,6 +121,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 		// First, set the username - only do this for new objects!!
 		if (newObject) {
 			copyAttributeToObject(DctmAttrNameConstants.USER_NAME, user);
+			final String userName = getAttribute(DctmAttrNameConstants.USER_NAME).getValue().asString();
 
 			// Login name + domain
 			copyAttributeToObject(DctmAttrNameConstants.USER_LOGIN_DOMAIN, user);
@@ -122,10 +130,10 @@ public class CmsUser extends CmsObject<IDfUser> {
 			// Next, set the password
 			DataAttribute att = getAttribute(DctmAttrNameConstants.USER_SOURCE);
 			final IDfValue userSource = att.getValue();
-			if (Tools.equals(userSource.asString(), CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
+			if (Tools.equals(CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
-				final String inlinePasswordValue = CMSMFProperties.DEFAULT_USER_PASSWORD.getString(user.getUserName());
+				final String inlinePasswordValue = CMSMFProperties.DEFAULT_USER_PASSWORD.getString(userName);
 				setAttributeOnObject(DctmAttrNameConstants.USER_PASSWORD,
 					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)), user);
 			}
