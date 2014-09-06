@@ -1,5 +1,7 @@
 package com.delta.cmsmf.datastore;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,70 +26,100 @@ public class DataTypeTest {
 	private static final Map<DataType, List<String>> ENCODING_LIST;
 
 	static {
-		Map<DataType, String> encodings = new EnumMap<DataType, String>(DataType.class);
-		encodings.put(DataType.DF_BOOLEAN, "false");
-		encodings.put(DataType.DF_INTEGER, "0");
-		encodings.put(DataType.DF_STRING, "");
-		encodings.put(DataType.DF_ID, DfId.DF_NULLID_STR);
-		encodings.put(DataType.DF_TIME, DfTime.DF_NULLDATE_STR);
-		encodings.put(DataType.DF_DOUBLE, "0x0.0p0");
-		NULL_ENCODING = Collections.unmodifiableMap(encodings);
+		Map<DataType, String> nullEncodings = new EnumMap<DataType, String>(DataType.class);
+		nullEncodings.put(DataType.DF_BOOLEAN, "false");
+		nullEncodings.put(DataType.DF_INTEGER, "0");
+		nullEncodings.put(DataType.DF_STRING, "");
+		nullEncodings.put(DataType.DF_ID, DfId.DF_NULLID_STR);
+		nullEncodings.put(DataType.DF_TIME, DfTime.DF_NULLDATE_STR);
+		nullEncodings.put(DataType.DF_DOUBLE, "0x0.0p0");
+		NULL_ENCODING = Collections.unmodifiableMap(nullEncodings);
 
-		Map<DataType, IDfValue> nulls = new EnumMap<DataType, IDfValue>(DataType.class);
-		nulls.put(DataType.DF_BOOLEAN, DfValueFactory.newBooleanValue(false));
-		nulls.put(DataType.DF_INTEGER, DfValueFactory.newIntValue(0));
-		nulls.put(DataType.DF_STRING, DfValueFactory.newStringValue(""));
-		nulls.put(DataType.DF_ID, DfValueFactory.newIdValue(DfId.DF_NULLID));
-		nulls.put(DataType.DF_TIME, DfValueFactory.newTimeValue(DfTime.DF_NULLDATE));
-		nulls.put(DataType.DF_DOUBLE, DfValueFactory.newDoubleValue(0.0));
-		NULL_VALUE = Collections.unmodifiableMap(nulls);
+		Map<DataType, IDfValue> nullValues = new EnumMap<DataType, IDfValue>(DataType.class);
+		nullValues.put(DataType.DF_BOOLEAN, DfValueFactory.newBooleanValue(false));
+		nullValues.put(DataType.DF_INTEGER, DfValueFactory.newIntValue(0));
+		nullValues.put(DataType.DF_STRING, DfValueFactory.newStringValue(""));
+		nullValues.put(DataType.DF_ID, DfValueFactory.newIdValue(DfId.DF_NULLID));
+		nullValues.put(DataType.DF_TIME, DfValueFactory.newTimeValue(DfTime.DF_NULLDATE));
+		nullValues.put(DataType.DF_DOUBLE, DfValueFactory.newDoubleValue(0.0));
+		NULL_VALUE = Collections.unmodifiableMap(nullValues);
 
-		Map<DataType, List<IDfValue>> lists = new EnumMap<DataType, List<IDfValue>>(DataType.class);
+		Map<DataType, List<IDfValue>> valueLists = new EnumMap<DataType, List<IDfValue>>(DataType.class);
+		Map<DataType, List<String>> encodingLists = new EnumMap<DataType, List<String>>(DataType.class);
 
-		List<IDfValue> list = null;
-		list = Arrays.asList(DfValueFactory.newBooleanValue(false), DfValueFactory.newBooleanValue(true));
-		lists.put(DataType.DF_BOOLEAN, Collections.unmodifiableList(list));
+		List<IDfValue> values = null;
+		List<String> encodings = null;
 
-		list = new ArrayList<IDfValue>();
+		values = Arrays.asList(DfValueFactory.newBooleanValue(false), DfValueFactory.newBooleanValue(true));
+		valueLists.put(DataType.DF_BOOLEAN, Collections.unmodifiableList(values));
+		encodings = Arrays.asList("false", "true");
+		encodingLists.put(DataType.DF_BOOLEAN, Collections.unmodifiableList(encodings));
+
+		values = new ArrayList<IDfValue>();
+		encodings = new ArrayList<String>();
 		for (int i = -100; i < 100; i++) {
-			list.add(DfValueFactory.newIntValue(i));
-			list.add(DfValueFactory.newIntValue((i < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE) - i));
+			values.add(DfValueFactory.newIntValue(i));
+			encodings.add(String.valueOf(i));
+			int I = (i < 0 ? Integer.MIN_VALUE : Integer.MAX_VALUE) - i;
+			values.add(DfValueFactory.newIntValue(I));
+			encodings.add(String.valueOf(I));
 		}
-		lists.put(DataType.DF_INTEGER, Collections.unmodifiableList(list));
+		valueLists.put(DataType.DF_INTEGER, Collections.unmodifiableList(values));
+		encodingLists.put(DataType.DF_INTEGER, Collections.unmodifiableList(encodings));
 
-		list = new ArrayList<IDfValue>();
+		values = new ArrayList<IDfValue>();
+		encodings = new ArrayList<String>();
 		for (int i = 0; i < 100; i++) {
-			list.add(DfValueFactory.newStringValue(UUID.randomUUID().toString()));
+			String s = UUID.randomUUID().toString();
+			values.add(DfValueFactory.newStringValue(s));
+			encodings.add(s);
 		}
-		lists.put(DataType.DF_STRING, Collections.unmodifiableList(list));
+		valueLists.put(DataType.DF_STRING, Collections.unmodifiableList(values));
+		encodingLists.put(DataType.DF_STRING, Collections.unmodifiableList(encodings));
 
-		list = new ArrayList<IDfValue>();
+		values = new ArrayList<IDfValue>();
+		encodings = new ArrayList<String>();
 		for (int i = -100; i < 100; i++) {
-			list.add(DfValueFactory.newIdValue(String.format("%016x", i)));
+			String s = String.format("%016x", i);
+			values.add(DfValueFactory.newIdValue(s));
+			encodings.add(s);
 			long L = (i < 0 ? Long.MIN_VALUE : Long.MAX_VALUE) - i;
-			list.add(DfValueFactory.newIdValue(String.format("%016x", L)));
+			s = String.format("%016x", L);
+			values.add(DfValueFactory.newIdValue(s));
+			encodings.add(s);
 		}
-		lists.put(DataType.DF_ID, Collections.unmodifiableList(list));
+		valueLists.put(DataType.DF_ID, Collections.unmodifiableList(values));
+		encodingLists.put(DataType.DF_ID, Collections.unmodifiableList(encodings));
 
-		list = new ArrayList<IDfValue>();
+		values = new ArrayList<IDfValue>();
+		encodings = new ArrayList<String>();
+		DateFormat fmt = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		for (int i = 0; i < 100; i++) {
-			list.add(DfValueFactory.newTimeValue(new Date(i)));
-			list.add(DfValueFactory.newTimeValue(new Date(Long.MAX_VALUE - i)));
+			Date d = new Date(i);
+			values.add(DfValueFactory.newTimeValue(d));
+			encodings.add(fmt.format(d));
+			d = new Date(Long.MAX_VALUE - i);
+			values.add(DfValueFactory.newTimeValue(d));
+			encodings.add(fmt.format(d));
 		}
-		lists.put(DataType.DF_TIME, Collections.unmodifiableList(list));
+		valueLists.put(DataType.DF_TIME, Collections.unmodifiableList(values));
+		encodingLists.put(DataType.DF_TIME, Collections.unmodifiableList(encodings));
 
-		list = new ArrayList<IDfValue>();
+		values = new ArrayList<IDfValue>();
+		encodings = new ArrayList<String>();
 		double[] DOUBLES = {
 			0.0, 1.0, 0.1, Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.MIN_VALUE,
 			Double.MAX_VALUE
 		};
 		for (double d : DOUBLES) {
-			list.add(DfValueFactory.newDoubleValue(d));
+			values.add(DfValueFactory.newDoubleValue(d));
+			encodings.add(Double.toHexString(d));
 		}
-		lists.put(DataType.DF_DOUBLE, Collections.unmodifiableList(list));
+		valueLists.put(DataType.DF_DOUBLE, Collections.unmodifiableList(values));
+		encodingLists.put(DataType.DF_DOUBLE, Collections.unmodifiableList(encodings));
 
-		VALUE_LIST = Collections.unmodifiableMap(lists);
-		ENCODING_LIST = null;
+		VALUE_LIST = Collections.unmodifiableMap(valueLists);
+		ENCODING_LIST = Collections.unmodifiableMap(encodingLists);
 	}
 
 	@Test
@@ -214,13 +246,12 @@ public class DataTypeTest {
 	public void testEncode() {
 		for (DataType type : DataTypeTest.NULL_VALUE.keySet()) {
 			Assert.assertEquals(DataTypeTest.NULL_ENCODING.get(type), type.encode(null));
-
-			for (IDfValue v : DataTypeTest.VALUE_LIST.get(type)) {
-				String encoding = type.encode(v);
-				// TODO: replace this with a pre-calculated encoding
-				IDfValue decoding = type.decode(encoding);
-				Assert.assertEquals(String.format("Comparing %s encodings", type), type.getValue(v),
-					type.getValue(decoding));
+			List<IDfValue> values = DataTypeTest.VALUE_LIST.get(type);
+			List<String> encodings = DataTypeTest.ENCODING_LIST.get(type);
+			for (int i = 0; i < values.size(); i++) {
+				final IDfValue v = values.get(i);
+				final String e = encodings.get(i);
+				Assert.assertEquals(String.format("Comparing %s encodings", type), e, type.encode(v));
 			}
 		}
 	}
@@ -229,13 +260,32 @@ public class DataTypeTest {
 	public void testDecode() {
 		for (DataType type : DataTypeTest.NULL_VALUE.keySet()) {
 			Assert.assertEquals(DataTypeTest.NULL_ENCODING.get(type), type.encode(null));
+			List<IDfValue> values = DataTypeTest.VALUE_LIST.get(type);
+			List<String> encodings = DataTypeTest.ENCODING_LIST.get(type);
+			for (int i = 0; i < values.size(); i++) {
+				final IDfValue v = values.get(i);
+				final String e = encodings.get(i);
+				Assert.assertEquals(String.format("Comparing %s decodings", type), type.getValue(v),
+					type.getValue(type.decode(e)));
+			}
+		}
+	}
 
-			for (IDfValue v : DataTypeTest.VALUE_LIST.get(type)) {
-				// TODO: replace this with a pre-calculated encoding
-				String encoding = type.encode(v);
-				IDfValue decoding = type.decode(encoding);
-				Assert.assertEquals(String.format("Comparing %s encodings", type), type.getValue(v),
-					type.getValue(decoding));
+	@Test
+	public void testEncodeDecode() {
+		for (DataType type : DataTypeTest.NULL_VALUE.keySet()) {
+			Assert.assertEquals(DataTypeTest.NULL_ENCODING.get(type), type.encode(null));
+			List<IDfValue> values = DataTypeTest.VALUE_LIST.get(type);
+			List<String> encodings = DataTypeTest.ENCODING_LIST.get(type);
+			for (int i = 0; i < values.size(); i++) {
+				final IDfValue v = values.get(i);
+				final IDfValue V = type.decode(type.encode(v));
+				Assert.assertEquals(String.format("Comparing %s looped encoding", type), type.getValue(v),
+					type.getValue(V));
+
+				final String e = encodings.get(i);
+				final String E = type.encode(type.decode(e));
+				Assert.assertEquals(String.format("Comparing %s looped decoding", type), e, E);
 			}
 		}
 	}
