@@ -182,9 +182,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			Result result = Result.SKIPPED;
 
 			T object = locateInCms(session);
-			final boolean isUpdate = (object != null);
+			final boolean isNew = (object == null);
 			final boolean updateVersionLabels = isVersionable(object);
-			if (object == null) {
+			if (isNew) {
 				// Create a new object
 				object = newObject(session);
 				result = Result.CREATED;
@@ -194,9 +194,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			}
 			DataStore.setIdMapping(this.id, object.getObjectId().getId());
 
-			prepareForConstruction(object, !isUpdate);
+			prepareForConstruction(object, isNew);
 
-			if (isUpdate) {
+			if (!isNew) {
 				// If an existing object is being updated, clear out all of its attributes that are
 				// not part of our attribute set
 				// NOTE Only clear non internal and non system attributes
@@ -235,7 +235,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				}
 			}
 
-			finalizeConstruction(object, !isUpdate);
+			finalizeConstruction(object, isNew);
 			updateModifyDate(object);
 			ok = true;
 			return result;
@@ -289,21 +289,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return Tools.equals(type.getValue(objectDate), type.getValue(thisDate.getValue()));
 	}
 
-	protected final T newObject(IDfSession session) throws DfException {
-		if (session == null) { throw new IllegalArgumentException("Must provide a session to create the object in"); }
-		return castObject(createObject(session));
-	}
-
-	protected IDfPersistentObject createObject(IDfSession session) throws DfException {
-		return session.newObject(this.type.getDocumentumType());
-	}
-
 	protected final T castObject(IDfPersistentObject object) throws DfException {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
 			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
+	}
+
+	protected T newObject(IDfSession session) throws DfException {
+		return castObject(session.newObject(this.type.getDocumentumType()));
 	}
 
 	protected abstract T locateInCms(IDfSession session) throws DfException;

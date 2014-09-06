@@ -76,7 +76,7 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected IDfPersistentObject createObject(IDfSession session) throws DfException {
+	protected IDfType newObject(IDfSession session) throws DfException {
 		String typeName = getAttribute(DctmAttrNameConstants.NAME).getValue().asString();
 		String superTypeName = getAttribute(DctmAttrNameConstants.SUPER_NAME).getValue().asString();
 
@@ -151,7 +151,8 @@ public class CmsType extends CmsObject<IDfType> {
 		IDfCollection resultCol = dqlQry.execute(session, IDfQuery.DF_EXECREAD_QUERY);
 		try {
 			while (resultCol.next()) {
-				return session.getObject(resultCol.getId(DctmAttrNameConstants.NEW_OBJECT_ID));
+				IDfPersistentObject obj = session.getObject(resultCol.getId(DctmAttrNameConstants.NEW_OBJECT_ID));
+				return castObject(obj);
 			}
 			// Nothing was created... we should explode
 			throw new DfException(String.format("Failed to create the type [%s] with DQL: %s", typeName, dql));
