@@ -92,7 +92,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected void applyPreCustomizations(IDfUser user, boolean newObject) throws DfException {
+	protected void prepareForConstruction(IDfUser user, boolean newObject) throws DfException {
 		// NOTE for some reason, 6.5 sp2 with ldap requires that user_login_domain be set
 		// workaround for [DM_USER_E_MUST_HAVE_LOGINDOMAIN] error
 		DataAttribute attribute = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
@@ -105,7 +105,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected void applyPostCustomizations(IDfUser user, boolean newObject) throws DfException {
+	protected void finalizeConstruction(IDfUser user, boolean newObject) throws DfException {
 		// First, set the username - only do this for new objects!!
 		if (newObject) {
 			copyAttributeToObject(DctmAttrNameConstants.USER_NAME, user);

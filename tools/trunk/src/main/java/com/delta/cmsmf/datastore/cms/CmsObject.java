@@ -55,7 +55,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -129,7 +129,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			"Expected an object of type %s, but got one of type %s", this.type, type)); }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new IllegalArgumentException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 
 		this.id = object.getObjectId().getId();
 		this.contentPath = calculateContentPath(object);
@@ -161,22 +161,18 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
-	public final void saveToCMS(IDfSession session) throws DfException, CMSMFException, SQLException {
+	public final Result saveToCMS(IDfSession session) throws DfException, CMSMFException, SQLException {
 		CmsCounter.incrementCounter(this, Result.READ);
 		boolean transOpen = false;
 		boolean ok = false;
 
 		// We assume the worst, out of the gate
-		Result result = Result.FAILED;
 		try {
 			session.beginTrans();
 			transOpen = true;
-			if (skipImport(session)) {
-				result = Result.SKIPPED;
-				return;
-			}
+			if (skipImport(session)) { return Result.SKIPPED; }
 
-			Result newResult = Result.SKIPPED;
+			Result result = Result.SKIPPED;
 
 			T object = locateInCms(session);
 			final boolean isUpdate = (object != null);
@@ -184,17 +180,14 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			if (object == null) {
 				// Create a new object
 				object = newObject(session);
-				newResult = Result.CREATED;
+				result = Result.CREATED;
 			} else {
-				if (!isSameObject(object)) {
-					result = newResult;
-					return;
-				}
-				newResult = Result.UPDATED;
+				if (!isSameObject(object)) { return Result.SKIPPED; }
+				result = Result.UPDATED;
 			}
 			DataStore.setIdMapping(this.id, object.getObjectId().getId());
 
-			applyPreCustomizations(object, !isUpdate);
+			prepareForConstruction(object, !isUpdate);
 
 			if (isUpdate) {
 				// If an existing object is being updated, clear out all of its attributes that are
@@ -235,12 +228,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				}
 			}
 
-			applyPostCustomizations(object, !isUpdate);
+			finalizeConstruction(object, !isUpdate);
 			updateModifyDate(object);
-			result = newResult;
 			ok = true;
+			return result;
 		} finally {
-			CmsCounter.incrementCounter(this, result);
 			if (transOpen) {
 				if (ok) {
 					session.commitTrans();
@@ -286,7 +278,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		IDfPersistentObject object = session.newObject(this.type.getDocumentumType());
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -294,7 +286,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -327,7 +319,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @param object
 	 * @throws DfException
 	 */
-	protected void applyPreCustomizations(T object, boolean newObject) throws DfException {
+	protected void prepareForConstruction(T object, boolean newObject) throws DfException {
 	}
 
 	/**
@@ -340,7 +332,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @param object
 	 * @throws DfException
 	 */
-	protected void applyPostCustomizations(T object, boolean newObject) throws DfException {
+	protected void finalizeConstruction(T object, boolean newObject) throws DfException {
 	}
 
 	protected final boolean copyAttributeToObject(String attrName, T object) throws DfException {
@@ -451,7 +443,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		final String sqlStr = String.format(
 			"UPDATE %s_s SET r_modify_date = TO_DATE(''%s'', ''%s'') WHERE r_object_id = ''%s''", objType, modifyDate
-			.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN), CMSMFAppConstants.DCTM_DATETIME_PATTERN,
+				.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN), CMSMFAppConstants.DCTM_DATETIME_PATTERN,
 			object.getObjectId().getId());
 
 		runExecSQL(object.getSession(), sqlStr);
