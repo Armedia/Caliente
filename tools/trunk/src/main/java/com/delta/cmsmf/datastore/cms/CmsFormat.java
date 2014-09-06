@@ -4,11 +4,8 @@
 
 package com.delta.cmsmf.datastore.cms;
 
-import java.util.Collection;
-
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataProperty;
 import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfFormat;
@@ -43,7 +40,10 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<DataProperty> properties, IDfFormat user) throws DfException {
+	protected void finalizeConstruction(IDfFormat object, boolean newObject) throws DfException {
+		if (newObject) {
+			copyAttributeToObject(DctmAttrNameConstants.NAME, object);
+		}
 	}
 
 	@Override
