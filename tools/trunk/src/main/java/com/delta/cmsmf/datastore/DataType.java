@@ -114,7 +114,7 @@ public enum DataType {
 
 		@Override
 		public String doEncode(IDfValue value) {
-			if ((value == null) || value.asTime().isNullDate()) { return this.nullDate; }
+			if (value.asTime().isNullDate()) { return this.nullDate; }
 			return value.asTime().asString(this.timePattern);
 		}
 
