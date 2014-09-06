@@ -6,10 +6,19 @@ package com.delta.cmsmf.datastore.cms;
 
 import java.util.Collection;
 
+import com.delta.cmsmf.constants.DctmAttrNameConstants;
+import com.delta.cmsmf.datastore.DataAttribute;
 import com.delta.cmsmf.datastore.DataProperty;
+import com.delta.cmsmf.datastore.DataType;
+import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
+import com.documentum.com.DfClientX;
+import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfAttr;
 
 /**
  * @author diego
@@ -17,8 +26,49 @@ import com.documentum.fc.common.DfException;
  */
 public class CmsType extends CmsObject<IDfType> {
 
+	private static boolean HANDLERS_READY = false;
+
+	private static synchronized void initHandlers() {
+		if (CmsType.HANDLERS_READY) { return; }
+		AttributeHandler handler = new AttributeHandler() {
+			@Override
+			public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
+				return false;
+			}
+		};
+		// These are the attributes that require special handling on import
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+			DctmAttrNameConstants.ATTR_COUNT, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+			DctmAttrNameConstants.ATTR_COUNT, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+			DctmAttrNameConstants.START_POS, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING, DctmAttrNameConstants.NAME,
+			handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+			DctmAttrNameConstants.SUPER_NAME, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+			DctmAttrNameConstants.ATTR_NAME, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+			DctmAttrNameConstants.ATTR_TYPE, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+			DctmAttrNameConstants.ATTR_LENGTH, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+			DctmAttrNameConstants.ATTR_REPEATING, handler);
+
+		CmsType.HANDLERS_READY = true;
+	}
+
 	public CmsType() {
 		super(CmsObjectType.TYPE, IDfType.class);
+		CmsType.initHandlers();
+	}
+
+	@Override
+	protected boolean skipImport(IDfSession session) throws DfException {
+		DataAttribute typeNameAttr = getAttribute(DctmAttrNameConstants.NAME);
+		String typeName = typeNameAttr.getValue().asString();
+		return typeName.startsWith("dm_");
 	}
 
 	@Override
@@ -26,7 +76,96 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
+	protected IDfPersistentObject createObject(IDfSession session) throws DfException {
+		String typeName = getAttribute(DctmAttrNameConstants.NAME).getValue().asString();
+		String superTypeName = getAttribute(DctmAttrNameConstants.SUPER_NAME).getValue().asString();
+
+		// TODO: Ensure the supertype is there
+		IDfType superType = null;
+		if (superTypeName.length() > 0) {
+			superType = session.getType(superTypeName);
+			if (superType == null) {
+				// We require a supertype that doesn't exist
+				throw new DfException(String.format(
+					"Attempting to create type [%s] before its supertype [%s] is created", typeName, superTypeName));
+			}
+		}
+
+		int attrCount = getAttribute(DctmAttrNameConstants.ATTR_COUNT).getValue().asInteger();
+		int startPosition = getAttribute(DctmAttrNameConstants.START_POS).getValue().asInteger();
+		DataAttribute attrNames = getAttribute(DctmAttrNameConstants.ATTR_NAME);
+		DataAttribute attrTypes = getAttribute(DctmAttrNameConstants.ATTR_TYPE);
+		DataAttribute attrLengths = getAttribute(DctmAttrNameConstants.ATTR_LENGTH);
+		DataAttribute attrRepeating = getAttribute(DctmAttrNameConstants.ATTR_REPEATING);
+
+		// Start the DQL
+		StringBuilder dql = new StringBuilder();
+		dql.append("Create Type \"").append(typeName).append("\"( ");
+		// Iterate through only the custom attributes of the type object and add them to the dql
+		// string
+		for (int iIndex = startPosition; iIndex < attrCount; ++iIndex) {
+			String attrName = attrNames.getValue(iIndex).asString();
+			dql.append(attrName).append(" ");
+			int attrType = attrTypes.getValue(iIndex).asInteger();
+			switch (attrType) {
+				case IDfAttr.DM_BOOLEAN:
+					dql.append("boolean");
+					break;
+				case IDfAttr.DM_INTEGER:
+					dql.append("Integer");
+					break;
+				case IDfAttr.DM_STRING:
+					int attrLength = attrLengths.getValue(iIndex).asInteger();
+					dql.append("String(").append(attrLength).append(")");
+					break;
+				case IDfAttr.DM_ID:
+					dql.append("ID");
+					break;
+				case IDfAttr.DM_TIME:
+					dql.append("Date");
+					break;
+				case IDfAttr.DM_DOUBLE:
+					dql.append("double");
+					break;
+				case IDfAttr.DM_UNDEFINED:
+					dql.append("Undefined");
+					break;
+				default:
+					break;
+			}
+			boolean isRepeating = attrRepeating.getValue(iIndex).asBoolean();
+			if (isRepeating) {
+				dql.append(" Repeating");
+			}
+
+			if (iIndex != (attrCount - 1)) {
+				dql.append(", ");
+			}
+		}
+
+		// Add the supertype phrase if needed
+		dql.append(") With SuperType ").append((superType != null) ? superTypeName : "Null ").append(" Publish");
+
+		IDfQuery dqlQry = new DfClientX().getQuery();
+		dqlQry.setDQL(dql.toString());
+		IDfCollection resultCol = dqlQry.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+		try {
+			while (resultCol.next()) {
+				return session.getObject(resultCol.getId(DctmAttrNameConstants.NEW_OBJECT_ID));
+			}
+			// Nothing was created... we should explode
+			throw new DfException(String.format("Failed to create the type [%s] with DQL: %s", typeName, dql));
+		} finally {
+			closeQuietly(resultCol);
+		}
+	}
+
+	@Override
+	protected void prepareForConstruction(IDfType object, boolean newObject) throws DfException {
+	}
+
+	@Override
 	protected IDfType locateInCms(IDfSession session) throws DfException {
-		return null;
+		return session.getType(getAttribute(DctmAttrNameConstants.NAME).getValue().asString());
 	}
 }
