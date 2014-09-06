@@ -119,8 +119,7 @@ public class DctmFolder extends DctmObject<IDfFolder> {
 					}
 					doesFolderNeedUpdate = true;
 					// If updating an existing folder object, make sure that you have write
-// permissions.
-					// If you don't, grant it. Reset it later on.
+					// permissions. If you don't, grant it. Reset it later on.
 					curPermit = fldr.getPermit();
 					if (curPermit < IDfACL.DF_PERMIT_WRITE) {
 						// Grant write permission and save the object
