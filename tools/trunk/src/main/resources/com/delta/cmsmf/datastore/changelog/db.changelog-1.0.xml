@@ -15,10 +15,6 @@
 			<column name="object_number" type="long" remarks="The insertion ordinal number of the object">
 				<constraints nullable="false" unique="true"/>
 			</column>
-			<column name="has_content" type="boolean">
-				<constraints nullable="false" />
-			</column>
-			<column name="content_path" type="varchar(256)" />
 		</createTable>
 		<addPrimaryKey tableName="dctm_object" columnNames="object_id" />
 		<createIndex tableName="dctm_object" indexName="idx_dctm_object_type" unique="true">
@@ -73,10 +69,10 @@
 			<column name="length" type="integer">
 				<constraints nullable="false" />
 			</column>
-			<column name="is_qualifiable" type="boolean">
+			<column name="qualifiable" type="boolean">
 				<constraints nullable="false" />
 			</column>
-			<column name="is_repeating" type="boolean">
+			<column name="repeating" type="boolean">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -117,7 +113,7 @@
 			<column name="data_type" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
-			<column name="is_repeating" type="boolean">
+			<column name="repeating" type="boolean">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
