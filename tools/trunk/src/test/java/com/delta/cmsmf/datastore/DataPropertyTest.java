@@ -85,6 +85,12 @@ public class DataPropertyTest {
 		for (int i = 0; i < values.size(); i++) {
 			Assert.assertEquals(values.get(i), prop.getValue(i));
 		}
+
+		values = null;
+		prop = new DataProperty(name, type, values);
+		Assert.assertTrue(prop.isRepeating());
+		Assert.assertEquals(0, prop.getValueCount());
+		Assert.assertFalse(prop.hasValues());
 	}
 
 	@Test
@@ -190,6 +196,18 @@ public class DataPropertyTest {
 		for (int i = 0; i < values.size(); i++) {
 			Assert.assertEquals(values.get(i), prop.getValue(i));
 		}
+
+		values = null;
+		prop = new DataProperty(name, type, false, values);
+		Assert.assertFalse(prop.isRepeating());
+		Assert.assertEquals(1, prop.getValueCount());
+		Assert.assertTrue(prop.hasValues());
+		Assert.assertEquals(type.getValue(type.getNullValue()), type.getValue(prop.getValue()));
+
+		prop = new DataProperty(name, type, true, values);
+		Assert.assertTrue(prop.isRepeating());
+		Assert.assertEquals(0, prop.getValueCount());
+		Assert.assertFalse(prop.hasValues());
 	}
 
 	@Test
@@ -337,6 +355,7 @@ public class DataPropertyTest {
 		final IDfValue NULL = type.getNullValue();
 		final List<IDfValue> values = new ArrayList<IDfValue>();
 		final List<IDfValue> EMPTY = Collections.emptyList();
+		final List<IDfValue> NULL_LIST = null;
 		DataProperty prop = null;
 
 		for (int i = 0; i < 100; i++) {
@@ -352,6 +371,12 @@ public class DataPropertyTest {
 			Assert.assertEquals(values.isEmpty() ? NULL : values.get(0), prop.getValue());
 			prop.setValues(EMPTY);
 			Assert.assertEquals(NULL, prop.getValue());
+
+			prop.setValues(values);
+			Assert.assertEquals(values.isEmpty() ? NULL : values.get(0), prop.getValue());
+			prop.setValues(NULL_LIST);
+			Assert.assertTrue(prop.hasValues());
+			Assert.assertEquals(1, prop.getValueCount());
 
 			// Now, try multi-valued
 			prop = new DataProperty(name, type, true);
@@ -369,11 +394,53 @@ public class DataPropertyTest {
 			prop.setValues(EMPTY);
 			Assert.assertFalse(prop.hasValues());
 			Assert.assertEquals(0, prop.getValueCount());
+
+			prop.setValues(values);
+			Assert.assertEquals(i > 0, prop.hasValues());
+			Assert.assertEquals(values.size(), prop.getValueCount());
+			prop.setValues(NULL_LIST);
+			Assert.assertFalse(prop.hasValues());
+			Assert.assertEquals(0, prop.getValueCount());
 		}
 	}
 
 	@Test
 	public void testGetValues() {
+		final String name = "attributeName";
+		final DataType type = DataType.DF_INTEGER;
+		final IDfValue NULL = type.getNullValue();
+		final List<IDfValue> values = new ArrayList<IDfValue>();
+		DataProperty prop = null;
+		List<IDfValue> actualValues = null;
+
+		for (int i = 0; i < 100; i++) {
+			values.clear();
+			for (int c = 0; c < i; c++) {
+				values.add(DfValueFactory.newIntValue((c * 100) + i));
+			}
+
+			// First, try single-valued
+			prop = new DataProperty(name, type, false, values);
+			actualValues = prop.getValues();
+			Assert.assertFalse(actualValues.isEmpty());
+			Assert.assertEquals(1, actualValues.size());
+			Assert.assertEquals(prop.getValueCount(), actualValues.size());
+			Assert.assertEquals(values.isEmpty() ? NULL : values.get(0), actualValues.get(0));
+
+			// Now, try multi-valued
+			prop = new DataProperty(name, type, true, values);
+			actualValues = prop.getValues();
+			Assert.assertEquals(i <= 0, actualValues.isEmpty());
+			Assert.assertEquals(values.size(), actualValues.size());
+			Assert.assertEquals(prop.getValueCount(), actualValues.size());
+
+			for (int v = 0; v < values.size(); v++) {
+				IDfValue pVal = actualValues.get(v);
+				IDfValue oVal = Tools.coalesce(values.get(v), NULL);
+				Assert.assertNotNull(pVal);
+				Assert.assertEquals(oVal, pVal);
+			}
+		}
 	}
 
 	@Test
@@ -726,6 +793,13 @@ public class DataPropertyTest {
 
 		singleIt = prop.iterator();
 		Assert.assertTrue(singleIt.hasNext());
+		try {
+			singleIt.remove();
+			Assert.fail("Did not fail when invoking remove() before iterating over the single element");
+		} catch (IllegalStateException e) {
+			// All is well
+		}
+
 		Assert.assertEquals(NULL, singleIt.next());
 		try {
 			singleIt.next();
