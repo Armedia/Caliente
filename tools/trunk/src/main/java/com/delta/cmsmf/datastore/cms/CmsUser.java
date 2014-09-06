@@ -75,12 +75,17 @@ public class CmsUser extends CmsObject<IDfUser> {
 		// If that search failed, go by username
 		IDfValue userName = getAttribute(DctmAttrNameConstants.USER_NAME).getValue();
 		IDfUser ret = session.getUser(userName.asString());
-		if (ret != null) { return ret; }
 
-		DataAttribute loginName = getAttribute(DctmAttrNameConstants.USER_LOGIN_NAME);
-		DataAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
-		return session.getUserByLoginName(loginName.getValue().asString(), loginDomain != null ? loginDomain.getValue()
-			.asString() : null);
+		/*
+		// TODO: Enable this only as a backup measure, through configuration options
+		if (ret == null) {
+			DataAttribute loginName = getAttribute(DctmAttrNameConstants.USER_LOGIN_NAME);
+			DataAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
+			ret = session.getUserByLoginName(loginName.getValue().asString(), loginDomain != null ? loginDomain.getValue()
+				.asString() : null);
+		}
+		 */
+		return ret;
 	}
 
 	@Override
