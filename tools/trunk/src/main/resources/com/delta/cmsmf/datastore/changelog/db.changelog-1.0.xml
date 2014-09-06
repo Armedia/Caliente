@@ -97,9 +97,6 @@
 			<column name="value_number" type="integer">
 				<constraints nullable="false" />
 			</column>
-			<column name="is_null" type="boolean">
-				<constraints nullable="false" />
-			</column>
 			<column name="data" type="text" />
 		</createTable>
 		<addPrimaryKey tableName="dctm_attribute_value"
@@ -120,6 +117,9 @@
 			<column name="data_type" type="varchar(32)">
 				<constraints nullable="false" />
 			</column>
+			<column name="is_repeating" type="boolean">
+				<constraints nullable="false" />
+			</column>
 		</createTable>
 		<addPrimaryKey tableName="dctm_property" columnNames="object_id, name" />
 		<addForeignKeyConstraint constraintName="fk_dctm_property_object"
@@ -136,9 +136,6 @@
 				<constraints nullable="false" />
 			</column>
 			<column name="value_number" type="integer">
-				<constraints nullable="false" />
-			</column>
-			<column name="is_null" type="boolean">
 				<constraints nullable="false" />
 			</column>
 			<column name="data" type="text" />
