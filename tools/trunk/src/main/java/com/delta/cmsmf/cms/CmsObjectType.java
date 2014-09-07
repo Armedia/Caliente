@@ -1,4 +1,4 @@
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;

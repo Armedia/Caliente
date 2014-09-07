@@ -15,11 +15,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataAttribute;
 import com.delta.cmsmf.datastore.DataObject;
-import com.delta.cmsmf.datastore.cms.CmsObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.runtime.RunTimeProperties;

@@ -2,13 +2,13 @@
  *
  */
 
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
+import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;

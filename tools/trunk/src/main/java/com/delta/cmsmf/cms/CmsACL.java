@@ -2,11 +2,11 @@
  *
  */
 
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
 import java.util.Collection;
 
-import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
+import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;

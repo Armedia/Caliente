@@ -1,4 +1,4 @@
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
 /**
  * The Class CmsAttributes. This class contains various constant values for

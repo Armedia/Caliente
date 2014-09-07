@@ -1,4 +1,4 @@
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
 import java.util.ArrayList;
 import java.util.Date;

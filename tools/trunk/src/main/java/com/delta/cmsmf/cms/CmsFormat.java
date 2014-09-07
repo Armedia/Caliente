@@ -2,9 +2,9 @@
  *
  */
 
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
-import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
+import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;

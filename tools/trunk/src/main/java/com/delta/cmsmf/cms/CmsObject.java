@@ -2,7 +2,7 @@
  *
  */
 
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,9 +16,9 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
+import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
+import com.delta.cmsmf.cms.CmsCounter.Result;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
-import com.delta.cmsmf.datastore.cms.CmsCounter.Result;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;

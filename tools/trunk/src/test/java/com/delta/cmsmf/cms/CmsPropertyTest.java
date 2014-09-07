@@ -1,4 +1,4 @@
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +12,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.armedia.commons.utilities.Tools;
+import com.delta.cmsmf.cms.CmsDataType;
+import com.delta.cmsmf.cms.CmsProperty;
+import com.delta.cmsmf.cms.DfValueFactory;
 import com.documentum.fc.common.IDfValue;
 
 public class CmsPropertyTest {

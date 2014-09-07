@@ -1,4 +1,4 @@
-package com.delta.cmsmf.datastore.cms;
+package com.delta.cmsmf.cms;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -14,6 +14,8 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.delta.cmsmf.cms.CmsDataType;
+import com.delta.cmsmf.cms.DfValueFactory;
 import com.documentum.fc.client.impl.typeddata.Attribute;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
