@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
@@ -41,7 +40,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 		};
 		// These are the attributes that require special handling on import
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			DctmAttrNameConstants.R_FOLDER_PATH, handler);
+			CmsAttributes.R_FOLDER_PATH, handler);
 
 		CmsFolder.HANDLERS_READY = true;
 	}
@@ -85,7 +84,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 		// TODO: Link the folder to all its paths...?
 		Set<String> actualPaths = new HashSet<String>();
-		CmsAttribute folderPaths = getAttribute(DctmAttrNameConstants.R_FOLDER_PATH);
+		CmsAttribute folderPaths = getAttribute(CmsAttributes.R_FOLDER_PATH);
 		if (folderPaths != null) {
 			for (IDfValue v : folderPaths) {
 				// TODO: Link the folder object to the given path

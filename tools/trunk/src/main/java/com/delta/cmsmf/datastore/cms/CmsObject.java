@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.datastore.cms.CmsCounter.Result;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -191,7 +190,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			}
 
 			// Mapping idMapping =
-			mapper.setMapping(this.type, DctmAttrNameConstants.R_OBJECT_ID, this.id, object.getObjectId().getId());
+			mapper.setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id, object.getObjectId().getId());
 
 			prepareForConstruction(object, isNew);
 
@@ -212,7 +211,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			// We remove the version labels as well
 			if (updateVersionLabels) {
-				object.removeAll(DctmAttrNameConstants.R_VERSION_LABEL);
+				object.removeAll(CmsAttributes.R_VERSION_LABEL);
 			}
 
 			// Set "default" attributes
@@ -225,7 +224,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				// for now ignore setting internal and system attributes
 				boolean doSet = (!name.startsWith("r_") && !name.startsWith("i_"));
 				// but process r_version_lebel
-				doSet |= (name.equals(DctmAttrNameConstants.R_VERSION_LABEL) && updateVersionLabels);
+				doSet |= (name.equals(CmsAttributes.R_VERSION_LABEL) && updateVersionLabels);
 				// allow for a last-minute interception...
 				doSet &= handler.includeInImport(object, attribute);
 
@@ -248,7 +247,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					}
 				} else {
 					// Clear the mapping
-					mapper.clearMapping(this.type, DctmAttrNameConstants.R_OBJECT_ID, this.id);
+					mapper.clearMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id);
 					if (localTx != null) {
 						session.abortTransEx(localTx);
 					} else {
@@ -280,9 +279,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	protected boolean isSameObject(T object) throws DfException {
-		CmsAttribute thisDate = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE);
+		CmsAttribute thisDate = getAttribute(CmsAttributes.R_MODIFY_DATE);
 		if (thisDate == null) { return false; }
-		IDfValue objectDate = object.getValue(DctmAttrNameConstants.R_MODIFY_DATE);
+		IDfValue objectDate = object.getValue(CmsAttributes.R_MODIFY_DATE);
 		if (objectDate == null) { return false; }
 		CmsDataType type = thisDate.getType(); // Should be DF_TIME, but this is the safe way to do
 // it
@@ -458,9 +457,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 */
 	protected final void updateModifyDate(T object) throws DfException {
 		final String objType = object.getType().getName();
-		final IDfValue modifyDate = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE).getValue();
+		final IDfValue modifyDate = getAttribute(CmsAttributes.R_MODIFY_DATE).getValue();
 		/*
-		final IDfValue vStamp = getAttribute(DctmAttrNameConstants.I_VSTAMP).getSingleValue();
+		final IDfValue vStamp = getAttribute(CmsAttributes.I_VSTAMP).getSingleValue();
 		final String sqlStr = String.format(
 			"UPDATE %s_s SET r_modify_date = TO_DATE(''%s'', ''%s''), i_vstamp = %d WHERE r_object_id = ''%s''",
 			objType, modifyDate.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN),

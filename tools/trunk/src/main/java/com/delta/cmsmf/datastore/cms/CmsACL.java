@@ -6,7 +6,6 @@ package com.delta.cmsmf.datastore.cms;
 
 import java.util.Collection;
 
-import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -44,13 +43,13 @@ public class CmsACL extends CmsObject<IDfACL> {
 		};
 		// These are the attributes that require special handling on import
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			DctmAttrNameConstants.R_ACCESSOR_NAME, handler);
+			CmsAttributes.R_ACCESSOR_NAME, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			DctmAttrNameConstants.R_ACCESSOR_PERMIT, handler);
+			CmsAttributes.R_ACCESSOR_PERMIT, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.R_IS_GROUP,
+			handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			DctmAttrNameConstants.R_IS_GROUP, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			DctmAttrNameConstants.R_ACCESSOR_XPERMIT, handler);
+			CmsAttributes.R_ACCESSOR_XPERMIT, handler);
 
 		CmsACL.HANDLERS_READY = true;
 	}
@@ -106,7 +105,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		CmsProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
-			final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getValue();
+			final IDfValue objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
 			for (IDfValue value : usersWithDefaultACL) {
 
 				// TODO: How do we decide if we should update the default ACL for this user? What if
@@ -115,10 +114,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 				final IDfUser user = session.getUser(value.asString());
 				if (user == null) {
 					this.logger
-					.warn(String
-						.format(
-							"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
-							acl.getDomain(), acl.getObjectName(), value.asString()));
+						.warn(String
+							.format(
+								"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
+								acl.getDomain(), acl.getObjectName(), value.asString()));
 					continue;
 				}
 
@@ -157,10 +156,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 			if (!exists) {
 				this.logger
-				.warn(String
-					.format(
-						"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the accessor wasn't located - probably didn't need to be copied over",
-						acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm));
+					.warn(String
+						.format(
+							"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the accessor wasn't located - probably didn't need to be copied over",
+							acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm));
 				continue;
 			}
 
@@ -172,8 +171,8 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected IDfACL locateInCms(IDfSession session) throws DfException {
-		final IDfValue ownerName = getAttribute(DctmAttrNameConstants.OWNER_NAME).getValue();
-		final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getValue();
+		final IDfValue ownerName = getAttribute(CmsAttributes.OWNER_NAME).getValue();
+		final IDfValue objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
 		return session.getACL(ownerName != null ? ownerName.asString() : null, objectName.asString());
 	}
 }

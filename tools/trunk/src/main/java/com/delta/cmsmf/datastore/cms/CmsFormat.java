@@ -4,7 +4,6 @@
 
 package com.delta.cmsmf.datastore.cms;
 
-import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -27,7 +26,7 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 				return false;
 			}
 		};
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FORMAT, CmsDataType.DF_STRING, DctmAttrNameConstants.NAME,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FORMAT, CmsDataType.DF_STRING, CmsAttributes.NAME,
 			handler);
 		CmsFormat.HANDLERS_READY = true;
 	}
@@ -40,13 +39,13 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 	@Override
 	protected void finalizeConstruction(IDfFormat object, boolean newObject) throws DfException {
 		if (newObject) {
-			copyAttributeToObject(DctmAttrNameConstants.NAME, object);
+			copyAttributeToObject(CmsAttributes.NAME, object);
 		}
 	}
 
 	@Override
 	protected IDfFormat locateInCms(IDfSession session) throws DfException {
-		IDfValue formatName = getAttribute(DctmAttrNameConstants.NAME).getValue();
+		IDfValue formatName = getAttribute(CmsAttributes.NAME).getValue();
 		return session.getFormat(formatName.asString());
 	}
 }

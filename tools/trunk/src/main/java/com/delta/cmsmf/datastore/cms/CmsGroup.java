@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -34,11 +33,11 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			}
 		};
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING,
-			DctmAttrNameConstants.GROUP_NAME, handler);
+			CmsAttributes.GROUP_NAME, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING,
-			DctmAttrNameConstants.GROUPS_NAMES, handler);
+			CmsAttributes.GROUPS_NAMES, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING,
-			DctmAttrNameConstants.USERS_NAMES, handler);
+			CmsAttributes.USERS_NAMES, handler);
 		CmsGroup.HANDLERS_READY = true;
 	}
 
@@ -58,15 +57,15 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 	@Override
 	protected void finalizeConstruction(IDfGroup object, boolean newObject) throws DfException {
-		IDfValue groupName = getAttribute(DctmAttrNameConstants.GROUP_NAME).getValue();
+		IDfValue groupName = getAttribute(CmsAttributes.GROUP_NAME).getValue();
 		if (newObject) {
-			copyAttributeToObject(DctmAttrNameConstants.GROUP_NAME, object);
+			copyAttributeToObject(CmsAttributes.GROUP_NAME, object);
 		}
 		// TODO: Support merging in the future?
 		// TODO: Support a two-pass approach per-tier, where required? This will help with
 		// horizontal dependencies like group-on-group action
 		IDfSession session = object.getSession();
-		CmsAttribute groupsNames = getAttribute(DctmAttrNameConstants.GROUPS_NAMES);
+		CmsAttribute groupsNames = getAttribute(CmsAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
 			List<IDfValue> actualGroups = new ArrayList<IDfValue>();
 			for (IDfValue v : groupsNames) {
@@ -83,7 +82,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			}
 			setAttributeOnObject(groupsNames, actualGroups, object);
 		}
-		CmsAttribute usersNames = getAttribute(DctmAttrNameConstants.USERS_NAMES);
+		CmsAttribute usersNames = getAttribute(CmsAttributes.USERS_NAMES);
 		if (usersNames != null) {
 			List<IDfValue> actualUsers = new ArrayList<IDfValue>();
 			for (IDfValue v : usersNames) {
@@ -104,6 +103,6 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 	@Override
 	protected IDfGroup locateInCms(IDfSession session) throws DfException {
-		return session.getGroup(getAttribute(DctmAttrNameConstants.GROUP_NAME).getValue().asString());
+		return session.getGroup(getAttribute(CmsAttributes.GROUP_NAME).getValue().asString());
 	}
 }
