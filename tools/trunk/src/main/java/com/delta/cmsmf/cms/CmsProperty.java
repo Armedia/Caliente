@@ -55,7 +55,7 @@ public class CmsProperty implements Iterable<IDfValue> {
 	 * @param rs
 	 * @throws SQLException
 	 */
-	void loadValues(ResultSet rs) throws SQLException {
+	public void loadValues(ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		boolean ok = false;
 		try {
@@ -308,8 +308,8 @@ public class CmsProperty implements Iterable<IDfValue> {
 	/**
 	 * <p>
 	 * Adds a value to this repeating instance. This operation is not allowed for single-valued
-	 * instances.If the given {@code value} parameter is {@code null}, then the {@link CmsDataType}'s
-	 * null value (as calculated by {@link CmsDataType#getNullValue()}) is used.
+	 * instances.If the given {@code value} parameter is {@code null}, then the {@link CmsDataType}
+	 * 's null value (as calculated by {@link CmsDataType#getNullValue()}) is used.
 	 * </p>
 	 *
 	 * @param value
@@ -330,8 +330,8 @@ public class CmsProperty implements Iterable<IDfValue> {
 	 * Sets value for this instance. If this is a repeating value instance, it clears all stored
 	 * values and leaves only the submitted value. If the given {@code value} parameter is
 	 * {@code null}, then the {@link CmsDataType}'s null value (as calculated by
-	 * {@link CmsDataType#getNullValue()}) is used. If the desire is to clear all repeating values, use
-	 * {@link #clearValue()} instead.
+	 * {@link CmsDataType#getNullValue()}) is used. If the desire is to clear all repeating values,
+	 * use {@link #clearValue()} instead.
 	 * </p>
 	 */
 	public final void setValue(IDfValue value) {

@@ -1,6 +1,8 @@
 package com.delta.cmsmf.cms;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,12 +17,6 @@ import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.common.DfException;
 
-/**
- * The CmsObjectType class holds enumerations for various documentum object types that are
- * handled by cmsmf application.
- *
- * @author Shridev Makim 6/15/2010
- */
 public enum CmsObjectType {
 
 	// IMPORTANT: The object types must be declared in the proper import order
@@ -33,7 +29,7 @@ public enum CmsObjectType {
 	FORMAT(CmsFormat.class, IDfFormat.class, false, true),
 	FOLDER(CmsFolder.class, IDfFolder.class, false, true),
 	DOCUMENT(CmsDocument.class, IDfDocument.class, true, true) {
-	/*
+		/*
 	@Override
 	protected CmsObjectType getActualType(IDfPersistentObject obj) {
 	if (obj instanceof IDfDocument) {
@@ -42,7 +38,7 @@ public enum CmsObjectType {
 	}
 	return super.getActualType(obj);
 	}
-	 */
+		 */
 	},
 	// REFERENCE_DOCUMENT(CmsReferenceDocument.class, IDfDocument.class),
 	CONTENT(CmsContent.class, IDfContent.class, false, true);
@@ -50,16 +46,26 @@ public enum CmsObjectType {
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
 	private final Class<? extends CmsObject<?>> objectClass;
+	private final Constructor<? extends CmsObject<?>> rsConstructor;
 	private final boolean horizontalDependencies;
 	private final boolean supportsParallelImport;
 
-	private CmsObjectType(Class<? extends CmsObject<?>> objectClass, Class<? extends IDfPersistentObject> dfClass,
-		boolean horizontalDependencies, boolean supportsParallelImport) {
+	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
+		Class<T> dfClass, boolean horizontalDependencies, boolean supportsParallelImport) {
 		this.dmType = String.format("dm_%s", name().toLowerCase());
 		this.dfClass = dfClass;
 		this.objectClass = objectClass;
 		this.horizontalDependencies = horizontalDependencies;
 		this.supportsParallelImport = supportsParallelImport;
+		Constructor<? extends CmsObject<?>> rsConstructor = null;
+		try {
+			rsConstructor = objectClass.getConstructor(ResultSet.class);
+		} catch (SecurityException e) {
+			rsConstructor = null;
+		} catch (NoSuchMethodException e) {
+			rsConstructor = null;
+		}
+		this.rsConstructor = rsConstructor;
 	}
 
 	/**
@@ -89,8 +95,15 @@ public enum CmsObjectType {
 	}
 
 	public final CmsObject<?> newInstance() throws InstantiationException, IllegalAccessException,
-		InvocationTargetException {
+	InvocationTargetException {
 		return this.objectClass.newInstance();
+	}
+
+	public final CmsObject<?> newInstance(ResultSet rs) throws InstantiationException, IllegalAccessException,
+	InvocationTargetException {
+		if (this.rsConstructor == null) { throw new UnsupportedOperationException(String.format(
+			"Class [%s] has no ResultSet constructor or it's not accessible", this.objectClass.getCanonicalName())); }
+		return this.rsConstructor.newInstance(rs);
 	}
 
 	public final String getDocumentumType() {
