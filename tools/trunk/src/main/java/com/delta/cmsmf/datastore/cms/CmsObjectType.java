@@ -26,14 +26,14 @@ public enum CmsObjectType {
 	// IMPORTANT: The object types must be declared in the proper import order
 	// otherwise that operation will fail.
 
-	USER(CmsUser.class, IDfUser.class),
-	GROUP(CmsGroup.class, IDfGroup.class, true),
-	ACL(CmsACL.class, IDfACL.class),
-	TYPE(CmsType.class, IDfType.class),
-	FORMAT(CmsFormat.class, IDfFormat.class),
-	FOLDER(CmsFolder.class, IDfFolder.class),
-	DOCUMENT(CmsDocument.class, IDfDocument.class, true) {
-		/*
+	USER(CmsUser.class, IDfUser.class, false, true),
+	GROUP(CmsGroup.class, IDfGroup.class, true, true),
+	ACL(CmsACL.class, IDfACL.class, false, true),
+	TYPE(CmsType.class, IDfType.class, false, false),
+	FORMAT(CmsFormat.class, IDfFormat.class, false, true),
+	FOLDER(CmsFolder.class, IDfFolder.class, false, true),
+	DOCUMENT(CmsDocument.class, IDfDocument.class, true, true) {
+	/*
 	@Override
 	protected CmsObjectType getActualType(IDfPersistentObject obj) {
 	if (obj instanceof IDfDocument) {
@@ -42,26 +42,24 @@ public enum CmsObjectType {
 	}
 	return super.getActualType(obj);
 	}
-		 */
+	 */
 	},
 	// REFERENCE_DOCUMENT(CmsReferenceDocument.class, IDfDocument.class),
-	CONTENT(CmsContent.class, IDfContent.class);
+	CONTENT(CmsContent.class, IDfContent.class, false, true);
 
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
 	private final Class<? extends CmsObject<?>> objectClass;
 	private final boolean horizontalDependencies;
-
-	private CmsObjectType(Class<? extends CmsObject<?>> objectClass, Class<? extends IDfPersistentObject> dfClass) {
-		this(objectClass, dfClass, false);
-	}
+	private final boolean supportsParallelImport;
 
 	private CmsObjectType(Class<? extends CmsObject<?>> objectClass, Class<? extends IDfPersistentObject> dfClass,
-		boolean horizontalDependencies) {
+		boolean horizontalDependencies, boolean supportsParallelImport) {
 		this.dmType = String.format("dm_%s", name().toLowerCase());
 		this.dfClass = dfClass;
 		this.objectClass = objectClass;
 		this.horizontalDependencies = horizontalDependencies;
+		this.supportsParallelImport = supportsParallelImport;
 	}
 
 	/**
@@ -91,7 +89,7 @@ public enum CmsObjectType {
 	}
 
 	public final CmsObject<?> newInstance() throws InstantiationException, IllegalAccessException,
-	InvocationTargetException {
+		InvocationTargetException {
 		return this.objectClass.newInstance();
 	}
 
@@ -99,8 +97,12 @@ public enum CmsObjectType {
 		return this.dmType;
 	}
 
-	public final boolean hasHorizontalDependencies() {
+	public final boolean isHorizontalDependencies() {
 		return this.horizontalDependencies;
+	}
+
+	public final boolean isSupportsParallelImport() {
+		return this.supportsParallelImport;
 	}
 
 	private static Map<String, CmsObjectType> DECODER = null;
