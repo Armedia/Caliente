@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public final class CmsCounter {
 
+	private static final String NEW_LINE = String.format("%n");
+
 	public static enum Result {
 		//
 		READ,
@@ -17,6 +19,7 @@ public final class CmsCounter {
 	}
 
 	private static final Map<CmsObjectType, Map<Result, AtomicInteger>> COUNTERS;
+	private static final Map<Result, AtomicInteger> CUMMULATIVE;
 
 	static {
 		Map<CmsObjectType, Map<Result, AtomicInteger>> counters = new EnumMap<CmsObjectType, Map<Result, AtomicInteger>>(
@@ -29,6 +32,12 @@ public final class CmsCounter {
 			counters.put(objectType, Collections.unmodifiableMap(results));
 		}
 		COUNTERS = Collections.unmodifiableMap(counters);
+
+		Map<Result, AtomicInteger> cummulative = new EnumMap<Result, AtomicInteger>(Result.class);
+		for (Result result : Result.values()) {
+			cummulative.put(result, new AtomicInteger(0));
+		}
+		CUMMULATIVE = Collections.unmodifiableMap(cummulative);
 	}
 
 	private CmsCounter() {
@@ -42,7 +51,10 @@ public final class CmsCounter {
 	public static int incrementCounter(CmsObjectType objectType, Result result) {
 		if (objectType == null) { throw new IllegalArgumentException("Unsupported null object type"); }
 		if (result == null) { throw new IllegalArgumentException("Must provide a valid result to count for"); }
-		return CmsCounter.COUNTERS.get(objectType).get(result).incrementAndGet();
+		AtomicInteger counter = CmsCounter.COUNTERS.get(objectType).get(result);
+		final int ret = counter.incrementAndGet();
+		CmsCounter.CUMMULATIVE.get(result).incrementAndGet();
+		return ret;
 	}
 
 	public static String generateCummulativeReport() {
@@ -50,39 +62,7 @@ public final class CmsCounter {
 	}
 
 	public static String generateCummulativeReport(int indentLevel) {
-		StringBuilder s = new StringBuilder();
-		if (indentLevel < 0) {
-			indentLevel = 0;
-		}
-		for (int i = 0; i < indentLevel; i++) {
-			s.append('\t');
-		}
-		final String indent = s.toString();
-		s.setLength(0);
-		Map<Result, AtomicInteger> cummulative = new EnumMap<Result, AtomicInteger>(Result.class);
-		for (CmsObjectType objectType : CmsObjectType.values()) {
-			Map<Result, AtomicInteger> results = CmsCounter.COUNTERS.get(objectType);
-			for (Map.Entry<Result, AtomicInteger> e : results.entrySet()) {
-				final Result r = e.getKey();
-				final AtomicInteger i = e.getValue();
-				AtomicInteger c = cummulative.get(r);
-				if (c == null) {
-					c = new AtomicInteger(0);
-					cummulative.put(r, c);
-				}
-				c.addAndGet(i.get());
-			}
-		}
-
-		for (Map.Entry<Result, AtomicInteger> e : cummulative.entrySet()) {
-			final Result r = e.getKey();
-			final AtomicInteger i = e.getValue();
-			if (indentLevel > 0) {
-				s.append(indent);
-			}
-			s.append(String.format("Total number of objects %s: %d%n", r, i.get()));
-		}
-		return s.toString();
+		return CmsCounter.generateReport(CmsCounter.CUMMULATIVE, indentLevel, "Total");
 	}
 
 	public static String generateReport(CmsObject<?> object) {
@@ -102,6 +82,10 @@ public final class CmsCounter {
 	public static String generateReport(CmsObjectType objectType, int indentLevel) {
 		if (objectType == null) { throw new IllegalArgumentException("Unsupported null object type"); }
 		Map<Result, AtomicInteger> results = CmsCounter.COUNTERS.get(objectType);
+		return CmsCounter.generateReport(results, indentLevel, String.format("Number of %s", objectType));
+	}
+
+	private static String generateReport(Map<Result, AtomicInteger> results, int indentLevel, String entryLabel) {
 		StringBuilder s = new StringBuilder();
 		if (indentLevel < 0) {
 			indentLevel = 0;
@@ -111,14 +95,15 @@ public final class CmsCounter {
 		}
 		final String indent = s.toString();
 		s.setLength(0);
+		int total = 0;
 		for (Map.Entry<Result, AtomicInteger> e : results.entrySet()) {
 			final Result r = e.getKey();
 			final AtomicInteger i = e.getValue();
-			if (indentLevel > 0) {
-				s.append(indent);
-			}
-			s.append(String.format("Number of %s objects %s: %d%n", objectType, r, i.get()));
+			total += i.get();
+			s.append(indent).append(String.format("%s objects %s: %d%n", entryLabel, r, i.get()));
 		}
+		s.append(indent).append("========================================").append(CmsCounter.NEW_LINE);
+		s.append(indent).append(String.format("%s objects processed: %d%n", entryLabel, total));
 		return s.toString();
 	}
 }
