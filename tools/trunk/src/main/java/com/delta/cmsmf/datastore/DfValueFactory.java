@@ -13,7 +13,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
-public final class DfValueFactory {
+final class DfValueFactory {
 	private DfValueFactory() {
 	}
 
