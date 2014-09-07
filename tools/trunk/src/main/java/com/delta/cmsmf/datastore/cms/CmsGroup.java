@@ -9,9 +9,6 @@ import java.util.Collection;
 import java.util.List;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataProperty;
-import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -32,15 +29,15 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		if (CmsGroup.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
 			@Override
-			public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
+			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
 				return false;
 			}
 		};
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.GROUP_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.GROUPS_NAMES, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.USERS_NAMES, handler);
 		CmsGroup.HANDLERS_READY = true;
 	}
@@ -51,7 +48,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<DataProperty> properties, IDfGroup user) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfGroup user) throws DfException {
 	}
 
 	@Override
@@ -69,7 +66,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		// TODO: Support a two-pass approach per-tier, where required? This will help with
 		// horizontal dependencies like group-on-group action
 		IDfSession session = object.getSession();
-		DataAttribute groupsNames = getAttribute(DctmAttrNameConstants.GROUPS_NAMES);
+		CmsAttribute groupsNames = getAttribute(DctmAttrNameConstants.GROUPS_NAMES);
 		if (groupsNames != null) {
 			List<IDfValue> actualGroups = new ArrayList<IDfValue>();
 			for (IDfValue v : groupsNames) {
@@ -86,7 +83,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			}
 			setAttributeOnObject(groupsNames, actualGroups, object);
 		}
-		DataAttribute usersNames = getAttribute(DctmAttrNameConstants.USERS_NAMES);
+		CmsAttribute usersNames = getAttribute(DctmAttrNameConstants.USERS_NAMES);
 		if (usersNames != null) {
 			List<IDfValue> actualUsers = new ArrayList<IDfValue>();
 			for (IDfValue v : usersNames) {

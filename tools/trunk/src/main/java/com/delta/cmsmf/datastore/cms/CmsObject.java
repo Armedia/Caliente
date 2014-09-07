@@ -18,10 +18,6 @@ import org.apache.log4j.Logger;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataProperty;
-import com.delta.cmsmf.datastore.DataStore;
-import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.datastore.cms.CmsCounter.Result;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -47,8 +43,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	private final Class<T> dfClass;
 
 	private String id = null;
-	private final Map<String, DataAttribute> attributes = new HashMap<String, DataAttribute>();
-	private final Map<String, DataProperty> properties = new HashMap<String, DataProperty>();
+	private final Map<String, CmsAttribute> attributes = new HashMap<String, CmsAttribute>();
+	private final Map<String, CmsProperty> properties = new HashMap<String, CmsProperty>();
 	private String contentPath = null;
 
 	protected CmsObject(CmsObjectType type, Class<T> dfClass) {
@@ -77,22 +73,22 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return Collections.unmodifiableSet(this.attributes.keySet());
 	}
 
-	public final DataAttribute getAttribute(String name) {
+	public final CmsAttribute getAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
 		return this.attributes.get(name);
 	}
 
-	public final DataAttribute setAttribute(DataAttribute attribute) {
+	public final CmsAttribute setAttribute(CmsAttribute attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set"); }
 		return this.attributes.put(attribute.getName(), attribute);
 	}
 
-	public final DataAttribute removeAttribute(String name) {
+	public final CmsAttribute removeAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to remove"); }
 		return this.attributes.remove(name);
 	}
 
-	public final Collection<DataAttribute> getAllAttributes() {
+	public final Collection<CmsAttribute> getAllAttributes() {
 		return Collections.unmodifiableCollection(this.attributes.values());
 	}
 
@@ -104,22 +100,22 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return Collections.unmodifiableSet(this.properties.keySet());
 	}
 
-	public final DataProperty getProperty(String name) {
+	public final CmsProperty getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return this.properties.get(name);
 	}
 
-	public final DataProperty setProperty(DataProperty property) {
+	public final CmsProperty setProperty(CmsProperty property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
 		return this.properties.put(property.getName(), property);
 	}
 
-	public final DataProperty removeProperty(String name) {
+	public final CmsProperty removeProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to remove"); }
 		return this.properties.remove(name);
 	}
 
-	public final Collection<DataProperty> getAllProperties() {
+	public final Collection<CmsProperty> getAllProperties() {
 		return Collections.unmodifiableCollection(this.properties.values());
 	}
 
@@ -144,7 +140,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			AttributeHandler handler = CmsAttributeHandlers.getAttributeHandler(object, attr);
 			// Get the attribute handler
 			if (handler.includeInExport(object, attr)) {
-				DataAttribute attribute = new DataAttribute(attr, handler.getExportableValues(object, attr));
+				CmsAttribute attribute = new CmsAttribute(attr, handler.getExportableValues(object, attr));
 				this.attributes.put(name, attribute);
 			}
 		}
@@ -154,15 +150,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		// call, etc., because setting it directly as an attribute would result in an error from
 		// DFC, and therefore specialized code is required to handle it
 		this.properties.clear();
-		List<DataProperty> properties = new ArrayList<DataProperty>();
+		List<CmsProperty> properties = new ArrayList<CmsProperty>();
 		getDataProperties(properties, object);
-		for (DataProperty property : properties) {
+		for (CmsProperty property : properties) {
 			// This mechanism overwrites properties, and intentionally so
 			this.properties.put(property.getName(), property);
 		}
 	}
 
-	public final Result saveToCMS(IDfSession session) throws DfException, CMSMFException, SQLException {
+	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
+	SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		CmsCounter.incrementCounter(this, Result.READ);
 		boolean transOpen = false;
@@ -192,7 +189,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				if (!isSameObject(object)) { return Result.SKIPPED; }
 				result = Result.UPDATED;
 			}
-			DataStore.setIdMapping(this.id, object.getObjectId().getId());
+
+			// Mapping idMapping =
+			mapper.setMapping(this.type, DctmAttrNameConstants.R_OBJECT_ID, this.id, object.getObjectId().getId());
 
 			prepareForConstruction(object, isNew);
 
@@ -217,7 +216,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			}
 
 			// Set "default" attributes
-			for (DataAttribute attribute : getAllAttributes()) {
+			for (CmsAttribute attribute : getAllAttributes()) {
 				// TODO check to see if we need to set any internal or system attributes of various
 				// types
 				final String name = attribute.getName();
@@ -249,7 +248,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					}
 				} else {
 					// Clear the mapping
-					DataStore.clearIdMapping(this.id);
+					mapper.clearMapping(this.type, DctmAttrNameConstants.R_OBJECT_ID, this.id);
 					if (localTx != null) {
 						session.abortTransEx(localTx);
 					} else {
@@ -264,11 +263,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return CmsAttributeHandlers.getAttributeHandler(this.type, attr);
 	}
 
-	protected final AttributeHandler getAttributeHandler(DataAttribute attr) {
+	protected final AttributeHandler getAttributeHandler(CmsAttribute attr) {
 		return CmsAttributeHandlers.getAttributeHandler(this.type, attr);
 	}
 
-	protected final AttributeHandler getAttributeHandler(DataType dataType, String name) {
+	protected final AttributeHandler getAttributeHandler(CmsDataType dataType, String name) {
 		return CmsAttributeHandlers.getAttributeHandler(this.type, dataType, name);
 	}
 
@@ -281,11 +280,12 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	protected boolean isSameObject(T object) throws DfException {
-		DataAttribute thisDate = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE);
+		CmsAttribute thisDate = getAttribute(DctmAttrNameConstants.R_MODIFY_DATE);
 		if (thisDate == null) { return false; }
 		IDfValue objectDate = object.getValue(DctmAttrNameConstants.R_MODIFY_DATE);
 		if (objectDate == null) { return false; }
-		DataType type = thisDate.getType(); // Should be DF_TIME, but this is the safe way to do it
+		CmsDataType type = thisDate.getType(); // Should be DF_TIME, but this is the safe way to do
+// it
 		return Tools.equals(type.getValue(objectDate), type.getValue(thisDate.getValue()));
 	}
 
@@ -315,14 +315,14 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return null;
 	}
 
-	protected void getDataProperties(Collection<DataProperty> properties, T object) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, T object) throws DfException {
 	}
 
 	/**
 	 * <p>
 	 * Apply specific processing to the given object prior to the automatically-copied attributes
 	 * having been applied to it. That means that the object may still have its old attributes, and
-	 * thus only this instance's {@link DataAttribute} values should be trusted. The
+	 * thus only this instance's {@link CmsAttribute} values should be trusted. The
 	 * {@code newObject} parameter indicates if this object was newly-created, or if it is an
 	 * already-existing object.
 	 * </p>
@@ -350,7 +350,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return copyAttributeToObject(getAttribute(attrName), object);
 	}
 
-	protected final boolean copyAttributeToObject(DataAttribute attribute, T object) throws DfException {
+	protected final boolean copyAttributeToObject(CmsAttribute attribute, T object) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set on the object"); }
 		final AttributeHandler handler = getAttributeHandler(attribute);
@@ -366,27 +366,27 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attrName == null) { throw new IllegalArgumentException(
 			"Must provide an attribute name to set on the object"); }
-		DataAttribute dataAttr = getAttribute(attrName);
+		CmsAttribute dataAttr = getAttribute(attrName);
 		if (dataAttr != null) { return setAttributeOnObject(dataAttr, values, object); }
 
 		int idx = object.findAttrIndex(attrName);
 		IDfAttr attribute = object.getAttr(idx);
-		DataType dataType = DataType.fromAttribute(attribute);
+		CmsDataType dataType = CmsDataType.fromAttribute(attribute);
 		return setAttributeOnObject(attrName, dataType, attribute.isRepeating(), values, object);
 	}
 
-	protected final boolean setAttributeOnObject(DataAttribute attribute, IDfValue value, T object) throws DfException {
+	protected final boolean setAttributeOnObject(CmsAttribute attribute, IDfValue value, T object) throws DfException {
 		return setAttributeOnObject(attribute, Collections.singleton(value), object);
 	}
 
-	protected final boolean setAttributeOnObject(DataAttribute attribute, Collection<IDfValue> values, T object)
+	protected final boolean setAttributeOnObject(CmsAttribute attribute, Collection<IDfValue> values, T object)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set on the object"); }
 		return setAttributeOnObject(attribute.getName(), attribute.getType(), attribute.isRepeating(), values, object);
 	}
 
-	private final boolean setAttributeOnObject(String attrName, DataType dataType, boolean repeating,
+	private final boolean setAttributeOnObject(String attrName, CmsDataType dataType, boolean repeating,
 		Collection<IDfValue> values, T object) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attrName == null) { throw new IllegalArgumentException(
@@ -413,7 +413,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	protected final void clearAttributeFromObject(String attr, T object) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to clear the attribute from"); }
-		DataAttribute dataAttr = getAttribute(attr);
+		CmsAttribute dataAttr = getAttribute(attr);
 		if (dataAttr != null) {
 			clearAttributeFromObject(dataAttr, object);
 		} else {
@@ -421,7 +421,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
-	protected final void clearAttributeFromObject(DataAttribute attribute, T object) throws DfException {
+	protected final void clearAttributeFromObject(CmsAttribute attribute, T object) throws DfException {
 		if (attribute == null) { throw new IllegalArgumentException(
 			"Must provide an attribute to clear from the object"); }
 		clearAttributeFromObject(attribute.getName(), attribute.getType(), attribute.isRepeating(), object);
@@ -430,11 +430,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	protected final void clearAttributeFromObject(IDfAttr attribute, T object) throws DfException {
 		if (attribute == null) { throw new IllegalArgumentException(
 			"Must provide an attribute to clear from the object"); }
-		clearAttributeFromObject(attribute.getName(), DataType.fromAttribute(attribute), attribute.isRepeating(),
+		clearAttributeFromObject(attribute.getName(), CmsDataType.fromAttribute(attribute), attribute.isRepeating(),
 			object);
 	}
 
-	protected final void clearAttributeFromObject(String attrName, DataType dataType, boolean repeating, T object)
+	protected final void clearAttributeFromObject(String attrName, CmsDataType dataType, boolean repeating, T object)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to clear the attribute from"); }
 		if (attrName == null) { throw new IllegalArgumentException(

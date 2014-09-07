@@ -8,10 +8,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.delta.cmsmf.constants.CMSMFAppConstants;
-import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataStore;
-import com.delta.cmsmf.datastore.DataType;
-import com.delta.cmsmf.datastore.DfValueFactory;
 import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
@@ -29,10 +25,10 @@ class CmsAttributeHandlers {
 		 * </p>
 		 *
 		 * @return the {@link Collection} of {@link IDfValue} instances to use, as extracted (and
-		 *         possibly modified) from the {@link DataStore}.
+		 *         possibly modified)
 		 * @throws DfException
 		 */
-		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, DataAttribute attribute)
+		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmsAttribute attribute)
 			throws DfException {
 			return attribute.getValues();
 		}
@@ -49,7 +45,7 @@ class CmsAttributeHandlers {
 		 *         {@code false})
 		 * @throws DfException
 		 */
-		public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
+		public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
 			return true;
 		}
 
@@ -89,7 +85,7 @@ class CmsAttributeHandlers {
 	private static final AttributeHandler DBO_HANDLER = new AttributeHandler() {
 
 		@Override
-		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, DataAttribute attribute)
+		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmsAttribute attribute)
 			throws DfException {
 			if (!attribute.isRepeating()) {
 				// Is this an operator attribute that needs interception?
@@ -108,25 +104,25 @@ class CmsAttributeHandlers {
 		}
 	};
 
-	private static final Map<CmsObjectType, Map<DataType, Map<String, AttributeHandler>>> PER_TYPE;
-	private static final Map<DataType, Map<String, AttributeHandler>> GLOBAL;
+	private static final Map<CmsObjectType, Map<CmsDataType, Map<String, AttributeHandler>>> PER_TYPE;
+	private static final Map<CmsDataType, Map<String, AttributeHandler>> GLOBAL;
 
 	static {
-		Map<CmsObjectType, Map<DataType, Map<String, AttributeHandler>>> perObjectType = new EnumMap<CmsObjectType, Map<DataType, Map<String, AttributeHandler>>>(
+		Map<CmsObjectType, Map<CmsDataType, Map<String, AttributeHandler>>> perObjectType = new EnumMap<CmsObjectType, Map<CmsDataType, Map<String, AttributeHandler>>>(
 			CmsObjectType.class);
 		for (CmsObjectType objectType : CmsObjectType.values()) {
-			Map<DataType, Map<String, AttributeHandler>> perDataType = new EnumMap<DataType, Map<String, AttributeHandler>>(
-				DataType.class);
-			for (DataType dataType : DataType.values()) {
-				perDataType.put(dataType, new ConcurrentHashMap<String, AttributeHandler>());
+			Map<CmsDataType, Map<String, AttributeHandler>> perCmsDataType = new EnumMap<CmsDataType, Map<String, AttributeHandler>>(
+				CmsDataType.class);
+			for (CmsDataType dataType : CmsDataType.values()) {
+				perCmsDataType.put(dataType, new ConcurrentHashMap<String, AttributeHandler>());
 			}
-			perObjectType.put(objectType, Collections.unmodifiableMap(perDataType));
+			perObjectType.put(objectType, Collections.unmodifiableMap(perCmsDataType));
 		}
 		PER_TYPE = Collections.unmodifiableMap(perObjectType);
 
-		Map<DataType, Map<String, AttributeHandler>> global = new EnumMap<DataType, Map<String, AttributeHandler>>(
-			DataType.class);
-		for (DataType dataType : DataType.values()) {
+		Map<CmsDataType, Map<String, AttributeHandler>> global = new EnumMap<CmsDataType, Map<String, AttributeHandler>>(
+			CmsDataType.class);
+		for (CmsDataType dataType : CmsDataType.values()) {
 			global.put(dataType, new ConcurrentHashMap<String, AttributeHandler>());
 		}
 		GLOBAL = Collections.unmodifiableMap(global);
@@ -140,7 +136,7 @@ class CmsAttributeHandlers {
 			.getAttrsToCheckForRepoOperatorName();
 		if (operatorNameAttributes != null) {
 			for (String att : operatorNameAttributes) {
-				CmsAttributeHandlers.setAttributeHandler(null, DataType.DF_STRING, att,
+				CmsAttributeHandlers.setAttributeHandler(null, CmsDataType.DF_STRING, att,
 					CmsAttributeHandlers.DBO_HANDLER);
 			}
 		}
@@ -153,40 +149,40 @@ class CmsAttributeHandlers {
 	private CmsAttributeHandlers() {
 	}
 
-	private static Map<String, AttributeHandler> getAttributeHandlerMap(CmsObjectType objectType, DataType dataType) {
+	private static Map<String, AttributeHandler> getAttributeHandlerMap(CmsObjectType objectType, CmsDataType dataType) {
 		if (dataType == null) { throw new IllegalArgumentException(
 			"Must provide a data type to retrieve the interceptor for"); }
-		if (dataType == DataType.DF_UNDEFINED) { throw new IllegalArgumentException("DF_UNDEFINED is not supported"); }
+		if (dataType == CmsDataType.DF_UNDEFINED) { throw new IllegalArgumentException("DF_UNDEFINED is not supported"); }
 		return (objectType == null ? CmsAttributeHandlers.GLOBAL.get(dataType) : CmsAttributeHandlers.PER_TYPE.get(
 			objectType).get(dataType));
 	}
 
-	static AttributeHandler removeAttributeHandler(CmsObjectType objectType, DataType dataType, String attributeName) {
+	static AttributeHandler removeAttributeHandler(CmsObjectType objectType, CmsDataType dataType, String attributeName) {
 		return CmsAttributeHandlers.setAttributeHandler(objectType, dataType, attributeName, null);
 	}
 
 	static AttributeHandler setAttributeHandler(CmsObjectType objectType, IDfAttr attribute,
 		AttributeHandler interceptor) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to intercept"); }
-		return CmsAttributeHandlers.setAttributeHandler(objectType, DataType.fromAttribute(attribute),
+		return CmsAttributeHandlers.setAttributeHandler(objectType, CmsDataType.fromAttribute(attribute),
 			attribute.getName(), interceptor);
 	}
 
-	static AttributeHandler setAttributeHandler(CmsObjectType objectType, DataType dataType, String attributeName,
+	static AttributeHandler setAttributeHandler(CmsObjectType objectType, CmsDataType dataType, String attributeName,
 		AttributeHandler interceptor) {
 		if (attributeName == null) { throw new IllegalArgumentException("Must provide an attribute to intercept"); }
 		Map<String, AttributeHandler> m = CmsAttributeHandlers.getAttributeHandlerMap(objectType, dataType);
 		return (interceptor != null ? m.put(attributeName, interceptor) : m.remove(attributeName));
 	}
 
-	static AttributeHandler getAttributeHandler(CmsObjectType objectType, DataAttribute attribute) {
+	static AttributeHandler getAttributeHandler(CmsObjectType objectType, CmsAttribute attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to intercept"); }
 		return CmsAttributeHandlers.getAttributeHandler(objectType, attribute.getType(), attribute.getName());
 	}
 
 	static AttributeHandler getAttributeHandler(CmsObjectType objectType, IDfAttr attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to intercept"); }
-		final DataType dataType = DataType.fromAttribute(attribute);
+		final CmsDataType dataType = CmsDataType.fromAttribute(attribute);
 		return CmsAttributeHandlers.getAttributeHandler(objectType, dataType, attribute.getName());
 	}
 
@@ -194,11 +190,11 @@ class CmsAttributeHandlers {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide an object to identify the attribute handler for"); }
 		final CmsObjectType objectType = CmsObjectType.decodeType(object);
-		return CmsAttributeHandlers.getAttributeHandler(objectType, DataType.fromAttribute(attribute),
+		return CmsAttributeHandlers.getAttributeHandler(objectType, CmsDataType.fromAttribute(attribute),
 			attribute.getName());
 	}
 
-	static AttributeHandler getAttributeHandler(CmsObjectType objectType, DataType dataType, String attributeName) {
+	static AttributeHandler getAttributeHandler(CmsObjectType objectType, CmsDataType dataType, String attributeName) {
 		if (attributeName == null) { throw new IllegalArgumentException("Must provide an attribute name to intercept"); }
 		AttributeHandler ret = CmsAttributeHandlers.getAttributeHandlerMap(objectType, dataType).get(attributeName);
 		if (ret == null) {

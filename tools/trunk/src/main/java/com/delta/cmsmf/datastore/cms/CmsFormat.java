@@ -5,8 +5,6 @@
 package com.delta.cmsmf.datastore.cms;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -25,11 +23,11 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 		if (CmsFormat.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
 			@Override
-			public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
+			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
 				return false;
 			}
 		};
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FORMAT, DataType.DF_STRING, DctmAttrNameConstants.NAME,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FORMAT, CmsDataType.DF_STRING, DctmAttrNameConstants.NAME,
 			handler);
 		CmsFormat.HANDLERS_READY = true;
 	}

@@ -6,7 +6,6 @@ package com.delta.cmsmf.datastore.cms;
 
 import java.util.Collection;
 
-import com.delta.cmsmf.datastore.DataProperty;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -22,7 +21,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<DataProperty> properties, IDfDocument user) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument user) throws DfException {
 	}
 
 	@Override

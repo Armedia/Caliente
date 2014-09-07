@@ -9,9 +9,6 @@ import java.util.Collections;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataType;
-import com.delta.cmsmf.datastore.DfValueFactory;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -34,33 +31,33 @@ public class CmsUser extends CmsObject<IDfUser> {
 		if (CmsUser.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
 			@Override
-			public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
+			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
 				return false;
 			}
 		};
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.USER_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.USER_PASSWORD, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.USER_LOGIN_DOMAIN, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.USER_LOGIN_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.HOME_DOCBASE, handler);
 
 		// We avoid storing these because it'll be the job of other classes to link back
 		// to the users to which they're related. This is CRITICAL to allow us to do a one-pass
 		// import without having to circle back to resolve circular dependencies, or getting
 		// ahead of ourselves in the object creation phase.
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.ACL_DOMAIN, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.ACL_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.DEFAULT_FOLDER, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.USER_GROUP_NAME, handler);
 
 		CmsUser.HANDLERS_READY = true;
@@ -80,8 +77,8 @@ public class CmsUser extends CmsObject<IDfUser> {
 		/*
 		// TODO: Enable this only as a backup measure, through configuration options
 		if (ret == null) {
-			DataAttribute loginName = getAttribute(DctmAttrNameConstants.USER_LOGIN_NAME);
-			DataAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
+			CmsAttribute loginName = getAttribute(DctmAttrNameConstants.USER_LOGIN_NAME);
+			CmsAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
 			ret = session.getUserByLoginName(loginName.getValue().asString(), loginDomain != null ? loginDomain.getValue()
 				.asString() : null);
 		}
@@ -100,10 +97,10 @@ public class CmsUser extends CmsObject<IDfUser> {
 	@Override
 	protected void prepareForConstruction(IDfUser user, boolean newObject) throws DfException {
 
-		DataAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
+		CmsAttribute loginDomain = getAttribute(DctmAttrNameConstants.USER_LOGIN_DOMAIN);
 		IDfTypedObject serverConfig = user.getSession().getServerConfig();
 		String serverVersion = serverConfig.getString(DctmAttrNameConstants.R_SERVER_VERSION);
-		DataAttribute userSourceAtt = getAttribute(DctmAttrNameConstants.USER_SOURCE);
+		CmsAttribute userSourceAtt = getAttribute(DctmAttrNameConstants.USER_SOURCE);
 		String userSource = (userSourceAtt != null ? userSourceAtt.getValue().asString() : null);
 
 		// NOTE for some reason, 6.5 sp2 with ldap requires that user_login_domain be set
@@ -111,7 +108,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 		// Only do this for Documentum 6.5-SP2
 		if ((loginDomain == null) && serverVersion.startsWith("6.5") && "LDAP".equalsIgnoreCase(userSource)) {
 			IDfAttr attr = user.getAttr(user.findAttrIndex(DctmAttrNameConstants.USER_LOGIN_DOMAIN));
-			loginDomain = new DataAttribute(attr, DfValueFactory.newStringValue(""));
+			loginDomain = new CmsAttribute(attr, DfValueFactory.newStringValue(""));
 			setAttribute(loginDomain);
 		}
 	}
@@ -128,7 +125,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 			copyAttributeToObject(DctmAttrNameConstants.USER_LOGIN_NAME, user);
 
 			// Next, set the password
-			DataAttribute att = getAttribute(DctmAttrNameConstants.USER_SOURCE);
+			CmsAttribute att = getAttribute(DctmAttrNameConstants.USER_SOURCE);
 			final IDfValue userSource = att.getValue();
 			if (Tools.equals(CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been

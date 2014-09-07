@@ -7,9 +7,6 @@ package com.delta.cmsmf.datastore.cms;
 import java.util.Collection;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataProperty;
-import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
@@ -32,28 +29,28 @@ public class CmsType extends CmsObject<IDfType> {
 		if (CmsType.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
 			@Override
-			public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
+			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
 				return false;
 			}
 		};
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.ATTR_COUNT, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.ATTR_COUNT, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.START_POS, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING, DctmAttrNameConstants.NAME,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, DctmAttrNameConstants.NAME,
 			handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.SUPER_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.ATTR_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.ATTR_TYPE, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.ATTR_LENGTH, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.ATTR_REPEATING, handler);
 
 		CmsType.HANDLERS_READY = true;
@@ -66,13 +63,13 @@ public class CmsType extends CmsObject<IDfType> {
 
 	@Override
 	protected boolean skipImport(IDfSession session) throws DfException {
-		DataAttribute typeNameAttr = getAttribute(DctmAttrNameConstants.NAME);
+		CmsAttribute typeNameAttr = getAttribute(DctmAttrNameConstants.NAME);
 		String typeName = typeNameAttr.getValue().asString();
 		return typeName.startsWith("dm_");
 	}
 
 	@Override
-	protected void getDataProperties(Collection<DataProperty> properties, IDfType user) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfType user) throws DfException {
 	}
 
 	@Override
@@ -93,10 +90,10 @@ public class CmsType extends CmsObject<IDfType> {
 
 		int attrCount = getAttribute(DctmAttrNameConstants.ATTR_COUNT).getValue().asInteger();
 		int startPosition = getAttribute(DctmAttrNameConstants.START_POS).getValue().asInteger();
-		DataAttribute attrNames = getAttribute(DctmAttrNameConstants.ATTR_NAME);
-		DataAttribute attrTypes = getAttribute(DctmAttrNameConstants.ATTR_TYPE);
-		DataAttribute attrLengths = getAttribute(DctmAttrNameConstants.ATTR_LENGTH);
-		DataAttribute attrRepeating = getAttribute(DctmAttrNameConstants.ATTR_REPEATING);
+		CmsAttribute attrNames = getAttribute(DctmAttrNameConstants.ATTR_NAME);
+		CmsAttribute attrTypes = getAttribute(DctmAttrNameConstants.ATTR_TYPE);
+		CmsAttribute attrLengths = getAttribute(DctmAttrNameConstants.ATTR_LENGTH);
+		CmsAttribute attrRepeating = getAttribute(DctmAttrNameConstants.ATTR_REPEATING);
 
 		// Start the DQL
 		StringBuilder dql = new StringBuilder();

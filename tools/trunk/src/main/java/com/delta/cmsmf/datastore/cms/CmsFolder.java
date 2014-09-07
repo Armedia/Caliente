@@ -9,9 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataProperty;
-import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
@@ -38,12 +35,12 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 		if (CmsFolder.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
 			@Override
-			public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
+			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
 				return false;
 			}
 		};
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.R_FOLDER_PATH, handler);
 
 		CmsFolder.HANDLERS_READY = true;
@@ -61,17 +58,17 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<DataProperty> properties, IDfFolder folder) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfFolder folder) throws DfException {
 		final String folderId = folder.getObjectId().getId();
 
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		dqlQry.setDQL(String.format(CmsFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId));
 		IDfCollection resultCol = dqlQry.execute(folder.getSession(), IDfQuery.EXEC_QUERY);
-		DataProperty usersWithDefaultFolder = null;
-		DataProperty usersDefaultFolderPaths = null;
+		CmsProperty usersWithDefaultFolder = null;
+		CmsProperty usersDefaultFolderPaths = null;
 		try {
-			usersWithDefaultFolder = new DataProperty(CmsFolder.USERS_WITH_DEFAULT_FOLDER, DataType.DF_STRING);
-			usersDefaultFolderPaths = new DataProperty(CmsFolder.USERS_DEFAULT_FOLDER_PATHS, DataType.DF_STRING);
+			usersWithDefaultFolder = new CmsProperty(CmsFolder.USERS_WITH_DEFAULT_FOLDER, CmsDataType.DF_STRING);
+			usersDefaultFolderPaths = new CmsProperty(CmsFolder.USERS_DEFAULT_FOLDER_PATHS, CmsDataType.DF_STRING);
 			while (resultCol.next()) {
 				usersWithDefaultFolder.addValue(resultCol.getValueAt(0));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
@@ -88,7 +85,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 		// TODO: Link the folder to all its paths...?
 		Set<String> actualPaths = new HashSet<String>();
-		DataAttribute folderPaths = getAttribute(DctmAttrNameConstants.R_FOLDER_PATH);
+		CmsAttribute folderPaths = getAttribute(DctmAttrNameConstants.R_FOLDER_PATH);
 		if (folderPaths != null) {
 			for (IDfValue v : folderPaths) {
 				// TODO: Link the folder object to the given path
@@ -97,8 +94,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			}
 		}
 
-		DataProperty usersWithDefaultFolder = getProperty(CmsFolder.USERS_WITH_DEFAULT_FOLDER);
-		DataProperty usersDefaultFolderPaths = getProperty(CmsFolder.USERS_DEFAULT_FOLDER_PATHS);
+		CmsProperty usersWithDefaultFolder = getProperty(CmsFolder.USERS_WITH_DEFAULT_FOLDER);
+		CmsProperty usersDefaultFolderPaths = getProperty(CmsFolder.USERS_DEFAULT_FOLDER_PATHS);
 		if ((usersWithDefaultFolder != null) && (usersDefaultFolderPaths != null)) {
 			final IDfSession session = folder.getSession();
 			final int total = usersWithDefaultFolder.getValueCount();

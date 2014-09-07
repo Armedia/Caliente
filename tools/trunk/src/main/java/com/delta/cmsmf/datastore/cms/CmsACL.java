@@ -7,10 +7,6 @@ package com.delta.cmsmf.datastore.cms;
 import java.util.Collection;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.datastore.DataAttribute;
-import com.delta.cmsmf.datastore.DataProperty;
-import com.delta.cmsmf.datastore.DataType;
-import com.delta.cmsmf.datastore.DfValueFactory;
 import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -42,18 +38,18 @@ public class CmsACL extends CmsObject<IDfACL> {
 		if (CmsACL.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
 			@Override
-			public boolean includeInImport(IDfPersistentObject object, DataAttribute attribute) throws DfException {
+			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
 				return false;
 			}
 		};
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.R_ACCESSOR_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.R_ACCESSOR_PERMIT, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.R_IS_GROUP, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, DataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			DctmAttrNameConstants.R_ACCESSOR_XPERMIT, handler);
 
 		CmsACL.HANDLERS_READY = true;
@@ -71,15 +67,15 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<DataProperty> properties, IDfACL acl) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfACL acl) throws DfException {
 		final String aclId = acl.getObjectId().getId();
 
 		IDfQuery dqlQry = new DfClientX().getQuery();
 		dqlQry.setDQL(String.format(CmsACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId));
 		IDfCollection resultCol = dqlQry.execute(acl.getSession(), IDfQuery.EXEC_QUERY);
-		DataProperty property = null;
+		CmsProperty property = null;
 		try {
-			property = new DataProperty(CmsACL.USERS_WITH_DEFAULT_ACL, DataType.DF_STRING);
+			property = new CmsProperty(CmsACL.USERS_WITH_DEFAULT_ACL, CmsDataType.DF_STRING);
 			while (resultCol.next()) {
 				property.addValue(resultCol.getValueAt(0));
 			}
@@ -88,10 +84,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 			closeQuietly(resultCol);
 		}
 
-		DataProperty accessors = new DataProperty(CmsACL.ACCESSORS, DataType.DF_STRING, true);
-		DataProperty permissions = new DataProperty(CmsACL.REGULAR_PERMISSIONS, DataType.DF_INTEGER, true);
-		DataProperty extended = new DataProperty(CmsACL.EXTENDED_PERMISSIONS, DataType.DF_STRING, true);
-		DataProperty accessorIsGroup = new DataProperty(CmsACL.ACCESSOR_IS_GROUP, DataType.DF_BOOLEAN, true);
+		CmsProperty accessors = new CmsProperty(CmsACL.ACCESSORS, CmsDataType.DF_STRING, true);
+		CmsProperty permissions = new CmsProperty(CmsACL.REGULAR_PERMISSIONS, CmsDataType.DF_INTEGER, true);
+		CmsProperty extended = new CmsProperty(CmsACL.EXTENDED_PERMISSIONS, CmsDataType.DF_STRING, true);
+		CmsProperty accessorIsGroup = new CmsProperty(CmsACL.ACCESSOR_IS_GROUP, CmsDataType.DF_BOOLEAN, true);
 		final int count = acl.getAccessorCount();
 		for (int i = 0; i < count; i++) {
 			accessors.addValue(DfValueFactory.newStringValue(acl.getAccessorName(i)));
@@ -107,7 +103,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected void finalizeConstruction(IDfACL acl, boolean newObject) throws DfException {
-		DataProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
+		CmsProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
 			final IDfValue objectName = getAttribute(DctmAttrNameConstants.OBJECT_NAME).getValue();
@@ -119,10 +115,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 				final IDfUser user = session.getUser(value.asString());
 				if (user == null) {
 					this.logger
-						.warn(String
-							.format(
-								"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
-								acl.getDomain(), acl.getObjectName(), value.asString()));
+					.warn(String
+						.format(
+							"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
+							acl.getDomain(), acl.getObjectName(), value.asString()));
 					continue;
 				}
 
@@ -139,10 +135,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 		}
 
 		// Now, apply the new permissions
-		DataProperty accessors = getProperty(CmsACL.ACCESSORS);
-		DataProperty permissions = getProperty(CmsACL.REGULAR_PERMISSIONS);
-		DataProperty extended = getProperty(CmsACL.EXTENDED_PERMISSIONS);
-		DataProperty accessorIsGroup = getProperty(CmsACL.ACCESSOR_IS_GROUP);
+		CmsProperty accessors = getProperty(CmsACL.ACCESSORS);
+		CmsProperty permissions = getProperty(CmsACL.REGULAR_PERMISSIONS);
+		CmsProperty extended = getProperty(CmsACL.EXTENDED_PERMISSIONS);
+		CmsProperty accessorIsGroup = getProperty(CmsACL.ACCESSOR_IS_GROUP);
 		final int accessorCount = accessors.getValueCount();
 		for (int i = 0; i < accessorCount; i++) {
 			String name = accessors.getValue(i).asString();
@@ -161,10 +157,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 			if (!exists) {
 				this.logger
-					.warn(String
-						.format(
-							"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the accessor wasn't located - probably didn't need to be copied over",
-							acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm));
+				.warn(String
+					.format(
+						"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the accessor wasn't located - probably didn't need to be copied over",
+						acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm));
 				continue;
 			}
 
