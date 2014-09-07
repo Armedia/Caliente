@@ -17,7 +17,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 
 /**
- * @author diego
+ * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
 public class CmsType extends CmsObject<IDfType> {

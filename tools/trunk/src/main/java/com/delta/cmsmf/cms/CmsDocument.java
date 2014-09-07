@@ -11,7 +11,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
 /**
- * @author diego
+ * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
 public class CmsDocument extends CmsObject<IDfDocument> {

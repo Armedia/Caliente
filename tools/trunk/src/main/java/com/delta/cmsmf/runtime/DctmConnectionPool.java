@@ -22,7 +22,7 @@ import com.documentum.fc.common.IDfLoginInfo;
 import com.documentum.fc.tools.RegistryPasswordUtils;
 
 /**
- * @author diego
+ * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
 public class DctmConnectionPool {

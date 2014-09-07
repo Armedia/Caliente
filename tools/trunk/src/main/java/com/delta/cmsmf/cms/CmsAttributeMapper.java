@@ -8,7 +8,7 @@ package com.delta.cmsmf.cms;
  * "r_object_id" attribute from its source value to its target repository value.
  * </p>
  *
- * @author diego
+ * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
 public abstract class CmsAttributeMapper {
@@ -19,7 +19,7 @@ public abstract class CmsAttributeMapper {
 	 * type it's for, its name, and both values mapped.
 	 * </p>
 	 * 
-	 * @author diego
+	 * @author Diego Rivera <diego.rivera@armedia.com>
 	 *
 	 */
 	public static final class Mapping {

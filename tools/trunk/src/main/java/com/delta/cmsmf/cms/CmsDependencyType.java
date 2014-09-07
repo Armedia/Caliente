@@ -5,7 +5,7 @@
 package com.delta.cmsmf.cms;
 
 /**
- * @author diego
+ * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
 public enum CmsDependencyType {

@@ -20,7 +20,7 @@ import com.documentum.fc.common.IDfList;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author diego
+ * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
 public class CmsACL extends CmsObject<IDfACL> {

@@ -19,7 +19,7 @@ import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author diego
+ * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
 public class CmsUser extends CmsObject<IDfUser> {

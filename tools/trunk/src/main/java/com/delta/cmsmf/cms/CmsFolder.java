@@ -20,7 +20,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author diego
+ * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
 public class CmsFolder extends CmsObject<IDfFolder> {
