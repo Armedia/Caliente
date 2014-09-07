@@ -4,7 +4,9 @@
 
 package com.delta.cmsmf.datastore.cms;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataAttribute;
@@ -14,7 +16,9 @@ import com.delta.cmsmf.datastore.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfValue;
 
 /**
  * @author diego
@@ -34,6 +38,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		};
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, DataType.DF_STRING,
 			DctmAttrNameConstants.GROUP_NAME, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, DataType.DF_STRING,
+			DctmAttrNameConstants.GROUPS_NAMES, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, DataType.DF_STRING,
+			DctmAttrNameConstants.USERS_NAMES, handler);
 		CmsGroup.HANDLERS_READY = true;
 	}
 
@@ -47,89 +55,58 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
+	protected IDfGroup newObject(IDfSession session) throws DfException {
+		return super.newObject(session);
+	}
+
+	@Override
+	protected void finalizeConstruction(IDfGroup object, boolean newObject) throws DfException {
+		IDfValue groupName = getAttribute(DctmAttrNameConstants.GROUP_NAME).getValue();
+		if (newObject) {
+			copyAttributeToObject(DctmAttrNameConstants.GROUP_NAME, object);
+		}
+		// TODO: Support merging in the future?
+		// TODO: Support a two-pass approach per-tier, where required? This will help with
+		// horizontal dependencies like group-on-group action
+		IDfSession session = object.getSession();
+		DataAttribute groupsNames = getAttribute(DctmAttrNameConstants.GROUPS_NAMES);
+		if (groupsNames != null) {
+			List<IDfValue> actualGroups = new ArrayList<IDfValue>();
+			for (IDfValue v : groupsNames) {
+				IDfGroup group = session.getGroup(v.asString());
+				if (group == null) {
+					this.logger
+					.warn(String
+						.format(
+							"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
+							groupName.asString(), v.asString()));
+					continue;
+				}
+				actualGroups.add(v);
+			}
+			setAttributeOnObject(groupsNames, actualGroups, object);
+		}
+		DataAttribute usersNames = getAttribute(DctmAttrNameConstants.USERS_NAMES);
+		if (usersNames != null) {
+			List<IDfValue> actualUsers = new ArrayList<IDfValue>();
+			for (IDfValue v : usersNames) {
+				IDfUser user = session.getUser(v.asString());
+				if (user == null) {
+					this.logger
+						.warn(String
+							.format(
+								"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
+								groupName.asString(), v.asString()));
+					continue;
+				}
+				actualUsers.add(v);
+			}
+			setAttributeOnObject(usersNames, actualUsers, object);
+		}
+	}
+
+	@Override
 	protected IDfGroup locateInCms(IDfSession session) throws DfException {
 		return session.getGroup(getAttribute(DctmAttrNameConstants.GROUP_NAME).getValue().asString());
 	}
-
-	/*
-	@Override
-	public void createInCMS(IDfSession session) throws DfException, IOException {
-		DctmGroup.grps_read.incrementAndGet();
-
-		if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
-			DctmGroup.logger.info("Started creating dctm dm_group in repository");
-		}
-
-		// Begin transaction
-		session.beginTrans();
-
-		try {
-			boolean doesGroupNeedUpdate = false;
-			IDfPersistentObject newObject = null;
-			// First check to see if the group already exist; if it does, check to see if we need to
-	// update it
-			String groupName = getStrSingleAttrValue(DctmAttrNameConstants.GROUP_NAME);
-
-			IDfGroup group = session.getGroup(groupName);
-			if (group != null) { // we found existing group
-				Date curGrpModifyDate = group.getModifyDate().getDate();
-				if (!curGrpModifyDate.equals(findAttribute(DctmAttrNameConstants.R_MODIFY_DATE).getSingleValue())) {
-					// we need to update the group
-					if (DctmGroup.logger.isEnabledFor(Level.DEBUG)) {
-						DctmGroup.logger.debug("Group by name " + groupName
-							+ " already exist in target repository but needs to be updated.");
-					}
-
-					// NOTE Remove the group_name attribute from attribute map to avoid following
-	// error
-					// [DM_GROUP_E_UNABLE_TO_SAVE_EXISTING] error:
-					// "Cannot save group %s because a group already exists with the same name"
-					removeAttribute(DctmAttrNameConstants.GROUP_NAME);
-
-					newObject = group;
-					doesGroupNeedUpdate = true;
-				} else { // identical group exists, exit this method
-					if (DctmGroup.logger.isEnabledFor(Level.DEBUG)) {
-						DctmGroup.logger.debug("Identical group by name " + groupName
-							+ " already exist in target repository.");
-					}
-					session.abortTrans();
-					DctmGroup.grps_skipped.incrementAndGet();
-					return;
-				}
-			} else { // group doesn't exist in repo, create one
-				if (DctmGroup.logger.isEnabledFor(Level.DEBUG)) {
-					DctmGroup.logger.debug("Creating group " + groupName + " in target repository.");
-				}
-				newObject = session.newObject(DctmTypeConstants.DM_GROUP);
-				group = castPersistentObject(newObject);
-			}
-
-			// set various attributes
-			setAllAttributesInCMS(group, this, false, doesGroupNeedUpdate);
-
-			// save the group object
-			group.save();
-			if (doesGroupNeedUpdate) {
-				DctmGroup.grps_updated.incrementAndGet();
-			} else {
-				DctmGroup.grps_created.incrementAndGet();
-			}
-
-			// update modify date of the group object
-			updateModifyDate(group, this);
-
-			if (DctmGroup.logger.isEnabledFor(Level.INFO)) {
-				DctmGroup.logger.info("Finished creating dctm dm_group in repository with name: " + groupName);
-			}
-		} catch (DfException e) {
-			// Abort the transaction in case of DfException
-			session.abortTrans();
-			throw (e);
-		}
-
-		// Commit the transaction
-		session.commitTrans();
-	}
-	 */
 }
