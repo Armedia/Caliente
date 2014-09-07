@@ -27,18 +27,18 @@ public enum CmsObjectType {
 	// otherwise that operation will fail.
 
 	USER(CmsUser.class, IDfUser.class),
-	GROUP(CmsGroup.class, IDfGroup.class),
+	GROUP(CmsGroup.class, IDfGroup.class, true),
 	ACL(CmsACL.class, IDfACL.class),
 	TYPE(CmsType.class, IDfType.class),
 	FORMAT(CmsFormat.class, IDfFormat.class),
 	FOLDER(CmsFolder.class, IDfFolder.class),
-	DOCUMENT(CmsDocument.class, IDfDocument.class) {
+	DOCUMENT(CmsDocument.class, IDfDocument.class, true) {
 		/*
 	@Override
 	protected CmsObjectType getActualType(IDfPersistentObject obj) {
 	if (obj instanceof IDfDocument) {
-		IDfDocument doc = IDfDocument.class.cast(obj);
-		if (doc.isReference()) { return CmsObjectType.REFERENCE_DOCUMENT; }
+	IDfDocument doc = IDfDocument.class.cast(obj);
+	if (doc.isReference()) { return CmsObjectType.REFERENCE_DOCUMENT; }
 	}
 	return super.getActualType(obj);
 	}
@@ -50,11 +50,18 @@ public enum CmsObjectType {
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
 	private final Class<? extends CmsObject<?>> objectClass;
+	private final boolean horizontalDependencies;
 
 	private CmsObjectType(Class<? extends CmsObject<?>> objectClass, Class<? extends IDfPersistentObject> dfClass) {
+		this(objectClass, dfClass, false);
+	}
+
+	private CmsObjectType(Class<? extends CmsObject<?>> objectClass, Class<? extends IDfPersistentObject> dfClass,
+		boolean horizontalDependencies) {
 		this.dmType = String.format("dm_%s", name().toLowerCase());
 		this.dfClass = dfClass;
 		this.objectClass = objectClass;
+		this.horizontalDependencies = horizontalDependencies;
 	}
 
 	/**
@@ -90,6 +97,10 @@ public enum CmsObjectType {
 
 	public final String getDocumentumType() {
 		return this.dmType;
+	}
+
+	public final boolean hasHorizontalDependencies() {
+		return this.horizontalDependencies;
 	}
 
 	private static Map<String, CmsObjectType> DECODER = null;
