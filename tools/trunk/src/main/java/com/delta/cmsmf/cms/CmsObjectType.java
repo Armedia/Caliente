@@ -26,19 +26,17 @@ public enum CmsObjectType {
 	TYPE(CmsType.class, IDfType.class, CmsDependencyType.HIERARCHY),
 	FORMAT(CmsFormat.class, IDfFormat.class),
 	FOLDER(CmsFolder.class, IDfFolder.class),
-	DOCUMENT(CmsDocument.class, IDfDocument.class, CmsDependencyType.PEER) {
-		/*
-	@Override
-	protected CmsObjectType getActualType(IDfPersistentObject obj) {
-	if (obj instanceof IDfDocument) {
-	IDfDocument doc = IDfDocument.class.cast(obj);
-	if (doc.isReference()) { return CmsObjectType.REFERENCE_DOCUMENT; }
-	}
-	return super.getActualType(obj);
-	}
-		 */
+	DOCUMENT(CmsDocument.class, IDfDocument.class) {
+		@Override
+		protected CmsObjectType getActualType(IDfPersistentObject obj) throws DfException {
+			if (obj instanceof IDfDocument) {
+				IDfDocument doc = IDfDocument.class.cast(obj);
+				if (doc.isReference()) { return CmsObjectType.DOCUMENT_REFERENCE; }
+			}
+			return super.getActualType(obj);
+		}
 	},
-	// REFERENCE_DOCUMENT(CmsReferenceDocument.class, IDfDocument.class),
+	DOCUMENT_REFERENCE(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER),
 	CONTENT(CmsContent.class, IDfContent.class);
 
 	private final String dmType;
@@ -67,7 +65,7 @@ public enum CmsObjectType {
 	 * @param obj
 	 * @return the actual type
 	 */
-	protected CmsObjectType getActualType(IDfPersistentObject obj) {
+	protected CmsObjectType getActualType(IDfPersistentObject obj) throws DfException {
 		return this;
 	}
 
