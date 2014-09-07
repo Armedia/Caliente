@@ -80,32 +80,32 @@ public class CmsObjectStore {
 	 */
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -287,8 +287,8 @@ public class CmsObjectStore {
 
 					// DO NOT process "undefined" attribute values
 					if (type == CmsDataType.DF_UNDEFINED) {
-						CmsObjectStore.LOG.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]", objectId,
-							name));
+						CmsObjectStore.LOG.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]",
+							objectId, name));
 						continue;
 					}
 
@@ -327,8 +327,8 @@ public class CmsObjectStore {
 
 					// DO NOT process "undefined" property values
 					if (type == CmsDataType.DF_UNDEFINED) {
-						CmsObjectStore.LOG.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]", objectId,
-							name));
+						CmsObjectStore.LOG.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]",
+							objectId, name));
 						continue;
 					}
 
@@ -371,7 +371,7 @@ public class CmsObjectStore {
 	}
 
 	public static void deserializeObjects(CmsObjectType type, ImportHandler handler) throws SQLException,
-		CMSMFException {
+	CMSMFException {
 		Connection objConn = null;
 		Connection attConn = null;
 
@@ -401,20 +401,20 @@ public class CmsObjectStore {
 				try {
 					while (objRS.next()) {
 						final int objNum = objRS.getInt("object_number");
-						final String objId = objRS.getString("object_id");
 						final CmsObjectType objType = CmsObjectType.valueOf(objRS.getString("object_type"));
-						CmsObject<?> obj = null;
-						try {
-							obj = objType.newInstance(objRS);
-						} catch (Throwable t) {
-							throw new CMSMFException(String.format("Failed to instantiate %s object #%d (id = %s)",
-								objType, objNum, objId), t);
+						final String objId = objRS.getString("object_id");
+						if (CmsObjectStore.LOG.isInfoEnabled()) {
+							CmsObjectStore.LOG.info(String.format("De-serializing %s object #%d [id=%s]", type, objNum,
+								objId));
 						}
+						CmsObject<?> obj = objType.newInstance();
+						obj.load(objRS);
 						if (CmsObjectStore.LOG.isTraceEnabled()) {
-							CmsObjectStore.LOG.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
+							CmsObjectStore.LOG.trace(String
+								.format("De-serialized %s object #%d: %s", type, objNum, obj));
 						} else if (CmsObjectStore.LOG.isDebugEnabled()) {
-							CmsObjectStore.LOG.debug(String.format("De-serialized %s object #%d with ID [%s]", type, objNum,
-								obj.getId()));
+							CmsObjectStore.LOG.debug(String.format("De-serialized %s object #%d with ID [%s]", type,
+								objNum, obj.getId()));
 						}
 
 						attPS.clearParameters();

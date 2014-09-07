@@ -1,11 +1,9 @@
 package com.delta.cmsmf.cms;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
@@ -29,7 +27,7 @@ public enum CmsObjectType {
 	FORMAT(CmsFormat.class, IDfFormat.class, false, true),
 	FOLDER(CmsFolder.class, IDfFolder.class, false, true),
 	DOCUMENT(CmsDocument.class, IDfDocument.class, true, true) {
-		/*
+	/*
 	@Override
 	protected CmsObjectType getActualType(IDfPersistentObject obj) {
 	if (obj instanceof IDfDocument) {
@@ -38,7 +36,7 @@ public enum CmsObjectType {
 	}
 	return super.getActualType(obj);
 	}
-		 */
+	 */
 	},
 	// REFERENCE_DOCUMENT(CmsReferenceDocument.class, IDfDocument.class),
 	CONTENT(CmsContent.class, IDfContent.class, false, true);
@@ -46,7 +44,6 @@ public enum CmsObjectType {
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
 	private final Class<? extends CmsObject<?>> objectClass;
-	private final Constructor<? extends CmsObject<?>> rsConstructor;
 	private final boolean horizontalDependencies;
 	private final boolean supportsParallelImport;
 
@@ -57,15 +54,6 @@ public enum CmsObjectType {
 		this.objectClass = objectClass;
 		this.horizontalDependencies = horizontalDependencies;
 		this.supportsParallelImport = supportsParallelImport;
-		Constructor<? extends CmsObject<?>> rsConstructor = null;
-		try {
-			rsConstructor = objectClass.getConstructor(ResultSet.class);
-		} catch (SecurityException e) {
-			rsConstructor = null;
-		} catch (NoSuchMethodException e) {
-			rsConstructor = null;
-		}
-		this.rsConstructor = rsConstructor;
 	}
 
 	/**
@@ -94,16 +82,13 @@ public enum CmsObjectType {
 		return this.objectClass;
 	}
 
-	public final CmsObject<?> newInstance() throws InstantiationException, IllegalAccessException,
-	InvocationTargetException {
-		return this.objectClass.newInstance();
-	}
-
-	public final CmsObject<?> newInstance(ResultSet rs) throws InstantiationException, IllegalAccessException,
-	InvocationTargetException {
-		if (this.rsConstructor == null) { throw new UnsupportedOperationException(String.format(
-			"Class [%s] has no ResultSet constructor or it's not accessible", this.objectClass.getCanonicalName())); }
-		return this.rsConstructor.newInstance(rs);
+	public final CmsObject<?> newInstance() throws CMSMFException {
+		try {
+			return this.objectClass.newInstance();
+		} catch (Throwable t) {
+			throw new CMSMFException(String.format("Failed to instantiate a new object of class [%s] for [%s]",
+				this.objectClass.getCanonicalName(), name()), t);
+		}
 	}
 
 	public final String getDocumentumType() {

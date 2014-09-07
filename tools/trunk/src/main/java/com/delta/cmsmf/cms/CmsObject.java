@@ -37,6 +37,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public abstract class CmsObject<T extends IDfPersistentObject> {
 
+	private static final String DEBUG_DUMP = "$debug-dump$";
+
 	private final CmsAttributeMapper NULL_MAPPER = new CmsAttributeMapper() {
 		@Override
 		protected Mapping createMapping(CmsObjectType objectType, String mappingName, String sourceValue,
@@ -74,14 +76,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.dfClass = dfClass;
 	}
 
-	protected CmsObject(Class<T> dfClass, ResultSet rs) throws SQLException {
-		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet"); }
-		this.type = CmsObjectType.valueOf(rs.getString("object_type"));
-		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
-			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
-		this.dfClass = dfClass;
+	public void load(ResultSet rs) throws SQLException {
 		this.id = rs.getString("object_id");
+		this.attributes.clear();
+		this.properties.clear();
 	}
 
 	public void loadAttributes(ResultSet rs) throws SQLException {
@@ -210,6 +208,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.properties.clear();
 		List<CmsProperty> properties = new ArrayList<CmsProperty>();
 		getDataProperties(properties, object);
+		// TODO: Only do this when in debug mode, to avoid slowdowns.
+		properties.add(new CmsProperty(CmsObject.DEBUG_DUMP, CmsDataType.DF_STRING, false, DfValueFactory
+			.newStringValue(object.dump())));
 		for (CmsProperty property : properties) {
 			// This mechanism overwrites properties, and intentionally so
 			this.properties.put(property.getName(), property);
@@ -217,7 +218,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-	SQLException {
+		SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
