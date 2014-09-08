@@ -48,9 +48,9 @@ public class CmsObjectStore {
 
 	private static final String INSERT_OBJECT_SQL = "insert into dctm_object (object_id, object_type) values (?, ?)";
 	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
-	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
-	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
 
 	private static final String FIND_TARGET_MAPPING_SQL = "select target_value from dctm_mapper where object_type = ? and name = ? and source_value = ?";
 	private static final String FIND_SOURCE_MAPPING_SQL = "select source_value from dctm_mapper where object_type = ? and name = ? and target_value = ?";
@@ -59,32 +59,32 @@ public class CmsObjectStore {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -210,8 +210,8 @@ public class CmsObjectStore {
 				qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_NULL, objectId, objectType.name());
 
 				// Then, insert its attributes
-				Object[] attData = new Object[8];
-				Object[] attValue = new Object[5];
+				Object[] attData = new Object[7];
+				Object[] attValue = new Object[4];
 				attData[0] = objectId; // This should never change within the loop
 				attValue[0] = objectId; // This should never change within the loop
 				for (final CmsAttribute attribute : object.getAllAttributes()) {
@@ -229,9 +229,8 @@ public class CmsObjectStore {
 					attData[2] = attribute.getId();
 					attData[3] = type.name();
 					attData[4] = attribute.getLength();
-					attData[5] = false; // TODO: is_internal?
-					attData[6] = attribute.isQualifiable();
-					attData[7] = repeating;
+					attData[5] = attribute.isQualifiable();
+					attData[6] = repeating;
 
 					// Insert the attribute
 					qr.insert(c, CmsObjectStore.INSERT_ATTRIBUTE_SQL, CmsObjectStore.HANDLER_NULL, attData);
@@ -242,8 +241,7 @@ public class CmsObjectStore {
 					// No special treatment, simply dump out all the values
 					for (IDfValue value : attribute) {
 						attValue[2] = v;
-						attValue[3] = ((value == null) || (value.asString() == null));
-						attValue[4] = type.encode(value);
+						attValue[3] = type.encode(value);
 						values[v] = attValue.clone();
 						v++;
 					}
@@ -252,7 +250,7 @@ public class CmsObjectStore {
 				}
 
 				// Then, the properties
-				Object[] propData = new Object[3];
+				Object[] propData = new Object[4];
 				propData[0] = objectId; // This should never change within the loop
 				for (final String name : object.getPropertyNames()) {
 					final CmsProperty property = object.getProperty(name);
@@ -266,6 +264,7 @@ public class CmsObjectStore {
 
 					propData[1] = name;
 					propData[2] = type.name();
+					propData[3] = property.isRepeating();
 
 					// Insert the attribute
 					qr.insert(c, CmsObjectStore.INSERT_PROPERTY_SQL, CmsObjectStore.HANDLER_NULL, propData);
@@ -276,8 +275,7 @@ public class CmsObjectStore {
 					// No special treatment, simply dump out all the values
 					for (IDfValue value : property) {
 						attValue[2] = v;
-						attValue[3] = ((value == null) || (value.asString() == null));
-						attValue[4] = type.encode(value);
+						attValue[3] = type.encode(value);
 						values[v] = attValue.clone();
 						v++;
 					}
