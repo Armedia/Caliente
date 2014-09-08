@@ -289,6 +289,14 @@ public abstract class DctmObject implements Serializable {
 		// If creator name contains single quote in its name, to escape it, replace it with 4 single
 		// quotes.
 		creatorName = creatorName.replaceAll("'", "''''");
+		// Make sure we ALWAYS store this, even if it's "null"...default to the connected user
+		// if not set
+		if (creatorName.length() == 0) {
+			String targetRepoOwnerName = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOwnerName(
+				this.dctmSession);
+			creatorName = targetRepoOwnerName;
+		}
+
 		String modifier = dctmObj.getStrSingleAttrValue(DctmAttrNameConstants.R_MODIFIER);
 		// If modifier contains single quote in its name, to escape it, replace it with 4 single
 		// quotes.
@@ -792,7 +800,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = (String) dctmAttribute.getSingleValue();
 					if (strVal.equals(CMSMFAppConstants.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-						.contains(attrName)) {
+							.contains(attrName)) {
 						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 							this.dctmSession);
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -811,7 +819,7 @@ public abstract class DctmObject implements Serializable {
 						String strVal = (String) attrVal;
 						if (strVal.equals(CMSMFAppConstants.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(attrName)) {
+								.contains(attrName)) {
 							strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 								this.dctmSession);
 							if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -942,7 +950,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = prsstntObj.getString(idfAttr.getName());
 					if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-						.contains(idfAttr.getName())) {
+							.contains(idfAttr.getName())) {
 						strVal = CMSMFAppConstants.DM_DBO;
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + idfAttr.getName() + " attribute of object with id: "
@@ -1014,7 +1022,7 @@ public abstract class DctmObject implements Serializable {
 							String strVal = prsstntObj.getRepeatingString(idfAttr.getName(), i);
 							if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 								&& RunTimeProperties.getRunTimePropertiesInstance()
-								.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
+									.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
 								strVal = CMSMFAppConstants.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()

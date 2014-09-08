@@ -92,6 +92,29 @@ public class RepositoryConfiguration implements Serializable {
 		this.operatorName = operatorName;
 	}
 
+	// Info from server configuration
+	/** The owner name. */
+	private String ownerName;
+
+	/**
+	 * Gets the owner name.
+	 *
+	 * @return the owner name
+	 */
+	public String getOwnerName() {
+		return this.ownerName;
+	}
+
+	/**
+	 * Sets the owner name.
+	 *
+	 * @param ownerName
+	 *            the new operator name
+	 */
+	public void setOwnerName(String ownerName) {
+		this.ownerName = ownerName;
+	}
+
 	/** The install owner. */
 	private String installOwner;
 
@@ -302,6 +325,7 @@ public class RepositoryConfiguration implements Serializable {
 		// Get Server Config Attributes
 		IDfTypedObject serverConfig = dctmSession.getServerConfig();
 		this.operatorName = serverConfig.getString(DctmAttrNameConstants.OPERATOR_NAME);
+		this.ownerName = serverConfig.getString(DctmAttrNameConstants.OWNER_NAME);
 		this.installOwner = serverConfig.getString(DctmAttrNameConstants.R_INSTALL_OWNER);
 		this.serverVersion = serverConfig.getString(DctmAttrNameConstants.R_SERVER_VERSION);
 		this.hostName = serverConfig.getString(DctmAttrNameConstants.R_HOST_NAME);
@@ -340,6 +364,8 @@ public class RepositoryConfiguration implements Serializable {
 		sb.append("*** Server Configuration Attributes ***");
 		sb.append(newLine);
 		sb.append("Operator Name: " + this.operatorName);
+		sb.append(newLine);
+		sb.append("Owner Name: " + this.ownerName);
 		sb.append(newLine);
 		sb.append("Install Owner: " + this.installOwner);
 		sb.append(newLine);

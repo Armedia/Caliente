@@ -59,6 +59,9 @@ public class RunTimeProperties {
 	/** The target repository operator name. */
 	private String targetRepoOperatorName = "";
 
+	/** The target repository owner name. */
+	private String targetRepoOwnerName = "";
+
 	/**
 	 * Gets the target repository operator name.
 	 *
@@ -74,6 +77,23 @@ public class RunTimeProperties {
 			this.targetRepoOperatorName = dctmSession.getServerConfig().getString(DctmAttrNameConstants.OPERATOR_NAME);
 		}
 		return this.targetRepoOperatorName;
+	}
+
+	/**
+	 * Gets the target repository owner name.
+	 *
+	 * @param dctmSession
+	 *            the existing docbase session
+	 * @return the target repository owner name
+	 * @throws DfException
+	 *             the df exception
+	 */
+	public String getTargetRepoOwnerName(IDfSession dctmSession) throws DfException {
+		if (StringUtils.isBlank(this.targetRepoOwnerName)) {
+			// read the repository owner name from server config object
+			this.targetRepoOwnerName = dctmSession.getServerConfig().getString(DctmAttrNameConstants.OWNER_NAME);
+		}
+		return this.targetRepoOwnerName;
 	}
 
 	/** The list of attribute names whose value should be checked for repository operator name. */
