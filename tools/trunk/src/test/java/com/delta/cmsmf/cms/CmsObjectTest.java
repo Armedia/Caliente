@@ -8,7 +8,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -31,31 +30,31 @@ public class CmsObjectTest extends AbstractSqlTest {
 	 */
 	@Test
 	public void testCmsObject() throws Throwable {
-		IDfSession session = DctmConnectionPool.acquireSession();
+		IDfSession session = acquireSession();
 		try {
 			IDfQuery q = new DfClientX().getQuery();
+			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
 				CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
-				q.setDQL(String.format("select r_object_id from %s", t.getDocumentumType()));
+				final String dql = String.format("select r_object_id from %s enable(optimize_top %d, return_top %d)",
+					t.getDocumentumType(), max, max);
+				q.setDQL(dql);
 				IDfCollection results = q.execute(session, IDfQuery.DF_EXECREAD_QUERY);
-				boolean found = false;
-				final int max = 3;
 				int count = 0;
 				while (results.next()) {
 					IDfId id = results.getId("r_object_id");
 					IDfPersistentObject cmsObj = session.getObject(id);
 					obj.loadFromCMS(cmsObj);
-
 					if (++count > max) {
 						break;
 					}
 				}
-				if (!found) {
+				if (count == 0) {
 					Assert.fail(String.format("Did not find any objects of type [%s] to test against", t));
 				}
 			}
 		} finally {
-			DctmConnectionPool.releaseSession(session);
+			releaseSession(session);
 		}
 	}
 
