@@ -53,7 +53,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	 * This DQL will find all users for which this group is marked as the default group,
 	 * and thus all users for whom it must be restored later on.
 	 */
-	private static final String DQL_FIND_USERS_WITH_DEFAULT_GROUP = "SELECT u.user_name FROM dm_user u, dm_group g WHERE u.user_group_name = g.group_name AND g.r_object_id = ''%s''";
+	private static final String DQL_FIND_USERS_WITH_DEFAULT_GROUP = "SELECT u.user_name FROM dm_user u, dm_group g WHERE u.user_group_name = g.group_name AND g.r_object_id = '%s'";
 
 	public CmsGroup() {
 		super(CmsObjectType.GROUP, IDfGroup.class);
@@ -102,10 +102,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(v.asString());
 					this.logger
-						.warn(String
-							.format(
-								"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
-								groupName.asString(), v.asString()));
+					.warn(String
+						.format(
+							"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
+							groupName.asString(), v.asString()));
 					continue;
 				}
 				actualUsers.add(v);
@@ -123,10 +123,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfUser user = session.getUser(v.asString());
 				if (user == null) {
 					this.logger
-						.warn(String
-							.format(
-								"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
-								groupName.asString(), v.asString()));
+					.warn(String
+						.format(
+							"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
+							groupName.asString(), v.asString()));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
@@ -146,10 +146,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfGroup other = session.getGroup(v.asString());
 				if (other == null) {
 					this.logger
-					.warn(String
-						.format(
-							"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
-							groupName, v.asString()));
+						.warn(String
+							.format(
+								"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
+								groupName, v.asString()));
 					continue;
 				}
 				actualGroups.add(v);

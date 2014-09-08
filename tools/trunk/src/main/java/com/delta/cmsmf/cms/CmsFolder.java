@@ -39,8 +39,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			}
 		};
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.R_FOLDER_PATH, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.R_FOLDER_PATH,
+			handler);
 
 		CmsFolder.HANDLERS_READY = true;
 	}
@@ -49,7 +49,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	 * This DQL will find all users for which this folder is marked as the default folder,
 	 * and thus all users for whom it must be restored later on.
 	 */
-	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = ''%s''";
+	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = '%s'";
 
 	public CmsFolder() {
 		super(CmsObjectType.FOLDER, IDfFolder.class);
@@ -108,10 +108,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.logger
-					.warn(String
-						.format(
-							"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							folder.getObjectId().getId(), userValue.asString()));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								folder.getObjectId().getId(), userValue.asString()));
 					continue;
 				}
 

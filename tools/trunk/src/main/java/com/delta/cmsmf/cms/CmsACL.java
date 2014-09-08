@@ -58,7 +58,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 	 * This DQL will find all users for which this ACL is marked as the default ACL,
 	 * and thus all users for whom it must be restored later on.
 	 */
-	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = ''%s''";
+	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
 	public CmsACL() {
 		super(CmsObjectType.ACL, IDfACL.class);
@@ -114,10 +114,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 				final IDfUser user = session.getUser(value.asString());
 				if (user == null) {
 					this.logger
-					.warn(String
-						.format(
-							"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
-							acl.getDomain(), acl.getObjectName(), value.asString()));
+						.warn(String
+							.format(
+								"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
+								acl.getDomain(), acl.getObjectName(), value.asString()));
 					continue;
 				}
 
@@ -156,10 +156,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 			if (!exists) {
 				this.logger
-				.warn(String
-					.format(
-						"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the %s wasn't located - probably didn't need to be copied over",
-						acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm, accessorType));
+					.warn(String
+						.format(
+							"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the %s wasn't located - probably didn't need to be copied over",
+							acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm, accessorType));
 				continue;
 			}
 
