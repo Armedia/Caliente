@@ -114,10 +114,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 				final IDfUser user = session.getUser(value.asString());
 				if (user == null) {
 					this.logger
-						.warn(String
-							.format(
-								"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
-								acl.getDomain(), acl.getObjectName(), value.asString()));
+					.warn(String
+						.format(
+							"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
+							acl.getDomain(), acl.getObjectName(), value.asString()));
 					continue;
 				}
 
@@ -156,10 +156,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 			if (!exists) {
 				this.logger
-					.warn(String
-						.format(
-							"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the accessor wasn't located - probably didn't need to be copied over",
-							acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm));
+				.warn(String
+					.format(
+						"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the %s wasn't located - probably didn't need to be copied over",
+						acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm, accessorType));
 				continue;
 			}
 
