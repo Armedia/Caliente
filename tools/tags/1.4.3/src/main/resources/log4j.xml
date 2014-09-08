@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration PUBLIC "-//log4j/log4j Configuration//EN" "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
+		</layout>
+	</appender>
+
+	<appender name="default" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="${logName}.log"/>
+		<param name="ImmediateFlush" value="true"/>
+		<param name="Append" value="false"/>
+		<param name="Threshold" value="trace"/>
+		<param name="MaxBackupIndex" value="10"/>
+		<param name="MaxFileSize" value="1024MB"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="levelMin" value="TRACE"/>
+			<param name="levelMax" value="INFO"/>
+			<param name="AcceptOnMatch" value="true"/>
+		</filter>
+		<filter class="org.apache.log4j.varia.DenyAllFilter"/>
+	</appender>
+
+	<appender name="errors" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="${logName}.err"/>
+		<param name="ImmediateFlush" value="true"/>
+		<param name="Append" value="false"/>
+		<param name="Threshold" value="warn"/>
+		<param name="MaxBackupIndex" value="10"/>
+		<param name="MaxFileSize" value="1024MB"/>
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
+		</layout>
+		<filter class="org.apache.log4j.varia.LevelRangeFilter">
+			<param name="levelMin" value="WARN"/>
+			<param name="levelMax" value="FATAL"/>
+			<param name="AcceptOnMatch" value="true"/>
+		</filter>
+		<filter class="org.apache.log4j.varia.DenyAllFilter"/>
+	</appender>
+
+	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
+
+	<logger name="com.delta.cmsmf">
+		<level value="INFO"/>
+	</logger>
+
+	<logger name="com.delta.cmsmf.cmsobjects.DctmObject">
+		<level value="DEBUG"/>
+	</logger>
+
+	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
+
+	<root>
+		<level value="INFO"/>
+		<appender-ref ref="console"/>
+		<appender-ref ref="default"/>
+		<appender-ref ref="errors"/>
+	</root>
+</log4j:configuration>
