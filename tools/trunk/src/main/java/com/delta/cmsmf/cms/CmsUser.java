@@ -35,29 +35,35 @@ public class CmsUser extends CmsObject<IDfUser> {
 			}
 		};
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
-			CmsAttributes.USER_NAME, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING, CmsAttributes.USER_NAME,
+			handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			CmsAttributes.USER_PASSWORD, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			CmsAttributes.USER_LOGIN_DOMAIN, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			CmsAttributes.USER_LOGIN_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
-			CmsAttributes.HOME_DOCBASE, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING, CmsAttributes.HOME_DOCBASE,
+			handler);
 
 		// We avoid storing these because it'll be the job of other classes to link back
 		// to the users to which they're related. This is CRITICAL to allow us to do a one-pass
 		// import without having to circle back to resolve circular dependencies, or getting
 		// ahead of ourselves in the object creation phase.
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
-			CmsAttributes.ACL_DOMAIN, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
-			CmsAttributes.ACL_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
-			CmsAttributes.DEFAULT_FOLDER, handler);
+
+		// The default ACL will be linked back when the ACL's are imported.
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING, CmsAttributes.ACL_DOMAIN,
+			handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING, CmsAttributes.ACL_NAME,
+			handler);
+
+		// The default group will be linked back when the groups are imported
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			CmsAttributes.USER_GROUP_NAME, handler);
+
+		// The default folder will be linked back when the folders are imported
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
+			CmsAttributes.DEFAULT_FOLDER, handler);
 
 		CmsUser.HANDLERS_READY = true;
 	}
