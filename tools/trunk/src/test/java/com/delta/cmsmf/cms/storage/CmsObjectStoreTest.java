@@ -1,11 +1,8 @@
 package com.delta.cmsmf.cms.storage;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.UUID;
 
 import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -30,18 +27,8 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 		QueryRunner qr = new QueryRunner(getDataSource());
 		store = new CmsObjectStore(getDataSource(), true);
 		// Make sure no data is there
-		Assert.assertFalse(qr.query("select * from dctm_mapper", new ResultSetHandler<Boolean>() {
-			@Override
-			public Boolean handle(ResultSet rs) throws SQLException {
-				return rs.next();
-			}
-		}));
-		Assert.assertFalse(qr.query("select * from dctm_object", new ResultSetHandler<Boolean>() {
-			@Override
-			public Boolean handle(ResultSet rs) throws SQLException {
-				return rs.next();
-			}
-		}));
+		Assert.assertFalse(qr.query("select * from dctm_mapper", AbstractSqlTest.HANDLER_EXISTS));
+		Assert.assertFalse(qr.query("select * from dctm_object", AbstractSqlTest.HANDLER_EXISTS));
 
 		// add some data
 		int count = 0;
@@ -59,13 +46,7 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 
 		// Make sure it's there
 		Assert.assertEquals(Integer.valueOf(count),
-			qr.query("select count(*) from dctm_mapper", new ResultSetHandler<Integer>() {
-				@Override
-				public Integer handle(ResultSet rs) throws SQLException {
-					if (rs.next()) { return rs.getInt(1); }
-					return 0;
-				}
-			}));
+			qr.query("select count(*) from dctm_mapper", AbstractSqlTest.HANDLER_COUNT));
 		// More detailed check
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -84,13 +65,7 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 		store = new CmsObjectStore(getDataSource(), false);
 		// Make sure the data is there
 		Assert.assertEquals(Integer.valueOf(count),
-			qr.query("select count(*) from dctm_mapper", new ResultSetHandler<Integer>() {
-				@Override
-				public Integer handle(ResultSet rs) throws SQLException {
-					if (rs.next()) { return rs.getInt(1); }
-					return 0;
-				}
-			}));
+			qr.query("select count(*) from dctm_mapper", AbstractSqlTest.HANDLER_COUNT));
 		// More detailed check
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -109,13 +84,7 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 		store = new CmsObjectStore(getDataSource(), true);
 		// Make sure all the data is gone
 		Assert.assertEquals(Integer.valueOf(0),
-			qr.query("select count(*) from dctm_mapper", new ResultSetHandler<Integer>() {
-				@Override
-				public Integer handle(ResultSet rs) throws SQLException {
-					if (rs.next()) { return rs.getInt(1); }
-					return 0;
-				}
-			}));
+			qr.query("select count(*) from dctm_mapper", AbstractSqlTest.HANDLER_COUNT));
 		// More detailed check
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -195,13 +164,7 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 
 		// Make sure it's there
 		Assert.assertEquals(Integer.valueOf(count),
-			qr.query("select count(*) from dctm_mapper", new ResultSetHandler<Integer>() {
-				@Override
-				public Integer handle(ResultSet rs) throws SQLException {
-					if (rs.next()) { return rs.getInt(1); }
-					return 0;
-				}
-			}));
+			qr.query("select count(*) from dctm_mapper", AbstractSqlTest.HANDLER_COUNT));
 		// More detailed check
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {

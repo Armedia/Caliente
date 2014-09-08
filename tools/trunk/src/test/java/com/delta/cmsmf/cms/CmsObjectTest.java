@@ -4,9 +4,11 @@
 
 package com.delta.cmsmf.cms;
 
+import org.apache.commons.dbutils.QueryRunner;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.delta.cmsmf.cms.storage.CmsObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
@@ -29,7 +31,7 @@ public class CmsObjectTest extends AbstractSqlTest {
 	 * @throws CMSMFException
 	 */
 	@Test
-	public void testCmsObject() throws Throwable {
+	public void testCmsObjectConstruction() throws Throwable {
 		IDfSession session = acquireSession();
 		try {
 			IDfQuery q = new DfClientX().getQuery();
@@ -62,8 +64,48 @@ public class CmsObjectTest extends AbstractSqlTest {
 	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#load(java.sql.ResultSet)}.
 	 */
 	@Test
-	public void testLoad() {
-		Assert.fail("Not yet implemented");
+	public void testCmsObjectPersistence() throws Throwable {
+		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		QueryRunner qr = new QueryRunner(getDataSource());
+		IDfSession session = acquireSession();
+		try {
+			IDfQuery q = new DfClientX().getQuery();
+			final int max = 3;
+			for (CmsObjectType t : CmsObjectType.values()) {
+				CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
+				final String dql = String.format("select r_object_id from %s enable(optimize_top %d, return_top %d)",
+					t.getDocumentumType(), max, max);
+				q.setDQL(dql);
+				IDfCollection results = q.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+				int count = 0;
+				while (results.next()) {
+					IDfId id = results.getId("r_object_id");
+					IDfPersistentObject cmsObj = session.getObject(id);
+					obj.loadFromCMS(cmsObj);
+					Assert.assertEquals(Integer.valueOf(0), qr.query(
+						"select count(*) from dctm_object where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+						id.getId()));
+					store.serializeObject(obj);
+					Assert.assertEquals(Integer.valueOf(1), qr.query(
+						"select count(*) from dctm_object where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+						id.getId()));
+					Assert.assertEquals(Integer.valueOf(obj.getAttributeCount()), qr.query(
+						"select count(*) from dctm_attribute where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+						id.getId()));
+					Assert.assertEquals(Integer.valueOf(obj.getPropertyCount()), qr.query(
+						"select count(*) from dctm_property where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+						id.getId()));
+					if (++count > max) {
+						break;
+					}
+				}
+				if (count == 0) {
+					Assert.fail(String.format("Did not find any objects of type [%s] to test against", t));
+				}
+			}
+		} finally {
+			releaseSession(session);
+		}
 	}
 
 	/**

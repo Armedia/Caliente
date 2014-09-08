@@ -2,6 +2,8 @@ package com.delta.cmsmf.cms;
 
 import java.io.IOException;
 import java.net.URL;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
@@ -14,6 +16,7 @@ import org.apache.commons.dbcp.PoolableConnection;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
@@ -34,6 +37,21 @@ public abstract class AbstractSqlTest {
 	protected static final ConnectionFactory CONNECTION_FACTORY;
 
 	private static final DctmSessionManager SESSION_MANAGER;
+
+	protected static final ResultSetHandler<Integer> HANDLER_COUNT = new ResultSetHandler<Integer>() {
+		@Override
+		public Integer handle(ResultSet rs) throws SQLException {
+			if (!rs.next()) { return -1; }
+			return rs.getInt(1);
+		}
+	};
+
+	protected static final ResultSetHandler<Boolean> HANDLER_EXISTS = new ResultSetHandler<Boolean>() {
+		@Override
+		public Boolean handle(ResultSet rs) throws SQLException {
+			return rs.next();
+		}
+	};
 
 	static {
 		if (!DbUtils.loadDriver(AbstractSqlTest.H2_DRIVER)) { throw new RuntimeException(String.format(
