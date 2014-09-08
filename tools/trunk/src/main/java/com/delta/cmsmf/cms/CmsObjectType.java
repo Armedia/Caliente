@@ -36,8 +36,8 @@ public enum CmsObjectType {
 			return super.getActualType(obj);
 		}
 	},
-	DOCUMENT_REFERENCE(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER),
-	CONTENT(CmsContent.class, IDfContent.class);
+	CONTENT(CmsContent.class, IDfContent.class),
+	DOCUMENT_REFERENCE(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER);
 
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
