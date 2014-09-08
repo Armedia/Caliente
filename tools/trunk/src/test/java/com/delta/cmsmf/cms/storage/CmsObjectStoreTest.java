@@ -4,42 +4,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import javax.sql.DataSource;
-
-import org.apache.commons.dbcp.ConnectionFactory;
-import org.apache.commons.dbcp.DriverManagerConnectionFactory;
-import org.apache.commons.dbcp.PoolableConnection;
-import org.apache.commons.dbcp.PoolableConnectionFactory;
-import org.apache.commons.dbcp.PoolingDataSource;
-import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.pool.ObjectPool;
-import org.apache.commons.pool.impl.GenericObjectPool;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.delta.cmsmf.cms.AbstractSqlTest;
 import com.delta.cmsmf.cms.CmsObjectType;
 
-public class CmsObjectStoreTest {
-
-	private static final String H2_DRIVER = "org.h2.Driver";
-	private static final String H2_URL = "jdbc:h2:mem:cmsmf";
-
-	private static final ConnectionFactory CONNECTION_FACTORY;
-
-	static {
-		if (!DbUtils.loadDriver(CmsObjectStoreTest.H2_DRIVER)) { throw new RuntimeException(String.format(
-			"Failed to locate the JDBC driver class [%s]", CmsObjectStoreTest.H2_DRIVER)); }
-		CONNECTION_FACTORY = new DriverManagerConnectionFactory(CmsObjectStoreTest.H2_URL, null);
-	}
-
-	private DataSource dataSource = null;
-	private ObjectPool<PoolableConnection> pool = null;
+public class CmsObjectStoreTest extends AbstractSqlTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -49,28 +24,11 @@ public class CmsObjectStoreTest {
 	public static void tearDownAfterClass() throws Exception {
 	}
 
-	@Before
-	public void setUp() throws Throwable {
-		System.out.printf("Preparing the memory-based connection pool");
-		this.pool = new GenericObjectPool<PoolableConnection>();
-		@SuppressWarnings("unused")
-		final PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(
-			CmsObjectStoreTest.CONNECTION_FACTORY, this.pool, null, null, false, true);
-		this.dataSource = new PoolingDataSource(this.pool);
-		System.out.printf("Memory-based connection pool ready");
-	}
-
-	@After
-	public void tearDown() throws Throwable {
-		this.pool.close();
-		System.out.printf("Closing the memory-based connection pool");
-	}
-
 	@Test
 	public void testConstructor() throws Throwable {
 		CmsObjectStore store = null;
-		QueryRunner qr = new QueryRunner(this.dataSource);
-		store = new CmsObjectStore(this.dataSource, true);
+		QueryRunner qr = new QueryRunner(getDataSource());
+		store = new CmsObjectStore(getDataSource(), true);
 		// Make sure no data is there
 		Assert.assertFalse(qr.query("select * from dctm_mapper", new ResultSetHandler<Boolean>() {
 			@Override
@@ -123,7 +81,7 @@ public class CmsObjectStoreTest {
 			}
 		}
 
-		store = new CmsObjectStore(this.dataSource, false);
+		store = new CmsObjectStore(getDataSource(), false);
 		// Make sure the data is there
 		Assert.assertEquals(Integer.valueOf(count),
 			qr.query("select count(*) from dctm_mapper", new ResultSetHandler<Integer>() {
@@ -148,7 +106,7 @@ public class CmsObjectStoreTest {
 			}
 		}
 
-		store = new CmsObjectStore(this.dataSource, true);
+		store = new CmsObjectStore(getDataSource(), true);
 		// Make sure all the data is gone
 		Assert.assertEquals(Integer.valueOf(0),
 			qr.query("select count(*) from dctm_mapper", new ResultSetHandler<Integer>() {
@@ -174,8 +132,8 @@ public class CmsObjectStoreTest {
 
 	@Test
 	public void testSetMapping() throws Throwable {
-		QueryRunner qr = new QueryRunner(this.dataSource);
-		CmsObjectStore store = new CmsObjectStore(this.dataSource, true);
+		QueryRunner qr = new QueryRunner(getDataSource());
+		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		try {
 			store.setMapping(null, "something", "source", "target");
 			Assert.fail("Did not fail with a null object type");
@@ -262,7 +220,7 @@ public class CmsObjectStoreTest {
 
 	@Test
 	public void testClearSourceMapping() throws Throwable {
-		CmsObjectStore store = new CmsObjectStore(this.dataSource, true);
+		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		// add some mappings
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -280,7 +238,7 @@ public class CmsObjectStoreTest {
 
 	@Test
 	public void testClearTargetMapping() throws Throwable {
-		CmsObjectStore store = new CmsObjectStore(this.dataSource, true);
+		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		// add some mappings
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -298,7 +256,7 @@ public class CmsObjectStoreTest {
 
 	@Test
 	public void testGetTargetMapping() throws Throwable {
-		CmsObjectStore store = new CmsObjectStore(this.dataSource, true);
+		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		// add some mappings
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -315,7 +273,7 @@ public class CmsObjectStoreTest {
 
 	@Test
 	public void testGetSourceMapping() throws Throwable {
-		CmsObjectStore store = new CmsObjectStore(this.dataSource, true);
+		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		// add some mappings
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
