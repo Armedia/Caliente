@@ -55,8 +55,8 @@ public class CmsObjectStore {
 	private static final String FIND_TARGET_MAPPING_SQL = "select target_value from dctm_mapper where object_type = ? and name = ? and source_value = ?";
 	private static final String FIND_SOURCE_MAPPING_SQL = "select source_value from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 	private static final String INSERT_MAPPING_SQL = "insert into dctm_mapper (object_type, name, source_value, target_value) values (?, ?, ?, ?)";
-	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and source_value = ?";
-	private static final String DELETE_TARGET_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
+	private static final String DELETE_TARGET_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and source_value = ?";
+	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
 		"    select * " + //
@@ -460,7 +460,7 @@ public class CmsObjectStore {
 				: CmsObjectStore.DELETE_SOURCE_MAPPING_SQL);
 			final String refValue = (targetValue == null ? sourceValue : targetValue);
 			try {
-				qr.update(sql, CmsObjectStore.HANDLER_NULL, type.name(), name, refValue);
+				qr.update(sql, type.name(), name, refValue);
 			} catch (SQLException e) {
 				final String refType = (targetValue == null ? "source" : "target");
 				throw new RuntimeException(String.format("Failed to clear the %s mapping for [%s/%s/%s]", refType,
