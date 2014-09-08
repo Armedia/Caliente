@@ -1,5 +1,7 @@
 package com.delta.cmsmf.constants;
 
+import com.documentum.fc.common.IDfTime;
+
 /**
  * The Class CMSMFAppConstants. This class contains various constant values used throughout
  * the CMSMF application.
@@ -56,10 +58,13 @@ public class CMSMFAppConstants {
 
 	// Time patterns
 	/** The date and time pattern commonly used in documentum repository. */
-	public static final String DCTM_DATETIME_PATTERN = "mm/dd/yyyy hh:mi:ss";
+	public static final String DCTM_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26; // "yyyy-mm-dd hh:mi:ss"
 
 	/** The date and time pattern used in oracle sql query. */
-	public static final String ORACLE_DATETIME_PATTERN = "MM/DD/YYYY HH24:MI:SS";
+	public static final String ORACLE_DATETIME_PATTERN = "YYYY/MM/DD HH24:MI:SS";
+
+	public static final String SQL_SERVER_DATETIME_PATTERN = "121"; // "yyyy-mm-dd hh:mi:ss"
+	public static final String SQL_SERVER_DATETIME_PATTERN_JAVA = "yyyy-MM-dd HH:mm:ss";
 
 	/** The date pattern in which last export date is stored in the repository. EX: 12/15/2010 */
 	public static final String LAST_EXPORT_DATE_PATTERN = "MM/dd/yyyy";
