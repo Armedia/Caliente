@@ -3,9 +3,6 @@ package com.delta.cmsmf.mainEngine;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -13,6 +10,8 @@ import java.util.Properties;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.xml.DOMConfigurator;
+
+import com.delta.cmsmf.utils.ClasspathPatcher;
 
 public class CMSMFLauncher extends AbstractLauncher {
 
@@ -22,39 +21,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 
 	private static final String MAIN_CLASS = "com.delta.cmsmf.mainEngine.CMSMFMain_%s";
 
-	private static final Class<?>[] PARAMETERS = new Class[] {
-		URL.class
-	};
-
-	private static final URLClassLoader CL;
-	private static final Method METHOD;
-
 	private static Properties PARAMETER_PROPERTIES = new Properties();
-
-	static {
-		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		if (!(cl instanceof URLClassLoader)) { throw new RuntimeException("System Classloader is not a URLClassLoader"); }
-		CL = URLClassLoader.class.cast(cl);
-		try {
-			METHOD = URLClassLoader.class.getDeclaredMethod("addURL", CMSMFLauncher.PARAMETERS);
-			CMSMFLauncher.METHOD.setAccessible(true);
-		} catch (Throwable t) {
-			throw new RuntimeException("Failed to initialize access to the addURL() method in the system classloader",
-				t);
-		}
-	}
-
-	private static void addToClassPath(URL u) throws IOException {
-		try {
-			CMSMFLauncher.METHOD.invoke(CMSMFLauncher.CL, u);
-		} catch (Throwable t) {
-			throw new IOException(String.format("Failed to add the URL [%s] to the system classloader", u), t);
-		}
-	}
-
-	private static void addToClassPath(File f) throws IOException {
-		CMSMFLauncher.addToClassPath(f.toURI().toURL());
-	}
 
 	public static String getParameter(CLIParam parameter) {
 		return AbstractLauncher.CLI_PARSED.get(parameter);
@@ -69,8 +36,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 		var = System.getProperty("user.dir");
 		base = new File(var);
 		tgt = new File(var, "cfg");
-		CMSMFLauncher.addToClassPath(base);
-		CMSMFLauncher.addToClassPath(tgt);
+		ClasspathPatcher.addToClassPath(base);
+		ClasspathPatcher.addToClassPath(tgt);
 
 		// Next, add ${DOCUMENTUM}/config to the classpath
 		var = System.getenv(CMSMFLauncher.ENV_DOCUMENTUM);
@@ -91,7 +58,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 			tgt.getAbsolutePath())); }
 
-		CMSMFLauncher.addToClassPath(tgt);
+		ClasspathPatcher.addToClassPath(tgt);
 
 		// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
 		var = System.getenv(CMSMFLauncher.ENV_DOCUMENTUM_SHARED);
@@ -115,7 +82,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			tgt.getAbsolutePath())); }
 
 		// Next, to the classpath
-		CMSMFLauncher.addToClassPath(tgt);
+		ClasspathPatcher.addToClassPath(tgt);
 	}
 
 	static Properties getParameterProperties() {
