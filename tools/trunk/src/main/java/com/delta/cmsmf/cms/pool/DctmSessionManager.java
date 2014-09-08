@@ -23,9 +23,9 @@ import com.documentum.fc.tools.RegistryPasswordUtils;
  * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
-public class DctmConnectionPool {
+public class DctmSessionManager {
 
-	private static final Logger LOG = Logger.getLogger(DctmConnectionPool.class);
+	private static final Logger LOG = Logger.getLogger(DctmSessionManager.class);
 	private static final IDfClient CLIENT;
 
 	static {
@@ -34,7 +34,7 @@ public class DctmConnectionPool {
 		} catch (DfException e) {
 			throw new RuntimeException("Failed to initialize the local DFC client", e);
 		}
-		if (DctmConnectionPool.CLIENT == null) { throw new RuntimeException(
+		if (DctmSessionManager.CLIENT == null) { throw new RuntimeException(
 			"No local client was established.  You may want to check the installation of Documentum or this application on this machine."); }
 	}
 
@@ -48,8 +48,8 @@ public class DctmConnectionPool {
 			try {
 				return obj.getSessionId();
 			} catch (DfException e) {
-				if (DctmConnectionPool.LOG.isTraceEnabled()) {
-					DctmConnectionPool.LOG.trace("Exception caught determining the ID of a session", e);
+				if (DctmSessionManager.LOG.isTraceEnabled()) {
+					DctmSessionManager.LOG.trace("Exception caught determining the ID of a session", e);
 				}
 			}
 		}
@@ -60,10 +60,10 @@ public class DctmConnectionPool {
 
 		@Override
 		public IDfSession makeObject() throws Exception {
-			IDfSession session = DctmConnectionPool.this.sessionManager.newSession(DctmConnectionPool.this.docbase);
-			if (DctmConnectionPool.LOG.isDebugEnabled()) {
-				DctmConnectionPool.LOG.debug(String.format("Creating a new session to [%s]: [%s]",
-					DctmConnectionPool.this.docbase, session.getSessionId()));
+			IDfSession session = DctmSessionManager.this.sessionManager.newSession(DctmSessionManager.this.docbase);
+			if (DctmSessionManager.LOG.isDebugEnabled()) {
+				DctmSessionManager.LOG.debug(String.format("Creating a new session to [%s]: [%s]",
+					DctmSessionManager.this.docbase, session.getSessionId()));
 			}
 			return session;
 		}
@@ -71,9 +71,9 @@ public class DctmConnectionPool {
 		@Override
 		public void destroyObject(IDfSession obj) throws Exception {
 			if (obj == null) { return; }
-			if (DctmConnectionPool.LOG.isDebugEnabled()) {
-				DctmConnectionPool.LOG.debug(String.format("Closing a session to [%s]: [%s]",
-					DctmConnectionPool.this.docbase, DctmConnectionPool.getId(obj)));
+			if (DctmSessionManager.LOG.isDebugEnabled()) {
+				DctmSessionManager.LOG.debug(String.format("Closing a session to [%s]: [%s]",
+					DctmSessionManager.this.docbase, DctmSessionManager.getId(obj)));
 			}
 			try {
 				obj.disconnect();
@@ -101,15 +101,15 @@ public class DctmConnectionPool {
 		}
 	};
 
-	public DctmConnectionPool() {
+	public DctmSessionManager() {
 		this(null, null, null);
 	}
 
-	public DctmConnectionPool(String docbase) {
+	public DctmSessionManager(String docbase) {
 		this(docbase, null, null);
 	}
 
-	public DctmConnectionPool(String docbase, String username, String password) {
+	public DctmSessionManager(String docbase, String username, String password) {
 		this.docbase = docbase;
 		this.loginInfo = new DfLoginInfo();
 		if (username != null) {
@@ -119,20 +119,20 @@ public class DctmConnectionPool {
 			String passTmp = password;
 			try {
 				passTmp = RegistryPasswordUtils.decrypt(password);
-				if (DctmConnectionPool.LOG.isEnabledFor(Level.INFO)) {
-					DctmConnectionPool.LOG.info(String.format("Password decrypted successfully"));
+				if (DctmSessionManager.LOG.isEnabledFor(Level.INFO)) {
+					DctmSessionManager.LOG.info(String.format("Password decrypted successfully"));
 				}
 			} catch (Throwable t) {
 				// Not encrypted, use literal
 				passTmp = password;
-				if (DctmConnectionPool.LOG.isEnabledFor(Level.INFO)) {
-					DctmConnectionPool.LOG.info(String.format("Password decryption failed, using as literal"));
+				if (DctmSessionManager.LOG.isEnabledFor(Level.INFO)) {
+					DctmSessionManager.LOG.info(String.format("Password decryption failed, using as literal"));
 				}
 			}
 			this.loginInfo.setPassword(passTmp);
 		}
 		this.loginInfo.setDomain(null);
-		this.sessionManager = DctmConnectionPool.CLIENT.newSessionManager();
+		this.sessionManager = DctmSessionManager.CLIENT.newSessionManager();
 		try {
 			this.sessionManager.setIdentity(this.docbase, this.loginInfo);
 		} catch (DfServiceException e) {
@@ -175,10 +175,10 @@ public class DctmConnectionPool {
 		try {
 			this.pool.returnObject(session);
 		} catch (Exception e) {
-			DctmConnectionPool.LOG
+			DctmSessionManager.LOG
 				.warn(
 					String.format("Exception caught returning session [%s] to the pool",
-						DctmConnectionPool.getId(session)), e);
+						DctmSessionManager.getId(session)), e);
 		}
 	}
 
@@ -186,7 +186,7 @@ public class DctmConnectionPool {
 		try {
 			this.pool.close();
 		} catch (Exception e) {
-			DctmConnectionPool.LOG.warn("Exception caught closing the pool instance", e);
+			DctmSessionManager.LOG.warn("Exception caught closing the pool instance", e);
 		}
 	}
 }
