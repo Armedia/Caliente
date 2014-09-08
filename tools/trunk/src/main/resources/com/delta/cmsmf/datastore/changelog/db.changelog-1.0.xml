@@ -5,14 +5,13 @@
 	<changeSet author="master" id="1">
 		<!-- The main objects table -->
 		<createTable tableName="dctm_object" remarks="The documentum objects">
-			<column name="object_id" type="varchar(32)">
+			<column name="object_id" type="varchar(32)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="object_type" type="varchar2(32)"
-				remarks="The official department name as registered on the internal website.">
+			<column name="object_type" type="varchar2(32)" remarks="The type of documentum object">
 				<constraints nullable="false" />
 			</column>
-			<column name="object_number" type="long" remarks="The insertion ordinal number of the object">
+			<column name="object_number" type="long" remarks="The export ordinal number of the object (import will be done in this order as well)">
 				<constraints nullable="false" unique="true"/>
 			</column>
 		</createTable>
@@ -24,11 +23,12 @@
 		<addAutoIncrement tableName="dctm_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>
 
 		<!-- The dependency relationships table -->
+		<!--
 		<createTable tableName="dctm_dependency">
-			<column name="object_id" type="varchar(32)">
+			<column name="object_id" type="varchar(32)" remarks="The object for which the dependency is being documented">
 				<constraints nullable="false" />
 			</column>
-			<column name="dependency_id" type="varchar(32)">
+			<column name="dependency_id" type="varchar(32)" remarks="The object upon which the object in object_id depends">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -45,28 +45,29 @@
 			<column name="dependency_id" />
 			<column name="object_id" />
 		</createIndex>
+		-->
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="dctm_attribute">
-			<column name="object_id" type="varchar(32)">
+			<column name="object_id" type="varchar(32)" remarks="The object the attribute is for">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(32)">
+			<column name="name" type="varchar(32)" remarks="The attribute's name">
 				<constraints nullable="false" />
 			</column>
-			<column name="data_type" type="varchar(32)">
+			<column name="data_type" type="varchar(32)" remarks="The attribute's data type">
 				<constraints nullable="false" />
 			</column>
-			<column name="id" type="varchar(32)">
+			<column name="id" type="varchar(32)" remarks="The attribute's id">
 				<constraints nullable="false" />
 			</column>
-			<column name="length" type="integer">
+			<column name="length" type="integer" remarks="The maximum length of stored values">
 				<constraints nullable="false" />
 			</column>
-			<column name="qualifiable" type="boolean">
+			<column name="qualifiable" type="boolean" remarks="The flag indicating whether the attriute is qualifiable">
 				<constraints nullable="false" />
 			</column>
-			<column name="repeating" type="boolean">
+			<column name="repeating" type="boolean" remarks="The flag indicating whether this is a single or repeating value attribute">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -78,16 +79,16 @@
 
 		<!-- The attribute values table -->
 		<createTable tableName="dctm_attribute_value">
-			<column name="object_id" type="varchar(32)">
+			<column name="object_id" type="varchar(32)" remarks="The object the attribute is for">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(32)">
+			<column name="name" type="varchar(32)" remarks="The attribute's name">
 				<constraints nullable="false" />
 			</column>
-			<column name="value_number" type="integer">
+			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
 				<constraints nullable="false" />
 			</column>
-			<column name="data" type="text" />
+			<column name="data" type="text" remarks="The actual string-encoded data"/>
 		</createTable>
 		<addPrimaryKey tableName="dctm_attribute_value"
 			columnNames="object_id, name, value_number" />
@@ -98,16 +99,16 @@
 
 		<!-- The property descriptor table -->
 		<createTable tableName="dctm_property">
-			<column name="object_id" type="varchar(32)">
+			<column name="object_id" type="varchar(32)" remarks="The object the property is for">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(32)">
+			<column name="name" type="varchar(32)" remarks="The property's name">
 				<constraints nullable="false" />
 			</column>
-			<column name="data_type" type="varchar(32)">
+			<column name="data_type" type="varchar(32)" remarks="The property's data type">
 				<constraints nullable="false" />
 			</column>
-			<column name="repeating" type="boolean">
+			<column name="repeating" type="boolean" remarks="The flag indicating whether this is a single or repeating value property">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -119,16 +120,16 @@
 
 		<!-- The property values table -->
 		<createTable tableName="dctm_property_value">
-			<column name="object_id" type="varchar(32)">
+			<column name="object_id" type="varchar(32)" remarks="The object the property is for">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(32)">
+			<column name="name" type="varchar(32)" remarks="The property's name">
 				<constraints nullable="false" />
 			</column>
-			<column name="value_number" type="integer">
+			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
 				<constraints nullable="false" />
 			</column>
-			<column name="data" type="text" />
+			<column name="data" type="text" remarks="The actual string-encoded data" />
 		</createTable>
 		<addPrimaryKey tableName="dctm_property_value"
 			columnNames="object_id, name, value_number" />
@@ -137,22 +138,26 @@
 			referencedTableName="dctm_property" referencedColumnNames="object_id, name"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 
-		<!-- The ID mapping table -->
+		<!-- The attribute mapping table -->
 		<createTable tableName="dctm_mapper">
-			<column name="source_id" type="varchar(32)">
+			<column name="object_type" type="varchar2(32)" remarks="The type of documentum object">
 				<constraints nullable="false" />
 			</column>
-			<column name="target_id" type="varchar(32)">
+			<column name="name" type="varchar(32)" remarks="The name of the attribute to map">
+				<constraints nullable="false" />
+			</column>
+			<column name="source_value" type="varchar(32)" remarks="The value on the source CMS">
+				<constraints nullable="false" />
+			</column>
+			<column name="target_value" type="varchar(32)" remarks="The value on the target CMS">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="dctm_mapper" columnNames="source_id" />
-		<addForeignKeyConstraint constraintName="fk_dctm_mapper_object"
-			baseTableName="dctm_mapper" baseColumnNames="source_id"
-			referencedTableName="dctm_object" referencedColumnNames="object_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-		<createIndex tableName="dctm_mapper" indexName="idx_dctm_mapper_reverse" unique="true">
-			<column name="target_id" />
+		<addPrimaryKey tableName="dctm_mapper" columnNames="object_type, name, source_value" />
+		<createIndex tableName="dctm_mapper" indexName="idx_dctm_mapper_reverse">
+			<column name="object_type" />
+			<column name="name" />
+			<column name="target_value" />
 		</createIndex>
 	</changeSet>
 </databaseChangeLog>

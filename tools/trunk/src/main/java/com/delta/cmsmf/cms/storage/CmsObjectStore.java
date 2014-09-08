@@ -4,14 +4,11 @@
 
 package com.delta.cmsmf.cms.storage;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
 
 import javax.sql.DataSource;
 
@@ -23,17 +20,9 @@ import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 
-import org.apache.commons.dbcp.ConnectionFactory;
-import org.apache.commons.dbcp.DriverManagerConnectionFactory;
-import org.apache.commons.dbcp.PoolableConnection;
-import org.apache.commons.dbcp.PoolableConnectionFactory;
-import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.commons.pool.ObjectPool;
-import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cms.CmsAttribute;
@@ -42,7 +31,6 @@ import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
@@ -63,21 +51,12 @@ public class CmsObjectStore {
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, name, value_number, is_null, data) values (?, ?, ?, ?, ?)";
-	private static final String FIND_SOURCE_ID_SQL = "select source_id from dctm_mapper where target_id = ?";
-	private static final String FIND_TARGET_ID_SQL = "select target_id from dctm_mapper where source_id = ?";
-	private static final String INSERT_MAPPING_SQL = "insert into dctm_mapper (source_id, target_id) values (?, ?)";
-	private static final String DELETE_MAPPING_SQL = "delete from dctm_mapper where source_id = ?";
 
-	/*
-	private static final String LOAD_EVERYTHING_SQL = //
-		"    select o.*, a.*, v.* " + //
-		"  from dctm_object o, dctm_attribute a, dctm_value v " + //
-		" where o.object_type = ? " + //
-		"   and o.object_id = a.object_id " + //
-		"   and a.object_id = v.object_id " + //
-		"   and a.name = v.name " + //
-		" order by o.object_number, v.value_number";
-	 */
+	private static final String FIND_TARGET_MAPPING_SQL = "select target_value from dctm_mapper where object_type = ? and name = ? and source_value = ?";
+	private static final String FIND_SOURCE_MAPPING_SQL = "select source_value from dctm_mapper where object_type = ? and name = ? and target_value = ?";
+	private static final String INSERT_MAPPING_SQL = "insert into dctm_mapper (object_type, name, source_value, target_value) values (?, ?, ?, ?)";
+	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and source_value = ?";
+	private static final String DELETE_TARGET_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
 		"    select * " + //
@@ -146,62 +125,16 @@ public class CmsObjectStore {
 	};
 	 */
 
-	private static final Logger LOG = Logger.getLogger(CmsObjectStore.class);
+	protected final Logger log = Logger.getLogger(getClass());
 
-	private static DataSource DATA_SOURCE;
+	private final DataSource dataSource;
 
-	private CmsObjectStore() {
-	}
-
-	public static void init(final boolean clearData) throws CMSMFException {
-		final String driverName = CMSMFProperties.JDBC_DRIVER.getString();
-		if (!DbUtils.loadDriver(driverName)) { throw new CMSMFException(String.format(
-			"Failed to locate the JDBC driver class [%s]", driverName)); }
-
-		if (CmsObjectStore.LOG.isDebugEnabled()) {
-			CmsObjectStore.LOG.debug(String.format("JDBC driver class [%s] is loaded and valid", driverName));
-		}
-
-		String jdbcUrl = CMSMFProperties.JDBC_URL.getString();
-		String targetPath = CMSMFProperties.STREAMS_DIRECTORY.getString();
-
-		File targetDirectory = null;
-		try {
-			targetDirectory = new File(targetPath).getCanonicalFile();
-		} catch (IOException e) {
-			throw new CMSMFException(String.format("Failed to canonicalize the path [%s]", targetPath), e);
-		}
-
-		// Replace variables in the URL
-		jdbcUrl = StrSubstitutor
-			.replace(jdbcUrl, Collections.singletonMap("target", targetDirectory.getAbsolutePath()));
-		if (CmsObjectStore.LOG.isInfoEnabled()) {
-			CmsObjectStore.LOG.info(String.format("State database will be stored at [%s]", jdbcUrl));
-		}
-		final ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(jdbcUrl, null);
-		final ObjectPool<PoolableConnection> connectionPool = new GenericObjectPool<PoolableConnection>();
-		@SuppressWarnings("unused")
-		final PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory,
-			connectionPool, null, null, false, true);
-		CmsObjectStore.DATA_SOURCE = new PoolingDataSource(connectionPool);
-
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				try {
-					if (CmsObjectStore.LOG.isInfoEnabled()) {
-						CmsObjectStore.LOG.info("Closing the state database connection pool");
-					}
-					connectionPool.close();
-				} catch (Exception e) {
-					CmsObjectStore.LOG.warn("Failed to close the JDBC connection pool", e);
-				}
-			}
-		});
+	public CmsObjectStore(DataSource dataSource, boolean clearData) throws CMSMFException {
+		this.dataSource = dataSource;
 
 		Connection c = null;
 		try {
-			c = CmsObjectStore.DATA_SOURCE.getConnection();
+			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
 			throw new CMSMFException("Failed to get a SQL Connection to validate the schema", e);
 		}
@@ -213,12 +146,13 @@ public class CmsObjectStore {
 				DatabaseMetaData dmd = c.getMetaData();
 				ResultSet rs = null;
 				try {
-					rs = dmd.getTables(null, null, "DCTM_OBJECT", new String[] {
+					rs = dmd.getTables(null, null, "DCTM_%", new String[] {
 						"TABLE"
 					});
-					QueryRunner qr = new QueryRunner();
-					if (rs.next()) {
-						qr.update(c, "delete from dctm_object");
+					QueryRunner qr = new QueryRunner(this.dataSource);
+					while (rs.next()) {
+						String tableName = rs.getString("TABLE_NAME");
+						qr.update(String.format("delete from %s", tableName));
 					}
 				} finally {
 					DbUtils.closeQuietly(rs);
@@ -252,7 +186,7 @@ public class CmsObjectStore {
 		return q;
 	}
 
-	public static boolean serializeObject(CmsObject<?> object) throws DfException {
+	public boolean serializeObject(CmsObject<?> object) throws DfException {
 		// First...is the object
 		// Put the object and its attributes into the state database
 		boolean ok = false;
@@ -262,7 +196,7 @@ public class CmsObjectStore {
 		final CmsObjectType objectType = object.getType();
 
 		try {
-			Connection c = CmsObjectStore.DATA_SOURCE.getConnection();
+			Connection c = this.dataSource.getConnection();
 			c.rollback();
 			c.setAutoCommit(false);
 			try {
@@ -287,8 +221,7 @@ public class CmsObjectStore {
 
 					// DO NOT process "undefined" attribute values
 					if (type == CmsDataType.DF_UNDEFINED) {
-						CmsObjectStore.LOG.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]",
-							objectId, name));
+						this.log.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]", objectId, name));
 						continue;
 					}
 
@@ -327,8 +260,7 @@ public class CmsObjectStore {
 
 					// DO NOT process "undefined" property values
 					if (type == CmsDataType.DF_UNDEFINED) {
-						CmsObjectStore.LOG.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]",
-							objectId, name));
+						this.log.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]", objectId, name));
 						continue;
 					}
 
@@ -356,12 +288,12 @@ public class CmsObjectStore {
 				return true;
 			} finally {
 				if (ok) {
-					if (CmsObjectStore.LOG.isDebugEnabled()) {
-						CmsObjectStore.LOG.debug(String.format("Committing insert transaction for [%s]", objectId));
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Committing insert transaction for [%s]", objectId));
 					}
 					DbUtils.commitAndClose(c);
 				} else {
-					CmsObjectStore.LOG.warn(String.format("Rolling back insert transaction for [%s]", objectId));
+					this.log.warn(String.format("Rolling back insert transaction for [%s]", objectId));
 					DbUtils.rollbackAndClose(c);
 				}
 			}
@@ -370,14 +302,13 @@ public class CmsObjectStore {
 		}
 	}
 
-	public static void deserializeObjects(CmsObjectType type, ImportHandler handler) throws SQLException,
-	CMSMFException {
+	public void deserializeObjects(CmsObjectType type, ImportHandler handler) throws SQLException, CMSMFException {
 		Connection objConn = null;
 		Connection attConn = null;
 
 		try {
-			objConn = CmsObjectStore.DATA_SOURCE.getConnection();
-			attConn = CmsObjectStore.DATA_SOURCE.getConnection();
+			objConn = this.dataSource.getConnection();
+			attConn = this.dataSource.getConnection();
 
 			PreparedStatement objPS = null;
 			PreparedStatement attPS = null;
@@ -403,18 +334,16 @@ public class CmsObjectStore {
 						final int objNum = objRS.getInt("object_number");
 						final CmsObjectType objType = CmsObjectType.valueOf(objRS.getString("object_type"));
 						final String objId = objRS.getString("object_id");
-						if (CmsObjectStore.LOG.isInfoEnabled()) {
-							CmsObjectStore.LOG.info(String.format("De-serializing %s object #%d [id=%s]", type, objNum,
-								objId));
+						if (this.log.isInfoEnabled()) {
+							this.log.info(String.format("De-serializing %s object #%d [id=%s]", type, objNum, objId));
 						}
 						CmsObject<?> obj = objType.newInstance();
 						obj.load(objRS);
-						if (CmsObjectStore.LOG.isTraceEnabled()) {
-							CmsObjectStore.LOG.trace(String
-								.format("De-serialized %s object #%d: %s", type, objNum, obj));
-						} else if (CmsObjectStore.LOG.isDebugEnabled()) {
-							CmsObjectStore.LOG.debug(String.format("De-serialized %s object #%d with ID [%s]", type,
-								objNum, obj.getId()));
+						if (this.log.isTraceEnabled()) {
+							this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
+						} else if (this.log.isDebugEnabled()) {
+							this.log.debug(String.format("De-serialized %s object #%d with ID [%s]", type, objNum,
+								obj.getId()));
 						}
 
 						attPS.clearParameters();
@@ -518,38 +447,60 @@ public class CmsObjectStore {
 	 * Assigns the given targetId as the new ID for the object with the given source ID
 	 * </p>
 	 *
-	 * @param sourceId
 	 */
-	public static void setIdMapping(String sourceId, String targetId) {
-		final QueryRunner qr = new QueryRunner(CmsObjectStore.DATA_SOURCE);
-		try {
-			qr.insert(CmsObjectStore.INSERT_MAPPING_SQL, CmsObjectStore.HANDLER_NULL, sourceId, targetId);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public void setMapping(CmsObjectType type, String name, String sourceValue, String targetValue) {
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
+		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
+		if ((sourceValue == null) && (targetValue == null)) { throw new IllegalArgumentException(
+			"Must provide a source or target value to search against"); }
+		final QueryRunner qr = new QueryRunner(this.dataSource);
+		if ((targetValue == null) || (sourceValue == null)) {
+			// Delete instead
+			final String sql = (targetValue == null ? CmsObjectStore.DELETE_TARGET_MAPPING_SQL
+				: CmsObjectStore.DELETE_SOURCE_MAPPING_SQL);
+			final String refValue = (targetValue == null ? sourceValue : targetValue);
+			try {
+				qr.update(sql, CmsObjectStore.HANDLER_NULL, type.name(), name, refValue);
+			} catch (SQLException e) {
+				final String refType = (targetValue == null ? "source" : "target");
+				throw new RuntimeException(String.format("Failed to clear the %s mapping for [%s/%s/%s]", refType,
+					type, name, refValue), e);
+			}
+		} else {
+			// TODO: Support updating the mapping
+			try {
+				qr.insert(CmsObjectStore.INSERT_MAPPING_SQL, CmsObjectStore.HANDLER_NULL, type.name(), name,
+					sourceValue, targetValue);
+			} catch (SQLException e) {
+				throw new RuntimeException(String.format("Failed to insert the mapping for [%s/%s/%s->%s]", type, name,
+					sourceValue, targetValue), e);
+			}
 		}
 	}
 
 	/**
 	 * <p>
-	 * Removes any ID mappings for the given source object ID.
+	 * Removes any source mappings for the given source object type, mapping name, with the given
+	 * source value.
 	 * </p>
 	 *
-	 * @param sourceId
+	 * @param type
+	 * @param name
+	 * @param sourceValue
 	 */
-	public static void clearIdMapping(String sourceId) {
-		final QueryRunner qr = new QueryRunner(CmsObjectStore.DATA_SOURCE);
-		try {
-			qr.update(CmsObjectStore.DELETE_MAPPING_SQL, CmsObjectStore.HANDLER_NULL, sourceId);
-		} catch (SQLException e) {
-			throw new RuntimeException(String.format("Failed to clear the ID mapping for [%s]", sourceId), e);
-		}
+	public void clearTargetMapping(CmsObjectType type, String name, String sourceValue) {
+		setMapping(type, name, sourceValue, null);
 	}
 
-	private static String getMappedId(boolean source, String id) {
-		if (id == null) { throw new IllegalArgumentException("Must provide a valid ID to search against"); }
-		final String sql = (source ? CmsObjectStore.FIND_SOURCE_ID_SQL : CmsObjectStore.FIND_TARGET_ID_SQL);
-		final QueryRunner qr = new QueryRunner(CmsObjectStore.DATA_SOURCE);
+	public void clearSourceMapping(CmsObjectType type, String name, String targetValue) {
+		setMapping(type, name, null, targetValue);
+	}
+
+	private String getMappedValue(boolean source, CmsObjectType type, String name, String value) {
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
+		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
+		if (value == null) { throw new IllegalArgumentException("Must provide a value to search against"); }
+		final QueryRunner qr = new QueryRunner(this.dataSource);
 		ResultSetHandler<String> h = new ResultSetHandler<String>() {
 			@Override
 			public String handle(ResultSet rs) throws SQLException {
@@ -557,43 +508,40 @@ public class CmsObjectStore {
 				return rs.getString(1);
 			}
 		};
+		final String sql = (source ? CmsObjectStore.FIND_TARGET_MAPPING_SQL : CmsObjectStore.FIND_SOURCE_MAPPING_SQL);
 		try {
-			return qr.query(sql, h, id);
+			return qr.query(sql, h, type.name(), name, value);
 		} catch (SQLException e) {
-			throw new RuntimeException(String.format("Failed to retrieve the ID %s mapping for [%s]", source ? "source"
-				: "target", id), e);
+			throw new RuntimeException(String.format("Failed to retrieve the %s mapping for [%s/%s/%s]",
+				source ? "source" : "target", type, name, value), e);
 		}
 	}
 
 	/**
 	 * <p>
-	 * Retrieves the target ID for the object with the given source ID
-	 * </p>
-	 * <p>
-	 * In particular, for a given target ID {@code tgtId} that has already been mapped to a source
-	 * ID, the invocation {@code getTargetId(getSourceId(tgtId)).equals(tgtId)} <b><i>must</i></b>
-	 * return {@code true}.
+	 * Retrieves the target value for the mapping with the given object type, mapping name and
+	 * source value.
 	 * </p>
 	 *
-	 * @param sourceId
+	 * @param type
+	 * @param name
+	 * @param sourceValue
 	 */
-	public static String getTargetId(String sourceId) {
-		return CmsObjectStore.getMappedId(false, sourceId);
+	public String getTargetMapping(CmsObjectType type, String name, String sourceValue) {
+		return getMappedValue(true, type, name, sourceValue);
 	}
 
 	/**
 	 * <p>
-	 * Retrieves the source ID for the object with the given target ID.
-	 * </p>
-	 * <p>
-	 * In particular, for a given source ID {@code srcId} that has already been mapped to a target
-	 * ID, the invocation {@code getSourceId(getTargetId(srcId)).equals(srcId)} <b><i>must</i></b>
-	 * return {@code true}.
+	 * Retrieves the source value for the mapping with the given object type, mapping name and
+	 * target value.
 	 * </p>
 	 *
-	 * @param targetId
+	 * @param type
+	 * @param name
+	 * @param targetValue
 	 */
-	public static String getSourceId(String targetId) {
-		return CmsObjectStore.getMappedId(true, targetId);
+	public String getSourceMapping(CmsObjectType type, String name, String targetValue) {
+		return getMappedValue(false, type, name, targetValue);
 	}
 }
