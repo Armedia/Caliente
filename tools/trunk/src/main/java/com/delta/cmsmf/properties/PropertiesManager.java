@@ -100,7 +100,7 @@ public class PropertiesManager {
 		}
 	}
 
-	public static synchronized void init() throws ConfigurationException {
+	public static synchronized void init() {
 		if (PropertiesManager.CFG == null) {
 			PropertiesManager.CFG = new CompositeConfiguration(PropertiesManager.CONFIGURATIONS);
 		}
@@ -116,6 +116,7 @@ public class PropertiesManager {
 	 * @return the string
 	 */
 	static String getProperty(String propName, String defaultValue) {
+		PropertiesManager.init();
 		return PropertiesManager.CFG.getString(propName, defaultValue);
 	}
 
@@ -129,14 +130,17 @@ public class PropertiesManager {
 	 * @return the int
 	 */
 	static int getProperty(String propName, int defaultValue) {
+		PropertiesManager.init();
 		return PropertiesManager.CFG.getInt(propName, defaultValue);
 	}
 
 	static boolean getProperty(String propName, boolean defaultValue) {
+		PropertiesManager.init();
 		return PropertiesManager.CFG.getBoolean(propName, defaultValue);
 	}
 
 	public static List<Configuration> getConfigurations() {
+		PropertiesManager.init();
 		return PropertiesManager.CONFIGURATIONS;
 	}
 
