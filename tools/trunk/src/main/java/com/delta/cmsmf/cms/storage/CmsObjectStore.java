@@ -9,6 +9,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import javax.sql.DataSource;
 
@@ -43,6 +45,8 @@ public class CmsObjectStore {
 	public static interface ImportHandler {
 		public boolean handle(CmsObject<?> dataObject) throws Exception;
 	}
+
+	private static final Object[][] NO_PARAMS = new Object[0][0];
 
 	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from dctm_object where object_id = ?";
 
@@ -194,6 +198,10 @@ public class CmsObjectStore {
 		// First, make sure no "left behind" garbage gets committed
 		final String objectId = object.getId();
 		final CmsObjectType objectType = object.getType();
+		final Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
+		final Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
+		final Collection<Object[]> propertyParameters = new ArrayList<Object[]>();
+		final Collection<Object[]> propertyValueParameters = new ArrayList<Object[]>();
 
 		try {
 			Connection c = this.dataSource.getConnection();
@@ -205,9 +213,6 @@ public class CmsObjectStore {
 					// Object is already there, so do nothing
 					return false;
 				}
-
-				// Not there, insert the actual object
-				qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_NULL, objectId, objectType.name());
 
 				// Then, insert its attributes
 				Object[] attData = new Object[7];
@@ -233,7 +238,11 @@ public class CmsObjectStore {
 					attData[6] = repeating;
 
 					// Insert the attribute
-					qr.insert(c, CmsObjectStore.INSERT_ATTRIBUTE_SQL, CmsObjectStore.HANDLER_NULL, attData);
+					attributeParameters.add(attData.clone());
+
+					if (attribute.getValueCount() <= 0) {
+						continue;
+					}
 
 					attValue[1] = name; // This never changes inside this next loop
 					Object[][] values = new Object[attribute.getValueCount()][];
@@ -243,10 +252,9 @@ public class CmsObjectStore {
 						attValue[2] = v;
 						attValue[3] = type.encode(value);
 						values[v] = attValue.clone();
+						attributeValueParameters.add(attValue.clone());
 						v++;
 					}
-					// Insert the values, as a batch
-					qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, CmsObjectStore.HANDLER_NULL, values);
 				}
 
 				// Then, the properties
@@ -267,7 +275,7 @@ public class CmsObjectStore {
 					propData[3] = property.isRepeating();
 
 					// Insert the attribute
-					qr.insert(c, CmsObjectStore.INSERT_PROPERTY_SQL, CmsObjectStore.HANDLER_NULL, propData);
+					propertyParameters.add(propData.clone());
 
 					attValue[1] = name; // This never changes inside this next loop
 					Object[][] values = new Object[property.getValueCount()][];
@@ -277,11 +285,22 @@ public class CmsObjectStore {
 						attValue[2] = v;
 						attValue[3] = type.encode(value);
 						values[v] = attValue.clone();
+						propertyValueParameters.add(attValue.clone());
 						v++;
 					}
-					// Insert the values, as a batch
-					qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_VALUE_SQL, CmsObjectStore.HANDLER_NULL, values);
 				}
+
+				// Do all the inserts in a row
+				qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_NULL, objectId, objectType.name());
+				qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_SQL, CmsObjectStore.HANDLER_NULL,
+					attributeParameters.toArray(CmsObjectStore.NO_PARAMS));
+				qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
+					attributeValueParameters.toArray(CmsObjectStore.NO_PARAMS));
+				qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_SQL, CmsObjectStore.HANDLER_NULL,
+					propertyParameters.toArray(CmsObjectStore.NO_PARAMS));
+				qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
+					propertyValueParameters.toArray(CmsObjectStore.NO_PARAMS));
+
 				ok = true;
 				return true;
 			} finally {
