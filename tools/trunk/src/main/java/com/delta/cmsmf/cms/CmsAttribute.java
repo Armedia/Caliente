@@ -20,7 +20,7 @@ public class CmsAttribute extends CmsProperty {
 	CmsAttribute(ResultSet rs) throws SQLException {
 		super(rs);
 		this.id = rs.getString("id");
-		this.qualifiable = rs.getBoolean("is_qualifiable");
+		this.qualifiable = rs.getBoolean("qualifiable");
 		this.length = rs.getInt("length");
 	}
 

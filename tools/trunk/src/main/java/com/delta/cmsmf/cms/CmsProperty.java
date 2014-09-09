@@ -38,7 +38,7 @@ public class CmsProperty implements Iterable<IDfValue> {
 	CmsProperty(ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		this.name = rs.getString("name");
-		this.type = CmsDataType.valueOf(rs.getString("type"));
+		this.type = CmsDataType.valueOf(rs.getString("data_type"));
 		this.repeating = rs.getBoolean("repeating");
 		this.values = new ArrayList<IDfValue>();
 		if (!this.repeating) {
