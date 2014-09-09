@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
@@ -53,7 +54,8 @@ public class CmsAttribute extends CmsProperty {
 
 	public CmsAttribute(String name, CmsDataType type, String id, int length, boolean repeating, boolean qualifiable,
 		Collection<IDfValue> values) {
-		super(name, type, values);
+		super(name, type, repeating, values);
+		if (id == null) { throw new IllegalArgumentException("Must provide a non-null attribute id"); }
 		this.id = id;
 		this.length = length;
 		this.qualifiable = qualifiable;
@@ -73,6 +75,7 @@ public class CmsAttribute extends CmsProperty {
 
 	public final boolean isSame(CmsAttribute other) {
 		if (!super.isSame(other)) { return false; }
+		if (!Tools.equals(this.id, other.id)) { return false; }
 		if (this.qualifiable != other.qualifiable) { return false; }
 		if (this.length != other.length) { return false; }
 		return true;
@@ -80,8 +83,8 @@ public class CmsAttribute extends CmsProperty {
 
 	@Override
 	public String toString() {
-		return String.format("CmsAttribute [name=%s, type=%s, repeating=%s, qualifiable=%s, length=%d %s=%s]",
-			getName(), getType(), isRepeating(), this.qualifiable, this.length, (isRepeating() ? "values"
+		return String.format("CmsAttribute [name=%s, type=%s, id=%s, repeating=%s, qualifiable=%s, length=%d %s=%s]",
+			getName(), getType(), this.id, isRepeating(), this.qualifiable, this.length, (isRepeating() ? "values"
 				: "singleValue"), (isRepeating() ? getValues() : getValue()));
 	}
 }
