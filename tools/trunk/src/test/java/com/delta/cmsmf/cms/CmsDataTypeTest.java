@@ -14,14 +14,12 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.delta.cmsmf.cms.CmsDataType;
-import com.delta.cmsmf.cms.DfValueFactory;
 import com.documentum.fc.client.impl.typeddata.Attribute;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfValue;
 
-public class CmsDataTypeTest {
+public class CmsDataTypeTest extends AbstractTest {
 
 	private static final Map<CmsDataType, String> NULL_ENCODING;
 	private static final Map<CmsDataType, IDfValue> NULL_VALUE;
@@ -123,6 +121,14 @@ public class CmsDataTypeTest {
 
 		VALUE_LIST = Collections.unmodifiableMap(valueLists);
 		ENCODING_LIST = Collections.unmodifiableMap(encodingLists);
+	}
+
+	@Override
+	public void setUp() throws Throwable {
+	}
+
+	@Override
+	public void tearDown() throws Throwable {
 	}
 
 	@Test

@@ -12,14 +12,19 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cms.CmsDataType;
-import com.delta.cmsmf.cms.CmsProperty;
-import com.delta.cmsmf.cms.DfValueFactory;
 import com.documentum.fc.common.IDfValue;
 
-public class CmsPropertyTest {
+public class CmsPropertyTest extends AbstractTest {
 
 	private static final IDfValue[] NO_VALUES = new IDfValue[0];
+
+	@Override
+	public void setUp() throws Throwable {
+	}
+
+	@Override
+	public void tearDown() throws Throwable {
+	}
 
 	@Test
 	public void testCmsPropertyStringCmsDataTypeIDfValueArray() {
@@ -751,8 +756,8 @@ public class CmsPropertyTest {
 					continue;
 				}
 				for (final boolean aRep : repeating) {
-					final CmsProperty aProp = new CmsProperty(aName, aType, aRep,
-						DfValueFactory.newStringValue(String.format("A = %s-%s-%s", aName, aType, aRep)));
+					final CmsProperty aProp = new CmsProperty(aName, aType, aRep, DfValueFactory.newStringValue(String
+						.format("A = %s-%s-%s", aName, aType, aRep)));
 
 					Assert.assertFalse(aProp.isSame(null));
 					Assert.assertTrue(aProp.isSame(aProp));

@@ -8,11 +8,11 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.delta.cmsmf.cms.AbstractSqlTest;
+import com.delta.cmsmf.cms.AbstractTest;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.documentum.fc.client.IDfSession;
 
-public class CmsObjectStoreTest extends AbstractSqlTest {
+public class CmsObjectStoreTest extends AbstractTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -28,8 +28,8 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 		QueryRunner qr = new QueryRunner(getDataSource());
 		store = new CmsObjectStore(getDataSource(), true);
 		// Make sure no data is there
-		Assert.assertFalse(qr.query("select * from dctm_mapper", AbstractSqlTest.HANDLER_EXISTS));
-		Assert.assertFalse(qr.query("select * from dctm_object", AbstractSqlTest.HANDLER_EXISTS));
+		Assert.assertFalse(qr.query("select * from dctm_mapper", AbstractTest.HANDLER_EXISTS));
+		Assert.assertFalse(qr.query("select * from dctm_object", AbstractTest.HANDLER_EXISTS));
 
 		// add some data
 		int count = 0;
@@ -47,7 +47,7 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 
 		// Make sure it's there
 		Assert.assertEquals(Integer.valueOf(count),
-			qr.query("select count(*) from dctm_mapper", AbstractSqlTest.HANDLER_COUNT));
+			qr.query("select count(*) from dctm_mapper", AbstractTest.HANDLER_COUNT));
 		// More detailed check
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -66,7 +66,7 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 		store = new CmsObjectStore(getDataSource(), false);
 		// Make sure the data is there
 		Assert.assertEquals(Integer.valueOf(count),
-			qr.query("select count(*) from dctm_mapper", AbstractSqlTest.HANDLER_COUNT));
+			qr.query("select count(*) from dctm_mapper", AbstractTest.HANDLER_COUNT));
 		// More detailed check
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -85,7 +85,7 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 		store = new CmsObjectStore(getDataSource(), true);
 		// Make sure all the data is gone
 		Assert.assertEquals(Integer.valueOf(0),
-			qr.query("select count(*) from dctm_mapper", AbstractSqlTest.HANDLER_COUNT));
+			qr.query("select count(*) from dctm_mapper", AbstractTest.HANDLER_COUNT));
 		// More detailed check
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -165,7 +165,7 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 
 		// Make sure it's there
 		Assert.assertEquals(Integer.valueOf(count),
-			qr.query("select count(*) from dctm_mapper", AbstractSqlTest.HANDLER_COUNT));
+			qr.query("select count(*) from dctm_mapper", AbstractTest.HANDLER_COUNT));
 		// More detailed check
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {

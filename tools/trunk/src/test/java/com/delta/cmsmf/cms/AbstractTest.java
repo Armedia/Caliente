@@ -31,9 +31,9 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
-public abstract class AbstractSqlTest {
+public abstract class AbstractTest {
 
-	protected final Logger LOG = Logger.getLogger(AbstractSqlTest.class);
+	protected final Logger LOG = Logger.getLogger(AbstractTest.class);
 
 	private static final String H2_DRIVER = "org.h2.Driver";
 	private static final String H2_URL = "jdbc:h2:mem:cmsmf";
@@ -58,12 +58,14 @@ public abstract class AbstractSqlTest {
 	};
 
 	static {
-		if (!DbUtils.loadDriver(AbstractSqlTest.H2_DRIVER)) { throw new RuntimeException(String.format(
-			"Failed to locate the JDBC driver class [%s]", AbstractSqlTest.H2_DRIVER)); }
-		CONNECTION_FACTORY = new DriverManagerConnectionFactory(AbstractSqlTest.H2_URL, null);
+		if (!DbUtils.loadDriver(AbstractTest.H2_DRIVER)) { throw new RuntimeException(String.format(
+			"Failed to locate the JDBC driver class [%s]", AbstractTest.H2_DRIVER)); }
+		CONNECTION_FACTORY = new DriverManagerConnectionFactory(AbstractTest.H2_URL, null);
 
 		try {
-			ClasspathPatcher.addToClassPath(System.getProperty("user.dir"));
+			String userDir = System.getProperty("user.dir");
+			System.err.printf("Adding [%s] to the classpath...%n", userDir);
+			ClasspathPatcher.addToClassPath(userDir);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to add the current working directory to the classpath", e);
 		}
@@ -96,7 +98,7 @@ public abstract class AbstractSqlTest {
 		this.pool = new GenericObjectPool<PoolableConnection>();
 		@SuppressWarnings("unused")
 		final PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(
-			AbstractSqlTest.CONNECTION_FACTORY, this.pool, null, null, false, true);
+			AbstractTest.CONNECTION_FACTORY, this.pool, null, null, false, true);
 		this.dataSource = new PoolingDataSource(this.pool);
 		this.LOG.info("Memory-based connection pool ready");
 	}
@@ -107,7 +109,7 @@ public abstract class AbstractSqlTest {
 	}
 
 	protected final IDfSession acquireSession() {
-		return AbstractSqlTest.SESSION_MANAGER.acquireSession();
+		return AbstractTest.SESSION_MANAGER.acquireSession();
 	}
 
 	protected final IDfQuery newQuery() {
@@ -123,7 +125,7 @@ public abstract class AbstractSqlTest {
 	}
 
 	protected final void releaseSession(IDfSession session) {
-		AbstractSqlTest.SESSION_MANAGER.releaseSession(session);
+		AbstractTest.SESSION_MANAGER.releaseSession(session);
 	}
 
 	protected final void baseTearDown() {

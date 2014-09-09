@@ -29,7 +29,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
-public class CmsAttributeTest extends AbstractSqlTest {
+public class CmsAttributeTest extends AbstractTest {
 
 	@Test
 	public void testCmsAttributeResultSet() throws Throwable {

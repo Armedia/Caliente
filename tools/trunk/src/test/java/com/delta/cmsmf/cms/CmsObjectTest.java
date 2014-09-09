@@ -33,7 +33,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
-public class CmsObjectTest extends AbstractSqlTest {
+public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
@@ -127,17 +127,17 @@ public class CmsObjectTest extends AbstractSqlTest {
 						obj.loadFromCMS(cmsObj);
 						Assert.assertEquals(id.getId(), obj.getId());
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
-							"select count(*) from dctm_object where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
 						store.serializeObject(obj);
 						Assert.assertEquals(Integer.valueOf(1), qr.query(
-							"select count(*) from dctm_object where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
 						Assert.assertEquals(Integer.valueOf(obj.getAttributeCount()), qr.query(
-							"select count(*) from dctm_attribute where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+							"select count(*) from dctm_attribute where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
 						Assert.assertEquals(Integer.valueOf(obj.getPropertyCount()), qr.query(
-							"select count(*) from dctm_property where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+							"select count(*) from dctm_property where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
 						qr.query("select * from dctm_attribute where object_id = ?", new ResultSetHandler<Void>() {
 							@Override
