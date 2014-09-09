@@ -21,12 +21,11 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument user) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException {
 	}
 
 	@Override
 	protected IDfDocument locateInCms(IDfSession session) throws DfException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }
