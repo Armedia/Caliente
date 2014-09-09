@@ -37,7 +37,7 @@ public class CmsAttributeTest extends AbstractSqlTest {
 		final QueryRunner qr = new QueryRunner(getDataSource());
 		final CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_sysobject where type(\"dm_document\")");
+		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
 			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
 			try {
@@ -51,7 +51,7 @@ public class CmsAttributeTest extends AbstractSqlTest {
 					IDfId id = collection.getId("r_object_id");
 					IDfPersistentObject dfObj = session.getObject(id);
 					Assert.assertNotNull(dfObj);
-					CmsObject<?> cmsObj = type.newInstance();
+					final CmsObject<?> cmsObj = type.newInstance();
 					cmsObj.loadFromCMS(dfObj);
 					store.serializeObject(cmsObj);
 
@@ -60,13 +60,29 @@ public class CmsAttributeTest extends AbstractSqlTest {
 							new ResultSetHandler<Void>() {
 								@Override
 								public Void handle(ResultSet rs) throws SQLException {
-									CmsAttribute actual = new CmsAttribute(rs);
+									if (!rs.next()) {
+										Assert.fail(String.format(
+										"No data found for attribute [%s] for object [%s:%s]", att.getName(),
+										cmsObj.getType(), cmsObj.getId()));
+									}
+									final CmsAttribute actual = new CmsAttribute(rs);
 									Assert.assertEquals(att.getType(), actual.getType());
 									Assert.assertEquals(att.getName(), actual.getName());
 									Assert.assertEquals(att.isRepeating(), actual.isRepeating());
 									Assert.assertEquals(att.getId(), actual.getId());
 									Assert.assertEquals(att.isQualifiable(), actual.isQualifiable());
 									Assert.assertEquals(att.getLength(), actual.getLength());
+
+									qr.query(
+									"select * from dctm_attribute_value where object_id = ? and name = ? order by value_number",
+									new ResultSetHandler<Void>() {
+										@Override
+										public Void handle(ResultSet rs) throws SQLException {
+											actual.loadValues(rs);
+											return null;
+										}
+										}, cmsObj.getId(), att.getName());
+
 									Assert.assertEquals(att.getValueCount(), actual.getValueCount());
 									for (int i = 0; i < att.getValueCount(); i++) {
 										IDfValue vExp = att.getValue(i);
@@ -76,8 +92,7 @@ public class CmsAttributeTest extends AbstractSqlTest {
 									}
 									return null;
 								}
-
-							}, id.getId(), att.getName());
+							}, cmsObj.getId(), att.getName());
 					}
 					c++;
 				}
@@ -94,7 +109,7 @@ public class CmsAttributeTest extends AbstractSqlTest {
 	public void testCmsAttributeIDfAttrIDfPersistentObject() throws Throwable {
 		final IDfSession session = acquireSession();
 		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_sysobject where type(\"dm_document\")");
+		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
 			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
 			try {
@@ -140,7 +155,7 @@ public class CmsAttributeTest extends AbstractSqlTest {
 	public void testCmsAttributeIDfAttrIDfValueArray() throws Throwable {
 		final IDfSession session = acquireSession();
 		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_sysobject where type(\"dm_document\")");
+		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
 			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
 			try {
@@ -191,7 +206,7 @@ public class CmsAttributeTest extends AbstractSqlTest {
 	public void testCmsAttributeIDfAttrCollectionOfIDfValue() throws Throwable {
 		final IDfSession session = acquireSession();
 		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_sysobject where type(\"dm_document\")");
+		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
 			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
 			try {
@@ -242,7 +257,7 @@ public class CmsAttributeTest extends AbstractSqlTest {
 	public void testCmsAttributeStringCmsDataTypeStringIntBooleanBooleanIDfValueArray() throws Throwable {
 		final IDfSession session = acquireSession();
 		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_sysobject where type(\"dm_document\")");
+		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
 			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
 			try {
@@ -295,7 +310,7 @@ public class CmsAttributeTest extends AbstractSqlTest {
 	public void testCmsAttributeStringCmsDataTypeStringIntBooleanBooleanCollectionOfIDfValue() throws Throwable {
 		final IDfSession session = acquireSession();
 		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_sysobject where type(\"dm_document\")");
+		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
 			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
 			try {
