@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import com.delta.cmsmf.cms.AbstractSqlTest;
 import com.delta.cmsmf.cms.CmsObjectType;
+import com.documentum.fc.client.IDfSession;
 
 public class CmsObjectStoreTest extends AbstractSqlTest {
 
@@ -253,7 +254,13 @@ public class CmsObjectStoreTest extends AbstractSqlTest {
 
 	@Test
 	public void testSerializeObject() throws Throwable {
-		// Assert.fail("Not yet implemented");
+		// QueryRunner qr = new QueryRunner(getDataSource());
+		IDfSession session = acquireSession();
+		try {
+
+		} finally {
+			releaseSession(session);
+		}
 	}
 
 	@Test
