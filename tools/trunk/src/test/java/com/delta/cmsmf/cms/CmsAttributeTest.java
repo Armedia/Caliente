@@ -33,6 +33,12 @@ public class CmsAttributeTest extends AbstractTest {
 
 	@Test
 	public void testCmsAttributeResultSet() throws Throwable {
+		try {
+			new CmsAttribute(null);
+			Assert.fail("Did not fail with a null ResultSet");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
 		final IDfSession session = acquireSession();
 		final QueryRunner qr = new QueryRunner(getDataSource());
 		final CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
@@ -58,41 +64,47 @@ public class CmsAttributeTest extends AbstractTest {
 					for (final CmsAttribute att : cmsObj.getAllAttributes()) {
 						qr.query("select * from dctm_attribute where object_id = ? and name = ?",
 							new ResultSetHandler<Void>() {
-								@Override
-								public Void handle(ResultSet rs) throws SQLException {
-									if (!rs.next()) {
-										Assert.fail(String.format(
-										"No data found for attribute [%s] for object [%s:%s]", att.getName(),
-										cmsObj.getType(), cmsObj.getId()));
-									}
-									final CmsAttribute actual = new CmsAttribute(rs);
-									Assert.assertEquals(att.getType(), actual.getType());
-									Assert.assertEquals(att.getName(), actual.getName());
-									Assert.assertEquals(att.isRepeating(), actual.isRepeating());
-									Assert.assertEquals(att.getId(), actual.getId());
-									Assert.assertEquals(att.isQualifiable(), actual.isQualifiable());
-									Assert.assertEquals(att.getLength(), actual.getLength());
-
-									qr.query(
-									"select * from dctm_attribute_value where object_id = ? and name = ? order by value_number",
-									new ResultSetHandler<Void>() {
-										@Override
-										public Void handle(ResultSet rs) throws SQLException {
-											actual.loadValues(rs);
-											return null;
-										}
-										}, cmsObj.getId(), att.getName());
-
-									Assert.assertEquals(att.getValueCount(), actual.getValueCount());
-									for (int i = 0; i < att.getValueCount(); i++) {
-										IDfValue vExp = att.getValue(i);
-										IDfValue vAct = actual.getValue(i);
-										CmsDataType type = att.getType();
-										Assert.assertEquals(type.getValue(vExp), type.getValue(vAct));
-									}
-									return null;
+							@Override
+							public Void handle(ResultSet rs) throws SQLException {
+								if (!rs.next()) {
+									Assert.fail(String.format(
+											"No data found for attribute [%s] for object [%s:%s]", att.getName(),
+											cmsObj.getType(), cmsObj.getId()));
 								}
-							}, cmsObj.getId(), att.getName());
+								final CmsAttribute actual = new CmsAttribute(rs);
+								try {
+									actual.loadValues(null);
+									Assert.fail("LoadValues did not fail with a null ResultSet");
+								} catch (IllegalArgumentException e) {
+									// All is well
+								}
+								Assert.assertEquals(att.getType(), actual.getType());
+								Assert.assertEquals(att.getName(), actual.getName());
+								Assert.assertEquals(att.isRepeating(), actual.isRepeating());
+								Assert.assertEquals(att.getId(), actual.getId());
+								Assert.assertEquals(att.isQualifiable(), actual.isQualifiable());
+								Assert.assertEquals(att.getLength(), actual.getLength());
+
+								qr.query(
+										"select * from dctm_attribute_value where object_id = ? and name = ? order by value_number",
+										new ResultSetHandler<Void>() {
+											@Override
+											public Void handle(ResultSet rs) throws SQLException {
+												actual.loadValues(rs);
+												return null;
+											}
+									}, cmsObj.getId(), att.getName());
+
+								Assert.assertEquals(att.getValueCount(), actual.getValueCount());
+								for (int i = 0; i < att.getValueCount(); i++) {
+									IDfValue vExp = att.getValue(i);
+									IDfValue vAct = actual.getValue(i);
+									CmsDataType type = att.getType();
+									Assert.assertEquals(type.getValue(vExp), type.getValue(vAct));
+								}
+								return null;
+							}
+						}, cmsObj.getId(), att.getName());
 					}
 					c++;
 				}
@@ -125,15 +137,140 @@ public class CmsAttributeTest extends AbstractTest {
 					final int attCount = dfObj.getAttrCount();
 					for (int i = 0; i < attCount; i++) {
 						final IDfAttr expected = dfObj.getAttr(i);
-						CmsAttribute actual = new CmsAttribute(expected, dfObj);
 						final CmsDataType expectedType = CmsDataType.fromAttribute(expected);
+						try {
+							new CmsAttribute(null, dfObj);
+							Assert.fail("Did not fail with a null attribute");
+						} catch (IllegalArgumentException e) {
+							// All is well
+						}
+						try {
+							new CmsAttribute(null, (Collection<IDfValue>) null);
+							Assert.fail("Did not fail with a null attribute");
+						} catch (IllegalArgumentException e) {
+							// All is well
+						}
+						try {
+							new CmsAttribute(null, (IDfValue[]) null);
+							Assert.fail("Did not fail with a null attribute");
+						} catch (IllegalArgumentException e) {
+							// All is well
+						}
+						try {
+							new CmsAttribute(null, (IDfValue) null);
+							Assert.fail("Did not fail with a null attribute");
+						} catch (IllegalArgumentException e) {
+							// All is well
+						}
+						CmsAttribute actual = new CmsAttribute(expected, IDfPersistentObject.class.cast(null));
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
 						Assert.assertEquals(expected.getId(), actual.getId());
 						Assert.assertEquals(expected.isQualifiable(), actual.isQualifiable());
 						Assert.assertEquals(expected.getLength(), actual.getLength());
+						if (actual.isRepeating()) {
+							Assert.assertEquals(0, actual.getValueCount());
+						} else {
+							Assert.assertEquals(1, actual.getValueCount());
+							Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
+								expectedType.getValue(actual.getValue()));
+						}
+						actual = new CmsAttribute(expected);
+						Assert.assertEquals(expectedType, actual.getType());
+						Assert.assertEquals(expected.getName(), actual.getName());
+						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
+						Assert.assertEquals(expected.getId(), actual.getId());
+						Assert.assertEquals(expected.isQualifiable(), actual.isQualifiable());
+						Assert.assertEquals(expected.getLength(), actual.getLength());
+						if (actual.isRepeating()) {
+							Assert.assertEquals(0, actual.getValueCount());
+						} else {
+							Assert.assertEquals(1, actual.getValueCount());
+							Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
+								expectedType.getValue(actual.getValue()));
+						}
+						actual = new CmsAttribute(expected, (IDfValue) null);
+						Assert.assertEquals(expectedType, actual.getType());
+						Assert.assertEquals(expected.getName(), actual.getName());
+						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
+						Assert.assertEquals(expected.getId(), actual.getId());
+						Assert.assertEquals(expected.isQualifiable(), actual.isQualifiable());
+						Assert.assertEquals(expected.getLength(), actual.getLength());
+						if (actual.isRepeating()) {
+							Assert.assertEquals(0, actual.getValueCount());
+						} else {
+							Assert.assertEquals(1, actual.getValueCount());
+							Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
+								expectedType.getValue(actual.getValue()));
+						}
+						actual = new CmsAttribute(expected, (IDfValue[]) null);
+						Assert.assertEquals(expectedType, actual.getType());
+						Assert.assertEquals(expected.getName(), actual.getName());
+						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
+						Assert.assertEquals(expected.getId(), actual.getId());
+						Assert.assertEquals(expected.isQualifiable(), actual.isQualifiable());
+						Assert.assertEquals(expected.getLength(), actual.getLength());
+						if (actual.isRepeating()) {
+							Assert.assertEquals(0, actual.getValueCount());
+						} else {
+							Assert.assertEquals(1, actual.getValueCount());
+							Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
+								expectedType.getValue(actual.getValue()));
+						}
+						actual = new CmsAttribute(expected, (Collection<IDfValue>) null);
+						Assert.assertEquals(expectedType, actual.getType());
+						Assert.assertEquals(expected.getName(), actual.getName());
+						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
+						Assert.assertEquals(expected.getId(), actual.getId());
+						Assert.assertEquals(expected.isQualifiable(), actual.isQualifiable());
+						Assert.assertEquals(expected.getLength(), actual.getLength());
+						if (actual.isRepeating()) {
+							Assert.assertEquals(0, actual.getValueCount());
+						} else {
+							Assert.assertEquals(1, actual.getValueCount());
+							Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
+								expectedType.getValue(actual.getValue()));
+						}
+
 						final int valueCount = dfObj.getValueCount(expected.getName());
+
+						actual = new CmsAttribute(expected, DfValueFactory.getAllRepeatingValues(expected, dfObj));
+						Assert.assertEquals(expectedType, actual.getType());
+						Assert.assertEquals(expected.getName(), actual.getName());
+						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
+						Assert.assertEquals(expected.getId(), actual.getId());
+						Assert.assertEquals(expected.isQualifiable(), actual.isQualifiable());
+						Assert.assertEquals(expected.getLength(), actual.getLength());
+						Assert.assertEquals(valueCount, actual.getValueCount());
+						for (int v = 0; v < valueCount; v++) {
+							IDfValue vExp = dfObj.getRepeatingValue(expected.getName(), v);
+							IDfValue vAct = actual.getValue(v);
+							Assert.assertEquals(expectedType.getValue(vExp), expectedType.getValue(vAct));
+						}
+
+						actual = new CmsAttribute(expected, DfValueFactory.getAllRepeatingValues(expected, dfObj)
+							.toArray(CmsProperty.NO_VALUES));
+						Assert.assertEquals(expectedType, actual.getType());
+						Assert.assertEquals(expected.getName(), actual.getName());
+						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
+						Assert.assertEquals(expected.getId(), actual.getId());
+						Assert.assertEquals(expected.isQualifiable(), actual.isQualifiable());
+						Assert.assertEquals(expected.getLength(), actual.getLength());
+						Assert.assertEquals(valueCount, actual.getValueCount());
+						for (int v = 0; v < valueCount; v++) {
+							IDfValue vExp = dfObj.getRepeatingValue(expected.getName(), v);
+							IDfValue vAct = actual.getValue(v);
+							Assert.assertEquals(expectedType.getValue(vExp), expectedType.getValue(vAct));
+						}
+
+						actual = new CmsAttribute(expected, dfObj);
+						Assert.assertEquals(expectedType, actual.getType());
+						Assert.assertEquals(expected.getName(), actual.getName());
+						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
+						Assert.assertEquals(expected.getId(), actual.getId());
+						Assert.assertEquals(expected.isQualifiable(), actual.isQualifiable());
+						Assert.assertEquals(expected.getLength(), actual.getLength());
 						Assert.assertEquals(valueCount, actual.getValueCount());
 						for (int v = 0; v < valueCount; v++) {
 							IDfValue vExp = dfObj.getRepeatingValue(expected.getName(), v);
