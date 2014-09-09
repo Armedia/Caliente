@@ -6,7 +6,6 @@ package com.delta.cmsmf.cms.pool;
 
 import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.documentum.fc.client.DfClient;
@@ -119,13 +118,13 @@ public class DctmSessionManager {
 			String passTmp = password;
 			try {
 				passTmp = RegistryPasswordUtils.decrypt(password);
-				if (DctmSessionManager.LOG.isEnabledFor(Level.INFO)) {
+				if (DctmSessionManager.LOG.isInfoEnabled()) {
 					DctmSessionManager.LOG.info(String.format("Password decrypted successfully"));
 				}
 			} catch (Throwable t) {
 				// Not encrypted, use literal
 				passTmp = password;
-				if (DctmSessionManager.LOG.isEnabledFor(Level.INFO)) {
+				if (DctmSessionManager.LOG.isInfoEnabled()) {
 					DctmSessionManager.LOG.info(String.format("Password decryption failed, using as literal"));
 				}
 			}
@@ -176,9 +175,9 @@ public class DctmSessionManager {
 			this.pool.returnObject(session);
 		} catch (Exception e) {
 			DctmSessionManager.LOG
-				.warn(
-					String.format("Exception caught returning session [%s] to the pool",
-						DctmSessionManager.getId(session)), e);
+			.warn(
+				String.format("Exception caught returning session [%s] to the pool",
+					DctmSessionManager.getId(session)), e);
 		}
 	}
 
