@@ -42,6 +42,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 			}
 		};
 		// These are the attributes that require special handling on import
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.OWNER_NAME,
+			handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.OBJECT_NAME,
+			handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			CmsAttributes.R_ACCESSOR_NAME, handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
@@ -102,6 +106,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected void finalizeConstruction(IDfACL acl, boolean newObject) throws DfException {
+		if (newObject) {
+			copyAttributeToObject(CmsAttributes.OWNER_NAME, acl);
+			copyAttributeToObject(CmsAttributes.OBJECT_NAME, acl);
+		}
 		CmsProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
@@ -113,11 +121,9 @@ public class CmsACL extends CmsObject<IDfACL> {
 				// clobber that?
 				final IDfUser user = session.getUser(value.asString());
 				if (user == null) {
-					this.logger
-						.warn(String
-							.format(
-								"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found - probably didn't need to be copied over",
-								acl.getDomain(), acl.getObjectName(), value.asString()));
+					this.logger.warn(String.format(
+						"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
+						acl.getDomain(), acl.getObjectName(), value.asString()));
 					continue;
 				}
 
@@ -155,11 +161,9 @@ public class CmsACL extends CmsObject<IDfACL> {
 			}
 
 			if (!exists) {
-				this.logger
-					.warn(String
-						.format(
-							"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the %s wasn't located - probably didn't need to be copied over",
-							acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm, accessorType));
+				this.logger.warn(String.format(
+					"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the %s wasn't found",
+					acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm, accessorType));
 				continue;
 			}
 
