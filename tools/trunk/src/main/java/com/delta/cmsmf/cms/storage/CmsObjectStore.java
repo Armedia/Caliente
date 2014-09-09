@@ -63,32 +63,32 @@ public class CmsObjectStore {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -198,10 +198,13 @@ public class CmsObjectStore {
 		// First, make sure no "left behind" garbage gets committed
 		final String objectId = object.getId();
 		final CmsObjectType objectType = object.getType();
-		final Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
-		final Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
-		final Collection<Object[]> propertyParameters = new ArrayList<Object[]>();
-		final Collection<Object[]> propertyValueParameters = new ArrayList<Object[]>();
+		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
+		Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
+		Collection<Object[]> propertyParameters = new ArrayList<Object[]>();
+		Collection<Object[]> propertyValueParameters = new ArrayList<Object[]>();
+		Object[] attData = new Object[7];
+		Object[] attValue = new Object[4];
+		Object[] propData = new Object[4];
 
 		try {
 			Connection c = this.dataSource.getConnection();
@@ -215,8 +218,6 @@ public class CmsObjectStore {
 				}
 
 				// Then, insert its attributes
-				Object[] attData = new Object[7];
-				Object[] attValue = new Object[4];
 				attData[0] = objectId; // This should never change within the loop
 				attValue[0] = objectId; // This should never change within the loop
 				for (final CmsAttribute attribute : object.getAllAttributes()) {
@@ -258,7 +259,6 @@ public class CmsObjectStore {
 				}
 
 				// Then, the properties
-				Object[] propData = new Object[4];
 				propData[0] = objectId; // This should never change within the loop
 				for (final String name : object.getPropertyNames()) {
 					final CmsProperty property = object.getProperty(name);
@@ -316,6 +316,20 @@ public class CmsObjectStore {
 			}
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to serialize %s", object), e);
+		} finally {
+			// Help the GC along...not strictly necessary, but should help manage the memory
+			// footprint long-term
+			attributeParameters.clear();
+			attributeParameters = null;
+			attributeValueParameters.clear();
+			attributeValueParameters = null;
+			propertyParameters.clear();
+			propertyParameters = null;
+			propertyValueParameters.clear();
+			propertyValueParameters = null;
+			attData = null;
+			attValue = null;
+			propData = null;
 		}
 	}
 
