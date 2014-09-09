@@ -46,7 +46,7 @@ public class CmsAttribute extends CmsProperty {
 		this.qualifiable = attr.isQualifiable();
 	}
 
-	public CmsAttribute(String name, String id, CmsDataType type, int length, boolean repeating, boolean qualifiable,
+	public CmsAttribute(String name, CmsDataType type, String id, int length, boolean repeating, boolean qualifiable,
 		IDfValue... values) {
 		this(name, type, id, length, repeating, qualifiable, Arrays.asList(values));
 	}
