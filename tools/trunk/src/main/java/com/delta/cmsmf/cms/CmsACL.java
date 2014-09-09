@@ -5,8 +5,10 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
+import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
@@ -102,6 +104,25 @@ public class CmsACL extends CmsObject<IDfACL> {
 		properties.add(permissions);
 		properties.add(extended);
 		properties.add(accessorIsGroup);
+	}
+
+	@Override
+	public Collection<Dependency> getDependencies(IDfACL acl) throws DfException, CMSMFException {
+		final int count = acl.getAccessorCount();
+		Collection<Dependency> ret = new HashSet<Dependency>(count);
+		final IDfSession session = acl.getSession();
+		for (int i = 0; i < count; i++) {
+			final String name = acl.getAccessorName(i);
+			final boolean group = acl.isGroup(i);
+			final IDfPersistentObject obj = (group ? session.getGroup(name) : session.getUser(name));
+			if (obj == null) {
+				this.logger.warn(String.format("WARNING: Missing dependency for acl [%s:%s] - %s [%s] not found",
+					acl.getDomain(), acl.getObjectName(), group ? "group" : "user", name));
+				continue;
+			}
+			ret.add(new Dependency(obj));
+		}
+		return ret;
 	}
 
 	@Override

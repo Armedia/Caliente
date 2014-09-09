@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
+import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
@@ -80,6 +81,29 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
+	public Collection<Dependency> getDependencies(IDfFolder folder) throws DfException, CMSMFException {
+		final Collection<Dependency> ret = new HashSet<Dependency>();
+		final IDfSession session = folder.getSession();
+		IDfPersistentObject[] dep = {
+			// The owner
+			session.getUser(folder.getOwnerName()),
+			// The group
+			session.getGroup(folder.getGroupName()),
+			// The ACL
+			folder.getACL()
+		};
+		for (IDfPersistentObject obj : dep) {
+			if (obj == null) {
+				continue;
+			}
+			ret.add(new Dependency(obj));
+		}
+
+		// The parent folders
+		return ret;
+	}
+
+	@Override
 	protected void finalizeConstruction(IDfFolder folder, boolean newObject) throws DfException {
 
 		// TODO: Link the folder to all its paths...?
@@ -108,10 +132,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.logger
-						.warn(String
-							.format(
-								"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								folder.getObjectId().getId(), userValue.asString()));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							folder.getObjectId().getId(), userValue.asString()));
 					continue;
 				}
 

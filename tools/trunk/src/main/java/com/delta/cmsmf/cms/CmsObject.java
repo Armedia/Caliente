@@ -29,6 +29,7 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
+import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -36,6 +37,53 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public abstract class CmsObject<T extends IDfPersistentObject> {
+
+	protected static final class Dependency {
+		private final String id;
+		private final CmsObjectType type;
+
+		protected Dependency(IDfPersistentObject obj) throws DfException {
+			this(CmsObjectType.decodeType(obj), obj.getObjectId());
+		}
+
+		protected Dependency(CmsObjectType type, IDfId id) {
+			this(type, id.getId());
+		}
+
+		protected Dependency(CmsObjectType type, String id) {
+			if (id == null) { throw new IllegalArgumentException("Null ID not allowed"); }
+			if (type == null) { throw new IllegalArgumentException("Null type not allowed"); }
+			this.id = id;
+			this.type = type;
+		}
+
+		public String getId() {
+			return this.id;
+		}
+
+		public CmsObjectType getType() {
+			return this.type;
+		}
+
+		@Override
+		public int hashCode() {
+			return Tools.hashTool(this, null, this.id, this.type);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!Tools.baseEquals(this, obj)) { return false; }
+			Dependency other = Dependency.class.cast(obj);
+			if (!Tools.equals(this.id, other.id)) { return false; }
+			if (this.type != other.type) { return false; }
+			return true;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Dependency [type=%s, id=%s]", this.type, this.id);
+		}
+	}
 
 	private static final String DEBUG_DUMP = "$debug-dump$";
 
@@ -213,6 +261,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			// This mechanism overwrites properties, and intentionally so
 			this.properties.put(property.getName(), property);
 		}
+	}
+
+	public Collection<Dependency> getDependencies(T object) throws DfException, CMSMFException {
+		return Collections.emptyList();
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,

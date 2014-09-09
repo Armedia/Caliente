@@ -80,6 +80,73 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
+	public Collection<Dependency> getDependencies(IDfGroup group) throws DfException, CMSMFException {
+		Collection<Dependency> ret = new HashSet<Dependency>();
+		// Avoid calling DQL twice
+		final IDfSession session = group.getSession();
+		IDfUser owner = session.getUser(group.getOwnerName());
+		if (owner != null) {
+			ret.add(new Dependency(owner));
+		} else {
+			this.logger.warn(String.format(
+				"WARNING: Missing dependency for group [%s] - user [%s] not found (as group owner)",
+				group.getGroupName(), group.getOwnerName()));
+		}
+
+		IDfUser admin = session.getUser(group.getGroupAdmin());
+		if (admin != null) {
+			ret.add(new Dependency(admin));
+		} else {
+			this.logger.warn(String.format(
+				"WARNING: Missing dependency for group [%s] - user [%s] not found (as group admin)",
+				group.getGroupName(), group.getGroupAdmin()));
+		}
+
+		CmsProperty property = getProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP);
+		if (property != null) {
+			for (IDfValue v : property) {
+				IDfUser user = session.getUser(v.asString());
+				if (user == null) {
+					this.logger.warn(String.format(
+						"WARNING: Missing dependency for group [%s] - user [%s] not found (as default group)",
+						group.getGroupName(), v.asString()));
+					continue;
+				}
+				ret.add(new Dependency(user));
+			}
+		}
+
+		CmsAttribute usersNames = getAttribute(CmsAttributes.USERS_NAMES);
+		if (usersNames != null) {
+			for (IDfValue v : usersNames) {
+				IDfUser user = session.getUser(v.asString());
+				if (user == null) {
+					this.logger.warn(String.format(
+						"WARNING: Missing dependency for group [%s] - user [%s] not found (as group member)",
+						group.getGroupName(), v.asString()));
+					continue;
+				}
+				ret.add(new Dependency(user));
+			}
+		}
+
+		CmsAttribute groupsNames = getAttribute(CmsAttributes.GROUPS_NAMES);
+		if (groupsNames != null) {
+			for (IDfValue v : groupsNames) {
+				IDfGroup g2 = session.getGroup(v.asString());
+				if (g2 == null) {
+					this.logger.warn(String.format(
+						"WARNING: Missing dependency for group [%s] - group [%s] not found (as group member)",
+						group.getGroupName(), v.asString()));
+					continue;
+				}
+				ret.add(new Dependency(g2));
+			}
+		}
+		return ret;
+	}
+
+	@Override
 	protected IDfGroup newObject(IDfSession session) throws DfException {
 		return super.newObject(session);
 	}
@@ -102,10 +169,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(v.asString());
 					this.logger
-					.warn(String
-						.format(
-							"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
-							groupName.asString(), v.asString()));
+						.warn(String
+							.format(
+								"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
+								groupName.asString(), v.asString()));
 					continue;
 				}
 				actualUsers.add(v);
@@ -123,10 +190,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfUser user = session.getUser(v.asString());
 				if (user == null) {
 					this.logger
-					.warn(String
-						.format(
-							"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
-							groupName.asString(), v.asString()));
+						.warn(String
+							.format(
+								"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
+								groupName.asString(), v.asString()));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
@@ -146,10 +213,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfGroup other = session.getGroup(v.asString());
 				if (other == null) {
 					this.logger
-						.warn(String
-							.format(
-								"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
-								groupName, v.asString()));
+					.warn(String
+						.format(
+							"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
+							groupName, v.asString()));
 					continue;
 				}
 				actualGroups.add(v);

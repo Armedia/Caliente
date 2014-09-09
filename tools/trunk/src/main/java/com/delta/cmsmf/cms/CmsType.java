@@ -5,8 +5,10 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
+import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -33,22 +35,21 @@ public class CmsType extends CmsObject<IDfType> {
 			}
 		};
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.ATTR_COUNT, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.ATTR_COUNT, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.START_POS, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.NAME,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_COUNT,
 			handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.SUPER_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.ATTR_NAME, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.ATTR_TYPE, handler);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.ATTR_LENGTH, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_COUNT,
+			handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.START_POS,
+			handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.NAME, handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.SUPER_NAME,
+			handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_NAME,
+			handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_TYPE,
+			handler);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_LENGTH,
+			handler);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			CmsAttributes.ATTR_REPEATING, handler);
 
@@ -69,6 +70,14 @@ public class CmsType extends CmsObject<IDfType> {
 
 	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfType user) throws DfException {
+	}
+
+	@Override
+	public Collection<Dependency> getDependencies(IDfType type) throws DfException, CMSMFException {
+		IDfType superType = type.getSuperType();
+		if (superType == null) { return Collections.emptyList(); }
+		if (superType.getName().startsWith("dm_")) { return Collections.emptyList(); }
+		return Collections.singleton(new Dependency(superType));
 	}
 
 	@Override
