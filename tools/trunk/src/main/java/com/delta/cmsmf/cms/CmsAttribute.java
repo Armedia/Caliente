@@ -29,15 +29,10 @@ public class CmsAttribute extends CmsProperty {
 		this.id = attr.getId();
 		this.length = attr.getLength();
 		this.qualifiable = attr.isQualifiable();
-		if (attr.isRepeating()) {
-			setValues(DfValueFactory.getAllRepeatingValues(attr, obj));
-		} else {
-			setValue(obj.getValue(attr.getName()));
-		}
 	}
 
 	public CmsAttribute(IDfAttr attr, IDfValue... values) throws DfException {
-		this(attr, Arrays.asList(values));
+		this(attr, Arrays.asList(values != null ? values : CmsProperty.NO_VALUES));
 	}
 
 	public CmsAttribute(IDfAttr attr, Collection<IDfValue> values) throws DfException {

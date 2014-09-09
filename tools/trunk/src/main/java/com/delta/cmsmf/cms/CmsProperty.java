@@ -18,6 +18,8 @@ import com.documentum.fc.common.IDfValue;
 
 public class CmsProperty implements Iterable<IDfValue> {
 
+	protected static final IDfValue[] NO_VALUES = new IDfValue[0];
+
 	private final String name;
 	private final CmsDataType type;
 	private final boolean repeating;
@@ -93,20 +95,28 @@ public class CmsProperty implements Iterable<IDfValue> {
 	 */
 	public CmsProperty(IDfAttr attr, IDfPersistentObject obj) throws DfException {
 		if (attr == null) { throw new IllegalArgumentException("Must provide an attribute to take after"); }
-		if (obj == null) { throw new IllegalArgumentException(String.format(
-			"Must provide an object to read the %s attribute from", attr.getName())); }
 		this.name = attr.getName();
 		this.type = CmsDataType.fromAttribute(attr);
-		final int valueCount = obj.getValueCount(this.name);
 		this.repeating = attr.isRepeating();
-		this.values = new ArrayList<IDfValue>(valueCount);
-		if (this.repeating) {
-			for (int i = 0; i < valueCount; i++) {
-				this.values.add(obj.getRepeatingValue(this.name, i));
+		if (obj != null) {
+			final int valueCount = obj.getValueCount(this.name);
+			this.values = new ArrayList<IDfValue>(valueCount);
+			if (this.repeating) {
+				for (int i = 0; i < valueCount; i++) {
+					this.values.add(obj.getRepeatingValue(this.name, i));
+				}
+				this.singleValue = null;
+			} else {
+				this.singleValue = obj.getValue(this.name);
 			}
-			this.singleValue = null;
 		} else {
-			this.singleValue = obj.getValue(this.name);
+			if (this.repeating) {
+				this.values = new ArrayList<IDfValue>();
+				this.singleValue = null;
+			} else {
+				this.values = null;
+				this.singleValue = this.type.getNullValue();
+			}
 		}
 	}
 
@@ -120,7 +130,7 @@ public class CmsProperty implements Iterable<IDfValue> {
 	 * @throws DfException
 	 */
 	public CmsProperty(IDfAttr attr, IDfValue... values) throws DfException {
-		this(attr, Arrays.asList(values));
+		this(attr, Arrays.asList(values != null ? values : CmsProperty.NO_VALUES));
 	}
 
 	/**
