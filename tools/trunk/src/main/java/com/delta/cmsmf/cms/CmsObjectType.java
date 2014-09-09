@@ -3,6 +3,7 @@ package com.delta.cmsmf.cms;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
@@ -36,7 +37,7 @@ public enum CmsObjectType {
 			return super.getActualType(obj);
 		}
 	},
-	CONTENT(CmsContent.class, IDfContent.class),
+	CONTENT(CmsContent.class, IDfContent.class, "dmr_content"),
 	DOCUMENT_REFERENCE(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER);
 
 	private final String dmType;
@@ -45,15 +46,29 @@ public enum CmsObjectType {
 	private final CmsDependencyType peerDependencyType;
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass, Class<T> dfClass) {
-		this(objectClass, dfClass, CmsDependencyType.NONE);
+		this(objectClass, dfClass, null, null);
+	}
+
+	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
+		Class<T> dfClass, String dmType) {
+		this(objectClass, dfClass, null, dmType);
 	}
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
 		Class<T> dfClass, CmsDependencyType peerDependencyType) {
-		this.dmType = String.format("dm_%s", name().toLowerCase());
+		this(objectClass, dfClass, peerDependencyType, null);
+	}
+
+	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
+		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType) {
+		if (dmType == null) {
+			this.dmType = String.format("dm_%s", name().toLowerCase());
+		} else {
+			this.dmType = dmType;
+		}
 		this.dfClass = dfClass;
 		this.objectClass = objectClass;
-		this.peerDependencyType = peerDependencyType;
+		this.peerDependencyType = Tools.coalesce(peerDependencyType, CmsDependencyType.NONE);
 	}
 
 	/**
