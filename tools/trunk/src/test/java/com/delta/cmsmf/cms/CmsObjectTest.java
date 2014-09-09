@@ -20,7 +20,6 @@ import org.junit.Test;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.runtime.RunTimeProperties;
-import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -47,7 +46,7 @@ public class CmsObjectTest extends AbstractSqlTest {
 	public void testCmsObjectConstruction() throws Throwable {
 		IDfSession session = acquireSession();
 		try {
-			IDfQuery q = new DfClientX().getQuery();
+			IDfQuery q = newQuery();
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
 				if ((t == CmsObjectType.CONTENT) || (t == CmsObjectType.DOCUMENT_REFERENCE)) {
@@ -57,27 +56,31 @@ public class CmsObjectTest extends AbstractSqlTest {
 				final String dql = String.format("select r_object_id from %s", t.getDocumentumType(), max, max);
 				q.setDQL(dql);
 				IDfCollection results = q.execute(session, IDfQuery.DF_EXECREAD_QUERY);
-				int count = 0;
-				while (results.next()) {
-					IDfId id = results.getId("r_object_id");
-					IDfPersistentObject cmsObj = session.getObject(id);
-					try {
-						CmsObjectType.decodeType(cmsObj);
-					} catch (IllegalArgumentException e) {
-						if (this.LOG.isDebugEnabled()) {
-							this.LOG.debug(String.format(
-								"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
-									.getType().getName(), t));
+				try {
+					int count = 0;
+					while (results.next()) {
+						IDfId id = results.getId("r_object_id");
+						IDfPersistentObject cmsObj = session.getObject(id);
+						try {
+							CmsObjectType.decodeType(cmsObj);
+						} catch (IllegalArgumentException e) {
+							if (this.LOG.isDebugEnabled()) {
+								this.LOG.debug(String.format(
+									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
+										.getType().getName(), t));
+							}
+							continue;
 						}
-						continue;
+						obj.loadFromCMS(cmsObj);
+						if (++count > max) {
+							break;
+						}
 					}
-					obj.loadFromCMS(cmsObj);
-					if (++count > max) {
-						break;
+					if (count == 0) {
+						Assert.fail(String.format("Did not find any objects of type [%s] to test against", t));
 					}
-				}
-				if (count == 0) {
-					Assert.fail(String.format("Did not find any objects of type [%s] to test against", t));
+				} finally {
+					closeQuietly(results);
 				}
 			}
 		} finally {
@@ -96,7 +99,7 @@ public class CmsObjectTest extends AbstractSqlTest {
 		final Set<String> ownerNameAttributes = RunTimeProperties.getRunTimePropertiesInstance()
 			.getAttrsToCheckForRepoOperatorName();
 		try {
-			IDfQuery q = new DfClientX().getQuery();
+			IDfQuery q = newQuery();
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
 				if ((t == CmsObjectType.CONTENT) || (t == CmsObjectType.DOCUMENT_REFERENCE)) {
@@ -106,176 +109,184 @@ public class CmsObjectTest extends AbstractSqlTest {
 				final String dql = String.format("select r_object_id from %s", t.getDocumentumType(), max, max);
 				q.setDQL(dql);
 				IDfCollection results = q.execute(session, IDfQuery.DF_EXECREAD_QUERY);
-				int count = 0;
-				while (results.next()) {
-					IDfId id = results.getId("r_object_id");
-					final IDfPersistentObject cmsObj = session.getObject(id);
-					try {
-						CmsObjectType.decodeType(cmsObj);
-					} catch (IllegalArgumentException e) {
-						if (this.LOG.isDebugEnabled()) {
-							this.LOG.debug(String.format(
-								"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
-									.getType().getName(), t));
+				try {
+					int count = 0;
+					while (results.next()) {
+						IDfId id = results.getId("r_object_id");
+						final IDfPersistentObject cmsObj = session.getObject(id);
+						try {
+							CmsObjectType.decodeType(cmsObj);
+						} catch (IllegalArgumentException e) {
+							if (this.LOG.isDebugEnabled()) {
+								this.LOG.debug(String.format(
+									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
+										.getType().getName(), t));
+							}
+							continue;
 						}
-						continue;
-					}
-					obj.loadFromCMS(cmsObj);
-					Assert.assertEquals(id.getId(), obj.getId());
-					Assert.assertEquals(Integer.valueOf(0), qr.query(
-						"select count(*) from dctm_object where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
-						id.getId()));
-					store.serializeObject(obj);
-					Assert.assertEquals(Integer.valueOf(1), qr.query(
-						"select count(*) from dctm_object where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
-						id.getId()));
-					Assert.assertEquals(Integer.valueOf(obj.getAttributeCount()), qr.query(
-						"select count(*) from dctm_attribute where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
-						id.getId()));
-					Assert.assertEquals(Integer.valueOf(obj.getPropertyCount()), qr.query(
-						"select count(*) from dctm_property where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
-						id.getId()));
-					qr.query("select * from dctm_attribute where object_id = ?", new ResultSetHandler<Void>() {
-						@Override
-						public Void handle(ResultSet rs) throws SQLException {
-							boolean explode = true;
-							while (rs.next()) {
-								explode = false;
-								final String objectId = rs.getString("object_id");
-								final String name = rs.getString("name");
-								final CmsDataType dataType = CmsDataType.valueOf(rs.getString("data_type"));
-								final String id = rs.getString("id");
-								final int length = rs.getInt("length");
-								final boolean qualifiable = rs.getBoolean("qualifiable");
-								final boolean repeating = rs.getBoolean("repeating");
-								final IDfAttr attr;
-								try {
-									attr = cmsObj.getAttr(cmsObj.findAttrIndex(name));
-								} catch (DfException e) {
-									String msg = String.format("Failed to retrieve attribute [%s] for object [%s:%s]",
-										name, obj.getType(), obj.getId());
-									CmsObjectTest.this.LOG.fatal(msg, e);
-									Assert.fail(msg);
-									return null;
-								}
-								Assert.assertNotNull(attr);
-								Assert.assertEquals(obj.getId(), objectId);
-								Assert.assertEquals(CmsDataType.fromAttribute(attr), dataType);
-								Assert.assertEquals(attr.getName(), name);
-								Assert.assertEquals(attr.getId(), id);
-								Assert.assertEquals(attr.getLength(), length);
-								Assert.assertEquals(attr.isQualifiable(), qualifiable);
-								Assert.assertEquals(attr.isRepeating(), repeating);
-								qr.query("select * from dctm_attribute_value where object_id = ? and name = ?",
-									new ResultSetHandler<Void>() {
-										@Override
-										public Void handle(ResultSet rs) throws SQLException {
-											int num = 0;
-											while (rs.next()) {
-												final String objectId = rs.getString("object_id");
-												final String name = rs.getString("name");
-												final int valueNum = rs.getInt("value_number");
-												final String data = rs.getString("data");
-												Assert.assertEquals(obj.getId(), objectId);
-												Assert.assertEquals(attr.getName(), name);
-												Assert.assertEquals(num, valueNum);
-												IDfValue expected = null;
+						obj.loadFromCMS(cmsObj);
+						Assert.assertEquals(id.getId(), obj.getId());
+						Assert.assertEquals(Integer.valueOf(0), qr.query(
+							"select count(*) from dctm_object where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+							id.getId()));
+						store.serializeObject(obj);
+						Assert.assertEquals(Integer.valueOf(1), qr.query(
+							"select count(*) from dctm_object where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+							id.getId()));
+						Assert.assertEquals(Integer.valueOf(obj.getAttributeCount()), qr.query(
+							"select count(*) from dctm_attribute where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+							id.getId()));
+						Assert.assertEquals(Integer.valueOf(obj.getPropertyCount()), qr.query(
+							"select count(*) from dctm_property where object_id = ?", AbstractSqlTest.HANDLER_COUNT,
+							id.getId()));
+						qr.query("select * from dctm_attribute where object_id = ?", new ResultSetHandler<Void>() {
+							@Override
+							public Void handle(ResultSet rs) throws SQLException {
+								boolean explode = true;
+								while (rs.next()) {
+									explode = false;
+									final String objectId = rs.getString("object_id");
+									final String name = rs.getString("name");
+									final CmsDataType dataType = CmsDataType.valueOf(rs.getString("data_type"));
+									final String id = rs.getString("id");
+									final int length = rs.getInt("length");
+									final boolean qualifiable = rs.getBoolean("qualifiable");
+									final boolean repeating = rs.getBoolean("repeating");
+									final IDfAttr attr;
+									try {
+										attr = cmsObj.getAttr(cmsObj.findAttrIndex(name));
+									} catch (DfException e) {
+										String msg = String.format(
+											"Failed to retrieve attribute [%s] for object [%s:%s]", name,
+											obj.getType(), obj.getId());
+										CmsObjectTest.this.LOG.fatal(msg, e);
+										Assert.fail(msg);
+										return null;
+									}
+									Assert.assertNotNull(attr);
+									Assert.assertEquals(obj.getId(), objectId);
+									Assert.assertEquals(CmsDataType.fromAttribute(attr), dataType);
+									Assert.assertEquals(attr.getName(), name);
+									Assert.assertEquals(attr.getId(), id);
+									Assert.assertEquals(attr.getLength(), length);
+									Assert.assertEquals(attr.isQualifiable(), qualifiable);
+									Assert.assertEquals(attr.isRepeating(), repeating);
+									qr.query("select * from dctm_attribute_value where object_id = ? and name = ?",
+										new ResultSetHandler<Void>() {
+											@Override
+											public Void handle(ResultSet rs) throws SQLException {
+												int num = 0;
+												while (rs.next()) {
+													final String objectId = rs.getString("object_id");
+													final String name = rs.getString("name");
+													final int valueNum = rs.getInt("value_number");
+													final String data = rs.getString("data");
+													Assert.assertEquals(obj.getId(), objectId);
+													Assert.assertEquals(attr.getName(), name);
+													Assert.assertEquals(num, valueNum);
+													IDfValue expected = null;
+													try {
+														expected = cmsObj.getRepeatingValue(name, valueNum);
+													} catch (DfException e) {
+														Assert.fail(String
+															.format(
+																"Failed to get repeating value #%d for attribute %s for object [%s:%s]",
+																valueNum, name, obj.getType(), obj.getId()));
+														return null;
+													}
+													IDfValue decoded = dataType.decode(data);
+													if (ownerNameAttributes.contains(name)) {
+														Set<Object> allowables = new HashSet<Object>();
+														allowables.add(dataType.getValue(expected));
+														allowables.add("dm_dbo");
+														Assert.assertTrue(
+															String
+																.format(
+																	"Expectation failed on attribute [%s.%s] (possibles = [%s], actual = [%s])",
+																	obj.getType().getDocumentumType(), name,
+																	allowables, dataType.getValue(decoded)), allowables
+																.contains(dataType.getValue(decoded)));
+													} else {
+														Assert.assertEquals(String.format(
+															"Expectation failed on attribute [%s.%s]", obj.getType()
+																.getDocumentumType(), name), dataType
+															.getValue(expected), dataType.getValue(decoded));
+													}
+													num++;
+												}
 												try {
-													expected = cmsObj.getRepeatingValue(name, valueNum);
+													Assert.assertEquals(cmsObj.getValueCount(name), num);
 												} catch (DfException e) {
 													Assert.fail(String
 														.format(
-															"Failed to get repeating value #%d for attribute %s for object [%s:%s]",
-															valueNum, name, obj.getType(), obj.getId()));
-													return null;
+															"Failed to get value count for attribute %s for object [%s:%s]",
+															name, obj.getType(), obj.getId()));
 												}
-												IDfValue decoded = dataType.decode(data);
-												if (ownerNameAttributes.contains(name)) {
-													Set<Object> allowables = new HashSet<Object>();
-													allowables.add(dataType.getValue(expected));
-													allowables.add("dm_dbo");
-													Assert.assertTrue(
-														String
-															.format(
-																"Expectation failed on attribute [%s.%s] (possibles = [%s], actual = [%s])",
-																obj.getType().getDocumentumType(), name, allowables,
-																dataType.getValue(decoded)), allowables
-															.contains(dataType.getValue(decoded)));
-												} else {
-													Assert.assertEquals(String.format(
-														"Expectation failed on attribute [%s.%s]", obj.getType()
-															.getDocumentumType(), name), dataType.getValue(expected),
+												return null;
+											}
+										}, obj.getId(), name);
+								}
+								Assert.assertFalse(
+									String.format("Failed to validate the attributes for object [%s:%s]",
+										obj.getType(), obj.getId()), explode);
+								return null;
+							}
+						}, id.getId());
+						qr.query("select * from dctm_property where object_id = ?", new ResultSetHandler<Void>() {
+							@Override
+							public Void handle(ResultSet rs) throws SQLException {
+								boolean explode = true;
+								while (rs.next()) {
+									explode = false;
+									final String objectId = rs.getString("object_id");
+									final String name = rs.getString("name");
+									final CmsDataType dataType = CmsDataType.valueOf(rs.getString("data_type"));
+									final boolean repeating = rs.getBoolean("repeating");
+									final CmsProperty property = obj.getProperty(name);
+									Assert.assertNotNull(property);
+									Assert.assertEquals(obj.getId(), objectId);
+									Assert.assertEquals(property.getType(), dataType);
+									Assert.assertEquals(property.getName(), name);
+									Assert.assertEquals(property.isRepeating(), repeating);
+									qr.query("select * from dctm_property_value where object_id = ? and name = ?",
+										new ResultSetHandler<Void>() {
+											@Override
+											public Void handle(ResultSet rs) throws SQLException {
+												int num = 0;
+												while (rs.next()) {
+													final String objectId = rs.getString("object_id");
+													final String name = rs.getString("name");
+													final int valueNum = rs.getInt("value_number");
+													final String data = rs.getString("data");
+													Assert.assertEquals(obj.getId(), objectId);
+													Assert.assertEquals(property.getName(), name);
+													Assert.assertEquals(num, valueNum);
+													IDfValue expected = property.getValue(valueNum);
+													IDfValue decoded = dataType.decode(data);
+													Assert.assertEquals(dataType.getValue(expected),
 														dataType.getValue(decoded));
+													num++;
 												}
-												num++;
+												Assert.assertEquals(property.getValueCount(), num);
+												return null;
 											}
-											try {
-												Assert.assertEquals(cmsObj.getValueCount(name), num);
-											} catch (DfException e) {
-												Assert.fail(String.format(
-													"Failed to get value count for attribute %s for object [%s:%s]",
-													name, obj.getType(), obj.getId()));
-											}
-											return null;
-										}
-								}, obj.getId(), name);
+										}, obj.getId(), name);
+								}
+								Assert.assertFalse(
+									String.format("Failed to validate the attributes for object [%s:%s]",
+										obj.getType(), obj.getId()), explode);
+								return null;
 							}
-							Assert.assertFalse(String.format("Failed to validate the attributes for object [%s:%s]",
-								obj.getType(), obj.getId()), explode);
-							return null;
+						}, id.getId());
+						if (++count > max) {
+							break;
 						}
-					}, id.getId());
-					qr.query("select * from dctm_property where object_id = ?", new ResultSetHandler<Void>() {
-						@Override
-						public Void handle(ResultSet rs) throws SQLException {
-							boolean explode = true;
-							while (rs.next()) {
-								explode = false;
-								final String objectId = rs.getString("object_id");
-								final String name = rs.getString("name");
-								final CmsDataType dataType = CmsDataType.valueOf(rs.getString("data_type"));
-								final boolean repeating = rs.getBoolean("repeating");
-								final CmsProperty property = obj.getProperty(name);
-								Assert.assertNotNull(property);
-								Assert.assertEquals(obj.getId(), objectId);
-								Assert.assertEquals(property.getType(), dataType);
-								Assert.assertEquals(property.getName(), name);
-								Assert.assertEquals(property.isRepeating(), repeating);
-								qr.query("select * from dctm_property_value where object_id = ? and name = ?",
-									new ResultSetHandler<Void>() {
-										@Override
-										public Void handle(ResultSet rs) throws SQLException {
-											int num = 0;
-											while (rs.next()) {
-												final String objectId = rs.getString("object_id");
-												final String name = rs.getString("name");
-												final int valueNum = rs.getInt("value_number");
-												final String data = rs.getString("data");
-												Assert.assertEquals(obj.getId(), objectId);
-												Assert.assertEquals(property.getName(), name);
-												Assert.assertEquals(num, valueNum);
-												IDfValue expected = property.getValue(valueNum);
-												IDfValue decoded = dataType.decode(data);
-												Assert.assertEquals(dataType.getValue(expected),
-													dataType.getValue(decoded));
-												num++;
-											}
-											Assert.assertEquals(property.getValueCount(), num);
-											return null;
-										}
-								}, obj.getId(), name);
-							}
-							Assert.assertFalse(String.format("Failed to validate the attributes for object [%s:%s]",
-								obj.getType(), obj.getId()), explode);
-							return null;
-						}
-					}, id.getId());
-					if (++count > max) {
-						break;
 					}
-				}
-				if (count == 0) {
-					Assert.fail(String.format("Did not find any objects of type [%s] to test against", t));
+					if (count == 0) {
+						Assert.fail(String.format("Did not find any objects of type [%s] to test against", t));
+					}
+				} finally {
+					closeQuietly(results);
 				}
 			}
 		} finally {

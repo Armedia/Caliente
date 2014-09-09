@@ -25,7 +25,11 @@ import org.junit.Before;
 
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.utils.ClasspathPatcher;
+import com.documentum.com.DfClientX;
+import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.common.DfException;
 
 public abstract class AbstractSqlTest {
 
@@ -104,6 +108,18 @@ public abstract class AbstractSqlTest {
 
 	protected final IDfSession acquireSession() {
 		return AbstractSqlTest.SESSION_MANAGER.acquireSession();
+	}
+
+	protected final IDfQuery newQuery() {
+		return new DfClientX().getQuery();
+	}
+
+	protected final void closeQuietly(IDfCollection collection) {
+		if (collection == null) { return; }
+		try {
+			collection.close();
+		} catch (DfException e) {
+		}
 	}
 
 	protected final void releaseSession(IDfSession session) {
