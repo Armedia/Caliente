@@ -14,7 +14,9 @@ public final class CmsCounter {
 	public static enum Result {
 		//
 		READ,
+		IGNORED,
 		SKIPPED,
+		DUPLICATE,
 		CREATED,
 		UPDATED,
 		FAILED;
@@ -119,7 +121,7 @@ public final class CmsCounter {
 				final Result r = e.getKey();
 				final int val = e.getValue().getAndSet(0);
 				ret.put(r, val);
-				CUMMULATIVE.get(r).addAndGet(-val);
+				CmsCounter.CUMMULATIVE.get(r).addAndGet(-val);
 			}
 			return Collections.unmodifiableMap(ret);
 		} finally {
