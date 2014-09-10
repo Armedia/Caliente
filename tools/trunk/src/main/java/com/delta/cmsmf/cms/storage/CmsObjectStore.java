@@ -74,32 +74,32 @@ public class CmsObjectStore extends CmsDependencyManager {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -617,7 +617,9 @@ public class CmsObjectStore extends CmsDependencyManager {
 		boolean ok = false;
 		try {
 			c.setAutoCommit(false);
-			return persistDependency(c, dependency);
+			boolean ret = persistDependency(c, dependency);
+			ok = true;
+			return ret;
 		} catch (SQLException e) {
 			throw new CMSMFException(String.format("Failed to register the dependency [%s]", dependency), e);
 		} finally {
@@ -684,19 +686,19 @@ public class CmsObjectStore extends CmsDependencyManager {
 			final AtomicInteger count = new AtomicInteger(0);
 			qr.query("select object_id from dctm_export_plan where object_type = ? and traversed = false",
 				new ResultSetHandler<Void>() {
-				@Override
-				public Void handle(ResultSet rs) throws SQLException {
-					while (rs.next()) {
-						try {
-							handler.handle(type, rs.getString("object_id"));
-						} catch (CMSMFException e) {
-							throw new SQLException(e);
+					@Override
+					public Void handle(ResultSet rs) throws SQLException {
+						while (rs.next()) {
+							try {
+								handler.handle(type, rs.getString("object_id"));
+							} catch (CMSMFException e) {
+								throw new SQLException(e);
+							}
+							count.incrementAndGet();
 						}
-						count.incrementAndGet();
+						return null;
 					}
-					return null;
-				}
-			}, type.name());
+				}, type.name());
 		} catch (SQLException e) {
 			Throwable cause = e.getCause();
 			if ((cause != null) && (cause instanceof CMSMFException)) { throw CMSMFException.class.cast(cause); }
