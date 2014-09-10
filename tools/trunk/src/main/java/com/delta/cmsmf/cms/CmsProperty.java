@@ -454,6 +454,18 @@ public class CmsProperty implements Iterable<IDfValue> {
 		return true;
 	}
 
+	public boolean isSameValues(CmsProperty other) {
+		if (!isSame(other)) { return false; }
+		if (!this.repeating) { return Tools.equals(this.type.getValue(this.singleValue),
+			this.type.getValue(other.singleValue)); }
+		final int valueCount = this.values.size();
+		if (valueCount != other.getValueCount()) { return false; }
+		for (int i = 0; i < valueCount; i++) {
+			if (!Tools.equals(this.type.getValue(this.values.get(i)), this.type.getValue(other.values.get(i)))) { return false; }
+		}
+		return true;
+	}
+
 	/**
 	 * <p>
 	 * Returns an {@link Iterator} to walk over the values for this instance. The iterator is backed

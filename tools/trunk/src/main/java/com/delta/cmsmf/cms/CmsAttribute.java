@@ -68,11 +68,14 @@ public class CmsAttribute extends CmsProperty {
 		return this.length;
 	}
 
-	public final boolean isSame(CmsAttribute other) {
+	@Override
+	public final boolean isSame(CmsProperty other) {
 		if (!super.isSame(other)) { return false; }
-		if (!Tools.equals(this.id, other.id)) { return false; }
-		if (this.qualifiable != other.qualifiable) { return false; }
-		if (this.length != other.length) { return false; }
+		if (!(other instanceof CmsAttribute)) { return false; }
+		CmsAttribute o = CmsAttribute.class.cast(other);
+		if (!Tools.equals(this.id, o.id)) { return false; }
+		if (this.qualifiable != o.qualifiable) { return false; }
+		if (this.length != o.length) { return false; }
 		return true;
 	}
 

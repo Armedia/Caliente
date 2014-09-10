@@ -63,32 +63,32 @@ public class CmsObjectStore {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -442,35 +442,6 @@ public class CmsObjectStore {
 			DbUtils.rollbackAndCloseQuietly(attConn);
 			DbUtils.rollbackAndCloseQuietly(objConn);
 		}
-
-		/*
-		final QueryRunner qr = new QueryRunner(CmsObjectStore.DATA_SOURCE);
-		qr.query(CmsObjectStore.LOAD_OBJECTS_SQL, new ResultSetHandler<Void>() {
-			@Override
-			public Void handle(ResultSet objectRs) throws SQLException {
-				while (objectRs.next()) {
-					final CmsObject<?> obj = new CmsObject<?>(objectRs);
-					qr.query(CmsObjectStore.LOAD_ATTRIBUTES_SQL, new ResultSetHandler<Void>() {
-						@Override
-						public Void handle(ResultSet attributeRs) throws SQLException {
-							obj.loadAttributes(attributeRs);
-							for (final CmsAttribute attribute : obj) {
-								qr.query(CmsObjectStore.LOAD_VALUES_SQL, new ResultSetHandler<Void>() {
-									@Override
-									public Void handle(ResultSet valueRs) throws SQLException {
-										attribute.loadValues(valueRs);
-										return null;
-									}
-								}, obj.getId(), attribute.getName());
-							}
-							return null;
-						}
-					}, obj.getId());
-				}
-				return null;
-			}
-		}, type.name());
-		 */
 	}
 
 	/**
