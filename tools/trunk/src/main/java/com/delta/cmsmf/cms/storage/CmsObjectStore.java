@@ -218,6 +218,8 @@ public class CmsObjectStore extends CmsDependencyManager {
 				return false;
 			}
 			persistDependency(c, new Dependency(object));
+			// TODO: Attempt to lock the object ID for the rest of the import, to
+			// manage the race condition of two threads attempting to commit the same object
 
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
@@ -568,8 +570,8 @@ public class CmsObjectStore extends CmsDependencyManager {
 	}
 
 	private boolean isSerialized(Connection c, String objectId) throws CMSMFException, SQLException {
-		return new QueryRunner().query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL, CmsObjectStore.HANDLER_EXISTS,
-			objectId);
+		return CmsObjectStore.getQueryRunner().query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL,
+			CmsObjectStore.HANDLER_EXISTS, objectId);
 	}
 
 	public boolean isSerialized(String objectId) throws CMSMFException {
@@ -591,7 +593,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 	}
 
 	private boolean persistDependency(Connection c, Dependency dependency) throws CMSMFException {
-		QueryRunner qr = new QueryRunner();
+		QueryRunner qr = CmsObjectStore.getQueryRunner();
 		try {
 			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS,
 				dependency.getId())) {
@@ -650,7 +652,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 	}
 
 	private boolean markTraversed(Connection c, String objectId) throws CMSMFException {
-		QueryRunner qr = new QueryRunner();
+		QueryRunner qr = CmsObjectStore.getQueryRunner();
 		try {
 			return (qr.update(c, CmsObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
 		} catch (SQLException e) {
