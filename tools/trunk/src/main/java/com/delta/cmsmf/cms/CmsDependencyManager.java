@@ -20,6 +20,10 @@ public abstract class CmsDependencyManager {
 			this(CmsObjectType.decodeType(obj), obj.getObjectId());
 		}
 
+		public Dependency(CmsObject<?> obj) {
+			this(obj.getType(), obj.getId());
+		}
+
 		public Dependency(CmsObjectType type, IDfId id) {
 			this(type, id.getId());
 		}

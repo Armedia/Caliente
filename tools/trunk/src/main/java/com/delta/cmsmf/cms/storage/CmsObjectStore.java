@@ -201,7 +201,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 		return q;
 	}
 
-	private boolean serializeObject(Connection c, CmsObject<?> object) throws DfException {
+	private boolean serializeObject(Connection c, CmsObject<?> object) throws DfException, CMSMFException {
 		final String objectId = object.getId();
 		final CmsObjectType objectType = object.getType();
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
@@ -218,6 +218,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 				// Object is already there, so do nothing
 				return false;
 			}
+			persistDependency(c, new Dependency(object));
 
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
@@ -322,7 +323,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 		}
 	}
 
-	public boolean serializeObject(CmsObject<?> object) throws DfException {
+	public boolean serializeObject(CmsObject<?> object) throws DfException, CMSMFException {
 		boolean ok = false;
 		try {
 			Connection c = this.dataSource.getConnection();
@@ -345,7 +346,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 				}
 			}
 		} catch (SQLException e) {
-			throw new RuntimeException(String.format("Failed to serialize %s", object), e);
+			throw new CMSMFException(String.format("Failed to serialize %s", object), e);
 		}
 	}
 
