@@ -60,33 +60,37 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		CmsGroup.initHandlers();
 	}
 
-	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfGroup group) throws DfException {
-		final String groupId = group.getObjectId().getId();
-
-		// Store all the users that have this group as their default group
+	private Collection<IDfValue> getUsersWithDefaultGroup(IDfGroup group) throws DfException {
 		IDfQuery dqlQry = new DfClientX().getQuery();
-		dqlQry.setDQL(String.format(CmsGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, groupId));
+		dqlQry.setDQL(String.format(CmsGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()));
 		IDfCollection resultCol = dqlQry.execute(group.getSession(), IDfQuery.EXEC_QUERY);
 		try {
-			CmsProperty property = new CmsProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP, CmsDataType.DF_STRING);
+			Collection<IDfValue> ret = new ArrayList<IDfValue>();
 			while (resultCol.next()) {
-				property.addValue(resultCol.getValueAt(0));
+				ret.add(resultCol.getValueAt(0));
 			}
-			properties.add(property);
+			return ret;
 		} finally {
 			closeQuietly(resultCol);
 		}
 	}
 
 	@Override
-	public Collection<Dependency> getDependencies(IDfGroup group) throws DfException, CMSMFException {
-		Collection<Dependency> ret = new HashSet<Dependency>();
-		// Avoid calling DQL twice
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfGroup group) throws DfException {
+		// Store all the users that have this group as their default group
+		CmsProperty property = new CmsProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP, CmsDataType.DF_STRING);
+		for (IDfValue v : getUsersWithDefaultGroup(group)) {
+			property.addValue(v);
+		}
+	}
+
+	@Override
+	public void registerDependencies(IDfGroup group, CmsDependencyManager dependencyManager) throws DfException,
+	CMSMFException {
 		final IDfSession session = group.getSession();
 		IDfUser owner = session.getUser(group.getOwnerName());
 		if (owner != null) {
-			ret.add(new Dependency(owner));
+			dependencyManager.registerDependency(owner);
 		} else {
 			this.logger.warn(String.format(
 				"WARNING: Missing dependency for group [%s] - user [%s] not found (as group owner)",
@@ -95,55 +99,58 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 		IDfUser admin = session.getUser(group.getGroupAdmin());
 		if (admin != null) {
-			ret.add(new Dependency(admin));
+			dependencyManager.registerDependency(admin);
 		} else {
 			this.logger.warn(String.format(
 				"WARNING: Missing dependency for group [%s] - user [%s] not found (as group admin)",
 				group.getGroupName(), group.getGroupAdmin()));
 		}
 
+		// Avoid calling DQL twice
 		CmsProperty property = getProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP);
-		if (property != null) {
-			for (IDfValue v : property) {
-				IDfUser user = session.getUser(v.asString());
-				if (user == null) {
-					this.logger.warn(String.format(
-						"WARNING: Missing dependency for group [%s] - user [%s] not found (as default group)",
-						group.getGroupName(), v.asString()));
-					continue;
-				}
-				ret.add(new Dependency(user));
+		Iterable<IDfValue> it = property;
+		if (property == null) {
+			// IF the property hasn't been set, we do the DQL...
+			it = getUsersWithDefaultGroup(group);
+		}
+		for (IDfValue v : it) {
+			IDfUser user = session.getUser(v.asString());
+			if (user == null) {
+				this.logger.warn(String.format(
+					"WARNING: Missing dependency for group [%s] - user [%s] not found (as default group)",
+					group.getGroupName(), v.asString()));
+				continue;
 			}
+			dependencyManager.registerDependency(user);
 		}
 
 		CmsAttribute usersNames = getAttribute(CmsAttributes.USERS_NAMES);
 		if (usersNames != null) {
 			for (IDfValue v : usersNames) {
-				IDfUser user = session.getUser(v.asString());
-				if (user == null) {
+				IDfUser member = session.getUser(v.asString());
+				if (member == null) {
 					this.logger.warn(String.format(
 						"WARNING: Missing dependency for group [%s] - user [%s] not found (as group member)",
 						group.getGroupName(), v.asString()));
 					continue;
 				}
-				ret.add(new Dependency(user));
+				dependencyManager.registerDependency(member);
 			}
 		}
 
 		CmsAttribute groupsNames = getAttribute(CmsAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
 			for (IDfValue v : groupsNames) {
-				IDfGroup g2 = session.getGroup(v.asString());
-				if (g2 == null) {
+				IDfGroup member = session.getGroup(v.asString());
+				if (member == null) {
 					this.logger.warn(String.format(
 						"WARNING: Missing dependency for group [%s] - group [%s] not found (as group member)",
 						group.getGroupName(), v.asString()));
 					continue;
 				}
-				ret.add(new Dependency(g2));
+				dependencyManager.registerDependency(member);
 			}
 		}
-		return ret;
 	}
 
 	@Override

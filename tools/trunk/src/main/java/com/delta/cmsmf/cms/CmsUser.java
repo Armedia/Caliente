@@ -4,15 +4,14 @@
 
 package com.delta.cmsmf.cms;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.properties.CMSMFProperties;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
@@ -77,8 +76,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	public Collection<Dependency> getDependencies(IDfUser user) throws DfException, CMSMFException {
-		final Collection<Dependency> ret = new HashSet<Dependency>();
+	public void registerDependencies(IDfUser user, CmsDependencyManager manager) throws DfException, CMSMFException {
 		final IDfSession session = user.getSession();
 		final IDfPersistentObject[] deps = {
 			session.getGroup(user.getUserGroupName()), session.getFolderByPath(user.getDefaultFolder())
@@ -87,9 +85,12 @@ public class CmsUser extends CmsObject<IDfUser> {
 			if (dep == null) {
 				continue;
 			}
-			ret.add(new Dependency(dep));
+			manager.registerDependency(dep);
 		}
-		return ret;
+		IDfACL acl = session.getACL(user.getACLDomain(), user.getACLName());
+		if (acl != null) {
+			manager.registerDependency(acl);
+		}
 	}
 
 	@Override

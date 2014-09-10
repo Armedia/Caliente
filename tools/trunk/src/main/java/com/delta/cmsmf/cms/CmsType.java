@@ -5,7 +5,6 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -73,11 +72,12 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	public Collection<Dependency> getDependencies(IDfType type) throws DfException, CMSMFException {
+	public void registerDependencies(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
 		IDfType superType = type.getSuperType();
-		if (superType == null) { return Collections.emptyList(); }
-		if (superType.getName().startsWith("dm_")) { return Collections.emptyList(); }
-		return Collections.singleton(new Dependency(superType));
+		if (superType == null) { return; }
+		// Ignore system types
+		if (superType.getName().startsWith("dm_")) { return; }
+		manager.registerDependency(superType);
 	}
 
 	@Override

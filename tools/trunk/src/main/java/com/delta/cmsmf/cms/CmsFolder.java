@@ -81,8 +81,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	public Collection<Dependency> getDependencies(IDfFolder folder) throws DfException, CMSMFException {
-		final Collection<Dependency> ret = new HashSet<Dependency>();
+	public void registerDependencies(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
+		CMSMFException {
 		final IDfSession session = folder.getSession();
 		IDfPersistentObject[] dep = {
 			// The owner
@@ -96,11 +96,11 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			if (obj == null) {
 				continue;
 			}
-			ret.add(new Dependency(obj));
+			dependencyManager.registerDependency(obj);
 		}
 
 		// The parent folders
-		return ret;
+		// TODO: Calculate this
 	}
 
 	@Override
@@ -132,10 +132,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.logger
-					.warn(String
-						.format(
-							"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							folder.getObjectId().getId(), userValue.asString()));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								folder.getObjectId().getId(), userValue.asString()));
 					continue;
 				}
 
