@@ -35,6 +35,7 @@ import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
@@ -200,12 +201,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 		return q;
 	}
 
-	public boolean serializeObject(CmsObject<?> object) throws DfException {
-		// First...is the object
-		// Put the object and its attributes into the state database
-		boolean ok = false;
-
-		// First, make sure no "left behind" garbage gets committed
+	private boolean serializeObject(Connection c, CmsObject<?> object) throws DfException {
 		final String objectId = object.getId();
 		final CmsObjectType objectType = object.getType();
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
@@ -217,113 +213,96 @@ public class CmsObjectStore extends CmsDependencyManager {
 		Object[] propData = new Object[4];
 
 		try {
-			Connection c = this.dataSource.getConnection();
-			c.rollback();
-			c.setAutoCommit(false);
-			try {
-				QueryRunner qr = CmsObjectStore.getQueryRunner();
-				if (qr.query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL, CmsObjectStore.HANDLER_EXISTS, objectId)) {
-					// Object is already there, so do nothing
-					return false;
+			QueryRunner qr = CmsObjectStore.getQueryRunner();
+			if (qr.query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL, CmsObjectStore.HANDLER_EXISTS, objectId)) {
+				// Object is already there, so do nothing
+				return false;
+			}
+
+			// Then, insert its attributes
+			attData[0] = objectId; // This should never change within the loop
+			attValue[0] = objectId; // This should never change within the loop
+			for (final CmsAttribute attribute : object.getAllAttributes()) {
+				final String name = attribute.getName();
+				final boolean repeating = attribute.isRepeating();
+				final CmsDataType type = attribute.getType();
+
+				// DO NOT process "undefined" attribute values
+				if (type == CmsDataType.DF_UNDEFINED) {
+					this.log.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]", objectId, name));
+					continue;
 				}
 
-				// Then, insert its attributes
-				attData[0] = objectId; // This should never change within the loop
-				attValue[0] = objectId; // This should never change within the loop
-				for (final CmsAttribute attribute : object.getAllAttributes()) {
-					final String name = attribute.getName();
-					final boolean repeating = attribute.isRepeating();
-					final CmsDataType type = attribute.getType();
+				attData[1] = name;
+				attData[2] = attribute.getId();
+				attData[3] = type.name();
+				attData[4] = attribute.getLength();
+				attData[5] = attribute.isQualifiable();
+				attData[6] = repeating;
 
-					// DO NOT process "undefined" attribute values
-					if (type == CmsDataType.DF_UNDEFINED) {
-						this.log.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]", objectId, name));
-						continue;
-					}
+				// Insert the attribute
+				attributeParameters.add(attData.clone());
 
-					attData[1] = name;
-					attData[2] = attribute.getId();
-					attData[3] = type.name();
-					attData[4] = attribute.getLength();
-					attData[5] = attribute.isQualifiable();
-					attData[6] = repeating;
-
-					// Insert the attribute
-					attributeParameters.add(attData.clone());
-
-					if (attribute.getValueCount() <= 0) {
-						continue;
-					}
-
-					attValue[1] = name; // This never changes inside this next loop
-					Object[][] values = new Object[attribute.getValueCount()][];
-					int v = 0;
-					// No special treatment, simply dump out all the values
-					for (IDfValue value : attribute) {
-						attValue[2] = v;
-						attValue[3] = type.encode(value);
-						values[v] = attValue.clone();
-						attributeValueParameters.add(attValue.clone());
-						v++;
-					}
+				if (attribute.getValueCount() <= 0) {
+					continue;
 				}
 
-				// Then, the properties
-				propData[0] = objectId; // This should never change within the loop
-				for (final String name : object.getPropertyNames()) {
-					final CmsProperty property = object.getProperty(name);
-					final CmsDataType type = property.getType();
-
-					// DO NOT process "undefined" property values
-					if (type == CmsDataType.DF_UNDEFINED) {
-						this.log.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]", objectId, name));
-						continue;
-					}
-
-					propData[1] = name;
-					propData[2] = type.name();
-					propData[3] = property.isRepeating();
-
-					// Insert the attribute
-					propertyParameters.add(propData.clone());
-
-					attValue[1] = name; // This never changes inside this next loop
-					Object[][] values = new Object[property.getValueCount()][];
-					int v = 0;
-					// No special treatment, simply dump out all the values
-					for (IDfValue value : property) {
-						attValue[2] = v;
-						attValue[3] = type.encode(value);
-						values[v] = attValue.clone();
-						propertyValueParameters.add(attValue.clone());
-						v++;
-					}
-				}
-
-				// Do all the inserts in a row
-				qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_NULL, objectId, objectType.name());
-				qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_SQL, CmsObjectStore.HANDLER_NULL,
-					attributeParameters.toArray(CmsObjectStore.NO_PARAMS));
-				qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
-					attributeValueParameters.toArray(CmsObjectStore.NO_PARAMS));
-				qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_SQL, CmsObjectStore.HANDLER_NULL,
-					propertyParameters.toArray(CmsObjectStore.NO_PARAMS));
-				qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
-					propertyValueParameters.toArray(CmsObjectStore.NO_PARAMS));
-
-				ok = true;
-				return true;
-			} finally {
-				if (ok) {
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Committing insert transaction for [%s]", objectId));
-					}
-					DbUtils.commitAndClose(c);
-				} else {
-					this.log.warn(String.format("Rolling back insert transaction for [%s]", objectId));
-					DbUtils.rollbackAndClose(c);
+				attValue[1] = name; // This never changes inside this next loop
+				Object[][] values = new Object[attribute.getValueCount()][];
+				int v = 0;
+				// No special treatment, simply dump out all the values
+				for (IDfValue value : attribute) {
+					attValue[2] = v;
+					attValue[3] = type.encode(value);
+					values[v] = attValue.clone();
+					attributeValueParameters.add(attValue.clone());
+					v++;
 				}
 			}
+
+			// Then, the properties
+			propData[0] = objectId; // This should never change within the loop
+			for (final String name : object.getPropertyNames()) {
+				final CmsProperty property = object.getProperty(name);
+				final CmsDataType type = property.getType();
+
+				// DO NOT process "undefined" property values
+				if (type == CmsDataType.DF_UNDEFINED) {
+					this.log.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]", objectId, name));
+					continue;
+				}
+
+				propData[1] = name;
+				propData[2] = type.name();
+				propData[3] = property.isRepeating();
+
+				// Insert the attribute
+				propertyParameters.add(propData.clone());
+
+				attValue[1] = name; // This never changes inside this next loop
+				Object[][] values = new Object[property.getValueCount()][];
+				int v = 0;
+				// No special treatment, simply dump out all the values
+				for (IDfValue value : property) {
+					attValue[2] = v;
+					attValue[3] = type.encode(value);
+					values[v] = attValue.clone();
+					propertyValueParameters.add(attValue.clone());
+					v++;
+				}
+			}
+
+			// Do all the inserts in a row
+			qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_NULL, objectId, objectType.name());
+			qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_SQL, CmsObjectStore.HANDLER_NULL,
+				attributeParameters.toArray(CmsObjectStore.NO_PARAMS));
+			qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
+				attributeValueParameters.toArray(CmsObjectStore.NO_PARAMS));
+			qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_SQL, CmsObjectStore.HANDLER_NULL,
+				propertyParameters.toArray(CmsObjectStore.NO_PARAMS));
+			qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
+				propertyValueParameters.toArray(CmsObjectStore.NO_PARAMS));
+			return true;
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to serialize %s", object), e);
 		} finally {
@@ -340,6 +319,33 @@ public class CmsObjectStore extends CmsDependencyManager {
 			attData = null;
 			attValue = null;
 			propData = null;
+		}
+	}
+
+	public boolean serializeObject(CmsObject<?> object) throws DfException {
+		boolean ok = false;
+		try {
+			Connection c = this.dataSource.getConnection();
+			// First, make sure no "left behind" garbage gets committed
+			c.rollback();
+			c.setAutoCommit(false);
+			try {
+				boolean ret = serializeObject(c, object);
+				ok = true;
+				return ret;
+			} finally {
+				if (ok) {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Committing insert transaction for [%s]", object.getId()));
+					}
+					DbUtils.commitAndClose(c);
+				} else {
+					this.log.warn(String.format("Rolling back insert transaction for [%s]", object.getId()));
+					DbUtils.rollbackAndClose(c);
+				}
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(String.format("Failed to serialize %s", object), e);
 		}
 	}
 
@@ -557,9 +563,51 @@ public class CmsObjectStore extends CmsDependencyManager {
 		return getMappedValue(false, type, name, targetValue);
 	}
 
-	@Override
-	protected boolean registerDependency(Dependency dependency) throws CMSMFException {
+	private boolean isSerialized(Connection c, String objectId) throws CMSMFException {
 		QueryRunner qr = new QueryRunner();
+		try {
+			return qr.query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL, CmsObjectStore.HANDLER_EXISTS, objectId);
+		} catch (SQLException e) {
+			throw new CMSMFException(String.format("Failed to check for duplicate object [%s]", objectId), e);
+		}
+	}
+
+	public boolean isSerialized(String objectId) throws CMSMFException {
+		final Connection c;
+		try {
+			c = this.dataSource.getConnection();
+		} catch (SQLException e) {
+			throw new CMSMFException("Failed to connecto to the object store's database", e);
+		}
+		try {
+			c.setAutoCommit(false);
+			return isSerialized(c, objectId);
+		} catch (SQLException e) {
+			throw new CMSMFException(String.format("Failed to check whether object [%s] was already serialized",
+				objectId), e);
+		} finally {
+			DbUtils.rollbackAndCloseQuietly(c);
+		}
+	}
+
+	private boolean persistDependency(Connection c, Dependency dependency) throws CMSMFException {
+		QueryRunner qr = new QueryRunner();
+		try {
+			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS,
+				dependency.getId())) {
+				// Duplicate dependency...we skip it
+				return false;
+			}
+			qr.insert(c, CmsObjectStore.INSERT_EXPORT_PLAN_SQL, CmsObjectStore.HANDLER_NULL, dependency.getType()
+				.name(), dependency.getId());
+			return true;
+		} catch (SQLException e) {
+			throw new CMSMFException(String.format("Failed to register the dependency [%s]", dependency), e);
+		}
+	}
+
+	@Override
+	protected boolean persistDependency(Dependency dependency) throws CMSMFException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
@@ -569,15 +617,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 		boolean ok = false;
 		try {
 			c.setAutoCommit(false);
-			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS,
-				dependency.getId())) {
-				// Duplicate dependency...we skip it
-				return false;
-			}
-			qr.insert(c, CmsObjectStore.INSERT_EXPORT_PLAN_SQL, CmsObjectStore.HANDLER_NULL, dependency.getType()
-				.name(), dependency.getId());
-			ok = true;
-			return true;
+			return persistDependency(c, dependency);
 		} catch (SQLException e) {
 			throw new CMSMFException(String.format("Failed to register the dependency [%s]", dependency), e);
 		} finally {
@@ -589,8 +629,34 @@ public class CmsObjectStore extends CmsDependencyManager {
 		}
 	}
 
-	public boolean markTraversed(String objectId) throws CMSMFException {
+	@Override
+	public Boolean persistDfObject(IDfPersistentObject dfObject) throws DfException, CMSMFException {
+		final Dependency dependency = new Dependency(dfObject);
+		persistDependency(dependency);
+		// If it's already serialized, we skip it
+		if (isSerialized(dfObject.getObjectId().getId())) { return false; }
+
+		// Not already serialized, so we do the deed.
+		CmsObject<?> obj = dependency.getType().newInstance();
+		obj.loadFromCMS(dfObject);
+		// If somehow it got serialized underneath us (perhaps by another thread), we skip it
+		if (!serializeObject(obj)) { return false; }
+		// We try to traverse its dependencies
+		obj.persistDependencies(dfObject, this);
+		markTraversed(obj.getId());
+		return true;
+	}
+
+	private boolean markTraversed(Connection c, String objectId) throws CMSMFException {
 		QueryRunner qr = new QueryRunner();
+		try {
+			return (qr.update(CmsObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
+		} catch (SQLException e) {
+			throw new CMSMFException(String.format("Failed to mark the dependency for [%s] as traversed", objectId), e);
+		}
+	}
+
+	public boolean markTraversed(String objectId) throws CMSMFException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
@@ -599,12 +665,9 @@ public class CmsObjectStore extends CmsDependencyManager {
 		}
 		boolean ok = false;
 		try {
-			c.setAutoCommit(false);
-			int count = qr.update(CmsObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId);
+			boolean ret = markTraversed(c, objectId);
 			ok = true;
-			return (count == 1);
-		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to mark the dependency for [%s] as traversed", objectId), e);
+			return ret;
 		} finally {
 			if (ok) {
 				DbUtils.commitAndCloseQuietly(c);

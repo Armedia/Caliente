@@ -17,6 +17,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
+import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -42,10 +43,9 @@ public class CmsAttributeTest extends AbstractTest {
 		final IDfSession session = acquireSession();
 		final QueryRunner qr = new QueryRunner(getDataSource());
 		final CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
-		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
-			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+			IDfCollection collection = DfUtils.executeQuery(session,
+				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				final CmsObjectType type = CmsObjectType.DOCUMENT;
 				final int max = 3;
@@ -120,10 +120,9 @@ public class CmsAttributeTest extends AbstractTest {
 	@Test
 	public void testCmsAttributeIDfAttrIDfPersistentObject() throws Throwable {
 		final IDfSession session = acquireSession();
-		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
-			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+			IDfCollection collection = DfUtils.executeQuery(session,
+				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				final int max = 3;
 				int c = 0;
@@ -287,10 +286,9 @@ public class CmsAttributeTest extends AbstractTest {
 	@Test
 	public void testCmsAttributeIDfAttrIDfValueArray() throws Throwable {
 		final IDfSession session = acquireSession();
-		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
-			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+			IDfCollection collection = DfUtils.executeQuery(session,
+				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				final int max = 3;
 				int c = 0;
@@ -338,10 +336,9 @@ public class CmsAttributeTest extends AbstractTest {
 	@Test
 	public void testCmsAttributeIDfAttrCollectionOfIDfValue() throws Throwable {
 		final IDfSession session = acquireSession();
-		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
-			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+			IDfCollection collection = DfUtils.executeQuery(session,
+				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				final int max = 3;
 				int c = 0;
@@ -389,10 +386,9 @@ public class CmsAttributeTest extends AbstractTest {
 	@Test
 	public void testCmsAttributeStringCmsDataTypeStringIntBooleanBooleanIDfValueArray() throws Throwable {
 		final IDfSession session = acquireSession();
-		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
-			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+			IDfCollection collection = DfUtils.executeQuery(session,
+				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				final int max = 3;
 				int c = 0;
@@ -442,10 +438,9 @@ public class CmsAttributeTest extends AbstractTest {
 	@Test
 	public void testCmsAttributeStringCmsDataTypeStringIntBooleanBooleanCollectionOfIDfValue() throws Throwable {
 		final IDfSession session = acquireSession();
-		IDfQuery query = newQuery();
-		query.setDQL("select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)");
 		try {
-			IDfCollection collection = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+			IDfCollection collection = DfUtils.executeQuery(session,
+				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				final int max = 3;
 				int c = 0;

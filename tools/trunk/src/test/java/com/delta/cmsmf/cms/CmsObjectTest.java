@@ -20,6 +20,7 @@ import org.junit.Test;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.runtime.RunTimeProperties;
+import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -46,16 +47,15 @@ public class CmsObjectTest extends AbstractTest {
 	public void testCmsObjectConstruction() throws Throwable {
 		IDfSession session = acquireSession();
 		try {
-			IDfQuery q = newQuery();
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
 				if (t == CmsObjectType.DOCUMENT_REFERENCE) {
 					continue;
 				}
 				CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
-				final String dql = String.format("select r_object_id from %s", t.getDocumentumType(), max, max);
-				q.setDQL(dql);
-				IDfCollection results = q.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+				IDfCollection results = DfUtils.executeQuery(session,
+					String.format("select r_object_id from %s", t.getDocumentumType(), max, max),
+					IDfQuery.DF_EXECREAD_QUERY);
 				try {
 					int count = 0;
 					while (results.next()) {
@@ -99,16 +99,15 @@ public class CmsObjectTest extends AbstractTest {
 		final Set<String> ownerNameAttributes = RunTimeProperties.getRunTimePropertiesInstance()
 			.getAttrsToCheckForRepoOperatorName();
 		try {
-			IDfQuery q = newQuery();
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
 				if (t == CmsObjectType.DOCUMENT_REFERENCE) {
 					continue;
 				}
 				final CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
-				final String dql = String.format("select r_object_id from %s", t.getDocumentumType(), max, max);
-				q.setDQL(dql);
-				IDfCollection results = q.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+				IDfCollection results = DfUtils.executeQuery(session,
+					String.format("select r_object_id from %s", t.getDocumentumType(), max, max),
+					IDfQuery.DF_EXECREAD_QUERY);
 				try {
 					int count = 0;
 					while (results.next()) {
@@ -721,13 +720,5 @@ public class CmsObjectTest extends AbstractTest {
 	 */
 	@Test
 	public void testUpdateVStampStringIntT() {
-	}
-
-	/**
-	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#closeQuietly(com.documentum.fc.client.IDfCollection)}.
-	 */
-	@Test
-	public void testCloseQuietly() {
 	}
 }

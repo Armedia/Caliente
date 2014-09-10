@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import com.delta.cmsmf.cms.AbstractTest;
 import com.delta.cmsmf.cms.CmsObjectType;
-import com.documentum.com.DfClientX;
+import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -279,15 +279,13 @@ public class CmsObjectStoreTest extends AbstractTest {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		Map<String, CmsObjectType> dependencies = new HashMap<String, CmsObjectType>();
 		try {
-			IDfQuery query = new DfClientX().getQuery();
 			String dql = "select r_object_id, r_object_type from dm_sysobject where folder('/CMSMFTests', DESCEND)";
-			query.setDQL(dql);
-			IDfCollection results = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+			IDfCollection results = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				while (results.next()) {
 					String id = results.getString("r_object_id");
 					CmsObjectType type = CmsObjectType.decodeType(results.getString("r_object_type"));
-					store.registerDependency(type, id);
+					store.persistDependency(type, id);
 					dependencies.put(id, type);
 				}
 			} finally {
@@ -300,11 +298,11 @@ public class CmsObjectStoreTest extends AbstractTest {
 				final String id = e.getKey();
 				final CmsObjectType type = e.getValue();
 				Assert
-					.assertEquals(
-						Integer.valueOf(1),
-						qr.query(
-							"select count(*) from dctm_export_plan where object_type = ? and object_id = ? and traversed = false",
-							AbstractTest.HANDLER_COUNT, type.name(), id));
+				.assertEquals(
+					Integer.valueOf(1),
+					qr.query(
+						"select count(*) from dctm_export_plan where object_type = ? and object_id = ? and traversed = false",
+						AbstractTest.HANDLER_COUNT, type.name(), id));
 			}
 		} finally {
 			releaseSession(session);

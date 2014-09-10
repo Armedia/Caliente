@@ -8,7 +8,7 @@ import java.util.Collection;
 
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.documentum.com.DfClientX;
+import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPermit;
@@ -73,10 +73,8 @@ public class CmsACL extends CmsObject<IDfACL> {
 	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfACL acl) throws DfException {
 		final String aclId = acl.getObjectId().getId();
-
-		IDfQuery dqlQry = new DfClientX().getQuery();
-		dqlQry.setDQL(String.format(CmsACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId));
-		IDfCollection resultCol = dqlQry.execute(acl.getSession(), IDfQuery.EXEC_QUERY);
+		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
+			String.format(CmsACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		CmsProperty property = null;
 		try {
 			property = new CmsProperty(CmsACL.USERS_WITH_DEFAULT_ACL, CmsDataType.DF_STRING);
@@ -85,7 +83,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			}
 			properties.add(property);
 		} finally {
-			closeQuietly(resultCol);
+			DfUtils.closeQuietly(resultCol);
 		}
 
 		CmsProperty accessors = new CmsProperty(CmsACL.ACCESSORS, CmsDataType.DF_STRING, true);
@@ -106,7 +104,8 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	public void registerDependencies(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
+	protected void doPersistDependencies(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
+	CMSMFException {
 		final int count = acl.getAccessorCount();
 		final IDfSession session = acl.getSession();
 		for (int i = 0; i < count; i++) {
@@ -118,7 +117,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 					acl.getDomain(), acl.getObjectName(), group ? "group" : "user", name));
 				continue;
 			}
-			dependencyManager.registerDependency(obj);
+			dependencyManager.persistDependency(obj);
 		}
 	}
 

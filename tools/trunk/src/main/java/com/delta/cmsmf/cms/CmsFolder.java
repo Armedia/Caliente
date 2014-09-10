@@ -10,7 +10,7 @@ import java.util.Set;
 
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.documentum.com.DfClientX;
+import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -61,9 +61,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfFolder folder) throws DfException {
 		final String folderId = folder.getObjectId().getId();
 
-		IDfQuery dqlQry = new DfClientX().getQuery();
-		dqlQry.setDQL(String.format(CmsFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId));
-		IDfCollection resultCol = dqlQry.execute(folder.getSession(), IDfQuery.EXEC_QUERY);
+		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
+			String.format(CmsFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
 		CmsProperty usersWithDefaultFolder = null;
 		CmsProperty usersDefaultFolderPaths = null;
 		try {
@@ -76,12 +75,12 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			properties.add(usersWithDefaultFolder);
 			properties.add(usersDefaultFolderPaths);
 		} finally {
-			closeQuietly(resultCol);
+			DfUtils.closeQuietly(resultCol);
 		}
 	}
 
 	@Override
-	public void registerDependencies(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
+	protected void doPersistDependencies(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
 		CMSMFException {
 		final IDfSession session = folder.getSession();
 		IDfPersistentObject[] dep = {
@@ -96,7 +95,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			if (obj == null) {
 				continue;
 			}
-			dependencyManager.registerDependency(obj);
+			dependencyManager.persistDependency(obj);
 		}
 
 		// The parent folders

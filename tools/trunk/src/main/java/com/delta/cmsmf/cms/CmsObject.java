@@ -21,7 +21,7 @@ import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.cms.CmsCounter.Result;
 import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.documentum.com.DfClientX;
+import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -71,7 +71,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -215,11 +215,18 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
-	public void registerDependencies(T object, CmsDependencyManager manager) throws DfException, CMSMFException {
+	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
+	CMSMFException {
+		if (object == null) { throw new IllegalArgumentException(
+			"Must provide the Documentum object from which to identify the dependencies"); }
+		doPersistDependencies(castObject(object), manager);
+	}
+
+	protected void doPersistDependencies(T object, CmsDependencyManager manager) throws DfException, CMSMFException {
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-	SQLException {
+		SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -358,7 +365,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -527,7 +534,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		final String sqlStr = String.format(
 			"UPDATE %s_s SET r_modify_date = TO_DATE(''%s'', ''%s'') WHERE r_object_id = ''%s''", objType, modifyDate
-			.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN), CMSMFAppConstants.DCTM_DATETIME_PATTERN,
+				.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN), CMSMFAppConstants.DCTM_DATETIME_PATTERN,
 			object.getObjectId().getId());
 
 		runExecSQL(object.getSession(), sqlStr);
@@ -572,36 +579,23 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 *             Signals that Dctm Server error has occurred.
 	 */
 	private final void runExecSQL(IDfSession session, String sql) throws DfException {
-		IDfQuery dqlQry = new DfClientX().getQuery();
-		dqlQry.setDQL(String.format("EXECUTE exec_sql WITH query='%s'", sql));
-		IDfCollection resultCol = dqlQry.execute(session, IDfQuery.EXEC_QUERY);
+		IDfCollection resultCol = DfUtils.executeQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
+			IDfQuery.DF_QUERY);
 		try {
 			if (resultCol.next()) {
 				final IDfValue ret = resultCol.getValueAt(0);
-				closeQuietly(resultCol);
+				DfUtils.closeQuietly(resultCol);
 				final String outcome;
 				if (ret.toString().equalsIgnoreCase("F")) {
 					outcome = "rollback";
 				} else {
 					outcome = "commit";
 				}
-				dqlQry.setDQL(String.format("EXECUTE exec_sql with query='%s';", outcome));
-				resultCol = dqlQry.execute(session, IDfQuery.EXEC_QUERY);
+				resultCol = DfUtils.executeQuery(session, String.format("EXECUTE exec_sql with query='%s';", outcome),
+					IDfQuery.DF_QUERY);
 			}
 		} finally {
-			closeQuietly(resultCol);
-		}
-	}
-
-	protected final void closeQuietly(IDfCollection c) {
-		if (c == null) { return; }
-		try {
-			c.close();
-		} catch (DfException e) {
-			// quietly swallowed
-			if (this.logger.isTraceEnabled()) {
-				this.logger.trace("Swallowing exception on close", e);
-			}
+			DfUtils.closeQuietly(resultCol);
 		}
 	}
 }

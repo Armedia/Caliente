@@ -16,15 +16,15 @@ public abstract class CmsDependencyManager {
 		private final CmsObjectType type;
 		private final String id;
 
-		protected Dependency(IDfPersistentObject obj) throws DfException {
+		public Dependency(IDfPersistentObject obj) throws DfException {
 			this(CmsObjectType.decodeType(obj), obj.getObjectId());
 		}
 
-		protected Dependency(CmsObjectType type, IDfId id) {
+		public Dependency(CmsObjectType type, IDfId id) {
 			this(type, id.getId());
 		}
 
-		protected Dependency(CmsObjectType type, String id) {
+		public Dependency(CmsObjectType type, String id) {
 			if (id == null) { throw new IllegalArgumentException("Null ID not allowed"); }
 			if (type == null) { throw new IllegalArgumentException("Null type not allowed"); }
 			this.id = id;
@@ -59,20 +59,23 @@ public abstract class CmsDependencyManager {
 		}
 	}
 
-	public final void registerDependency(IDfPersistentObject object) throws DfException, CMSMFException {
-		if (object == null) { throw new IllegalArgumentException("Must provide a dependency object"); }
-		registerDependency(CmsObjectType.decodeType(object), object.getObjectId());
+	public final void persistDependency(IDfPersistentObject object) throws DfException, CMSMFException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an IDfPersistentObject object"); }
+		Boolean ret = persistDfObject(object);
+		if (ret == null) {
+			persistDependency(CmsObjectType.decodeType(object), object.getObjectId());
+		}
 	}
 
-	public final void registerDependency(CmsObjectType type, IDfId id) throws CMSMFException {
+	public final void persistDependency(CmsObjectType type, IDfId id) throws CMSMFException {
 		if (type == null) { throw new IllegalArgumentException("Must provide a dependency type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide dependency id"); }
-		registerDependency(type, id.getId());
+		persistDependency(type, id.getId());
 	}
 
-	public final void registerDependency(CmsObjectType type, String id) throws CMSMFException {
+	public final void persistDependency(CmsObjectType type, String id) throws CMSMFException {
 		final Dependency dep = new Dependency(type, id);
-		if (registerDependency(dep)) {
+		if (persistDependency(dep)) {
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Registered %s", dep));
 			}
@@ -86,6 +89,25 @@ public abstract class CmsDependencyManager {
 
 	/**
 	 * <p>
+	 * This method is analogous to {@link #persistDependency(Dependency)}, except that it affords
+	 * the {@link CmsDependencyManager} instance the opportunity to more deeply analyze the object,
+	 * or perhaps even store it and avoid the need to load it again later. The return has the same
+	 * meaning as the other method for the values {@link Boolean#TRUE} and {@link Boolean#FALSE},
+	 * but adds a third meaning of {@code null} - to indicate that this method did nothing.
+	 * </p>
+	 *
+	 * @param object
+	 * @return same as {@link #persistDependency(Dependency)}, but with the added possibility of
+	 *         {@code null} to indicate that the method did nothing.
+	 * @throws DfException
+	 * @throws CMSMFException
+	 */
+	protected Boolean persistDfObject(IDfPersistentObject object) throws DfException, CMSMFException {
+		return null;
+	}
+
+	/**
+	 * <p>
 	 * Register the given {@link Dependency}, and return {@code true} if the dependency is new and
 	 * hasn't been registered yet, {@code false} if it has already been registered.
 	 * </p>
@@ -94,5 +116,5 @@ public abstract class CmsDependencyManager {
 	 * @return {@code true} if the dependency is new and hasn't been registered yet, {@code false}
 	 *         if it has already been registered
 	 */
-	protected abstract boolean registerDependency(Dependency dependency) throws CMSMFException;
+	protected abstract boolean persistDependency(Dependency dependency) throws CMSMFException;
 }

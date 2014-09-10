@@ -8,7 +8,7 @@ import java.util.Collection;
 
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.documentum.com.DfClientX;
+import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -72,12 +72,12 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	public void registerDependencies(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
+	protected void doPersistDependencies(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
 		IDfType superType = type.getSuperType();
 		if (superType == null) { return; }
 		// Ignore system types
 		if (superType.getName().startsWith("dm_")) { return; }
-		manager.registerDependency(superType);
+		manager.persistDependency(superType);
 	}
 
 	@Override
@@ -151,9 +151,7 @@ public class CmsType extends CmsObject<IDfType> {
 		// Add the supertype phrase if needed
 		dql.append(") With SuperType ").append((superType != null) ? superTypeName : "Null ").append(" Publish");
 
-		IDfQuery dqlQry = new DfClientX().getQuery();
-		dqlQry.setDQL(dql.toString());
-		IDfCollection resultCol = dqlQry.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+		IDfCollection resultCol = DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_QUERY);
 		try {
 			while (resultCol.next()) {
 				IDfPersistentObject obj = session.getObject(resultCol.getId(CmsAttributes.NEW_OBJECT_ID));
@@ -162,7 +160,7 @@ public class CmsType extends CmsObject<IDfType> {
 			// Nothing was created... we should explode
 			throw new DfException(String.format("Failed to create the type [%s] with DQL: %s", typeName, dql));
 		} finally {
-			closeQuietly(resultCol);
+			DfUtils.closeQuietly(resultCol);
 		}
 	}
 

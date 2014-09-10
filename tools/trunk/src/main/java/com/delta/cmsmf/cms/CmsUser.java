@@ -76,7 +76,8 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	public void registerDependencies(IDfUser user, CmsDependencyManager manager) throws DfException, CMSMFException {
+	protected void doPersistDependencies(IDfUser user, CmsDependencyManager manager) throws DfException,
+	CMSMFException {
 		final IDfSession session = user.getSession();
 		final IDfPersistentObject[] deps = {
 			session.getGroup(user.getUserGroupName()), session.getFolderByPath(user.getDefaultFolder())
@@ -85,11 +86,11 @@ public class CmsUser extends CmsObject<IDfUser> {
 			if (dep == null) {
 				continue;
 			}
-			manager.registerDependency(dep);
+			manager.persistDependency(dep);
 		}
 		IDfACL acl = session.getACL(user.getACLDomain(), user.getACLName());
 		if (acl != null) {
-			manager.registerDependency(acl);
+			manager.persistDependency(acl);
 		}
 	}
 
