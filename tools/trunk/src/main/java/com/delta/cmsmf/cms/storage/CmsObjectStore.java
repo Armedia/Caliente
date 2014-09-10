@@ -45,7 +45,7 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CmsObjectStore extends CmsDependencyManager {
 
-	public static interface ImportHandler {
+	public static interface ObjectHandler {
 		public boolean handle(CmsObject<?> dataObject) throws CMSMFException;
 	}
 
@@ -324,6 +324,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 	}
 
 	public boolean serializeObject(CmsObject<?> object) throws DfException, CMSMFException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
 		boolean ok = false;
 		try {
 			Connection c = this.dataSource.getConnection();
@@ -350,7 +351,10 @@ public class CmsObjectStore extends CmsDependencyManager {
 		}
 	}
 
-	public void deserializeObjects(CmsObjectType type, ImportHandler handler) throws SQLException, CMSMFException {
+	public void deserializeObjects(CmsObjectType type, ObjectHandler handler) throws SQLException, CMSMFException {
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to deserialize"); }
+		if (handler == null) { throw new IllegalArgumentException(
+			"Must provide an object handler to handle the deserialized objects"); }
 		Connection objConn = null;
 		Connection attConn = null;
 
