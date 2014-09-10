@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.sql.DataSource;
 
@@ -65,7 +64,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 
 	private static final String QUERY_EXPORT_PLAN_DUPE_SQL = "select * from dctm_export_plan where object_id = ?";
 	private static final String INSERT_EXPORT_PLAN_SQL = "insert into dctm_export_plan (object_type, object_id) values (?, ?)";
-	private static final String MARK_EXPORT_PLAN_TRAVERSED_SQL = "updated dctm_export_plan set traversed = true where object_id = ? and traversed = false";
+	private static final String MARK_EXPORT_PLAN_TRAVERSED_SQL = "update dctm_export_plan set traversed = true where object_id = ? and traversed = false";
 
 	private static final String FIND_TARGET_MAPPING_SQL = "select target_value from dctm_mapper where object_type = ? and name = ? and source_value = ?";
 	private static final String FIND_SOURCE_MAPPING_SQL = "select source_value from dctm_mapper where object_type = ? and name = ? and target_value = ?";
@@ -74,32 +73,32 @@ public class CmsObjectStore extends CmsDependencyManager {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -653,7 +652,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 	private boolean markTraversed(Connection c, String objectId) throws CMSMFException {
 		QueryRunner qr = new QueryRunner();
 		try {
-			return (qr.update(CmsObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
+			return (qr.update(c, CmsObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
 		} catch (SQLException e) {
 			throw new CMSMFException(String.format("Failed to mark the dependency for [%s] as traversed", objectId), e);
 		}
@@ -677,33 +676,6 @@ public class CmsObjectStore extends CmsDependencyManager {
 			} else {
 				DbUtils.rollbackAndCloseQuietly(c);
 			}
-		}
-	}
-
-	public void handleDependencies(final CmsObjectType type, final DependencyHandler handler) throws CMSMFException {
-		if (handler == null) { return; }
-		QueryRunner qr = new QueryRunner(this.dataSource);
-		try {
-			final AtomicInteger count = new AtomicInteger(0);
-			qr.query("select object_id from dctm_export_plan where object_type = ? and traversed = false",
-				new ResultSetHandler<Void>() {
-					@Override
-					public Void handle(ResultSet rs) throws SQLException {
-						while (rs.next()) {
-							try {
-								handler.handle(type, rs.getString("object_id"));
-							} catch (CMSMFException e) {
-								throw new SQLException(e);
-							}
-							count.incrementAndGet();
-						}
-						return null;
-					}
-				}, type.name());
-		} catch (SQLException e) {
-			Throwable cause = e.getCause();
-			if ((cause != null) && (cause instanceof CMSMFException)) { throw CMSMFException.class.cast(cause); }
-			throw new CMSMFException(String.format("Failed to scan the export plan for [%s]", type), e);
 		}
 	}
 }
