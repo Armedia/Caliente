@@ -1,5 +1,7 @@
 package com.delta.cmsmf.cms.storage;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.dbutils.QueryRunner;
@@ -10,6 +12,9 @@ import org.junit.Test;
 
 import com.delta.cmsmf.cms.AbstractTest;
 import com.delta.cmsmf.cms.CmsObjectType;
+import com.documentum.com.DfClientX;
+import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 
 public class CmsObjectStoreTest extends AbstractTest {
@@ -266,5 +271,43 @@ public class CmsObjectStoreTest extends AbstractTest {
 	@Test
 	public void testDeserializeObjects() throws Throwable {
 		// Assert.fail("Not yet implemented");
+	}
+
+	@Test
+	public void testRegisterDependency() throws Throwable {
+		final IDfSession session = acquireSession();
+		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		Map<String, CmsObjectType> dependencies = new HashMap<String, CmsObjectType>();
+		try {
+			IDfQuery query = new DfClientX().getQuery();
+			String dql = "select r_object_id, r_object_type from dm_sysobject where folder('/CMSMFTests', DESCEND)";
+			query.setDQL(dql);
+			IDfCollection results = query.execute(session, IDfQuery.DF_EXECREAD_QUERY);
+			try {
+				while (results.next()) {
+					String id = results.getString("r_object_id");
+					CmsObjectType type = CmsObjectType.decodeType(results.getString("r_object_type"));
+					store.registerDependency(type, id);
+					dependencies.put(id, type);
+				}
+			} finally {
+				closeQuietly(results);
+			}
+			QueryRunner qr = new QueryRunner(getDataSource());
+			Assert.assertEquals(Integer.valueOf(dependencies.size()),
+				qr.query("select count(*) from dctm_export_plan where traversed = false", AbstractTest.HANDLER_COUNT));
+			for (Map.Entry<String, CmsObjectType> e : dependencies.entrySet()) {
+				final String id = e.getKey();
+				final CmsObjectType type = e.getValue();
+				Assert
+					.assertEquals(
+						Integer.valueOf(1),
+						qr.query(
+							"select count(*) from dctm_export_plan where object_type = ? and object_id = ? and traversed = false",
+							AbstractTest.HANDLER_COUNT, type.name(), id));
+			}
+		} finally {
+			releaseSession(session);
+		}
 	}
 }

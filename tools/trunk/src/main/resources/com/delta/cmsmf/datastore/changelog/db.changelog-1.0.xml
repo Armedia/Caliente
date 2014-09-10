@@ -3,6 +3,26 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 	<changeSet author="master" id="1">
+		<!-- The export plan table -->
+		<createTable tableName="dctm_export_plan">
+			<column name="object_id" type="varchar(32)" remarks="The object which is to be exported">
+				<constraints nullable="false" />
+			</column>
+			<column name="object_type" type="varchar(32)" remarks="The type of documentum object">
+				<constraints nullable="false" />
+			</column>
+			<column name="traversed" type="boolean" remarks="A flag indicating whether the object has been exported or not">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="dctm_export_plan" columnNames="object_id" />
+		<addDefaultValue tableName="dctm_export_plan" columnName="traversed" defaultValueBoolean="false" />
+		<createIndex tableName="dctm_export_plan" indexName="idx_dctm_export_plan">
+			<column name="object_type" />
+			<column name="traversed" />
+			<column name="object_id" />
+		</createIndex>
+
 		<!-- The main objects table -->
 		<createTable tableName="dctm_object" remarks="The documentum objects">
 			<column name="object_id" type="varchar(32)" remarks="The object's ID">
@@ -16,36 +36,15 @@
 			</column>
 		</createTable>
 		<addPrimaryKey tableName="dctm_object" columnNames="object_id" />
+		<addForeignKeyConstraint constraintName="fk_dctm_object_plan"
+			baseTableName="dctm_object" baseColumnNames="object_id"
+			referencedTableName="dctm_export_plan" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
 		<createIndex tableName="dctm_object" indexName="idx_dctm_object_type" unique="true">
 			<column name="object_type" />
 			<column name="object_number" />
 		</createIndex>
 		<addAutoIncrement tableName="dctm_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>
-
-		<!-- The dependency relationships table -->
-		<!--
-		<createTable tableName="dctm_dependency">
-			<column name="object_id" type="varchar(32)" remarks="The object for which the dependency is being documented">
-				<constraints nullable="false" />
-			</column>
-			<column name="dependency_id" type="varchar(32)" remarks="The object upon which the object in object_id depends">
-				<constraints nullable="false" />
-			</column>
-		</createTable>
-		<addPrimaryKey tableName="dctm_dependency" columnNames="object_id, dependency_id" />
-		<addForeignKeyConstraint constraintName="fk_dctm_dependency_object"
-			baseTableName="dctm_dependency" baseColumnNames="object_id"
-			referencedTableName="dctm_object" referencedColumnNames="object_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-		<addForeignKeyConstraint constraintName="fk_dctm_dependency_dependency"
-			baseTableName="dctm_dependency" baseColumnNames="dependency_id"
-			referencedTableName="dctm_object" referencedColumnNames="object_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-		<createIndex tableName="dctm_dependency" indexName="idx_dctm_dependency_reverse">
-			<column name="dependency_id" />
-			<column name="object_id" />
-		</createIndex>
-		-->
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="dctm_attribute">

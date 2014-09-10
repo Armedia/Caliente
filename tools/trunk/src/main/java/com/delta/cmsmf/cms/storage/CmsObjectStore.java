@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.sql.DataSource;
 
@@ -29,6 +30,7 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cms.CmsAttribute;
 import com.delta.cmsmf.cms.CmsDataType;
+import com.delta.cmsmf.cms.CmsDependencyManager;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
@@ -40,10 +42,14 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
-public class CmsObjectStore {
+public class CmsObjectStore extends CmsDependencyManager {
 
 	public static interface ImportHandler {
-		public boolean handle(CmsObject<?> dataObject) throws Exception;
+		public boolean handle(CmsObject<?> dataObject) throws CMSMFException;
+	}
+
+	public static interface DependencyHandler {
+		public boolean handle(CmsObjectType type, String id) throws CMSMFException;
 	}
 
 	private static final Object[][] NO_PARAMS = new Object[0][0];
@@ -55,6 +61,10 @@ public class CmsObjectStore {
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
+
+	private static final String QUERY_EXPORT_PLAN_DUPE_SQL = "select * from dctm_export_plan where object_id = ?";
+	private static final String INSERT_EXPORT_PLAN_SQL = "insert into dctm_export_plan (object_type, object_id) values (?, ?)";
+	private static final String MARK_EXPORT_PLAN_TRAVERSED_SQL = "updated dctm_export_plan set traversed = true where object_id = ? and traversed = false";
 
 	private static final String FIND_TARGET_MAPPING_SQL = "select target_value from dctm_mapper where object_type = ? and name = ? and source_value = ?";
 	private static final String FIND_SOURCE_MAPPING_SQL = "select source_value from dctm_mapper where object_type = ? and name = ? and target_value = ?";
@@ -545,5 +555,89 @@ public class CmsObjectStore {
 	 */
 	public String getSourceMapping(CmsObjectType type, String name, String targetValue) {
 		return getMappedValue(false, type, name, targetValue);
+	}
+
+	@Override
+	protected boolean registerDependency(Dependency dependency) throws CMSMFException {
+		QueryRunner qr = new QueryRunner();
+		final Connection c;
+		try {
+			c = this.dataSource.getConnection();
+		} catch (SQLException e) {
+			throw new CMSMFException("Failed to connecto to the object store's database", e);
+		}
+		boolean ok = false;
+		try {
+			c.setAutoCommit(false);
+			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS,
+				dependency.getId())) {
+				// Duplicate dependency...we skip it
+				return false;
+			}
+			qr.insert(c, CmsObjectStore.INSERT_EXPORT_PLAN_SQL, CmsObjectStore.HANDLER_NULL, dependency.getType()
+				.name(), dependency.getId());
+			ok = true;
+			return true;
+		} catch (SQLException e) {
+			throw new CMSMFException(String.format("Failed to register the dependency [%s]", dependency), e);
+		} finally {
+			if (ok) {
+				DbUtils.commitAndCloseQuietly(c);
+			} else {
+				DbUtils.rollbackAndCloseQuietly(c);
+			}
+		}
+	}
+
+	public boolean markTraversed(String objectId) throws CMSMFException {
+		QueryRunner qr = new QueryRunner();
+		final Connection c;
+		try {
+			c = this.dataSource.getConnection();
+		} catch (SQLException e) {
+			throw new CMSMFException("Failed to connecto to the object store's database", e);
+		}
+		boolean ok = false;
+		try {
+			c.setAutoCommit(false);
+			int count = qr.update(CmsObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId);
+			ok = true;
+			return (count == 1);
+		} catch (SQLException e) {
+			throw new CMSMFException(String.format("Failed to mark the dependency for [%s] as traversed", objectId), e);
+		} finally {
+			if (ok) {
+				DbUtils.commitAndCloseQuietly(c);
+			} else {
+				DbUtils.rollbackAndCloseQuietly(c);
+			}
+		}
+	}
+
+	public void handleDependencies(final CmsObjectType type, final DependencyHandler handler) throws CMSMFException {
+		if (handler == null) { return; }
+		QueryRunner qr = new QueryRunner(this.dataSource);
+		try {
+			final AtomicInteger count = new AtomicInteger(0);
+			qr.query("select object_id from dctm_export_plan where object_type = ? and traversed = false",
+				new ResultSetHandler<Void>() {
+				@Override
+				public Void handle(ResultSet rs) throws SQLException {
+					while (rs.next()) {
+						try {
+							handler.handle(type, rs.getString("object_id"));
+						} catch (CMSMFException e) {
+							throw new SQLException(e);
+						}
+						count.incrementAndGet();
+					}
+					return null;
+				}
+			}, type.name());
+		} catch (SQLException e) {
+			Throwable cause = e.getCause();
+			if ((cause != null) && (cause instanceof CMSMFException)) { throw CMSMFException.class.cast(cause); }
+			throw new CMSMFException(String.format("Failed to scan the export plan for [%s]", type), e);
+		}
 	}
 }
