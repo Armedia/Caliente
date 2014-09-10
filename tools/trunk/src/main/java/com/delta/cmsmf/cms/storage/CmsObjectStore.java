@@ -214,7 +214,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 
 		try {
 			QueryRunner qr = CmsObjectStore.getQueryRunner();
-			if (qr.query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL, CmsObjectStore.HANDLER_EXISTS, objectId)) {
+			if (isSerialized(c, objectId)) {
 				// Object is already there, so do nothing
 				return false;
 			}
@@ -568,13 +568,9 @@ public class CmsObjectStore extends CmsDependencyManager {
 		return getMappedValue(false, type, name, targetValue);
 	}
 
-	private boolean isSerialized(Connection c, String objectId) throws CMSMFException {
-		QueryRunner qr = new QueryRunner();
-		try {
-			return qr.query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL, CmsObjectStore.HANDLER_EXISTS, objectId);
-		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to check for duplicate object [%s]", objectId), e);
-		}
+	private boolean isSerialized(Connection c, String objectId) throws CMSMFException, SQLException {
+		return new QueryRunner().query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL, CmsObjectStore.HANDLER_EXISTS,
+			objectId);
 	}
 
 	public boolean isSerialized(String objectId) throws CMSMFException {
