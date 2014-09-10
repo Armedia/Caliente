@@ -42,4 +42,13 @@ public class DfUtils {
 		query.setDQL(dql);
 		return query.execute(session, queryType);
 	}
+
+	public static String getSessionId(IDfSession session) {
+		if (session == null) { throw new IllegalArgumentException("Must provide a session to get the ID from"); }
+		try {
+			return session.getSessionId();
+		} catch (DfException e) {
+			return "(unknown)";
+		}
+	}
 }
