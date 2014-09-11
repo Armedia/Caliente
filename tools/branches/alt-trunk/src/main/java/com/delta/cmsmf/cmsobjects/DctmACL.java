@@ -104,6 +104,9 @@ public class DctmACL extends DctmObject {
 
 					prsstntObj = acl;
 					doesACLNeedUpdate = true;
+					// Add these two in hopes of avoiding DM_OBJ_MGR_E_SAVE_FAIL errors
+					removeAttribute(DctmAttrNameConstants.OWNER_NAME);
+					removeAttribute(DctmAttrNameConstants.OBJECT_NAME);
 				} else { // Identical ACL exists in the target repository, abort the transaction and
 // quit
 					if (DctmACL.logger.isEnabledFor(Level.DEBUG)) {
