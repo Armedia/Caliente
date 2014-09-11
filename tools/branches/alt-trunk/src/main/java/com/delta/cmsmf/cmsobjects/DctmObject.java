@@ -262,6 +262,24 @@ public abstract class DctmObject implements Serializable {
 	 */
 	public abstract void createInCMS() throws DfException, IOException;
 
+	private String generateSqlDateClause(IDfTime date, IDfSession session) throws DfException {
+		// First, output to the "netural" format
+		String dateString = date.asString(CMSMFAppConstants.SQL_DATETIME_PATTERN);
+		// Now, select the database format string
+		final String ret;
+		final boolean oracle = session.getServerVersion().toLowerCase().contains("oracle");
+		if (oracle) {
+			ret = String.format("TO_DATE(''%s'', ''%s'')", dateString, CMSMFAppConstants.ORACLE_DATETIME_PATTERN);
+		} else {
+			ret = String.format("CONVERT(DATETIME, ''%s'', %d)", dateString, CMSMFAppConstants.MSSQL_DATETIME_PATTERN);
+		}
+		if (DctmObject.logger.isTraceEnabled()) {
+			DctmObject.logger.trace(String
+				.format("Generated %s SQL Date string [%s]", oracle ? "Oracle" : "MSSQL", ret));
+		}
+		return ret;
+	}
+
 	/**
 	 * Updates system attributes of an object using execsql. This method is used to
 	 * update various system and internal attributes of an object during the import step.
@@ -281,7 +299,6 @@ public abstract class DctmObject implements Serializable {
 		// prepare sql to be executed
 		IDfTime modifyDate = new DfTime(dctmObj.getDateSingleAttrValue(DctmAttrNameConstants.R_MODIFY_DATE));
 		IDfTime creationDate = new DfTime(dctmObj.getDateSingleAttrValue(DctmAttrNameConstants.R_CREATION_DATE));
-		int vStamp = dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
 
 		// if a value in acl_domain or r_creator_name or r_modifier attributes
 		// of the system object is "dm_dbo", change it to target repository operator name
@@ -317,14 +334,22 @@ public abstract class DctmObject implements Serializable {
 			}
 		}
 
-		String sqlStr = "UPDATE dm_sysobject_s " + "SET r_modify_date = TO_DATE(''"
-			+ modifyDate.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
-			+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN + "''), r_creation_date = TO_DATE(''"
-			+ creationDate.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
-			+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN + "''), r_creator_name = ''" + creatorName
-			+ "'', r_modifier = ''" + modifier + "'', i_vstamp = " + vStamp + ", acl_name = ''"
-			+ dctmObj.getStrSingleAttrValue(DctmAttrNameConstants.ACL_NAME) + "'', acl_domain = ''" + aclDomain
-			+ "'' WHERE r_object_id = ''" + sysObject.getObjectId().getId() + "''";
+		String sql = "" //
+			+ "UPDATE dm_sysobject_s SET " //
+			+ "       r_modify_date = %s, " //
+			+ "       r_creation_date = %s, " //
+			+ "       r_creator_name = ''%s'', " //
+			+ "       r_modifier = ''%s'', " //
+			+ "       acl_name = ''%s'', " //
+			+ "       acl_domain = ''%s'' " //
+			+ "       %s " //
+			+ " WHERE r_object_id = ''%s''";
+		String vstampFlag = (CMSMFProperties.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
+			dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP)));
+		String sqlStr = String.format(sql, generateSqlDateClause(modifyDate, this.dctmSession),
+			generateSqlDateClause(creationDate, this.dctmSession), creatorName, modifier, dctmObj
+			.getStrSingleAttrValue(DctmAttrNameConstants.ACL_NAME), aclDomain, vstampFlag, sysObject.getObjectId()
+			.getId());
 
 		runExecSQL(sysObject.getSession(), sqlStr);
 
@@ -352,11 +377,14 @@ public abstract class DctmObject implements Serializable {
 		String objType = prsstntObject.getType().getName();
 		// prepare sql to be executed
 		IDfTime modifyDate = new DfTime(dctmObj.getDateSingleAttrValue(DctmAttrNameConstants.R_MODIFY_DATE));
-		String sql = "UPDATE %s_s SET r_modify_date = TO_DATE(''%s'', ''%s'') %s WHERE r_object_id = ''%s''";
+		String sql = "UPDATE %s_s SET " //
+			+ "r_modify_date = %s " //
+			+ "%s " //
+			+ "WHERE r_object_id = ''%s''";
 		String vstampFlag = (CMSMFProperties.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 			dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP)));
-		String sqlStr = String.format(sql, objType, modifyDate.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN),
-			CMSMFAppConstants.ORACLE_DATETIME_PATTERN, vstampFlag, prsstntObject.getObjectId().getId());
+		String sqlStr = String.format(sql, objType, generateSqlDateClause(modifyDate, this.dctmSession), vstampFlag,
+			prsstntObject.getObjectId().getId());
 
 		runExecSQL(prsstntObject.getSession(), sqlStr);
 
@@ -399,19 +427,28 @@ public abstract class DctmObject implements Serializable {
 
 			String pageModifierStr = "";
 			if (!StringUtils.isBlank(dctmContent.getPageModifier())) {
-				pageModifierStr = " and dcr.page_modifier = ''" + dctmContent.getPageModifier() + "''";
+				pageModifierStr = String.format(" and dcr.page_modifier = ''%s''", dctmContent.getPageModifier());
 			}
 
 			// Prepare the sql to be executed
-			String sqlStr = "UPDATE dmr_content_s SET set_file = ''" + setFile + "'', set_client = ''" + setClient
-				+ "'', set_time = TO_DATE(''" + setTime.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
-				+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN
-				+ "'') WHERE r_object_id = (select dcs.r_object_id from dmr_content_s dcs, dmr_content_r dcr "
-				+ "where dcr.parent_id = ''" + parentID + "'' " + " and dcs.r_object_id = dcr.r_object_id "
-				+ "and dcs.rendition = " + dctmContent.getIntSingleAttrValue(DctmAttrNameConstants.RENDITION)
-				+ pageModifierStr + " and dcr.page = " + dctmContent.getPageNbr() + " and dcs.full_format = ''"
-				+ dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.FULL_FORMAT) + "'')";
+			String sql = "UPDATE dmr_content_s SET " //
+				+ "set_file = ''%s'', " //
+				+ "set_client = ''%s'', " //
+				+ "set_time = %s " //
+				+ "WHERE r_object_id = (" //
+				+ "    select dcs.r_object_id " //
+				+ "      from dmr_content_s dcs, dmr_content_r dcr " //
+				+ "     where dcr.parent_id = ''%s'' " //
+				+ "       and dcs.r_object_id = dcr.r_object_id " //
+				+ "       and dcs.rendition = %d " //
+				+ "       %s " //
+				+ "       and dcr.page = %d " //
+				+ "       and dcs.full_format = ''%s''" //
+				+ ")";
 
+			String sqlStr = String.format(sql, setFile, setClient, generateSqlDateClause(setTime, this.dctmSession),
+				parentID, dctmContent.getIntSingleAttrValue(DctmAttrNameConstants.RENDITION), pageModifierStr,
+				dctmContent.getPageNbr(), dctmContent.getStrSingleAttrValue(DctmAttrNameConstants.FULL_FORMAT));
 			// Run the exec sql
 			runExecSQL(prsstntObject.getSession(), sqlStr);
 		}

@@ -41,12 +41,9 @@ public class CMSMFAppConstants {
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
-	 * combine the
-	 * select clause listed above with this from and where clauses to build the complete dql query.
-	 * Please
-	 * note that this clause will be ignored when the export is running in the adhoc mode. In that
-	 * case the
-	 * from and where clauses are specified in the properties file.
+	 * combine the select clause listed above with this from and where clauses to build the complete
+	 * dql query. Please note that this clause will be ignored when the export is running in the
+	 * adhoc mode. In that case the from and where clauses are specified in the properties file.
 	 */
 	public static final String DEFAULT_PREDICATE = "from dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
 		+ "and not folder('/System', descend)"; // and r_modify_date >= DATE('XX_PLACE_HOLDER_XX')";
@@ -58,11 +55,16 @@ public class CMSMFAppConstants {
 	/** The date and time pattern commonly used in documentum repository. */
 	public static final String DCTM_DATETIME_PATTERN = "mm/dd/yyyy hh:mi:ss";
 
+	/** The "sql-neutral" date and time pattern that will be fed for SQL updates to date attributes */
+	public static final String SQL_DATETIME_PATTERN = "yyyy-mm-dd hh:mi:ss";
+
 	/** The date and time pattern used in oracle sql query. */
-	public static final String ORACLE_DATETIME_PATTERN = "MM/DD/YYYY HH24:MI:SS";
+	public static final String ORACLE_DATETIME_PATTERN = "YYYY-MM-DD HH24:MI:SS";
+
+	public static final int MSSQL_DATETIME_PATTERN = 120;
 
 	/** The date pattern in which last export date is stored in the repository. EX: 12/15/2010 */
-	public static final String LAST_EXPORT_DATE_PATTERN = "MM/dd/yyyy";
+	public static final String LAST_EXPORT_DATE_PATTERN = CMSMFAppConstants.DCTM_DATETIME_PATTERN;
 
 	// Generic documentum Constants
 	/** The dm_dbo alias used for ACL domains for system ACLs. */
