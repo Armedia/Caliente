@@ -651,7 +651,18 @@ public abstract class DctmObject implements Serializable {
 		for (String attrName : dctmObj.getAttrMap().keySet()) {
 			// for now ignore setting internal and system attributes
 			// TODO check to see if we need to set any internal or system attributes of various
-// types
+			// types
+			try {
+				prsstntObj.findAttrIndex(attrName);
+			} catch (DfException e) {
+				if ("DM_API_E_BADATTRNAME".equals(e.getMessageId())) {
+					// Bad attribute - warn it, but skip it;
+					DctmObject.logger.warn(String.format("Failed to locate attribute [%s] in %s with id [%s]",
+						attrName, dctmObj.dctmObjectType, dctmObj.srcObjectID));
+					continue;
+				}
+				throw e;
+			}
 			if (!attrName.startsWith("r_") && !attrName.startsWith("i_")) {
 				setAttributeInCMS(prsstntObj, attrName, dctmObj.findAttribute(attrName), isUpdate);
 			}
