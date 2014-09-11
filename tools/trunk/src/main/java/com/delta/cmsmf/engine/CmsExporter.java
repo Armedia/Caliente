@@ -111,6 +111,7 @@ public class CmsExporter {
 		for (int i = 0; i < threadCount; i++) {
 			executor.submit(worker);
 		}
+		executor.shutdown();
 
 		try {
 			// 1: run the query for the given predicate
@@ -146,12 +147,19 @@ public class CmsExporter {
 						break;
 					}
 				}
+				try {
+					this.log.info("Waiting for pending workers to terminate (maximum 5 minutes)");
+					executor.awaitTermination(5, TimeUnit.MINUTES);
+				} catch (InterruptedException e) {
+					this.log.warn("Interrupted while waiting for normal executor termination", e);
+				}
 			} finally {
 				executor.shutdownNow();
 				try {
-					executor.awaitTermination(2, TimeUnit.MINUTES);
+					this.log.info("Waiting an additional 60 seconds for worker termination as a contingency");
+					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
-					this.log.warn("Interrupted while waiting for executor termination", e);
+					this.log.warn("Interrupted while waiting for immediate executor termination", e);
 				}
 				DfUtils.closeQuietly(results);
 			}
