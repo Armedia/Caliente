@@ -92,7 +92,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		if (owner != null) {
 			dependencyManager.persistDependency(owner);
 		} else {
-			this.logger.warn(String.format(
+			this.log.warn(String.format(
 				"WARNING: Missing dependency for group [%s] - user [%s] not found (as group owner)",
 				group.getGroupName(), group.getOwnerName()));
 		}
@@ -101,7 +101,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		if (admin != null) {
 			dependencyManager.persistDependency(admin);
 		} else {
-			this.logger.warn(String.format(
+			this.log.warn(String.format(
 				"WARNING: Missing dependency for group [%s] - user [%s] not found (as group admin)",
 				group.getGroupName(), group.getGroupAdmin()));
 		}
@@ -116,7 +116,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		for (IDfValue v : it) {
 			IDfUser user = session.getUser(v.asString());
 			if (user == null) {
-				this.logger.warn(String.format(
+				this.log.warn(String.format(
 					"WARNING: Missing dependency for group [%s] - user [%s] not found (as default group)",
 					group.getGroupName(), v.asString()));
 				continue;
@@ -129,7 +129,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			for (IDfValue v : usersNames) {
 				IDfUser member = session.getUser(v.asString());
 				if (member == null) {
-					this.logger.warn(String.format(
+					this.log.warn(String.format(
 						"WARNING: Missing dependency for group [%s] - user [%s] not found (as group member)",
 						group.getGroupName(), v.asString()));
 					continue;
@@ -143,7 +143,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			for (IDfValue v : groupsNames) {
 				IDfGroup member = session.getGroup(v.asString());
 				if (member == null) {
-					this.logger.warn(String.format(
+					this.log.warn(String.format(
 						"WARNING: Missing dependency for group [%s] - group [%s] not found (as group member)",
 						group.getGroupName(), v.asString()));
 					continue;
@@ -175,7 +175,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfUser user = session.getUser(v.asString());
 				if (user == null) {
 					missingUsers.add(v.asString());
-					this.logger
+					this.log
 					.warn(String
 						.format(
 							"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
@@ -196,7 +196,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				}
 				IDfUser user = session.getUser(v.asString());
 				if (user == null) {
-					this.logger
+					this.log
 					.warn(String
 						.format(
 							"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
@@ -219,7 +219,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			for (IDfValue v : groupsNames) {
 				IDfGroup other = session.getGroup(v.asString());
 				if (other == null) {
-					this.logger
+					this.log
 						.warn(String
 							.format(
 								"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",

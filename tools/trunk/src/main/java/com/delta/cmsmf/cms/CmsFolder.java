@@ -130,7 +130,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				// want to clobber that?
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
-					this.logger
+					this.log
 					.warn(String
 						.format(
 							"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",

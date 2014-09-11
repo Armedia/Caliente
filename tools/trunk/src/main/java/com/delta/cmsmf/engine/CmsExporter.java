@@ -36,6 +36,24 @@ public class CmsExporter {
 
 	private Logger log = Logger.getLogger(getClass());
 
+	private static final int MAX_THREAD_COUNT = 32;
+
+	private final int threadCount;
+
+	public CmsExporter(int threadCount) {
+		if (threadCount <= 0) {
+			threadCount = 1;
+		}
+		if (threadCount > CmsExporter.MAX_THREAD_COUNT) {
+			threadCount = CmsExporter.MAX_THREAD_COUNT;
+		}
+		this.threadCount = threadCount;
+	}
+
+	public int getThreadCount() {
+		return this.threadCount;
+	}
+
 	public void doExport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
 		final String dqlPredicate) throws DfException, CMSMFException {
 
@@ -44,9 +62,8 @@ public class CmsExporter {
 		final AtomicInteger activeCounter = new AtomicInteger(0);
 		final String exitFlag = String.format("%s[%s]", toString(), UUID.randomUUID().toString());
 		final IDfValue exitValue = DfValueFactory.newStringValue(exitFlag);
-		final int threadCount = 10;
-		final BlockingQueue<IDfValue> workQueue = new ArrayBlockingQueue<IDfValue>(threadCount);
-		ExecutorService executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
+		final BlockingQueue<IDfValue> workQueue = new ArrayBlockingQueue<IDfValue>(this.threadCount);
+		ExecutorService executor = new ThreadPoolExecutor(this.threadCount, this.threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
 
 		Runnable worker = new Runnable() {
@@ -108,7 +125,7 @@ public class CmsExporter {
 		};
 
 		// Fire off the workers
-		for (int i = 0; i < threadCount; i++) {
+		for (int i = 0; i < this.threadCount; i++) {
 			executor.submit(worker);
 		}
 		executor.shutdown();
@@ -138,7 +155,7 @@ public class CmsExporter {
 						break;
 					}
 				}
-				for (int i = 0; i < threadCount; i++) {
+				for (int i = 0; i < this.threadCount; i++) {
 					try {
 						workQueue.put(exitValue);
 					} catch (InterruptedException e) {
@@ -147,19 +164,31 @@ public class CmsExporter {
 						break;
 					}
 				}
-				try {
-					this.log.info("Waiting for pending workers to terminate (maximum 5 minutes)");
-					executor.awaitTermination(5, TimeUnit.MINUTES);
-				} catch (InterruptedException e) {
-					this.log.warn("Interrupted while waiting for normal executor termination", e);
+				int pending = activeCounter.get();
+				if (pending > 0) {
+					try {
+						this.log.info(String
+							.format("Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)",
+								pending));
+						executor.awaitTermination(5, TimeUnit.MINUTES);
+					} catch (InterruptedException e) {
+						this.log.warn("Interrupted while waiting for normal executor termination", e);
+					}
 				}
 			} finally {
 				executor.shutdownNow();
-				try {
-					this.log.info("Waiting an additional 60 seconds for worker termination as a contingency");
-					executor.awaitTermination(1, TimeUnit.MINUTES);
-				} catch (InterruptedException e) {
-					this.log.warn("Interrupted while waiting for immediate executor termination", e);
+				int pending = activeCounter.get();
+				if (pending > 0) {
+					try {
+						this.log
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
+						executor.awaitTermination(1, TimeUnit.MINUTES);
+					} catch (InterruptedException e) {
+						this.log.warn("Interrupted while waiting for immediate executor termination", e);
+					}
 				}
 				DfUtils.closeQuietly(results);
 			}

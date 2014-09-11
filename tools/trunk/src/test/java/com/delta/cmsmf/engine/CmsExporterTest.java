@@ -20,7 +20,7 @@ public class CmsExporterTest extends AbstractTest {
 	@Test
 	public void testDoExport() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
-		CmsExporter exporter = new CmsExporter();
+		CmsExporter exporter = new CmsExporter(10);
 		exporter.doExport(store, getSessionManager(), "from dm_user");
 	}
 }

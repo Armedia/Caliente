@@ -117,7 +117,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			}
 			final IDfPersistentObject obj = (group ? session.getGroup(name) : session.getUser(name));
 			if (obj == null) {
-				this.logger.warn(String.format("WARNING: Missing dependency for acl [%s:%s] - %s [%s] not found",
+				this.log.warn(String.format("WARNING: Missing dependency for acl [%s:%s] - %s [%s] not found",
 					acl.getDomain(), acl.getObjectName(), group ? "group" : "user", name));
 				continue;
 			}
@@ -142,7 +142,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 				// clobber that?
 				final IDfUser user = session.getUser(value.asString());
 				if (user == null) {
-					this.logger.warn(String.format(
+					this.log.warn(String.format(
 						"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
 						acl.getDomain(), acl.getObjectName(), value.asString()));
 					continue;
@@ -182,7 +182,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			}
 
 			if (!exists) {
-				this.logger.warn(String.format(
+				this.log.warn(String.format(
 					"ACL [%s.%s] references the %s [%s] for permissions [%d/%s], but the %s wasn't found",
 					acl.getDomain(), acl.getObjectName(), accessorType, name, perm, xperm, accessorType));
 				continue;

@@ -57,7 +57,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	};
 
-	protected final Logger logger = Logger.getLogger(getClass());
+	protected final Logger log = Logger.getLogger(getClass());
 
 	private final CmsObjectType type;
 	private final Class<T> dfClass;
