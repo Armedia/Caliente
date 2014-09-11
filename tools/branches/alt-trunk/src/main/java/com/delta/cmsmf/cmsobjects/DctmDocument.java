@@ -308,6 +308,7 @@ public class DctmDocument extends DctmObject {
 				boolean branchCreated = false;
 				boolean doesExistingObjectNeedsUpdate = false;
 				boolean permitChangedFlag = false;
+				boolean isFrozenChangedFlag = false;
 				boolean isImmutableChangedFlag = false;
 				int curPermit = 0;
 
@@ -450,6 +451,11 @@ public class DctmDocument extends DctmObject {
 						// Check the immutable flag of the document version object. Set to False if
 // it is not
 						// and revert it back later.
+						if (sysObject.isFrozen()) {
+							sysObject.setBoolean(DctmAttrNameConstants.R_FROZEN_FLAG, false);
+							sysObject.save();
+							isFrozenChangedFlag = true;
+						}
 						if (sysObject.isImmutable()) {
 							sysObject.setBoolean(DctmAttrNameConstants.R_IMMUTABLE_FLAG, false);
 							sysObject.save();
@@ -554,6 +560,10 @@ public class DctmDocument extends DctmObject {
 						// Revert back the r_immutable_flag if it was modified previously
 						if (isImmutableChangedFlag) {
 							sysObject.setBoolean(DctmAttrNameConstants.R_IMMUTABLE_FLAG, true);
+							sysObject.save();
+						}
+						if (isFrozenChangedFlag) {
+							sysObject.setBoolean(DctmAttrNameConstants.R_FROZEN_FLAG, true);
 							sysObject.save();
 						}
 						// Revert back the permission on the document if it was modified previously
