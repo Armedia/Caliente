@@ -150,8 +150,8 @@ public class DctmUser extends DctmObject {
 			if (userLoginDomain.equals("")) {
 				userLoginDomain = null;
 			}
-			IDfUser usr = this.dctmSession.getUserByLoginName(userLoginName, userLoginDomain);
 
+			IDfUser usr = this.dctmSession.getUser(userName);
 			if (usr != null) { // we found existing user
 				Date curUsrModifyDate = usr.getModifyDate().getDate();
 				if (!curUsrModifyDate.equals(findAttribute(DctmAttrNameConstants.R_MODIFY_DATE).getSingleValue())) {
@@ -162,8 +162,7 @@ public class DctmUser extends DctmObject {
 					}
 
 					// NOTE Remove the user_name attribute from attribute map to avoid following
-// error if it
-					// is the same as before
+					// error if it is the same as before
 					// [DM_USER_E_EXISTING_USER_NAME] error:
 					// "Cannot create user %s since its user_name already exists"
 					if (usr.getUserName().equals(getStrSingleAttrValue(DctmAttrNameConstants.USER_NAME))) {
