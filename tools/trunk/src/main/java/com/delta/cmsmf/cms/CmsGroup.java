@@ -76,6 +76,11 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
+	protected boolean isValidForLoad(IDfGroup group) throws DfException {
+		return !group.getGroupName().startsWith("dm_");
+	}
+
+	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfGroup group) throws DfException {
 		// Store all the users that have this group as their default group
 		CmsProperty property = new CmsProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP, CmsDataType.DF_STRING);

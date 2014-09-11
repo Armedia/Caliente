@@ -4,8 +4,6 @@
 
 package com.delta.cmsmf.cms;
 
-import java.util.Collection;
-
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
@@ -68,7 +66,9 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfType user) throws DfException {
+	protected boolean isValidForLoad(IDfType type) throws DfException {
+		final String name = type.getName();
+		return !name.startsWith("dm_");
 	}
 
 	@Override
