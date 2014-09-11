@@ -21,6 +21,7 @@ import com.delta.cmsmf.cms.CmsDataType;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
+import com.delta.cmsmf.cms.UnsupportedObjectTypeException;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.runtime.RunTimeProperties;
@@ -305,14 +306,20 @@ public class CmsObjectStoreTest extends AbstractTest {
 						try {
 							CmsObjectType.decodeType(cmsObj);
 						} catch (IllegalArgumentException e) {
-							if (this.LOG.isDebugEnabled()) {
-								this.LOG.debug(String.format(
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format(
 									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
 										.getType().getName(), t));
 							}
 							continue;
+						} catch (UnsupportedObjectTypeException e) {
+							this.log.info(e.getMessage());
+							continue;
 						}
-						obj.loadFromCMS(cmsObj);
+						if (!obj.loadFromCMS(cmsObj)) {
+							// Unsupported object
+							continue;
+						}
 						Assert.assertEquals(id.getId(), obj.getId());
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
@@ -348,7 +355,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 										String msg = String.format(
 											"Failed to retrieve attribute [%s] for object [%s:%s]", name,
 											obj.getType(), obj.getId());
-										CmsObjectStoreTest.this.LOG.fatal(msg, e);
+										CmsObjectStoreTest.this.log.fatal(msg, e);
 										Assert.fail(msg);
 										return null;
 									}
@@ -529,15 +536,21 @@ public class CmsObjectStoreTest extends AbstractTest {
 						try {
 							CmsObjectType.decodeType(cmsObj);
 						} catch (IllegalArgumentException e) {
-							if (this.LOG.isDebugEnabled()) {
-								this.LOG.debug(String.format(
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format(
 									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
 										.getType().getName(), t));
 							}
 							continue;
+						} catch (UnsupportedObjectTypeException e) {
+							this.log.info(e.getMessage());
+							continue;
 						}
 						final CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
-						obj.loadFromCMS(cmsObj);
+						if (!obj.loadFromCMS(cmsObj)) {
+							// Unsupported object
+							continue;
+						}
 						store.serializeObject(obj);
 						expected.put(obj.getId(), obj);
 						if (++count > max) {

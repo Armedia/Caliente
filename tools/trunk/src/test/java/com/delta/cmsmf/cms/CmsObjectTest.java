@@ -64,14 +64,21 @@ public class CmsObjectTest extends AbstractTest {
 						try {
 							CmsObjectType.decodeType(cmsObj);
 						} catch (IllegalArgumentException e) {
-							if (this.LOG.isDebugEnabled()) {
-								this.LOG.debug(String.format(
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format(
 									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
 									.getType().getName(), t));
 							}
 							continue;
+						} catch (UnsupportedObjectTypeException e) {
+							// Object type is not supported
+							this.log.info(e.getMessage());
+							continue;
 						}
-						obj.loadFromCMS(cmsObj);
+						if (!obj.loadFromCMS(cmsObj)) {
+							// Unsupported object
+							continue;
+						}
 						if (++count > max) {
 							break;
 						}
@@ -116,14 +123,20 @@ public class CmsObjectTest extends AbstractTest {
 						try {
 							CmsObjectType.decodeType(cmsObj);
 						} catch (IllegalArgumentException e) {
-							if (this.LOG.isDebugEnabled()) {
-								this.LOG.debug(String.format(
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format(
 									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
 									.getType().getName(), t));
 							}
 							continue;
+						} catch (UnsupportedObjectTypeException e) {
+							this.log.info(e.getMessage());
+							continue;
 						}
-						obj.loadFromCMS(cmsObj);
+						if (!obj.loadFromCMS(cmsObj)) {
+							// Unsupported object
+							continue;
+						}
 						Assert.assertEquals(id.getId(), obj.getId());
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
@@ -158,7 +171,7 @@ public class CmsObjectTest extends AbstractTest {
 										String msg = String.format(
 											"Failed to retrieve attribute [%s] for object [%s:%s]", name,
 											obj.getType(), obj.getId());
-										CmsObjectTest.this.LOG.fatal(msg, e);
+										CmsObjectTest.this.log.fatal(msg, e);
 										Assert.fail(msg);
 										return null;
 									}

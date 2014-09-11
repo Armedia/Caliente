@@ -31,7 +31,7 @@ import com.documentum.fc.common.DfException;
 
 public abstract class AbstractTest {
 
-	protected final Logger LOG = Logger.getLogger(AbstractTest.class);
+	protected final Logger log = Logger.getLogger(AbstractTest.class);
 
 	private static final String H2_DRIVER = "org.h2.Driver";
 	private static final String H2_URL = "jdbc:h2:mem:cmsmf";
@@ -98,7 +98,7 @@ public abstract class AbstractTest {
 		final PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(
 			AbstractTest.CONNECTION_FACTORY, this.pool, null, null, false, true);
 		this.dataSource = new PoolingDataSource(this.pool);
-		this.LOG.info("Memory-based connection pool ready");
+		this.log.info("Memory-based connection pool ready");
 	}
 
 	@After
@@ -133,7 +133,7 @@ public abstract class AbstractTest {
 		}
 		this.pool = null;
 		this.dataSource = null;
-		this.LOG.info("Closing the memory-based connection pool");
+		this.log.info("Closing the memory-based connection pool");
 	}
 
 	protected final DataSource getDataSource() {
