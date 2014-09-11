@@ -63,6 +63,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	private final Class<T> dfClass;
 
 	private String id = null;
+	private String label = null;
 	private final Map<String, CmsAttribute> attributes = new HashMap<String, CmsAttribute>();
 	private final Map<String, CmsProperty> properties = new HashMap<String, CmsProperty>();
 
@@ -78,6 +79,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	public void load(ResultSet rs) throws SQLException {
 		this.id = rs.getString("object_id");
+		this.label = rs.getString("object_label");
 		this.attributes.clear();
 		this.properties.clear();
 	}
@@ -116,6 +118,14 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	public final CmsObjectType getType() {
 		return this.type;
+	}
+
+	public final String getId() {
+		return this.id;
+	}
+
+	public final String getLabel() {
+		return this.label;
 	}
 
 	public final Class<T> getDfClass() {
@@ -181,7 +191,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * Validate that the object should continue to be loaded by
 	 * {@link #loadFromCMS(IDfPersistentObject)}, or not.
 	 * </p>
-	 * 
+	 *
 	 * @param object
 	 * @return {@code true} if the object should continue to be loaded, {@code false} otherwise.
 	 * @throws DfException
@@ -189,6 +199,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	protected boolean isValidForLoad(T object) throws DfException {
 		return true;
 	}
+
+	protected abstract String calculateLabel(T object) throws DfException;
 
 	/**
 	 * <p>
@@ -221,6 +233,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 
 		this.id = object.getObjectId().getId();
+		this.label = calculateLabel(typedObject);
 
 		// First, the attributes
 		this.attributes.clear();
@@ -412,10 +425,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	protected abstract T locateInCms(IDfSession session) throws DfException;
-
-	public final String getId() {
-		return this.id;
-	}
 
 	protected void getDataProperties(Collection<CmsProperty> properties, T object) throws DfException {
 	}
@@ -635,5 +644,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return String.format("CmsObject [type=%s, dfClass=%s, id=%s, label=%s]", this.type,
+			this.dfClass.getSimpleName(), this.id, this.label);
 	}
 }

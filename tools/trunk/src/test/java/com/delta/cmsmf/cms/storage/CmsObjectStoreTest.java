@@ -290,7 +290,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 		try {
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
-				if (t == CmsObjectType.DOCUMENT_REFERENCE) {
+				if (t == CmsObjectType.DOCUMENT_REF) {
 					continue;
 				}
 				final CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
@@ -515,7 +515,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 			final int max = 3;
 			for (final CmsObjectType t : CmsObjectType.values()) {
 				final Map<String, CmsObject<?>> expected = new HashMap<String, CmsObject<?>>();
-				if (t == CmsObjectType.DOCUMENT_REFERENCE) {
+				if (t == CmsObjectType.DOCUMENT_REF) {
 					continue;
 				}
 				IDfCollection results = DfUtils.executeQuery(session,

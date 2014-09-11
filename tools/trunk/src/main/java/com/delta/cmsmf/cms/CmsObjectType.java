@@ -32,13 +32,13 @@ public enum CmsObjectType {
 		protected CmsObjectType getActualType(IDfPersistentObject obj) throws DfException {
 			if (obj instanceof IDfDocument) {
 				IDfDocument doc = IDfDocument.class.cast(obj);
-				if (doc.isReference()) { return CmsObjectType.DOCUMENT_REFERENCE; }
+				if (doc.isReference()) { return CmsObjectType.DOCUMENT_REF; }
 			}
 			return super.getActualType(obj);
 		}
 	},
 	CONTENT(CmsContent.class, IDfContent.class, "dmr_content"),
-	DOCUMENT_REFERENCE(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER);
+	DOCUMENT_REF(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER);
 
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
@@ -117,7 +117,7 @@ public enum CmsObjectType {
 	private static Map<String, CmsObjectType> DECODER = null;
 
 	public static CmsObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedObjectTypeException {
+		UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return CmsObjectType.decodeType(object.getType().getName()).getActualType(object);
 	}

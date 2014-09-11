@@ -33,17 +33,19 @@ public class CmsExporterTest extends AbstractTest {
 			"from dm_user union select r_object_id from dm_type union select r_object_id from dm_format union select r_object_id from dm_group union select r_object_id from dm_acl");
 		QueryRunner qr = new QueryRunner(getDataSource());
 		qr.query(
-			"select o.object_type, o.object_number, o.object_id, p.traversed from dctm_object o, dctm_export_plan p where p.object_id = o.object_id order by o.object_type, o.object_number",
+			"select o.object_type, o.object_number, o.object_id, o.object_label, p.traversed from dctm_object o, dctm_export_plan p where p.object_id = o.object_id order by o.object_type, o.object_number",
 			new ResultSetHandler<Integer>() {
 				@Override
 				public Integer handle(ResultSet rs) throws SQLException {
 					int count = 0;
-					System.out.printf("TYPE\tNUMBER\tID\tTRAVERSED%n");
-					System.out.printf("============================================================%n");
+					final String columnFormat = "%-12s\t%-6s\t%-16s\t%s%n";
+					System.out.printf(columnFormat, "TYPE", "NUMBER", "ID", "LABEL");
+					System.out
+						.printf("================================================================================%n");
 					while (rs.next()) {
 						count++;
-						System.out.printf("%s\t%s\t%s\t%s%n", rs.getString(1), rs.getString(2), rs.getString(3),
-							rs.getBoolean(4));
+						System.out.printf(columnFormat, rs.getString(1), rs.getString(2), rs.getString(3),
+							rs.getString(4));
 					}
 					return count;
 				}

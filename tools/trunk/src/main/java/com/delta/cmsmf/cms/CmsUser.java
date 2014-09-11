@@ -28,6 +28,11 @@ public class CmsUser extends CmsObject<IDfUser> {
 
 	private static boolean HANDLERS_READY = false;
 
+	@Override
+	protected String calculateLabel(IDfUser user) throws DfException {
+		return user.getUserName();
+	}
+
 	private static synchronized void initHandlers() {
 		if (CmsUser.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {

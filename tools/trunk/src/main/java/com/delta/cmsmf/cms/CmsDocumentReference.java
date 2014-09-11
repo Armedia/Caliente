@@ -7,8 +7,10 @@ package com.delta.cmsmf.cms;
 import java.util.Collection;
 
 import com.documentum.fc.client.IDfDocument;
+import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 
 /**
  * @author Diego Rivera <diego.rivera@armedia.com>
@@ -17,7 +19,20 @@ import com.documentum.fc.common.DfException;
 public class CmsDocumentReference extends CmsObject<IDfDocument> {
 
 	public CmsDocumentReference() {
-		super(CmsObjectType.DOCUMENT_REFERENCE, IDfDocument.class);
+		super(CmsObjectType.DOCUMENT_REF, IDfDocument.class);
+	}
+
+	@Override
+	protected String calculateLabel(IDfDocument document) throws DfException {
+		IDfId id = document.getFolderId(0);
+		String path = "(unknown)";
+		if (id != null) {
+			IDfFolder f = IDfFolder.class.cast(document.getSession().getObject(id));
+			if (f != null) {
+				path = f.getFolderPath(0);
+			}
+		}
+		return String.format("%s/%s [REF]", path, document.getObjectName());
 	}
 
 	@Override

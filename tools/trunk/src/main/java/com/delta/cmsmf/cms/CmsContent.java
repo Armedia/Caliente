@@ -5,6 +5,7 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collection;
+import java.util.UUID;
 
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.content.IDfContent;
@@ -18,6 +19,11 @@ public class CmsContent extends CmsObject<IDfContent> {
 
 	public CmsContent() {
 		super(CmsObjectType.CONTENT, IDfContent.class);
+	}
+
+	@Override
+	protected String calculateLabel(IDfContent object) throws DfException {
+		return UUID.randomUUID().toString();
 	}
 
 	@Override

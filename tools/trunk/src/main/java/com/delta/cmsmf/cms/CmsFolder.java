@@ -31,6 +31,11 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 	private static boolean HANDLERS_READY = false;
 
+	@Override
+	protected String calculateLabel(IDfFolder folder) throws DfException {
+		return folder.getFolderPath(0);
+	}
+
 	private static synchronized void initHandlers() {
 		if (CmsFolder.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {

@@ -34,6 +34,9 @@
 			<column name="object_number" type="long" remarks="The export ordinal number of the object (import will be done in this order as well)">
 				<constraints nullable="false" unique="true"/>
 			</column>
+			<column name="object_label" type="varchar(128)" remarks="A label to quickly identify the object">
+				<constraints nullable="true" />
+			</column>
 		</createTable>
 		<addPrimaryKey tableName="dctm_object" columnNames="object_id" />
 		<addForeignKeyConstraint constraintName="fk_dctm_object_plan"
