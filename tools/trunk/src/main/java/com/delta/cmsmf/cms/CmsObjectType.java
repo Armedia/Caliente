@@ -27,16 +27,7 @@ public enum CmsObjectType {
 	TYPE(CmsType.class, IDfType.class, CmsDependencyType.HIERARCHY),
 	FORMAT(CmsFormat.class, IDfFormat.class),
 	FOLDER(CmsFolder.class, IDfFolder.class),
-	DOCUMENT(CmsDocument.class, IDfDocument.class) {
-		@Override
-		protected CmsObjectType getActualType(IDfPersistentObject obj) throws DfException {
-			if (obj instanceof IDfDocument) {
-				IDfDocument doc = IDfDocument.class.cast(obj);
-				if (doc.isReference()) { return CmsObjectType.DOCUMENT_REF; }
-			}
-			return super.getActualType(obj);
-		}
-	},
+	DOCUMENT(CmsDocument.class, IDfDocument.class),
 	CONTENT(CmsContent.class, IDfContent.class, "dmr_content"),
 	DOCUMENT_REF(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER);
 
@@ -69,19 +60,6 @@ public enum CmsObjectType {
 		this.dfClass = dfClass;
 		this.objectClass = objectClass;
 		this.peerDependencyType = Tools.coalesce(peerDependencyType, CmsDependencyType.NONE);
-	}
-
-	/**
-	 * <p>
-	 * This method permits individual instances of types to determine alternative object types given
-	 * special circumstances (for instance, reference documents vs. documents).
-	 * </p>
-	 *
-	 * @param obj
-	 * @return the actual type
-	 */
-	protected CmsObjectType getActualType(IDfPersistentObject obj) throws DfException {
-		return this;
 	}
 
 	public final boolean isProperClass(IDfPersistentObject o) {
@@ -117,9 +95,20 @@ public enum CmsObjectType {
 	private static Map<String, CmsObjectType> DECODER = null;
 
 	public static CmsObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedObjectTypeException {
+	UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
-		return CmsObjectType.decodeType(object.getType().getName()).getActualType(object);
+		IDfType type = object.getType();
+		while (type != null) {
+			try {
+				return CmsObjectType.decodeType(type.getName());
+			} catch (UnsupportedObjectTypeException e) {
+				// This type isn't supported...try its parent
+				type = type.getSuperType();
+				continue;
+			}
+		}
+		// The only way we get here is if we can't decode into a supported type
+		throw new UnsupportedObjectTypeException(object.getType().getName());
 	}
 
 	public static CmsObjectType decodeType(String type) throws UnsupportedObjectTypeException {

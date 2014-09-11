@@ -33,8 +33,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	private static synchronized void initHandlers() {
 		if (CmsFolder.HANDLERS_READY) { return; }
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.R_FOLDER_PATH,
-			CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FOLDER, CmsDataType.DF_STRING,
+			CmsAttributes.R_FOLDER_PATH, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 
 		CmsFolder.HANDLERS_READY = true;
 	}
@@ -45,9 +45,13 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = '%s'";
 
-	public CmsFolder() {
-		super(CmsObjectType.FOLDER, IDfFolder.class);
+	protected CmsFolder(CmsObjectType altType) {
+		super(altType, IDfFolder.class);
 		CmsFolder.initHandlers();
+	}
+
+	public CmsFolder() {
+		this(CmsObjectType.FOLDER);
 	}
 
 	@Override

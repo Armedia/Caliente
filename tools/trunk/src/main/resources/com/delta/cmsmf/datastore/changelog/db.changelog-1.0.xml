@@ -31,6 +31,9 @@
 			<column name="object_type" type="varchar2(32)" remarks="The type of documentum object">
 				<constraints nullable="false" />
 			</column>
+			<column name="object_subtype" type="varchar(32)" remarks="The exact type of documentum object">
+				<constraints nullable="false" />
+			</column>
 			<column name="object_number" type="long" remarks="The export ordinal number of the object (import will be done in this order as well)">
 				<constraints nullable="false" unique="true"/>
 			</column>
@@ -43,8 +46,15 @@
 			baseTableName="dctm_object" baseColumnNames="object_id"
 			referencedTableName="dctm_export_plan" referencedColumnNames="object_id"
 			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="dctm_object" indexName="idx_dctm_object_number" unique="true">
+			<column name="object_number" />
+		</createIndex>
 		<createIndex tableName="dctm_object" indexName="idx_dctm_object_type" unique="true">
 			<column name="object_type" />
+			<column name="object_number" />
+		</createIndex>
+		<createIndex tableName="dctm_object" indexName="idx_dctm_object_subtype" unique="true">
+			<column name="object_subtype" />
 			<column name="object_number" />
 		</createIndex>
 		<addAutoIncrement tableName="dctm_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>

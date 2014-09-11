@@ -31,19 +31,19 @@ public class CmsExporterTest extends AbstractTest {
 		exporter.doExport(store, getSessionManager(), "from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 		QueryRunner qr = new QueryRunner(getDataSource());
 		qr.query(
-			"select o.object_type, o.object_number, o.object_id, o.object_label, p.traversed from dctm_object o, dctm_export_plan p where p.object_id = o.object_id order by o.object_type, o.object_number",
+			"select o.object_type, o.object_subtype, o.object_number, o.object_id, o.object_label from dctm_object o, dctm_export_plan p where p.object_id = o.object_id order by o.object_type, o.object_number",
 			new ResultSetHandler<Integer>() {
 				@Override
 				public Integer handle(ResultSet rs) throws SQLException {
 					int count = 0;
-					final String columnFormat = "%-12s\t%-6s\t%-16s\t%s%n";
-					System.out.printf(columnFormat, "TYPE", "NUMBER", "ID", "LABEL");
+					final String columnFormat = "%-12s\t%-12s\t%-6s\t%-16s\t%s%n";
+					System.out.printf(columnFormat, "TYPE", "SUBTYPE", "NUMBER", "ID", "LABEL");
 					System.out
-						.printf("================================================================================%n");
+					.printf("==========================================================================================%n");
 					while (rs.next()) {
 						count++;
 						System.out.printf(columnFormat, rs.getString(1), rs.getString(2), rs.getString(3),
-							rs.getString(4));
+							rs.getString(4), rs.getString(5));
 					}
 					return count;
 				}
