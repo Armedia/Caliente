@@ -652,17 +652,6 @@ public abstract class DctmObject implements Serializable {
 			// for now ignore setting internal and system attributes
 			// TODO check to see if we need to set any internal or system attributes of various
 			// types
-			try {
-				prsstntObj.findAttrIndex(attrName);
-			} catch (DfException e) {
-				if ("DM_API_E_BADATTRNAME".equals(e.getMessageId())) {
-					// Bad attribute - warn it, but skip it;
-					DctmObject.logger.warn(String.format("Failed to locate attribute [%s] in %s with id [%s]",
-						attrName, dctmObj.dctmObjectType, dctmObj.srcObjectID));
-					continue;
-				}
-				throw e;
-			}
 			if (!attrName.startsWith("r_") && !attrName.startsWith("i_")) {
 				setAttributeInCMS(prsstntObj, attrName, dctmObj.findAttribute(attrName), isUpdate);
 			}
@@ -687,6 +676,11 @@ public abstract class DctmObject implements Serializable {
 	 *             the DfException
 	 */
 	protected void clearAttributeInCMS(IDfPersistentObject prsstntObj, String attrName) throws DfException {
+		if (prsstntObj.findAttrIndex(attrName) < 0) {
+			DctmObject.logger.warn(String.format("Failed to locate attribute [%s] in %s with id [%s]", attrName,
+				prsstntObj.getType().getName(), prsstntObj.getObjectId().getId()));
+			return;
+		}
 
 		if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
 			DctmObject.logger.debug("Clearing attribute with name: " + attrName + " from object with id: "
@@ -742,6 +736,11 @@ public abstract class DctmObject implements Serializable {
 	 */
 	protected void setAttributeInCMS(IDfPersistentObject prsstntObj, String attrName, DctmAttribute dctmAttribute,
 		boolean isUpdate) throws DfException {
+		if (prsstntObj.findAttrIndex(attrName) < 0) {
+			DctmObject.logger.warn(String.format("Failed to locate attribute [%s] in %s with id [%s]", attrName,
+				prsstntObj.getType().getName(), prsstntObj.getObjectId().getId()));
+			return;
+		}
 
 		if (DctmObject.logger.isEnabledFor(Level.DEBUG)) {
 			if (dctmAttribute.getAttrValueType() == DctmAttributeTypesEnum.SINGLE_VALUE_TYPE_ATTRIBUTE) {
@@ -811,7 +810,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = (String) dctmAttribute.getSingleValue();
 					if (strVal.equals(CMSMFAppConstants.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(attrName)) {
+						.contains(attrName)) {
 						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 							this.dctmSession);
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -830,7 +829,7 @@ public abstract class DctmObject implements Serializable {
 						String strVal = (String) attrVal;
 						if (strVal.equals(CMSMFAppConstants.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-								.contains(attrName)) {
+							.contains(attrName)) {
 							strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 								this.dctmSession);
 							if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -961,7 +960,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = prsstntObj.getString(idfAttr.getName());
 					if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(idfAttr.getName())) {
+						.contains(idfAttr.getName())) {
 						strVal = CMSMFAppConstants.DM_DBO;
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + idfAttr.getName() + " attribute of object with id: "
@@ -1033,7 +1032,7 @@ public abstract class DctmObject implements Serializable {
 							String strVal = prsstntObj.getRepeatingString(idfAttr.getName(), i);
 							if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 								&& RunTimeProperties.getRunTimePropertiesInstance()
-									.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
+								.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
 								strVal = CMSMFAppConstants.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()
