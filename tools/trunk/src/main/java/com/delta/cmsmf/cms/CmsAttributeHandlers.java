@@ -81,6 +81,12 @@ class CmsAttributeHandlers {
 	}
 
 	static final AttributeHandler DEFAULT_HANDLER = new AttributeHandler();
+	static final AttributeHandler NO_IMPORT_HANDLER = new AttributeHandler() {
+		@Override
+		public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
+			return false;
+		}
+	};
 
 	private static final AttributeHandler DBO_HANDLER = new AttributeHandler() {
 
@@ -144,6 +150,10 @@ class CmsAttributeHandlers {
 		//
 		// Next...
 		//
+		CmsAttributeHandlers.setAttributeHandler(null, CmsDataType.DF_BOOLEAN, CmsAttributes.R_IMMUTABLE_FLAG,
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(null, CmsDataType.DF_BOOLEAN, CmsAttributes.R_FROZEN_FLAG,
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 	}
 
 	private CmsAttributeHandlers() {
@@ -187,7 +197,7 @@ class CmsAttributeHandlers {
 	}
 
 	static AttributeHandler getAttributeHandler(IDfPersistentObject object, IDfAttr attribute) throws DfException,
-		UnsupportedObjectTypeException {
+	UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide an object to identify the attribute handler for"); }
 		final CmsObjectType objectType = CmsObjectType.decodeType(object);

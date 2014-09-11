@@ -30,6 +30,9 @@ public class CmsAttributes {
 	/** The r_immutable_flag attribute of dm_sysobject. */
 	public static final String R_IMMUTABLE_FLAG = "r_immutable_flag";
 
+	/** The r_frozen_flag attribute of dm_sysobject. */
+	public static final String R_FROZEN_FLAG = "r_immutable_flag";
+
 	/** The i_antecedent_id attribute of dm_sysobject. */
 	public static final String I_ANTECEDENT_ID = "i_antecedent_id";
 

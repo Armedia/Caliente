@@ -6,7 +6,6 @@ package com.delta.cmsmf.cms;
 
 import java.util.Collection;
 
-import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfACL;
@@ -36,25 +35,19 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	private static synchronized void initHandlers() {
 		if (CmsACL.HANDLERS_READY) { return; }
-		AttributeHandler handler = new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
-				return false;
-			}
-		};
 		// These are the attributes that require special handling on import
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.OWNER_NAME,
-			handler);
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.OBJECT_NAME,
-			handler);
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.R_ACCESSOR_NAME, handler);
+			CmsAttributes.R_ACCESSOR_NAME, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.R_ACCESSOR_PERMIT, handler);
+			CmsAttributes.R_ACCESSOR_PERMIT, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.R_IS_GROUP,
-			handler);
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
-			CmsAttributes.R_ACCESSOR_XPERMIT, handler);
+			CmsAttributes.R_ACCESSOR_XPERMIT, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 
 		CmsACL.HANDLERS_READY = true;
 	}

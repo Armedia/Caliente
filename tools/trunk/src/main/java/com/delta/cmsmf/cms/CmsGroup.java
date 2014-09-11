@@ -10,12 +10,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
@@ -34,18 +32,12 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 	private static synchronized void initHandlers() {
 		if (CmsGroup.HANDLERS_READY) { return; }
-		AttributeHandler handler = new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
-				return false;
-			}
-		};
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING, CmsAttributes.GROUP_NAME,
-			handler);
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING,
-			CmsAttributes.GROUPS_NAMES, handler);
+			CmsAttributes.GROUPS_NAMES, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING, CmsAttributes.USERS_NAMES,
-			handler);
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsGroup.HANDLERS_READY = true;
 	}
 
@@ -96,7 +88,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 	@Override
 	protected void doPersistDependencies(IDfGroup group, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final IDfSession session = group.getSession();
 		IDfUser owner = session.getUser(group.getOwnerName());
 		if (owner != null) {
@@ -186,10 +178,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(v.asString());
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
-							groupName.asString(), v.asString()));
+						.warn(String
+							.format(
+								"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
+								groupName.asString(), v.asString()));
 					continue;
 				}
 				actualUsers.add(v);
@@ -207,10 +199,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfUser user = session.getUser(v.asString());
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
-							groupName.asString(), v.asString()));
+						.warn(String
+							.format(
+								"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
+								groupName.asString(), v.asString()));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
@@ -230,10 +222,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfGroup other = session.getGroup(v.asString());
 				if (other == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
-								groupName, v.asString()));
+					.warn(String
+						.format(
+							"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
+							groupName, v.asString()));
 					continue;
 				}
 				actualGroups.add(v);

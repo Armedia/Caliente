@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
@@ -33,15 +32,9 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 	private static synchronized void initHandlers() {
 		if (CmsFolder.HANDLERS_READY) { return; }
-		AttributeHandler handler = new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
-				return false;
-			}
-		};
 		// These are the attributes that require special handling on import
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.R_FOLDER_PATH,
-			handler);
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 
 		CmsFolder.HANDLERS_READY = true;
 	}
@@ -86,7 +79,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 	@Override
 	protected void doPersistDependencies(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final IDfSession session = folder.getSession();
 		IDfPersistentObject[] dep = {
 			// The owner
@@ -136,10 +129,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								folder.getObjectId().getId(), userValue.asString()));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							folder.getObjectId().getId(), userValue.asString()));
 					continue;
 				}
 

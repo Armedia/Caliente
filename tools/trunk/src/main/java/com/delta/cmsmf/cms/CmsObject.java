@@ -27,6 +27,7 @@ import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
@@ -288,6 +289,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 		// We assume the worst, out of the gate
 		IDfLocalTransaction localTx = null;
+		boolean mustFreeze = false;
+		boolean mustImmute = false;
+		IDfSysObject sysObject = null;
 		try {
 			if (session.isTransactionActive()) {
 				localTx = session.beginTransEx();
@@ -305,9 +309,45 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				// Create a new object
 				object = newObject(session);
 				result = Result.CREATED;
+				if (object instanceof IDfSysObject) {
+					sysObject = IDfSysObject.class.cast(object);
+				}
 			} else {
 				if (isSameObject(object)) { return Result.DUPLICATE; }
 				result = Result.UPDATED;
+				if (object instanceof IDfSysObject) {
+					sysObject = IDfSysObject.class.cast(object);
+					if (sysObject.isFrozen()) {
+						mustFreeze = true;
+						if (this.log.isDebugEnabled()) {
+							this.log.debug(String.format("Clearing frozen status from [%s](%s)", this.label, this.id));
+						}
+						sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, false);
+						sysObject.save();
+					}
+					if (sysObject.isImmutable()) {
+						mustImmute = true;
+						if (this.log.isDebugEnabled()) {
+							this.log.debug(String
+								.format("Clearing immutable status from [%s](%s)", this.label, this.id));
+						}
+						sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, false);
+						sysObject.save();
+					}
+				}
+			}
+
+			CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
+			if (frozen != null) {
+				// We only copy over the "true" values - we don't override local frozen status
+				// if it's set to true, and the incoming value is false
+				mustFreeze |= frozen.getValue().asBoolean();
+			}
+			CmsAttribute immutable = getAttribute(CmsAttributes.R_IMMUTABLE_FLAG);
+			if (immutable != null) {
+				// We only copy over the "true" values - we don't override local immutable status
+				// if it's set to true, and the incoming value is false
+				mustImmute |= immutable.getValue().asBoolean();
 			}
 
 			// Mapping idMapping =
@@ -356,9 +396,26 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			finalizeConstruction(object, isNew);
 			updateModifyDate(object);
+			object.save();
 			ok = true;
 			return result;
 		} finally {
+			if (ok && (sysObject != null)) {
+				if (mustImmute) {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Setting immutability status to [%s](%s)", this.label, this.id));
+					}
+					sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
+					sysObject.save();
+				}
+				if (mustFreeze) {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Setting frozen status to [%s](%s)", this.label, this.id));
+					}
+					sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, true);
+					sysObject.save();
+				}
+			}
 			if (transOpen) {
 				if (ok) {
 					if (localTx != null) {

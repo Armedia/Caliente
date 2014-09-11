@@ -4,9 +4,7 @@
 
 package com.delta.cmsmf.cms;
 
-import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.documentum.fc.client.IDfFormat;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
@@ -20,14 +18,8 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 
 	private static synchronized void initHandlers() {
 		if (CmsFormat.HANDLERS_READY) { return; }
-		AttributeHandler handler = new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
-				return false;
-			}
-		};
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FORMAT, CmsDataType.DF_STRING, CmsAttributes.NAME,
-			handler);
+			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsFormat.HANDLERS_READY = true;
 	}
 
