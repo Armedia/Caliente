@@ -295,9 +295,9 @@ public class CmsObjectStoreTest extends AbstractTest {
 					continue;
 				}
 				final CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
+				final DocumentumType dt = DocumentumType.decode(obj);
 				IDfCollection results = DfUtils.executeQuery(session,
-					String.format("select r_object_id from %s", t.getDocumentumType(), max, max),
-					IDfQuery.DF_EXECREAD_QUERY);
+					String.format("select r_object_id from %s", dt.dmTable, max, max), IDfQuery.DF_EXECREAD_QUERY);
 				try {
 					int count = 0;
 					while (results.next()) {
@@ -399,14 +399,14 @@ public class CmsObjectStoreTest extends AbstractTest {
 															String
 																.format(
 																	"Expectation failed on attribute [%s.%s] (possibles = [%s], actual = [%s])",
-																	obj.getType().getDocumentumType(), name,
-																	allowables, dataType.getValue(decoded)), allowables
+																	obj.getSubtype(), name, allowables,
+															dataType.getValue(decoded)), allowables
 																.contains(dataType.getValue(decoded)));
 													} else {
 														Assert.assertEquals(String.format(
-															"Expectation failed on attribute [%s.%s]", obj.getType()
-																.getDocumentumType(), name), dataType
-															.getValue(expected), dataType.getValue(decoded));
+															"Expectation failed on attribute [%s.%s]",
+														obj.getSubtype(), name), dataType.getValue(expected),
+														dataType.getValue(decoded));
 													}
 													num++;
 												}
@@ -525,9 +525,9 @@ public class CmsObjectStoreTest extends AbstractTest {
 				if (t == CmsObjectType.DOCUMENT_REF) {
 					continue;
 				}
+				final DocumentumType dt = DocumentumType.decode(t);
 				IDfCollection results = DfUtils.executeQuery(session,
-					String.format("select r_object_id from %s", t.getDocumentumType(), max, max),
-					IDfQuery.DF_EXECREAD_QUERY);
+					String.format("select r_object_id from %s", dt.dmTable, max, max), IDfQuery.DF_EXECREAD_QUERY);
 				try {
 					int count = 0;
 					while (results.next()) {

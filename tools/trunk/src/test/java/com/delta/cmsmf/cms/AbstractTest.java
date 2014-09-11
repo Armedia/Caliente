@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.EnumMap;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -30,6 +32,62 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
 public abstract class AbstractTest {
+
+	protected enum DocumentumType {
+		//
+		DM_USER(CmsObjectType.USER),
+		DM_GROUP(CmsObjectType.GROUP),
+		DM_ACL(CmsObjectType.ACL),
+		DM_TYPE(CmsObjectType.TYPE),
+		DM_FORMAT(CmsObjectType.FORMAT),
+		DM_FOLDER(CmsObjectType.FOLDER),
+		DM_DOCUMENT(CmsObjectType.DOCUMENT),
+		DM_CONTENT(CmsObjectType.CONTENT, "dmr_content");
+
+		public final CmsObjectType cmsType;
+		public final String dmTable;
+
+		private DocumentumType(CmsObjectType cmsType) {
+			this(cmsType, null);
+		}
+
+		private DocumentumType(CmsObjectType cmsType, String dmTable) {
+			this.cmsType = cmsType;
+			if (dmTable == null) {
+				dmTable = name().toLowerCase();
+			}
+			this.dmTable = dmTable;
+		}
+
+		private static Map<CmsObjectType, DocumentumType> MAP = new EnumMap<CmsObjectType, DocumentumType>(
+			CmsObjectType.class);
+
+		public static DocumentumType decode(CmsObject<?> object) {
+			if (object == null) { throw new IllegalArgumentException("Must provide an object to decode from"); }
+			return DocumentumType.decode(object.getType());
+		}
+
+		public static DocumentumType decode(CmsObjectType type) {
+			synchronized (DocumentumType.MAP) {
+				if (DocumentumType.MAP.isEmpty()) {
+					for (DocumentumType t : DocumentumType.values()) {
+						DocumentumType.MAP.put(t.cmsType, t);
+					}
+				}
+			}
+			if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
+			DocumentumType ret = DocumentumType.MAP.get(type);
+			if (ret == null) {
+				switch (type) {
+					case DOCUMENT_REF:
+						return DocumentumType.DM_DOCUMENT;
+					default:
+						throw new IllegalArgumentException(String.format("Unsupported type [%s]", type));
+				}
+			}
+			return ret;
+		}
+	}
 
 	protected final Logger log = Logger.getLogger(AbstractTest.class);
 
