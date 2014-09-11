@@ -22,6 +22,7 @@ public enum CMSMFProperties {
 	SKIP_ACLS("cmsmf.app.export.skip.acls"),
 	SKIP_USERS("cmsmf.app.export.skip.users"),
 	SKIP_GROUPS("cmsmf.app.export.skip.groups"),
+	SKIP_VSTAMP("cmsmf.app.export.skip.vstamp"),
 	POST_PROCESS_IMPORT("cmsmf.app.import.postprocess.flag"),
 	STATE_CABINET_NAME("cmsmf.app.state.cabinet");
 

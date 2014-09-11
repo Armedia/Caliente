@@ -32,7 +32,8 @@ public enum CLIParam {
 	smtpHost(CMSMFProperties.MAIL_SMTP_HOST, true, "The SMTP server through which e-mail must be sent"),
 	skip_users(CMSMFProperties.SKIP_USERS, false, "Skip exporting users"),
 	skip_groups(CMSMFProperties.SKIP_GROUPS, false, "Skip exporting groups"),
-	skip_acls(CMSMFProperties.SKIP_ACLS, false, "Skip exporting acls");
+	skip_acls(CMSMFProperties.SKIP_ACLS, false, "Skip exporting acls"),
+	skip_vstamp(CMSMFProperties.SKIP_VSTAMP, false, "Skip modifying i_vstamp");
 
 	public final CMSMFProperties property;
 	public final Option option;

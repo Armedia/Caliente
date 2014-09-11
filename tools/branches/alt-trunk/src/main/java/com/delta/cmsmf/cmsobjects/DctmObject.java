@@ -19,6 +19,7 @@ import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
+import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
@@ -351,12 +352,11 @@ public abstract class DctmObject implements Serializable {
 		String objType = prsstntObject.getType().getName();
 		// prepare sql to be executed
 		IDfTime modifyDate = new DfTime(dctmObj.getDateSingleAttrValue(DctmAttrNameConstants.R_MODIFY_DATE));
-		int vStamp = dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
-
-		String sqlStr = "UPDATE " + objType + "_s " + "SET r_modify_date = TO_DATE(''"
-			+ modifyDate.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
-			+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN + "''), i_vstamp = " + vStamp + " WHERE r_object_id = ''"
-			+ prsstntObject.getObjectId().getId() + "''";
+		String sql = "UPDATE %s_s SET r_modify_date = TO_DATE(''%s'', ''%s'') %s WHERE r_object_id = ''%s''";
+		String vstampFlag = (CMSMFProperties.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
+			dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP)));
+		String sqlStr = String.format(sql, objType, modifyDate.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN),
+			CMSMFAppConstants.ORACLE_DATETIME_PATTERN, vstampFlag, prsstntObject.getObjectId().getId());
 
 		runExecSQL(prsstntObject.getSession(), sqlStr);
 
@@ -463,6 +463,7 @@ public abstract class DctmObject implements Serializable {
 	 *             Signals that Dctm Server error has occurred.
 	 */
 	protected void updateVStamp(IDfPersistentObject prsstntObject, DctmObject dctmObj) throws DfException {
+		if (CMSMFProperties.SKIP_VSTAMP.getBoolean()) { return; }
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started updating vStamp of object");
 		}
@@ -494,6 +495,7 @@ public abstract class DctmObject implements Serializable {
 	 *             Signals that Dctm Server error has occurred.
 	 */
 	protected void updateVStamp(IDfPersistentObject prsstntObject, String tableName, int vStamp) throws DfException {
+		if (CMSMFProperties.SKIP_VSTAMP.getBoolean()) { return; }
 		if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 			DctmObject.logger.info("Started updating vStamp of an object");
 		}
@@ -810,7 +812,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = (String) dctmAttribute.getSingleValue();
 					if (strVal.equals(CMSMFAppConstants.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-						.contains(attrName)) {
+							.contains(attrName)) {
 						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 							this.dctmSession);
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -829,7 +831,7 @@ public abstract class DctmObject implements Serializable {
 						String strVal = (String) attrVal;
 						if (strVal.equals(CMSMFAppConstants.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-							.contains(attrName)) {
+								.contains(attrName)) {
 							strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 								this.dctmSession);
 							if (DctmObject.logger.isEnabledFor(Level.INFO)) {
@@ -960,7 +962,7 @@ public abstract class DctmObject implements Serializable {
 					String strVal = prsstntObj.getString(idfAttr.getName());
 					if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
-						.contains(idfAttr.getName())) {
+							.contains(idfAttr.getName())) {
 						strVal = CMSMFAppConstants.DM_DBO;
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + idfAttr.getName() + " attribute of object with id: "
@@ -1032,7 +1034,7 @@ public abstract class DctmObject implements Serializable {
 							String strVal = prsstntObj.getRepeatingString(idfAttr.getName(), i);
 							if (strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())
 								&& RunTimeProperties.getRunTimePropertiesInstance()
-								.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
+									.getAttrsToCheckForRepoOperatorName().contains(idfAttr.getName())) {
 								strVal = CMSMFAppConstants.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()
