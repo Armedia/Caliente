@@ -32,11 +32,6 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 	private static boolean HANDLERS_READY = false;
 
-	@Override
-	protected String calculateLabel(IDfGroup group) throws DfException {
-		return group.getGroupName();
-	}
-
 	private static synchronized void initHandlers() {
 		if (CmsGroup.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
@@ -63,6 +58,11 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	public CmsGroup() {
 		super(CmsObjectType.GROUP, IDfGroup.class);
 		CmsGroup.initHandlers();
+	}
+
+	@Override
+	protected String calculateLabel(IDfGroup group) throws DfException {
+		return group.getGroupName();
 	}
 
 	private Collection<IDfValue> getUsersWithDefaultGroup(IDfGroup group) throws DfException {
@@ -96,7 +96,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 	@Override
 	protected void doPersistDependencies(IDfGroup group, CmsDependencyManager dependencyManager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		final IDfSession session = group.getSession();
 		IDfUser owner = session.getUser(group.getOwnerName());
 		if (owner != null) {
@@ -186,10 +186,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(v.asString());
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
-								groupName.asString(), v.asString()));
+					.warn(String
+						.format(
+							"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
+							groupName.asString(), v.asString()));
 					continue;
 				}
 				actualUsers.add(v);
@@ -207,10 +207,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfUser user = session.getUser(v.asString());
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
-								groupName.asString(), v.asString()));
+					.warn(String
+						.format(
+							"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
+							groupName.asString(), v.asString()));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
@@ -230,10 +230,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfGroup other = session.getGroup(v.asString());
 				if (other == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
-							groupName, v.asString()));
+						.warn(String
+							.format(
+								"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
+								groupName, v.asString()));
 					continue;
 				}
 				actualGroups.add(v);

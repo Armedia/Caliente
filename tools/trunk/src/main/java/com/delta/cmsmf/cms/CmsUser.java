@@ -28,11 +28,6 @@ public class CmsUser extends CmsObject<IDfUser> {
 
 	private static boolean HANDLERS_READY = false;
 
-	@Override
-	protected String calculateLabel(IDfUser user) throws DfException {
-		return user.getUserName();
-	}
-
 	private static synchronized void initHandlers() {
 		if (CmsUser.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
@@ -81,6 +76,11 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
+	protected String calculateLabel(IDfUser user) throws DfException {
+		return user.getUserName();
+	}
+
+	@Override
 	protected void doPersistDependencies(IDfUser user, CmsDependencyManager manager) throws DfException, CMSMFException {
 		final IDfSession session = user.getSession();
 		final IDfPersistentObject[] deps = {
@@ -101,7 +101,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 	@Override
 	protected boolean isValidForLoad(IDfUser user) throws DfException {
 		final String name = user.getUserName();
-		return !name.startsWith("dm_") || !name.equals("dmadmin");
+		return !name.startsWith("dm_") && !name.equals("dmadmin");
 	}
 
 	@Override

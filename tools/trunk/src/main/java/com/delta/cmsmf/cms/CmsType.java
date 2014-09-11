@@ -23,17 +23,6 @@ public class CmsType extends CmsObject<IDfType> {
 
 	private static boolean HANDLERS_READY = false;
 
-	@Override
-	protected String calculateLabel(IDfType type) throws DfException {
-		String superName = type.getSuperName();
-		if ((superName != null) && (superName.length() > 0)) {
-			superName = String.format(" (extends %s)", superName);
-		} else {
-			superName = "";
-		}
-		return String.format("%s%s", type.getName(), superName);
-	}
-
 	private static synchronized void initHandlers() {
 		if (CmsType.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
@@ -67,6 +56,17 @@ public class CmsType extends CmsObject<IDfType> {
 	public CmsType() {
 		super(CmsObjectType.TYPE, IDfType.class);
 		CmsType.initHandlers();
+	}
+
+	@Override
+	protected String calculateLabel(IDfType type) throws DfException {
+		String superName = type.getSuperName();
+		if ((superName != null) && (superName.length() > 0)) {
+			superName = String.format(" (extends %s)", superName);
+		} else {
+			superName = "";
+		}
+		return String.format("%s%s", type.getName(), superName);
 	}
 
 	@Override

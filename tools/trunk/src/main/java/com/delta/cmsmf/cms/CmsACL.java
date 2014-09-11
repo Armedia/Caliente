@@ -34,11 +34,6 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	private static boolean HANDLERS_READY = false;
 
-	@Override
-	protected String calculateLabel(IDfACL acl) throws DfException {
-		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
-	}
-
 	private static synchronized void initHandlers() {
 		if (CmsACL.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
@@ -76,6 +71,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
+	protected String calculateLabel(IDfACL acl) throws DfException {
+		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
+	}
+
+	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfACL acl) throws DfException {
 		final String aclId = acl.getObjectId().getId();
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
@@ -110,7 +110,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected void doPersistDependencies(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		final int count = acl.getAccessorCount();
 		final IDfSession session = acl.getSession();
 		for (int i = 0; i < count; i++) {

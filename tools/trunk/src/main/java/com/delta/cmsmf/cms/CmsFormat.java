@@ -18,11 +18,6 @@ import com.documentum.fc.common.IDfValue;
 public class CmsFormat extends CmsObject<IDfFormat> {
 	private static boolean HANDLERS_READY = false;
 
-	@Override
-	protected String calculateLabel(IDfFormat format) throws DfException {
-		return format.getName();
-	}
-
 	private static synchronized void initHandlers() {
 		if (CmsFormat.HANDLERS_READY) { return; }
 		AttributeHandler handler = new AttributeHandler() {
@@ -39,6 +34,11 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 	public CmsFormat() {
 		super(CmsObjectType.FORMAT, IDfFormat.class);
 		CmsFormat.initHandlers();
+	}
+
+	@Override
+	protected String calculateLabel(IDfFormat format) throws DfException {
+		return format.getName();
 	}
 
 	@Override
