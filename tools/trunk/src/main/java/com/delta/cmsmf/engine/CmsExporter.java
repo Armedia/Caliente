@@ -4,15 +4,18 @@
 
 package com.delta.cmsmf.engine;
 
+import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cms.DfValueFactory;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -23,6 +26,7 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
+import com.documentum.fc.common.IDfValue;
 
 /**
  * @author Diego Rivera <diego.rivera@armedia.com>
@@ -37,9 +41,11 @@ public class CmsExporter {
 
 		IDfSession session = sessionManager.acquireSession();
 
-		// TODO: Make capacity configurable
+		final AtomicInteger activeCounter = new AtomicInteger(0);
+		final String exitFlag = String.format("%s[%s]", toString(), UUID.randomUUID().toString());
+		final IDfValue exitValue = DfValueFactory.newStringValue(exitFlag);
 		final int threadCount = 10;
-		final BlockingQueue<IDfId> workQueue = new ArrayBlockingQueue<IDfId>(threadCount);
+		final BlockingQueue<IDfValue> workQueue = new ArrayBlockingQueue<IDfValue>(threadCount);
 		ExecutorService executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
 
@@ -47,18 +53,27 @@ public class CmsExporter {
 			@Override
 			public void run() {
 				IDfSession session = sessionManager.acquireSession();
+				activeCounter.incrementAndGet();
 				try {
 					while (true) {
 						if (CmsExporter.this.log.isDebugEnabled()) {
 							CmsExporter.this.log.debug("Polling the queue...");
 						}
-						final IDfId id;
+						final IDfValue next;
 						try {
-							id = workQueue.take();
+							next = workQueue.take();
 						} catch (InterruptedException e) {
 							Thread.currentThread().interrupt();
 							return;
 						}
+
+						if (exitFlag.equals(next.asString())) {
+							// Work complete
+							CmsExporter.this.log.info("Exiting the export polling loop");
+							return;
+						}
+
+						final IDfId id = next.asId();
 
 						if (CmsExporter.this.log.isDebugEnabled()) {
 							CmsExporter.this.log.debug(String.format("Polled ID %s", id.getId()));
@@ -86,6 +101,7 @@ public class CmsExporter {
 						}
 					}
 				} finally {
+					activeCounter.decrementAndGet();
 					sessionManager.releaseSession(session);
 				}
 			}
@@ -107,7 +123,7 @@ public class CmsExporter {
 					if (this.log.isTraceEnabled()) {
 						this.log.trace("Retrieving the next ID from the query");
 					}
-					final IDfId id = results.getId("r_object_id");
+					final IDfValue id = results.getValue("r_object_id");
 					counter++;
 					try {
 						workQueue.put(id);
@@ -121,7 +137,22 @@ public class CmsExporter {
 						break;
 					}
 				}
+				for (int i = 0; i < threadCount; i++) {
+					try {
+						workQueue.put(exitValue);
+					} catch (InterruptedException e) {
+						// Here we have a problem: we're timing out while adding the exit values...
+						this.log.warn("Interrupted while attempting to request executor thread termination", e);
+						break;
+					}
+				}
 			} finally {
+				executor.shutdownNow();
+				try {
+					executor.awaitTermination(2, TimeUnit.MINUTES);
+				} catch (InterruptedException e) {
+					this.log.warn("Interrupted while waiting for executor termination", e);
+				}
 				DfUtils.closeQuietly(results);
 			}
 		} finally {

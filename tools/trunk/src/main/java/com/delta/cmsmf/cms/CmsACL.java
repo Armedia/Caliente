@@ -105,12 +105,16 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected void doPersistDependencies(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		final int count = acl.getAccessorCount();
 		final IDfSession session = acl.getSession();
 		for (int i = 0; i < count; i++) {
 			final String name = acl.getAccessorName(i);
 			final boolean group = acl.isGroup(i);
+			if (name.startsWith("dm_")) {
+				// Skip system users
+				continue;
+			}
 			final IDfPersistentObject obj = (group ? session.getGroup(name) : session.getUser(name));
 			if (obj == null) {
 				this.logger.warn(String.format("WARNING: Missing dependency for acl [%s:%s] - %s [%s] not found",

@@ -16,7 +16,7 @@ public abstract class CmsDependencyManager {
 		private final CmsObjectType type;
 		private final String id;
 
-		public Dependency(IDfPersistentObject obj) throws DfException {
+		public Dependency(IDfPersistentObject obj) throws DfException, UnsupportedObjectTypeException {
 			this(CmsObjectType.decodeType(obj), obj.getObjectId());
 		}
 
@@ -67,7 +67,15 @@ public abstract class CmsDependencyManager {
 		if (object == null) { throw new IllegalArgumentException("Must provide an IDfPersistentObject object"); }
 		Boolean ret = persistDfObject(object);
 		if (ret == null) {
-			persistDependency(CmsObjectType.decodeType(object), object.getObjectId());
+			final CmsObjectType type;
+			try {
+				type = CmsObjectType.decodeType(object);
+			} catch (UnsupportedObjectTypeException e) {
+				// Log a warning?
+				this.log.warn(e.getMessage());
+				return;
+			}
+			persistDependency(type, object.getObjectId());
 		}
 	}
 

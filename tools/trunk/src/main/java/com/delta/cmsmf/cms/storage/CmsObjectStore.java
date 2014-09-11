@@ -33,6 +33,7 @@ import com.delta.cmsmf.cms.CmsDependencyManager;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
+import com.delta.cmsmf.cms.UnsupportedObjectTypeException;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
@@ -73,32 +74,32 @@ public class CmsObjectStore extends CmsDependencyManager {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -211,6 +212,8 @@ public class CmsObjectStore extends CmsDependencyManager {
 		Object[] attValue = new Object[4];
 		Object[] propData = new Object[4];
 
+		PreparedStatement lockPS = null;
+		ResultSet lockRS = null;
 		try {
 			QueryRunner qr = CmsObjectStore.getQueryRunner();
 			if (isSerialized(c, objectId)) {
@@ -218,6 +221,14 @@ public class CmsObjectStore extends CmsDependencyManager {
 				return false;
 			}
 			persistDependency(c, new Dependency(object));
+			final String sql = "select * from dctm_export_plan where traversed = false and object_id = ? and not exists ( select o.object_id from dctm_object o where o.object_id = dctm_export_plan.object_id ) for update";
+			lockPS = c.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+			lockPS.setString(1, objectId);
+			lockRS = lockPS.executeQuery();
+			if (!lockRS.next()) {
+				// Already serialized...
+				return false;
+			}
 			// TODO: Attempt to lock the object ID for the rest of the import, to
 			// manage the race condition of two threads attempting to commit the same object
 
@@ -304,10 +315,14 @@ public class CmsObjectStore extends CmsDependencyManager {
 				propertyParameters.toArray(CmsObjectStore.NO_PARAMS));
 			qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
 				propertyValueParameters.toArray(CmsObjectStore.NO_PARAMS));
+			// lockRS.updateBoolean(1, true);
+			// lockRS.updateRow();
 			return true;
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to serialize %s", object), e);
 		} finally {
+			DbUtils.closeQuietly(lockRS);
+			DbUtils.closeQuietly(lockPS);
 			// Help the GC along...not strictly necessary, but should help manage the memory
 			// footprint long-term
 			attributeParameters.clear();
@@ -635,7 +650,15 @@ public class CmsObjectStore extends CmsDependencyManager {
 
 	@Override
 	public Boolean persistDfObject(IDfPersistentObject dfObject) throws DfException, CMSMFException {
-		final Dependency dependency = new Dependency(dfObject);
+		Dependency dependency;
+		try {
+			dependency = new Dependency(dfObject);
+		} catch (UnsupportedObjectTypeException e) {
+			if (this.log.isDebugEnabled()) {
+				this.log.warn(e.getMessage());
+			}
+			return false;
+		}
 		persistDependency(dependency);
 		// If it's already serialized, we skip it
 		if (isSerialized(dfObject.getObjectId().getId())) { return false; }
@@ -647,7 +670,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 		if (!serializeObject(obj)) { return false; }
 		// We try to traverse its dependencies
 		obj.persistDependencies(dfObject, this);
-		markTraversed(obj.getId());
+		// markTraversed(obj.getId());
 		return true;
 	}
 

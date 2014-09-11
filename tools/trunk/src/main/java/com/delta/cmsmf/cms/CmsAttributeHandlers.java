@@ -186,7 +186,8 @@ class CmsAttributeHandlers {
 		return CmsAttributeHandlers.getAttributeHandler(objectType, dataType, attribute.getName());
 	}
 
-	static AttributeHandler getAttributeHandler(IDfPersistentObject object, IDfAttr attribute) throws DfException {
+	static AttributeHandler getAttributeHandler(IDfPersistentObject object, IDfAttr attribute) throws DfException,
+		UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide an object to identify the attribute handler for"); }
 		final CmsObjectType objectType = CmsObjectType.decodeType(object);

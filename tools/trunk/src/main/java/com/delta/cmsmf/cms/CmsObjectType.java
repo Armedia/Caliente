@@ -116,12 +116,13 @@ public enum CmsObjectType {
 
 	private static Map<String, CmsObjectType> DECODER = null;
 
-	public static CmsObjectType decodeType(IDfPersistentObject object) throws DfException {
+	public static CmsObjectType decodeType(IDfPersistentObject object) throws DfException,
+	UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return CmsObjectType.decodeType(object.getType().getName()).getActualType(object);
 	}
 
-	public static CmsObjectType decodeType(String type) throws DfException {
+	public static CmsObjectType decodeType(String type) throws UnsupportedObjectTypeException {
 		synchronized (CmsObjectType.class) {
 			if (CmsObjectType.DECODER == null) {
 				CmsObjectType.DECODER = new HashMap<String, CmsObjectType>();
@@ -132,7 +133,7 @@ public enum CmsObjectType {
 		}
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
 		CmsObjectType ret = CmsObjectType.DECODER.get(type);
-		if (ret == null) { throw new IllegalArgumentException(String.format("Unsupported object type [%s]", type)); }
+		if (ret == null) { throw new UnsupportedObjectTypeException(type); }
 		return ret;
 	}
 }

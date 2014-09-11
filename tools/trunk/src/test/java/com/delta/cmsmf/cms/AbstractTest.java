@@ -106,6 +106,10 @@ public abstract class AbstractTest {
 		baseTearDown();
 	}
 
+	protected final DctmSessionManager getSessionManager() {
+		return AbstractTest.SESSION_MANAGER;
+	}
+
 	protected final IDfSession acquireSession() {
 		return AbstractTest.SESSION_MANAGER.acquireSession();
 	}
