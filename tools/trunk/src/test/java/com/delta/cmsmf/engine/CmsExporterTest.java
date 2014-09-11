@@ -26,11 +26,9 @@ public class CmsExporterTest extends AbstractTest {
 	public void testDoExport() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		CmsExporter exporter = new CmsExporter(10);
-		exporter
-		.doExport(
-			store,
-			getSessionManager(),
-			"from dm_user union select r_object_id from dm_type union select r_object_id from dm_format union select r_object_id from dm_group union select r_object_id from dm_acl");
+		// big crap - includes "everything":
+		// "from dm_user union select r_object_id from dm_type union select r_object_id from dm_format union select r_object_id from dm_group union select r_object_id from dm_acl union select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)"
+		exporter.doExport(store, getSessionManager(), "from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 		QueryRunner qr = new QueryRunner(getDataSource());
 		qr.query(
 			"select o.object_type, o.object_number, o.object_id, o.object_label, p.traversed from dctm_object o, dctm_export_plan p where p.object_id = o.object_id order by o.object_type, o.object_number",
