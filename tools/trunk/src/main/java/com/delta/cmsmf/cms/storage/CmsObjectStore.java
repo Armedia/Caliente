@@ -74,32 +74,32 @@ public class CmsObjectStore extends CmsDependencyManager {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -355,11 +355,13 @@ public class CmsObjectStore extends CmsDependencyManager {
 			} finally {
 				if (ok) {
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Committing insert transaction for [%s]", object.getId()));
+						this.log.debug(String.format("Committing insert transaction for [%s](%s)", object.getLabel(),
+							object.getId()));
 					}
 					DbUtils.commitAndClose(c);
 				} else {
-					this.log.warn(String.format("Rolling back insert transaction for [%s]", object.getId()));
+					this.log.warn(String.format("Rolling back insert transaction for [%s](%s)", object.getLabel(),
+						object.getId()));
 					DbUtils.rollbackAndClose(c);
 				}
 			}
@@ -403,16 +405,18 @@ public class CmsObjectStore extends CmsDependencyManager {
 						final int objNum = objRS.getInt("object_number");
 						final CmsObjectType objType = CmsObjectType.valueOf(objRS.getString("object_type"));
 						final String objId = objRS.getString("object_id");
+						final String objLabel = objRS.getString("object_label");
 						if (this.log.isInfoEnabled()) {
-							this.log.info(String.format("De-serializing %s object #%d [id=%s]", type, objNum, objId));
+							this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
+								objLabel, objId));
 						}
 						CmsObject<?> obj = objType.newInstance();
 						obj.load(objRS);
 						if (this.log.isTraceEnabled()) {
 							this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 						} else if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("De-serialized %s object #%d with ID [%s]", type, objNum,
-								obj.getId()));
+							this.log.debug(String.format("De-serialized %s object #%d [%s](%s)", type, objNum,
+								objLabel, objId));
 						}
 
 						attPS.clearParameters();
@@ -463,7 +467,8 @@ public class CmsObjectStore extends CmsDependencyManager {
 							}
 						} catch (Exception e) {
 							throw new CMSMFException(String.format(
-								"Failed to properly import %s object with ID [%s] (#%d)", type, obj.getId(), objNum), e);
+								"Failed to properly import %s object [%s](%s) (#%d)", type, obj.getLabel(),
+								obj.getId(), objNum), e);
 						}
 					}
 				} finally {
