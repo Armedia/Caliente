@@ -295,12 +295,17 @@ public class DctmACL extends DctmObject {
 		// Export accessor names except dm_world and dm_owner
 		for (int i = 0; i < aclObj.getAccessorCount(); i++) {
 			String accessorName = aclObj.getAccessorName(i);
-			if (!accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_WORLD)
-				&& !accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_OWNER)
-				&& !accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_GROUP)) {
-				DctmObjectExportHelper.serializeUserOrGroupByName(this.dctmSession, accessorName);
+			boolean group = aclObj.isGroup(i);
+			if (group) {
+				if (!accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_WORLD)
+					&& !accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_GROUP)) {
+					DctmObjectExportHelper.serializeGroupByName(this.dctmSession, accessorName);
+				}
+			} else {
+				if (!accessorName.equals(DctmAttrNameConstants.ACCESSOR_NAME_DM_OWNER)) {
+					DctmObjectExportHelper.serializeUserByName(this.dctmSession, accessorName);
+				}
 			}
 		}
 	}
-
 }
