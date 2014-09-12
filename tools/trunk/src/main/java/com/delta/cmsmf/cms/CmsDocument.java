@@ -18,8 +18,22 @@ import com.documentum.fc.common.IDfId;
  */
 public class CmsDocument extends CmsObject<IDfDocument> {
 
+	private static boolean HANDLERS_READY = false;
+
+	private static synchronized void initHandlers() {
+		if (CmsDocument.HANDLERS_READY) { return; }
+		// These are the attributes that require special handling on import
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_STRING,
+			CmsAttributes.OWNER_NAME, CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_STRING,
+			CmsAttributes.ACL_DOMAIN, CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+
+		CmsDocument.HANDLERS_READY = true;
+	}
+
 	public CmsDocument() {
 		super(CmsObjectType.DOCUMENT, IDfDocument.class);
+		CmsDocument.initHandlers();
 	}
 
 	@Override

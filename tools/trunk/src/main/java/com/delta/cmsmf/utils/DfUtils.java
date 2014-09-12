@@ -67,7 +67,16 @@ public class DfUtils {
 			DfUtils.LOG.trace(String.format("Executing DQL (type=%d): %s", queryType, dql));
 		}
 		query.setDQL(dql);
-		return query.execute(session, queryType);
+		boolean ok = false;
+		try {
+			IDfCollection ret = query.execute(session, queryType);
+			ok = true;
+			return ret;
+		} finally {
+			if (!ok) {
+				DfUtils.LOG.fatal(String.format("Exception raised while executing the query: %s", dql));
+			}
+		}
 	}
 
 	public static String getSessionId(IDfSession session) {

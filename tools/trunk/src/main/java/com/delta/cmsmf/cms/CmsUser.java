@@ -65,6 +65,11 @@ public class CmsUser extends CmsObject<IDfUser> {
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			CmsAttributes.DEFAULT_FOLDER, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 
+		// This will help intercept user names that need to be mapped to "dynamic" names on the
+		// target DB, taken from the session config
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING, CmsAttributes.USER_NAME,
+			CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+
 		CmsUser.HANDLERS_READY = true;
 	}
 

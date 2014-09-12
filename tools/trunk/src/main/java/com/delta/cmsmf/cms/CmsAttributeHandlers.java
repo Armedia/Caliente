@@ -3,12 +3,14 @@ package com.delta.cmsmf.cms;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.delta.cmsmf.cfg.Constant;
-import com.delta.cmsmf.runtime.RunTimeProperties;
+import org.apache.commons.lang.text.StrTokenizer;
+
+import com.delta.cmsmf.cfg.Setting;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
@@ -80,33 +82,24 @@ class CmsAttributeHandlers {
 		}
 	}
 
+	static final AttributeHandler SESSION_CONFIG_USER_HANDLER = new AttributeHandler() {
+		@Override
+		public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
+			return CmsMappingUtils.substituteSpecialUsers(object, attr);
+		}
+
+		@Override
+		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmsAttribute attribute)
+			throws DfException {
+			return CmsMappingUtils.resolveSpecialUsers(object, attribute);
+		}
+	};
+
 	static final AttributeHandler DEFAULT_HANDLER = new AttributeHandler();
 	static final AttributeHandler NO_IMPORT_HANDLER = new AttributeHandler() {
 		@Override
 		public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
 			return false;
-		}
-	};
-
-	private static final AttributeHandler DBO_HANDLER = new AttributeHandler() {
-
-		@Override
-		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmsAttribute attribute)
-			throws DfException {
-			if (!attribute.isRepeating()) {
-				// Is this an operator attribute that needs interception?
-				if (Constant.DM_DBO.equals(attribute.getValue().asString())) {
-					String alternate = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
-						object.getSession());
-					return Collections.singletonList(DfValueFactory.newStringValue(alternate));
-				}
-			}
-			return null;
-		}
-
-		@Override
-		public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
-			return Collections.singletonList(DfValueFactory.newStringValue(Constant.DM_DBO));
 		}
 	};
 
@@ -138,13 +131,13 @@ class CmsAttributeHandlers {
 		//
 		// First, the operator names
 		//
-		Set<String> operatorNameAttributes = RunTimeProperties.getRunTimePropertiesInstance()
-			.getAttrsToCheckForRepoOperatorName();
-		if (operatorNameAttributes != null) {
-			for (String att : operatorNameAttributes) {
-				CmsAttributeHandlers.setAttributeHandler(null, CmsDataType.DF_STRING, att,
-					CmsAttributeHandlers.DBO_HANDLER);
-			}
+		String attrsToCheck = Setting.OWNER_ATTRIBUTES.getString();
+		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
+		@SuppressWarnings("unchecked")
+		List<String> l = strTokenizer.getTokenList();
+		for (String att : new HashSet<String>(l)) {
+			CmsAttributeHandlers.setAttributeHandler(null, CmsDataType.DF_STRING, att,
+				CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
 		}
 
 		//
@@ -197,7 +190,7 @@ class CmsAttributeHandlers {
 	}
 
 	static AttributeHandler getAttributeHandler(IDfPersistentObject object, IDfAttr attribute) throws DfException,
-		UnsupportedObjectTypeException {
+	UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide an object to identify the attribute handler for"); }
 		final CmsObjectType objectType = CmsObjectType.decodeType(object);

@@ -5,9 +5,6 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
@@ -34,24 +31,16 @@ public class CmsACL extends CmsObject<IDfACL> {
 	private static final String EXTENDED_PERMISSIONS = "extendedPermissions";
 	private static final String REGULAR_PERMISSIONS = "regularPermissions";
 
-	private static final Set<String> SPECIAL_NAMES;
-	static {
-		Set<String> s = new HashSet<String>();
-		s.add("dm_owner");
-		s.add("dm_group");
-		s.add("dm_world");
-		SPECIAL_NAMES = Collections.unmodifiableSet(s);
-	}
-
 	private static boolean HANDLERS_READY = false;
 
 	private static synchronized void initHandlers() {
 		if (CmsACL.HANDLERS_READY) { return; }
 		// These are the attributes that require special handling on import
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.OWNER_NAME,
-			CmsAttributeHandlers.NO_IMPORT_HANDLER);
+			CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.OBJECT_NAME,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		// TODO: Handle special mappings
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			CmsAttributes.R_ACCESSOR_NAME, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
@@ -121,10 +110,21 @@ public class CmsACL extends CmsObject<IDfACL> {
 		for (int i = 0; i < count; i++) {
 			final String name = acl.getAccessorName(i);
 			final boolean group = acl.isGroup(i);
-			if (name.startsWith("dm_")) {
-				// Skip system users
+
+			if (!group) {
+				if (CmsMappingUtils.isSpecialUser(session, name)) {
+					// User is mapped to a special user, so we shouldn't include it as a dependency
+					// because it will be mapped on the target
+					continue;
+				}
+			}
+
+			if (CmsMappingUtils.SPECIAL_NAMES.contains(name)) {
+				// This is a special name - non-existent per-se, but supported by the system
+				// such as dm_owner, dm_group, dm_world
 				continue;
 			}
+
 			final IDfPersistentObject obj = (group ? session.getGroup(name) : session.getUser(name));
 			if (obj == null) {
 				this.log.warn(String.format("WARNING: Missing dependency for acl [%s:%s] - %s [%s] not found",
@@ -145,7 +145,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		CmsProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
-			for (IDfValue value : usersWithDefaultACL) {
+			for (IDfValue value : CmsMappingUtils.resolveSpecialUsers(acl, usersWithDefaultACL)) {
 
 				// TODO: How do we decide if we should update the default ACL for this user? What if
 				// the user's default ACL has been modified on the target CMS and we don't want to
@@ -177,6 +177,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		CmsProperty extended = getProperty(CmsACL.EXTENDED_PERMISSIONS);
 		CmsProperty accessorIsGroup = getProperty(CmsACL.ACCESSOR_IS_GROUP);
 		final int accessorCount = accessors.getValueCount();
+		IDfSession session = acl.getSession();
 		for (int i = 0; i < accessorCount; i++) {
 			String name = accessors.getValue(i).asString();
 			int perm = permissions.getValue(i).asInteger();
@@ -184,11 +185,12 @@ public class CmsACL extends CmsObject<IDfACL> {
 			final boolean exists;
 			final String accessorType;
 
-			if (!CmsACL.SPECIAL_NAMES.contains(name)) {
+			if (!CmsMappingUtils.SPECIAL_NAMES.contains(name)) {
 				if (accessorIsGroup.getValue(i).asBoolean()) {
 					accessorType = "group";
 					exists = (acl.getSession().getGroup(name) != null);
 				} else {
+					name = CmsMappingUtils.resolveSpecialUser(session, name);
 					accessorType = "user";
 					exists = (acl.getSession().getUser(name) != null);
 				}
@@ -214,6 +216,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 	protected IDfACL locateInCms(IDfSession session) throws DfException {
 		final IDfValue ownerName = getAttribute(CmsAttributes.OWNER_NAME).getValue();
 		final IDfValue objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
-		return session.getACL(ownerName != null ? ownerName.asString() : null, objectName.asString());
+		return session.getACL(ownerName != null ? CmsMappingUtils.resolveSpecialUser(session, ownerName.asString())
+			: null, objectName.asString());
 	}
 }

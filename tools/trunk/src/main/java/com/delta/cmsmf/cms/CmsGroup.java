@@ -10,14 +10,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -32,18 +35,34 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 
 	private static synchronized void initHandlers() {
 		if (CmsGroup.HANDLERS_READY) { return; }
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING, CmsAttributes.GROUP_ADMIN,
+			CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING, CmsAttributes.OWNER_NAME,
+			CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING, CmsAttributes.GROUP_NAME,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING,
 			CmsAttributes.GROUPS_NAMES, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING, CmsAttributes.USERS_NAMES,
-			CmsAttributeHandlers.NO_IMPORT_HANDLER);
+			new AttributeHandler() {
+				@Override
+				public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
+					return false;
+				}
+
+				@Override
+				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+					throws DfException {
+					return CmsMappingUtils.substituteSpecialUsers(object, attr);
+				}
+
+		});
 		CmsGroup.HANDLERS_READY = true;
 	}
 
 	/**
-	 * This DQL will find all users for which this group is marked as the default group,
-	 * and thus all users for whom it must be restored later on.
+	 * This DQL will find all users for which this group is marked as the default group, and thus
+	 * all users for whom it must be restored later on.
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_GROUP = "SELECT u.user_name FROM dm_user u, dm_group g WHERE u.user_group_name = g.group_name AND g.r_object_id = '%s'";
 
@@ -90,22 +109,26 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	protected void doPersistDependencies(IDfGroup group, CmsDependencyManager dependencyManager) throws DfException,
 	CMSMFException {
 		final IDfSession session = group.getSession();
-		IDfUser owner = session.getUser(group.getOwnerName());
-		if (owner != null) {
-			dependencyManager.persistDependency(owner);
-		} else {
-			this.log.warn(String.format(
-				"WARNING: Missing dependency for group [%s] - user [%s] not found (as group owner)",
-				group.getGroupName(), group.getOwnerName()));
+		if (!CmsMappingUtils.isSpecialUser(session, group.getOwnerName())) {
+			IDfUser owner = session.getUser(group.getOwnerName());
+			if (owner != null) {
+				dependencyManager.persistDependency(owner);
+			} else {
+				this.log.warn(String.format(
+					"WARNING: Missing dependency for group [%s] - user [%s] not found (as group owner)",
+					group.getGroupName(), group.getOwnerName()));
+			}
 		}
 
-		IDfUser admin = session.getUser(group.getGroupAdmin());
-		if (admin != null) {
-			dependencyManager.persistDependency(admin);
-		} else {
-			this.log.warn(String.format(
-				"WARNING: Missing dependency for group [%s] - user [%s] not found (as group admin)",
-				group.getGroupName(), group.getGroupAdmin()));
+		if (!CmsMappingUtils.isSpecialUser(session, group.getGroupAdmin())) {
+			IDfUser admin = session.getUser(group.getGroupAdmin());
+			if (admin != null) {
+				dependencyManager.persistDependency(admin);
+			} else {
+				this.log.warn(String.format(
+					"WARNING: Missing dependency for group [%s] - user [%s] not found (as group admin)",
+					group.getGroupName(), group.getGroupAdmin()));
+			}
 		}
 
 		// Avoid calling DQL twice
@@ -116,6 +139,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			it = getUsersWithDefaultGroup(group);
 		}
 		for (IDfValue v : it) {
+			if (CmsMappingUtils.isSpecialUser(session, v.asString())) {
+				// This is a special user, we don't add it as a dependency
+				continue;
+			}
 			IDfUser user = session.getUser(v.asString());
 			if (user == null) {
 				this.log.warn(String.format(
@@ -129,6 +156,15 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		CmsAttribute usersNames = getAttribute(CmsAttributes.USERS_NAMES);
 		if (usersNames != null) {
 			for (IDfValue v : usersNames) {
+				// We can check against whether the user is ${...} or a normal one because
+				// we will have already performed the mappings, hence why we use getAttribute()
+				// instead of getting the attribute direct from the object
+				if (CmsMappingUtils.isSpecialUserSubstitution(v.asString())) {
+					// User is mapped to a special user, so we shouldn't include it as a dependency
+					// because it will be mapped on the target
+					continue;
+				}
+
 				IDfUser member = session.getUser(v.asString());
 				if (member == null) {
 					this.log.warn(String.format(
