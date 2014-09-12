@@ -36,18 +36,37 @@ public class CmsExporter {
 
 	private Logger log = Logger.getLogger(getClass());
 
-	private static final int MAX_THREAD_COUNT = 32;
+	public static final int DEFAULT_BACKLOG_SIZE = 100;
+	public static final int MAX_BACKLOG_SIZE = 1000;
+	public static final int DEFAULT_THREAD_COUNT = 4;
+	public static final int MAX_THREAD_COUNT = 32;
 
+	private final int backlogSize;
 	private final int threadCount;
 
+	public CmsExporter() {
+		this(CmsExporter.DEFAULT_THREAD_COUNT);
+	}
+
 	public CmsExporter(int threadCount) {
+		this(threadCount, CmsExporter.DEFAULT_BACKLOG_SIZE);
+	}
+
+	public CmsExporter(int threadCount, int backlogSize) {
 		if (threadCount <= 0) {
 			threadCount = 1;
 		}
 		if (threadCount > CmsExporter.MAX_THREAD_COUNT) {
 			threadCount = CmsExporter.MAX_THREAD_COUNT;
 		}
+		if (backlogSize <= 0) {
+			backlogSize = 10;
+		}
+		if (backlogSize > CmsImporter.MAX_BACKLOG_SIZE) {
+			backlogSize = CmsImporter.MAX_BACKLOG_SIZE;
+		}
 		this.threadCount = threadCount;
+		this.backlogSize = backlogSize;
 	}
 
 	public int getThreadCount() {
@@ -62,7 +81,7 @@ public class CmsExporter {
 		final AtomicInteger activeCounter = new AtomicInteger(0);
 		final String exitFlag = String.format("%s[%s]", toString(), UUID.randomUUID().toString());
 		final IDfValue exitValue = DfValueFactory.newStringValue(exitFlag);
-		final BlockingQueue<IDfValue> workQueue = new ArrayBlockingQueue<IDfValue>(this.threadCount);
+		final BlockingQueue<IDfValue> workQueue = new ArrayBlockingQueue<IDfValue>(this.threadCount * this.backlogSize);
 		ExecutorService executor = new ThreadPoolExecutor(this.threadCount, this.threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
 
@@ -181,10 +200,10 @@ public class CmsExporter {
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);

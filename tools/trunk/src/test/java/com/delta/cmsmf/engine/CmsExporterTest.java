@@ -25,7 +25,7 @@ public class CmsExporterTest extends AbstractTest {
 	@Test
 	public void testDoExport() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
-		CmsExporter exporter = new CmsExporter(10);
+		CmsExporter exporter = new CmsExporter(10, 10);
 		// big crap - includes "everything":
 		// "from dm_user union select r_object_id from dm_type union select r_object_id from dm_format union select r_object_id from dm_group union select r_object_id from dm_acl union select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)"
 		exporter.doExport(store, getSourceSessionManager(), "from dm_sysobject where folder('/CMSMFTests', DESCEND)");

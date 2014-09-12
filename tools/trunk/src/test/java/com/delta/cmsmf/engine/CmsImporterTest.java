@@ -25,7 +25,7 @@ public class CmsImporterTest extends AbstractTest {
 	@Test
 	public void testDoImport() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
-		CmsExporter exporter = new CmsExporter(10);
+		CmsExporter exporter = new CmsExporter(10, 10);
 		CmsImporter importer = new CmsImporter(10, 10);
 
 		// big crap - includes "everything":
