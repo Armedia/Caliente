@@ -8,13 +8,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.log4j.Level;
 
+import com.delta.cmsmf.cfg.Constant;
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cmsobjects.DctmObject;
-import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.delta.cmsmf.serialization.DctmObjectWriter;
@@ -39,9 +39,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 	}
 
 	/**
-	 * Starts exporting objects from source directory. It reads up the query from
-	 * properties file and executes it against the source repository. It retrieves
-	 * objects from the repository and exports it out.
+	 * Starts exporting objects from source directory. It reads up the query from properties file
+	 * and executes it against the source repository. It retrieves objects from the repository and
+	 * exports it out.
 	 *
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
@@ -51,7 +51,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 		// First check to see if import.lock file exists, if it does, that means import didn't
 // finish
 		// cleanly. In that case do not start the export.
-		File importLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.IMPORT_LOCK_FILE_NAME);
+		File importLockFile = new File(this.streamFilesDirectoryLocation, Constant.IMPORT_LOCK_FILE_NAME);
 		if (importLockFile.exists()) {
 			String msg = "_cmsmf_import.lck file exists in the export directory. Unsafe to continue with the export.";
 			throw (new CMSMFFatalException(msg));
@@ -62,7 +62,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 
 			// Create a export.lock file which will be removed at the of exporting. Import
 			// will not start if this file exists.
-			File exportLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.EXPORT_LOCK_FILE_NAME);
+			File exportLockFile = new File(this.streamFilesDirectoryLocation, Constant.EXPORT_LOCK_FILE_NAME);
 			// Make sure that parent folder path exists before trying to create the file.
 			File parentFolderPath = new File(exportLockFile.getAbsolutePath());
 			parentFolderPath.mkdirs();
@@ -98,7 +98,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 
 			IDfQuery dqlQry = new DfClientX().getQuery();
 			dqlQry.setDQL(exportDQLQuery);
-			dqlQry.setBatchSize(CMSMFProperties.EXPORT_BATCH_SIZE.getInt());
+			dqlQry.setBatchSize(Setting.EXPORT_BATCH_SIZE.getInt());
 			if (this.logger.isEnabledFor(Level.DEBUG)) {
 				this.logger.debug("Export DQL Query is: " + dqlQry.getDQL());
 				this.logger.debug("Export DQL batch size is: " + dqlQry.getBatchSize());
@@ -186,10 +186,10 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 			// If this is auto run type of an export instead of an adhoc query export, store the
 			// value of the current export date in the repository. This value will be looked up in
 			// the next run
-			String fromWhereClause = CMSMFProperties.EXPORT_PREDICATE.getString();
+			String fromWhereClause = Setting.EXPORT_PREDICATE.getString();
 			if (StringUtils.isBlank(fromWhereClause)) {
 				// This is indeed an auto run type of export
-				String dateTimePattern = CMSMFAppConstants.LAST_EXPORT_DATE_PATTERN;
+				String dateTimePattern = Constant.LAST_EXPORT_DATE_PATTERN;
 				String exportStartDateStr = DateFormatUtils.format(exportStartTime, dateTimePattern);
 
 				CMSMFUtils.setLastExportDate(session, exportStartDateStr);
@@ -208,8 +208,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 		// repository to see when was the last export run and pick up the sysobjects modified since
 		// then.
 
-		String selectClause = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE;
-		String predicate = CMSMFProperties.EXPORT_PREDICATE.getString("");
+		String selectClause = Constant.EXPORT_QUERY_SELECT_CLAUSE;
+		String predicate = Setting.EXPORT_PREDICATE.getString("");
 		if (StringUtils.isNotBlank(predicate)) {
 			exportDQLQuery = selectClause + " " + predicate;
 		} else {
@@ -230,7 +230,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 			} finally {
 				DctmConnectionPool.releaseSession(session);
 			}
-			exportDQLQuery = CMSMFAppConstants.EXPORT_QUERY_SELECT_CLAUSE + " " + CMSMFAppConstants.DEFAULT_PREDICATE;
+			exportDQLQuery = Constant.EXPORT_QUERY_SELECT_CLAUSE + " " + Constant.DEFAULT_PREDICATE;
 			if (StringUtils.isNotBlank(lastExportRunDate)) {
 				String modifiedWhereCondition = " AND r_modify_date >= DATE('" + lastExportRunDate + "')";
 				exportDQLQuery = exportDQLQuery + modifiedWhereCondition;

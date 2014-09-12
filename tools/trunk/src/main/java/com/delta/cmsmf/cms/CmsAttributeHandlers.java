@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.runtime.RunTimeProperties;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
@@ -95,7 +95,7 @@ class CmsAttributeHandlers {
 			throws DfException {
 			if (!attribute.isRepeating()) {
 				// Is this an operator attribute that needs interception?
-				if (CMSMFAppConstants.DM_DBO.equals(attribute.getValue().asString())) {
+				if (Constant.DM_DBO.equals(attribute.getValue().asString())) {
 					String alternate = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 						object.getSession());
 					return Collections.singletonList(DfValueFactory.newStringValue(alternate));
@@ -106,7 +106,7 @@ class CmsAttributeHandlers {
 
 		@Override
 		public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
-			return Collections.singletonList(DfValueFactory.newStringValue(CMSMFAppConstants.DM_DBO));
+			return Collections.singletonList(DfValueFactory.newStringValue(Constant.DM_DBO));
 		}
 	};
 
@@ -197,7 +197,7 @@ class CmsAttributeHandlers {
 	}
 
 	static AttributeHandler getAttributeHandler(IDfPersistentObject object, IDfAttr attribute) throws DfException,
-	UnsupportedObjectTypeException {
+		UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide an object to identify the attribute handler for"); }
 		final CmsObjectType objectType = CmsObjectType.decodeType(object);

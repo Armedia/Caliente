@@ -5,11 +5,16 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.lang.text.StrTokenizer;
 
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.cfg.Constant;
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -63,9 +68,23 @@ public class CmsUser extends CmsObject<IDfUser> {
 		CmsUser.HANDLERS_READY = true;
 	}
 
+	private static boolean SPECIAL_USERS_READY = false;
+	private static Set<String> SPECIAL_USERS = Collections.emptySet();
+
+	private static synchronized void initSpecialUsers() {
+		if (CmsUser.SPECIAL_USERS_READY) { return; }
+		String specialUsers = Setting.SPECIAL_USERS.getString();
+		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialUsers);
+		@SuppressWarnings("unchecked")
+		List<String> l = strTokenizer.getTokenList();
+		CmsUser.SPECIAL_USERS = Collections.unmodifiableSet(new HashSet<String>(l));
+		CmsUser.SPECIAL_USERS_READY = true;
+	}
+
 	public CmsUser() {
 		super(CmsObjectType.USER, IDfUser.class);
 		CmsUser.initHandlers();
+		CmsUser.initSpecialUsers();
 	}
 
 	@Override
@@ -92,26 +111,10 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected boolean isValidForLoad(IDfUser user) throws DfException {
-		final String name = user.getUserName();
-		return !name.startsWith("dm_") && !name.equals("dmadmin");
-	}
-
-	@Override
 	protected IDfUser locateInCms(IDfSession session) throws DfException {
 		// If that search failed, go by username
 		IDfValue userName = getAttribute(CmsAttributes.USER_NAME).getValue();
 		IDfUser ret = session.getUser(userName.asString());
-
-		/*
-		// TODO: Enable this only as a backup measure, through configuration options
-		if (ret == null) {
-			CmsAttribute loginName = getAttribute(CmsAttributes.USER_LOGIN_NAME);
-			CmsAttribute loginDomain = getAttribute(CmsAttributes.USER_LOGIN_DOMAIN);
-			ret = session.getUserByLoginName(loginName.getValue().asString(), loginDomain != null ? loginDomain.getValue()
-				.asString() : null);
-		}
-		 */
 		return ret;
 	}
 
@@ -119,7 +122,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 	protected boolean skipImport(IDfSession session) throws DfException {
 		IDfValue userNameValue = getAttribute(CmsAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
-		if (Tools.equals("dmadmin", userName) || userName.startsWith("dm_")) { return true; }
+		if (CmsUser.SPECIAL_USERS.contains(userName)) { return true; }
 		return super.skipImport(session);
 	}
 
@@ -156,10 +159,10 @@ public class CmsUser extends CmsObject<IDfUser> {
 			// Next, set the password
 			CmsAttribute att = getAttribute(CmsAttributes.USER_SOURCE);
 			final IDfValue userSource = att.getValue();
-			if (Tools.equals(CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
+			if (Tools.equals(Constant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
-				final String inlinePasswordValue = CMSMFProperties.DEFAULT_USER_PASSWORD.getString(userName);
+				final String inlinePasswordValue = Setting.DEFAULT_USER_PASSWORD.getString(userName);
 				setAttributeOnObject(CmsAttributes.USER_PASSWORD,
 					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)), user);
 			}

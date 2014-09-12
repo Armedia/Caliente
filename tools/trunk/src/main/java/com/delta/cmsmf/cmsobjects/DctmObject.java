@@ -15,8 +15,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataAttribute;
 import com.delta.cmsmf.datastore.DataObject;
@@ -59,9 +59,8 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 	protected static final Logger logger = Logger.getLogger(DctmObject.class);
 
 	/**
-	 * The dctm object type enumeration.
-	 * This type will be set by individual object types during initialization
-	 * within the class constructors.
+	 * The dctm object type enumeration. This type will be set by individual object types during
+	 * initialization within the class constructors.
 	 *
 	 * @see CmsObjectType
 	 */
@@ -265,8 +264,8 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 	public abstract void createInCMS(IDfSession session) throws DfException, IOException;
 
 	/**
-	 * Updates system attributes of an object using execsql. This method is used to
-	 * update various system and internal attributes of an object during the import step.
+	 * Updates system attributes of an object using execsql. This method is used to update various
+	 * system and internal attributes of an object during the import step.
 	 *
 	 * @param sysObject
 	 *            the DFC sysObject representing an object in repository.
@@ -297,27 +296,26 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 		// If modifier contains single quote in its name, to escape it, replace it with 4 single
 		// quotes.
 		modifier = modifier.replaceAll("'", "''''");
-		if (aclDomain.equals(CMSMFAppConstants.DM_DBO) || creatorName.equals(CMSMFAppConstants.DM_DBO)
-			|| modifier.equals(CMSMFAppConstants.DM_DBO)) {
+		if (aclDomain.equals(Constant.DM_DBO) || creatorName.equals(Constant.DM_DBO)
+			|| modifier.equals(Constant.DM_DBO)) {
 			String targetRepoOperatorName = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(
 				session);
-			if (aclDomain.equals(CMSMFAppConstants.DM_DBO)) {
+			if (aclDomain.equals(Constant.DM_DBO)) {
 				aclDomain = targetRepoOperatorName;
 			}
-			if (creatorName.equals(CMSMFAppConstants.DM_DBO)) {
+			if (creatorName.equals(Constant.DM_DBO)) {
 				creatorName = targetRepoOperatorName;
 			}
-			if (modifier.equals(CMSMFAppConstants.DM_DBO)) {
+			if (modifier.equals(Constant.DM_DBO)) {
 				modifier = targetRepoOperatorName;
 			}
 		}
 
 		String sqlStr = "UPDATE dm_sysobject_s " + "SET r_modify_date = TO_DATE(''"
-			+ modifyDate.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
-			+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN + "''), r_creation_date = TO_DATE(''"
-			+ creationDate.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
-			+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN + "''), r_creator_name = ''" + creatorName
-			+ "'', r_modifier = ''" + modifier + "'', i_vstamp = " + vStamp + ", acl_name = ''"
+			+ modifyDate.asString(Constant.DCTM_DATETIME_PATTERN) + "'', ''" + Constant.ORACLE_DATETIME_PATTERN
+			+ "''), r_creation_date = TO_DATE(''" + creationDate.asString(Constant.DCTM_DATETIME_PATTERN) + "'', ''"
+			+ Constant.ORACLE_DATETIME_PATTERN + "''), r_creator_name = ''" + creatorName + "'', r_modifier = ''"
+			+ modifier + "'', i_vstamp = " + vStamp + ", acl_name = ''"
 			+ dctmObj.getStrSingleAttrValue(DctmAttrNameConstants.ACL_NAME) + "'', acl_domain = ''" + aclDomain
 			+ "'' WHERE r_object_id = ''" + sysObject.getObjectId().getId() + "''";
 
@@ -350,9 +348,8 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 		int vStamp = dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP);
 
 		String sqlStr = "UPDATE " + objType + "_s " + "SET r_modify_date = TO_DATE(''"
-			+ modifyDate.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
-			+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN + "''), i_vstamp = " + vStamp + " WHERE r_object_id = ''"
-			+ prsstntObject.getObjectId().getId() + "''";
+			+ modifyDate.asString(Constant.DCTM_DATETIME_PATTERN) + "'', ''" + Constant.ORACLE_DATETIME_PATTERN
+			+ "''), i_vstamp = " + vStamp + " WHERE r_object_id = ''" + prsstntObject.getObjectId().getId() + "''";
 
 		DctmObject.runExecSQL(prsstntObject.getSession(), sqlStr);
 
@@ -400,8 +397,8 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 
 			// Prepare the sql to be executed
 			String sqlStr = "UPDATE dmr_content_s SET set_file = ''" + setFile + "'', set_client = ''" + setClient
-				+ "'', set_time = TO_DATE(''" + setTime.asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN) + "'', ''"
-				+ CMSMFAppConstants.ORACLE_DATETIME_PATTERN
+				+ "'', set_time = TO_DATE(''" + setTime.asString(Constant.DCTM_DATETIME_PATTERN) + "'', ''"
+				+ Constant.ORACLE_DATETIME_PATTERN
 				+ "'') WHERE r_object_id = (select dcs.r_object_id from dmr_content_s dcs, dmr_content_r dcr "
 				+ "where dcr.parent_id = ''" + parentID + "'' " + " and dcs.r_object_id = dcr.r_object_id "
 				+ "and dcs.rendition = " + dctmContent.getIntSingleAttrValue(DctmAttrNameConstants.RENDITION)
@@ -770,7 +767,7 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 					// check the value of the attribute if it is "dm_dbo", replace it with
 					// repository owner (operator) name.
 					String strVal = (String) dctmAttribute.getSingleValue();
-					if (strVal.equals(CMSMFAppConstants.DM_DBO)
+					if (strVal.equals(Constant.DM_DBO)
 						&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
 						.contains(attrName)) {
 						strVal = RunTimeProperties.getRunTimePropertiesInstance().getTargetRepoOperatorName(session);
@@ -788,7 +785,7 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 						// check the value of the attribute if it is "dm_dbo", replace it with
 						// repository owner (operator) name.
 						String strVal = (String) attrVal;
-						if (strVal.equals(CMSMFAppConstants.DM_DBO)
+						if (strVal.equals(Constant.DM_DBO)
 							&& RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
 							.contains(attrName)) {
 							strVal = RunTimeProperties.getRunTimePropertiesInstance()
@@ -888,8 +885,8 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 	}
 
 	/**
-	 * Gets a single attribute from the CMS and adds to the attributes map of DctmObject.
-	 * This method handles single value attribute as well as repeating attributes
+	 * Gets a single attribute from the CMS and adds to the attributes map of DctmObject. This
+	 * method handles single value attribute as well as repeating attributes
 	 *
 	 * @param dctmObj
 	 *            the CMSMF DctmObject to which the retrieved attribute will be added
@@ -942,7 +939,7 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 					if (RunTimeProperties.getRunTimePropertiesInstance().getAttrsToCheckForRepoOperatorName()
 						.contains(idfAttr.getName())
 						&& strVal.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())) {
-						strVal = CMSMFAppConstants.DM_DBO;
+						strVal = Constant.DM_DBO;
 						if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 							DctmObject.logger.info("Updated " + idfAttr.getName() + " attribute of object with id: "
 								+ getSrcObjectID() + " to dm_dbo.");
@@ -1015,7 +1012,7 @@ public abstract class DctmObject<T extends IDfPersistentObject> implements Seria
 								.contains(idfAttr.getName())
 								&& strVal
 								.equals(RepositoryConfiguration.getRepositoryConfiguration().getOperatorName())) {
-								strVal = CMSMFAppConstants.DM_DBO;
+								strVal = Constant.DM_DBO;
 								if (DctmObject.logger.isEnabledFor(Level.INFO)) {
 									DctmObject.logger.info("Updated " + idfAttr.getName()
 										+ " attribute of object with id: " + getSrcObjectID() + " to dm_dbo.");

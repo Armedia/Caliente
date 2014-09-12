@@ -1,13 +1,13 @@
-package com.delta.cmsmf.constants;
+package com.delta.cmsmf.cfg;
 
 
 /**
- * The Class CMSMFAppConstants. This class contains various constant values used throughout the
+ * The Class Constant. This class contains various constant values used throughout the
  * CMSMF application.
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFAppConstants {
+public class Constant {
 
 	/**
 	 * The buffer size in bytes used to retrieve the content file. This buffer size is used to read
@@ -61,7 +61,7 @@ public class CMSMFAppConstants {
 	public static final int MSSQL_DATETIME_PATTERN = 120;
 
 	/** The date pattern in which last export date is stored in the repository. EX: 12/15/2010 */
-	public static final String LAST_EXPORT_DATE_PATTERN = CMSMFAppConstants.DCTM_DATETIME_PATTERN;
+	public static final String LAST_EXPORT_DATE_PATTERN = Constant.DCTM_DATETIME_PATTERN;
 
 	// Generic documentum Constants
 	/** The dm_dbo alias used for ACL domains for system ACLs. */

@@ -16,6 +16,8 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 
+import com.delta.cmsmf.cfg.Constant;
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cmsobjects.DctmACL;
 import com.delta.cmsmf.cmsobjects.DctmDocument;
 import com.delta.cmsmf.cmsobjects.DctmFolder;
@@ -26,7 +28,6 @@ import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.cmsobjects.DctmReferenceDocument;
 import com.delta.cmsmf.cmsobjects.DctmType;
 import com.delta.cmsmf.cmsobjects.DctmUser;
-import com.delta.cmsmf.constants.CMSMFAppConstants;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.datastore.DataObject;
 import com.delta.cmsmf.datastore.DataStore;
@@ -34,7 +35,6 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.exception.CMSMFFatalException;
 import com.delta.cmsmf.exception.CMSMFIOException;
 import com.delta.cmsmf.filestreams.FileStreamsManager;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.delta.cmsmf.runtime.RunTimeProperties;
@@ -58,9 +58,9 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	}
 
 	/**
-	 * Starts exporting objects from source directory. It reads up the query from
-	 * properties file and executes it against the source repository. It retrieves
-	 * objects from the repository and exports it out.
+	 * Starts exporting objects from source directory. It reads up the query from properties file
+	 * and executes it against the source repository. It retrieves objects from the repository and
+	 * exports it out.
 	 *
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
@@ -68,14 +68,14 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	 */
 	@Override
 	public void run() throws IOException, CMSMFFatalException {
-		File exportLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.EXPORT_LOCK_FILE_NAME);
+		File exportLockFile = new File(this.streamFilesDirectoryLocation, Constant.EXPORT_LOCK_FILE_NAME);
 		if (exportLockFile.exists()) {
 			String msg = "_cmsmf_export.lck file exists in the export directory. Unsafe to continue with the import.";
 			throw (new CMSMFFatalException(msg));
 		}
 		// Create an import.lock file which will be removed at the of exporting. Import
 		// will not start if this file exists.
-		File importLockFile = new File(this.streamFilesDirectoryLocation, CMSMFAppConstants.IMPORT_LOCK_FILE_NAME);
+		File importLockFile = new File(this.streamFilesDirectoryLocation, Constant.IMPORT_LOCK_FILE_NAME);
 		// Make sure that parent folder path exists before trying to create the file.
 		File parentFolderPath = new File(importLockFile.getAbsolutePath());
 		parentFolderPath.mkdirs();
@@ -132,7 +132,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 			this.logger.info("##### Import Process Finished #####");
 		}
 
-		if (CMSMFProperties.POST_PROCESS_IMPORT.getBoolean()) {
+		if (Setting.POST_PROCESS_IMPORT.getBoolean()) {
 			postProcessImport();
 		}
 	}
@@ -159,8 +159,8 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	}
 
 	/**
-	 * Prints the import report. It prints how many objects of each
-	 * type were read, created, skipped and updated during import process.
+	 * Prints the import report. It prints how many objects of each type were read, created, skipped
+	 * and updated during import process.
 	 */
 	private void printImportReport() {
 		DctmUser.printImportReport();
@@ -196,8 +196,8 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	}
 
 	/**
-	 * Checks if it is safe to import. It checks to see if all required file stores exists
-	 * in the target repository before the import process begins.
+	 * Checks if it is safe to import. It checks to see if all required file stores exists in the
+	 * target repository before the import process begins.
 	 *
 	 * @return true, if it is safe to import
 	 * @throws IOException
@@ -312,7 +312,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 						// the import process after closing all of the file streams
 						runtimeProps.incrementImportProcessErrorCount();
 
-						int importErrorThreshold = CMSMFProperties.IMPORT_MAX_ERRORS.getInt();
+						int importErrorThreshold = Setting.IMPORT_MAX_ERRORS.getInt();
 						CMSMFMain_import.this.logger.warn(String.format(
 							"Total nbr of errors detected so far: %d of %d allowed",
 							runtimeProps.getImportProcessErrorCount(), importErrorThreshold));

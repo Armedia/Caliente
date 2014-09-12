@@ -10,7 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -28,10 +28,8 @@ import com.documentum.fc.common.DfId;
 
 /**
  * The DctmFolder class contains methods to export/import dm_folder type (or its subtype) of objects
- * from/to
- * Documentum CMS. It also contains methods to export any supporting objects that are needed to
- * replicate a
- * dm_folder object in target repository.
+ * from/to Documentum CMS. It also contains methods to export any supporting objects that are needed
+ * to replicate a dm_folder object in target repository.
  *
  * @author Shridev Makim 6/15/2010
  */
@@ -55,8 +53,8 @@ public class DctmFolder extends DctmObject<IDfFolder> {
 
 	/**
 	 * The isThisATest is used for testing purposes. The value for this attribute is set from
-	 * properties file.
-	 * If the value is true, the documents and folders are created in /Replications cabinet.
+	 * properties file. If the value is true, the documents and folders are created in /Replications
+	 * cabinet.
 	 */
 	private static boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
 
@@ -69,7 +67,7 @@ public class DctmFolder extends DctmObject<IDfFolder> {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see com.delta.cmsmf.repoSync.DctmObject#createInCMS()
 	 */
 	@Override
@@ -192,7 +190,7 @@ public class DctmFolder extends DctmObject<IDfFolder> {
 							linkedUnLinkedParentIDs.add(parentFldr.getObjectId().getId());
 						}
 					} catch (DfException dfe) {
-						if (dfe.getMessageId().equals(CMSMFAppConstants.DM_SYSOBJECT_E_ALREADY_LINKED_MESSAGE_ID)) {
+						if (dfe.getMessageId().equals(Constant.DM_SYSOBJECT_E_ALREADY_LINKED_MESSAGE_ID)) {
 							if (DctmFolder.logger.isEnabledFor(Level.INFO)) {
 								DctmFolder.logger.debug("Sysobject already Linked error handled");
 							}
@@ -294,8 +292,7 @@ public class DctmFolder extends DctmObject<IDfFolder> {
 
 	/**
 	 * Prints the import report detailing how many folder objects were read, updated, created,
-	 * skipped during
-	 * the import process.
+	 * skipped during the import process.
 	 */
 	public static void printImportReport() {
 		DctmFolder.logger.info("No. of folder objects read from file: " + DctmFolder.fldrs_read);
@@ -321,8 +318,10 @@ public class DctmFolder extends DctmObject<IDfFolder> {
 
 	/*
 	 * (non-Javadoc)
-	 *
-	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
+	 * 
+	 * @see
+	 * com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject
+	 * )
 	 */
 	@Override
 	protected DctmFolder doGetFromCMS(IDfFolder folder) throws CMSMFException {
@@ -438,29 +437,32 @@ public class DctmFolder extends DctmObject<IDfFolder> {
 				}
 				/*
 				 * String pathSep = "/";
-				 *
-				 * if (fldrPath.startsWith(pathSep)) { fldrPath = fldrPath.substring(1); } String[] fldrs =
-				 * fldrPath.split(pathSep); StringBuffer curFldrPath = new StringBuffer(); for (int j = 0; j <
-				 * fldrs.length - 1; j++) { curFldrPath.append(pathSep + fldrs[j]); if
-				 * (logger.isEnabledFor(Level.DEBUG)) { logger.debug("Currently processing folder: " +
-				 * curFldrPath); } IDfFolder ancestorFldr =
-				 * dctmSession.getFolderByPath(curFldrPath.toString()); if (ancestorFldr != null) { // Check
-				 * if this folder has already been serialized, but do not add it to the // processed list yet
-				 * String ancestorFldrID = ancestorFldr.getObjectId().getId(); if
-				 * (!DuplicateChecker.getDuplicateChecker().isFolderProcessed(ancestorFldrID, false)) { //
-				 * Export other supporting objects exportSupportingObjects(ancestorFldr);
-				 *
-				 * DctmFolder dctmFolder = new DctmFolder(); getAllAttributesFromCMS(dctmFolder, ancestorFldr,
-				 * ancestorFldrID); // Update ACL Domain attribute value // No need to do this here anymore,
-				 * it is handled in getAllAttributesFromCMS() // itself. //
+				 * 
+				 * if (fldrPath.startsWith(pathSep)) { fldrPath = fldrPath.substring(1); } String[]
+				 * fldrs = fldrPath.split(pathSep); StringBuffer curFldrPath = new StringBuffer();
+				 * for (int j = 0; j < fldrs.length - 1; j++) { curFldrPath.append(pathSep +
+				 * fldrs[j]); if (logger.isEnabledFor(Level.DEBUG)) {
+				 * logger.debug("Currently processing folder: " + curFldrPath); } IDfFolder
+				 * ancestorFldr = dctmSession.getFolderByPath(curFldrPath.toString()); if
+				 * (ancestorFldr != null) { // Check if this folder has already been serialized, but
+				 * do not add it to the // processed list yet String ancestorFldrID =
+				 * ancestorFldr.getObjectId().getId(); if
+				 * (!DuplicateChecker.getDuplicateChecker().isFolderProcessed(ancestorFldrID,
+				 * false)) { // Export other supporting objects
+				 * exportSupportingObjects(ancestorFldr);
+				 * 
+				 * DctmFolder dctmFolder = new DctmFolder(); getAllAttributesFromCMS(dctmFolder,
+				 * ancestorFldr, ancestorFldrID); // Update ACL Domain attribute value // No need to
+				 * do this here anymore, it is handled in getAllAttributesFromCMS() // itself. //
 				 * updateACLDomainAttribute(dctmFolder); if
-				 * (!DuplicateChecker.getDuplicateChecker().isFolderProcessed(ancestorFldrID, true)) {
-				 * DctmObjectWriter.writeBinaryObject(dctmFolder); if (logger.isEnabledFor(Level.DEBUG)) {
-				 * logger.debug("Folder object written to filesystem!"); } } } else { if
+				 * (!DuplicateChecker.getDuplicateChecker().isFolderProcessed(ancestorFldrID, true))
+				 * { DctmObjectWriter.writeBinaryObject(dctmFolder); if
 				 * (logger.isEnabledFor(Level.DEBUG)) {
-				 * logger.debug("Skipping serializing folder since it is already been processed before: " +
-				 * curFldrPath); } } } else { // Break out of the loop if can't locate the folder/cabinet
-				 * break; } }
+				 * logger.debug("Folder object written to filesystem!"); } } } else { if
+				 * (logger.isEnabledFor(Level.DEBUG)) { logger.debug(
+				 * "Skipping serializing folder since it is already been processed before: " +
+				 * curFldrPath); } } } else { // Break out of the loop if can't locate the
+				 * folder/cabinet break; } }
 				 */
 			}
 		} catch (DfException e) {

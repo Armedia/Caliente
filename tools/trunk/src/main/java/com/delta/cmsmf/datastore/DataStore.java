@@ -36,9 +36,9 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
@@ -65,30 +65,26 @@ public class DataStore {
 	private static final String DELETE_MAPPING_SQL = "delete from dctm_mapper where source_id = ?";
 
 	/*
-	private static final String LOAD_EVERYTHING_SQL = //
-		"    select o.*, a.*, v.* " + //
-		"  from dctm_object o, dctm_attribute a, dctm_value v " + //
-		" where o.object_type = ? " + //
-		"   and o.object_id = a.object_id " + //
-		"   and a.object_id = v.object_id " + //
-		"   and a.name = v.name " + //
-		" order by o.object_number, v.value_number";
+	 * private static final String LOAD_EVERYTHING_SQL = // "    select o.*, a.*, v.* " + //
+	 * "  from dctm_object o, dctm_attribute a, dctm_value v " + // " where o.object_type = ? " + //
+	 * "   and o.object_id = a.object_id " + // "   and a.object_id = v.object_id " + //
+	 * "   and a.name = v.name " + // " order by o.object_number, v.value_number";
 	 */
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -109,24 +105,17 @@ public class DataStore {
 	};
 
 	/*
-	private static final ResultSetHandler<Integer> HANDLER_COUNT_ITERATOR = new ResultSetHandler<Integer>() {
-		@Override
-		public Integer handle(ResultSet rs) throws SQLException {
-			int ret = 0;
-			while (rs.next()) {
-				ret++;
-			}
-			return ret;
-		}
-	};
-
-	private static final ResultSetHandler<Integer> HANDLER_COUNT = new ResultSetHandler<Integer>() {
-		@Override
-		public Integer handle(ResultSet rs) throws SQLException {
-			if (!rs.next()) { return 0; }
-			return rs.getInt(1);
-		}
-	};
+	 * private static final ResultSetHandler<Integer> HANDLER_COUNT_ITERATOR = new
+	 * ResultSetHandler<Integer>() {
+	 * 
+	 * @Override public Integer handle(ResultSet rs) throws SQLException { int ret = 0; while
+	 * (rs.next()) { ret++; } return ret; } };
+	 * 
+	 * private static final ResultSetHandler<Integer> HANDLER_COUNT = new
+	 * ResultSetHandler<Integer>() {
+	 * 
+	 * @Override public Integer handle(ResultSet rs) throws SQLException { if (!rs.next()) { return
+	 * 0; } return rs.getInt(1); } };
 	 */
 
 	private static final Logger LOG = Logger.getLogger(DataStore.class);
@@ -137,7 +126,7 @@ public class DataStore {
 	}
 
 	public static void init(final boolean clearData) throws CMSMFException {
-		final String driverName = CMSMFProperties.JDBC_DRIVER.getString();
+		final String driverName = Setting.JDBC_DRIVER.getString();
 		if (!DbUtils.loadDriver(driverName)) { throw new CMSMFException(String.format(
 			"Failed to locate the JDBC driver class [%s]", driverName)); }
 
@@ -145,8 +134,8 @@ public class DataStore {
 			DataStore.LOG.debug(String.format("JDBC driver class [%s] is loaded and valid", driverName));
 		}
 
-		String jdbcUrl = CMSMFProperties.JDBC_URL.getString();
-		String targetPath = CMSMFProperties.STREAMS_DIRECTORY.getString();
+		String jdbcUrl = Setting.JDBC_URL.getString();
+		String targetPath = Setting.STREAMS_DIRECTORY.getString();
 
 		File targetDirectory = null;
 		try {
@@ -354,7 +343,7 @@ public class DataStore {
 	}
 
 	public static void deserializeObjects(DctmObjectType type, ImportHandler handler) throws SQLException,
-	CMSMFException {
+		CMSMFException {
 		Connection objConn = null;
 		Connection attConn = null;
 		Connection valConn = null;
@@ -434,32 +423,20 @@ public class DataStore {
 		}
 
 		/*
-		final QueryRunner qr = new QueryRunner(DataStore.DATA_SOURCE);
-		qr.query(DataStore.LOAD_OBJECTS_SQL, new ResultSetHandler<Void>() {
-			@Override
-			public Void handle(ResultSet objectRs) throws SQLException {
-				while (objectRs.next()) {
-					final DataObject obj = new DataObject(objectRs);
-					qr.query(DataStore.LOAD_ATTRIBUTES_SQL, new ResultSetHandler<Void>() {
-						@Override
-						public Void handle(ResultSet attributeRs) throws SQLException {
-							obj.loadAttributes(attributeRs);
-							for (final DataAttribute attribute : obj) {
-								qr.query(DataStore.LOAD_VALUES_SQL, new ResultSetHandler<Void>() {
-									@Override
-									public Void handle(ResultSet valueRs) throws SQLException {
-										attribute.loadValues(valueRs);
-										return null;
-									}
-								}, obj.getId(), attribute.getName());
-							}
-							return null;
-						}
-					}, obj.getId());
-				}
-				return null;
-			}
-		}, type.name());
+		 * final QueryRunner qr = new QueryRunner(DataStore.DATA_SOURCE);
+		 * qr.query(DataStore.LOAD_OBJECTS_SQL, new ResultSetHandler<Void>() {
+		 * 
+		 * @Override public Void handle(ResultSet objectRs) throws SQLException { while
+		 * (objectRs.next()) { final DataObject obj = new DataObject(objectRs);
+		 * qr.query(DataStore.LOAD_ATTRIBUTES_SQL, new ResultSetHandler<Void>() {
+		 * 
+		 * @Override public Void handle(ResultSet attributeRs) throws SQLException {
+		 * obj.loadAttributes(attributeRs); for (final DataAttribute attribute : obj) {
+		 * qr.query(DataStore.LOAD_VALUES_SQL, new ResultSetHandler<Void>() {
+		 * 
+		 * @Override public Void handle(ResultSet valueRs) throws SQLException {
+		 * attribute.loadValues(valueRs); return null; } }, obj.getId(), attribute.getName()); }
+		 * return null; } }, obj.getId()); } return null; } }, type.name());
 		 */
 	}
 

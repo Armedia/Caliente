@@ -17,19 +17,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cmsobjects.DctmObjectType;
 import com.delta.cmsmf.exception.CMSMFFileNotFoundException;
 import com.delta.cmsmf.exception.CMSMFIOException;
-import com.delta.cmsmf.properties.CMSMFProperties;
 
 /**
- * The Class FileStreamsManager is facilitates access to various file system
- * stream files to serialize/deserialize java objects. This class implements
- * a singleton design pattern. It contains methods to create outputstreams so
- * that CMSMF application write CMS objects to these streams. Likewise, it
- * contains methods to create inputstreams so that application can read CMS
- * objects during import process. This class maintains one filestream for each object
- * type.
+ * The Class FileStreamsManager is facilitates access to various file system stream files to
+ * serialize/deserialize java objects. This class implements a singleton design pattern. It contains
+ * methods to create outputstreams so that CMSMF application write CMS objects to these streams.
+ * Likewise, it contains methods to create inputstreams so that application can read CMS objects
+ * during import process. This class maintains one filestream for each object type.
  *
  * @author Shridev Makim 6/15/2010
  */
@@ -119,7 +117,7 @@ public class FileStreamsManager {
 	 */
 	private FileStreamsManager() {
 		// no code here; this is a singleton class so private constructor
-		this.compressStreams = CMSMFProperties.COMPRESSDATA_FLAG.getBoolean();
+		this.compressStreams = Setting.COMPRESSDATA_FLAG.getBoolean();
 	}
 
 	/**
@@ -137,7 +135,7 @@ public class FileStreamsManager {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see java.lang.Object#clone()
 	 */
 	@Override
@@ -412,8 +410,7 @@ public class FileStreamsManager {
 
 	/**
 	 * Creates the input stream on a given file name and returns it. It checks the compress data
-	 * flag in
-	 * properties file to see if the data stored in the file system is compressed or not.
+	 * flag in properties file to see if the data stored in the file system is compressed or not.
 	 *
 	 * @param fileName
 	 *            the file name excluding the path
@@ -509,8 +506,8 @@ public class FileStreamsManager {
 	}
 
 	/**
-	 * Deletes all stream files from the streams directory. This method only deletes
-	 * files that may be used by cmsmf application (files with .cmsmf extension).
+	 * Deletes all stream files from the streams directory. This method only deletes files that may
+	 * be used by cmsmf application (files with .cmsmf extension).
 	 */
 	public void deleteStreamFiles() {
 

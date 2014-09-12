@@ -8,7 +8,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.cfg.Constant;
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.datastore.DataObject;
@@ -17,7 +18,6 @@ import com.delta.cmsmf.datastore.DataType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.DctmObjectImportHelper;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.runtime.DuplicateChecker;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfGroup;
@@ -28,9 +28,9 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfValue;
 
 /**
- * The DctmUser class contains methods to export/import dm_user type of objects from/to
- * Documentum CMS. It also contains methods to export any supporting objects that
- * are needed to replicate a dm_user object in target repository.
+ * The DctmUser class contains methods to export/import dm_user type of objects from/to Documentum
+ * CMS. It also contains methods to export any supporting objects that are needed to replicate a
+ * dm_user object in target repository.
  * <p>
  * <b> NOTE: We are not handling aliases currently. </b>
  * <p>
@@ -73,7 +73,7 @@ public class DctmUser extends DctmObject<IDfUser> {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see com.delta.cmsmf.cmsobjects.DctmObject#createInCMS()
 	 */
 	@Override
@@ -116,11 +116,10 @@ public class DctmUser extends DctmObject<IDfUser> {
 			// properties file. For all other types of user source, clear out the password field.
 			// If the value in the properties file is 'sameasloginid' set the password equal to the
 			// the user_login_name
-			if (getStrSingleAttrValue(DctmAttrNameConstants.USER_SOURCE).equals(
-				CMSMFAppConstants.USER_SOURCE_INLINE_PASSWORD)) {
+			if (getStrSingleAttrValue(DctmAttrNameConstants.USER_SOURCE).equals(Constant.USER_SOURCE_INLINE_PASSWORD)) {
 				// Default the password to the user's login name, if one hasn't been selected
 				// for global use
-				final String inlinePasswordValue = CMSMFProperties.DEFAULT_USER_PASSWORD
+				final String inlinePasswordValue = Setting.DEFAULT_USER_PASSWORD
 					.getString(DctmAttrNameConstants.USER_LOGIN_NAME);
 				findAttribute(DctmAttrNameConstants.USER_PASSWORD).setSingleValue(inlinePasswordValue);
 
@@ -293,11 +292,11 @@ public class DctmUser extends DctmObject<IDfUser> {
 				// IDfACL newDefaultACL = (IDfACL) dctmSession.getObject(newACLID);
 				// newDefaultACL.setObjectName(defaultACLName);
 				// newDefaultACL.setDomain(userACLDomainName);
-				// newDefaultACL.setDescription(CMSMFAppConstants.CMSMF_TEMP_ACL_DESCRIPTION);
+				// newDefaultACL.setDescription(Constant.CMSMF_TEMP_ACL_DESCRIPTION);
 				// newDefaultACL.save();
 
 				curUsrDefaultACL.setObjectName(defaultACLName);
-				curUsrDefaultACL.setDescription(CMSMFAppConstants.CMSMF_TEMP_ACL_DESCRIPTION);
+				curUsrDefaultACL.setDescription(Constant.CMSMF_TEMP_ACL_DESCRIPTION);
 				curUsrDefaultACL.save();
 
 				if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
@@ -319,10 +318,9 @@ public class DctmUser extends DctmObject<IDfUser> {
 	}
 
 	/**
-	 * Creates the required user defaults for this user.
-	 * This method creates default folder, default group and default acl in repository
-	 * during import process if they do not exist. These objects will be updated later on
-	 * when the import process imports group, acls and folders.
+	 * Creates the required user defaults for this user. This method creates default folder, default
+	 * group and default acl in repository during import process if they do not exist. These objects
+	 * will be updated later on when the import process imports group, acls and folders.
 	 *
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
@@ -391,7 +389,7 @@ public class DctmUser extends DctmObject<IDfUser> {
 				IDfACL defaultACL = (IDfACL) session.newObject(DctmTypeConstants.DM_ACL);
 				defaultACL.setObjectName(userDefaultACLName);
 				defaultACL.setDomain(userDefaultACLDomainName);
-				defaultACL.setDescription(CMSMFAppConstants.CMSMF_TEMP_ACL_DESCRIPTION);
+				defaultACL.setDescription(Constant.CMSMF_TEMP_ACL_DESCRIPTION);
 				defaultACL.save();
 				if (DctmUser.logger.isEnabledFor(Level.DEBUG)) {
 					DctmUser.logger.debug("The default acl of the user: " + userDefaultACLName
@@ -407,8 +405,10 @@ public class DctmUser extends DctmObject<IDfUser> {
 
 	/*
 	 * (non-Javadoc)
-	 *
-	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
+	 * 
+	 * @see
+	 * com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject
+	 * )
 	 */
 	@Override
 	protected DctmUser doGetFromCMS(IDfUser prsstntObj) throws CMSMFException {
@@ -459,9 +459,8 @@ public class DctmUser extends DctmObject<IDfUser> {
 	}
 
 	/**
-	 * Exports various user defaults for a given user.
-	 * This method exports default folder, default group and default acl
-	 * of an user object.
+	 * Exports various user defaults for a given user. This method exports default folder, default
+	 * group and default acl of an user object.
 	 *
 	 * @param dctmUser
 	 *            the dctm user

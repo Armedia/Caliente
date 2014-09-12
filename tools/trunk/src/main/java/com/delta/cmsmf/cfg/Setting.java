@@ -1,4 +1,4 @@
-package com.delta.cmsmf.properties;
+package com.delta.cmsmf.cfg;
 
 import java.net.URL;
 
@@ -6,7 +6,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
-public enum CMSMFProperties {
+public enum Setting {
 	//
 	COMPRESSDATA_FLAG("cmsmf.app.compressdata.flag"),
 	EXPORT_PREDICATE("cmsmf.app.export.predicate"),
@@ -22,6 +22,8 @@ public enum CMSMFProperties {
 	SKIP_ACLS("cmsmf.app.export.skip.acls"),
 	SKIP_USERS("cmsmf.app.export.skip.users"),
 	SKIP_GROUPS("cmsmf.app.export.skip.groups"),
+	SPECIAL_USERS("cmsmf.app.special.users"),
+	SPECIAL_GROUPS("cmsmf.app.special.groups"),
 	POST_PROCESS_IMPORT("cmsmf.app.import.postprocess.flag"),
 	STATE_CABINET_NAME("cmsmf.app.state.cabinet"),
 	EXPORT_BATCH_SIZE("cmsmf.app.export.batch.size"),
@@ -32,7 +34,7 @@ public enum CMSMFProperties {
 
 	public final String name;
 
-	private CMSMFProperties(String name) {
+	private Setting(String name) {
 		this.name = name;
 	}
 
@@ -42,7 +44,7 @@ public enum CMSMFProperties {
 
 	static {
 		PropertiesConfiguration def = new PropertiesConfiguration();
-		URL url = Thread.currentThread().getContextClassLoader().getResource(CMSMFProperties.DEFAULT_PROPERTIES);
+		URL url = Thread.currentThread().getContextClassLoader().getResource(Setting.DEFAULT_PROPERTIES);
 		if (url != null) {
 			def.setDelimiterParsingDisabled(true);
 			def.setListDelimiter('|');
@@ -50,7 +52,7 @@ public enum CMSMFProperties {
 				def.load(url);
 			} catch (ConfigurationException e) {
 				throw new RuntimeException(String.format("Failed to load the property defaults from [%s]",
-					CMSMFProperties.DEFAULT_PROPERTIES));
+					Setting.DEFAULT_PROPERTIES));
 			}
 		}
 		// Load the defaults
@@ -58,26 +60,26 @@ public enum CMSMFProperties {
 	}
 
 	public int getInt() {
-		return getInt(CMSMFProperties.DEFAULTS.getInt(this.name, 0));
+		return getInt(Setting.DEFAULTS.getInt(this.name, 0));
 	}
 
 	public int getInt(int altDefault) {
-		return PropertiesManager.getProperty(this.name, altDefault);
+		return SettingManager.getProperty(this.name, altDefault);
 	}
 
 	public boolean getBoolean() {
-		return getBoolean(CMSMFProperties.DEFAULTS.getBoolean(this.name, false));
+		return getBoolean(Setting.DEFAULTS.getBoolean(this.name, false));
 	}
 
 	public boolean getBoolean(boolean altDefault) {
-		return PropertiesManager.getProperty(this.name, altDefault);
+		return SettingManager.getProperty(this.name, altDefault);
 	}
 
 	public String getString() {
-		return getString(CMSMFProperties.DEFAULTS.getString(this.name, ""));
+		return getString(Setting.DEFAULTS.getString(this.name, ""));
 	}
 
 	public String getString(String altDefault) {
-		return PropertiesManager.getProperty(this.name, altDefault);
+		return SettingManager.getProperty(this.name, altDefault);
 	}
 }

@@ -16,13 +16,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.cfg.Constant;
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.AbstractCMSMFMain;
 import com.delta.cmsmf.mainEngine.DctmObjectExportHelper;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -43,10 +43,8 @@ import com.documentum.fc.common.IDfTime;
 
 /**
  * The DctmDocument class contains methods to export/import dm_document type (or its subtype) of
- * objects
- * from/to Documentum CMS. It also contains methods to export any supporting objects that are needed
- * to
- * replicate a dm_document object in target repository.
+ * objects from/to Documentum CMS. It also contains methods to export any supporting objects that
+ * are needed to replicate a dm_document object in target repository.
  * <p>
  * All versions of a document and all content files of each version are stored in lists which are
  * the field of this class. This allows to serialize/deserialize all of it in one shot and maintains
@@ -83,15 +81,14 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 	/**
 	 * The list that contains all of the version tree. It stores the version in the order from
-	 * oldest to
-	 * newest
+	 * oldest to newest
 	 */
 	private List<DctmDocument> versionTree = new ArrayList<DctmDocument>();
 
 	/**
 	 * The isThisATest is used for testing purposes. The value for this attribute is set from
-	 * properties file.
-	 * If the value is true, the documents and folders are created in /Replications cabinet.
+	 * properties file. If the value is true, the documents and folders are created in /Replications
+	 * cabinet.
 	 */
 	private static final boolean isThisATest = AbstractCMSMFMain.getInstance().isTestMode();
 
@@ -187,7 +184,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see com.delta.cmsmf.repoSync.DctmObject#createInCMS()
 	 */
 	@Override
@@ -207,8 +204,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 	/**
 	 * Prints the import report detailing how many document versions were read, updated, created,
-	 * skipped
-	 * during the import process.
+	 * skipped during the import process.
 	 */
 	public static void printImportReport() {
 		DctmDocument.logger.info("No. of document object versions read from file: " + DctmDocument.docs_read);
@@ -236,12 +232,9 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 	/**
 	 * Creates the multi version document in the repository. It first checks to see if an identical
-	 * document
-	 * already exists in the repository, if not it also checks to see if out dated version exists
-	 * and updates
-	 * it if needed. It also checks to see if there is a need to branching. This method builds the
-	 * complete
-	 * version tree as it existed in the source repository.
+	 * document already exists in the repository, if not it also checks to see if out dated version
+	 * exists and updates it if needed. It also checks to see if there is a need to branching. This
+	 * method builds the complete version tree as it existed in the source repository.
 	 *
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
@@ -418,8 +411,8 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 						DctmDocument.docs_skipped.incrementAndGet();
 						if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 							DctmDocument.logger
-							.debug("Identical version of document already exist in target repo with id: "
-								+ existingDoc.getObjectId().getId() + " and name: " + existingDoc.getObjectName());
+								.debug("Identical version of document already exist in target repo with id: "
+									+ existingDoc.getObjectId().getId() + " and name: " + existingDoc.getObjectName());
 						}
 					} else {
 						doesExistingObjectNeedsUpdate = true;
@@ -482,7 +475,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 								linkedUnLinkedParentIDs.add(parentFldr.getObjectId().getId());
 							}
 						} catch (DfException dfe) {
-							if (dfe.getMessageId().equals(CMSMFAppConstants.DM_SYSOBJECT_E_ALREADY_LINKED_MESSAGE_ID)) {
+							if (dfe.getMessageId().equals(Constant.DM_SYSOBJECT_E_ALREADY_LINKED_MESSAGE_ID)) {
 								if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 									DctmDocument.logger.debug("Sysobject already Linked error ignored");
 								}
@@ -655,7 +648,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 			String objectType = dctmVerDoc.getStrSingleAttrValue(DctmAttrNameConstants.R_OBJECT_TYPE);
 			// Date creationDate =
 // dctmVerDoc.getDateSingleAttrValue(DctmAttrNameConstants.R_CREATION_DATE);
-			// String dctmDateTimePattern = CMSMFAppConstants.DCTM_DATETIME_PATTERN;
+			// String dctmDateTimePattern = Constant.DCTM_DATETIME_PATTERN;
 			// IDfTime createDate = new DfTime(creationDate);
 
 			// NOTE: MODIFY THIS NOTE
@@ -701,7 +694,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 		String objectType = dctmVerDoc.getStrSingleAttrValue(DctmAttrNameConstants.R_OBJECT_TYPE);
 		Date creationDate = dctmVerDoc.getDateSingleAttrValue(DctmAttrNameConstants.R_CREATION_DATE);
-		String dctmDateTimePattern = CMSMFAppConstants.DCTM_DATETIME_PATTERN;
+		String dctmDateTimePattern = Constant.DCTM_DATETIME_PATTERN;
 		IDfTime createDate = new DfTime(creationDate);
 		String fldrLoc = "";
 		if (dctmVerDoc.folderLocations.size() >= 1) {
@@ -776,7 +769,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 	 *             Signals that DFC Exception has occurred.
 	 */
 	private static void setContentFilesInCMS(IDfSysObject sysObject, DctmDocument dctmDoc) throws IOException,
-	DfException {
+		DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger.info("Started setting content files of document with name: "
 				+ sysObject.getObjectName());
@@ -819,8 +812,10 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 	/*
 	 * (non-Javadoc)
-	 *
-	 * @see com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject)
+	 * 
+	 * @see
+	 * com.delta.cmsmf.cmsobjects.DctmObject#getFromCMS(com.documentum.fc.client.IDfPersistentObject
+	 * )
 	 */
 	@Override
 	protected DctmDocument doGetFromCMS(IDfDocument doc) throws CMSMFException {
@@ -885,7 +880,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
 			DctmDocument.logger
-			.info("Finished exporting dctm dm_document and supporting objects from repository for ID: " + srcObjID);
+				.info("Finished exporting dctm dm_document and supporting objects from repository for ID: " + srcObjID);
 		}
 		return dctmDocument;
 	}
@@ -1030,8 +1025,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 	/**
 	 * Gets the content files from repository for an object and sets as the content file list of an
-	 * dctm
-	 * object.
+	 * dctm object.
 	 *
 	 * @param dctmDocument
 	 *            the dctm document
@@ -1062,7 +1056,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 				StringBuffer contentDQLBuffer = new StringBuffer(
 					"select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, ");
 				contentDQLBuffer
-				.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
+					.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
 				contentDQLBuffer.append("from dmr_content_r  dcr, dmr_content_s dcs ");
 				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
 				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
@@ -1113,8 +1107,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 
 	/**
 	 * Gets the content files from repository for an object and sets as the content file list of an
-	 * dctm
-	 * object.
+	 * dctm object.
 	 *
 	 * @param dctmDocument
 	 *            the dctm document
@@ -1201,8 +1194,8 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 		String pageModifier = dctmContent.getPageModifier();
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
-			.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
-				+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
+				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+					+ contentObjID + ", " + contentFormat + ", " + pageNbr + ", " + pageModifier + ">");
 		}
 		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
 // ByteArrayInputStream
@@ -1210,8 +1203,8 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 // now
 		// using getFileEx2 instead.
 		@SuppressWarnings("unused")
-		int bufferSize = CMSMFProperties.CONTENT_READ_BUFFER_SIZE.getInt();
-		String contentExportRootDir = CMSMFProperties.CONTENT_DIRECTORY.getString();
+		int bufferSize = Setting.CONTENT_READ_BUFFER_SIZE.getInt();
+		String contentExportRootDir = Setting.CONTENT_DIRECTORY.getString();
 		// Make sure the content export location exists
 		FileUtils.forceMkdir(new File(contentExportRootDir));
 		String relativeContentFileLocation = CMSMFUtils.getContentPathFromContentID(contentObjID);
@@ -1264,16 +1257,16 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 		String pageModifier, int contentDataTicket) throws IOException, DfException {
 		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
 			DctmDocument.logger
-			.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
-				+ contentObjID
-				+ ", "
-				+ contentFormat
-				+ ", "
-				+ pageNbr
-				+ ", "
-				+ pageModifier
-				+ ", "
-				+ contentDataTicket + ">");
+				.debug("Started getting content file to filesystem. <contentID, format, pageNbr, pageModifier, dataTicket> : <"
+					+ contentObjID
+					+ ", "
+					+ contentFormat
+					+ ", "
+					+ pageNbr
+					+ ", "
+					+ pageModifier
+					+ ", "
+					+ contentDataTicket + ">");
 		}
 		// NOTE smakim: I tried using getContentEx2 method of IDfSysObject to get the
 // ByteArrayInputStream
@@ -1281,8 +1274,8 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 // now
 		// using getFileEx2 instead.
 /*
-		int bufferSize = PropertiesManager.getProperty("content_read_buffer_size",
-			CMSMFAppConstants.CONTENT_READ_BUFFER_SIZE);
+ * int bufferSize = SettingManager.getProperty("content_read_buffer_size",
+ * Constant.CONTENT_READ_BUFFER_SIZE);
  */
 		File contentExportRootDir = AbstractCMSMFMain.getInstance().getContentFilesDirectory();
 		// Make sure the content export location exists
@@ -1324,7 +1317,7 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 			DctmDocument.logger.debug("Started converting content input stream to byte[]");
 		}
 
-		int bufferSize = CMSMFProperties.CONTENT_READ_BUFFER_SIZE.getInt();
+		int bufferSize = Setting.CONTENT_READ_BUFFER_SIZE.getInt();
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(bufferSize);
 		byte[] bytes = new byte[bufferSize];
 

@@ -1,4 +1,4 @@
-package com.delta.cmsmf.properties;
+package com.delta.cmsmf.cfg;
 
 import java.io.File;
 import java.net.URL;
@@ -16,7 +16,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 
 /**
- * The Class PropertiesManager reads the properties from cmsmf properties file and makes them
+ * The Class SettingManager reads the properties from cmsmf properties file and makes them
  * available during
  * application execution. This class implements singleton design pattern to maintain single set of
  * properties
@@ -26,15 +26,15 @@ import org.apache.log4j.Logger;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class PropertiesManager {
+public class SettingManager {
 
-	protected static final Logger logger = Logger.getLogger(PropertiesManager.class);
+	protected static final Logger logger = Logger.getLogger(SettingManager.class);
 
 	/**
 	 * Instantiates a new properties manager. Private constructor to prevent
 	 * new instances being created.
 	 */
-	private PropertiesManager() {
+	private SettingManager() {
 		// no code here; this is a singleton class so private constructor
 	}
 
@@ -44,7 +44,7 @@ public class PropertiesManager {
 
 	public static void addPropertySource(String propertyFilePath) throws ConfigurationException {
 		if (propertyFilePath == null) { return; }
-		PropertiesManager.addPropertySource(new File(propertyFilePath));
+		SettingManager.addPropertySource(new File(propertyFilePath));
 	}
 
 	private static void configure(AbstractConfiguration cfg) {
@@ -57,52 +57,52 @@ public class PropertiesManager {
 	public static void addPropertySource(URL propertyUrl) throws ConfigurationException {
 		if (propertyUrl == null) { return; }
 		PropertiesConfiguration cfg = new PropertiesConfiguration();
-		PropertiesManager.configure(cfg);
+		SettingManager.configure(cfg);
 		cfg.load(propertyUrl);
-		PropertiesManager.addConfiguration(cfg);
+		SettingManager.addConfiguration(cfg);
 	}
 
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
 		if (!propertyFile.exists()) {
-			PropertiesManager.logger.warn(String.format("Property file [%s] does not exist, ignoring",
+			SettingManager.logger.warn(String.format("Property file [%s] does not exist, ignoring",
 				propertyFile.getAbsolutePath()));
 			return;
 		}
 		if (!propertyFile.isFile()) {
-			PropertiesManager.logger.warn(String.format("Property file [%s] is not a regular file, ignoring",
+			SettingManager.logger.warn(String.format("Property file [%s] is not a regular file, ignoring",
 				propertyFile.getAbsolutePath()));
 			return;
 		}
 		if (!propertyFile.canRead()) {
-			PropertiesManager.logger.warn(String.format("Property file [%s] can't be read, ignoring",
+			SettingManager.logger.warn(String.format("Property file [%s] can't be read, ignoring",
 				propertyFile.getAbsolutePath()));
 			return;
 		}
 		PropertiesConfiguration cfg = new PropertiesConfiguration();
-		PropertiesManager.configure(cfg);
+		SettingManager.configure(cfg);
 		cfg.load(propertyFile);
 		// TODO: Support XML properties file format?
-		PropertiesManager.addConfiguration(cfg);
+		SettingManager.addConfiguration(cfg);
 	}
 
 	public static void addPropertySource(Properties properties) throws ConfigurationException {
 		if (properties == null) { return; }
 		MapConfiguration cfg = new MapConfiguration(new HashMap<Object, Object>(properties));
-		PropertiesManager.configure(cfg);
-		PropertiesManager.addConfiguration(cfg);
+		SettingManager.configure(cfg);
+		SettingManager.addConfiguration(cfg);
 	}
 
 	protected static synchronized void addConfiguration(AbstractConfiguration configuration) {
-		if (PropertiesManager.CFG != null) { return; }
+		if (SettingManager.CFG != null) { return; }
 		if (configuration != null) {
-			PropertiesManager.CONFIGURATIONS.add(configuration);
+			SettingManager.CONFIGURATIONS.add(configuration);
 		}
 	}
 
 	public static synchronized void init() {
-		if (PropertiesManager.CFG == null) {
-			PropertiesManager.CFG = new CompositeConfiguration(PropertiesManager.CONFIGURATIONS);
+		if (SettingManager.CFG == null) {
+			SettingManager.CFG = new CompositeConfiguration(SettingManager.CONFIGURATIONS);
 		}
 	}
 
@@ -116,8 +116,8 @@ public class PropertiesManager {
 	 * @return the string
 	 */
 	static String getProperty(String propName, String defaultValue) {
-		PropertiesManager.init();
-		return PropertiesManager.CFG.getString(propName, defaultValue);
+		SettingManager.init();
+		return SettingManager.CFG.getString(propName, defaultValue);
 	}
 
 	/**
@@ -130,22 +130,22 @@ public class PropertiesManager {
 	 * @return the int
 	 */
 	static int getProperty(String propName, int defaultValue) {
-		PropertiesManager.init();
-		return PropertiesManager.CFG.getInt(propName, defaultValue);
+		SettingManager.init();
+		return SettingManager.CFG.getInt(propName, defaultValue);
 	}
 
 	static boolean getProperty(String propName, boolean defaultValue) {
-		PropertiesManager.init();
-		return PropertiesManager.CFG.getBoolean(propName, defaultValue);
+		SettingManager.init();
+		return SettingManager.CFG.getBoolean(propName, defaultValue);
 	}
 
 	public static List<Configuration> getConfigurations() {
-		PropertiesManager.init();
-		return PropertiesManager.CONFIGURATIONS;
+		SettingManager.init();
+		return SettingManager.CONFIGURATIONS;
 	}
 
 	public static synchronized void close() {
-		PropertiesManager.CONFIGURATIONS.clear();
-		PropertiesManager.CFG = null;
+		SettingManager.CONFIGURATIONS.clear();
+		SettingManager.CFG = null;
 	}
 }

@@ -7,17 +7,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrTokenizer;
 
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
 /**
  * The Class RunTimeProperties. This class implements singleton design pattern to maintain runtime
- * properties
- * during the execution of cmsmf application. These properties are used internally by the
- * application and not
- * set by the user in properties file.
+ * properties during the execution of cmsmf application. These properties are used internally by the
+ * application and not set by the user in properties file.
  *
  * @author Shridev Makim 6/15/2010
  */
@@ -36,8 +34,8 @@ public class RunTimeProperties {
 	private AtomicInteger importProcessErrorCount = new AtomicInteger(0);
 
 	/**
-	 * Instantiates a new run time properties. Private constructor to prevent
-	 * new instances being created.
+	 * Instantiates a new run time properties. Private constructor to prevent new instances being
+	 * created.
 	 */
 	private RunTimeProperties() {
 		// no code here; this is a singleton class so private constructor
@@ -81,7 +79,7 @@ public class RunTimeProperties {
 	@SuppressWarnings("unchecked")
 	public Set<String> getAttrsToCheckForRepoOperatorName() {
 		if (this.attrsToCheckForRepoOperatorName == null) {
-			String attrsToCheck = CMSMFProperties.OWNER_ATTRIBUTES.getString();
+			String attrsToCheck = Setting.OWNER_ATTRIBUTES.getString();
 			StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
 			this.attrsToCheckForRepoOperatorName = new HashSet<String>(strTokenizer.getTokenList());
 		}

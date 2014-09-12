@@ -21,9 +21,9 @@ import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.properties.CMSMFProperties;
 
 /**
  * @author diego
@@ -74,10 +74,10 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 
 	public static synchronized DefaultCmsObjectStore init(boolean clearData) throws CMSMFException {
 		if (DefaultCmsObjectStore.INSTANCE != null) { return DefaultCmsObjectStore.INSTANCE; }
-		final String driverName = CMSMFProperties.JDBC_DRIVER.getString();
-		final String jdbcUrl = CMSMFProperties.JDBC_URL.getString();
+		final String driverName = Setting.JDBC_DRIVER.getString();
+		final String jdbcUrl = Setting.JDBC_URL.getString();
 
-		String targetPath = CMSMFProperties.STREAMS_DIRECTORY.getString();
+		String targetPath = Setting.STREAMS_DIRECTORY.getString();
 		File targetDirectory = null;
 		try {
 			targetDirectory = new File(targetPath).getCanonicalFile();

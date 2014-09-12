@@ -6,6 +6,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cmsobjects.DctmACL;
 import com.delta.cmsmf.cmsobjects.DctmDocument;
 import com.delta.cmsmf.cmsobjects.DctmFolder;
@@ -16,7 +17,6 @@ import com.delta.cmsmf.cmsobjects.DctmType;
 import com.delta.cmsmf.cmsobjects.DctmUser;
 import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.properties.CMSMFProperties;
 import com.delta.cmsmf.serialization.DctmObjectWriter;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
@@ -30,9 +30,9 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 
 /**
- * The Class DctmObjectExportHelper is a helper class used extensively during export operation
- * in CMSMF application. This class contains various static methods to serialize several types
- * of objects from documentum repository.
+ * The Class DctmObjectExportHelper is a helper class used extensively during export operation in
+ * CMSMF application. This class contains various static methods to serialize several types of
+ * objects from documentum repository.
  *
  * @author Shridev Makim 6/15/2010
  */
@@ -112,8 +112,7 @@ public class DctmObjectExportHelper {
 
 	/**
 	 * Serializes a user or a group by given name. This method first tries to locate a group by
-	 * given name
-	 * and then if it can't find the group, it will try to locate a user by given name.
+	 * given name and then if it can't find the group, it will try to locate a user by given name.
 	 *
 	 * @param dctmSession
 	 *            the existing documentum session
@@ -171,7 +170,7 @@ public class DctmObjectExportHelper {
 		}
 		try {
 			// First check if the property is set to export the users
-			if (!CMSMFProperties.SKIP_USERS.getBoolean()) {
+			if (!Setting.SKIP_USERS.getBoolean()) {
 				// check if user exists by name provided
 				IDfUser user = dctmSession.getUser(userName);
 				if (user != null) {
@@ -211,7 +210,7 @@ public class DctmObjectExportHelper {
 		String userName = "";
 		try {
 			DctmObject<IDfUser> exportObject = null;
-			if ((user != null) && !CMSMFProperties.SKIP_USERS.getBoolean()) {
+			if ((user != null) && !Setting.SKIP_USERS.getBoolean()) {
 				userName = user.getUserName();
 				// get the user and serialize it
 				DctmUser dctmUser = new DctmUser();
@@ -247,7 +246,7 @@ public class DctmObjectExportHelper {
 		}
 		try {
 			// First check if the property is set to export the groups
-			if (!CMSMFProperties.SKIP_GROUPS.getBoolean()) {
+			if (!Setting.SKIP_GROUPS.getBoolean()) {
 				// check if group exists by name provided
 				IDfGroup group = dctmSession.getGroup(groupName);
 				if (group != null) {
@@ -287,7 +286,7 @@ public class DctmObjectExportHelper {
 		String groupName = "";
 		try {
 			DctmObject<IDfGroup> exportObject = null;
-			if ((group != null) && !CMSMFProperties.SKIP_GROUPS.getBoolean()) {
+			if ((group != null) && !Setting.SKIP_GROUPS.getBoolean()) {
 				groupName = group.getGroupName();
 				// get the group and serialize it
 				DctmGroup dctmGroup = new DctmGroup();
@@ -327,7 +326,7 @@ public class DctmObjectExportHelper {
 		try {
 			// check if acl exists by name provided
 			// First check if the property is set to export the groups
-			if (!CMSMFProperties.SKIP_ACLS.getBoolean()) {
+			if (!Setting.SKIP_ACLS.getBoolean()) {
 				IDfACL acl = dctmSession.getACL(aclDomain, aclName);
 				if (acl != null) {
 					DctmObjectExportHelper.serializeACL(dctmSession, acl);

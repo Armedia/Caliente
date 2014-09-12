@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.constants.CMSMFAppConstants;
+import com.delta.cmsmf.cfg.Constant;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
@@ -92,17 +92,16 @@ public class DfUtils {
 
 	public static String generateSqlDateClause(IDfTime date, IDfSession session) throws DfException {
 		// First, output to the "netural" format
-		String dateString = date.asString(CMSMFAppConstants.SQL_DATETIME_PATTERN);
+		String dateString = date.asString(Constant.SQL_DATETIME_PATTERN);
 		// Now, select the database format string
 		final String ret;
 		DbType dbType = DfUtils.getDbType(session);
 		switch (dbType) {
 			case ORACLE:
-				ret = String.format("TO_DATE(''%s'', ''%s'')", dateString, CMSMFAppConstants.ORACLE_DATETIME_PATTERN);
+				ret = String.format("TO_DATE(''%s'', ''%s'')", dateString, Constant.ORACLE_DATETIME_PATTERN);
 				break;
 			case MSSQL:
-				ret = String.format("CONVERT(DATETIME, ''%s'', %d)", dateString,
-					CMSMFAppConstants.MSSQL_DATETIME_PATTERN);
+				ret = String.format("CONVERT(DATETIME, ''%s'', %d)", dateString, Constant.MSSQL_DATETIME_PATTERN);
 				break;
 			default:
 				throw new UnsupportedOperationException(String.format("Unsupported database type [%s]", dbType));
