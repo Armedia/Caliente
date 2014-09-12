@@ -632,7 +632,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 */
 	protected final void updateModifyDate(T object) throws DfException {
 		final String objType = object.getType().getName();
-		final IDfValue modifyDate = getAttribute(CmsAttributes.R_MODIFY_DATE).getValue();
+		CmsAttribute attribute = getAttribute(CmsAttributes.R_MODIFY_DATE);
+		if (attribute == null) { return; }
+
+		final IDfValue modifyDate = attribute.getValue();
 
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		final String sqlStr = String.format("UPDATE %s_s SET r_modify_date = %s WHERE r_object_id = ''%s''", objType,
