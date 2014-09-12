@@ -45,7 +45,7 @@ public class CmsObjectTest extends AbstractTest {
 	 */
 	@Test
 	public void testCmsObjectConstruction() throws Throwable {
-		IDfSession session = acquireSession();
+		IDfSession session = acquireSourceSession();
 		try {
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
@@ -91,7 +91,7 @@ public class CmsObjectTest extends AbstractTest {
 				}
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
@@ -102,7 +102,7 @@ public class CmsObjectTest extends AbstractTest {
 	public void testCmsObjectPersistence() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
-		IDfSession session = acquireSession();
+		IDfSession session = acquireSourceSession();
 		final Set<String> ownerNameAttributes = RunTimeProperties.getRunTimePropertiesInstance()
 			.getAttrsToCheckForRepoOperatorName();
 		try {
@@ -302,7 +302,7 @@ public class CmsObjectTest extends AbstractTest {
 				}
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 

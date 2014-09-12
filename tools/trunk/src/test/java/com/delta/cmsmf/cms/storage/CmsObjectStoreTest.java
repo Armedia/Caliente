@@ -285,7 +285,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
-		IDfSession session = acquireSession();
+		IDfSession session = acquireSourceSession();
 		final Set<String> ownerNameAttributes = RunTimeProperties.getRunTimePropertiesInstance()
 			.getAttrsToCheckForRepoOperatorName();
 		try {
@@ -486,7 +486,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 				}
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
@@ -517,7 +517,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 			// All is well
 		}
 
-		IDfSession session = acquireSession();
+		IDfSession session = acquireSourceSession();
 		try {
 			final int max = 3;
 			for (final CmsObjectType t : CmsObjectType.values()) {
@@ -599,13 +599,13 @@ public class CmsObjectStoreTest extends AbstractTest {
 				});
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
 	@Test
 	public void testRegisterDependency() throws Throwable {
-		final IDfSession session = acquireSession();
+		final IDfSession session = acquireSourceSession();
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		Map<String, CmsObjectType> dependencies = new HashMap<String, CmsObjectType>();
 		try {
@@ -635,7 +635,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 						AbstractTest.HANDLER_COUNT, type.name(), id));
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 }

@@ -9,7 +9,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.dbcp.ConnectionFactory;
@@ -96,7 +95,8 @@ public abstract class AbstractTest {
 
 	protected static final ConnectionFactory CONNECTION_FACTORY;
 
-	private static final DctmSessionManager SESSION_MANAGER;
+	private static final DctmSessionManager SOURCE_SESSION_MANAGER;
+	private static final DctmSessionManager TARGET_SESSION_MANAGER;
 
 	protected static final ResultSetHandler<Integer> HANDLER_COUNT = new ResultSetHandler<Integer>() {
 		@Override
@@ -128,17 +128,22 @@ public abstract class AbstractTest {
 
 		URL properties = Thread.currentThread().getContextClassLoader().getResource("test.properties");
 		if (properties == null) { throw new RuntimeException("Failed to load test.properties"); }
-		Configuration cfg = null;
+		PropertiesConfiguration cfg = null;
 		try {
 			cfg = new PropertiesConfiguration(properties);
 		} catch (ConfigurationException e) {
 			throw new RuntimeException("Failed to load the properties configuration", e);
 		}
 
-		String docbase = cfg.getString("dctm.docbase");
-		String username = cfg.getString("dctm.username");
-		String password = cfg.getString("dctm.password");
-		SESSION_MANAGER = new DctmSessionManager(docbase, username, password);
+		String docbase = cfg.getString("source.docbase");
+		String username = cfg.getString("source.username");
+		String password = cfg.getString("source.password");
+		SOURCE_SESSION_MANAGER = new DctmSessionManager(docbase, username, password);
+
+		docbase = cfg.getString("target.docbase", docbase);
+		username = cfg.getString("target.username", username);
+		password = cfg.getString("target.password", password);
+		TARGET_SESSION_MANAGER = new DctmSessionManager(docbase, username, password);
 	}
 
 	private DataSource dataSource = null;
@@ -164,14 +169,6 @@ public abstract class AbstractTest {
 		baseTearDown();
 	}
 
-	protected final DctmSessionManager getSessionManager() {
-		return AbstractTest.SESSION_MANAGER;
-	}
-
-	protected final IDfSession acquireSession() {
-		return AbstractTest.SESSION_MANAGER.acquireSession();
-	}
-
 	protected final void closeQuietly(IDfCollection collection) {
 		if (collection == null) { return; }
 		try {
@@ -180,8 +177,28 @@ public abstract class AbstractTest {
 		}
 	}
 
-	protected final void releaseSession(IDfSession session) {
-		AbstractTest.SESSION_MANAGER.releaseSession(session);
+	protected final DctmSessionManager getSourceSessionManager() {
+		return AbstractTest.SOURCE_SESSION_MANAGER;
+	}
+
+	protected final IDfSession acquireSourceSession() {
+		return AbstractTest.SOURCE_SESSION_MANAGER.acquireSession();
+	}
+
+	protected final void releaseSourceSession(IDfSession session) {
+		AbstractTest.SOURCE_SESSION_MANAGER.releaseSession(session);
+	}
+
+	protected final DctmSessionManager getTargetSessionManager() {
+		return AbstractTest.TARGET_SESSION_MANAGER;
+	}
+
+	protected final IDfSession acquireTargetSession() {
+		return AbstractTest.TARGET_SESSION_MANAGER.acquireSession();
+	}
+
+	protected final void releaseTargetSession(IDfSession session) {
+		AbstractTest.TARGET_SESSION_MANAGER.releaseSession(session);
 	}
 
 	protected final void baseTearDown() {

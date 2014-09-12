@@ -40,7 +40,7 @@ public class CmsAttributeTest extends AbstractTest {
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
-		final IDfSession session = acquireSession();
+		final IDfSession session = acquireSourceSession();
 		final QueryRunner qr = new QueryRunner(getDataSource());
 		final CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		try {
@@ -116,13 +116,13 @@ public class CmsAttributeTest extends AbstractTest {
 			}
 
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
 	@Test
 	public void testCmsAttributeIDfAttrIDfPersistentObject() throws Throwable {
-		final IDfSession session = acquireSession();
+		final IDfSession session = acquireSourceSession();
 		try {
 			IDfCollection collection = DfUtils.executeQuery(session,
 				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
@@ -282,13 +282,13 @@ public class CmsAttributeTest extends AbstractTest {
 				closeQuietly(collection);
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
 	@Test
 	public void testCmsAttributeIDfAttrIDfValueArray() throws Throwable {
-		final IDfSession session = acquireSession();
+		final IDfSession session = acquireSourceSession();
 		try {
 			IDfCollection collection = DfUtils.executeQuery(session,
 				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
@@ -332,13 +332,13 @@ public class CmsAttributeTest extends AbstractTest {
 				closeQuietly(collection);
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
 	@Test
 	public void testCmsAttributeIDfAttrCollectionOfIDfValue() throws Throwable {
-		final IDfSession session = acquireSession();
+		final IDfSession session = acquireSourceSession();
 		try {
 			IDfCollection collection = DfUtils.executeQuery(session,
 				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
@@ -382,13 +382,13 @@ public class CmsAttributeTest extends AbstractTest {
 				closeQuietly(collection);
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
 	@Test
 	public void testCmsAttributeStringCmsDataTypeStringIntBooleanBooleanIDfValueArray() throws Throwable {
-		final IDfSession session = acquireSession();
+		final IDfSession session = acquireSourceSession();
 		try {
 			IDfCollection collection = DfUtils.executeQuery(session,
 				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
@@ -434,13 +434,13 @@ public class CmsAttributeTest extends AbstractTest {
 				closeQuietly(collection);
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
 	@Test
 	public void testCmsAttributeStringCmsDataTypeStringIntBooleanBooleanCollectionOfIDfValue() throws Throwable {
-		final IDfSession session = acquireSession();
+		final IDfSession session = acquireSourceSession();
 		try {
 			IDfCollection collection = DfUtils.executeQuery(session,
 				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
@@ -486,7 +486,7 @@ public class CmsAttributeTest extends AbstractTest {
 				closeQuietly(collection);
 			}
 		} finally {
-			releaseSession(session);
+			releaseSourceSession(session);
 		}
 	}
 
