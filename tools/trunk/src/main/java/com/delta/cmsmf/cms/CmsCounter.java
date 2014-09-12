@@ -13,7 +13,6 @@ public final class CmsCounter {
 
 	public static enum Result {
 		//
-		READ,
 		IGNORED,
 		SKIPPED,
 		DUPLICATE,
