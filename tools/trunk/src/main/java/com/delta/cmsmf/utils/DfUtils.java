@@ -16,13 +16,13 @@ public class DfUtils {
 
 	public static enum DbType {
 		//
-		ORACLE("\\.Oracle$"),
-		MSSQL("\\.SQLServer$");
+		ORACLE("^.*\\.Oracle$"),
+		MSSQL("^.*\\.SQLServer$");
 
 		private final Pattern pattern;
 
 		private DbType(String pattern) {
-			this.pattern = Pattern.compile(pattern);
+			this.pattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 		}
 
 		public boolean matches(String serverVersion) {
