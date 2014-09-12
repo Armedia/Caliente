@@ -74,7 +74,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -275,7 +275,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
 		doPersistDependencies(castObject(object), manager);
@@ -285,7 +285,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-	SQLException {
+		SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -432,7 +432,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					}
 				} else {
 					// Clear the mapping
-					mapper.clearMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id);
+					mapper.clearSourceMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id);
 					if (localTx != null) {
 						session.abortTransEx(localTx);
 					} else {
@@ -480,7 +480,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -646,7 +646,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		final String sqlStr = String.format(
 			"UPDATE %s_s SET r_modify_date = TO_DATE(''%s'', ''%s'') WHERE r_object_id = ''%s''", objType, modifyDate
-			.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN), CMSMFAppConstants.DCTM_DATETIME_PATTERN,
+				.asTime().asString(CMSMFAppConstants.DCTM_DATETIME_PATTERN), CMSMFAppConstants.DCTM_DATETIME_PATTERN,
 			object.getObjectId().getId());
 
 		runExecSQL(object.getSession(), sqlStr);

@@ -1,5 +1,7 @@
 package com.delta.cmsmf.cms;
 
+import com.armedia.commons.utilities.Tools;
+
 /**
  * <p>
  * This interface provides a mechanism through which object classes that interact with these CMS
@@ -18,7 +20,7 @@ public abstract class CmsAttributeMapper {
 	 * This class encapsulates a value mapping, including contextual information about what object
 	 * type it's for, its name, and both values mapped.
 	 * </p>
-	 * 
+	 *
 	 * @author Diego Rivera <diego.rivera@armedia.com>
 	 *
 	 */
@@ -54,6 +56,47 @@ public abstract class CmsAttributeMapper {
 		public String getTargetValue() {
 			return this.targetValue;
 		}
+
+		public boolean isSameTypeAndName(Mapping other) {
+			if (other == null) { throw new IllegalArgumentException("Must provide another mapping to compare against"); }
+			if (!Tools.equals(this.objectType, other.objectType)) { return false; }
+			if (!Tools.equals(this.mappingName, other.mappingName)) { return false; }
+			return true;
+		}
+
+		public boolean isSameSource(Mapping other) {
+			if (!isSameTypeAndName(other)) { return false; }
+			if (!Tools.equals(this.sourceValue, other.sourceValue)) { return false; }
+			return true;
+		}
+
+		public boolean isSameTarget(Mapping other) {
+			if (!isSameTypeAndName(other)) { return false; }
+			if (!Tools.equals(this.targetValue, other.targetValue)) { return false; }
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			return Tools.hashTool(this, null, this.objectType, this.mappingName, this.sourceValue, this.targetValue);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!Tools.baseEquals(this, obj)) { return false; }
+			Mapping other = Mapping.class.cast(obj);
+			if (!Tools.equals(this.objectType, other.objectType)) { return false; }
+			if (!Tools.equals(this.mappingName, other.mappingName)) { return false; }
+			if (!Tools.equals(this.sourceValue, other.sourceValue)) { return false; }
+			if (!Tools.equals(this.targetValue, other.targetValue)) { return false; }
+			return true;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Mapping [objectType=%s, mappingName=%s, sourceValue=%s, targetValue=%s]",
+				this.objectType, this.mappingName, this.sourceValue, this.targetValue);
+		}
 	}
 
 	/**
@@ -76,8 +119,12 @@ public abstract class CmsAttributeMapper {
 		setMapping(oldMapping, null);
 	}
 
-	public final void clearMapping(CmsObjectType objectType, String mappingName, String sourceValue) {
+	public final void clearTargetMapping(CmsObjectType objectType, String mappingName, String sourceValue) {
 		setMapping(objectType, mappingName, sourceValue, null);
+	}
+
+	public final void clearSourceMapping(CmsObjectType objectType, String mappingName, String targetValue) {
+		setMapping(objectType, mappingName, null, targetValue);
 	}
 
 	public final void setMapping(Mapping oldMapping, String targetValue) {
@@ -89,22 +136,27 @@ public abstract class CmsAttributeMapper {
 	public final Mapping setMapping(CmsObjectType objectType, String mappingName, String sourceValue, String targetValue) {
 		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (mappingName == null) { throw new IllegalArgumentException("Must provide a mapping name"); }
-		if (sourceValue == null) { throw new IllegalArgumentException("Must provide a source value"); }
 		return createMapping(objectType, mappingName, sourceValue, targetValue);
 	}
 
 	/**
 	 * <p>
 	 * Creates a new mapping for the given object type, name and source value that will resolve to
-	 * the target value. If the target value is {@code null}, then that means that the mapping
-	 * should be cleared completely.
+	 * the target value. If the either the source or target values are {@code null}, then that means
+	 * that the mapping should be cleared completely, using the non-{@code null} value as a
+	 * reference (i.e. if the target value is {@code null}, then search based on the source value,
+	 * and vice-versa). If both values are {@code null}, then the mapping can't be cleared and an
+	 * {@link IllegalArgumentException} should be raised.
 	 * </p>
 	 *
 	 * @param objectType
 	 * @param mappingName
 	 * @param sourceValue
 	 * @param targetValue
-	 * @return the mapping created, or {@code null} if {@code targetValue} was {@code null}
+	 * @return the mapping created, or {@code null} if exactly one of {@code sourceValue} or
+	 *         {@code targetValue} was {@code null}
+	 * @throws IllegalArgumentException
+	 *             if both {@code sourceValue} and {@code targetValue} were {@code null}
 	 */
 	protected abstract Mapping createMapping(CmsObjectType objectType, String mappingName, String sourceValue,
 		String targetValue);

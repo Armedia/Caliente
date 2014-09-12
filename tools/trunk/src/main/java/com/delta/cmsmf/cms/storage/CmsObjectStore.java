@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.Set;
 
 import javax.sql.DataSource;
 
@@ -28,6 +30,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cms.CmsAttribute;
+import com.delta.cmsmf.cms.CmsAttributeMapper;
 import com.delta.cmsmf.cms.CmsDataType;
 import com.delta.cmsmf.cms.CmsDependencyManager;
 import com.delta.cmsmf.cms.CmsObject;
@@ -43,7 +46,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
-public class CmsObjectStore extends CmsDependencyManager {
+public class CmsObjectStore extends CmsAttributeMapper {
 
 	public static interface ObjectHandler {
 		public boolean handle(CmsObject<?> dataObject) throws CMSMFException;
@@ -72,6 +75,10 @@ public class CmsObjectStore extends CmsDependencyManager {
 	private static final String INSERT_MAPPING_SQL = "insert into dctm_mapper (object_type, name, source_value, target_value) values (?, ?, ?, ?)";
 	private static final String DELETE_TARGET_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and source_value = ?";
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
+
+	private static final String LOAD_OBJECT_TYPES_SQL = //
+	"   select distinct object_type " + //
+		" from dctm_object ";
 
 	private static final String LOAD_OBJECTS_SQL = //
 	"    select * " + //
@@ -119,26 +126,17 @@ public class CmsObjectStore extends CmsDependencyManager {
 		}
 	};
 
-	/*
-	private static final ResultSetHandler<Integer> HANDLER_COUNT_ITERATOR = new ResultSetHandler<Integer>() {
+	private final CmsDependencyManager dependencyManager = new CmsDependencyManager() {
 		@Override
-		public Integer handle(ResultSet rs) throws SQLException {
-			int ret = 0;
-			while (rs.next()) {
-				ret++;
-			}
-			return ret;
+		protected boolean persistDependency(Dependency dependency) throws CMSMFException {
+			return CmsObjectStore.this.persistDependency(dependency.getType(), dependency.getId());
 		}
-	};
 
-	private static final ResultSetHandler<Integer> HANDLER_COUNT = new ResultSetHandler<Integer>() {
 		@Override
-		public Integer handle(ResultSet rs) throws SQLException {
-			if (!rs.next()) { return 0; }
-			return rs.getInt(1);
+		public Boolean persistDfObject(IDfPersistentObject dfObject) throws DfException, CMSMFException {
+			return CmsObjectStore.this.persistDfObject(dfObject);
 		}
 	};
-	 */
 
 	protected final Logger log = Logger.getLogger(getClass());
 
@@ -220,7 +218,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 				// Object is already there, so do nothing
 				return false;
 			}
-			persistDependency(c, new Dependency(object));
+			persistDependency(c, object.getType(), object.getId());
 			final String sql = "select * from dctm_export_plan where traversed = false and object_id = ? and not exists ( select o.object_id from dctm_object o where o.object_id = dctm_export_plan.object_id ) for update";
 			lockPS = c.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 			lockPS.setString(1, objectId);
@@ -370,7 +368,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 		}
 	}
 
-	public void deserializeObjects(CmsObjectType type, ObjectHandler handler) throws SQLException, CMSMFException {
+	public void deserializeObjects(CmsObjectType type, ObjectHandler handler) throws CMSMFException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to deserialize"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
@@ -481,6 +479,9 @@ public class CmsObjectStore extends CmsDependencyManager {
 				DbUtils.closeQuietly(attPS);
 				DbUtils.closeQuietly(objPS);
 			}
+		} catch (SQLException e) {
+			throw new CMSMFException(
+				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
 		} finally {
 			DbUtils.rollbackAndCloseQuietly(attConn);
 			DbUtils.rollbackAndCloseQuietly(objConn);
@@ -493,7 +494,8 @@ public class CmsObjectStore extends CmsDependencyManager {
 	 * </p>
 	 *
 	 */
-	public void setMapping(CmsObjectType type, String name, String sourceValue, String targetValue) {
+	@Override
+	protected Mapping createMapping(CmsObjectType type, String name, String sourceValue, String targetValue) {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if ((sourceValue == null) && (targetValue == null)) { throw new IllegalArgumentException(
@@ -506,6 +508,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 			final String refValue = (targetValue == null ? sourceValue : targetValue);
 			try {
 				qr.update(sql, type.name(), name, refValue);
+				return null;
 			} catch (SQLException e) {
 				final String refType = (targetValue == null ? "source" : "target");
 				throw new RuntimeException(String.format("Failed to clear the %s mapping for [%s/%s/%s]", refType,
@@ -516,29 +519,12 @@ public class CmsObjectStore extends CmsDependencyManager {
 			try {
 				qr.insert(CmsObjectStore.INSERT_MAPPING_SQL, CmsObjectStore.HANDLER_NULL, type.name(), name,
 					sourceValue, targetValue);
+				return newMapping(type, name, sourceValue, targetValue);
 			} catch (SQLException e) {
 				throw new RuntimeException(String.format("Failed to insert the mapping for [%s/%s/%s->%s]", type, name,
 					sourceValue, targetValue), e);
 			}
 		}
-	}
-
-	/**
-	 * <p>
-	 * Removes any source mappings for the given source object type, mapping name, with the given
-	 * source value.
-	 * </p>
-	 *
-	 * @param type
-	 * @param name
-	 * @param sourceValue
-	 */
-	public void clearTargetMapping(CmsObjectType type, String name, String sourceValue) {
-		setMapping(type, name, sourceValue, null);
-	}
-
-	public void clearSourceMapping(CmsObjectType type, String name, String targetValue) {
-		setMapping(type, name, null, targetValue);
 	}
 
 	private String getMappedValue(boolean source, CmsObjectType type, String name, String value) {
@@ -572,7 +558,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 	 * @param name
 	 * @param sourceValue
 	 */
-	public String getTargetMapping(CmsObjectType type, String name, String sourceValue) {
+	public String getTargetMappingValue(CmsObjectType type, String name, String sourceValue) {
 		return getMappedValue(true, type, name, sourceValue);
 	}
 
@@ -586,7 +572,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 	 * @param name
 	 * @param targetValue
 	 */
-	public String getSourceMapping(CmsObjectType type, String name, String targetValue) {
+	public String getSourceMappingValue(CmsObjectType type, String name, String targetValue) {
 		return getMappedValue(false, type, name, targetValue);
 	}
 
@@ -613,24 +599,23 @@ public class CmsObjectStore extends CmsDependencyManager {
 		}
 	}
 
-	private boolean persistDependency(Connection c, Dependency dependency) throws CMSMFException {
+	protected boolean persistDependency(Connection c, CmsObjectType type, String id) throws CMSMFException {
 		QueryRunner qr = CmsObjectStore.getQueryRunner();
 		try {
-			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS,
-				dependency.getId())) {
+			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS, id)) {
 				// Duplicate dependency...we skip it
 				return false;
 			}
-			qr.insert(c, CmsObjectStore.INSERT_EXPORT_PLAN_SQL, CmsObjectStore.HANDLER_NULL, dependency.getType()
-				.name(), dependency.getId());
+			qr.insert(c, CmsObjectStore.INSERT_EXPORT_PLAN_SQL, CmsObjectStore.HANDLER_NULL, type.name(), id);
 			return true;
 		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to register the dependency [%s]", dependency), e);
+			throw new CMSMFException(String.format("Failed to register the dependency [%s::%s]", type.name(), id), e);
 		}
 	}
 
-	@Override
-	protected boolean persistDependency(Dependency dependency) throws CMSMFException {
+	protected boolean persistDependency(CmsObjectType type, String id) throws CMSMFException {
+		if (type == null) { throw new IllegalArgumentException("Must provide a type to persist a dependency"); }
+		if (id == null) { throw new IllegalArgumentException("Must provide an ID for the dependency to be persisted"); }
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
@@ -640,11 +625,11 @@ public class CmsObjectStore extends CmsDependencyManager {
 		boolean ok = false;
 		try {
 			c.setAutoCommit(false);
-			boolean ret = persistDependency(c, dependency);
+			boolean ret = persistDependency(c, type, id);
 			ok = true;
 			return ret;
 		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to register the dependency [%s]", dependency), e);
+			throw new CMSMFException(String.format("Failed to register the dependency [%s::%s]", type, id), e);
 		} finally {
 			if (ok) {
 				DbUtils.commitAndCloseQuietly(c);
@@ -654,23 +639,23 @@ public class CmsObjectStore extends CmsDependencyManager {
 		}
 	}
 
-	@Override
 	public Boolean persistDfObject(IDfPersistentObject dfObject) throws DfException, CMSMFException {
-		Dependency dependency;
+		final CmsObjectType objectType;
 		try {
-			dependency = new Dependency(dfObject);
+			objectType = CmsObjectType.decodeType(dfObject);
 		} catch (UnsupportedObjectTypeException e) {
 			if (this.log.isDebugEnabled()) {
 				this.log.warn(e.getMessage());
 			}
 			return false;
 		}
-		persistDependency(dependency);
+		final String objectId = dfObject.getObjectId().getId();
+		persistDependency(objectType, objectId);
 		// If it's already serialized, we skip it
-		if (isSerialized(dfObject.getObjectId().getId())) { return false; }
+		if (isSerialized(objectId)) { return false; }
 
 		// Not already serialized, so we do the deed.
-		CmsObject<?> obj = dependency.getType().newInstance();
+		CmsObject<?> obj = objectType.newInstance();
 		if (!obj.loadFromCMS(dfObject)) {
 			// The object is not supported
 			return false;
@@ -678,7 +663,7 @@ public class CmsObjectStore extends CmsDependencyManager {
 		// If somehow it got serialized underneath us (perhaps by another thread), we skip it
 		if (!serializeObject(obj)) { return false; }
 		// We try to traverse its dependencies
-		obj.persistDependencies(dfObject, this);
+		obj.persistDependencies(dfObject, this.dependencyManager);
 		// markTraversed(obj.getId());
 		return true;
 	}
@@ -710,6 +695,48 @@ public class CmsObjectStore extends CmsDependencyManager {
 			} else {
 				DbUtils.rollbackAndCloseQuietly(c);
 			}
+		}
+	}
+
+	@Override
+	public Mapping getTargetMapping(CmsObjectType objectType, String mappingName, String sourceValue) {
+		String mappedValue = getMappedValue(true, objectType, mappingName, sourceValue);
+		if (mappedValue == null) { return null; }
+		return newMapping(objectType, mappingName, sourceValue, mappedValue);
+	}
+
+	@Override
+	public Mapping getSourceMapping(CmsObjectType objectType, String mappingName, String targetValue) {
+		String mappedValue = getMappedValue(false, objectType, mappingName, targetValue);
+		if (mappedValue == null) { return null; }
+		return newMapping(objectType, mappingName, mappedValue, targetValue);
+	}
+
+	public Set<CmsObjectType> getStoredObjectTypes() throws CMSMFException {
+		QueryRunner qr = CmsObjectStore.getQueryRunner();
+		try {
+			return qr.query(CmsObjectStore.LOAD_OBJECT_TYPES_SQL, new ResultSetHandler<Set<CmsObjectType>>() {
+				@Override
+				public Set<CmsObjectType> handle(ResultSet rs) throws SQLException {
+					Set<CmsObjectType> ret = EnumSet.noneOf(CmsObjectType.class);
+					while (rs.next()) {
+						String t = rs.getString("object_type");
+						if ((t == null) || rs.wasNull()) {
+							CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+							continue;
+						}
+						try {
+							ret.add(CmsObjectType.valueOf(t));
+						} catch (IllegalArgumentException e) {
+							CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+							continue;
+						}
+					}
+					return ret;
+				}
+			});
+		} catch (SQLException e) {
+			throw new CMSMFException("Failed to retrieve the stored object types", e);
 		}
 	}
 }
