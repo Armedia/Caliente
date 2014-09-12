@@ -5,6 +5,9 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
@@ -31,6 +34,15 @@ public class CmsACL extends CmsObject<IDfACL> {
 	private static final String EXTENDED_PERMISSIONS = "extendedPermissions";
 	private static final String REGULAR_PERMISSIONS = "regularPermissions";
 
+	private static final Set<String> SPECIAL_NAMES;
+	static {
+		Set<String> s = new HashSet<String>();
+		s.add("dm_owner");
+		s.add("dm_group");
+		s.add("dm_world");
+		SPECIAL_NAMES = Collections.unmodifiableSet(s);
+	}
+
 	private static boolean HANDLERS_READY = false;
 
 	private static synchronized void initHandlers() {
@@ -53,8 +65,8 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	/**
-	 * This DQL will find all users for which this ACL is marked as the default ACL,
-	 * and thus all users for whom it must be restored later on.
+	 * This DQL will find all users for which this ACL is marked as the default ACL, and thus all
+	 * users for whom it must be restored later on.
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
@@ -103,7 +115,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected void doPersistDependencies(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final int count = acl.getAccessorCount();
 		final IDfSession session = acl.getSession();
 		for (int i = 0; i < count; i++) {
@@ -128,11 +140,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 		if (newObject) {
 			copyAttributeToObject(CmsAttributes.OWNER_NAME, acl);
 			copyAttributeToObject(CmsAttributes.OBJECT_NAME, acl);
+			acl.save();
 		}
 		CmsProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
-			final IDfValue objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
 			for (IDfValue value : usersWithDefaultACL) {
 
 				// TODO: How do we decide if we should update the default ACL for this user? What if
@@ -147,7 +159,8 @@ public class CmsACL extends CmsObject<IDfACL> {
 				}
 
 				// Ok...so we relate this thing back to its owner as its internal ACL
-				user.setDefaultACLEx(value.asString(), objectName.asString());
+				user.setDefaultACLEx(acl.getDomain(), acl.getObjectName());
+				user.save();
 			}
 		}
 
@@ -171,12 +184,17 @@ public class CmsACL extends CmsObject<IDfACL> {
 			final boolean exists;
 			final String accessorType;
 
-			if (accessorIsGroup.getValue(i).asBoolean()) {
-				accessorType = "group";
-				exists = (acl.getSession().getGroup(name) != null);
+			if (!CmsACL.SPECIAL_NAMES.contains(name)) {
+				if (accessorIsGroup.getValue(i).asBoolean()) {
+					accessorType = "group";
+					exists = (acl.getSession().getGroup(name) != null);
+				} else {
+					accessorType = "user";
+					exists = (acl.getSession().getUser(name) != null);
+				}
 			} else {
-				accessorType = "user";
-				exists = (acl.getSession().getUser(name) != null);
+				exists = true;
+				accessorType = "[SPECIAL]";
 			}
 
 			if (!exists) {
