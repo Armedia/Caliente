@@ -92,18 +92,41 @@ public class CmsImporter {
 
 	private Logger log = Logger.getLogger(getClass());
 
-	private static final int MAX_THREAD_COUNT = 32;
+	public static final int DEFAULT_BACKLOG_SIZE = 100;
+	public static final int MAX_BACKLOG_SIZE = 1000;
+	public static final int DEFAULT_THREAD_COUNT = 4;
+	public static final int MAX_THREAD_COUNT = 32;
 
+	private final int backlogSize;
 	private final int threadCount;
 
+	public CmsImporter() {
+		this(CmsImporter.DEFAULT_THREAD_COUNT);
+	}
+
 	public CmsImporter(int threadCount) {
+		this(threadCount, CmsImporter.DEFAULT_BACKLOG_SIZE);
+	}
+
+	public CmsImporter(int threadCount, int backlogSize) {
 		if (threadCount <= 0) {
 			threadCount = 1;
 		}
 		if (threadCount > CmsImporter.MAX_THREAD_COUNT) {
 			threadCount = CmsImporter.MAX_THREAD_COUNT;
 		}
+		if (backlogSize <= 0) {
+			backlogSize = 10;
+		}
+		if (backlogSize > CmsImporter.MAX_BACKLOG_SIZE) {
+			backlogSize = CmsImporter.MAX_BACKLOG_SIZE;
+		}
 		this.threadCount = threadCount;
+		this.backlogSize = backlogSize;
+	}
+
+	public int getBacklogSize() {
+		return this.backlogSize;
 	}
 
 	public int getThreadCount() {
@@ -116,7 +139,8 @@ public class CmsImporter {
 		final SynchronizedCounter waitCounter = new SynchronizedCounter();
 		final AtomicInteger activeCounter = new AtomicInteger(0);
 		final CmsObject<?> exitFlag = new CmsUser();
-		final BlockingQueue<CmsObject<?>> workQueue = new ArrayBlockingQueue<CmsObject<?>>(this.threadCount);
+		final BlockingQueue<CmsObject<?>> workQueue = new ArrayBlockingQueue<CmsObject<?>>(this.threadCount
+			* this.backlogSize);
 		ExecutorService executor = new ThreadPoolExecutor(this.threadCount, this.threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
 
@@ -206,9 +230,9 @@ public class CmsImporter {
 				// as many waiters as there are active threads. This covers
 				// the contingency of threads dying on us, which SHOULDN'T
 				// happen, but still, we defend against it.
+				this.log
+					.info(String.format("Submitted the entire %s workload, waiting for it to complete", type.name()));
 				synchronized (waitCounter) {
-					this.log.info(String.format("Submitted the entire %s workload, waiting for it to complete",
-						type.name()));
 					while (waitCounter.getValue() < activeCounter.get()) {
 						try {
 							waitCounter.wait();
