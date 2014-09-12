@@ -77,36 +77,36 @@ public class CmsObjectStore extends CmsAttributeMapper {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-	"   select distinct object_type " + //
+		"   select distinct object_type " + //
 		" from dctm_object ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -712,10 +712,10 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		return newMapping(objectType, mappingName, mappedValue, targetValue);
 	}
 
-	public Set<CmsObjectType> getStoredObjectTypes() throws CMSMFException {
-		QueryRunner qr = CmsObjectStore.getQueryRunner();
+	private Set<CmsObjectType> getStoredObjectTypes(Connection c) throws CMSMFException {
+		QueryRunner qr = new QueryRunner();
 		try {
-			return qr.query(CmsObjectStore.LOAD_OBJECT_TYPES_SQL, new ResultSetHandler<Set<CmsObjectType>>() {
+			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL, new ResultSetHandler<Set<CmsObjectType>>() {
 				@Override
 				public Set<CmsObjectType> handle(ResultSet rs) throws SQLException {
 					Set<CmsObjectType> ret = EnumSet.noneOf(CmsObjectType.class);
@@ -737,6 +737,20 @@ public class CmsObjectStore extends CmsAttributeMapper {
 			});
 		} catch (SQLException e) {
 			throw new CMSMFException("Failed to retrieve the stored object types", e);
+		}
+	}
+
+	public Set<CmsObjectType> getStoredObjectTypes() throws CMSMFException {
+		final Connection c;
+		try {
+			c = this.dataSource.getConnection();
+		} catch (SQLException e) {
+			throw new CMSMFException("Failed to connecto to the object store's database", e);
+		}
+		try {
+			return getStoredObjectTypes(c);
+		} finally {
+			DbUtils.rollbackAndCloseQuietly(c);
 		}
 	}
 }
