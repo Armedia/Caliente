@@ -4,7 +4,7 @@
 
 package com.delta.cmsmf.engine;
 
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -208,7 +208,7 @@ public class CmsImporter {
 
 		// 1: run the query for the given predicate
 		try {
-			final Set<CmsObjectType> containedTypes = objectStore.getStoredObjectTypes();
+			final Map<CmsObjectType, Integer> containedTypes = objectStore.getStoredObjectTypes();
 			final ObjectHandler handler = new ObjectHandler() {
 				@Override
 				public boolean handle(CmsObject<?> dataObject) {
@@ -218,11 +218,18 @@ public class CmsImporter {
 			};
 
 			outer: for (CmsObjectType type : CmsObjectType.values()) {
-				if (!containedTypes.contains(type)) {
+				final Integer total = containedTypes.get(type);
+				if (total == null) {
 					this.log.warn(String.format("No %s objects are contained in the export", type.name()));
 					continue;
 				}
 
+				if (total < 1) {
+					this.log.warn(String.format("No %s objects available"));
+					continue;
+				}
+
+				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 				objectStore.deserializeObjects(type, handler);
 
 				// We're done, we must wait until all workers are waiting
@@ -230,8 +237,8 @@ public class CmsImporter {
 				// as many waiters as there are active threads. This covers
 				// the contingency of threads dying on us, which SHOULDN'T
 				// happen, but still, we defend against it.
-				this.log
-					.info(String.format("Submitted the entire %s workload, waiting for it to complete", type.name()));
+				this.log.info(String.format(
+					"Submitted the entire %s workload (%d objects), waiting for it to complete", type.name(), total));
 				synchronized (waitCounter) {
 					while (waitCounter.getValue() < activeCounter.get()) {
 						try {
