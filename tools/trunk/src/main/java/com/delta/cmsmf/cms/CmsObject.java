@@ -289,7 +289,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
 		}
-		CmsCounter.incrementCounter(this, Result.READ);
 		boolean transOpen = false;
 		boolean ok = false;
 
@@ -401,6 +400,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			}
 
 			finalizeConstruction(object, isNew);
+			object.save();
+
 			updateModifyDate(object);
 			object.save();
 			ok = true;
