@@ -11,8 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.EnumMap;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -77,36 +77,38 @@ public class CmsObjectStore extends CmsAttributeMapper {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-		"   select distinct object_type " + //
-		" from dctm_object ";
+	"   select object_type, count(*) as total " + //
+		" from dctm_object " + //
+		"group by object_type " + // ;
+		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -712,35 +714,37 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		return newMapping(objectType, mappingName, mappedValue, targetValue);
 	}
 
-	private Set<CmsObjectType> getStoredObjectTypes(Connection c) throws CMSMFException {
+	private Map<CmsObjectType, Integer> getStoredObjectTypes(Connection c) throws CMSMFException {
 		QueryRunner qr = new QueryRunner();
 		try {
-			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL, new ResultSetHandler<Set<CmsObjectType>>() {
-				@Override
-				public Set<CmsObjectType> handle(ResultSet rs) throws SQLException {
-					Set<CmsObjectType> ret = EnumSet.noneOf(CmsObjectType.class);
-					while (rs.next()) {
-						String t = rs.getString("object_type");
-						if ((t == null) || rs.wasNull()) {
-							CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-							continue;
+			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL,
+				new ResultSetHandler<Map<CmsObjectType, Integer>>() {
+					@Override
+					public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
+						while (rs.next()) {
+							String t = rs.getString("object_type");
+							if ((t == null) || rs.wasNull()) {
+								CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
+							try {
+								ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
+							} catch (IllegalArgumentException e) {
+								CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
+									t));
+								continue;
+							}
 						}
-						try {
-							ret.add(CmsObjectType.valueOf(t));
-						} catch (IllegalArgumentException e) {
-							CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-							continue;
-						}
+						return ret;
 					}
-					return ret;
-				}
-			});
+				});
 		} catch (SQLException e) {
 			throw new CMSMFException("Failed to retrieve the stored object types", e);
 		}
 	}
 
-	public Set<CmsObjectType> getStoredObjectTypes() throws CMSMFException {
+	public Map<CmsObjectType, Integer> getStoredObjectTypes() throws CMSMFException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
