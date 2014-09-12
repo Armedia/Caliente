@@ -139,11 +139,25 @@ public abstract class AbstractTest {
 		String username = cfg.getString("source.username");
 		String password = cfg.getString("source.password");
 		SOURCE_SESSION_MANAGER = new DctmSessionManager(docbase, username, password);
+		try {
+			// Test it out
+			AbstractTest.SOURCE_SESSION_MANAGER.releaseSession(AbstractTest.SOURCE_SESSION_MANAGER.acquireSession());
+		} catch (Throwable t) {
+			throw new RuntimeException(String.format("Failed to initialize the source session manager at [%s|%s|%s]",
+				docbase, username, password));
+		}
 
 		docbase = cfg.getString("target.docbase", docbase);
 		username = cfg.getString("target.username", username);
 		password = cfg.getString("target.password", password);
 		TARGET_SESSION_MANAGER = new DctmSessionManager(docbase, username, password);
+		try {
+			// Test it out
+			AbstractTest.TARGET_SESSION_MANAGER.releaseSession(AbstractTest.TARGET_SESSION_MANAGER.acquireSession());
+		} catch (Throwable t) {
+			throw new RuntimeException(String.format("Failed to initialize the target session manager at [%s|%s|%s]",
+				docbase, username, password));
+		}
 	}
 
 	private DataSource dataSource = null;
