@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
@@ -73,16 +73,15 @@ public final class DfValueFactory {
 		return new DfValue(Double.toHexString(v), type.getDfConstant());
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(IDfAttr attr, IDfPersistentObject object) throws DfException {
+	public static List<IDfValue> getAllRepeatingValues(IDfAttr attr, IDfTypedObject object) throws DfException {
 		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(CmsAttribute attr, IDfPersistentObject object)
-		throws DfException {
+	public static List<IDfValue> getAllRepeatingValues(CmsAttribute attr, IDfTypedObject object) throws DfException {
 		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(String attr, IDfPersistentObject object) throws DfException {
+	public static List<IDfValue> getAllRepeatingValues(String attr, IDfTypedObject object) throws DfException {
 		int valueCount = object.getValueCount(attr);
 		List<IDfValue> ret = new ArrayList<IDfValue>(valueCount);
 		for (int i = 0; i < valueCount; i++) {
