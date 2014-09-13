@@ -1,7 +1,6 @@
 package com.delta.cmsmf.cms;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,7 +34,7 @@ public class CmsMappingUtils {
 		CmsAttributes.R_INSTALL_OWNER, CmsAttributes.OWNER_NAME, CmsAttributes.OPERATOR_NAME
 	};
 
-	public static Collection<IDfValue> substituteSpecialUsers(IDfTypedObject object, IDfAttr attr) throws DfException {
+	public static List<IDfValue> substituteSpecialUsers(IDfTypedObject object, IDfAttr attr) throws DfException {
 		IDfTypedObject serverConfig = object.getSession().getServerConfig();
 		final int count = object.getValueCount(attr.getName());
 		List<IDfValue> ret = new ArrayList<IDfValue>(count);
@@ -54,8 +53,7 @@ public class CmsMappingUtils {
 		return ret;
 	}
 
-	public static Collection<IDfValue> resolveSpecialUsers(IDfTypedObject object, CmsProperty property)
-		throws DfException {
+	public static List<IDfValue> resolveSpecialUsers(IDfTypedObject object, CmsProperty property) throws DfException {
 		IDfTypedObject sessionConfig = null;
 		List<IDfValue> ret = new ArrayList<IDfValue>(property.getValueCount());
 		for (IDfValue oldValue : property) {
