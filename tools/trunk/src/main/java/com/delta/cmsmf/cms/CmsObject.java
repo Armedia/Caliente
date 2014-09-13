@@ -79,7 +79,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -280,7 +280,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
 		doPersistDependencies(castObject(object), manager);
@@ -290,7 +290,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-	SQLException {
+		SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -486,7 +486,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -719,7 +719,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-					.getObjectId().getId());
+				.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);
@@ -804,6 +804,21 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		final String objId = obj.getObjectId().getId();
 		runExecSQL(obj.getSession(),
 			String.format("UPDATE %s SET i_vstamp = %d WHERE r_object_id = ''%s''", tableName, vStamp, objId));
+	}
+
+	protected void updateIsDeletedAttribute(IDfSession session, List<String> objectIds) throws DfException {
+		// Prepare list of object ids for IN clause
+		StringBuilder b = new StringBuilder();
+		for (String id : objectIds) {
+			if (b.length() > 0) {
+				b.append(", ");
+			}
+			b.append("''").append(id).append("''");
+		}
+
+		// prepare sql to be executed
+		String sql = "UPDATE dm_sysobject_s SET i_is_deleted = 1 WHERE r_object_id IN ( %s )";
+		runExecSQL(session, String.format(sql, b));
 	}
 
 	/**
