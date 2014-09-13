@@ -30,6 +30,7 @@ public class CmsMappingUtils {
 
 	private static final Pattern SUBSTITUTION = Pattern.compile("^\\$\\{([\\w]+)\\}$");
 
+	// TODO: Make this configurable via a configuration setting/CLI parameter
 	private static final String[] SUBSTITUTION_ATTRIBUTES = {
 		// DO NOT modify this order...this is CRITICAL!
 		CmsAttributes.R_INSTALL_OWNER, CmsAttributes.OWNER_NAME, CmsAttributes.OPERATOR_NAME
