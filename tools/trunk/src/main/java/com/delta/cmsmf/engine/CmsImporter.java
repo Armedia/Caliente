@@ -13,8 +13,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
-
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsCounter.Result;
 import com.delta.cmsmf.cms.CmsObject;
@@ -32,116 +30,30 @@ import com.documentum.fc.common.DfException;
  * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
-public class CmsImporter {
-
-	public static class SynchronizedCounter {
-		private long value;
-
-		public SynchronizedCounter() {
-			this(0);
-		}
-
-		public SynchronizedCounter(long initialValue) {
-			this.value = initialValue;
-		}
-
-		public synchronized long decrement() {
-			return increment(-1);
-		}
-
-		public synchronized long decrement(long amount) {
-			return increment(-amount);
-		}
-
-		public synchronized long increment() {
-			return increment(1);
-		}
-
-		public synchronized long increment(long amount) {
-			this.value += amount;
-			notify();
-			return this.value;
-		}
-
-		public synchronized long setValue(long value) {
-			long prev = this.value;
-			this.value = value;
-			notify();
-			return prev;
-		}
-
-		public synchronized long getValue() {
-			return this.value;
-		}
-
-		public synchronized void waitUntilChange() throws InterruptedException {
-			final long current = this.value;
-			while (this.value == current) {
-				wait();
-			}
-			notify();
-		}
-
-		public synchronized void waitForValue(long value) throws InterruptedException {
-			while (this.value != value) {
-				wait();
-			}
-			notify();
-		}
-	}
-
-	private Logger log = Logger.getLogger(getClass());
-
-	public static final int DEFAULT_BACKLOG_SIZE = 100;
-	public static final int MAX_BACKLOG_SIZE = 1000;
-	public static final int DEFAULT_THREAD_COUNT = 4;
-	public static final int MAX_THREAD_COUNT = 32;
-
-	private final int backlogSize;
-	private final int threadCount;
+public class CmsImporter extends CmsTransferEngine {
 
 	public CmsImporter() {
-		this(CmsImporter.DEFAULT_THREAD_COUNT);
+		super();
 	}
 
 	public CmsImporter(int threadCount) {
-		this(threadCount, CmsImporter.DEFAULT_BACKLOG_SIZE);
+		super(threadCount);
 	}
 
 	public CmsImporter(int threadCount, int backlogSize) {
-		if (threadCount <= 0) {
-			threadCount = 1;
-		}
-		if (threadCount > CmsImporter.MAX_THREAD_COUNT) {
-			threadCount = CmsImporter.MAX_THREAD_COUNT;
-		}
-		if (backlogSize <= 0) {
-			backlogSize = 10;
-		}
-		if (backlogSize > CmsImporter.MAX_BACKLOG_SIZE) {
-			backlogSize = CmsImporter.MAX_BACKLOG_SIZE;
-		}
-		this.threadCount = threadCount;
-		this.backlogSize = backlogSize;
-	}
-
-	public int getBacklogSize() {
-		return this.backlogSize;
-	}
-
-	public int getThreadCount() {
-		return this.threadCount;
+		super(threadCount, backlogSize);
 	}
 
 	public void doImport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 
+		final int threadCount = getThreadCount();
+		final int backlogSize = getBacklogSize();
 		final SynchronizedCounter waitCounter = new SynchronizedCounter();
 		final AtomicInteger activeCounter = new AtomicInteger(0);
-		final CmsObject<?> exitFlag = new CmsUser();
-		final BlockingQueue<CmsObject<?>> workQueue = new ArrayBlockingQueue<CmsObject<?>>(this.threadCount
-			* this.backlogSize);
-		ExecutorService executor = new ThreadPoolExecutor(this.threadCount, this.threadCount, 30, TimeUnit.SECONDS,
+		final CmsObject<?> exitValue = new CmsUser();
+		final BlockingQueue<CmsObject<?>> workQueue = new ArrayBlockingQueue<CmsObject<?>>(threadCount * backlogSize);
+		final ExecutorService executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
 
 		Runnable worker = new Runnable() {
@@ -170,7 +82,7 @@ public class CmsImporter {
 							waitCounter.decrement();
 						}
 
-						if (next == exitFlag) {
+						if (next == exitValue) {
 							CmsImporter.this.log.info("Exiting the export polling loop");
 							return;
 						}
@@ -201,7 +113,7 @@ public class CmsImporter {
 		};
 
 		// Fire off the workers
-		for (int i = 0; i < this.threadCount; i++) {
+		for (int i = 0; i < threadCount; i++) {
 			executor.submit(worker);
 		}
 		executor.shutdown();
@@ -254,20 +166,25 @@ public class CmsImporter {
 				}
 			}
 
-			for (int i = 0; i < this.threadCount; i++) {
+			// Ask the workers to exit civilly
+			this.log.info("Signaling work completion for the workers");
+			for (int i = 0; i < threadCount; i++) {
 				try {
-					workQueue.put(exitFlag);
+					workQueue.put(exitValue);
 				} catch (InterruptedException e) {
 					// Here we have a problem: we're timing out while adding the exit values...
 					this.log.warn("Interrupted while attempting to request executor thread termination", e);
 					break;
 				}
 			}
+
+			// If there are still pending workers, then wait for them to finish for up to 5
+			// minutes
 			int pending = activeCounter.get();
 			if (pending > 0) {
+				this.log.info(String.format(
+					"Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
 				try {
-					this.log.info(String.format(
-						"Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
 					executor.awaitTermination(5, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for normal executor termination", e);
@@ -279,10 +196,10 @@ public class CmsImporter {
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);

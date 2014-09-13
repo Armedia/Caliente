@@ -13,8 +13,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
-
 import com.delta.cmsmf.cms.DfValueFactory;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
@@ -32,57 +30,33 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
-public class CmsExporter {
-
-	private Logger log = Logger.getLogger(getClass());
-
-	public static final int DEFAULT_BACKLOG_SIZE = 100;
-	public static final int MAX_BACKLOG_SIZE = 1000;
-	public static final int DEFAULT_THREAD_COUNT = 4;
-	public static final int MAX_THREAD_COUNT = 32;
-
-	private final int backlogSize;
-	private final int threadCount;
+public class CmsExporter extends CmsTransferEngine {
 
 	public CmsExporter() {
-		this(CmsExporter.DEFAULT_THREAD_COUNT);
+		super();
 	}
 
 	public CmsExporter(int threadCount) {
-		this(threadCount, CmsExporter.DEFAULT_BACKLOG_SIZE);
+		super(threadCount);
 	}
 
 	public CmsExporter(int threadCount, int backlogSize) {
-		if (threadCount <= 0) {
-			threadCount = 1;
-		}
-		if (threadCount > CmsExporter.MAX_THREAD_COUNT) {
-			threadCount = CmsExporter.MAX_THREAD_COUNT;
-		}
-		if (backlogSize <= 0) {
-			backlogSize = 10;
-		}
-		if (backlogSize > CmsImporter.MAX_BACKLOG_SIZE) {
-			backlogSize = CmsImporter.MAX_BACKLOG_SIZE;
-		}
-		this.threadCount = threadCount;
-		this.backlogSize = backlogSize;
-	}
-
-	public int getThreadCount() {
-		return this.threadCount;
+		super(threadCount, backlogSize);
 	}
 
 	public void doExport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
 		final String dqlPredicate) throws DfException, CMSMFException {
 
-		IDfSession session = sessionManager.acquireSession();
+		final IDfSession session = sessionManager.acquireSession();
 
+		final int threadCount = getThreadCount();
+		final int backlogSize = getBacklogSize();
+		final SynchronizedCounter waitCounter = new SynchronizedCounter();
 		final AtomicInteger activeCounter = new AtomicInteger(0);
-		final String exitFlag = String.format("%s[%s]", toString(), UUID.randomUUID().toString());
-		final IDfValue exitValue = DfValueFactory.newStringValue(exitFlag);
-		final BlockingQueue<IDfValue> workQueue = new ArrayBlockingQueue<IDfValue>(this.threadCount * this.backlogSize);
-		ExecutorService executor = new ThreadPoolExecutor(this.threadCount, this.threadCount, 30, TimeUnit.SECONDS,
+		final IDfValue exitValue = DfValueFactory.newStringValue(String.format("%s[%s]", toString(), UUID.randomUUID()
+			.toString()));
+		final BlockingQueue<IDfValue> workQueue = new ArrayBlockingQueue<IDfValue>(threadCount * backlogSize);
+		final ExecutorService executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
 
 		Runnable worker = new Runnable() {
@@ -96,14 +70,17 @@ public class CmsExporter {
 							CmsExporter.this.log.debug("Polling the queue...");
 						}
 						final IDfValue next;
+						waitCounter.increment();
 						try {
 							next = workQueue.take();
 						} catch (InterruptedException e) {
 							Thread.currentThread().interrupt();
 							return;
+						} finally {
+							waitCounter.decrement();
 						}
 
-						if (exitFlag.equals(next.asString())) {
+						if (next == exitValue) {
 							// Work complete
 							CmsExporter.this.log.info("Exiting the export polling loop");
 							return;
@@ -144,7 +121,7 @@ public class CmsExporter {
 		};
 
 		// Fire off the workers
-		for (int i = 0; i < this.threadCount; i++) {
+		for (int i = 0; i < threadCount; i++) {
 			executor.submit(worker);
 		}
 		executor.shutdown();
@@ -174,7 +151,30 @@ public class CmsExporter {
 						break;
 					}
 				}
-				for (int i = 0; i < this.threadCount; i++) {
+
+				// We're done, we must wait until all workers are waiting
+				// This "weird" condition allows us to wait until there are
+				// as many waiters as there are active threads. This covers
+				// the contingency of threads dying on us, which SHOULDN'T
+				// happen, but still, we defend against it.
+				this.log.info(String.format(
+					"Submitted the entire export workload (%d objects), waiting for it to complete", counter));
+				synchronized (waitCounter) {
+					while (waitCounter.getValue() < activeCounter.get()) {
+						try {
+							waitCounter.wait();
+							waitCounter.notify();
+						} catch (InterruptedException e) {
+							// We've been interrupted...that means that...what?
+							this.log.fatal("Interrupted while waiting for the export workload to complete");
+							break;
+						}
+					}
+				}
+
+				// Ask the workers to exit civilly
+				this.log.info("Signaling work completion for the workers");
+				for (int i = 0; i < threadCount; i++) {
 					try {
 						workQueue.put(exitValue);
 					} catch (InterruptedException e) {
@@ -183,12 +183,14 @@ public class CmsExporter {
 						break;
 					}
 				}
+
+				// If there are still pending workers, then wait for them to finish for up to 5
+				// minutes
 				int pending = activeCounter.get();
 				if (pending > 0) {
+					this.log.info(String.format(
+						"Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
 					try {
-						this.log.info(String
-							.format("Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)",
-								pending));
 						executor.awaitTermination(5, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for normal executor termination", e);
@@ -200,10 +202,10 @@ public class CmsExporter {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
