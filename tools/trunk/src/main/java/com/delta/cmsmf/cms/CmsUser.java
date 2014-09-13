@@ -4,6 +4,7 @@
 
 package com.delta.cmsmf.cms;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.apache.commons.lang.text.StrTokenizer;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
+import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -30,13 +32,29 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CmsUser extends CmsObject<IDfUser> {
 
+	static final AttributeHandler USER_NAME_HANDLER = new AttributeHandler() {
+		@Override
+		public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
+			return CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER.getExportableValues(object, attr);
+		}
+
+		@Override
+		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmsAttribute attribute)
+			throws DfException {
+			return CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER.getImportableValues(object, attribute);
+		}
+
+		@Override
+		public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
+			return false;
+		}
+	};
+
 	private static boolean HANDLERS_READY = false;
 
 	private static synchronized void initHandlers() {
 		if (CmsUser.HANDLERS_READY) { return; }
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING, CmsAttributes.USER_NAME,
-			CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
 			CmsAttributes.USER_PASSWORD, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING,
@@ -68,7 +86,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 		// This will help intercept user names that need to be mapped to "dynamic" names on the
 		// target DB, taken from the session config
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.USER, CmsDataType.DF_STRING, CmsAttributes.USER_NAME,
-			CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			CmsUser.USER_NAME_HANDLER);
 
 		CmsUser.HANDLERS_READY = true;
 	}
@@ -118,8 +136,9 @@ public class CmsUser extends CmsObject<IDfUser> {
 	@Override
 	protected IDfUser locateInCms(IDfSession session) throws DfException {
 		// If that search failed, go by username
-		IDfValue userName = getAttribute(CmsAttributes.USER_NAME).getValue();
-		IDfUser ret = session.getUser(userName.asString());
+		String userName = getAttribute(CmsAttributes.USER_NAME).getValue().asString();
+		userName = CmsMappingUtils.resolveSpecialUser(session, userName);
+		IDfUser ret = session.getUser(userName);
 		return ret;
 	}
 
