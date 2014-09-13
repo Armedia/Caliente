@@ -67,7 +67,7 @@ public class CmsObjectTest extends AbstractTest {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format(
 									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
-										.getType().getName(), t));
+									.getType().getName(), t));
 							}
 							continue;
 						} catch (UnsupportedObjectTypeException e) {
@@ -126,7 +126,7 @@ public class CmsObjectTest extends AbstractTest {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format(
 									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
-										.getType().getName(), t));
+									.getType().getName(), t));
 							}
 							continue;
 						} catch (UnsupportedObjectTypeException e) {
@@ -185,58 +185,58 @@ public class CmsObjectTest extends AbstractTest {
 									Assert.assertEquals(attr.isRepeating(), repeating);
 									qr.query("select * from dctm_attribute_value where object_id = ? and name = ?",
 										new ResultSetHandler<Void>() {
-											@Override
-											public Void handle(ResultSet rs) throws SQLException {
-												int num = 0;
-												while (rs.next()) {
-													final String objectId = rs.getString("object_id");
-													final String name = rs.getString("name");
-													final int valueNum = rs.getInt("value_number");
-													final String data = rs.getString("data");
-													Assert.assertEquals(obj.getId(), objectId);
-													Assert.assertEquals(attr.getName(), name);
-													Assert.assertEquals(num, valueNum);
-													IDfValue expected = null;
-													try {
-														expected = cmsObj.getRepeatingValue(name, valueNum);
-													} catch (DfException e) {
-														Assert.fail(String
-															.format(
-																"Failed to get repeating value #%d for attribute %s for object [%s:%s]",
-																valueNum, name, obj.getType(), obj.getId()));
-														return null;
-													}
-													IDfValue decoded = dataType.decode(data);
-													if (ownerNameAttributes.contains(name)) {
-														Set<Object> allowables = new HashSet<Object>();
-														allowables.add(dataType.getValue(expected));
-														allowables.add("dm_dbo");
-														Assert.assertTrue(
-															String
-																.format(
-																	"Expectation failed on attribute [%s.%s] (possibles = [%s], actual = [%s])",
-																	obj.getSubtype(), name, allowables,
-																	dataType.getValue(decoded)), allowables
-																.contains(dataType.getValue(decoded)));
-													} else {
-														Assert.assertEquals(String.format(
-															"Expectation failed on attribute [%s.%s]",
-														obj.getSubtype(), name), dataType.getValue(expected),
-														dataType.getValue(decoded));
-													}
-													num++;
-												}
+										@Override
+										public Void handle(ResultSet rs) throws SQLException {
+											int num = 0;
+											while (rs.next()) {
+												final String objectId = rs.getString("object_id");
+												final String name = rs.getString("name");
+												final int valueNum = rs.getInt("value_number");
+												final String data = rs.getString("data");
+												Assert.assertEquals(obj.getId(), objectId);
+												Assert.assertEquals(attr.getName(), name);
+												Assert.assertEquals(num, valueNum);
+												IDfValue expected = null;
 												try {
-													Assert.assertEquals(cmsObj.getValueCount(name), num);
+													expected = cmsObj.getRepeatingValue(name, valueNum);
 												} catch (DfException e) {
 													Assert.fail(String
 														.format(
-															"Failed to get value count for attribute %s for object [%s:%s]",
-															name, obj.getType(), obj.getId()));
+															"Failed to get repeating value #%d for attribute %s for object [%s:%s]",
+															valueNum, name, obj.getType(), obj.getId()));
+													return null;
 												}
-												return null;
+												IDfValue decoded = dataType.decode(data);
+												if (ownerNameAttributes.contains(name)) {
+													Set<Object> allowables = new HashSet<Object>();
+													allowables.add(dataType.getValue(expected));
+													allowables.add("dm_dbo");
+													Assert.assertTrue(
+														String
+														.format(
+															"Expectation failed on attribute [%s.%s] (possibles = [%s], actual = [%s])",
+															obj.getSubtype(), name, allowables,
+															dataType.getValue(decoded)), allowables
+															.contains(dataType.getValue(decoded)));
+												} else {
+													Assert.assertEquals(String.format(
+														"Expectation failed on attribute [%s.%s]",
+															obj.getSubtype(), name), dataType.getValue(expected),
+															dataType.getValue(decoded));
+												}
+												num++;
 											}
-										}, obj.getId(), name);
+											try {
+												Assert.assertEquals(cmsObj.getValueCount(name), num);
+											} catch (DfException e) {
+												Assert.fail(String
+													.format(
+														"Failed to get value count for attribute %s for object [%s:%s]",
+														name, obj.getType(), obj.getId()));
+											}
+											return null;
+										}
+									}, obj.getId(), name);
 								}
 								Assert.assertFalse(
 									String.format("Failed to validate the attributes for object [%s:%s]",
@@ -262,27 +262,27 @@ public class CmsObjectTest extends AbstractTest {
 									Assert.assertEquals(property.isRepeating(), repeating);
 									qr.query("select * from dctm_property_value where object_id = ? and name = ?",
 										new ResultSetHandler<Void>() {
-											@Override
-											public Void handle(ResultSet rs) throws SQLException {
-												int num = 0;
-												while (rs.next()) {
-													final String objectId = rs.getString("object_id");
-													final String name = rs.getString("name");
-													final int valueNum = rs.getInt("value_number");
-													final String data = rs.getString("data");
-													Assert.assertEquals(obj.getId(), objectId);
-													Assert.assertEquals(property.getName(), name);
-													Assert.assertEquals(num, valueNum);
-													IDfValue expected = property.getValue(valueNum);
-													IDfValue decoded = dataType.decode(data);
-													Assert.assertEquals(dataType.getValue(expected),
-														dataType.getValue(decoded));
-													num++;
-												}
-												Assert.assertEquals(property.getValueCount(), num);
-												return null;
+										@Override
+										public Void handle(ResultSet rs) throws SQLException {
+											int num = 0;
+											while (rs.next()) {
+												final String objectId = rs.getString("object_id");
+												final String name = rs.getString("name");
+												final int valueNum = rs.getInt("value_number");
+												final String data = rs.getString("data");
+												Assert.assertEquals(obj.getId(), objectId);
+												Assert.assertEquals(property.getName(), name);
+												Assert.assertEquals(num, valueNum);
+												IDfValue expected = property.getValue(valueNum);
+												IDfValue decoded = dataType.decode(data);
+												Assert.assertEquals(dataType.getValue(expected),
+													dataType.getValue(decoded));
+												num++;
 											}
-										}, obj.getId(), name);
+											Assert.assertEquals(property.getValueCount(), num);
+											return null;
+										}
+									}, obj.getId(), name);
 								}
 								Assert.assertFalse(
 									String.format("Failed to validate the attributes for object [%s:%s]",
@@ -710,11 +710,10 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#updateModifyDate(com.documentum.fc.client.IDfPersistentObject)}
-	 * .
+	 * {@link com.delta.cmsmf.cms.CmsObject#updateSystemAttributes(IDfPersistentObject)} .
 	 */
 	@Test
-	public void testUpdateModifyDate() {
+	public void testUpdateSystemAttributes() {
 	}
 
 	/**

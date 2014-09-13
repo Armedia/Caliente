@@ -29,6 +29,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
+import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -73,7 +74,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -274,7 +275,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
 		doPersistDependencies(castObject(object), manager);
@@ -284,7 +285,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-	SQLException {
+		SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -402,7 +403,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			finalizeConstruction(object, isNew);
 			object.save();
 
-			updateModifyDate(object);
+			updateSystemAttributes(object);
 			object.save();
 			ok = true;
 			return result;
@@ -480,7 +481,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -631,17 +632,80 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected final void updateModifyDate(T object) throws DfException {
-		final String objType = object.getType().getName();
-		CmsAttribute attribute = getAttribute(CmsAttributes.R_MODIFY_DATE);
-		if (attribute == null) { return; }
+	protected final void updateSystemAttributes(T object) throws DfException {
+		final String sqlStr;
+		if (object instanceof IDfSysObject) {
+			// IDfSysObject sysObject = IDfSysObject.class.cast(object);
+			final IDfSession session = object.getSession();
 
-		final IDfValue modifyDate = attribute.getValue();
+			// prepare sql to be executed
+			CmsAttribute modifyDateAtt = getAttribute(CmsAttributes.R_MODIFY_DATE);
+			CmsAttribute modifierNameAtt = getAttribute(CmsAttributes.R_MODIFIER);
+			CmsAttribute creationDateAtt = getAttribute(CmsAttributes.R_CREATION_DATE);
+			CmsAttribute creatorNameAtt = getAttribute(CmsAttributes.R_CREATOR_NAME);
 
-		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
-		final String sqlStr = String.format("UPDATE %s_s SET r_modify_date = %s WHERE r_object_id = ''%s''", objType,
-			DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), object.getObjectId().getId());
+			CmsAttribute aclDomainAtt = getAttribute(CmsAttributes.ACL_DOMAIN);
 
+			// Important: REPLACE QUOTES!!
+
+			// Make sure we ALWAYS store this, even if it's "null"...default to the connected user
+			// if not set
+			String creatorName = creatorNameAtt.getValue().asString();
+			if (creatorName.length() == 0) {
+				creatorName = "${owner_name}";
+			}
+			creatorName = CmsMappingUtils.resolveSpecialUser(session, creatorName);
+			creatorName = creatorName.replaceAll("'", "''''");
+
+			String modifierName = modifierNameAtt.getValue().asString();
+			if (modifierName.length() == 0) {
+				modifierName = "${owner_name}";
+			}
+			modifierName = CmsMappingUtils.resolveSpecialUser(session, modifierName);
+			modifierName = modifierName.replaceAll("'", "''''");
+
+			String aclDomain = aclDomainAtt.getValue().asString();
+			if (aclDomain.length() == 0) {
+				aclDomain = "${owner_name}";
+			}
+			aclDomain = CmsMappingUtils.resolveSpecialUser(session, aclDomain);
+			aclDomain = aclDomain.replaceAll("'", "''''");
+
+			String aclName = getAttribute(CmsAttributes.ACL_NAME).getValue().asString();
+
+			IDfTime modifyDate = modifyDateAtt.getValue().asTime();
+			IDfTime creationDate = creationDateAtt.getValue().asTime();
+
+			String sql = "" //
+				+ "UPDATE dm_sysobject_s SET " //
+				+ "       r_modify_date = %s, " //
+				+ "       r_creation_date = %s, " //
+				+ "       r_creator_name = ''%s'', " //
+				+ "       r_modifier = ''%s'', " //
+				+ "       acl_name = ''%s'', " //
+				+ "       acl_domain = ''%s'' " //
+				+ "       %s " //
+				+ " WHERE r_object_id = ''%s''";
+
+			String vstampFlag = "";
+			// (CMSMFProperties.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
+			// dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP)));
+			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session),
+				DfUtils.generateSqlDateClause(creationDate, session), creatorName, modifierName, aclName, aclDomain,
+				vstampFlag, object.getObjectId().getId());
+
+		} else {
+			final String objType = object.getType().getName();
+			CmsAttribute attribute = getAttribute(CmsAttributes.R_MODIFY_DATE);
+			if (attribute == null) { return; }
+
+			final IDfValue modifyDate = attribute.getValue();
+
+			// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
+			sqlStr = String.format("UPDATE %s_s SET r_modify_date = %s WHERE r_object_id = ''%s''", objType,
+				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), object.getObjectId().getId());
+
+		}
 		runExecSQL(object.getSession(), sqlStr);
 	}
 
