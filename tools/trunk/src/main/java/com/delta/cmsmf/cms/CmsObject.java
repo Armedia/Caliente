@@ -36,6 +36,11 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera <diego.rivera@armedia.com>
  *
  */
+/**
+ * @author Diego Rivera <diego.rivera@armedia.com>
+ *
+ * @param <T>
+ */
 public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	private static final String DEBUG_DUMP = "$debug-dump$";
@@ -74,7 +79,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -275,7 +280,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
 		doPersistDependencies(castObject(object), manager);
@@ -285,7 +290,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-		SQLException {
+	SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -481,7 +486,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -688,26 +693,90 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				+ " WHERE r_object_id = ''%s''";
 
 			String vstampFlag = "";
-			// (CMSMFProperties.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
-			// dctmObj.getIntSingleAttrValue(DctmAttrNameConstants.I_VSTAMP)));
+			// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
+			// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
+			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session),
 				DfUtils.generateSqlDateClause(creationDate, session), creatorName, modifierName, aclName, aclDomain,
 				vstampFlag, object.getObjectId().getId());
 
 		} else {
+
 			final String objType = object.getType().getName();
 			CmsAttribute attribute = getAttribute(CmsAttributes.R_MODIFY_DATE);
 			if (attribute == null) { return; }
 
 			final IDfValue modifyDate = attribute.getValue();
-
+			String sql = "" //
+				+ "UPDATE %s_s SET " //
+				+ "       r_modify_date = %s " //
+				+ "       %s " //
+				+ " WHERE r_object_id = ''%s''";
+			String vstampFlag = "";
 			// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
-			sqlStr = String.format("UPDATE %s_s SET r_modify_date = %s WHERE r_object_id = ''%s''", objType,
-				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), object.getObjectId().getId());
+			// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
+			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
+
+			sqlStr = String.format(sql, objType,
+				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
+					.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);
 	}
+
+	/*
+	@formatter:off
+	protected final void updateContentAttributes(T object) throws DfException {
+		final IDfSession session = object.getSession();
+		String parentID = object.getObjectId().getId();
+
+		List<CmsContent> contentList = ((DctmDocument) dctmObj).getContentList();
+		for (CmsContent content : contentList) {
+			String setFile = content.getStrSingleAttrValue(DctmAttrNameConstants.SET_FILE);
+			if (StringUtils.isBlank(setFile)) {
+				setFile = " ";
+			}
+			// If setFile contains single quote in its contents, to escape it, replace it with 4
+			// single quotes.
+			setFile = setFile.replaceAll("'", "''''");
+			String setClient = content.getStrSingleAttrValue(DctmAttrNameConstants.SET_CLIENT);
+			if (StringUtils.isBlank(setClient)) {
+				setClient = " ";
+			}
+			IDfTime setTime = new DfTime(content.getDateSingleAttrValue(DctmAttrNameConstants.SET_TIME));
+
+			String pageModifierStr = "";
+			if (!StringUtils.isBlank(content.getPageModifier())) {
+				pageModifierStr = String.format("and dcr.page_modifier = ''%s''", content.getPageModifier());
+			}
+
+			// Prepare the sql to be executed
+			String sql = "" //
+				+ "UPDATE dmr_content_s SET " //
+				+ "       set_file = ''%s'', " //
+				+ "       set_client = ''%s'', " //
+				+ "       set_time = %s " //
+				+ " WHERE r_object_id = (" //
+				+ "           select dcs.r_object_id " //
+				+ "             from dmr_content_s dcs, dmr_content_r dcr " //
+				+ "            where dcr.parent_id = ''%s'' " //
+				+ "              and dcs.r_object_id = dcr.r_object_id " //
+				+ "              and dcs.rendition = %d " //
+				+ "              %s " //
+				+ "              and dcr.page = %d " //
+				+ "              and dcs.full_format = ''%s''" //
+				+ "       )";
+
+			String sqlStr = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime, session),
+				parentID, dctmContent.getIntSingleAttrValue(CmsAttributes.RENDITION), pageModifierStr,
+				dctmContent.getPageNbr(), dctmContent.getStrSingleAttrValue(CmsAttributes.FULL_FORMAT));
+			// Run the exec sql
+			runExecSQL(session, sqlStr);
+		}
+	}
+	 */
+	// 	@formatter:on
 
 	/**
 	 * Updates vStamp attribute of an persistent object using execsql.
