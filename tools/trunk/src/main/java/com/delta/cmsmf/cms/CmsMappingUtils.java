@@ -79,12 +79,23 @@ public class CmsMappingUtils {
 		return CmsMappingUtils.resolveSpecialUsers(object, property.getValues());
 	}
 
+	private static IDfTypedObject[] getSources(IDfTypedObject src) throws DfException {
+		if (src == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
+		return CmsMappingUtils.getSources(src.getSession());
+	}
+
+	private static IDfTypedObject[] getSources(IDfSession session) throws DfException {
+		if (session == null) { throw new IllegalArgumentException("Must provide a session to get the sources from"); }
+		return new IDfTypedObject[] {
+			session.getDocbaseConfig(), session.getServerConfig()
+		};
+	}
+
 	public static List<IDfValue> resolveSpecialUsers(IDfTypedObject object, Collection<IDfValue> values)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
 		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
-		final IDfSession session = object.getSession();
 		IDfTypedObject[] srcObjects = null;
 		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
 		for (IDfValue oldValue : values) {
@@ -93,9 +104,7 @@ public class CmsMappingUtils {
 				final String serverAttribute = m.group(1);
 				if (srcObjects == null) {
 					// We delay this until we actually need it, to reduce performance hits
-					srcObjects = new IDfTypedObject[] {
-						session.getDocbaseConfig(), session.getServerConfig()
-					};
+					srcObjects = CmsMappingUtils.getSources(object);
 				}
 				for (IDfTypedObject src : srcObjects) {
 					int idx = src.findAttrIndex(serverAttribute);
@@ -116,9 +125,7 @@ public class CmsMappingUtils {
 		if (user == null) { throw new IllegalArgumentException("Must provide a username to resolve"); }
 		Matcher m = CmsMappingUtils.SUBSTITUTION.matcher(user);
 		if (m.matches()) {
-			IDfTypedObject[] srcObjects = {
-				session.getDocbaseConfig(), session.getServerConfig()
-			};
+			IDfTypedObject[] srcObjects = CmsMappingUtils.getSources(session);
 			final String serverAttribute = m.group(1);
 			for (IDfTypedObject src : srcObjects) {
 				int idx = src.findAttrIndex(serverAttribute);
@@ -139,10 +146,16 @@ public class CmsMappingUtils {
 	public static boolean isSpecialUser(IDfSession session, String user) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to analyze with"); }
 		if (user == null) { throw new IllegalArgumentException("Must provide a username to analyze"); }
-		IDfTypedObject serverConfig = session.getServerConfig();
+		IDfTypedObject[] srcObjects = CmsMappingUtils.getSources(session);
 		Map<String, String> valueMap = new HashMap<String, String>();
 		for (String serverAttribute : CmsMappingUtils.SUBSTITUTION_ATTRIBUTES) {
-			valueMap.put(serverConfig.getString(serverAttribute), serverAttribute);
+			for (IDfTypedObject src : srcObjects) {
+				int idx = src.findAttrIndex(serverAttribute);
+				if (idx < 0) {
+					continue;
+				}
+				valueMap.put(src.getString(serverAttribute), serverAttribute);
+			}
 		}
 		return (valueMap.get(user) != null);
 	}
