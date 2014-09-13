@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -79,7 +80,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -280,7 +281,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
 		doPersistDependencies(castObject(object), manager);
@@ -290,7 +291,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-	SQLException {
+		SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -407,9 +408,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			finalizeConstruction(object, isNew);
 			object.save();
+			if (postConstruction(object, isNew)) {
+				object.save();
+			}
 
 			updateSystemAttributes(object);
 			object.save();
+
+			if (cleanupAfterSave(object, isNew)) {
+				object.save();
+			}
 			ok = true;
 			return result;
 		} finally {
@@ -486,7 +494,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -525,6 +533,14 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject) throws DfException {
+	}
+
+	protected boolean postConstruction(T object, boolean newObject) throws DfException {
+		return false;
+	}
+
+	protected boolean cleanupAfterSave(T object, boolean newObject) throws DfException {
+		return false;
 	}
 
 	protected final boolean copyAttributeToObject(String attrName, T object) throws DfException {
@@ -719,7 +735,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-					.getObjectId().getId());
+				.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);
@@ -850,6 +866,31 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
+	}
+
+	/**
+	 * Removes all links of an object in CMS.
+	 *
+	 * @param object
+	 *            the DFC sysObject who is being unlinked
+	 * @throws DfException
+	 *             Signals that Dctm Server error has occurred.
+	 */
+	protected final Set<String> removeAllLinks(IDfSysObject object) throws DfException {
+		Set<String> ret = new HashSet<String>();
+		int folderIdCount = object.getFolderIdCount();
+		for (int i = 0; i < folderIdCount; i++) {
+			// We have to do it backwards, instead of forwards, because it's
+			// faster. Otherwise, when we remove an "earlier" element, the ones
+			// down the list have to be shifted "forward" by DCTM, and that takes
+			// time, which we try to avoid by being smart...
+			String id = object.getFolderId(folderIdCount - i - 1).getId();
+			if (!ret.contains(id)) {
+				ret.add(id);
+			}
+			object.unlink(id);
+		}
+		return ret;
 	}
 
 	@Override
