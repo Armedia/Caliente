@@ -606,12 +606,21 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		try {
 			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS, id)) {
 				// Duplicate dependency...we skip it
+				if (this.log.isTraceEnabled()) {
+					this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
+				}
 				return false;
 			}
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("PERSISTING DEPENDENCY [%s::%s]", type.name(), id));
+			}
 			qr.insert(c, CmsObjectStore.INSERT_EXPORT_PLAN_SQL, CmsObjectStore.HANDLER_NULL, type.name(), id);
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
+			}
 			return true;
 		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to register the dependency [%s::%s]", type.name(), id), e);
+			throw new CMSMFException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
 		}
 	}
 
@@ -652,8 +661,16 @@ public class CmsObjectStore extends CmsAttributeMapper {
 			return false;
 		}
 		final String objectId = dfObject.getObjectId().getId();
-		persistDependency(objectType, objectId);
 		// If it's already serialized, we skip it
+		try {
+			persistDependency(objectType, objectId);
+		} catch (CMSMFException e) {
+			// Check again...maybe it was a PK violation...
+			if (!persistDependency(objectType, objectId)) { return false; }
+			// It wasn't... raise an error
+			throw new CMSMFException(String.format(
+				"Exception caught while trying to create the mutex lock for [%s::%s]", objectType.name(), objectId), e);
+		}
 		if (isSerialized(objectId)) { return false; }
 
 		// Not already serialized, so we do the deed.
