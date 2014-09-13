@@ -1,6 +1,7 @@
 package com.delta.cmsmf.cms;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,15 +36,23 @@ public class CmsMappingUtils {
 	};
 
 	public static List<IDfValue> substituteSpecialUsers(IDfTypedObject object, IDfAttr attr) throws DfException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
+		if (attr == null) { throw new IllegalArgumentException("Must provide an attribute to expand"); }
+		return CmsMappingUtils.substituteSpecialUsers(object, DfValueFactory.getAllRepeatingValues(attr, object));
+	}
+
+	public static List<IDfValue> substituteSpecialUsers(IDfTypedObject object, Collection<IDfValue> values)
+		throws DfException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
+		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
+		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
 		IDfTypedObject serverConfig = object.getSession().getServerConfig();
-		final int count = object.getValueCount(attr.getName());
-		List<IDfValue> ret = new ArrayList<IDfValue>(count);
+		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
 		Map<String, String> valueMap = new HashMap<String, String>();
 		for (String serverAttribute : CmsMappingUtils.SUBSTITUTION_ATTRIBUTES) {
 			valueMap.put(serverConfig.getString(serverAttribute), serverAttribute);
 		}
-		for (int v = 0; v < count; v++) {
-			IDfValue value = object.getRepeatingValue(attr.getName(), v);
+		for (IDfValue value : values) {
 			String mapping = valueMap.get(value.asString());
 			if (mapping != null) {
 				value = DfValueFactory.newStringValue(String.format("${%s}", mapping));
@@ -54,9 +63,32 @@ public class CmsMappingUtils {
 	}
 
 	public static List<IDfValue> resolveSpecialUsers(IDfTypedObject object, CmsProperty property) throws DfException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
+		if (property == null) { throw new IllegalArgumentException("Must provide a property to expand"); }
 		IDfTypedObject sessionConfig = null;
 		List<IDfValue> ret = new ArrayList<IDfValue>(property.getValueCount());
 		for (IDfValue oldValue : property) {
+			Matcher m = CmsMappingUtils.SUBSTITUTION.matcher(oldValue.asString());
+			if (m.matches()) {
+				if (sessionConfig == null) {
+					sessionConfig = object.getSession().getServerConfig();
+				}
+				ret.add(sessionConfig.getValue(m.group(1)));
+			} else {
+				ret.add(oldValue);
+			}
+		}
+		return ret;
+	}
+
+	public static List<IDfValue> resolveSpecialUsers(IDfTypedObject object, Collection<IDfValue> values)
+		throws DfException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
+		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
+		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
+		IDfTypedObject sessionConfig = null;
+		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
+		for (IDfValue oldValue : values) {
 			Matcher m = CmsMappingUtils.SUBSTITUTION.matcher(oldValue.asString());
 			if (m.matches()) {
 				if (sessionConfig == null) {
