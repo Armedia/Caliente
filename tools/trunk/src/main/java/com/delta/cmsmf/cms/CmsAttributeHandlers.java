@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.text.StrTokenizer;
+import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.delta.cmsmf.cfg.Setting;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -133,7 +133,6 @@ class CmsAttributeHandlers {
 		//
 		String attrsToCheck = Setting.OWNER_ATTRIBUTES.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
-		@SuppressWarnings("unchecked")
 		List<String> l = strTokenizer.getTokenList();
 		for (String att : new HashSet<String>(l)) {
 			CmsAttributeHandlers.setAttributeHandler(null, CmsDataType.DF_STRING, att,
