@@ -1,11 +1,15 @@
 package com.delta.cmsmf.utils;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cfg.Constant;
 import com.documentum.com.DfClientX;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -38,6 +42,33 @@ public class DfUtils {
 	}
 
 	private static final Logger LOG = Logger.getLogger(DfUtils.class);
+
+	private static enum Permission {
+		//
+		DF_PERMIT_NONE(IDfACL.DF_PERMIT_NONE, IDfACL.DF_PERMIT_NONE_STR),
+		DF_PERMIT_BROWSE(IDfACL.DF_PERMIT_BROWSE, IDfACL.DF_PERMIT_BROWSE_STR),
+		DF_PERMIT_READ(IDfACL.DF_PERMIT_READ, IDfACL.DF_PERMIT_READ_STR),
+		DF_PERMIT_RELATE(IDfACL.DF_PERMIT_RELATE, IDfACL.DF_PERMIT_RELATE_STR),
+		DF_PERMIT_VERSION(IDfACL.DF_PERMIT_VERSION, IDfACL.DF_PERMIT_VERSION_STR),
+		DF_PERMIT_WRITE(IDfACL.DF_PERMIT_WRITE, IDfACL.DF_PERMIT_WRITE_STR),
+		DF_PERMIT_DELETE(IDfACL.DF_PERMIT_DELETE, IDfACL.DF_PERMIT_DELETE_STR);
+		private final int num;
+		private final String str;
+
+		private Permission(int num, String str) {
+			this.str = str;
+			this.num = num;
+		}
+	}
+
+	private static final Map<String, Integer> PERMISSIONS_MAP;
+	static {
+		Map<String, Integer> m = new HashMap<String, Integer>();
+		for (Permission p : Permission.values()) {
+			m.put(p.str, p.num);
+		}
+		PERMISSIONS_MAP = Collections.unmodifiableMap(m);
+	}
 
 	public static void closeQuietly(IDfCollection c) {
 		if (c == null) { return; }
@@ -118,6 +149,35 @@ public class DfUtils {
 		if (DfUtils.LOG.isTraceEnabled()) {
 			DfUtils.LOG.trace(String.format("Generated %s SQL Date string [%s]", dbType, ret));
 		}
+		return ret;
+	}
+
+	public static String decodeAccessPermission(int permission) throws DfException {
+		// We do it the "hardcoded" way here because it's MUCH faster than maps...
+		switch (permission) {
+			case IDfACL.DF_PERMIT_NONE:
+				return IDfACL.DF_PERMIT_NONE_STR;
+			case IDfACL.DF_PERMIT_BROWSE:
+				return IDfACL.DF_PERMIT_BROWSE_STR;
+			case IDfACL.DF_PERMIT_READ:
+				return IDfACL.DF_PERMIT_READ_STR;
+			case IDfACL.DF_PERMIT_RELATE:
+				return IDfACL.DF_PERMIT_RELATE_STR;
+			case IDfACL.DF_PERMIT_VERSION:
+				return IDfACL.DF_PERMIT_VERSION_STR;
+			case IDfACL.DF_PERMIT_WRITE:
+				return IDfACL.DF_PERMIT_WRITE_STR;
+			case IDfACL.DF_PERMIT_DELETE:
+				return IDfACL.DF_PERMIT_DELETE_STR;
+			default:
+				throw new DfException(String.format("Unknown permissions value [%d] detected", permission));
+		}
+	}
+
+	public static int decodeAccessPermission(String permission) throws DfException {
+		if (permission == null) { throw new IllegalArgumentException("Must provide a permission to map"); }
+		Integer ret = DfUtils.PERMISSIONS_MAP.get(permission);
+		if (ret == null) { throw new DfException(String.format("Unknown permissions value [%s] detected", permission)); }
 		return ret;
 	}
 }

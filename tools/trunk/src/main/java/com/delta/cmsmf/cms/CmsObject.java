@@ -25,7 +25,6 @@ import com.delta.cmsmf.cms.CmsCounter.Result;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.DfPermit;
-import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPermit;
@@ -72,11 +71,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				this.oldPermit = new DfPermit();
 				this.oldPermit.setAccessorName(userName);
 				this.oldPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
-				this.oldPermit.setPermitValue(decodeAccessPermission(oldPermission));
+				this.oldPermit.setPermitValue(DfUtils.decodeAccessPermission(oldPermission));
 				this.newPermit = new DfPermit();
 				this.newPermit.setAccessorName(userName);
 				this.newPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
-				this.newPermit.setPermitValue(decodeAccessPermission(newPermission));
+				this.newPermit.setPermitValue(DfUtils.decodeAccessPermission(newPermission));
 			} else {
 				this.oldPermit = null;
 				this.newPermit = null;
@@ -97,27 +96,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				}
 			}
 			this.newXPermit = Collections.unmodifiableCollection(l);
-		}
-
-		private String decodeAccessPermission(int permission) throws DfException {
-			switch (permission) {
-				case IDfACL.DF_PERMIT_NONE:
-					return IDfACL.DF_PERMIT_NONE_STR;
-				case IDfACL.DF_PERMIT_BROWSE:
-					return IDfACL.DF_PERMIT_BROWSE_STR;
-				case IDfACL.DF_PERMIT_READ:
-					return IDfACL.DF_PERMIT_READ_STR;
-				case IDfACL.DF_PERMIT_RELATE:
-					return IDfACL.DF_PERMIT_RELATE_STR;
-				case IDfACL.DF_PERMIT_VERSION:
-					return IDfACL.DF_PERMIT_VERSION_STR;
-				case IDfACL.DF_PERMIT_WRITE:
-					return IDfACL.DF_PERMIT_WRITE_STR;
-				case IDfACL.DF_PERMIT_DELETE:
-					return IDfACL.DF_PERMIT_DELETE_STR;
-				default:
-					throw new DfException(String.format("Unknown permissions value [%d] detected", permission));
-			}
 		}
 
 		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
