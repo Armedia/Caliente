@@ -87,7 +87,9 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			usersWithDefaultFolder = new CmsProperty(CmsFolder.USERS_WITH_DEFAULT_FOLDER, CmsDataType.DF_STRING);
 			usersDefaultFolderPaths = new CmsProperty(CmsFolder.USERS_DEFAULT_FOLDER_PATHS, CmsDataType.DF_STRING);
 			while (resultCol.next()) {
-				usersWithDefaultFolder.addValue(resultCol.getValueAt(0));
+				// TODO: This probably should not be done for special users
+				usersWithDefaultFolder
+					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -271,6 +273,12 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			for (int i = 0; i < total; i++) {
 				IDfValue userValue = usersWithDefaultFolder.getValue(i);
 				IDfValue pathValue = usersDefaultFolderPaths.getValue(i);
+
+				if (CmsMappingUtils.isSpecialUserSubstitution(userValue.asString())) {
+					this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
+						CmsMappingUtils.resolveSpecialUser(session, userValue.asString())));
+					continue;
+				}
 
 				// TODO: How do we decide if we should update the default folder for this user? What
 				// if the user's default folder has been modified on the target CMS and we don't
