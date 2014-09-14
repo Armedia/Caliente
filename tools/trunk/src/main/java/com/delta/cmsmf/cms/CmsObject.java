@@ -7,6 +7,7 @@ package com.delta.cmsmf.cms;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
@@ -22,8 +24,12 @@ import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.cms.CmsCounter.Result;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
+import com.documentum.fc.client.DfPermit;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
+import com.documentum.fc.client.IDfPermit;
+import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -43,6 +49,106 @@ import com.documentum.fc.common.IDfValue;
  * @param <T>
  */
 public abstract class CmsObject<T extends IDfPersistentObject> {
+
+	private static final Collection<String> NO_PERMITS = Collections.emptySet();
+
+	protected final class PermitDelta {
+		private final String objectId;
+		private final IDfPermit oldPermit;
+		private final IDfPermit newPermit;
+		private final Collection<IDfPermit> newXPermit;
+
+		public PermitDelta(IDfSysObject object, int newPermission, String... newXPermits) throws DfException {
+			this(object, newPermission, (newXPermits == null ? CmsObject.NO_PERMITS : Arrays.asList(newXPermits)));
+		}
+
+		public PermitDelta(IDfSysObject object, int newPermission, Collection<String> newXPermits) throws DfException {
+			this.objectId = object.getObjectId().getId();
+			final String userName = object.getSession().getLoginUserName();
+
+			// Does it have the required access permission?
+			int oldPermission = object.getPermit();
+			if (oldPermission < newPermission) {
+				this.oldPermit = new DfPermit();
+				this.oldPermit.setAccessorName(userName);
+				this.oldPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
+				this.oldPermit.setPermitValue(decodeAccessPermission(oldPermission));
+				this.newPermit = new DfPermit();
+				this.newPermit.setAccessorName(userName);
+				this.newPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
+				this.newPermit.setPermitValue(decodeAccessPermission(newPermission));
+			} else {
+				this.oldPermit = null;
+				this.newPermit = null;
+			}
+
+			Set<String> s = new HashSet<String>(StrTokenizer.getCSVInstance(object.getXPermitList()).getTokenList());
+			List<IDfPermit> l = new ArrayList<IDfPermit>();
+			for (String x : newXPermits) {
+				if (x == null) {
+					continue;
+				}
+				if (!s.contains(x)) {
+					IDfPermit xpermit = new DfPermit();
+					xpermit.setAccessorName(userName);
+					xpermit.setPermitType(IDfPermitType.EXTENDED_PERMIT);
+					xpermit.setPermitValue(x);
+					l.add(xpermit);
+				}
+			}
+			this.newXPermit = Collections.unmodifiableCollection(l);
+		}
+
+		private String decodeAccessPermission(int permission) throws DfException {
+			switch (permission) {
+				case IDfACL.DF_PERMIT_NONE:
+					return IDfACL.DF_PERMIT_NONE_STR;
+				case IDfACL.DF_PERMIT_BROWSE:
+					return IDfACL.DF_PERMIT_BROWSE_STR;
+				case IDfACL.DF_PERMIT_READ:
+					return IDfACL.DF_PERMIT_READ_STR;
+				case IDfACL.DF_PERMIT_RELATE:
+					return IDfACL.DF_PERMIT_RELATE_STR;
+				case IDfACL.DF_PERMIT_VERSION:
+					return IDfACL.DF_PERMIT_VERSION_STR;
+				case IDfACL.DF_PERMIT_WRITE:
+					return IDfACL.DF_PERMIT_WRITE_STR;
+				case IDfACL.DF_PERMIT_DELETE:
+					return IDfACL.DF_PERMIT_DELETE_STR;
+				default:
+					throw new DfException(String.format("Unknown permissions value [%d] detected", permission));
+			}
+		}
+
+		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
+			if (!Tools.equals(this.objectId, object.getObjectId().getId())) { throw new DfException(
+				String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId, object
+					.getObjectId().getId())); }
+			boolean ret = false;
+			IDfPermit access = (grant ? this.newPermit : this.oldPermit);
+			if (access != null) {
+				object.grantPermit(access);
+				ret = true;
+			}
+			for (IDfPermit p : this.newXPermit) {
+				if (grant) {
+					object.grantPermit(p);
+				} else {
+					object.revokePermit(p);
+				}
+				ret = true;
+			}
+			return ret;
+		}
+
+		public boolean grant(IDfSysObject object) throws DfException {
+			return apply(object, true);
+		}
+
+		public boolean revoke(IDfSysObject object) throws DfException {
+			return apply(object, false);
+		}
+	}
 
 	private static final String DEBUG_DUMP = "$debug-dump$";
 
@@ -80,7 +186,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -281,7 +387,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
 		doPersistDependencies(castObject(object), manager);
@@ -291,7 +397,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-		SQLException {
+	SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -494,7 +600,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -735,7 +841,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-				.getObjectId().getId());
+					.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);
