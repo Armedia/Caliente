@@ -115,7 +115,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -125,11 +125,30 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		return super.isValidForLoad(object);
 	}
 
+	private void exportParentFolders(IDfDocument document, CmsDependencyManager dependencyManager) throws DfException,
+		CMSMFException {
+		IDfSession session = document.getSession();
+		// The parent folders
+		final int pathCount = document.getFolderIdCount();
+		for (int i = 0; i < pathCount; i++) {
+			IDfId folderId = document.getFolderId(i);
+			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
+			dependencyManager.persistDependency(parent);
+		}
+	}
+
 	@Override
 	protected void doPersistDependencies(IDfDocument document, CmsDependencyManager dependencyManager)
 		throws DfException, CMSMFException {
 		final IDfSession session = document.getSession();
-		if (!document.isReference()) {
+		if (document.isReference()) {
+			// If this is a reference, this is all we're interested in
+			exportParentFolders(document, dependencyManager);
+
+		} else {
+
+			// This isn't a reference so let's do the whole shebang
+
 			String owner = CmsMappingUtils.resolveSpecialUser(session, document.getOwnerName());
 			if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
 				IDfUser user = session.getUser(document.getOwnerName());
@@ -163,17 +182,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			if (StringUtils.isNotBlank(storageType)) {
 				RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
 			}
-		}
 
-		// The parent folders
-		final int pathCount = document.getFolderIdCount();
-		for (int i = 0; i < pathCount; i++) {
-			IDfId folderId = document.getFolderId(i);
-			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
-			dependencyManager.persistDependency(parent);
-		}
+			exportParentFolders(document, dependencyManager);
 
-		if (!document.isReference()) {
 			// Persist versions, but only if we're the root version
 			// TODO: Is this the proper way to tell if an object is the root of the version tree?
 			CmsAttribute antecedent = getAttribute(CmsAttributes.I_ANTECEDENT_ID);
