@@ -67,6 +67,14 @@ public class CmsExporter extends CmsTransferEngine {
 			@Override
 			public void run() {
 				IDfSession session = sessionManager.acquireSession();
+				boolean transOk = false;
+				try {
+					session.beginTrans();
+					transOk = true;
+				} catch (DfException e) {
+					CmsExporter.this.log.warn("FAILED TO INITIALIZE A TRANSACTION FOR EXPORT. Will continue anyway", e);
+					transOk = false;
+				}
 				activeCounter.incrementAndGet();
 				try {
 					while (!Thread.interrupted()) {
@@ -116,6 +124,13 @@ public class CmsExporter extends CmsTransferEngine {
 					}
 				} finally {
 					activeCounter.decrementAndGet();
+					if (transOk) {
+						try {
+							session.abortTrans();
+						} catch (DfException e) {
+							CmsExporter.this.log.warn("FAILED TO ABORT THE OPEN TRANSACTION.", e);
+						}
+					}
 					sessionManager.releaseSession(session);
 				}
 			}
@@ -222,10 +237,10 @@ public class CmsExporter extends CmsTransferEngine {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
