@@ -7,18 +7,31 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.lang3.StringUtils;
+
 public final class CmsCounter<R extends Enum<R>> {
 
+	private static final String TOTAL_LABEL = "processed".intern();
 	private static final String NEW_LINE = String.format("%n");
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	private final Map<CmsObjectType, Map<R, AtomicInteger>> counters;
 	private final Map<R, AtomicInteger> cummulative;
 	private final Class<R> rClass;
+	private final String formatString;
 
 	public CmsCounter(Class<R> rClass) {
 		if (rClass == null) { throw new IllegalArgumentException("Must provide an enum class"); }
 		this.rClass = rClass;
+
+		int maxWidth = 0;
+		Map<R, AtomicInteger> cummulative = new EnumMap<R, AtomicInteger>(rClass);
+		for (R result : this.rClass.getEnumConstants()) {
+			cummulative.put(result, new AtomicInteger(0));
+			maxWidth = Math.max(maxWidth, result.name().length());
+		}
+		this.cummulative = Collections.unmodifiableMap(cummulative);
+
 		Map<CmsObjectType, Map<R, AtomicInteger>> counters = new EnumMap<CmsObjectType, Map<R, AtomicInteger>>(
 			CmsObjectType.class);
 		for (CmsObjectType objectType : CmsObjectType.values()) {
@@ -30,11 +43,8 @@ public final class CmsCounter<R extends Enum<R>> {
 		}
 		this.counters = Collections.unmodifiableMap(counters);
 
-		Map<R, AtomicInteger> cummulative = new EnumMap<R, AtomicInteger>(rClass);
-		for (R result : this.rClass.getEnumConstants()) {
-			cummulative.put(result, new AtomicInteger(0));
-		}
-		this.cummulative = Collections.unmodifiableMap(cummulative);
+		maxWidth = Math.max(maxWidth, CmsCounter.TOTAL_LABEL.length());
+		this.formatString = String.format("%%s objects %%-%ds: %%6d%%n", maxWidth);
 	}
 
 	public int increment(CmsObject<?> object, R result) {
@@ -157,6 +167,8 @@ public final class CmsCounter<R extends Enum<R>> {
 			for (int i = 0; i < indentLevel; i++) {
 				s.append('\t');
 			}
+			String str = String.format(this.formatString, entryLabel, CmsCounter.TOTAL_LABEL, 0);
+			final int equalsCount = str.length();
 			final String indent = s.toString();
 			s.setLength(0);
 			int total = 0;
@@ -164,10 +176,10 @@ public final class CmsCounter<R extends Enum<R>> {
 				final R r = e.getKey();
 				final AtomicInteger i = e.getValue();
 				total += i.get();
-				s.append(indent).append(String.format("%s objects %s: %d%n", entryLabel, r, i.get()));
+				s.append(indent).append(String.format(this.formatString, entryLabel, r, i.get()));
 			}
-			s.append(indent).append("========================================").append(CmsCounter.NEW_LINE);
-			s.append(indent).append(String.format("%s objects processed: %d%n", entryLabel, total));
+			s.append(indent).append(StringUtils.repeat('=', equalsCount)).append(CmsCounter.NEW_LINE);
+			s.append(indent).append(String.format(this.formatString, entryLabel, CmsCounter.TOTAL_LABEL, total));
 			return s.toString();
 		} finally {
 			this.lock.writeLock().unlock();
