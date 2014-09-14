@@ -177,7 +177,8 @@ public final class CmsCounter<R extends Enum<R>> {
 				s.append(indent).append(String.format(this.formatString, entryLabel, r, i.get()));
 			}
 			String totalLine = String.format(this.formatString, entryLabel, CmsCounter.TOTAL_LABEL, total);
-			s.append(indent).append(StringUtils.repeat("=", totalLine.length())).append(CmsCounter.NEW_LINE);
+			// PATCH: need to repeat one less than the length of the line, or we'll overflow by 1...
+			s.append(indent).append(StringUtils.repeat("=", totalLine.length() - 1)).append(CmsCounter.NEW_LINE);
 			s.append(indent).append(totalLine).append(CmsCounter.NEW_LINE);
 			return s.toString();
 		} finally {
