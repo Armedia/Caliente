@@ -40,6 +40,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.OBJECT_NAME,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
+
 		// TODO: Handle special mappings
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
 			CmsAttributes.R_ACCESSOR_NAME, CmsAttributeHandlers.NO_IMPORT_HANDLER);
@@ -104,7 +105,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected void doPersistDependencies(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		final int count = acl.getAccessorCount();
 		final IDfSession session = acl.getSession();
 		for (int i = 0; i < count; i++) {
@@ -126,12 +127,20 @@ public class CmsACL extends CmsObject<IDfACL> {
 			}
 
 			final IDfPersistentObject obj = (group ? session.getGroup(name) : session.getUser(name));
-			if (obj == null) {
-				this.log.warn(String.format("WARNING: Missing dependency for acl [%s:%s] - %s [%s] not found",
-					acl.getDomain(), acl.getObjectName(), group ? "group" : "user", name));
-				continue;
-			}
+			if (obj == null) { throw new CMSMFException(String.format(
+				"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectName(),
+				(group ? "group" : "user"), name)); }
 			dependencyManager.persistDependency(obj);
+		}
+
+		// Do the owner
+		final String owner = acl.getDomain();
+		if (CmsMappingUtils.isSpecialUser(session, owner)) {
+			this.log.warn(String.format("Skipping export of special user [%s]", owner));
+		} else {
+			IDfUser user = session.getUser(acl.getDomain());
+			if (user == null) { throw new CMSMFException(String.format(
+				"Missing dependency for ACL [%s] - user [%s] not found (as ACL domain)", acl.getObjectName(), owner)); }
 		}
 	}
 

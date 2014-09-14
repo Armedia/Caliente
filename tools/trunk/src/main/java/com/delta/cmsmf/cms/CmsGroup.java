@@ -114,10 +114,13 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			if (owner != null) {
 				dependencyManager.persistDependency(owner);
 			} else {
-				this.log.warn(String.format(
-					"WARNING: Missing dependency for group [%s] - user [%s] not found (as group owner)",
-					group.getGroupName(), group.getOwnerName()));
+				throw new CMSMFException(String.format(
+					"Missing dependency for group [%s] - user [%s] not found (as group owner)", group.getGroupName(),
+					group.getOwnerName()));
 			}
+		} else {
+			this.log.warn(String.format("Skipping export of special user [%s] as the owner of group [%s]",
+				group.getOwnerName(), group.getGroupName()));
 		}
 
 		if (!CmsMappingUtils.isSpecialUser(session, group.getGroupAdmin())) {
@@ -125,10 +128,13 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			if (admin != null) {
 				dependencyManager.persistDependency(admin);
 			} else {
-				this.log.warn(String.format(
-					"WARNING: Missing dependency for group [%s] - user [%s] not found (as group admin)",
-					group.getGroupName(), group.getGroupAdmin()));
+				throw new CMSMFException(String.format(
+					"Missing dependency for group [%s] - user [%s] not found (as group admin)", group.getGroupName(),
+					group.getGroupAdmin()));
 			}
+		} else {
+			this.log.warn(String.format("Skipping export of special user [%s] as the admin of group [%s]",
+				group.getGroupAdmin(), group.getGroupName()));
 		}
 
 		// Avoid calling DQL twice
@@ -145,10 +151,11 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			}
 			IDfUser user = session.getUser(v.asString());
 			if (user == null) {
-				this.log.warn(String.format(
+				// in theory, this should be impossible as we just got the list via a direct query
+				// to dm_user, and thus the users listed do exist
+				throw new CMSMFException(String.format(
 					"WARNING: Missing dependency for group [%s] - user [%s] not found (as default group)",
 					group.getGroupName(), v.asString()));
-				continue;
 			}
 			dependencyManager.persistDependency(user);
 		}
@@ -166,12 +173,9 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				}
 
 				IDfUser member = session.getUser(v.asString());
-				if (member == null) {
-					this.log.warn(String.format(
-						"WARNING: Missing dependency for group [%s] - user [%s] not found (as group member)",
-						group.getGroupName(), v.asString()));
-					continue;
-				}
+				if (member == null) { throw new CMSMFException(String.format(
+					"Missing dependency for group [%s] - user [%s] not found (as group member)", group.getGroupName(),
+					v.asString())); }
 				dependencyManager.persistDependency(member);
 			}
 		}
@@ -180,12 +184,9 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		if (groupsNames != null) {
 			for (IDfValue v : groupsNames) {
 				IDfGroup member = session.getGroup(v.asString());
-				if (member == null) {
-					this.log.warn(String.format(
-						"WARNING: Missing dependency for group [%s] - group [%s] not found (as group member)",
-						group.getGroupName(), v.asString()));
-					continue;
-				}
+				if (member == null) { throw new CMSMFException(String.format(
+					"Missing dependency for group [%s] - group [%s] not found (as group member)", group.getGroupName(),
+					v.asString())); }
 				dependencyManager.persistDependency(member);
 			}
 		}
