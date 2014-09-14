@@ -1,8 +1,8 @@
 package com.delta.cmsmf.cms;
 
 /**
- * The Class CmsAttributes. This class contains various constant values for
- * attribute names and column names used in CMSMF application.
+ * The Class CmsAttributes. This class contains various constant values for attribute names and
+ * column names used in CMSMF application.
  *
  * @author Shridev Makim 6/15/2010
  */
@@ -35,6 +35,9 @@ public class CmsAttributes {
 
 	/** The i_antecedent_id attribute of dm_sysobject. */
 	public static final String I_ANTECEDENT_ID = "i_antecedent_id";
+
+	/** The i_antecedent_id attribute of dm_sysobject. */
+	public static final String I_CHRONICLE_ID = "i_chronicle_id";
 
 	/** The r_version_label attribute of dm_sysobject. */
 	public static final String R_VERSION_LABEL = "r_version_label";
