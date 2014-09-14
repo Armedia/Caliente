@@ -5,11 +5,19 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.utils.DfUtils;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -35,6 +43,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 		// These are the attributes that require special handling on import
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FOLDER, CmsDataType.DF_STRING,
 			CmsAttributes.R_FOLDER_PATH, CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FOLDER, CmsDataType.DF_STRING,
+			CmsAttributes.OBJECT_NAME, CmsAttributeHandlers.NO_IMPORT_HANDLER);
+
+		// These attributes can be substituted for values
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FOLDER, CmsDataType.DF_STRING, CmsAttributes.OWNER_NAME,
 			CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.FOLDER, CmsDataType.DF_STRING, CmsAttributes.ACL_DOMAIN,
@@ -87,7 +99,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 	@Override
 	protected void doPersistDependencies(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final IDfSession session = folder.getSession();
 		String owner = CmsMappingUtils.resolveSpecialUser(session, folder.getOwnerName());
 		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
@@ -111,28 +123,150 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			dependencyManager.persistDependency(obj);
 		}
 
+		// Export the object type
+		dependencyManager.persistDependency(folder.getType());
+
+		// Save filestore name
+		String storageType = folder.getStorageType();
+		if (StringUtils.isNotBlank(storageType)) {
+			RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
+		}
+
 		// The parent folders
-		// TODO: Calculate this
+		final int pathCount = folder.getFolderPathCount();
+		for (int i = 0; i < pathCount; i++) {
+			String path = folder.getFolderPath(i);
+			String parentPath = path.substring(0, path.lastIndexOf("/"));
+			if (StringUtils.isNotBlank(parentPath)) {
+				IDfFolder parent = session.getFolderByPath(parentPath);
+				if (parent != null) {
+					dependencyManager.persistDependency(parent);
+				}
+			}
+		}
+	}
+
+	private PermitDelta mainPermitDelta = null;
+	private Map<String, PermitDelta> parentPermitDeltas = null;
+
+	@Override
+	protected void prepareForConstruction(IDfFolder folder, boolean newObject) throws DfException {
+		this.mainPermitDelta = null;
+		this.parentPermitDeltas = null;
+
+		// If updating an existing folder object, make sure that you have write
+		// permissions and CHANGE_LOCATION. If you don't, grant them, and reset it later on.
+		if (!newObject) {
+			this.mainPermitDelta = new PermitDelta(folder, IDfACL.DF_PERMIT_WRITE,
+				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+			if (this.mainPermitDelta.grant(folder)) {
+				folder.save();
+			}
+		}
 	}
 
 	@Override
 	protected void finalizeConstruction(IDfFolder folder, boolean newObject) throws DfException {
 
-		// TODO: Link the folder to all its paths...?
-		Set<String> actualPaths = new HashSet<String>();
-		CmsAttribute folderPaths = getAttribute(CmsAttributes.R_FOLDER_PATH);
-		if (folderPaths != null) {
-			for (IDfValue v : folderPaths) {
-				// TODO: Link the folder object to the given path
-				// TODO: If the given path already exists...is it a different folder? What to do?
-				actualPaths.add(v.asString());
-			}
+		final String folderName;
+		if (newObject) {
+			CmsAttribute objectName = getAttribute(CmsAttributes.OBJECT_NAME);
+			IDfValue newValue = objectName.getValue();
+			folderName = newValue.toString().trim();
+			setAttributeOnObject(CmsAttributes.OBJECT_NAME, DfValueFactory.newStringValue(folderName), folder);
+		} else {
+			folderName = folder.getObjectName();
 		}
+
+		final IDfSession session = folder.getSession();
+
+		// Only do the linking/unlinking for non-cabinets
+		Set<String> actualPaths = new TreeSet<String>();
+		if (!"dm_cabinet".equals(getSubtype())) {
+
+			Set<String> oldParents = new HashSet<String>();
+			int oldParentCount = folder.getFolderIdCount();
+			for (int i = 0; i < oldParentCount; i++) {
+				String path = folder.getFolderPath(i);
+				IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
+				if (parent != null) {
+					oldParents.add(parent.getObjectId().getId());
+				}
+			}
+
+			Set<String> newParents = new TreeSet<String>();
+			for (IDfValue v : getAttribute(CmsAttributes.R_FOLDER_PATH)) {
+				String path = v.asString();
+				IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
+				if (parent != null) {
+					newParents.add(parent.getObjectId().getId());
+				}
+			}
+
+			// Unlink from those who are in the old parent list, but not in the new parent list
+			Set<String> unlinkTargets = new TreeSet<String>(oldParents);
+			unlinkTargets.removeAll(newParents);
+
+			// Link to those who are in the new parent list, but not the old parent list
+			Set<String> linkTargets = new TreeSet<String>(newParents);
+			linkTargets.removeAll(oldParents);
+
+			// These are the parents to which the folder will remain linked, but may need to be
+			// processed later
+			Set<String> commonTargets = new TreeSet<String>(newParents);
+			commonTargets.retainAll(oldParents);
+
+			// Unlink from all the parents we're supposed to unlink from
+			for (String oldParentId : unlinkTargets) {
+				folder.unlink(oldParentId);
+			}
+
+			this.parentPermitDeltas = new HashMap<String, PermitDelta>();
+			for (String parentId : newParents) {
+				IDfFolder parent = session.getFolderBySpecification(parentId);
+				if (parent == null) {
+					// How the hell did this happen?
+					continue;
+				}
+
+				// If we should link here, then link!
+				if (linkTargets.contains(parentId)) {
+					folder.link(parentId);
+				}
+
+				// Keep track of the paths
+				int pathCount = parent.getFolderPathCount();
+				for (int i = 0; i < pathCount; i++) {
+					String newPath = String.format("%s/%s", parent.getFolderPath(i), folderName);
+					actualPaths.add(newPath);
+				}
+
+				// TODO: The old code used to also modify v_stamp here...
+				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
+					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+				this.parentPermitDeltas.put(parentId, delta);
+				if (delta.grant(parent)) {
+					parent.save();
+				}
+			}
+		} else {
+			actualPaths.add(String.format("/%s", folderName));
+		}
+	}
+
+	@Override
+	protected boolean postConstruction(IDfFolder folder, boolean newObject) throws DfException {
+		if (newObject) {
+			// Make sure we apply the original name, since we had to "massage" it to
+			// get things to work later on
+			copyAttributeToObject(CmsAttributes.OBJECT_NAME, folder);
+		}
+
+		final IDfSession session = folder.getSession();
 
 		CmsProperty usersWithDefaultFolder = getProperty(CmsFolder.USERS_WITH_DEFAULT_FOLDER);
 		CmsProperty usersDefaultFolderPaths = getProperty(CmsFolder.USERS_DEFAULT_FOLDER_PATHS);
 		if ((usersWithDefaultFolder != null) && (usersDefaultFolderPaths != null)) {
-			final IDfSession session = folder.getSession();
 			final int total = usersWithDefaultFolder.getValueCount();
 			for (int i = 0; i < total; i++) {
 				IDfValue userValue = usersWithDefaultFolder.getValue(i);
@@ -140,33 +274,82 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 				// TODO: How do we decide if we should update the default folder for this user? What
 				// if the user's default folder has been modified on the target CMS and we don't
-				// want to clobber that?
+				// want to clobber that? That's a decision that needs to be made later...
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								folder.getObjectId().getId(), userValue.asString()));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							folder.getObjectId().getId(), userValue.asString()));
 					continue;
 				}
 
 				// Ok...so...is the user's default path one of ours? Or is it perhaps a different
 				// object? This will determine if the user's default folder will be private or
 				// not...
-				IDfFolder actual = folder;
-				if (!actualPaths.contains(pathValue.asString())) {
-					// Not one of ours
-					actual = session.getFolderByPath(pathValue.asString());
-				}
+				IDfFolder actual = session.getFolderByPath(pathValue.asString());
+
 				// Ok...so...we set the path to "whatever"...
 				user.setDefaultFolder(pathValue.asString(), (actual == null));
 			}
 		}
+		return newObject;
 	}
 
 	@Override
-	protected IDfFolder locateInCms(IDfSession session) throws DfException {
-		return null;
+	protected boolean cleanupAfterSave(IDfFolder folder, boolean newObject) throws DfException {
+
+		boolean changed = false;
+		if (this.mainPermitDelta != null) {
+			changed = this.mainPermitDelta.revoke(folder);
+		}
+
+		if (this.parentPermitDeltas != null) {
+			IDfSession session = folder.getSession();
+			for (String parentId : this.parentPermitDeltas.keySet()) {
+				IDfFolder parent = session.getFolderBySpecification(parentId);
+				if (parent == null) {
+					// Again...how the hell?
+					continue;
+				}
+				this.parentPermitDeltas.get(parentId).revoke(parent);
+				parent.save();
+			}
+		}
+
+		// Return true so this object is saved afterwards
+		return changed;
+	}
+
+	@Override
+	protected IDfFolder locateInCms(IDfSession session) throws CMSMFException, DfException {
+		IDfFolder existing = null;
+		String existingPath = null;
+		for (IDfValue path : getAttribute(CmsAttributes.R_FOLDER_PATH)) {
+			String currentPath = path.asString();
+			IDfFolder current = session.getFolderByPath(currentPath);
+			if (current == null) {
+				// No match, we're good...
+				continue;
+			}
+			// We have a match...
+			if (existing == null) {
+				// First match, keep track of it
+				existing = current;
+				existingPath = currentPath;
+				continue;
+			}
+			// Second match, is it the same as the first?
+			if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
+				// Same as the first - we have an issue here
+				continue;
+			}
+			// Not the same, this is a problem
+			throw new CMSMFException(String.format(
+				"Found two different folders matching this folders paths: [%s@%s] and [%s@%s]", existing.getObjectId()
+				.getId(), existingPath, current.getObjectId().getId(), currentPath));
+		}
+		return existing;
 	}
 }
