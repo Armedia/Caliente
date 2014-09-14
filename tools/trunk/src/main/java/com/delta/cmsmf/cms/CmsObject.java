@@ -150,6 +150,43 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
+	public static final class SaveResult {
+		private final Result result;
+		private final String objectId;
+
+		private SaveResult(Result result, String objectId) {
+			this.result = result;
+			this.objectId = objectId;
+		}
+
+		public Result getResult() {
+			return this.result;
+		}
+
+		public String getObjectId() {
+			return this.objectId;
+		}
+
+		@Override
+		public int hashCode() {
+			return Tools.hashTool(this, null, this.result, this.objectId);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!Tools.baseEquals(this, obj)) { return false; }
+			SaveResult other = SaveResult.class.cast(obj);
+			if (!Tools.equals(this.result, other.result)) { return false; }
+			if (!Tools.equals(this.objectId, other.objectId)) { return false; }
+			return true;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("SaveResult [result=%s, objectId=%s]", this.result, this.objectId);
+		}
+	}
+
 	private static final String DEBUG_DUMP = "$debug-dump$";
 
 	private final CmsAttributeMapper NULL_MAPPER = new CmsAttributeMapper() {
@@ -186,7 +223,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
 		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.type = type;
 		this.dfClass = dfClass;
 	}
@@ -387,7 +424,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
 		doPersistDependencies(castObject(object), manager);
@@ -396,8 +433,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	protected void doPersistDependencies(T object, CmsDependencyManager manager) throws DfException, CMSMFException {
 	}
 
-	public final Result saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException, CMSMFException,
-	SQLException {
+	public final SaveResult saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException,
+	CMSMFException, SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -417,7 +454,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				session.beginTrans();
 			}
 			transOpen = true;
-			if (skipImport(session)) { return Result.SKIPPED; }
+			if (skipImport(session)) { return new SaveResult(Result.SKIPPED, null); }
 
 			T object = locateInCms(session);
 			final boolean isNew = (object == null);
@@ -431,7 +468,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					sysObject = IDfSysObject.class.cast(object);
 				}
 			} else {
-				if (isSameObject(object)) { return Result.DUPLICATE; }
+				if (isSameObject(object)) { return new SaveResult(Result.DUPLICATE, object.getObjectId().getId()); }
 				result = Result.UPDATED;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
@@ -525,7 +562,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				object.save();
 			}
 			ok = true;
-			return result;
+			return new SaveResult(result, object.getObjectId().getId());
 		} finally {
 			if (ok && (sysObject != null)) {
 				if (mustImmute) {
@@ -600,7 +637,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -841,7 +878,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-					.getObjectId().getId());
+				.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);

@@ -22,6 +22,7 @@ import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsCounter.Result;
 import com.delta.cmsmf.cms.CmsDependencyType;
 import com.delta.cmsmf.cms.CmsObject;
+import com.delta.cmsmf.cms.CmsObject.SaveResult;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsUser;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
@@ -92,18 +93,18 @@ public class CmsImporter extends CmsTransferEngine {
 							CmsImporter.this.log.debug(String.format("Polled %s", next));
 						}
 
-						Result result = Result.FAILED;
+						SaveResult result = null;
 						try {
 							result = next.saveToCMS(session, objectStore);
 							if (CmsImporter.this.log.isDebugEnabled()) {
 								CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
 							}
 						} catch (Throwable t) {
-							result = Result.FAILED;
+							result = null;
 							// Log the error, move on
 							CmsImporter.this.log.error(String.format("Exception caught processing %s", next), t);
 						} finally {
-							CmsCounter.incrementCounter(next, result);
+							CmsCounter.incrementCounter(next, (result != null ? result.getResult() : Result.FAILED));
 						}
 					}
 				} finally {
