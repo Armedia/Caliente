@@ -357,7 +357,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			}
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
-				"Found two different folders matching this folders paths: [%s@%s] and [%s@%s]", existing.getObjectId()
+				"Found two different folders matching this folder's paths: [%s@%s] and [%s@%s]", existing.getObjectId()
 					.getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
