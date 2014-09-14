@@ -27,7 +27,7 @@ public enum CmsObjectType {
 	TYPE(CmsType.class, IDfType.class, CmsDependencyType.HIERARCHY),
 	FORMAT(CmsFormat.class, IDfFormat.class),
 	FOLDER(CmsFolder.class, IDfFolder.class, CmsDependencyType.HIERARCHY),
-	DOCUMENT(CmsDocument.class, IDfDocument.class),
+	DOCUMENT(CmsDocument.class, IDfDocument.class, CmsDependencyType.PEER),
 	CONTENT(CmsContent.class, IDfContent.class, "dmr_content"),
 	DOCUMENT_REF(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER);
 
