@@ -1,7 +1,5 @@
 package com.delta.cmsmf.cmsobjects;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1036,88 +1034,6 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 	 * @throws CMSMFException
 	 *             the cMSMF exception
 	 */
-	@SuppressWarnings("unused")
-	@Deprecated
-	private void getContentFilesFromCMS_old(DctmDocument dctmDocument, IDfSysObject sysObj, String srcObjID)
-		throws CMSMFException {
-		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
-			DctmDocument.logger.info("Started retrieving content files from repository for document with id: "
-				+ srcObjID);
-		}
-
-		IDfSession session = sysObj.getSession();
-		try {
-			int pageCnt = sysObj.getPageCount();
-			if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-				DctmDocument.logger.debug("object with id " + srcObjID + " has page count: " + pageCnt);
-			}
-			for (int i = 0; i < pageCnt; i++) {
-				// Run a query to find out all dmr_content objects linked to the sysobject
-				StringBuffer contentDQLBuffer = new StringBuffer(
-					"select dcs.r_object_id, dcr.parent_id, dcs.full_format, dcr.page, dcr.page_modifier, dcs.rendition, ");
-				contentDQLBuffer
-					.append("dcs.content_size, dcs.set_file, dcs.set_time, dcs.set_client, dcs.data_ticket ");
-				contentDQLBuffer.append("from dmr_content_r  dcr, dmr_content_s dcs ");
-				contentDQLBuffer.append("where dcr.parent_id = '" + sysObj.getObjectId().getId() + "' ");
-				contentDQLBuffer.append("and dcr.r_object_id = dcs.r_object_id ");
-				contentDQLBuffer.append("and page = ");
-				contentDQLBuffer.append(i);
-				contentDQLBuffer.append(" order by rendition");
-
-				if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-					DctmDocument.logger.debug("DQL Query to locate content is: " + contentDQLBuffer.toString());
-				}
-				IDfQuery contentQuery = new DfClientX().getQuery();
-				contentQuery.setDQL(contentDQLBuffer.toString());
-				IDfCollection contentColl = contentQuery.execute(session, IDfQuery.READ_QUERY);
-				while (contentColl.next()) {
-					DctmContent dctmContent = new DctmContent();
-					// Set various attributes of dctmContent object
-					// dctmContent.setContentFormat(contentColl.getString(DctmAttrNameConstants.FULL_FORMAT));
-					dctmContent.setPageNbr(contentColl.getInt(DctmAttrNameConstants.PAGE));
-					dctmContent.setPageModifier(contentColl.getString(DctmAttrNameConstants.PAGE_MODIFIER));
-					// dctmContent.setSetFile(contentColl.getString(DctmAttrNameConstants.SET_FILE));
-					// dctmContent.setSetClient(contentColl.getString(DctmAttrNameConstants.SET_CLIENT));
-					// dctmContent.setSetTime(contentColl.getTime(DctmAttrNameConstants.SET_TIME).getDate());
-					// dctmContent.setRenditionNbr(contentColl.getInt(DctmAttrNameConstants.RENDITION));
-					// int contentDataTicket =
-// contentColl.getInt(DctmAttrNameConstants.DATA_TICKET);
-					// dctmContent.setRelativeContentFileLocation(getContent(sysObj,
-					// contentColl.getId("r_object_id")
-					// .getId(), dctmContent.getContentFormat(), dctmContent.getPageNbr(),
-// dctmContent
-					// .getPageModifier(), contentDataTicket));
-					dctmDocument.addContent(dctmContent);
-				}
-				contentColl.close();
-			}
-		} catch (DfException e) {
-			throw (new CMSMFException("Couldn't retrieve all content files from dctm document with id: " + srcObjID, e));
-			// } catch (IOException e) {
-			// throw (new
-// CMSMFException("Couldn't read content file streams from dctm document with id: " +
-			// srcObjID, e));
-		}
-
-		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
-			DctmDocument.logger.info("Finished retrieving content files from repository for document with id: "
-				+ srcObjID);
-		}
-	}
-
-	/**
-	 * Gets the content files from repository for an object and sets as the content file list of an
-	 * dctm object.
-	 *
-	 * @param dctmDocument
-	 *            the dctm document
-	 * @param sysObj
-	 *            the sys obj
-	 * @param srcObjID
-	 *            the src obj id
-	 * @throws CMSMFException
-	 *             the cMSMF exception
-	 */
 	private void getContentFilesFromCMS(DctmDocument dctmDocument, IDfSysObject sysObj, String srcObjID)
 		throws CMSMFException {
 		if (DctmDocument.logger.isEnabledFor(Level.INFO)) {
@@ -1300,45 +1216,6 @@ public class DctmDocument extends DctmObject<IDfDocument> {
 				+ relativeContentFileLocation + File.separator + contentFileName);
 		}
 		return relativeContentFileLocation + File.separator + contentFileName;
-	}
-
-	/**
-	 * Reads the content from a byte array input stream and stores it into a byte array.
-	 *
-	 * @param contentStream
-	 *            the content stream
-	 * @return the byte data
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
-	 */
-	@Deprecated
-	protected byte[] getByteData(ByteArrayInputStream contentStream) throws IOException {
-		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-			DctmDocument.logger.debug("Started converting content input stream to byte[]");
-		}
-
-		int bufferSize = Setting.CONTENT_READ_BUFFER_SIZE.getInt();
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(bufferSize);
-		byte[] bytes = new byte[bufferSize];
-
-		// Read bytes from the input stream in bytes.length-sized chunks and
-		// write them into the output stream
-		int readBytes;
-		while ((readBytes = contentStream.read(bytes)) > 0) {
-			outputStream.write(bytes, 0, readBytes);
-		}
-
-		// Convert the contents of the output stream into a byte array
-		byte[] byteData = outputStream.toByteArray();
-
-		// Close the streams
-		contentStream.close();
-		outputStream.close();
-		if (DctmDocument.logger.isEnabledFor(Level.DEBUG)) {
-			DctmDocument.logger.debug("Finished converting content input stream to byte[]");
-		}
-
-		return byteData;
 	}
 
 }
