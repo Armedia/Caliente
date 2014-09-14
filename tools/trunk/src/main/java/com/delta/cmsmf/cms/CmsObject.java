@@ -21,7 +21,6 @@ import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
-import com.delta.cmsmf.cms.CmsCounter.Result;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.DfPermit;
@@ -129,16 +128,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public static final class SaveResult {
-		private final Result result;
+		private final CmsImportResult cmsImportResult;
 		private final String objectId;
 
-		private SaveResult(Result result, String objectId) {
-			this.result = result;
+		private SaveResult(CmsImportResult cmsImportResult, String objectId) {
+			this.cmsImportResult = cmsImportResult;
 			this.objectId = objectId;
 		}
 
-		public Result getResult() {
-			return this.result;
+		public CmsImportResult getResult() {
+			return this.cmsImportResult;
 		}
 
 		public String getObjectId() {
@@ -147,21 +146,21 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 		@Override
 		public int hashCode() {
-			return Tools.hashTool(this, null, this.result, this.objectId);
+			return Tools.hashTool(this, null, this.cmsImportResult, this.objectId);
 		}
 
 		@Override
 		public boolean equals(Object obj) {
 			if (!Tools.baseEquals(this, obj)) { return false; }
 			SaveResult other = SaveResult.class.cast(obj);
-			if (!Tools.equals(this.result, other.result)) { return false; }
+			if (!Tools.equals(this.cmsImportResult, other.cmsImportResult)) { return false; }
 			if (!Tools.equals(this.objectId, other.objectId)) { return false; }
 			return true;
 		}
 
 		@Override
 		public String toString() {
-			return String.format("SaveResult [result=%s, objectId=%s]", this.result, this.objectId);
+			return String.format("SaveResult [cmsImportResult=%s, objectId=%s]", this.cmsImportResult, this.objectId);
 		}
 	}
 
@@ -386,7 +385,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 		// Properties are different from attributes in that they require special handling. For
 		// instance, a property would only be settable via direct SQL, or via an explicit method
-		// call, etc., because setting it directly as an attribute would result in an error from
+		// call, etc., because setting it directly as an attribute would cmsImportResult in an error from
 		// DFC, and therefore specialized code is required to handle it
 		this.properties.clear();
 		List<CmsProperty> properties = new ArrayList<CmsProperty>();
@@ -432,22 +431,22 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				session.beginTrans();
 			}
 			transOpen = true;
-			if (skipImport(session)) { return new SaveResult(Result.SKIPPED, null); }
+			if (skipImport(session)) { return new SaveResult(CmsImportResult.SKIPPED, null); }
 
 			T object = locateInCms(session);
 			final boolean isNew = (object == null);
 			final boolean updateVersionLabels = isVersionable(object);
-			final Result result;
+			final CmsImportResult cmsImportResult;
 			if (isNew) {
 				// Create a new object
 				object = newObject(session);
-				result = Result.CREATED;
+				cmsImportResult = CmsImportResult.CREATED;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
 				}
 			} else {
-				if (isSameObject(object)) { return new SaveResult(Result.DUPLICATE, object.getObjectId().getId()); }
-				result = Result.UPDATED;
+				if (isSameObject(object)) { return new SaveResult(CmsImportResult.DUPLICATE, object.getObjectId().getId()); }
+				cmsImportResult = CmsImportResult.UPDATED;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
 					if (sysObject.isFrozen()) {
@@ -540,7 +539,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				object.save();
 			}
 			ok = true;
-			return new SaveResult(result, object.getObjectId().getId());
+			return new SaveResult(cmsImportResult, object.getObjectId().getId());
 		} finally {
 			if (ok && (sysObject != null)) {
 				if (mustImmute) {

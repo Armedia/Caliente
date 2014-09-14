@@ -2,8 +2,8 @@ package com.delta.cmsmf.cms.storage;
 
 import java.util.Map;
 
-import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsObjectType;
+import com.delta.cmsmf.cms.CmsImportResult;
 
 public interface CmsImportEventListener {
 
@@ -47,9 +47,9 @@ public interface CmsImportEventListener {
 	 *
 	 * @param objectType
 	 * @param objectId
-	 * @param result
+	 * @param cmsImportResult
 	 */
-	public void objectImported(CmsObjectType objectType, String objectId, CmsCounter.Result result);
+	public void objectImported(CmsObjectType objectType, String objectId, CmsImportResult cmsImportResult);
 
 	/**
 	 * <p>
@@ -60,7 +60,7 @@ public interface CmsImportEventListener {
 	 * @param objectType
 	 * @param counters
 	 */
-	public void objectTypeImportCompleted(CmsObjectType objectType, Map<CmsCounter.Result, Integer> counters);
+	public void objectTypeImportCompleted(CmsObjectType objectType, Map<CmsImportResult, Integer> counters);
 
 	/**
 	 * <p>
@@ -70,5 +70,5 @@ public interface CmsImportEventListener {
 	 *
 	 * @param counters
 	 */
-	public void importConcluded(Map<CmsCounter.Result, Integer> counters);
+	public void importConcluded(Map<CmsImportResult, Integer> counters);
 }

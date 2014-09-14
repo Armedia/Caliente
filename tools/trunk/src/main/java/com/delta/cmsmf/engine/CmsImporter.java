@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.delta.cmsmf.cms.CmsCounter;
-import com.delta.cmsmf.cms.CmsCounter.Result;
 import com.delta.cmsmf.cms.CmsDependencyType;
+import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObject.SaveResult;
 import com.delta.cmsmf.cms.CmsObjectType;
@@ -38,6 +38,8 @@ import com.documentum.fc.common.DfException;
  *
  */
 public class CmsImporter extends CmsTransferEngine {
+
+	private final CmsCounter<CmsImportResult> counter = new CmsCounter<CmsImportResult>(CmsImportResult.class);
 
 	public CmsImporter() {
 		super();
@@ -61,6 +63,8 @@ public class CmsImporter extends CmsTransferEngine {
 		final BlockingQueue<CmsObject<?>> workQueue = new ArrayBlockingQueue<CmsObject<?>>(threadCount * backlogSize);
 		final ExecutorService executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
+
+		this.counter.reset();
 
 		Runnable worker = new Runnable() {
 			@Override
@@ -104,7 +108,8 @@ public class CmsImporter extends CmsTransferEngine {
 							// Log the error, move on
 							CmsImporter.this.log.error(String.format("Exception caught processing %s", next), t);
 						} finally {
-							CmsCounter.incrementCounter(next, (result != null ? result.getResult() : Result.FAILED));
+							CmsImporter.this.counter.increment(next, (result != null ? result.getResult()
+								: CmsImportResult.FAILED));
 						}
 					}
 				} finally {
@@ -227,9 +232,10 @@ public class CmsImporter extends CmsTransferEngine {
 				}
 			}
 			for (CmsObjectType type : CmsObjectType.values()) {
-				this.log.info(String.format("Action report for %s:%n%s", type.name(), CmsCounter.generateReport(type)));
+				this.log
+				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
-			this.log.info(String.format("Summary Report:%n%s", CmsCounter.generateCummulativeReport()));
+			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}
 	}
 }
