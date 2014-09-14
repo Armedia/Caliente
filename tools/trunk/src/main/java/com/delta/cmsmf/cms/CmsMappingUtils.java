@@ -43,6 +43,16 @@ public class CmsMappingUtils {
 		return CmsMappingUtils.substituteSpecialUsers(object, DfValueFactory.getAllRepeatingValues(attr, object));
 	}
 
+	public static String substituteSpecialUsers(IDfTypedObject object, String user) throws DfException {
+		if (user == null) { throw new IllegalArgumentException("Must provide a user to substitute"); }
+		return CmsMappingUtils.substituteSpecialUsers(object, DfValueFactory.newStringValue(user)).asString();
+	}
+
+	public static IDfValue substituteSpecialUsers(IDfTypedObject object, IDfValue value) throws DfException {
+		if (value == null) { throw new IllegalArgumentException("Must provide a value to substitute"); }
+		return CmsMappingUtils.substituteSpecialUsers(object, Collections.singleton(value)).get(0);
+	}
+
 	public static List<IDfValue> substituteSpecialUsers(IDfTypedObject object, Collection<IDfValue> values)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
