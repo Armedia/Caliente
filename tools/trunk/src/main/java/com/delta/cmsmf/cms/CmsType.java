@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
@@ -66,6 +67,11 @@ public class CmsType extends CmsObject<IDfType> {
 		CmsType.SPECIAL_TYPES_READY = true;
 	}
 
+	public static boolean isSpecialType(String type) {
+		CmsType.initSpecialTypes();
+		return CmsType.SPECIAL_TYPES.contains(type);
+	}
+
 	public CmsType() {
 		super(CmsObjectType.TYPE, IDfType.class);
 		CmsType.initHandlers();
@@ -84,15 +90,14 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected boolean isValidForLoad(IDfType type) throws DfException {
-		return !CmsType.SPECIAL_TYPES.contains(type.getName());
-	}
-
-	@Override
 	protected void doPersistDependencies(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
 		IDfType superType = type.getSuperType();
 		if (superType == null) { return; }
-		if (CmsType.SPECIAL_TYPES.contains(superType.getName())) { return; }
+		if (CmsType.isSpecialType(superType.getName())) {
+			this.log.warn(String.format("Will not export special type [%s] (supertype of [%s])", superType.getName(),
+				type.getName()));
+			return;
+		}
 		manager.persistDependency(superType);
 	}
 
@@ -185,10 +190,23 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
+	protected boolean isValidForLoad(IDfType type) throws DfException {
+		if (CmsType.isSpecialType(type.getName())) { return false; }
+		// If the type name is the same as dmi_${objectId}, we skip it
+		if (Tools.equals(type.getName(), String.format("dmi_%s", type.getObjectId().getId()))) { return false; }
+		return super.isValidForLoad(type);
+	}
+
+	@Override
 	protected boolean skipImport(IDfSession session) throws DfException {
-		IDfValue typeNameValue = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
+		IDfValue typeNameValue = getAttribute(CmsAttributes.NAME).getValue();
 		final String typeName = typeNameValue.asString();
-		if (CmsType.SPECIAL_TYPES.contains(typeName)) { return true; }
+		if (CmsType.isSpecialType(typeName)) {
+			this.log.warn(String.format("Will not import special type [%s]", typeName));
+			return true;
+		}
+		// If the type name is the same as dmi_${objectId}, we skip it
+		if (Tools.equals(typeName, String.format("dmi_%s", getId()))) { return false; }
 		return super.skipImport(session);
 	}
 

@@ -7,10 +7,9 @@ package com.delta.cmsmf.cms;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.text.StrTokenizer;
+import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.Constant;
@@ -98,10 +97,13 @@ public class CmsUser extends CmsObject<IDfUser> {
 		if (CmsUser.SPECIAL_USERS_READY) { return; }
 		String specialUsers = Setting.SPECIAL_USERS.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialUsers);
-		@SuppressWarnings("unchecked")
-		List<String> l = strTokenizer.getTokenList();
-		CmsUser.SPECIAL_USERS = Collections.unmodifiableSet(new HashSet<String>(l));
+		CmsUser.SPECIAL_USERS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
 		CmsUser.SPECIAL_USERS_READY = true;
+	}
+
+	public static boolean isSpecialUser(String user) {
+		CmsUser.initSpecialUsers();
+		return CmsUser.SPECIAL_USERS.contains(user);
 	}
 
 	public CmsUser() {
@@ -143,10 +145,16 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
+	protected boolean isValidForLoad(IDfUser user) throws DfException {
+		if (CmsUser.isSpecialUser(user.getUserName())) { return false; }
+		return super.isValidForLoad(user);
+	}
+
+	@Override
 	protected boolean skipImport(IDfSession session) throws DfException {
 		IDfValue userNameValue = getAttribute(CmsAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
-		if (CmsUser.SPECIAL_USERS.contains(userName)) { return true; }
+		if (CmsUser.isSpecialUser(userName)) { return true; }
 		return super.skipImport(session);
 	}
 

@@ -6,10 +6,14 @@ package com.delta.cmsmf.cms;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.text.StrTokenizer;
+
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.CmsAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
@@ -60,6 +64,22 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		CmsGroup.HANDLERS_READY = true;
 	}
 
+	private static boolean SPECIAL_GROUPS_READY = false;
+	private static Set<String> SPECIAL_GROUPS = Collections.emptySet();
+
+	private static synchronized void initSpecialGroups() {
+		if (CmsGroup.SPECIAL_GROUPS_READY) { return; }
+		String specialGroups = Setting.SPECIAL_GROUPS.getString();
+		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialGroups);
+		CmsGroup.SPECIAL_GROUPS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
+		CmsGroup.SPECIAL_GROUPS_READY = true;
+	}
+
+	public static boolean isSpecialGroup(String group) {
+		CmsGroup.initSpecialGroups();
+		return CmsGroup.SPECIAL_GROUPS.contains(group);
+	}
+
 	/**
 	 * This DQL will find all users for which this group is marked as the default group, and thus
 	 * all users for whom it must be restored later on.
@@ -69,6 +89,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	public CmsGroup() {
 		super(CmsObjectType.GROUP, IDfGroup.class);
 		CmsGroup.initHandlers();
+		CmsGroup.initSpecialGroups();
 	}
 
 	@Override
@@ -92,11 +113,6 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected boolean isValidForLoad(IDfGroup group) throws DfException {
-		return !group.getGroupName().startsWith("dm_");
-	}
-
-	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfGroup group) throws DfException {
 		// Store all the users that have this group as their default group
 		CmsProperty property = new CmsProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP, CmsDataType.DF_STRING);
@@ -109,32 +125,34 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	protected void doPersistDependencies(IDfGroup group, CmsDependencyManager dependencyManager) throws DfException,
 	CMSMFException {
 		final IDfSession session = group.getSession();
-		if (!CmsMappingUtils.isSpecialUser(session, group.getOwnerName())) {
-			IDfUser owner = session.getUser(group.getOwnerName());
+		String groupOwner = group.getOwnerName();
+		if (!CmsMappingUtils.isSpecialUser(session, groupOwner) && !CmsUser.isSpecialUser(groupOwner)) {
+			IDfUser owner = session.getUser(groupOwner);
 			if (owner != null) {
 				dependencyManager.persistDependency(owner);
 			} else {
 				throw new CMSMFException(String.format(
 					"Missing dependency for group [%s] - user [%s] not found (as group owner)", group.getGroupName(),
-					group.getOwnerName()));
+					groupOwner));
 			}
 		} else {
-			this.log.warn(String.format("Skipping export of special user [%s] as the owner of group [%s]",
-				group.getOwnerName(), group.getGroupName()));
+			this.log.warn(String.format("Skipping export of special user [%s] as the owner of group [%s]", groupOwner,
+				group.getGroupName()));
 		}
 
-		if (!CmsMappingUtils.isSpecialUser(session, group.getGroupAdmin())) {
-			IDfUser admin = session.getUser(group.getGroupAdmin());
+		String groupAdmin = group.getGroupAdmin();
+		if (!CmsMappingUtils.isSpecialUser(session, groupAdmin) && !CmsUser.isSpecialUser(groupAdmin)) {
+			IDfUser admin = session.getUser(groupAdmin);
 			if (admin != null) {
 				dependencyManager.persistDependency(admin);
 			} else {
 				throw new CMSMFException(String.format(
 					"Missing dependency for group [%s] - user [%s] not found (as group admin)", group.getGroupName(),
-					group.getGroupAdmin()));
+					groupAdmin));
 			}
 		} else {
-			this.log.warn(String.format("Skipping export of special user [%s] as the admin of group [%s]",
-				group.getGroupAdmin(), group.getGroupName()));
+			this.log.warn(String.format("Skipping export of special user [%s] as the admin of group [%s]", groupAdmin,
+				group.getGroupName()));
 		}
 
 		// Avoid calling DQL twice
@@ -163,19 +181,25 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		CmsAttribute usersNames = getAttribute(CmsAttributes.USERS_NAMES);
 		if (usersNames != null) {
 			for (IDfValue v : usersNames) {
+				String userName = v.asString();
+				if (CmsUser.isSpecialUser(userName)) {
+					this.log.warn(String.format("Will not persist special member user dependency [%s] for group [%s]",
+						userName, group.getGroupName()));
+					continue;
+				}
 				// We can check against whether the user is ${...} or a normal one because
 				// we will have already performed the mappings, hence why we use getAttribute()
 				// instead of getting the attribute direct from the object
-				if (CmsMappingUtils.isSpecialUserSubstitution(v.asString())) {
+				if (CmsMappingUtils.isSpecialUserSubstitution(userName)) {
 					// User is mapped to a special user, so we shouldn't include it as a dependency
 					// because it will be mapped on the target
 					continue;
 				}
 
-				IDfUser member = session.getUser(v.asString());
+				IDfUser member = session.getUser(userName);
 				if (member == null) { throw new CMSMFException(String.format(
 					"Missing dependency for group [%s] - user [%s] not found (as group member)", group.getGroupName(),
-					v.asString())); }
+					userName)); }
 				dependencyManager.persistDependency(member);
 			}
 		}
@@ -183,10 +207,17 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		CmsAttribute groupsNames = getAttribute(CmsAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
 			for (IDfValue v : groupsNames) {
-				IDfGroup member = session.getGroup(v.asString());
+				String groupName = v.asString();
+				if (CmsGroup.isSpecialGroup(groupName)) {
+					this.log.warn(String.format("Will not persist special member group dependency [%s] for group [%s]",
+						groupName, group.getGroupName()));
+					continue;
+				}
+
+				IDfGroup member = session.getGroup(groupName);
 				if (member == null) { throw new CMSMFException(String.format(
 					"Missing dependency for group [%s] - group [%s] not found (as group member)", group.getGroupName(),
-					v.asString())); }
+					groupName)); }
 				dependencyManager.persistDependency(member);
 			}
 		}
@@ -269,6 +300,20 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			}
 			setAttributeOnObject(groupsNames, actualGroups, group);
 		}
+	}
+
+	@Override
+	protected boolean isValidForLoad(IDfGroup group) throws DfException {
+		if (CmsGroup.isSpecialGroup(group.getGroupName())) { return false; }
+		return super.isValidForLoad(group);
+	}
+
+	@Override
+	protected boolean skipImport(IDfSession session) throws DfException {
+		IDfValue groupNameValue = getAttribute(CmsAttributes.GROUP_NAME).getValue();
+		final String groupName = groupNameValue.asString();
+		if (CmsGroup.isSpecialGroup(groupName)) { return true; }
+		return super.skipImport(session);
 	}
 
 	@Override
