@@ -24,6 +24,7 @@ public enum Setting {
 	SKIP_GROUPS("cmsmf.app.export.skip.groups"),
 	SPECIAL_USERS("cmsmf.app.special.users"),
 	SPECIAL_GROUPS("cmsmf.app.special.groups"),
+	SPECIAL_TYPES("cmsmf.app.special.types"),
 	POST_PROCESS_IMPORT("cmsmf.app.import.postprocess.flag"),
 	STATE_CABINET_NAME("cmsmf.app.state.cabinet"),
 	EXPORT_BATCH_SIZE("cmsmf.app.export.batch.size"),
