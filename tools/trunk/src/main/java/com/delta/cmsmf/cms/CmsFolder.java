@@ -292,6 +292,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 				// Ok...so...we set the path to "whatever"...
 				user.setDefaultFolder(pathValue.asString(), (actual == null));
+				user.save();
 			}
 		}
 		return newObject;
@@ -313,8 +314,9 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 					// Again...how the hell?
 					continue;
 				}
-				this.parentPermitDeltas.get(parentId).revoke(parent);
-				parent.save();
+				if (this.parentPermitDeltas.get(parentId).revoke(parent)) {
+					parent.save();
+				}
 			}
 		}
 
