@@ -4,10 +4,15 @@
 
 package com.delta.cmsmf.engine;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsCounter.Result;
+import com.delta.cmsmf.cms.CmsDependencyType;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsUser;
@@ -49,7 +55,6 @@ public class CmsImporter extends CmsTransferEngine {
 
 		final int threadCount = getThreadCount();
 		final int backlogSize = getBacklogSize();
-		final SynchronizedCounter waitCounter = new SynchronizedCounter();
 		final AtomicInteger activeCounter = new AtomicInteger(0);
 		final CmsObject<?> exitValue = new CmsUser();
 		final BlockingQueue<CmsObject<?>> workQueue = new ArrayBlockingQueue<CmsObject<?>>(threadCount * backlogSize);
@@ -65,21 +70,17 @@ public class CmsImporter extends CmsTransferEngine {
 				}
 				activeCounter.incrementAndGet();
 				try {
-					while (true) {
+					while (!Thread.interrupted()) {
 						if (CmsImporter.this.log.isDebugEnabled()) {
 							CmsImporter.this.log.debug("Polling the queue...");
 						}
 						final CmsObject<?> next;
 						// increase the waiter count
-						waitCounter.increment();
 						try {
 							next = workQueue.take();
 						} catch (InterruptedException e) {
 							Thread.currentThread().interrupt();
 							return;
-						} finally {
-							// decrease the waiter count
-							waitCounter.decrement();
 						}
 
 						if (next == exitValue) {
@@ -106,17 +107,12 @@ public class CmsImporter extends CmsTransferEngine {
 						}
 					}
 				} finally {
+					CmsImporter.this.log.debug("Worker exiting...");
 					activeCounter.decrementAndGet();
 					sessionManager.releaseSession(session);
 				}
 			}
 		};
-
-		// Fire off the workers
-		for (int i = 0; i < threadCount; i++) {
-			executor.submit(worker);
-		}
-		executor.shutdown();
 
 		// 1: run the query for the given predicate
 		try {
@@ -129,7 +125,9 @@ public class CmsImporter extends CmsTransferEngine {
 				}
 			};
 
-			outer: for (CmsObjectType type : CmsObjectType.values()) {
+			List<Future<?>> futures = new ArrayList<Future<?>>();
+			List<CmsObject<?>> remaining = new ArrayList<CmsObject<?>>();
+			for (CmsObjectType type : CmsObjectType.values()) {
 				final Integer total = containedTypes.get(type);
 				if (total == null) {
 					this.log.warn(String.format("No %s objects are contained in the export", type.name()));
@@ -141,42 +139,62 @@ public class CmsImporter extends CmsTransferEngine {
 					continue;
 				}
 
+				// Start the workers
+				futures.clear();
+				final int workerCount = (type.getPeerDependencyType() == CmsDependencyType.HIERARCHY ? 1 : threadCount);
+				for (int i = 0; i < workerCount; i++) {
+					futures.add(executor.submit(worker));
+				}
+
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 				objectStore.deserializeObjects(type, handler);
 
-				// We're done, we must wait until all workers are waiting
-				// This "weird" condition allows us to wait until there are
-				// as many waiters as there are active threads. This covers
-				// the contingency of threads dying on us, which SHOULDN'T
-				// happen, but still, we defend against it.
-				this.log.info(String.format(
-					"Submitted the entire %s workload (%d objects), waiting for it to complete", type.name(), total));
-				synchronized (waitCounter) {
-					while (waitCounter.getValue() < activeCounter.get()) {
+				try {
+					// Ask the workers to exit civilly after the entire workload is submitted
+					this.log.info(String.format("Signaling work completion for the %s workers", type.name()));
+					for (int i = 0; i < workerCount; i++) {
 						try {
-							waitCounter.wait();
-							waitCounter.notify();
+							workQueue.put(exitValue);
 						} catch (InterruptedException e) {
-							// We've been interrupted...that means that...what?
-							this.log.fatal(String.format("Interrupted while waiting for the %s workload to complete",
-								type));
-							break outer;
+							// Here we have a problem: we're timing out while adding the exit
+							// values...
+							this.log.warn("Interrupted while attempting to request executor thread termination", e);
+							Thread.currentThread().interrupt();
+							break;
 						}
 					}
+
+					// Here, we wait for all the workers to conclude
+					this.log.info(String.format("Waiting for the %s workers to exit...", type.name()));
+					for (Future<?> future : futures) {
+						try {
+							future.get();
+						} catch (InterruptedException e) {
+							this.log.warn("Interrupted while wiating for an executor thread to exit", e);
+							Thread.currentThread().interrupt();
+							break;
+						} catch (ExecutionException e) {
+							this.log.warn("An executor thread raised an exception", e);
+						} catch (CancellationException e) {
+							this.log.warn("An executor thread was canceled!", e);
+						}
+					}
+					this.log.info(String.format("All the %s workers are done, continuing with the next object type...",
+						type.name()));
+				} finally {
+					workQueue.drainTo(remaining);
+					for (CmsObject<?> v : remaining) {
+						if (v == exitValue) {
+							continue;
+						}
+						this.log.fatal(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
+					}
+					remaining.clear();
 				}
 			}
 
-			// Ask the workers to exit civilly
-			this.log.info("Signaling work completion for the workers");
-			for (int i = 0; i < threadCount; i++) {
-				try {
-					workQueue.put(exitValue);
-				} catch (InterruptedException e) {
-					// Here we have a problem: we're timing out while adding the exit values...
-					this.log.warn("Interrupted while attempting to request executor thread termination", e);
-					break;
-				}
-			}
+			// Shut down the executor
+			executor.shutdown();
 
 			// If there are still pending workers, then wait for them to finish for up to 5
 			// minutes
@@ -188,6 +206,7 @@ public class CmsImporter extends CmsTransferEngine {
 					executor.awaitTermination(5, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for normal executor termination", e);
+					Thread.currentThread().interrupt();
 				}
 			}
 		} finally {
@@ -203,6 +222,7 @@ public class CmsImporter extends CmsTransferEngine {
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
+					Thread.currentThread().interrupt();
 				}
 			}
 			for (CmsObjectType type : CmsObjectType.values()) {
