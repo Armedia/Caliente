@@ -80,7 +80,7 @@ public class CmsType extends CmsObject<IDfType> {
 	protected void doPersistDependencies(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
 		IDfType superType = type.getSuperType();
 		if (superType == null) { return; }
-		// Ignore system types
+		// TODO: Ignore system types?
 		if (superType.getName().startsWith("dm_")) { return; }
 		manager.persistDependency(superType);
 	}
