@@ -167,8 +167,6 @@ public final class CmsCounter<R extends Enum<R>> {
 			for (int i = 0; i < indentLevel; i++) {
 				s.append('\t');
 			}
-			String str = String.format(this.formatString, entryLabel, CmsCounter.TOTAL_LABEL, 0);
-			final int equalsCount = str.length();
 			final String indent = s.toString();
 			s.setLength(0);
 			int total = 0;
@@ -178,8 +176,9 @@ public final class CmsCounter<R extends Enum<R>> {
 				total += i.get();
 				s.append(indent).append(String.format(this.formatString, entryLabel, r, i.get()));
 			}
-			s.append(indent).append(StringUtils.repeat('=', equalsCount)).append(CmsCounter.NEW_LINE);
-			s.append(indent).append(String.format(this.formatString, entryLabel, CmsCounter.TOTAL_LABEL, total));
+			String totalLine = String.format(this.formatString, entryLabel, CmsCounter.TOTAL_LABEL, total);
+			s.append(indent).append(StringUtils.repeat("=", totalLine.length())).append(CmsCounter.NEW_LINE);
+			s.append(indent).append(totalLine).append(CmsCounter.NEW_LINE);
 			return s.toString();
 		} finally {
 			this.lock.writeLock().unlock();
