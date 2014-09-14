@@ -18,7 +18,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 
 /**
  * @author Diego Rivera <diego.rivera@armedia.com>.rivera@armedia.com
