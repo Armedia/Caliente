@@ -4,6 +4,13 @@
 
 package com.delta.cmsmf.cms;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang3.text.StrTokenizer;
+
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
@@ -13,6 +20,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
+import com.documentum.fc.common.IDfValue;
 
 /**
  * @author Diego Rivera <diego.rivera@armedia.com>
@@ -47,9 +55,21 @@ public class CmsType extends CmsObject<IDfType> {
 		CmsType.HANDLERS_READY = true;
 	}
 
+	private static boolean SPECIAL_TYPES_READY = false;
+	private static Set<String> SPECIAL_TYPES = Collections.emptySet();
+
+	private static synchronized void initSpecialTypes() {
+		if (CmsType.SPECIAL_TYPES_READY) { return; }
+		String specialTypes = Setting.SPECIAL_TYPES.getString();
+		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialTypes);
+		CmsType.SPECIAL_TYPES = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
+		CmsType.SPECIAL_TYPES_READY = true;
+	}
+
 	public CmsType() {
 		super(CmsObjectType.TYPE, IDfType.class);
 		CmsType.initHandlers();
+		CmsType.initSpecialTypes();
 	}
 
 	@Override
@@ -64,24 +84,15 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected boolean skipImport(IDfSession session) throws DfException {
-		CmsAttribute typeNameAttr = getAttribute(CmsAttributes.NAME);
-		String typeName = typeNameAttr.getValue().asString();
-		return typeName.startsWith("dm_");
-	}
-
-	@Override
 	protected boolean isValidForLoad(IDfType type) throws DfException {
-		final String name = type.getName();
-		return !name.startsWith("dm_");
+		return !CmsType.SPECIAL_TYPES.contains(type.getName());
 	}
 
 	@Override
 	protected void doPersistDependencies(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
 		IDfType superType = type.getSuperType();
 		if (superType == null) { return; }
-		// TODO: Ignore system types?
-		if (superType.getName().startsWith("dm_")) { return; }
+		if (CmsType.SPECIAL_TYPES.contains(superType.getName())) { return; }
 		manager.persistDependency(superType);
 	}
 
@@ -171,6 +182,14 @@ public class CmsType extends CmsObject<IDfType> {
 
 	@Override
 	protected void prepareForConstruction(IDfType object, boolean newObject) throws DfException {
+	}
+
+	@Override
+	protected boolean skipImport(IDfSession session) throws DfException {
+		IDfValue typeNameValue = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
+		final String typeName = typeNameValue.asString();
+		if (CmsType.SPECIAL_TYPES.contains(typeName)) { return true; }
+		return super.skipImport(session);
 	}
 
 	@Override
