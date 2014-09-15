@@ -33,6 +33,7 @@ import com.documentum.fc.common.IDfValue;
 public class CmsDocument extends CmsObject<IDfDocument> {
 
 	private static final String TARGET_PATHS = "targetPaths";
+	private static final String CONTENTS = "contents";
 
 	private static boolean HANDLERS_READY = false;
 
@@ -120,7 +121,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -204,6 +205,8 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
 		if (Tools.equals(getId(), ctx.getRootObjectId())) {
+			// TODO: This works for single-threadedness... for multi-threadedness, they must be
+			// stored as separate types
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
 			for (IDfId versionId : getVersions(true, document)) {
 				IDfPersistentObject obj = session.getObject(versionId);
@@ -213,6 +216,30 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				}
 				IDfDocument versionDoc = IDfDocument.class.cast(obj);
 				dependencyManager.persistRelatedObject(versionDoc);
+			}
+		}
+
+		// We export our contents...
+		CmsProperty contents = new CmsProperty(CmsDocument.CONTENTS, CmsDataType.DF_ID, true);
+		setProperty(contents);
+		String dql = "" //
+			+ "select dcs.r_object_id " //
+			+ "  from dmr_content_r dcr, dmr_content_s dcs " //
+			+ " where dcr.r_object_id = dcs.r_object_id " //
+			+ "   and dcr.parent_id = '%s' " //
+			+ "   and dcr.page = %d " //
+			+ " order by dcs.rendition ";
+		final String parentId = getId();
+		final int pageCount = document.getPageCount();
+		for (int i = 0; i < pageCount; i++) {
+			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
+				IDfQuery.DF_EXECREAD_QUERY);
+			try {
+				while (results.next()) {
+					contents.addValue(results.getValue("r_object_id"));
+				}
+			} finally {
+				DfUtils.closeQuietly(results);
 			}
 		}
 	}
@@ -253,36 +280,6 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
 			}
 
-			// We export our contents...
-			String dql = "" //
-				+ "select dcs.r_object_id, dcr.page, dcr.page_modifier, dcs.rendition " //
-				+ "  from dmr_content_r dcr, dmr_content_s dcs " //
-				+ " where dcr.r_object_id = dcs.r_object_id " //
-				+ "   and dcr.parent_id = '%s' " //
-				+ "   and dcr.page = %d " //
-				+ " order by dcs.rendition ";
-			final String parentId = getId();
-			final int pageCount = document.getPageCount();
-			for (int i = 0; i < pageCount; i++) {
-				IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
-					IDfQuery.DF_EXECREAD_QUERY);
-				try {
-					while (results.next()) {
-						IDfId contentId = results.getId("r_object_id");
-						IDfPersistentObject content = session.getObject(contentId);
-						if (content == null) {
-							// Impossible, but defend against it anyway
-							this.log.warn(String
-								.format("Missing page %d for document [%s](%s)", i, getLabel(), getId()));
-							continue;
-						}
-						dependencyManager.persistRelatedObject(content);
-					}
-				} finally {
-					DfUtils.closeQuietly(results);
-				}
-			}
-
 			// We only export versions if we're the root object of the context operation
 			// There is no actual harm done, since the export engine is smart enough to
 			// not duplicate, but doing it like this helps us avoid o(n^2) performance
@@ -298,6 +295,18 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 					IDfDocument versionDoc = IDfDocument.class.cast(obj);
 					dependencyManager.persistRelatedObject(versionDoc);
 				}
+			}
+
+			// Now, export the content
+			for (IDfValue contentId : getProperty(CmsDocument.CONTENTS)) {
+				IDfPersistentObject content = session.getObject(contentId.asId());
+				if (content == null) {
+					// Impossible, but defend against it anyway
+					this.log.warn(String.format("Missing content %s for document [%s](%s)", contentId.asString(),
+						getLabel(), getId()));
+					continue;
+				}
+				dependencyManager.persistRelatedObject(content);
 			}
 		}
 	}
