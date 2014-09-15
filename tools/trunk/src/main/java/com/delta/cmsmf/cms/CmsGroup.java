@@ -60,7 +60,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				return CmsMappingUtils.substituteSpecialUsers(object, attr);
 			}
 
-			});
+		});
 		CmsGroup.HANDLERS_READY = true;
 	}
 
@@ -224,12 +224,12 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfGroup object, boolean newObject) throws DfException {
-		IDfValue groupName = getAttribute(CmsAttributes.GROUP_NAME).getValue();
+	protected void finalizeConstruction(IDfGroup group, boolean newObject) throws DfException {
+		final IDfValue groupName = getAttribute(CmsAttributes.GROUP_NAME).getValue();
 		if (newObject) {
-			copyAttributeToObject(CmsAttributes.GROUP_NAME, object);
+			copyAttributeToObject(CmsAttributes.GROUP_NAME, group);
 		}
-		final IDfSession session = object.getSession();
+		final IDfSession session = group.getSession();
 		CmsAttribute usersNames = getAttribute(CmsAttributes.USERS_NAMES);
 		// Keep track of missing users so we don't look for them again.
 		Set<String> missingUsers = new HashSet<String>();
@@ -243,13 +243,32 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 					this.log
 					.warn(String
 						.format(
-							"Failed to link Group [%s] to user [%s] as a member - the user wasn't found - probably didn't need to be copied over",
-							groupName.asString(), v.asString()));
+							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+							v.asString(), groupName.asString()));
 					continue;
 				}
 				actualUsers.add(v);
 			}
-			setAttributeOnObject(usersNames, actualUsers, object);
+			setAttributeOnObject(usersNames, actualUsers, group);
+		}
+
+		CmsAttribute groupsNames = getAttribute(CmsAttributes.GROUPS_NAMES);
+		if (groupsNames != null) {
+			// TODO: Support merging in the future?
+			List<IDfValue> actualGroups = new ArrayList<IDfValue>();
+			for (IDfValue v : groupsNames) {
+				IDfGroup other = session.getGroup(v.asString());
+				if (other == null) {
+					this.log
+					.warn(String
+						.format(
+							"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
+							v.asString(), groupName.asString()));
+					continue;
+				}
+				actualGroups.add(v);
+			}
+			setAttributeOnObject(groupsNames, actualGroups, group);
 		}
 
 		// Set this group as users' default group
@@ -264,36 +283,12 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 					this.log
 					.warn(String
 						.format(
-							"Failed to link Group [%s] to user [%s] as the user's default group - the user wasn't found - probably didn't need to be copied over",
+							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
 							groupName.asString(), v.asString()));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
 			}
-		}
-	}
-
-	@Override
-	public void resolveDependencies(IDfGroup group, CmsTransferContext ctx) throws DfException, CMSMFException {
-		final String groupName = group.getGroupName();
-		final IDfSession session = group.getSession();
-		CmsAttribute groupsNames = getAttribute(CmsAttributes.GROUPS_NAMES);
-		if (groupsNames != null) {
-			// TODO: Support merging in the future?
-			List<IDfValue> actualGroups = new ArrayList<IDfValue>();
-			for (IDfValue v : groupsNames) {
-				IDfGroup other = session.getGroup(v.asString());
-				if (other == null) {
-					this.log
-						.warn(String
-							.format(
-								"Failed to link Group [%s] to group [%s] as a member - the group wasn't found - probably didn't need to be copied over",
-								groupName, v.asString()));
-					continue;
-				}
-				actualGroups.add(v);
-			}
-			setAttributeOnObject(groupsNames, actualGroups, group);
 		}
 	}
 

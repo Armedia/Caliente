@@ -196,15 +196,11 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected boolean isValidForLoad(IDfDocument document) throws DfException {
-		return super.isValidForLoad(document);
-	}
-
-	@Override
 	protected void doPersistRequirements(IDfDocument document, CmsTransferContext ctx,
 		CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
 
 		final IDfSession session = document.getSession();
+
 		// The parent folders
 		final int pathCount = document.getFolderIdCount();
 		for (int i = 0; i < pathCount; i++) {
@@ -212,6 +208,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
 			dependencyManager.persistRelatedObject(parent);
 		}
+
+		// We do nothing else for references, as we need nothing else
+		if (document.isReference()) { return; }
 
 		// Export the object type
 		dependencyManager.persistRelatedObject(document.getType());
@@ -269,76 +268,72 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	@Override
 	protected void doPersistDependents(IDfDocument document, CmsTransferContext ctx,
 		CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
+
+		// We do nothing else for references, as we need nothing else
+		if (document.isReference()) { return; }
+
 		final IDfSession session = document.getSession();
-		if (!document.isReference()) {
 
-			// This isn't a reference so let's do the whole shebang
-
-			String owner = CmsMappingUtils.resolveSpecialUser(session, document.getOwnerName());
-			if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
-				IDfUser user = session.getUser(document.getOwnerName());
-				if (user != null) {
-					dependencyManager.persistRelatedObject(user);
-				}
-			}
-
-			// Do the others
-			IDfPersistentObject[] dep = {
-				// The group
-				session.getGroup(document.getGroupName()),
-				// The ACL
-				document.getACL()
-			};
-			for (IDfPersistentObject obj : dep) {
-				if (obj == null) {
-					continue;
-				}
-				dependencyManager.persistRelatedObject(obj);
-			}
-
-			// Save filestore name
-			String storageType = document.getStorageType();
-			if (StringUtils.isNotBlank(storageType)) {
-				RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
-			}
-
-			// We only export versions if we're the root object of the context operation
-			// There is no actual harm done, since the export engine is smart enough to
-			// not duplicate, but doing it like this helps us avoid o(n^2) performance
-			// which is BAAAD
-			if (Tools.equals(getId(), ctx.getRootObjectId())) {
-				// Now, also do the *SUBSEQUENT* versions...
-				for (IDfId versionId : getVersions(false, document)) {
-					IDfPersistentObject obj = session.getObject(versionId);
-					if (obj == null) {
-						// WTF?? Shouldn't happen...
-						continue;
-					}
-					IDfDocument versionDoc = IDfDocument.class.cast(obj);
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Adding subsequent version [%s]",
-							calculateVersionString(document, false)));
-					}
-					dependencyManager.persistRelatedObject(versionDoc);
-				}
-			}
-
-			// Now, export the content
-			for (IDfValue contentId : getProperty(CmsDocument.CONTENTS)) {
-				IDfPersistentObject content = session.getObject(contentId.asId());
-				if (content == null) {
-					// Impossible, but defend against it anyway
-					this.log.warn(String.format("Missing content %s for document [%s](%s)", contentId.asString(),
-						getLabel(), getId()));
-					continue;
-				}
-				dependencyManager.persistRelatedObject(content);
+		String owner = CmsMappingUtils.resolveSpecialUser(session, document.getOwnerName());
+		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
+			IDfUser user = session.getUser(document.getOwnerName());
+			if (user != null) {
+				dependencyManager.persistRelatedObject(user);
 			}
 		}
-	}
 
-	@Override
-	public void resolveDependencies(IDfDocument object, CmsTransferContext ctx) throws DfException, CMSMFException {
+		// Do the others
+		IDfPersistentObject[] dep = {
+			// The group
+			session.getGroup(document.getGroupName()),
+			// The ACL
+			document.getACL()
+		};
+		for (IDfPersistentObject obj : dep) {
+			if (obj == null) {
+				continue;
+			}
+			dependencyManager.persistRelatedObject(obj);
+		}
+
+		// Save filestore name
+		String storageType = document.getStorageType();
+		if (StringUtils.isNotBlank(storageType)) {
+			RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
+		}
+
+		// We only export versions if we're the root object of the context operation
+		// There is no actual harm done, since the export engine is smart enough to
+		// not duplicate, but doing it like this helps us avoid o(n^2) performance
+		// which is BAAAD
+		if (Tools.equals(getId(), ctx.getRootObjectId())) {
+			// Now, also do the *SUBSEQUENT* versions...
+			for (IDfId versionId : getVersions(false, document)) {
+				IDfPersistentObject obj = session.getObject(versionId);
+				if (obj == null) {
+					// WTF?? Shouldn't happen...
+					continue;
+				}
+				IDfDocument versionDoc = IDfDocument.class.cast(obj);
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Adding subsequent version [%s]",
+						calculateVersionString(document, false)));
+				}
+				dependencyManager.persistRelatedObject(versionDoc);
+			}
+		}
+
+		// Now, export the content
+		for (IDfValue contentId : getProperty(CmsDocument.CONTENTS)) {
+			IDfPersistentObject content = session.getObject(contentId.asId());
+			if (content == null) {
+				// Impossible, but defend against it anyway
+				this.log.warn(String.format("Missing content %s for document [%s](%s)", contentId.asString(),
+					getLabel(), getId()));
+				continue;
+			}
+			dependencyManager.persistRelatedObject(content);
+		}
 	}
 
 	@Override

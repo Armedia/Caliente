@@ -590,10 +590,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
-	public void resolveDependencies(T object, CmsTransferContext ctx) throws DfException, CMSMFException {
-
-	}
-
 	protected final AttributeHandler getAttributeHandler(IDfAttr attr) {
 		return CmsAttributeHandlers.getAttributeHandler(this.type, attr);
 	}
