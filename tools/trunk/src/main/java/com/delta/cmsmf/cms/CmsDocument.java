@@ -70,7 +70,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				path = f.getFolderPath(0);
 			}
 		}
-		return String.format("%s/%s", path, document.getObjectName());
+		String version = String.format("%s%s", document.getImplicitVersionLabel(), document.getHasFolder() ? ",CURRENT"
+			: "");
+		return String.format("%s/%s [%s]", path, document.getObjectName(), version);
 	}
 
 	@Override
@@ -126,7 +128,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
