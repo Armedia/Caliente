@@ -195,13 +195,12 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	private final Map<String, CmsAttribute> attributes = new HashMap<String, CmsAttribute>();
 	private final Map<String, CmsProperty> properties = new HashMap<String, CmsProperty>();
 
-	protected CmsObject(CmsObjectType type, Class<T> dfClass) {
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type"); }
+	protected CmsObject(Class<T> dfClass) {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
-		if (type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
-			"Class mismatch: type is tied to class [%s], but was given class [%s]", type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
-		this.type = type;
+		this.type = CmsObjectType.decodeFromClass(getClass());
+		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
+			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -385,7 +384,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 		// Properties are different from attributes in that they require special handling. For
 		// instance, a property would only be settable via direct SQL, or via an explicit method
-		// call, etc., because setting it directly as an attribute would cmsImportResult in an error from
+		// call, etc., because setting it directly as an attribute would cmsImportResult in an error
+// from
 		// DFC, and therefore specialized code is required to handle it
 		this.properties.clear();
 		List<CmsProperty> properties = new ArrayList<CmsProperty>();
@@ -401,7 +401,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
 		doPersistDependencies(castObject(object), manager);
@@ -411,7 +411,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	}
 
 	public final SaveResult saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException,
-	CMSMFException, SQLException {
+		CMSMFException, SQLException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
 		if (mapper == null) {
 			mapper = this.NULL_MAPPER;
@@ -445,7 +445,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					sysObject = IDfSysObject.class.cast(object);
 				}
 			} else {
-				if (isSameObject(object)) { return new SaveResult(CmsImportResult.DUPLICATE, object.getObjectId().getId()); }
+				if (isSameObject(object)) { return new SaveResult(CmsImportResult.DUPLICATE, object.getObjectId()
+					.getId()); }
 				cmsImportResult = CmsImportResult.UPDATED;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
@@ -614,7 +615,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -855,7 +856,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-				.getObjectId().getId());
+					.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);

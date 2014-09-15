@@ -61,7 +61,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
 	public CmsACL() {
-		super(CmsObjectType.ACL, IDfACL.class);
+		super(IDfACL.class);
 		CmsACL.initHandlers();
 	}
 
@@ -105,7 +105,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 	@Override
 	protected void doPersistDependencies(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final int count = acl.getAccessorCount();
 		final IDfSession session = acl.getSession();
 		for (int i = 0; i < count; i++) {

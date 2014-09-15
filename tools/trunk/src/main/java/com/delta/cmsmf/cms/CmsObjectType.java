@@ -1,5 +1,6 @@
 package com.delta.cmsmf.cms;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,10 +89,11 @@ public enum CmsObjectType {
 		return this.peerDependencyType;
 	}
 
-	private static Map<String, CmsObjectType> DECODER = null;
+	private static Map<String, CmsObjectType> DM_TYPE_DECODER = null;
+	private static Map<String, CmsObjectType> CLASS_DECODER = null;
 
 	public static CmsObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedObjectTypeException {
+		UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		IDfType type = object.getType();
 		while (type != null) {
@@ -109,16 +111,33 @@ public enum CmsObjectType {
 
 	public static CmsObjectType decodeType(String type) throws UnsupportedObjectTypeException {
 		synchronized (CmsObjectType.class) {
-			if (CmsObjectType.DECODER == null) {
-				CmsObjectType.DECODER = new HashMap<String, CmsObjectType>();
+			if (CmsObjectType.DM_TYPE_DECODER == null) {
+				Map<String, CmsObjectType> m = new HashMap<String, CmsObjectType>();
 				for (CmsObjectType t : CmsObjectType.values()) {
-					CmsObjectType.DECODER.put(t.dmType, t);
+					m.put(t.dmType, t);
 				}
+				CmsObjectType.DM_TYPE_DECODER = Collections.unmodifiableMap(m);
 			}
 		}
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
-		CmsObjectType ret = CmsObjectType.DECODER.get(type);
+		CmsObjectType ret = CmsObjectType.DM_TYPE_DECODER.get(type);
 		if (ret == null) { throw new UnsupportedObjectTypeException(type); }
+		return ret;
+	}
+
+	public static CmsObjectType decodeFromClass(Class<?> klass) {
+		synchronized (CmsObjectType.class) {
+			if (CmsObjectType.CLASS_DECODER == null) {
+				Map<String, CmsObjectType> m = new HashMap<String, CmsObjectType>();
+				for (CmsObjectType t : CmsObjectType.values()) {
+					m.put(t.objectClass.getCanonicalName(), t);
+				}
+				CmsObjectType.CLASS_DECODER = Collections.unmodifiableMap(m);
+			}
+		}
+		if (klass == null) { throw new IllegalArgumentException("Must provide a class to decode"); }
+		CmsObjectType ret = CmsObjectType.CLASS_DECODER.get(klass.getCanonicalName());
+		if (ret == null) { throw new UnsupportedObjectClassException(klass); }
 		return ret;
 	}
 }

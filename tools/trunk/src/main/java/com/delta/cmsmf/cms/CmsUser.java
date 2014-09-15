@@ -107,7 +107,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	public CmsUser() {
-		super(CmsObjectType.USER, IDfUser.class);
+		super(IDfUser.class);
 		CmsUser.initHandlers();
 		CmsUser.initSpecialUsers();
 	}

@@ -19,7 +19,7 @@ import com.documentum.fc.common.IDfId;
 public class CmsDocumentReference extends CmsObject<IDfDocument> {
 
 	public CmsDocumentReference() {
-		super(CmsObjectType.DOCUMENT_REF, IDfDocument.class);
+		super(IDfDocument.class);
 	}
 
 	@Override

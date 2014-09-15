@@ -11,7 +11,7 @@ package com.delta.cmsmf.cms;
 public class UnsupportedObjectTypeException extends Exception {
 	private static final long serialVersionUID = 1L;
 
-	public UnsupportedObjectTypeException(String type) {
+	UnsupportedObjectTypeException(String type) {
 		super(String.format("The object type [%s] is not supported", type));
 	}
 }

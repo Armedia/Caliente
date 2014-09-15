@@ -61,13 +61,9 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = '%s'";
 
-	protected CmsFolder(CmsObjectType altType) {
-		super(altType, IDfFolder.class);
-		CmsFolder.initHandlers();
-	}
-
 	public CmsFolder() {
-		this(CmsObjectType.FOLDER);
+		super(IDfFolder.class);
+		CmsFolder.initHandlers();
 	}
 
 	@Override
@@ -89,7 +85,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-				.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
+					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -101,7 +97,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 	@Override
 	protected void doPersistDependencies(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final IDfSession session = folder.getSession();
 		String owner = CmsMappingUtils.resolveSpecialUser(session, folder.getOwnerName());
 		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
@@ -286,10 +282,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								folder.getObjectId().getId(), getLabel(), userValue.asString()));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							folder.getObjectId().getId(), getLabel(), userValue.asString()));
 					continue;
 				}
 
@@ -358,7 +354,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different folders matching this folder's paths: [%s@%s] and [%s@%s]", existing.getObjectId()
-					.getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}

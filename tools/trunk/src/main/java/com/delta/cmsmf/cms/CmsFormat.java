@@ -24,7 +24,7 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 	}
 
 	public CmsFormat() {
-		super(CmsObjectType.FORMAT, IDfFormat.class);
+		super(IDfFormat.class);
 		CmsFormat.initHandlers();
 	}
 

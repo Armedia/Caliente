@@ -17,7 +17,7 @@ import com.documentum.fc.common.DfException;
 public class CmsContent extends CmsObject<IDfContent> {
 
 	public CmsContent() {
-		super(CmsObjectType.CONTENT, IDfContent.class);
+		super(IDfContent.class);
 	}
 
 	@Override

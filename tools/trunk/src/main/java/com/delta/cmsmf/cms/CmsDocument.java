@@ -52,7 +52,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	public CmsDocument() {
-		super(CmsObjectType.DOCUMENT, IDfDocument.class);
+		super(IDfDocument.class);
 		CmsDocument.initHandlers();
 	}
 
@@ -116,7 +116,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -127,7 +127,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	private void exportParentFolders(IDfDocument document, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		IDfSession session = document.getSession();
 		// The parent folders
 		final int pathCount = document.getFolderIdCount();

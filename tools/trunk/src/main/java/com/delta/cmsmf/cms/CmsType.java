@@ -73,7 +73,7 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	public CmsType() {
-		super(CmsObjectType.TYPE, IDfType.class);
+		super(IDfType.class);
 		CmsType.initHandlers();
 		CmsType.initSpecialTypes();
 	}
