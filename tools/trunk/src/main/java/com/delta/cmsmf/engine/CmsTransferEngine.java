@@ -1,75 +1,8 @@
 package com.delta.cmsmf.engine;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cms.CmsAttributeMapper;
-import com.delta.cmsmf.cms.CmsTransferContext;
-import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.common.IDfValue;
-
 public abstract class CmsTransferEngine {
-
-	protected final class Context implements CmsTransferContext {
-
-		private final String rootId;
-		private final IDfSession session;
-		private final CmsAttributeMapper mapper;
-		private final Map<String, IDfValue> values = new HashMap<String, IDfValue>();
-
-		public Context(String rootId, IDfSession session, CmsAttributeMapper mapper) {
-			this.rootId = rootId;
-			this.session = session;
-			this.mapper = mapper;
-		}
-
-		@Override
-		public String getRootObjectId() {
-			return this.rootId;
-		}
-
-		@Override
-		public IDfSession getSession() {
-			return this.session;
-		}
-
-		@Override
-		public CmsAttributeMapper getAttributeMapper() {
-			return this.mapper;
-		}
-
-		private void assertValidName(String name) {
-			if (name == null) { throw new IllegalArgumentException("Must provide a value name"); }
-		}
-
-		@Override
-		public IDfValue getValue(String name) {
-			assertValidName(name);
-			return this.values.get(name);
-		}
-
-		@Override
-		public IDfValue setValue(String name, IDfValue value) {
-			assertValidName(name);
-			if (value == null) { return clearValue(name); }
-			return this.values.put(name, value);
-		}
-
-		@Override
-		public IDfValue clearValue(String name) {
-			assertValidName(name);
-			return this.values.remove(name);
-		}
-
-		@Override
-		public boolean hasValue(String name) {
-			assertValidName(name);
-			return this.values.containsKey(name);
-		}
-
-	}
 
 	protected final Logger log = Logger.getLogger(getClass());
 

@@ -20,12 +20,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsDependencyType;
-import com.delta.cmsmf.cms.CmsTransferContext;
 import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObject.SaveResult;
 import com.delta.cmsmf.cms.CmsObjectType;
+import com.delta.cmsmf.cms.CmsTransferContext;
 import com.delta.cmsmf.cms.CmsUser;
+import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
@@ -97,7 +98,7 @@ public class CmsImporter extends CmsTransferEngine {
 						if (CmsImporter.this.log.isDebugEnabled()) {
 							CmsImporter.this.log.debug(String.format("Polled %s", next));
 						}
-						CmsTransferContext ctx = new Context(next.getId(), session, objectStore);
+						CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore);
 						SaveResult result = null;
 						try {
 							result = next.saveToCMS(ctx);

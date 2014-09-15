@@ -15,13 +15,15 @@ import org.junit.Test;
 
 import com.delta.cmsmf.cms.AbstractTest;
 import com.delta.cmsmf.cms.CmsAttribute;
+import com.delta.cmsmf.cms.CmsAttributeMapper;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.CmsDataType;
-import com.delta.cmsmf.cms.CmsTransferContext;
 import com.delta.cmsmf.cms.CmsMappingUtils;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
+import com.delta.cmsmf.cms.CmsTransferContext;
+import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.DfValueFactory;
 import com.delta.cmsmf.cms.UnsupportedObjectTypeException;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
@@ -55,6 +57,8 @@ public class CmsObjectStoreTest extends AbstractTest {
 		Assert.assertFalse(qr.query("select * from dctm_mapper", AbstractTest.HANDLER_EXISTS));
 		Assert.assertFalse(qr.query("select * from dctm_object", AbstractTest.HANDLER_EXISTS));
 
+		CmsAttributeMapper mapper = store.getAttributeMapper();
+
 		// add some data
 		int count = 0;
 		for (final CmsObjectType type : CmsObjectType.values()) {
@@ -63,7 +67,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					store.setMapping(type, mapping, source, target);
+					mapper.setMapping(type, mapping, source, target);
 					count++;
 				}
 			}
@@ -79,9 +83,9 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					Mapping actualSource = store.getSourceMapping(type, mapping, target);
+					Mapping actualSource = mapper.getSourceMapping(type, mapping, target);
 					Assert.assertEquals(source, actualSource.getSourceValue());
-					Mapping actualTarget = store.getTargetMapping(type, mapping, source);
+					Mapping actualTarget = mapper.getTargetMapping(type, mapping, source);
 					Assert.assertEquals(target, actualTarget.getTargetValue());
 				}
 			}
@@ -98,9 +102,9 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					Mapping actualSource = store.getSourceMapping(type, mapping, target);
+					Mapping actualSource = mapper.getSourceMapping(type, mapping, target);
 					Assert.assertEquals(source, actualSource.getSourceValue());
-					Mapping actualTarget = store.getTargetMapping(type, mapping, source);
+					Mapping actualTarget = mapper.getTargetMapping(type, mapping, source);
 					Assert.assertEquals(target, actualTarget.getTargetValue());
 				}
 			}
@@ -117,8 +121,8 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					Assert.assertNull(store.getSourceMapping(type, mapping, target));
-					Assert.assertNull(store.getTargetMapping(type, mapping, source));
+					Assert.assertNull(mapper.getSourceMapping(type, mapping, target));
+					Assert.assertNull(mapper.getTargetMapping(type, mapping, source));
 				}
 			}
 		}
@@ -128,20 +132,21 @@ public class CmsObjectStoreTest extends AbstractTest {
 	public void testSetMapping() throws Throwable {
 		QueryRunner qr = new QueryRunner(getDataSource());
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		CmsAttributeMapper mapper = store.getAttributeMapper();
 		try {
-			store.setMapping(null, "something", "source", "target");
+			mapper.setMapping(null, "something", "source", "target");
 			Assert.fail("Did not fail with a null object type");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			store.setMapping(CmsObjectType.ACL, null, "source", "target");
+			mapper.setMapping(CmsObjectType.ACL, null, "source", "target");
 			Assert.fail("Did not fail with a null mapping name");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			store.setMapping(CmsObjectType.ACL, "something", null, null);
+			mapper.setMapping(CmsObjectType.ACL, "something", null, null);
 			Assert.fail("Did not fail with both mapped values nulled");
 		} catch (IllegalArgumentException e) {
 			// All is well
@@ -155,9 +160,9 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					store.setMapping(type, mapping, source, target);
+					mapper.setMapping(type, mapping, source, target);
 					try {
-						store.setMapping(type, mapping, source, target);
+						mapper.setMapping(type, mapping, source, target);
 						Assert.fail(String.format(
 							"Did not raise an exception while storing duplicate mapping [%s/%s/%s->%s]", type, mapping,
 							source, target));
@@ -166,7 +171,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 					}
 					try {
 						String altTarget = UUID.randomUUID().toString();
-						store.setMapping(type, mapping, source, altTarget);
+						mapper.setMapping(type, mapping, source, altTarget);
 						Assert.fail(String.format(
 							"Did not raise an exception while storing duplicate mapping [%s/%s/%s->%s]", type, mapping,
 							source, altTarget));
@@ -175,7 +180,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 					}
 					try {
 						String altSource = UUID.randomUUID().toString();
-						store.setMapping(type, mapping, altSource, target);
+						mapper.setMapping(type, mapping, altSource, target);
 						Assert.fail(String.format(
 							"Did not raise an exception while storing duplicate mapping [%s/%s/%s->%s]", type, mapping,
 							altSource, target));
@@ -197,9 +202,9 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					Mapping actualSource = store.getSourceMapping(type, mapping, target);
+					Mapping actualSource = mapper.getSourceMapping(type, mapping, target);
 					Assert.assertEquals(source, actualSource.getSourceValue());
-					Mapping actualTarget = store.getTargetMapping(type, mapping, source);
+					Mapping actualTarget = mapper.getTargetMapping(type, mapping, source);
 					Assert.assertEquals(target, actualTarget.getTargetValue());
 				}
 			}
@@ -209,6 +214,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 	@Test
 	public void testClearSourceMapping() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		CmsAttributeMapper mapper = store.getAttributeMapper();
 		// add some mappings
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -216,9 +222,9 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					store.setMapping(type, mapping, source, target);
-					store.clearSourceMapping(type, mapping, target);
-					Assert.assertNull(store.getSourceMapping(type, mapping, target));
+					mapper.setMapping(type, mapping, source, target);
+					mapper.clearSourceMapping(type, mapping, target);
+					Assert.assertNull(mapper.getSourceMapping(type, mapping, target));
 				}
 			}
 		}
@@ -227,6 +233,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 	@Test
 	public void testClearTargetMapping() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		CmsAttributeMapper mapper = store.getAttributeMapper();
 		// add some mappings
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -234,9 +241,9 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					store.setMapping(type, mapping, source, target);
-					store.clearTargetMapping(type, mapping, source);
-					Assert.assertNull(store.getTargetMapping(type, mapping, source));
+					mapper.setMapping(type, mapping, source, target);
+					mapper.clearTargetMapping(type, mapping, source);
+					Assert.assertNull(mapper.getTargetMapping(type, mapping, source));
 				}
 			}
 		}
@@ -245,6 +252,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 	@Test
 	public void testGetTargetMapping() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		CmsAttributeMapper mapper = store.getAttributeMapper();
 		// add some mappings
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -252,8 +260,8 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					Mapping expected = store.setMapping(type, mapping, source, target);
-					Mapping actual = store.getTargetMapping(type, mapping, source);
+					Mapping expected = mapper.setMapping(type, mapping, source, target);
+					Mapping actual = mapper.getTargetMapping(type, mapping, source);
 					Assert.assertEquals(expected, actual);
 				}
 			}
@@ -263,6 +271,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 	@Test
 	public void testGetSourceMapping() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		CmsAttributeMapper mapper = store.getAttributeMapper();
 		// add some mappings
 		for (final CmsObjectType type : CmsObjectType.values()) {
 			for (int a = 0; a < 10; a++) {
@@ -270,8 +279,8 @@ public class CmsObjectStoreTest extends AbstractTest {
 				for (int s = 0; s < 10; s++) {
 					final String source = String.format("%02d", s);
 					final String target = String.format("%02x", s | 0x00FF0000);
-					Mapping expected = store.setMapping(type, mapping, source, target);
-					Mapping actual = store.getSourceMapping(type, mapping, target);
+					Mapping expected = mapper.setMapping(type, mapping, source, target);
+					Mapping actual = mapper.getSourceMapping(type, mapping, target);
 					Assert.assertEquals(expected, actual);
 				}
 			}
@@ -282,7 +291,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 	public void testSerializeObject() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
-		CmsTransferContext ctx = new TestContext(null, null, store);
+		CmsTransferContext ctx = new DefaultTransferContext(null, null, store);
 		try {
 			store.serializeObject(null, ctx);
 			Assert.fail("Did not fail with a null object");
@@ -338,7 +347,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
-						ctx = new TestContext(obj.getId(), session, store);
+						ctx = new DefaultTransferContext(obj.getId(), session, store);
 						Assert.assertTrue(store.serializeObject(obj, ctx));
 						Assert.assertEquals(Integer.valueOf(1), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
@@ -562,7 +571,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 							// Unsupported object
 							continue;
 						}
-						CmsTransferContext ctx = new TestContext(obj.getId(), session, store);
+						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store);
 						store.serializeObject(obj, ctx);
 						expected.put(obj.getId(), obj);
 						if (++count > max) {
@@ -627,7 +636,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 				while (results.next()) {
 					String id = results.getString("r_object_id");
 					CmsObjectType type = CmsObjectType.decodeType(results.getString("r_object_type"));
-					CmsTransferContext ctx = new TestContext(id, session, store);
+					CmsTransferContext ctx = new DefaultTransferContext(id, session, store);
 					store.persistDependency(type, id, ctx);
 					dependencies.put(id, type);
 				}
