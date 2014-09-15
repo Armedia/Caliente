@@ -117,7 +117,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -128,8 +128,8 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected void doPersistRequirements(IDfDocument document, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
-		throws DfException, CMSMFException {
+	protected void doPersistRequirements(IDfDocument document, CmsTransferContext ctx,
+		CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
 
 		final IDfSession session = document.getSession();
 		// The parent folders
@@ -146,33 +146,39 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		// Export the format
 		dependencyManager.persistRelatedObject(document.getFormat());
 
-		// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
-		// TODO: Is this the right way? Perhaps do it differently?
-		IDfCollection versions = document.getVersions(null);
-		try {
-			while (versions.next()) {
-				IDfId versionId = versions.getId("r_object_id");
-				if (Tools.equals(getId(), versionId.getId())) {
-					// We've caught up with the present
-					break;
-				}
+		// We only export versions if we're the root object of the context operation
+		// There is no actual harm done, since the export engine is smart enough to
+		// not duplicate, but doing it like this helps us avoid o(n^2) performance
+		// which is BAAAD
+		if (Tools.equals(getId(), ctx.getRootObjectId())) {
+			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
+			// TODO: Is this the right way? Perhaps do it differently?
+			IDfCollection versions = document.getVersions(null);
+			try {
+				while (versions.next()) {
+					IDfId versionId = versions.getId("r_object_id");
+					if (Tools.equals(getId(), versionId.getId())) {
+						// We've caught up with the present
+						break;
+					}
 
-				IDfPersistentObject version = session.getObject(versionId);
-				if (version == null) {
-					// Just in case...shouldn't be needed
-					continue;
+					IDfPersistentObject version = session.getObject(versionId);
+					if (version == null) {
+						// Just in case...shouldn't be needed
+						continue;
+					}
+					IDfDocument versionDoc = IDfDocument.class.cast(version);
+					dependencyManager.persistRelatedObject(versionDoc);
 				}
-				IDfDocument versionDoc = IDfDocument.class.cast(version);
-				dependencyManager.persistRelatedObject(versionDoc);
+			} finally {
+				DfUtils.closeQuietly(versions);
 			}
-		} finally {
-			DfUtils.closeQuietly(versions);
 		}
 	}
 
 	@Override
-	protected void doPersistDependents(IDfDocument document, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
-		throws DfException, CMSMFException {
+	protected void doPersistDependents(IDfDocument document, CmsTransferContext ctx,
+		CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
 		final IDfSession session = document.getSession();
 		if (!document.isReference()) {
 
@@ -206,31 +212,38 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
 			}
 
-			// Now, also do the *SUBSEQUENT* versions...
-			// TODO: Is this the right way? Perhaps do it differently?
-			IDfCollection versions = document.getVersions(null);
-			boolean caughtUp = false;
-			try {
-				while (versions.next()) {
-					IDfId versionId = versions.getId("r_object_id");
-					boolean current = Tools.equals(getId(), versionId.getId());
-					caughtUp |= current;
-					if (!caughtUp || current) {
-						continue;
+			// We only export versions if we're the root object of the context operation
+			// There is no actual harm done, since the export engine is smart enough to
+			// not duplicate, but doing it like this helps us avoid o(n^2) performance
+			// which is BAAAD
+			if (Tools.equals(getId(), ctx.getRootObjectId())) {
+				// Now, also do the *SUBSEQUENT* versions...
+				// TODO: Is this the right way? Perhaps do it differently?
+				IDfCollection versions = document.getVersions(null);
+				boolean caughtUp = false;
+				try {
+					while (versions.next()) {
+						IDfId versionId = versions.getId("r_object_id");
+						boolean current = Tools.equals(getId(), versionId.getId());
+						caughtUp |= current;
+						if (!caughtUp || current) {
+							continue;
+						}
+						IDfPersistentObject version = session.getObject(versionId);
+						if (version == null) {
+							// Just in case...shouldn't be needed
+							continue;
+						}
+						IDfDocument versionDoc = IDfDocument.class.cast(version);
+						// TODO: Is this the right way? Perhaps do it differently?
+						dependencyManager.persistRelatedObject(versionDoc);
 					}
-					IDfPersistentObject version = session.getObject(versionId);
-					if (version == null) {
-						// Just in case...shouldn't be needed
-						continue;
-					}
-					IDfDocument versionDoc = IDfDocument.class.cast(version);
-					// TODO: Is this the right way? Perhaps do it differently?
-					dependencyManager.persistRelatedObject(versionDoc);
+				} finally {
+					DfUtils.closeQuietly(versions);
 				}
-			} finally {
-				DfUtils.closeQuietly(versions);
 			}
 
+			// We export our contents...
 			String dql = "" //
 				+ "select dcs.r_object_id, dcr.page, dcr.page_modifier, dcs.rendition " //
 				+ "  from dmr_content_r dcr, dmr_content_s dcs " //
