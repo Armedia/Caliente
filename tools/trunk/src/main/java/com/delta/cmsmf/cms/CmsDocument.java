@@ -60,6 +60,10 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		CmsDocument.initHandlers();
 	}
 
+	private String calculateVersionString(IDfDocument document) throws DfException {
+		return String.format("%s%s", document.getImplicitVersionLabel(), document.getHasFolder() ? ",CURRENT" : "");
+	}
+
 	@Override
 	protected String calculateLabel(IDfDocument document) throws DfException {
 		IDfId id = document.getFolderId(0);
@@ -70,9 +74,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				path = f.getFolderPath(0);
 			}
 		}
-		String version = String.format("%s%s", document.getImplicitVersionLabel(), document.getHasFolder() ? ",CURRENT"
-			: "");
-		return String.format("%s/%s [%s]", path, document.getObjectName(), version);
+		return String.format("%s/%s [%s]", path, document.getObjectName(), calculateVersionString(document));
 	}
 
 	@Override
@@ -222,6 +224,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 					continue;
 				}
 				IDfDocument versionDoc = IDfDocument.class.cast(obj);
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Adding prior version [%s]", calculateVersionString(document)));
+				}
 				dependencyManager.persistRelatedObject(versionDoc);
 			}
 		}
@@ -300,6 +305,10 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 						continue;
 					}
 					IDfDocument versionDoc = IDfDocument.class.cast(obj);
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String
+							.format("Adding subsequent version [%s]", calculateVersionString(document)));
+					}
 					dependencyManager.persistRelatedObject(versionDoc);
 				}
 			}
