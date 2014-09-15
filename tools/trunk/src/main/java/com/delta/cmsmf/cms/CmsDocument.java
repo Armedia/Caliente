@@ -60,8 +60,18 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		CmsDocument.initHandlers();
 	}
 
-	private String calculateVersionString(IDfDocument document) throws DfException {
-		return String.format("%s%s", document.getImplicitVersionLabel(), document.getHasFolder() ? ",CURRENT" : "");
+	private String calculateVersionString(IDfDocument document, boolean full) throws DfException {
+		if (!full) { return String.format("%s%s", document.getImplicitVersionLabel(),
+			document.getHasFolder() ? ",CURRENT" : ""); }
+		int labelCount = document.getVersionLabelCount();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < labelCount; i++) {
+			if (i > 0) {
+				sb.append(',');
+			}
+			sb.append(document.getVersionLabel(i));
+		}
+		return sb.toString();
 	}
 
 	@Override
@@ -74,7 +84,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				path = f.getFolderPath(0);
 			}
 		}
-		return String.format("%s/%s [%s]", path, document.getObjectName(), calculateVersionString(document));
+		return String.format("%s/%s [%s]", path, document.getObjectName(), calculateVersionString(document, true));
 	}
 
 	@Override
@@ -130,7 +140,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -225,7 +235,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				}
 				IDfDocument versionDoc = IDfDocument.class.cast(obj);
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Adding prior version [%s]", calculateVersionString(document)));
+					this.log.debug(String.format("Adding prior version [%s]", calculateVersionString(document, false)));
 				}
 				dependencyManager.persistRelatedObject(versionDoc);
 			}
@@ -306,8 +316,8 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 					}
 					IDfDocument versionDoc = IDfDocument.class.cast(obj);
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String
-							.format("Adding subsequent version [%s]", calculateVersionString(document)));
+						this.log.debug(String.format("Adding subsequent version [%s]",
+							calculateVersionString(document, false)));
 					}
 					dependencyManager.persistRelatedObject(versionDoc);
 				}
