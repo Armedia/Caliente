@@ -126,8 +126,21 @@ public class CmsImporter extends CmsTransferEngine {
 			final ObjectHandler handler = new ObjectHandler() {
 				@Override
 				public boolean handle(CmsObject<?> dataObject) {
-					workQueue.add(dataObject);
-					return true;
+					try {
+						workQueue.put(dataObject);
+						return true;
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						if (CmsImporter.this.log.isDebugEnabled()) {
+							CmsImporter.this.log
+								.warn(String.format("Thread interrupted while trying to submit the object %s",
+									dataObject), e);
+						} else {
+							CmsImporter.this.log.warn(String.format(
+								"Thread interrupted while trying to submit the object %s", dataObject));
+						}
+						return false;
+					}
 				}
 			};
 
