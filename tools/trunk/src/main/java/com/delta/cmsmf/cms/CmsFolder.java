@@ -85,7 +85,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
+				.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -96,14 +96,33 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected void doPersistDependencies(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
-	CMSMFException {
+	protected void doPersistRequirements(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
+		CMSMFException {
+		final IDfSession session = folder.getSession();
+		// The parent folders
+		final int pathCount = folder.getFolderPathCount();
+		for (int i = 0; i < pathCount; i++) {
+			String path = folder.getFolderPath(i);
+			String parentPath = path.substring(0, path.lastIndexOf("/"));
+			if (StringUtils.isNotBlank(parentPath)) {
+				IDfFolder parent = session.getFolderByPath(parentPath);
+				if (parent != null) {
+					dependencyManager.persistRelatedObject(parent);
+				}
+			}
+		}
+	}
+
+	@Override
+	protected void doPersistDependents(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
+		CMSMFException {
+
 		final IDfSession session = folder.getSession();
 		String owner = CmsMappingUtils.resolveSpecialUser(session, folder.getOwnerName());
 		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
 			IDfUser user = session.getUser(folder.getOwnerName());
 			if (user != null) {
-				dependencyManager.persistDependency(user);
+				dependencyManager.persistRelatedObject(user);
 			}
 		}
 
@@ -118,29 +137,16 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			if (obj == null) {
 				continue;
 			}
-			dependencyManager.persistDependency(obj);
+			dependencyManager.persistRelatedObject(obj);
 		}
 
 		// Export the object type
-		dependencyManager.persistDependency(folder.getType());
+		dependencyManager.persistRelatedObject(folder.getType());
 
 		// Save filestore name
 		String storageType = folder.getStorageType();
 		if (StringUtils.isNotBlank(storageType)) {
 			RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
-		}
-
-		// The parent folders
-		final int pathCount = folder.getFolderPathCount();
-		for (int i = 0; i < pathCount; i++) {
-			String path = folder.getFolderPath(i);
-			String parentPath = path.substring(0, path.lastIndexOf("/"));
-			if (StringUtils.isNotBlank(parentPath)) {
-				IDfFolder parent = session.getFolderByPath(parentPath);
-				if (parent != null) {
-					dependencyManager.persistDependency(parent);
-				}
-			}
 		}
 	}
 
@@ -282,10 +288,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							folder.getObjectId().getId(), getLabel(), userValue.asString()));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								folder.getObjectId().getId(), getLabel(), userValue.asString()));
 					continue;
 				}
 
@@ -354,7 +360,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different folders matching this folder's paths: [%s@%s] and [%s@%s]", existing.getObjectId()
-				.getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}

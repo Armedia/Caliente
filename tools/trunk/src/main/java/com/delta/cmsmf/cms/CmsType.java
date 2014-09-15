@@ -90,7 +90,7 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected void doPersistDependencies(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
+	protected void doPersistRequirements(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
 		IDfType superType = type.getSuperType();
 		if (superType == null) { return; }
 		if (CmsType.isSpecialType(superType.getName())) {
@@ -98,7 +98,7 @@ public class CmsType extends CmsObject<IDfType> {
 				type.getName()));
 			return;
 		}
-		manager.persistDependency(superType);
+		manager.persistRelatedObject(superType);
 	}
 
 	@Override

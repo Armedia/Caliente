@@ -33,7 +33,6 @@ import com.delta.cmsmf.cms.CmsAttribute;
 import com.delta.cmsmf.cms.CmsAttributeMapper;
 import com.delta.cmsmf.cms.CmsDataType;
 import com.delta.cmsmf.cms.CmsDependencyManager;
-import com.delta.cmsmf.cms.CmsDependencyType;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
@@ -78,38 +77,38 @@ public class CmsObjectStore extends CmsAttributeMapper {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-		"   select object_type, count(*) as total " + //
+	"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -680,17 +679,11 @@ public class CmsObjectStore extends CmsAttributeMapper {
 			// The object is not supported
 			return false;
 		}
-		boolean dependenciesFirst = (objectType.getPeerDependencyType() == CmsDependencyType.HIERARCHY);
-		if (dependenciesFirst) {
-			// We try to traverse its dependencies
-			obj.persistDependencies(dfObject, this.dependencyManager);
-		}
+		// We try to traverse its dependencies
+		obj.persistRequirements(dfObject, this.dependencyManager);
 		// If somehow it got serialized underneath us (perhaps by another thread), we skip it
 		if (!serializeObject(obj)) { return false; }
-		if (!dependenciesFirst) {
-			// We try to traverse its dependencies
-			obj.persistDependencies(dfObject, this.dependencyManager);
-		}
+		obj.persistDependents(dfObject, this.dependencyManager);
 		// markTraversed(obj.getId());
 		return true;
 	}
@@ -744,26 +737,26 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		try {
 			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<CmsObjectType, Integer>>() {
-				@Override
-				public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
-					Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
-					while (rs.next()) {
-						String t = rs.getString("object_type");
-						if ((t == null) || rs.wasNull()) {
-							CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-							continue;
+					@Override
+					public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
+						while (rs.next()) {
+							String t = rs.getString("object_type");
+							if ((t == null) || rs.wasNull()) {
+								CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
+							try {
+								ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
+							} catch (IllegalArgumentException e) {
+								CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
+									t));
+								continue;
+							}
 						}
-						try {
-							ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
-						} catch (IllegalArgumentException e) {
-							CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
-								t));
-							continue;
-						}
+						return ret;
 					}
-					return ret;
-				}
-			});
+				});
 		} catch (SQLException e) {
 			throw new CMSMFException("Failed to retrieve the stored object types", e);
 		}

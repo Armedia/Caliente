@@ -104,7 +104,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	protected void doPersistDependencies(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
+	protected void doPersistDependents(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
 	CMSMFException {
 		final int count = acl.getAccessorCount();
 		final IDfSession session = acl.getSession();
@@ -130,7 +130,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			if (obj == null) { throw new CMSMFException(String.format(
 				"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectName(),
 				(group ? "group" : "user"), name)); }
-			dependencyManager.persistDependency(obj);
+			dependencyManager.persistRelatedObject(obj);
 		}
 
 		// Do the owner

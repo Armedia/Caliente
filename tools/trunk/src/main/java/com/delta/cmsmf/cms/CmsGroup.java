@@ -122,14 +122,14 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected void doPersistDependencies(IDfGroup group, CmsDependencyManager dependencyManager) throws DfException,
+	protected void doPersistDependents(IDfGroup group, CmsDependencyManager dependencyManager) throws DfException,
 		CMSMFException {
 		final IDfSession session = group.getSession();
 		String groupOwner = group.getOwnerName();
 		if (!CmsMappingUtils.isSpecialUser(session, groupOwner) && !CmsUser.isSpecialUser(groupOwner)) {
 			IDfUser owner = session.getUser(groupOwner);
 			if (owner != null) {
-				dependencyManager.persistDependency(owner);
+				dependencyManager.persistRelatedObject(owner);
 			} else {
 				throw new CMSMFException(String.format(
 					"Missing dependency for group [%s] - user [%s] not found (as group owner)", group.getGroupName(),
@@ -144,7 +144,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		if (!CmsMappingUtils.isSpecialUser(session, groupAdmin) && !CmsUser.isSpecialUser(groupAdmin)) {
 			IDfUser admin = session.getUser(groupAdmin);
 			if (admin != null) {
-				dependencyManager.persistDependency(admin);
+				dependencyManager.persistRelatedObject(admin);
 			} else {
 				throw new CMSMFException(String.format(
 					"Missing dependency for group [%s] - user [%s] not found (as group admin)", group.getGroupName(),
@@ -175,7 +175,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 					"WARNING: Missing dependency for group [%s] - user [%s] not found (as default group)",
 					group.getGroupName(), v.asString()));
 			}
-			dependencyManager.persistDependency(user);
+			dependencyManager.persistRelatedObject(user);
 		}
 
 		CmsAttribute usersNames = getAttribute(CmsAttributes.USERS_NAMES);
@@ -200,7 +200,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (member == null) { throw new CMSMFException(String.format(
 					"Missing dependency for group [%s] - user [%s] not found (as group member)", group.getGroupName(),
 					userName)); }
-				dependencyManager.persistDependency(member);
+				dependencyManager.persistRelatedObject(member);
 			}
 		}
 
@@ -218,7 +218,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (member == null) { throw new CMSMFException(String.format(
 					"Missing dependency for group [%s] - group [%s] not found (as group member)", group.getGroupName(),
 					groupName)); }
-				dependencyManager.persistDependency(member);
+				dependencyManager.persistRelatedObject(member);
 			}
 		}
 	}

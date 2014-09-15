@@ -63,7 +63,7 @@ public abstract class CmsDependencyManager {
 		}
 	}
 
-	public final boolean persistDependency(IDfPersistentObject object) throws DfException, CMSMFException {
+	public final boolean persistRelatedObject(IDfPersistentObject object) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an IDfPersistentObject object"); }
 		Boolean ret = persistDfObject(object);
 		if (ret == null) {
@@ -75,18 +75,18 @@ public abstract class CmsDependencyManager {
 				this.log.warn(e.getMessage());
 				return false;
 			}
-			return persistDependency(type, object.getObjectId());
+			return persistRelatedObject(type, object.getObjectId());
 		}
 		return ret;
 	}
 
-	public final boolean persistDependency(CmsObjectType type, IDfId id) throws CMSMFException {
+	public final boolean persistRelatedObject(CmsObjectType type, IDfId id) throws CMSMFException {
 		if (type == null) { throw new IllegalArgumentException("Must provide a dependency type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide dependency id"); }
-		return persistDependency(type, id.getId());
+		return persistRelatedObject(type, id.getId());
 	}
 
-	public final boolean persistDependency(CmsObjectType type, String id) throws CMSMFException {
+	public final boolean persistRelatedObject(CmsObjectType type, String id) throws CMSMFException {
 		final Dependency dep = new Dependency(type, id);
 		boolean ret = persistDependency(dep);
 		if (ret) {

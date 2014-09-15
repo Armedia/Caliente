@@ -116,7 +116,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -127,19 +127,19 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	private void exportParentFolders(IDfDocument document, CmsDependencyManager dependencyManager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		IDfSession session = document.getSession();
 		// The parent folders
 		final int pathCount = document.getFolderIdCount();
 		for (int i = 0; i < pathCount; i++) {
 			IDfId folderId = document.getFolderId(i);
 			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
-			dependencyManager.persistDependency(parent);
+			dependencyManager.persistRelatedObject(parent);
 		}
 	}
 
 	@Override
-	protected void doPersistDependencies(IDfDocument document, CmsDependencyManager dependencyManager)
+	protected void doPersistDependents(IDfDocument document, CmsDependencyManager dependencyManager)
 		throws DfException, CMSMFException {
 		final IDfSession session = document.getSession();
 		if (document.isReference()) {
@@ -154,7 +154,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
 				IDfUser user = session.getUser(document.getOwnerName());
 				if (user != null) {
-					dependencyManager.persistDependency(user);
+					dependencyManager.persistRelatedObject(user);
 				}
 			}
 
@@ -169,14 +169,14 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				if (obj == null) {
 					continue;
 				}
-				dependencyManager.persistDependency(obj);
+				dependencyManager.persistRelatedObject(obj);
 			}
 
 			// Export the object type
-			dependencyManager.persistDependency(document.getType());
+			dependencyManager.persistRelatedObject(document.getType());
 
 			// Export the format
-			dependencyManager.persistDependency(document.getFormat());
+			dependencyManager.persistRelatedObject(document.getFormat());
 
 			// Save filestore name
 			String storageType = document.getStorageType();
@@ -197,7 +197,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 							// Just in case...shouldn't be needed
 							continue;
 						}
-						dependencyManager.persistDependency(version);
+						IDfDocument versionDoc = IDfDocument.class.cast(version);
+						// TODO: Is this the right way? Perhaps do it differently?
+						dependencyManager.persistRelatedObject(versionDoc);
 					}
 				}
 			} finally {
@@ -226,7 +228,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 								.format("Missing page %d for document [%s](%s)", i, getLabel(), getId()));
 							continue;
 						}
-						dependencyManager.persistDependency(content);
+						dependencyManager.persistRelatedObject(content);
 					}
 				} finally {
 					DfUtils.closeQuietly(results);

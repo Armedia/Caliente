@@ -400,14 +400,26 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return true;
 	}
 
-	public final void persistDependencies(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
+	public final void persistRequirements(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
+		CMSMFException {
+		if (object == null) { throw new IllegalArgumentException(
+			"Must provide the Documentum object from which to identify the requirements"); }
+		if (manager == null) { throw new IllegalArgumentException("Must provide a dependency manager"); }
+		doPersistRequirements(castObject(object), manager);
+	}
+
+	protected void doPersistRequirements(T object, CmsDependencyManager manager) throws DfException, CMSMFException {
+	}
+
+	public final void persistDependents(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
 		CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
-		doPersistDependencies(castObject(object), manager);
+		if (manager == null) { throw new IllegalArgumentException("Must provide a dependency manager"); }
+		doPersistDependents(castObject(object), manager);
 	}
 
-	protected void doPersistDependencies(T object, CmsDependencyManager manager) throws DfException, CMSMFException {
+	protected void doPersistDependents(T object, CmsDependencyManager manager) throws DfException, CMSMFException {
 	}
 
 	public final SaveResult saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException,
