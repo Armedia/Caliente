@@ -5,6 +5,8 @@
 package com.delta.cmsmf.engine;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -25,7 +27,6 @@ import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObject.SaveResult;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsTransferContext;
-import com.delta.cmsmf.cms.CmsUser;
 import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
@@ -61,8 +62,9 @@ public class CmsImporter extends CmsTransferEngine {
 		final int threadCount = getThreadCount();
 		final int backlogSize = getBacklogSize();
 		final AtomicInteger activeCounter = new AtomicInteger(0);
-		final CmsObject<?> exitValue = new CmsUser();
-		final BlockingQueue<CmsObject<?>> workQueue = new ArrayBlockingQueue<CmsObject<?>>(threadCount * backlogSize);
+		final Collection<CmsObject<?>> exitValue = new ArrayList<CmsObject<?>>(0);
+		final BlockingQueue<Collection<CmsObject<?>>> workQueue = new ArrayBlockingQueue<Collection<CmsObject<?>>>(
+			threadCount * backlogSize);
 		final ExecutorService executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
 
@@ -81,37 +83,47 @@ public class CmsImporter extends CmsTransferEngine {
 						if (CmsImporter.this.log.isDebugEnabled()) {
 							CmsImporter.this.log.debug("Polling the queue...");
 						}
-						final CmsObject<?> next;
+						final Collection<CmsObject<?>> batch;
 						// increase the waiter count
 						try {
-							next = workQueue.take();
+							batch = workQueue.take();
 						} catch (InterruptedException e) {
 							Thread.currentThread().interrupt();
 							return;
 						}
 
-						if (next == exitValue) {
+						if (batch == exitValue) {
 							CmsImporter.this.log.info("Exiting the export polling loop");
 							return;
 						}
 
-						if (CmsImporter.this.log.isDebugEnabled()) {
-							CmsImporter.this.log.debug(String.format("Polled %s", next));
+						if ((batch == null) || batch.isEmpty()) {
+							// Shouldn't happen, but still
+							CmsImporter.this.log.warn(String.format(
+								"An invalid value made it into the work queue somehow: %s", batch));
+							continue;
 						}
-						CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore);
-						SaveResult result = null;
-						try {
-							result = next.saveToCMS(ctx);
-							if (CmsImporter.this.log.isDebugEnabled()) {
-								CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
+
+						if (CmsImporter.this.log.isDebugEnabled()) {
+							CmsImporter.this.log.debug(String.format("Polled a batch with %d items", batch.size()));
+						}
+
+						for (CmsObject<?> next : batch) {
+							CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore);
+							SaveResult result = null;
+							try {
+								result = next.saveToCMS(ctx);
+								if (CmsImporter.this.log.isDebugEnabled()) {
+									CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
+								}
+							} catch (Throwable t) {
+								result = null;
+								// Log the error, move on
+								CmsImporter.this.log.error(String.format("Exception caught processing %s", next), t);
+							} finally {
+								CmsImporter.this.counter.increment(next, (result != null ? result.getResult()
+									: CmsImportResult.FAILED));
 							}
-						} catch (Throwable t) {
-							result = null;
-							// Log the error, move on
-							CmsImporter.this.log.error(String.format("Exception caught processing %s", next), t);
-						} finally {
-							CmsImporter.this.counter.increment(next, (result != null ? result.getResult()
-								: CmsImportResult.FAILED));
 						}
 					}
 				} finally {
@@ -126,28 +138,49 @@ public class CmsImporter extends CmsTransferEngine {
 		try {
 			final Map<CmsObjectType, Integer> containedTypes = objectStore.getStoredObjectTypes();
 			final ObjectHandler<CmsObject<?>> handler = new ObjectHandler<CmsObject<?>>() {
+				private String batchId = null;
+				private List<CmsObject<?>> batch = null;
+
 				@Override
-				public boolean handle(CmsObject<?> dataObject) {
+				public boolean newBatch(String batchId) throws CMSMFException {
+					this.batch = new LinkedList<CmsObject<?>>();
+					this.batchId = batchId;
+					return true;
+				}
+
+				@Override
+				public void handle(CmsObject<?> dataObject) {
+					this.batch.add(dataObject);
+				}
+
+				@Override
+				public boolean closeBatch(boolean ok) throws CMSMFException {
+					if ((this.batch == null) || this.batch.isEmpty()) { return true; }
+
 					try {
-						workQueue.put(dataObject);
-						return true;
+						workQueue.put(this.batch);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 						if (CmsImporter.this.log.isDebugEnabled()) {
-							CmsImporter.this.log
-								.warn(String.format("Thread interrupted while trying to submit the object %s",
-									dataObject), e);
+							CmsImporter.this.log.warn(String.format(
+								"Thread interrupted while trying to submit the batch %s containing [%s]", this.batchId,
+								this.batch), e);
 						} else {
 							CmsImporter.this.log.warn(String.format(
-								"Thread interrupted while trying to submit the object %s", dataObject));
+								"Thread interrupted while trying to submit the batch %s containing [%s]", this.batchId,
+								this.batch));
 						}
-						return false;
+					} finally {
+						this.batch = null;
+						this.batchId = null;
 					}
+					// TODO: Perhaps check the error threshold
+					return true;
 				}
 			};
 
 			List<Future<?>> futures = new ArrayList<Future<?>>();
-			List<CmsObject<?>> remaining = new ArrayList<CmsObject<?>>();
+			List<Collection<CmsObject<?>>> remaining = new ArrayList<Collection<CmsObject<?>>>();
 			for (CmsObjectType type : CmsObjectType.values()) {
 				final Integer total = containedTypes.get(type);
 				if (total == null) {
@@ -204,7 +237,7 @@ public class CmsImporter extends CmsTransferEngine {
 						type.name()));
 				} finally {
 					workQueue.drainTo(remaining);
-					for (CmsObject<?> v : remaining) {
+					for (Collection<CmsObject<?>> v : remaining) {
 						if (v == exitValue) {
 							continue;
 						}

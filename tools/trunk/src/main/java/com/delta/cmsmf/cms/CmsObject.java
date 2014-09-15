@@ -48,6 +48,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public abstract class CmsObject<T extends IDfPersistentObject> {
 
+	public static final String NULL_BATCH_ID = "[NO BATCHING]";
+
 	private static final Collection<String> NO_PERMITS = Collections.emptySet();
 
 	protected final class PermitDelta {
@@ -172,6 +174,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	private final Class<T> dfClass;
 
 	private String id = null;
+	private String batchId = null;
 	private String label = null;
 	private String subtype = null;
 	private final Map<String, CmsAttribute> attributes = new HashMap<String, CmsAttribute>();
@@ -182,12 +185,13 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
 	public void load(ResultSet rs) throws SQLException {
 		this.id = rs.getString("object_id");
+		this.batchId = rs.getString("batch_id");
 		this.label = rs.getString("object_label");
 		this.subtype = rs.getString("object_subtype");
 		this.attributes.clear();
@@ -236,6 +240,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	public final String getId() {
 		return this.id;
+	}
+
+	public final String getBatchId() {
+		return this.batchId;
 	}
 
 	public final String getLabel() {
@@ -316,6 +324,13 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	protected abstract String calculateLabel(T object) throws DfException;
 
+	protected String calculateBatchId(T object) throws DfException {
+		// We use this trick to avoid requiring subclasses to implement this method, but also
+		// because we've structured our code to ensure that it's only called for subclasses
+		// that really should implement it
+		throw new AbstractMethodError("calculateBatchId() must be overridden by subclasses that support batching");
+	}
+
 	/**
 	 * <p>
 	 * Loads the object's attributes and properties from the given CMS object, and returns
@@ -349,6 +364,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.id = object.getObjectId().getId();
 		this.subtype = object.getType().getName();
 		this.label = calculateLabel(typedObject);
+		this.batchId = (type.isBatchingSupported() ? calculateBatchId(typedObject) : CmsObject.NULL_BATCH_ID);
 
 		// First, the attributes
 		this.attributes.clear();
@@ -367,8 +383,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		// Properties are different from attributes in that they require special handling. For
 		// instance, a property would only be settable via direct SQL, or via an explicit method
 		// call, etc., because setting it directly as an attribute would cmsImportResult in an error
-// from
-		// DFC, and therefore specialized code is required to handle it
+		// from DFC, and therefore specialized code is required to handle it
 		this.properties.clear();
 		List<CmsProperty> properties = new ArrayList<CmsProperty>();
 		getDataProperties(properties, typedObject);
@@ -612,7 +627,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -853,7 +868,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-				.getObjectId().getId());
+					.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);

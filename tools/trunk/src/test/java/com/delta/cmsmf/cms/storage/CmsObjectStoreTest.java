@@ -528,9 +528,19 @@ public class CmsObjectStoreTest extends AbstractTest {
 		}
 		try {
 			store.deserializeObjects(null, new ObjectHandler<CmsObject<?>>() {
+
 				@Override
-				public boolean handle(CmsObject<?> dataObject) throws CMSMFException {
-					return false;
+				public boolean newBatch(String batchId) throws CMSMFException {
+					return true;
+				}
+
+				@Override
+				public void handle(CmsObject<?> dataObject) throws CMSMFException {
+				}
+
+				@Override
+				public boolean closeBatch(boolean ok) throws CMSMFException {
+					return true;
 				}
 			});
 			Assert.fail("Did not fail with type null");
@@ -588,8 +598,23 @@ public class CmsObjectStoreTest extends AbstractTest {
 
 				// Now, try to deserialize
 				store.deserializeObjects(t.getCmsObjectClass(), new ObjectHandler<CmsObject<?>>() {
+					private String currentBatch = null;
+
 					@Override
-					public boolean handle(CmsObject<?> obj) throws CMSMFException {
+					public boolean newBatch(String batchId) throws CMSMFException {
+						Assert.assertNotNull(batchId);
+						if (t.isBatchingSupported()) {
+							this.currentBatch = batchId;
+						} else {
+							this.currentBatch = CmsObject.NULL_BATCH_ID;
+						}
+						return true;
+					}
+
+					@Override
+					public void handle(CmsObject<?> obj) throws CMSMFException {
+						Assert.assertEquals(this.currentBatch, obj.getBatchId());
+
 						final CmsObject<?> expectedObject = expected.get(obj.getId());
 						Assert.assertNotNull(expectedObject);
 						// Compare them both
@@ -616,6 +641,10 @@ public class CmsObjectStoreTest extends AbstractTest {
 							Assert.assertTrue(propA.isSame(propB));
 							Assert.assertTrue(propA.isSameValues(propB));
 						}
+					}
+
+					@Override
+					public boolean closeBatch(boolean ok) throws CMSMFException {
 						return true;
 					}
 				});

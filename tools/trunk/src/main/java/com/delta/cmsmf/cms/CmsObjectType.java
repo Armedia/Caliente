@@ -28,7 +28,7 @@ public enum CmsObjectType {
 	TYPE(CmsType.class, IDfType.class, CmsDependencyType.HIERARCHY),
 	FORMAT(CmsFormat.class, IDfFormat.class),
 	FOLDER(CmsFolder.class, IDfFolder.class, CmsDependencyType.HIERARCHY),
-	DOCUMENT(CmsDocument.class, IDfDocument.class, CmsDependencyType.PEER),
+	DOCUMENT(CmsDocument.class, IDfDocument.class, CmsDependencyType.PEER, null, true),
 	CONTENT(CmsContent.class, IDfContent.class, "dmr_content"),
 	DOCUMENT_REF(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER);
 
@@ -36,6 +36,7 @@ public enum CmsObjectType {
 	private final Class<? extends IDfPersistentObject> dfClass;
 	private final Class<? extends CmsObject<?>> objectClass;
 	private final CmsDependencyType peerDependencyType;
+	private final boolean supportsBatching;
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass, Class<T> dfClass) {
 		this(objectClass, dfClass, null, null);
@@ -53,6 +54,11 @@ public enum CmsObjectType {
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
 		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType) {
+		this(objectClass, dfClass, peerDependencyType, dmType, false);
+	}
+
+	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
+		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType, boolean supportsBatching) {
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
 		} else {
@@ -61,6 +67,7 @@ public enum CmsObjectType {
 		this.dfClass = dfClass;
 		this.objectClass = objectClass;
 		this.peerDependencyType = Tools.coalesce(peerDependencyType, CmsDependencyType.NONE);
+		this.supportsBatching = supportsBatching;
 	}
 
 	public final boolean isProperClass(IDfPersistentObject o) {
@@ -89,11 +96,15 @@ public enum CmsObjectType {
 		return this.peerDependencyType;
 	}
 
+	public final boolean isBatchingSupported() {
+		return this.supportsBatching;
+	}
+
 	private static Map<String, CmsObjectType> DM_TYPE_DECODER = null;
 	private static Map<String, CmsObjectType> CLASS_DECODER = null;
 
 	public static CmsObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedObjectTypeException {
+		UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		IDfType type = object.getType();
 		while (type != null) {

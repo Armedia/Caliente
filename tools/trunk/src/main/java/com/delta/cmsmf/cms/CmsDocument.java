@@ -74,6 +74,11 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
+	protected String calculateBatchId(IDfDocument document) throws DfException {
+		return document.getChronicleId().getId();
+	}
+
+	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException {
 		CmsProperty paths = new CmsProperty(CmsDocument.TARGET_PATHS, CmsDataType.DF_STRING, true);
 		final IDfSession session = document.getSession();

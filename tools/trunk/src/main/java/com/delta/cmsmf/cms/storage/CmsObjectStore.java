@@ -30,6 +30,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.log4j.Logger;
 
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.CmsAttribute;
 import com.delta.cmsmf.cms.CmsAttributeMapper;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
@@ -52,18 +53,52 @@ import com.documentum.fc.common.IDfValue;
 public class CmsObjectStore {
 
 	public static interface ObjectHandler<O extends CmsObject<?>> {
-		public boolean handle(O dataObject) throws CMSMFException;
-	}
 
-	public static interface DependencyHandler {
-		public boolean handle(CmsObjectType type, String id) throws CMSMFException;
+		/**
+		 * <p>
+		 * Signal the beginning of a new batch, with the given ID. Returns {@code true} if the batch
+		 * should be processed, {@code false} if it should be skipped. If the batch is skipped,
+		 * Neither {@link #closeBatch(boolean)} nor {@link #handle(CmsObject)} will be invoked.
+		 * </p>
+		 *
+		 * @param batchId
+		 * @return {@code true} if the batch should be processed, {@code false} if it should be
+		 *         skipped
+		 * @throws CMSMFException
+		 */
+		public boolean newBatch(String batchId) throws CMSMFException;
+
+		/**
+		 * <p>
+		 * Handle the given object instance in the context of the currently-open batch
+		 * </p>
+		 *
+		 * @param dataObject
+		 * @throws CMSMFException
+		 */
+		public void handle(O dataObject) throws CMSMFException;
+
+		/**
+		 * <p>
+		 * Close the current batch, returning {@code true} if processing should continue with the
+		 * next batch, or {@code false} otherwise.
+		 * </p>
+		 *
+		 * @param ok
+		 *            indicates whether processing succeeded normally ({@code true}) or not (
+		 *            {@code false}).
+		 * @return {@code true} if processing should continue with the next batch, or {@code false}
+		 *         otherwise
+		 * @throws CMSMFException
+		 */
+		public boolean closeBatch(boolean ok) throws CMSMFException;
 	}
 
 	private static final Object[][] NO_PARAMS = new Object[0][0];
 
 	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from dctm_object where object_id = ?";
 
-	private static final String INSERT_OBJECT_SQL = "insert into dctm_object (object_id, object_type, object_subtype, object_label) values (?, ?, ?, ?)";
+	private static final String INSERT_OBJECT_SQL = "insert into dctm_object (object_id, object_type, object_subtype, object_label, batch_id) values (?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
@@ -80,52 +115,52 @@ public class CmsObjectStore {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-		"   select object_type, count(*) as total " + //
+	"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
-		" order by object_number";
+		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-		"    select o.* " + //
+	"    select o.* " + //
 		"  from dctm_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -232,7 +267,7 @@ public class CmsObjectStore {
 	}
 
 	private boolean serializeObject(Connection c, CmsObject<?> object, CmsTransferContext ctx) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		final String objectId = object.getId();
 		final CmsObjectType objectType = object.getType();
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
@@ -338,7 +373,7 @@ public class CmsObjectStore {
 
 			// Do all the inserts in a row
 			qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_NULL, objectId, objectType.name(),
-				object.getSubtype(), object.getLabel());
+				object.getSubtype(), object.getLabel(), object.getBatchId());
 			qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_SQL, CmsObjectStore.HANDLER_NULL,
 				attributeParameters.toArray(CmsObjectStore.NO_PARAMS));
 			qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
@@ -372,7 +407,7 @@ public class CmsObjectStore {
 	}
 
 	public boolean serializeObject(CmsObject<?> object, final CmsTransferContext ctx) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to serialize with"); }
 		boolean ok = false;
@@ -467,9 +502,39 @@ public class CmsObjectStore {
 					}
 				}
 				objRS = objPS.executeQuery();
+				String currentBatch = null;
+				boolean ok = false;
 				try {
 					while (objRS.next()) {
 						final int objNum = objRS.getInt("object_number");
+						// If batching is not required, then we simply use the object number
+						// as the batch ID, to ensure that object_number remains the sole
+						// ordering factor
+						final String batchId = (type.isBatchingSupported() ? objRS.getString("batch_id") : String
+							.valueOf(objNum));
+						if (!Tools.equals(currentBatch, batchId)) {
+							if (currentBatch != null) {
+								if (this.log.isDebugEnabled()) {
+									this.log.debug(String.format("CLOSE BATCH: %s", currentBatch));
+								}
+								if (!handler.closeBatch(true)) {
+									this.log.warn(String.format("%s batch [%s] requested processing cancellation",
+										type.name(), batchId));
+									currentBatch = null;
+									break;
+								}
+							}
+
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format("NEW BATCH: %s", batchId));
+							}
+							if (!handler.newBatch(batchId)) {
+								this.log.warn(String.format("%s batch [%s] skipped", type.name(), batchId));
+								continue;
+							}
+							currentBatch = batchId;
+						}
+
 						final String objId = objRS.getString("object_id");
 						final String objLabel = objRS.getString("object_label");
 						final CmsObjectType objType = CmsObjectType.valueOf(objRS.getString("object_type"));
@@ -544,16 +609,25 @@ public class CmsObjectStore {
 						}
 
 						try {
-							if (!handler.handle(obj)) {
-								break;
-							}
+							handler.handle(obj);
 						} catch (Exception e) {
 							throw new CMSMFException(String.format(
 								"Failed to properly import %s object [%s](%s) (#%d)", type, obj.getLabel(),
 								obj.getId(), objNum), e);
 						}
 					}
+					ok = true;
 				} finally {
+					// Make sure we clean up after ourselves
+					if (currentBatch != null) {
+						try {
+							handler.closeBatch(ok);
+						} catch (CMSMFException e) {
+							this.log.error(String
+								.format("Exception caught attempting to close the pending batch [%s] (ok=%s)",
+									currentBatch, ok), e);
+						}
+					}
 					DbUtils.closeQuietly(objRS);
 				}
 			} finally {
@@ -734,7 +808,7 @@ public class CmsObjectStore {
 	}
 
 	public Boolean persistDfObject(IDfPersistentObject dfObject, final CmsTransferContext ctx) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		final CmsObjectType objectType;
 		try {
 			objectType = CmsObjectType.decodeType(dfObject);
@@ -831,26 +905,26 @@ public class CmsObjectStore {
 		try {
 			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<CmsObjectType, Integer>>() {
-				@Override
-				public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
-					Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
-					while (rs.next()) {
-						String t = rs.getString("object_type");
-						if ((t == null) || rs.wasNull()) {
-							CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-							continue;
+					@Override
+					public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
+						while (rs.next()) {
+							String t = rs.getString("object_type");
+							if ((t == null) || rs.wasNull()) {
+								CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
+							try {
+								ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
+							} catch (IllegalArgumentException e) {
+								CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
+									t));
+								continue;
+							}
 						}
-						try {
-							ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
-						} catch (IllegalArgumentException e) {
-							CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
-								t));
-							continue;
-						}
+						return ret;
 					}
-					return ret;
-				}
-			});
+				});
 		} catch (SQLException e) {
 			throw new CMSMFException("Failed to retrieve the stored object types", e);
 		}
