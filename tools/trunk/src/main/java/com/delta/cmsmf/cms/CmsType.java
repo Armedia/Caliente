@@ -90,7 +90,8 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected void doPersistRequirements(IDfType type, CmsDependencyManager manager) throws DfException, CMSMFException {
+	protected void doPersistRequirements(IDfType type, CmsTransferContext ctx, CmsDependencyManager manager)
+		throws DfException, CMSMFException {
 		IDfType superType = type.getSuperType();
 		if (superType == null) { return; }
 		if (CmsType.isSpecialType(superType.getName())) {
@@ -102,10 +103,10 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected IDfType newObject(IDfSession session) throws DfException {
+	protected IDfType newObject(CmsTransferContext ctx) throws DfException {
 		String typeName = getAttribute(CmsAttributes.NAME).getValue().asString();
 		String superTypeName = getAttribute(CmsAttributes.SUPER_NAME).getValue().asString();
-
+		final IDfSession session = ctx.getSession();
 		// TODO: Ensure the supertype is there
 		IDfType superType = null;
 		if (superTypeName.length() > 0) {
@@ -198,7 +199,7 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected boolean skipImport(IDfSession session) throws DfException {
+	protected boolean skipImport(CmsTransferContext ctx) throws DfException {
 		IDfValue typeNameValue = getAttribute(CmsAttributes.NAME).getValue();
 		final String typeName = typeNameValue.asString();
 		if (CmsType.isSpecialType(typeName)) {
@@ -207,11 +208,11 @@ public class CmsType extends CmsObject<IDfType> {
 		}
 		// If the type name is the same as dmi_${objectId}, we skip it
 		if (Tools.equals(typeName, String.format("dmi_%s", getId()))) { return false; }
-		return super.skipImport(session);
+		return super.skipImport(ctx);
 	}
 
 	@Override
-	protected IDfType locateInCms(IDfSession session) throws DfException {
-		return session.getType(getAttribute(CmsAttributes.NAME).getValue().asString());
+	protected IDfType locateInCms(CmsTransferContext ctx) throws DfException {
+		return ctx.getSession().getType(getAttribute(CmsAttributes.NAME).getValue().asString());
 	}
 }

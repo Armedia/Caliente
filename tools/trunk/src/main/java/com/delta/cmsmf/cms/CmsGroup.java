@@ -122,8 +122,8 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected void doPersistDependents(IDfGroup group, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	protected void doPersistDependents(IDfGroup group, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
+		throws DfException, CMSMFException {
 		final IDfSession session = group.getSession();
 		String groupOwner = group.getOwnerName();
 		if (!CmsMappingUtils.isSpecialUser(session, groupOwner) && !CmsUser.isSpecialUser(groupOwner)) {
@@ -224,11 +224,6 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected IDfGroup newObject(IDfSession session) throws DfException {
-		return super.newObject(session);
-	}
-
-	@Override
 	protected void finalizeConstruction(IDfGroup object, boolean newObject) throws DfException {
 		IDfValue groupName = getAttribute(CmsAttributes.GROUP_NAME).getValue();
 		if (newObject) {
@@ -279,7 +274,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	public void resolveDependencies(IDfGroup group, CmsAttributeMapper mapper) throws DfException, CMSMFException {
+	public void resolveDependencies(IDfGroup group, CmsTransferContext ctx) throws DfException, CMSMFException {
 		final String groupName = group.getGroupName();
 		final IDfSession session = group.getSession();
 		CmsAttribute groupsNames = getAttribute(CmsAttributes.GROUPS_NAMES);
@@ -309,15 +304,15 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected boolean skipImport(IDfSession session) throws DfException {
+	protected boolean skipImport(CmsTransferContext ctx) throws DfException {
 		IDfValue groupNameValue = getAttribute(CmsAttributes.GROUP_NAME).getValue();
 		final String groupName = groupNameValue.asString();
 		if (CmsGroup.isSpecialGroup(groupName)) { return true; }
-		return super.skipImport(session);
+		return super.skipImport(ctx);
 	}
 
 	@Override
-	protected IDfGroup locateInCms(IDfSession session) throws DfException {
-		return session.getGroup(getAttribute(CmsAttributes.GROUP_NAME).getValue().asString());
+	protected IDfGroup locateInCms(CmsTransferContext ctx) throws DfException {
+		return ctx.getSession().getGroup(getAttribute(CmsAttributes.GROUP_NAME).getValue().asString());
 	}
 }

@@ -104,8 +104,8 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	protected void doPersistDependents(IDfACL acl, CmsDependencyManager dependencyManager) throws DfException,
-	CMSMFException {
+	protected void doPersistDependents(IDfACL acl, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
+		throws DfException, CMSMFException {
 		final int count = acl.getAccessorCount();
 		final IDfSession session = acl.getSession();
 		for (int i = 0; i < count; i++) {
@@ -222,9 +222,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	protected IDfACL locateInCms(IDfSession session) throws DfException {
+	protected IDfACL locateInCms(CmsTransferContext ctx) throws DfException {
 		final IDfValue ownerName = getAttribute(CmsAttributes.OWNER_NAME).getValue();
 		final IDfValue objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
+		final IDfSession session = ctx.getSession();
 		return session.getACL(ownerName != null ? CmsMappingUtils.resolveSpecialUser(session, ownerName.asString())
 			: null, objectName.asString());
 	}

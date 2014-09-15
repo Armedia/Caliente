@@ -17,6 +17,7 @@ import com.delta.cmsmf.cms.AbstractTest;
 import com.delta.cmsmf.cms.CmsAttribute;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.CmsDataType;
+import com.delta.cmsmf.cms.CmsTransferContext;
 import com.delta.cmsmf.cms.CmsMappingUtils;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
@@ -281,9 +282,22 @@ public class CmsObjectStoreTest extends AbstractTest {
 	public void testSerializeObject() throws Throwable {
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
+		CmsTransferContext ctx = new TestContext(null, null, store);
 		try {
-			store.serializeObject(null);
+			store.serializeObject(null, ctx);
 			Assert.fail("Did not fail with a null object");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+		try {
+			store.serializeObject(null, null);
+			Assert.fail("Did not fail with a null object and context");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+		try {
+			store.serializeObject(CmsObjectType.TYPE.newInstance(), null);
+			Assert.fail("Did not fail with a null context");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
@@ -324,11 +338,12 @@ public class CmsObjectStoreTest extends AbstractTest {
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
-						Assert.assertTrue(store.serializeObject(obj));
+						ctx = new TestContext(obj.getId(), session, store);
+						Assert.assertTrue(store.serializeObject(obj, ctx));
 						Assert.assertEquals(Integer.valueOf(1), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
-						Assert.assertFalse(store.serializeObject(obj));
+						Assert.assertFalse(store.serializeObject(obj, ctx));
 						Assert.assertEquals(Integer.valueOf(obj.getAttributeCount()), qr.query(
 							"select count(*) from dctm_attribute where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
@@ -547,7 +562,8 @@ public class CmsObjectStoreTest extends AbstractTest {
 							// Unsupported object
 							continue;
 						}
-						store.serializeObject(obj);
+						CmsTransferContext ctx = new TestContext(obj.getId(), session, store);
+						store.serializeObject(obj, ctx);
 						expected.put(obj.getId(), obj);
 						if (++count > max) {
 							break;
@@ -611,7 +627,8 @@ public class CmsObjectStoreTest extends AbstractTest {
 				while (results.next()) {
 					String id = results.getString("r_object_id");
 					CmsObjectType type = CmsObjectType.decodeType(results.getString("r_object_type"));
-					store.persistDependency(type, id);
+					CmsTransferContext ctx = new TestContext(id, session, store);
+					store.persistDependency(type, id, ctx);
 					dependencies.put(id, type);
 				}
 			} finally {

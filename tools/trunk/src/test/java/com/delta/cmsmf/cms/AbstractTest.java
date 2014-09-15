@@ -5,6 +5,7 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -29,8 +30,68 @@ import com.delta.cmsmf.utils.ClasspathPatcher;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfValue;
 
 public abstract class AbstractTest {
+
+	protected static class TestContext implements CmsTransferContext {
+
+		private final String rootId;
+		private final IDfSession session;
+		private final CmsAttributeMapper mapper;
+		private final Map<String, IDfValue> values = new HashMap<String, IDfValue>();
+
+		public TestContext(String rootId, IDfSession session, CmsAttributeMapper mapper) {
+			this.rootId = rootId;
+			this.session = session;
+			this.mapper = mapper;
+		}
+
+		@Override
+		public String getRootObjectId() {
+			return this.rootId;
+		}
+
+		@Override
+		public IDfSession getSession() {
+			return this.session;
+		}
+
+		@Override
+		public CmsAttributeMapper getAttributeMapper() {
+			return this.mapper;
+		}
+
+		private void assertValidName(String name) {
+			if (name == null) { throw new IllegalArgumentException("Must provide a value name"); }
+		}
+
+		@Override
+		public IDfValue getValue(String name) {
+			assertValidName(name);
+			return this.values.get(name);
+		}
+
+		@Override
+		public IDfValue setValue(String name, IDfValue value) {
+			assertValidName(name);
+			if (value == null) { return clearValue(name); }
+			return this.values.put(name, value);
+		}
+
+		@Override
+		public IDfValue clearValue(String name) {
+			assertValidName(name);
+			return this.values.remove(name);
+		}
+
+		@Override
+		public boolean hasValue(String name) {
+			assertValidName(name);
+			return this.values.containsKey(name);
+		}
+
+	}
 
 	protected enum DocumentumType {
 		//

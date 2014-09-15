@@ -118,7 +118,8 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected void doPersistDependents(IDfUser user, CmsDependencyManager manager) throws DfException, CMSMFException {
+	protected void doPersistDependents(IDfUser user, CmsTransferContext ctx, CmsDependencyManager manager) throws DfException,
+	CMSMFException {
 		final IDfSession session = user.getSession();
 		final IDfPersistentObject[] deps = {
 			session.getGroup(user.getUserGroupName()), session.getFolderByPath(user.getDefaultFolder())
@@ -136,8 +137,9 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected IDfUser locateInCms(IDfSession session) throws DfException {
+	protected IDfUser locateInCms(CmsTransferContext ctx) throws DfException {
 		// If that search failed, go by username
+		final IDfSession session = ctx.getSession();
 		String userName = getAttribute(CmsAttributes.USER_NAME).getValue().asString();
 		userName = CmsMappingUtils.resolveSpecialUser(session, userName);
 		IDfUser ret = session.getUser(userName);
@@ -151,11 +153,11 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected boolean skipImport(IDfSession session) throws DfException {
+	protected boolean skipImport(CmsTransferContext ctx) throws DfException {
 		IDfValue userNameValue = getAttribute(CmsAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
 		if (CmsUser.isSpecialUser(userName)) { return true; }
-		return super.skipImport(session);
+		return super.skipImport(ctx);
 	}
 
 	@Override

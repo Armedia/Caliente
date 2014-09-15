@@ -62,52 +62,53 @@ public class CmsAttributeTest extends AbstractTest {
 						// Unsupported object
 						continue;
 					}
-					store.serializeObject(cmsObj);
+					CmsTransferContext ctx = new TestContext(cmsObj.getId(), session, store);
+					store.serializeObject(cmsObj, ctx);
 
 					for (final CmsAttribute att : cmsObj.getAllAttributes()) {
 						qr.query("select * from dctm_attribute where object_id = ? and name = ?",
 							new ResultSetHandler<Void>() {
-							@Override
-							public Void handle(ResultSet rs) throws SQLException {
-								if (!rs.next()) {
-									Assert.fail(String.format(
-											"No data found for attribute [%s] for object [%s:%s]", att.getName(),
-											cmsObj.getType(), cmsObj.getId()));
-								}
-								final CmsAttribute actual = new CmsAttribute(rs);
-								try {
-									actual.loadValues(null);
-									Assert.fail("LoadValues did not fail with a null ResultSet");
-								} catch (IllegalArgumentException e) {
-									// All is well
-								}
-								Assert.assertEquals(att.getType(), actual.getType());
-								Assert.assertEquals(att.getName(), actual.getName());
-								Assert.assertEquals(att.isRepeating(), actual.isRepeating());
-								Assert.assertEquals(att.getId(), actual.getId());
-								Assert.assertEquals(att.isQualifiable(), actual.isQualifiable());
-								Assert.assertEquals(att.getLength(), actual.getLength());
+								@Override
+								public Void handle(ResultSet rs) throws SQLException {
+									if (!rs.next()) {
+										Assert.fail(String.format(
+										"No data found for attribute [%s] for object [%s:%s]", att.getName(),
+										cmsObj.getType(), cmsObj.getId()));
+									}
+									final CmsAttribute actual = new CmsAttribute(rs);
+									try {
+										actual.loadValues(null);
+										Assert.fail("LoadValues did not fail with a null ResultSet");
+									} catch (IllegalArgumentException e) {
+										// All is well
+									}
+									Assert.assertEquals(att.getType(), actual.getType());
+									Assert.assertEquals(att.getName(), actual.getName());
+									Assert.assertEquals(att.isRepeating(), actual.isRepeating());
+									Assert.assertEquals(att.getId(), actual.getId());
+									Assert.assertEquals(att.isQualifiable(), actual.isQualifiable());
+									Assert.assertEquals(att.getLength(), actual.getLength());
 
-								qr.query(
-										"select * from dctm_attribute_value where object_id = ? and name = ? order by value_number",
-										new ResultSetHandler<Void>() {
-											@Override
-											public Void handle(ResultSet rs) throws SQLException {
-												actual.loadValues(rs);
-												return null;
-											}
-									}, cmsObj.getId(), att.getName());
+									qr.query(
+									"select * from dctm_attribute_value where object_id = ? and name = ? order by value_number",
+									new ResultSetHandler<Void>() {
+										@Override
+										public Void handle(ResultSet rs) throws SQLException {
+											actual.loadValues(rs);
+											return null;
+										}
+										}, cmsObj.getId(), att.getName());
 
-								Assert.assertEquals(att.getValueCount(), actual.getValueCount());
-								for (int i = 0; i < att.getValueCount(); i++) {
-									IDfValue vExp = att.getValue(i);
-									IDfValue vAct = actual.getValue(i);
-									CmsDataType type = att.getType();
-									Assert.assertEquals(type.getValue(vExp), type.getValue(vAct));
+									Assert.assertEquals(att.getValueCount(), actual.getValueCount());
+									for (int i = 0; i < att.getValueCount(); i++) {
+										IDfValue vExp = att.getValue(i);
+										IDfValue vAct = actual.getValue(i);
+										CmsDataType type = att.getType();
+										Assert.assertEquals(type.getValue(vExp), type.getValue(vAct));
+									}
+									return null;
 								}
-								return null;
-							}
-						}, cmsObj.getId(), att.getName());
+							}, cmsObj.getId(), att.getName());
 					}
 					c++;
 				}

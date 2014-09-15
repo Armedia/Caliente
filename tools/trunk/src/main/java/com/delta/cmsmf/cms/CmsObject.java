@@ -166,24 +166,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	private static final String DEBUG_DUMP = "$debug-dump$";
 
-	private final CmsAttributeMapper NULL_MAPPER = new CmsAttributeMapper() {
-		@Override
-		protected Mapping createMapping(CmsObjectType objectType, String mappingName, String sourceValue,
-			String targetValue) {
-			return null;
-		}
-
-		@Override
-		public Mapping getTargetMapping(CmsObjectType objectType, String mappingName, String sourceValue) {
-			return null;
-		}
-
-		@Override
-		public Mapping getSourceMapping(CmsObjectType objectType, String mappingName, String targetValue) {
-			return null;
-		}
-	};
-
 	protected final Logger log = Logger.getLogger(getClass());
 
 	private final CmsObjectType type;
@@ -200,7 +182,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -400,34 +382,35 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return true;
 	}
 
-	public final void persistRequirements(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-		CMSMFException {
+	public final void persistRequirements(IDfPersistentObject object, CmsTransferContext ctx,
+		CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the requirements"); }
-		if (manager == null) { throw new IllegalArgumentException("Must provide a dependency manager"); }
-		doPersistRequirements(castObject(object), manager);
+		if (ctx == null) { throw new IllegalArgumentException("Must provide a context"); }
+		if (dependencyManager == null) { throw new IllegalArgumentException("Must provide a dependency manager"); }
+		doPersistRequirements(castObject(object), ctx, dependencyManager);
 	}
 
-	protected void doPersistRequirements(T object, CmsDependencyManager manager) throws DfException, CMSMFException {
+	protected void doPersistRequirements(T object, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
+		throws DfException, CMSMFException {
 	}
 
-	public final void persistDependents(IDfPersistentObject object, CmsDependencyManager manager) throws DfException,
-		CMSMFException {
+	public final void persistDependents(IDfPersistentObject object, CmsTransferContext ctx,
+		CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide the Documentum object from which to identify the dependencies"); }
-		if (manager == null) { throw new IllegalArgumentException("Must provide a dependency manager"); }
-		doPersistDependents(castObject(object), manager);
+		if (ctx == null) { throw new IllegalArgumentException("Must provide a context"); }
+		if (dependencyManager == null) { throw new IllegalArgumentException("Must provide a dependency manager"); }
+		doPersistDependents(castObject(object), ctx, dependencyManager);
 	}
 
-	protected void doPersistDependents(T object, CmsDependencyManager manager) throws DfException, CMSMFException {
+	protected void doPersistDependents(T object, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
+		throws DfException, CMSMFException {
 	}
 
-	public final SaveResult saveToCMS(IDfSession session, CmsAttributeMapper mapper) throws DfException,
-		CMSMFException, SQLException {
-		if (session == null) { throw new IllegalArgumentException("Must provide a session to save the object"); }
-		if (mapper == null) {
-			mapper = this.NULL_MAPPER;
-		}
+	public final SaveResult saveToCMS(CmsTransferContext context) throws DfException, CMSMFException, SQLException {
+		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
+
 		boolean transOpen = false;
 		boolean ok = false;
 
@@ -436,6 +419,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		boolean mustFreeze = false;
 		boolean mustImmute = false;
 		IDfSysObject sysObject = null;
+		final IDfSession session = context.getSession();
 		try {
 			if (session.isTransactionActive()) {
 				localTx = session.beginTransEx();
@@ -443,15 +427,15 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				session.beginTrans();
 			}
 			transOpen = true;
-			if (skipImport(session)) { return new SaveResult(CmsImportResult.SKIPPED, null); }
+			if (skipImport(context)) { return new SaveResult(CmsImportResult.SKIPPED, null); }
 
-			T object = locateInCms(session);
+			T object = locateInCms(context);
 			final boolean isNew = (object == null);
 			final boolean updateVersionLabels = isVersionable(object);
 			final CmsImportResult cmsImportResult;
 			if (isNew) {
 				// Create a new object
-				object = newObject(session);
+				object = newObject(context);
 				cmsImportResult = CmsImportResult.CREATED;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
@@ -496,7 +480,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			}
 
 			// Mapping idMapping =
-			mapper.setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id, object.getObjectId().getId());
+			context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
+				object.getObjectId().getId());
 
 			prepareForConstruction(object, isNew);
 
@@ -579,7 +564,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					}
 				} else {
 					// Clear the mapping
-					mapper.clearSourceMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id);
+					context.getAttributeMapper().clearSourceMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id);
 					if (localTx != null) {
 						session.abortTransEx(localTx);
 					} else {
@@ -590,7 +575,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
-	public void resolveDependencies(T object, CmsAttributeMapper mapper) throws DfException, CMSMFException {
+	public void resolveDependencies(T object, CmsTransferContext ctx) throws DfException, CMSMFException {
 
 	}
 
@@ -610,7 +595,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return false;
 	}
 
-	protected boolean skipImport(IDfSession session) throws DfException {
+	protected boolean skipImport(CmsTransferContext ctx) throws DfException {
 		return false;
 	}
 
@@ -627,15 +612,15 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
-	protected T newObject(IDfSession session) throws DfException {
-		return castObject(session.newObject(this.subtype));
+	protected T newObject(CmsTransferContext ctx) throws DfException {
+		return castObject(ctx.getSession().newObject(this.subtype));
 	}
 
-	protected abstract T locateInCms(IDfSession session) throws CMSMFException, DfException;
+	protected abstract T locateInCms(CmsTransferContext context) throws CMSMFException, DfException;
 
 	protected void getDataProperties(Collection<CmsProperty> properties, T object) throws DfException {
 	}
@@ -868,7 +853,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-					.getObjectId().getId());
+				.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);

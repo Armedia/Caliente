@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsDependencyType;
+import com.delta.cmsmf.cms.CmsTransferContext;
 import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObject.SaveResult;
@@ -54,7 +55,7 @@ public class CmsImporter extends CmsTransferEngine {
 	}
 
 	public void doImport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager) throws DfException,
-	CMSMFException {
+		CMSMFException {
 
 		final int threadCount = getThreadCount();
 		final int backlogSize = getBacklogSize();
@@ -96,10 +97,10 @@ public class CmsImporter extends CmsTransferEngine {
 						if (CmsImporter.this.log.isDebugEnabled()) {
 							CmsImporter.this.log.debug(String.format("Polled %s", next));
 						}
-
+						CmsTransferContext ctx = new Context(next.getId(), session, objectStore);
 						SaveResult result = null;
 						try {
-							result = next.saveToCMS(session, objectStore);
+							result = next.saveToCMS(ctx);
 							if (CmsImporter.this.log.isDebugEnabled()) {
 								CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
 							}
@@ -133,8 +134,8 @@ public class CmsImporter extends CmsTransferEngine {
 						Thread.currentThread().interrupt();
 						if (CmsImporter.this.log.isDebugEnabled()) {
 							CmsImporter.this.log
-								.warn(String.format("Thread interrupted while trying to submit the object %s",
-									dataObject), e);
+							.warn(String.format("Thread interrupted while trying to submit the object %s",
+								dataObject), e);
 						} else {
 							CmsImporter.this.log.warn(String.format(
 								"Thread interrupted while trying to submit the object %s", dataObject));
@@ -234,10 +235,10 @@ public class CmsImporter extends CmsTransferEngine {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -246,7 +247,7 @@ public class CmsImporter extends CmsTransferEngine {
 			}
 			for (CmsObjectType type : CmsObjectType.values()) {
 				this.log
-				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}

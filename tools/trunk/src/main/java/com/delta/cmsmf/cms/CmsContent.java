@@ -6,7 +6,6 @@ package com.delta.cmsmf.cms;
 
 import java.util.Collection;
 
-import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.common.DfException;
 
@@ -30,7 +29,7 @@ public class CmsContent extends CmsObject<IDfContent> {
 	}
 
 	@Override
-	protected IDfContent locateInCms(IDfSession session) throws DfException {
+	protected IDfContent locateInCms(CmsTransferContext ctx) throws DfException {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -111,7 +111,8 @@ public class CmsExporter extends CmsTransferEngine {
 								CmsExporter.this.log.debug(String.format("Retrieved [%s] object with id [%s]", dfObj
 									.getType().getName(), dfObj.getObjectId().getId()));
 							}
-							objectStore.persistDfObject(dfObj);
+							objectStore.persistDfObject(dfObj, new Context(dfObj.getObjectId().getId(), session,
+								objectStore));
 							if (CmsExporter.this.log.isDebugEnabled()) {
 								CmsExporter.this.log.debug(String.format("Persisted [%s] object with id [%s]", dfObj
 									.getType().getName(), dfObj.getObjectId().getId()));

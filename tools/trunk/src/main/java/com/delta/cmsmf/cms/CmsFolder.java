@@ -85,7 +85,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-				.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
+					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -96,8 +96,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected void doPersistRequirements(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	protected void doPersistRequirements(IDfFolder folder, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
+		throws DfException, CMSMFException {
 		final IDfSession session = folder.getSession();
 		// The parent folders
 		final int pathCount = folder.getFolderPathCount();
@@ -114,8 +114,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected void doPersistDependents(IDfFolder folder, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
+	protected void doPersistDependents(IDfFolder folder, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
+		throws DfException, CMSMFException {
 
 		final IDfSession session = folder.getSession();
 		String owner = CmsMappingUtils.resolveSpecialUser(session, folder.getOwnerName());
@@ -288,10 +288,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								folder.getObjectId().getId(), getLabel(), userValue.asString()));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							folder.getObjectId().getId(), getLabel(), userValue.asString()));
 					continue;
 				}
 
@@ -335,9 +335,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected IDfFolder locateInCms(IDfSession session) throws CMSMFException, DfException {
+	protected IDfFolder locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
 		IDfFolder existing = null;
 		String existingPath = null;
+		final IDfSession session = ctx.getSession();
 		for (IDfValue path : getAttribute(CmsAttributes.R_FOLDER_PATH)) {
 			String currentPath = path.asString();
 			IDfFolder current = session.getFolderByPath(currentPath);
@@ -360,7 +361,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different folders matching this folder's paths: [%s@%s] and [%s@%s]", existing.getObjectId()
-					.getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}

@@ -86,8 +86,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected IDfDocument locateInCms(IDfSession session) throws CMSMFException, DfException {
+	protected IDfDocument locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
 		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
+		final IDfSession session = ctx.getSession();
 		IDfDocument existing = null;
 		String existingPath = null;
 		for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
@@ -126,9 +127,11 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		return super.isValidForLoad(object);
 	}
 
-	private void exportParentFolders(IDfDocument document, CmsDependencyManager dependencyManager) throws DfException,
-		CMSMFException {
-		IDfSession session = document.getSession();
+	@Override
+	protected void doPersistRequirements(IDfDocument document, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
+		throws DfException, CMSMFException {
+
+		final IDfSession session = document.getSession();
 		// The parent folders
 		final int pathCount = document.getFolderIdCount();
 		for (int i = 0; i < pathCount; i++) {
@@ -136,17 +139,42 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
 			dependencyManager.persistRelatedObject(parent);
 		}
+
+		// Export the object type
+		dependencyManager.persistRelatedObject(document.getType());
+
+		// Export the format
+		dependencyManager.persistRelatedObject(document.getFormat());
+
+		// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
+		// TODO: Is this the right way? Perhaps do it differently?
+		IDfCollection versions = document.getVersions(null);
+		try {
+			while (versions.next()) {
+				IDfId versionId = versions.getId("r_object_id");
+				if (Tools.equals(getId(), versionId.getId())) {
+					// We've caught up with the present
+					break;
+				}
+
+				IDfPersistentObject version = session.getObject(versionId);
+				if (version == null) {
+					// Just in case...shouldn't be needed
+					continue;
+				}
+				IDfDocument versionDoc = IDfDocument.class.cast(version);
+				dependencyManager.persistRelatedObject(versionDoc);
+			}
+		} finally {
+			DfUtils.closeQuietly(versions);
+		}
 	}
 
 	@Override
-	protected void doPersistDependents(IDfDocument document, CmsDependencyManager dependencyManager)
+	protected void doPersistDependents(IDfDocument document, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
 		throws DfException, CMSMFException {
 		final IDfSession session = document.getSession();
-		if (document.isReference()) {
-			// If this is a reference, this is all we're interested in
-			exportParentFolders(document, dependencyManager);
-
-		} else {
+		if (!document.isReference()) {
 
 			// This isn't a reference so let's do the whole shebang
 
@@ -172,35 +200,32 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				dependencyManager.persistRelatedObject(obj);
 			}
 
-			// Export the object type
-			dependencyManager.persistRelatedObject(document.getType());
-
-			// Export the format
-			dependencyManager.persistRelatedObject(document.getFormat());
-
 			// Save filestore name
 			String storageType = document.getStorageType();
 			if (StringUtils.isNotBlank(storageType)) {
 				RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
 			}
 
-			exportParentFolders(document, dependencyManager);
-
-			// Persist versions, but only if we're the root version
+			// Now, also do the *SUBSEQUENT* versions...
+			// TODO: Is this the right way? Perhaps do it differently?
 			IDfCollection versions = document.getVersions(null);
+			boolean caughtUp = false;
 			try {
 				while (versions.next()) {
 					IDfId versionId = versions.getId("r_object_id");
-					if (!Tools.equals(getId(), versionId.getId())) {
-						IDfPersistentObject version = session.getObject(versionId);
-						if (version == null) {
-							// Just in case...shouldn't be needed
-							continue;
-						}
-						IDfDocument versionDoc = IDfDocument.class.cast(version);
-						// TODO: Is this the right way? Perhaps do it differently?
-						dependencyManager.persistRelatedObject(versionDoc);
+					boolean current = Tools.equals(getId(), versionId.getId());
+					caughtUp |= current;
+					if (!caughtUp || current) {
+						continue;
 					}
+					IDfPersistentObject version = session.getObject(versionId);
+					if (version == null) {
+						// Just in case...shouldn't be needed
+						continue;
+					}
+					IDfDocument versionDoc = IDfDocument.class.cast(version);
+					// TODO: Is this the right way? Perhaps do it differently?
+					dependencyManager.persistRelatedObject(versionDoc);
 				}
 			} finally {
 				DfUtils.closeQuietly(versions);
@@ -238,7 +263,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	public void resolveDependencies(IDfDocument object, CmsAttributeMapper mapper) throws DfException, CMSMFException {
+	public void resolveDependencies(IDfDocument object, CmsTransferContext ctx) throws DfException, CMSMFException {
 	}
 
 	@Override

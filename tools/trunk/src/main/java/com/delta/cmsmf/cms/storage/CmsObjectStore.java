@@ -33,6 +33,7 @@ import com.delta.cmsmf.cms.CmsAttribute;
 import com.delta.cmsmf.cms.CmsAttributeMapper;
 import com.delta.cmsmf.cms.CmsDataType;
 import com.delta.cmsmf.cms.CmsDependencyManager;
+import com.delta.cmsmf.cms.CmsTransferContext;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
@@ -77,38 +78,38 @@ public class CmsObjectStore extends CmsAttributeMapper {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-	"   select object_type, count(*) as total " + //
+		"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -125,18 +126,6 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		@Override
 		public Boolean handle(ResultSet rs) throws SQLException {
 			return rs.next();
-		}
-	};
-
-	private final CmsDependencyManager dependencyManager = new CmsDependencyManager() {
-		@Override
-		protected boolean persistDependency(Dependency dependency) throws CMSMFException {
-			return CmsObjectStore.this.persistDependency(dependency.getType(), dependency.getId());
-		}
-
-		@Override
-		public Boolean persistDfObject(IDfPersistentObject dfObject) throws DfException, CMSMFException {
-			return CmsObjectStore.this.persistDfObject(dfObject);
 		}
 	};
 
@@ -201,7 +190,8 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		return q;
 	}
 
-	private boolean serializeObject(Connection c, CmsObject<?> object) throws DfException, CMSMFException {
+	private boolean serializeObject(Connection c, CmsObject<?> object, CmsTransferContext ctx) throws DfException,
+	CMSMFException {
 		final String objectId = object.getId();
 		final CmsObjectType objectType = object.getType();
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
@@ -220,7 +210,7 @@ public class CmsObjectStore extends CmsAttributeMapper {
 				// Object is already there, so do nothing
 				return false;
 			}
-			persistDependency(c, object.getType(), object.getId());
+			persistDependency(c, object.getType(), object.getId(), ctx);
 			final String sql = "select * from dctm_export_plan where traversed = false and object_id = ? and not exists ( select o.object_id from dctm_object o where o.object_id = dctm_export_plan.object_id ) for update";
 			lockPS = c.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 			lockPS.setString(1, objectId);
@@ -340,8 +330,9 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		}
 	}
 
-	public boolean serializeObject(CmsObject<?> object) throws DfException, CMSMFException {
+	public boolean serializeObject(CmsObject<?> object, final CmsTransferContext ctx) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
+		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to serialize with"); }
 		boolean ok = false;
 		try {
 			Connection c = this.dataSource.getConnection();
@@ -349,7 +340,7 @@ public class CmsObjectStore extends CmsAttributeMapper {
 			c.rollback();
 			c.setAutoCommit(false);
 			try {
-				boolean ret = serializeObject(c, object);
+				boolean ret = serializeObject(c, object, ctx);
 				ok = true;
 				return ret;
 			} finally {
@@ -601,7 +592,8 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		}
 	}
 
-	protected boolean persistDependency(Connection c, CmsObjectType type, String id) throws CMSMFException {
+	protected boolean persistDependency(Connection c, CmsObjectType type, String id, final CmsTransferContext ctx)
+		throws CMSMFException {
 		QueryRunner qr = CmsObjectStore.getQueryRunner();
 		try {
 			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS, id)) {
@@ -624,7 +616,8 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		}
 	}
 
-	protected boolean persistDependency(CmsObjectType type, String id) throws CMSMFException {
+	protected boolean persistDependency(CmsObjectType type, String id, final CmsTransferContext ctx)
+		throws CMSMFException {
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to persist a dependency"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide an ID for the dependency to be persisted"); }
 		final Connection c;
@@ -636,7 +629,7 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		boolean ok = false;
 		try {
 			c.setAutoCommit(false);
-			boolean ret = persistDependency(c, type, id);
+			boolean ret = persistDependency(c, type, id, ctx);
 			ok = true;
 			return ret;
 		} catch (SQLException e) {
@@ -650,7 +643,8 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		}
 	}
 
-	public Boolean persistDfObject(IDfPersistentObject dfObject) throws DfException, CMSMFException {
+	public Boolean persistDfObject(IDfPersistentObject dfObject, final CmsTransferContext ctx) throws DfException,
+		CMSMFException {
 		final CmsObjectType objectType;
 		try {
 			objectType = CmsObjectType.decodeType(dfObject);
@@ -663,10 +657,10 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		final String objectId = dfObject.getObjectId().getId();
 		// If it's already serialized, we skip it
 		try {
-			persistDependency(objectType, objectId);
+			persistDependency(objectType, objectId, ctx);
 		} catch (CMSMFException e) {
 			// Check again...maybe it was a PK violation...
-			if (!persistDependency(objectType, objectId)) { return false; }
+			if (!persistDependency(objectType, objectId, ctx)) { return false; }
 			// It wasn't... raise an error
 			throw new CMSMFException(String.format(
 				"Exception caught while trying to create the mutex lock for [%s::%s]", objectType.name(), objectId), e);
@@ -680,10 +674,22 @@ public class CmsObjectStore extends CmsAttributeMapper {
 			return false;
 		}
 		// We try to traverse its dependencies
-		obj.persistRequirements(dfObject, this.dependencyManager);
+		CmsDependencyManager dependencyManager = new CmsDependencyManager() {
+			@Override
+			protected boolean persistDependency(Dependency dependency) throws CMSMFException {
+				return CmsObjectStore.this.persistDependency(dependency.getType(), dependency.getId(), ctx);
+			}
+
+			@Override
+			public Boolean persistDfObject(IDfPersistentObject dfObject) throws DfException, CMSMFException {
+				return CmsObjectStore.this.persistDfObject(dfObject, ctx);
+			}
+		};
+
+		obj.persistRequirements(dfObject, ctx, dependencyManager);
 		// If somehow it got serialized underneath us (perhaps by another thread), we skip it
-		if (!serializeObject(obj)) { return false; }
-		obj.persistDependents(dfObject, this.dependencyManager);
+		if (!serializeObject(obj, ctx)) { return false; }
+		obj.persistDependents(dfObject, ctx, dependencyManager);
 		// markTraversed(obj.getId());
 		return true;
 	}
@@ -737,26 +743,26 @@ public class CmsObjectStore extends CmsAttributeMapper {
 		try {
 			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<CmsObjectType, Integer>>() {
-					@Override
-					public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
-						while (rs.next()) {
-							String t = rs.getString("object_type");
-							if ((t == null) || rs.wasNull()) {
-								CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
-							try {
-								ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
-							} catch (IllegalArgumentException e) {
-								CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
-									t));
-								continue;
-							}
+				@Override
+				public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
+					Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
+					while (rs.next()) {
+						String t = rs.getString("object_type");
+						if ((t == null) || rs.wasNull()) {
+							CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+							continue;
 						}
-						return ret;
+						try {
+							ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
+						} catch (IllegalArgumentException e) {
+							CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
+								t));
+							continue;
+						}
 					}
-				});
+					return ret;
+				}
+			});
 		} catch (SQLException e) {
 			throw new CMSMFException("Failed to retrieve the stored object types", e);
 		}

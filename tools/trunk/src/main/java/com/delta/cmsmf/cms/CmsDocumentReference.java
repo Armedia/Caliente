@@ -8,7 +8,6 @@ import java.util.Collection;
 
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
-import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
@@ -40,7 +39,7 @@ public class CmsDocumentReference extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected IDfDocument locateInCms(IDfSession session) throws DfException {
+	protected IDfDocument locateInCms(CmsTransferContext ctx) throws DfException {
 		// TODO Auto-generated method stub
 		return null;
 	}
