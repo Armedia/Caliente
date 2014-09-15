@@ -16,6 +16,7 @@ import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
@@ -186,29 +187,46 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			exportParentFolders(document, dependencyManager);
 
 			// Persist versions, but only if we're the root version
-			// TODO: Is this the proper way to tell if an object is the root of the version tree?
-			CmsAttribute antecedent = getAttribute(CmsAttributes.I_ANTECEDENT_ID);
-			if ((antecedent == null) || antecedent.getValue().asId().isNull()) {
-				// No antecedent, so we're a root object, so we can get our versions
-				String chronicleId = document.getChronicleId().getId();
-				String dql = String
-					.format(
-						"select distinct r_object_id, r_creation_date from dm_sysobject_s where i_chronicle_id = '%s' order by r_creation_date",
-						chronicleId);
-				IDfCollection results = DfUtils.executeQuery(session, dql);
-				try {
-					while (results.next()) {
-						IDfId versionId = results.getId("r_object_id");
-						if (Tools.equals(getId(), versionId.getId())) {
-							// Do not even try to loop on ourselves, or a null ID
-							continue;
-						}
+			IDfCollection versions = document.getVersions(null);
+			try {
+				while (versions.next()) {
+					IDfId versionId = versions.getId("r_object_id");
+					if (!Tools.equals(getId(), versionId.getId())) {
 						IDfPersistentObject version = session.getObject(versionId);
 						if (version == null) {
 							// Just in case...shouldn't be needed
 							continue;
 						}
 						dependencyManager.persistDependency(version);
+					}
+				}
+			} finally {
+				DfUtils.closeQuietly(versions);
+			}
+
+			String dql = "" //
+				+ "select dcs.r_object_id, dcr.page, dcr.page_modifier, dcs.rendition " //
+				+ "  from dmr_content_r dcr, dmr_content_s dcs " //
+				+ " where dcr.r_object_id = dcs.r_object_id " //
+				+ "   and dcr.parent_id = '%s' " //
+				+ "   and dcr.page = %d " //
+				+ " order by dcs.rendition ";
+			final String parentId = getId();
+			final int pageCount = document.getPageCount();
+			for (int i = 0; i < pageCount; i++) {
+				IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
+					IDfQuery.DF_EXECREAD_QUERY);
+				try {
+					while (results.next()) {
+						IDfId contentId = results.getId("r_object_id");
+						IDfPersistentObject content = session.getObject(contentId);
+						if (content == null) {
+							// Impossible, but defend against it anyway
+							this.log.warn(String
+								.format("Missing page %d for document [%s](%s)", i, getLabel(), getId()));
+							continue;
+						}
+						dependencyManager.persistDependency(content);
 					}
 				} finally {
 					DfUtils.closeQuietly(results);
