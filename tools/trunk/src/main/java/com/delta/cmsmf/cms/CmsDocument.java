@@ -120,7 +120,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -147,17 +147,19 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				}
 
 				boolean current = Tools.equals(currentId.getId(), versionId.getId());
+				caughtUp |= current;
+				// This logic can be condensed, but it's better to leave it simple
+				// to understand
 				if (prior) {
 					// If we're looking for prior versions, then we have to wait until
 					// we find this one, and then start adding
-					caughtUp |= current;
 					if (!caughtUp || current) {
 						continue;
 					}
 				} else {
 					// If we're looking for later versions, then we start adding them
 					// all, until we find this one
-					if (current) {
+					if (caughtUp) {
 						// We've caught up with the present, break the cycle
 						break;
 					}
