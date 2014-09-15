@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
+import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
@@ -83,8 +83,7 @@ public class DefaultTransferContext implements CmsTransferContext {
 	}
 
 	@Override
-	public <T extends IDfPersistentObject, O extends CmsObject<T>> Map<String, O> retrieveObjects(Class<O> klass,
-		Set<String> ids) throws CMSMFException {
-		return this.objectStore.retrieveObjects(klass, ids);
+	public void deserializeObjects(CmsObjectType type, Set<String> ids, ObjectHandler handler) throws CMSMFException {
+		this.objectStore.deserializeObjects(type, ids, handler);
 	}
 }

@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -81,52 +80,52 @@ public class CmsObjectStore {
 	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-	"   select object_type, count(*) as total " + //
+		"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-	"    select o.* " + //
+		"    select o.* " + //
 		"  from dctm_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -233,7 +232,7 @@ public class CmsObjectStore {
 	}
 
 	private boolean serializeObject(Connection c, CmsObject<?> object, CmsTransferContext ctx) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final String objectId = object.getId();
 		final CmsObjectType objectType = object.getType();
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
@@ -373,7 +372,7 @@ public class CmsObjectStore {
 	}
 
 	public boolean serializeObject(CmsObject<?> object, final CmsTransferContext ctx) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to serialize with"); }
 		boolean ok = false;
@@ -405,11 +404,18 @@ public class CmsObjectStore {
 	}
 
 	public void deserializeObjects(CmsObjectType type, ObjectHandler handler) throws CMSMFException {
+		deserializeObjects(type, null, handler);
+	}
+
+	public void deserializeObjects(CmsObjectType type, Set<String> ids, ObjectHandler handler) throws CMSMFException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to deserialize"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
 		Connection objConn = null;
 		Connection attConn = null;
+
+		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
+		if ((ids != null) && ids.isEmpty()) { return; }
 
 		try {
 			objConn = this.dataSource.getConnection();
@@ -421,7 +427,20 @@ public class CmsObjectStore {
 			PreparedStatement propPS = null;
 			PreparedStatement pvalPS = null;
 			try {
-				objPS = objConn.prepareStatement(CmsObjectStore.LOAD_OBJECTS_SQL);
+				boolean limitByIDs = false;
+				boolean useSqlArray = false;
+				if (ids == null) {
+					objPS = objConn.prepareStatement(CmsObjectStore.LOAD_OBJECTS_SQL);
+				} else {
+					limitByIDs = true;
+					try {
+						objPS = objConn.prepareStatement(CmsObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
+						useSqlArray = true;
+					} catch (SQLException e) {
+						objPS = objConn.prepareStatement(CmsObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
+					}
+				}
+
 				attPS = attConn.prepareStatement(CmsObjectStore.LOAD_ATTRIBUTES_SQL);
 				valPS = attConn.prepareStatement(CmsObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
 				propPS = attConn.prepareStatement(CmsObjectStore.LOAD_PROPERTIES_SQL);
@@ -432,7 +451,17 @@ public class CmsObjectStore {
 				ResultSet propRS = null;
 				ResultSet valRS = null;
 
-				objPS.setString(1, type.name());
+				if (!limitByIDs) {
+					objPS.setString(1, type.name());
+				} else {
+					if (useSqlArray) {
+						objPS.setString(1, type.name());
+						objPS.setArray(2, objConn.createArrayOf("text", ids.toArray()));
+					} else {
+						objPS.setObject(1, ids.toArray());
+						objPS.setString(2, type.name());
+					}
+				}
 				objRS = objPS.executeQuery();
 				try {
 					while (objRS.next()) {
@@ -686,7 +715,7 @@ public class CmsObjectStore {
 	}
 
 	public Boolean persistDfObject(IDfPersistentObject dfObject, final CmsTransferContext ctx) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final CmsObjectType objectType;
 		try {
 			objectType = CmsObjectType.decodeType(dfObject);
@@ -783,26 +812,26 @@ public class CmsObjectStore {
 		try {
 			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<CmsObjectType, Integer>>() {
-					@Override
-					public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
-						while (rs.next()) {
-							String t = rs.getString("object_type");
-							if ((t == null) || rs.wasNull()) {
-								CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
-							try {
-								ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
-							} catch (IllegalArgumentException e) {
-								CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
-									t));
-								continue;
-							}
+				@Override
+				public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
+					Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
+					while (rs.next()) {
+						String t = rs.getString("object_type");
+						if ((t == null) || rs.wasNull()) {
+							CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+							continue;
 						}
-						return ret;
+						try {
+							ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
+						} catch (IllegalArgumentException e) {
+							CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
+								t));
+							continue;
+						}
 					}
-				});
+					return ret;
+				}
+			});
 		} catch (SQLException e) {
 			throw new CMSMFException("Failed to retrieve the stored object types", e);
 		}
@@ -817,162 +846,6 @@ public class CmsObjectStore {
 		}
 		try {
 			return getStoredObjectTypes(c);
-		} finally {
-			DbUtils.rollbackAndCloseQuietly(c);
-		}
-	}
-
-	private <T extends IDfPersistentObject, O extends CmsObject<T>> Map<String, O> retrieveObjects(Connection c,
-		Class<O> klass, Set<String> ids) throws CMSMFException {
-		if (klass == null) { throw new IllegalArgumentException("Must provide a class of object to retrieve"); }
-		if (ids == null) { throw new IllegalArgumentException("Must provide a set of object IDs to retrieve"); }
-		final CmsObjectType type = CmsObjectType.decodeFromClass(klass);
-
-		Map<String, O> ret = new HashMap<String, O>();
-		// Short-circuit
-		if (ids.isEmpty()) { return ret; }
-
-		Connection objConn = null;
-		Connection attConn = null;
-
-		try {
-			objConn = this.dataSource.getConnection();
-			attConn = this.dataSource.getConnection();
-
-			PreparedStatement objPS = null;
-			PreparedStatement attPS = null;
-			PreparedStatement valPS = null;
-			PreparedStatement propPS = null;
-			PreparedStatement pvalPS = null;
-			try {
-				boolean useSqlArray = false;
-				try {
-					objPS = objConn.prepareStatement(CmsObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
-					useSqlArray = true;
-				} catch (SQLException e) {
-					objPS = objConn.prepareStatement(CmsObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
-				}
-
-				attPS = attConn.prepareStatement(CmsObjectStore.LOAD_ATTRIBUTES_SQL);
-				valPS = attConn.prepareStatement(CmsObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
-				propPS = attConn.prepareStatement(CmsObjectStore.LOAD_PROPERTIES_SQL);
-				pvalPS = attConn.prepareStatement(CmsObjectStore.LOAD_PROPERTY_VALUES_SQL);
-
-				ResultSet objRS = null;
-				ResultSet attRS = null;
-				ResultSet propRS = null;
-				ResultSet valRS = null;
-
-				if (useSqlArray) {
-					objPS.setString(1, type.name());
-					objPS.setArray(2, c.createArrayOf("text", ids.toArray()));
-				} else {
-					objPS.setObject(1, ids.toArray());
-					objPS.setString(2, type.name());
-				}
-				objRS = objPS.executeQuery();
-				try {
-					while (objRS.next()) {
-						final CmsObjectType objType = CmsObjectType.valueOf(objRS.getString("object_type"));
-						if (objType != type) { throw new CMSMFException(String.format(
-							"Objects being retrieved are of type [%s], but type [%s] was requested", objType.name(),
-							type.name())); }
-						final int objNum = objRS.getInt("object_number");
-						final String objId = objRS.getString("object_id");
-						final String objLabel = objRS.getString("object_label");
-						if (this.log.isInfoEnabled()) {
-							this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
-								objLabel, objId));
-						}
-						O obj;
-						try {
-							obj = klass.newInstance();
-						} catch (Throwable t) {
-							throw new CMSMFException(
-								String.format("Failed to construct the object of type [%s]", type), t);
-						}
-						obj.load(objRS);
-						if (this.log.isTraceEnabled()) {
-							this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
-						} else if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("De-serialized %s object #%d [%s](%s)", type, objNum,
-								objLabel, objId));
-						}
-
-						attPS.clearParameters();
-						attPS.setString(1, obj.getId());
-						attRS = attPS.executeQuery();
-						try {
-							obj.loadAttributes(attRS);
-						} finally {
-							DbUtils.closeQuietly(attRS);
-						}
-
-						valPS.clearParameters();
-						valPS.setString(1, obj.getId());
-						for (CmsAttribute att : obj.getAllAttributes()) {
-							valPS.setString(2, att.getName());
-							valRS = valPS.executeQuery();
-							try {
-								att.loadValues(valRS);
-							} finally {
-								DbUtils.closeQuietly(valRS);
-							}
-						}
-
-						propPS.clearParameters();
-						propPS.setString(1, obj.getId());
-						propRS = propPS.executeQuery();
-						try {
-							obj.loadProperties(propRS);
-						} finally {
-							DbUtils.closeQuietly(propRS);
-						}
-
-						pvalPS.clearParameters();
-						pvalPS.setString(1, obj.getId());
-						for (CmsProperty prop : obj.getAllProperties()) {
-							pvalPS.setString(2, prop.getName());
-							valRS = pvalPS.executeQuery();
-							try {
-								prop.loadValues(valRS);
-							} finally {
-								DbUtils.closeQuietly(valRS);
-							}
-						}
-
-						ret.put(obj.getId(), obj);
-					}
-					return ret;
-				} finally {
-					DbUtils.closeQuietly(objRS);
-				}
-			} finally {
-				DbUtils.closeQuietly(pvalPS);
-				DbUtils.closeQuietly(propPS);
-				DbUtils.closeQuietly(valPS);
-				DbUtils.closeQuietly(attPS);
-				DbUtils.closeQuietly(objPS);
-			}
-		} catch (SQLException e) {
-			throw new CMSMFException(
-				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
-		} finally {
-			DbUtils.rollbackAndCloseQuietly(attConn);
-			DbUtils.rollbackAndCloseQuietly(objConn);
-		}
-	}
-
-	public <T extends IDfPersistentObject, O extends CmsObject<T>> Map<String, O> retrieveObjects(Class<O> klass,
-		Set<String> ids) throws CMSMFException {
-		final Connection c;
-		try {
-			c = this.dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new CMSMFException("Failed to connecto to the object store's database", e);
-		}
-		try {
-			return retrieveObjects(c, klass, ids);
 		} finally {
 			DbUtils.rollbackAndCloseQuietly(c);
 		}
