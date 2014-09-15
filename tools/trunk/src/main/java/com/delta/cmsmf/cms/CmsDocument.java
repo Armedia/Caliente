@@ -4,7 +4,10 @@
 
 package com.delta.cmsmf.cms;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -117,14 +120,62 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
 
+	private List<IDfId> getVersions(boolean prior, IDfDocument document) throws DfException {
+		if (document == null) { throw new IllegalArgumentException("Must provide a document whose versions to analyze"); }
+
+		// Is this the root of the version hierarchy? If so, then there are no prior versions
+		if (prior && Tools.equals(document.getObjectId().getId(), document.getChronicleId().getId())) {
+			// Return an empty list - this is the root of the version hierarchy
+			return new ArrayList<IDfId>();
+		}
+
+		IDfCollection versions = document.getVersions(null);
+		try {
+			final IDfId currentId = document.getObjectId();
+			LinkedList<IDfId> ret = new LinkedList<IDfId>();
+			boolean caughtUp = false;
+			while (versions.next()) {
+				IDfId versionId = versions.getId("r_object_id");
+				if (versionId.isNull()) {
+					// Shouldn't happen, but better safe than sorry...
+					continue;
+				}
+
+				boolean current = Tools.equals(currentId.getId(), versionId.getId());
+				if (prior) {
+					// If we're looking for prior versions, then we have to wait until
+					// we find this one, and then start adding
+					caughtUp |= current;
+					if (!caughtUp || current) {
+						continue;
+					}
+				} else {
+					// If we're looking for later versions, then we start adding them
+					// all, until we find this one
+					if (current) {
+						// We've caught up with the present, break the cycle
+						break;
+					}
+				}
+
+				// Add this version at the head, since it's older than the existing ones
+				ret.addFirst(versionId);
+			}
+
+			return ret;
+		} finally {
+			DfUtils.closeQuietly(versions);
+		}
+	}
+
 	@Override
-	protected boolean isValidForLoad(IDfDocument object) throws DfException {
-		return super.isValidForLoad(object);
+	protected boolean isValidForLoad(IDfDocument document) throws DfException {
+		return super.isValidForLoad(document);
 	}
 
 	@Override
@@ -152,26 +203,14 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		// which is BAAAD
 		if (Tools.equals(getId(), ctx.getRootObjectId())) {
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
-			// TODO: Is this the right way? Perhaps do it differently?
-			IDfCollection versions = document.getVersions(null);
-			try {
-				while (versions.next()) {
-					IDfId versionId = versions.getId("r_object_id");
-					if (Tools.equals(getId(), versionId.getId())) {
-						// We've caught up with the present
-						break;
-					}
-
-					IDfPersistentObject version = session.getObject(versionId);
-					if (version == null) {
-						// Just in case...shouldn't be needed
-						continue;
-					}
-					IDfDocument versionDoc = IDfDocument.class.cast(version);
-					dependencyManager.persistRelatedObject(versionDoc);
+			for (IDfId versionId : getVersions(true, document)) {
+				IDfPersistentObject obj = session.getObject(versionId);
+				if (obj == null) {
+					// WTF?? Shouldn't happen...
+					continue;
 				}
-			} finally {
-				DfUtils.closeQuietly(versions);
+				IDfDocument versionDoc = IDfDocument.class.cast(obj);
+				dependencyManager.persistRelatedObject(versionDoc);
 			}
 		}
 	}
@@ -218,28 +257,14 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// which is BAAAD
 			if (Tools.equals(getId(), ctx.getRootObjectId())) {
 				// Now, also do the *SUBSEQUENT* versions...
-				// TODO: Is this the right way? Perhaps do it differently?
-				IDfCollection versions = document.getVersions(null);
-				boolean caughtUp = false;
-				try {
-					while (versions.next()) {
-						IDfId versionId = versions.getId("r_object_id");
-						boolean current = Tools.equals(getId(), versionId.getId());
-						caughtUp |= current;
-						if (!caughtUp || current) {
-							continue;
-						}
-						IDfPersistentObject version = session.getObject(versionId);
-						if (version == null) {
-							// Just in case...shouldn't be needed
-							continue;
-						}
-						IDfDocument versionDoc = IDfDocument.class.cast(version);
-						// TODO: Is this the right way? Perhaps do it differently?
-						dependencyManager.persistRelatedObject(versionDoc);
+				for (IDfId versionId : getVersions(false, document)) {
+					IDfPersistentObject obj = session.getObject(versionId);
+					if (obj == null) {
+						// WTF?? Shouldn't happen...
+						continue;
 					}
-				} finally {
-					DfUtils.closeQuietly(versions);
+					IDfDocument versionDoc = IDfDocument.class.cast(obj);
+					dependencyManager.persistRelatedObject(versionDoc);
 				}
 			}
 
