@@ -51,8 +51,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CmsObjectStore {
 
-	public static interface ObjectHandler {
-		public boolean handle(CmsObject<?> dataObject) throws CMSMFException;
+	public static interface ObjectHandler<O extends CmsObject<?>> {
+		public boolean handle(O dataObject) throws CMSMFException;
 	}
 
 	public static interface DependencyHandler {
@@ -403,16 +403,20 @@ public class CmsObjectStore {
 		}
 	}
 
-	public void deserializeObjects(CmsObjectType type, ObjectHandler handler) throws CMSMFException {
-		deserializeObjects(type, null, handler);
+	public <O extends CmsObject<?>> void deserializeObjects(Class<O> klass, ObjectHandler<O> handler)
+		throws CMSMFException {
+		deserializeObjects(klass, null, handler);
 	}
 
-	public void deserializeObjects(CmsObjectType type, Set<String> ids, ObjectHandler handler) throws CMSMFException {
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type to deserialize"); }
+	public <O extends CmsObject<?>> void deserializeObjects(Class<O> klass, Set<String> ids, ObjectHandler<O> handler)
+		throws CMSMFException {
+		if (klass == null) { throw new IllegalArgumentException("Must provide an object class to deserialize"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
 		Connection objConn = null;
 		Connection attConn = null;
+
+		final CmsObjectType type = CmsObjectType.decodeFromClass(klass);
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return; }
@@ -466,14 +470,29 @@ public class CmsObjectStore {
 				try {
 					while (objRS.next()) {
 						final int objNum = objRS.getInt("object_number");
-						final CmsObjectType objType = CmsObjectType.valueOf(objRS.getString("object_type"));
 						final String objId = objRS.getString("object_id");
 						final String objLabel = objRS.getString("object_label");
+						final CmsObjectType objType = CmsObjectType.valueOf(objRS.getString("object_type"));
+
+						// Make sure we're returning the right thing
+						if (objType != type) { throw new CMSMFException(
+							String
+							.format(
+								"Deserialization failure with object #%d [%s](ID=%s) - got type [%s] but expected type [%s]",
+								objNum, objLabel, objId, objType.name(), type.name())); }
+
+						if (!klass.isAssignableFrom(objType.getCmsObjectClass())) { throw new CMSMFException(
+							String
+							.format(
+								"Deserialization failure with %s object #%d [%s](ID=%s) - class [%s] is not assignable as [%s]",
+								objType.name(), objNum, objLabel, objId, objType.getDeclaringClass()
+								.getCanonicalName(), klass.getCanonicalName())); }
+
 						if (this.log.isInfoEnabled()) {
 							this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
 								objLabel, objId));
 						}
-						CmsObject<?> obj = objType.newInstance();
+						O obj = klass.cast(objType.newInstance());
 						obj.load(objRS);
 						if (this.log.isTraceEnabled()) {
 							this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));

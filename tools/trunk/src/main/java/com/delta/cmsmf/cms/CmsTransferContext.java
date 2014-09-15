@@ -23,5 +23,6 @@ public interface CmsTransferContext {
 
 	public boolean hasValue(String name);
 
-	public void deserializeObjects(CmsObjectType type, Set<String> ids, ObjectHandler handler) throws CMSMFException;
+	public <O extends CmsObject<?>> void deserializeObjects(Class<O> klass, Set<String> ids, ObjectHandler<O> handler)
+		throws CMSMFException;
 }

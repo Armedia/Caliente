@@ -14,6 +14,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.delta.cmsmf.cms.AbstractTest;
+import com.delta.cmsmf.cms.CmsACL;
 import com.delta.cmsmf.cms.CmsAttribute;
 import com.delta.cmsmf.cms.CmsAttributeMapper;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
@@ -520,13 +521,13 @@ public class CmsObjectStoreTest extends AbstractTest {
 			// All is well
 		}
 		try {
-			store.deserializeObjects(CmsObjectType.ACL, null);
+			store.deserializeObjects(CmsACL.class, null);
 			Assert.fail("Did not fail with id null");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			store.deserializeObjects(null, new ObjectHandler() {
+			store.deserializeObjects(null, new ObjectHandler<CmsObject<?>>() {
 				@Override
 				public boolean handle(CmsObject<?> dataObject) throws CMSMFException {
 					return false;
@@ -586,7 +587,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 				}
 
 				// Now, try to deserialize
-				store.deserializeObjects(t, new ObjectHandler() {
+				store.deserializeObjects(t.getCmsObjectClass(), new ObjectHandler<CmsObject<?>>() {
 					@Override
 					public boolean handle(CmsObject<?> obj) throws CMSMFException {
 						final CmsObject<?> expectedObject = expected.get(obj.getId());

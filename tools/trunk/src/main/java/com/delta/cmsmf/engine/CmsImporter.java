@@ -125,7 +125,7 @@ public class CmsImporter extends CmsTransferEngine {
 		// 1: run the query for the given predicate
 		try {
 			final Map<CmsObjectType, Integer> containedTypes = objectStore.getStoredObjectTypes();
-			final ObjectHandler handler = new ObjectHandler() {
+			final ObjectHandler<CmsObject<?>> handler = new ObjectHandler<CmsObject<?>>() {
 				@Override
 				public boolean handle(CmsObject<?> dataObject) {
 					try {
@@ -135,8 +135,8 @@ public class CmsImporter extends CmsTransferEngine {
 						Thread.currentThread().interrupt();
 						if (CmsImporter.this.log.isDebugEnabled()) {
 							CmsImporter.this.log
-							.warn(String.format("Thread interrupted while trying to submit the object %s",
-								dataObject), e);
+								.warn(String.format("Thread interrupted while trying to submit the object %s",
+									dataObject), e);
 						} else {
 							CmsImporter.this.log.warn(String.format(
 								"Thread interrupted while trying to submit the object %s", dataObject));
@@ -168,7 +168,7 @@ public class CmsImporter extends CmsTransferEngine {
 				}
 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
-				objectStore.deserializeObjects(type, handler);
+				objectStore.deserializeObjects(type.getCmsObjectClass(), handler);
 
 				try {
 					// Ask the workers to exit civilly after the entire workload is submitted
