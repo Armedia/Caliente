@@ -120,7 +120,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -253,23 +253,6 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
 			}
 
-			// We only export versions if we're the root object of the context operation
-			// There is no actual harm done, since the export engine is smart enough to
-			// not duplicate, but doing it like this helps us avoid o(n^2) performance
-			// which is BAAAD
-			if (Tools.equals(getId(), ctx.getRootObjectId())) {
-				// Now, also do the *SUBSEQUENT* versions...
-				for (IDfId versionId : getVersions(false, document)) {
-					IDfPersistentObject obj = session.getObject(versionId);
-					if (obj == null) {
-						// WTF?? Shouldn't happen...
-						continue;
-					}
-					IDfDocument versionDoc = IDfDocument.class.cast(obj);
-					dependencyManager.persistRelatedObject(versionDoc);
-				}
-			}
-
 			// We export our contents...
 			String dql = "" //
 				+ "select dcs.r_object_id, dcr.page, dcr.page_modifier, dcs.rendition " //
@@ -297,6 +280,23 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 					}
 				} finally {
 					DfUtils.closeQuietly(results);
+				}
+			}
+
+			// We only export versions if we're the root object of the context operation
+			// There is no actual harm done, since the export engine is smart enough to
+			// not duplicate, but doing it like this helps us avoid o(n^2) performance
+			// which is BAAAD
+			if (Tools.equals(getId(), ctx.getRootObjectId())) {
+				// Now, also do the *SUBSEQUENT* versions...
+				for (IDfId versionId : getVersions(false, document)) {
+					IDfPersistentObject obj = session.getObject(versionId);
+					if (obj == null) {
+						// WTF?? Shouldn't happen...
+						continue;
+					}
+					IDfDocument versionDoc = IDfDocument.class.cast(obj);
+					dependencyManager.persistRelatedObject(versionDoc);
 				}
 			}
 		}
