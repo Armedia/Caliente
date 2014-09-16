@@ -190,7 +190,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -494,7 +494,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 						this.log.debug(String.format("Clearing frozen status from [%s](%s)", this.label, this.id));
 					}
 					sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, false);
-					sysObject.save();
+					if (!sysObject.isCheckedOut()) {
+						sysObject.save();
+					}
 				}
 				if (sysObject.isImmutable()) {
 					mustImmute = true;
@@ -502,7 +504,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 						this.log.debug(String.format("Clearing immutable status from [%s](%s)", this.label, this.id));
 					}
 					sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, false);
-					sysObject.save();
+					if (!sysObject.isCheckedOut()) {
+						sysObject.save();
+					}
 				}
 
 				CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
@@ -561,18 +565,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			}
 
 			finalizeConstruction(object, isNew, context);
-			object.save();
-			if (postConstruction(object, isNew, context)) {
-				object.save();
-			}
-
-			updateSystemAttributes(object);
-			object.save();
-
-			if (cleanupAfterSave(object, isNew, context)) {
-				object.save();
-			}
-
+			final IDfId newId;
 			if (checkOut) {
 				StringBuilder versionLabels = new StringBuilder();
 				for (IDfValue v : getAttribute(CmsAttributes.R_VERSION_LABEL)) {
@@ -582,10 +575,24 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					versionLabels.append(v.asString());
 				}
 				String vl = versionLabels.toString();
-				IDfId newId = sysObject.checkin(false, vl);
+				newId = sysObject.checkin(false, vl);
 				this.log.info(String.format("Checked in %s [%s](%s) to CMS as versions [%s] (newId=%s)", this.type,
 					this.label, this.id, vl, newId.getId()));
 				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id, newId.getId());
+			} else {
+				newId = object.getObjectId();
+				object.save();
+			}
+
+			if (postConstruction(object, isNew, context)) {
+				object.save();
+			}
+
+			updateSystemAttributes(object);
+			object.save();
+
+			if (cleanupAfterSave(object, isNew, context)) {
+				object.save();
 			}
 
 			ok = true;
@@ -615,11 +622,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			} catch (DfException e) {
 				ok = false;
 				this.log
-					.error(
-						String
-							.format(
-								"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
-								this.label, this.id), e);
+				.error(
+					String
+					.format(
+						"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
+						this.label, this.id), e);
 			}
 			if (transOpen) {
 				if (ok) {
@@ -676,7 +683,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -917,7 +924,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-					.getObjectId().getId());
+				.getObjectId().getId());
 
 		}
 		runExecSQL(object.getSession(), sqlStr);
