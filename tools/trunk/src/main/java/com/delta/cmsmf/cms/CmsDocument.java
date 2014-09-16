@@ -150,9 +150,10 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				sourceChronicleId);
 			if (chronicleMapping != null) {
 				// We have the chronicle! Try to find our actual match!
-				IDfPersistentObject obj = session.getObjectByQualification(String.format(
-					"%s where i_chronicle_id = '%s' and any r_version_label = '%s'",
-					String.format("%s (ALL)", getSubtype()), chronicleMapping.getTargetValue(), implicitLabel));
+				String q = String.format(
+					"dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = '%s'",
+					chronicleMapping.getTargetValue(), implicitLabel);
+				IDfPersistentObject obj = session.getObjectByQualification(q);
 				// If we have it, return it!!
 				if (obj != null) { return castObject(obj); }
 			}
@@ -213,7 +214,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
