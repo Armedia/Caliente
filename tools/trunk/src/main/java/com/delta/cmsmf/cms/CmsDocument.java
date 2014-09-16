@@ -207,7 +207,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -596,18 +596,21 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			}
 		}
 
-		IDfId antecedentId = new DfId(this.antecedentPermitDelta.getObjectId());
-		IDfDocument antecedent = castObject(session.getObject(antecedentId));
-		if (antecedent != null) {
-			// When would this be null?
-			session.flush("persistentobjcache", null);
-			session.flushObject(antecedentId);
-			session.flushCache(false);
-			antecedent.fetch(null);
-			if (this.antecedentPermitDelta.revoke(antecedent)) {
-				antecedent.save();
+		if (this.antecedentPermitDelta != null) {
+			IDfId antecedentId = new DfId(this.antecedentPermitDelta.getObjectId());
+			IDfDocument antecedent = castObject(session.getObject(antecedentId));
+			if (antecedent != null) {
+				// When would this be null?
+				session.flush("persistentobjcache", null);
+				session.flushObject(antecedentId);
+				session.flushCache(false);
+				antecedent.fetch(null);
+				if (this.antecedentPermitDelta.revoke(antecedent)) {
+					antecedent.save();
+				}
 			}
 		}
-		return super.cleanupAfterSave(document, newObject, context);
+
+		return true;
 	}
 }
