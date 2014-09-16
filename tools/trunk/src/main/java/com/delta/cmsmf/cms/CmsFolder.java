@@ -7,6 +7,7 @@ package com.delta.cmsmf.cms;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -25,6 +26,7 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -71,9 +73,52 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 		return folder.getFolderPath(0);
 	}
 
+	private int calculateDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
+		// If the folder has already been visited, we have a loop...so let's explode loudly
+		if (visited.contains(folderId.getId())) { throw new DfException(String.format(
+			"Folder loop detected, element [%s] exists twice: %s", folderId.getId(), visited.toString())); }
+		visited.add(folderId.getId());
+		try {
+			int depth = 0;
+			String dql = String.format("select i_folder_id from dm_sysobject where r_object_id = '%s'",
+				folderId.getId());
+			IDfCollection results = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
+			try {
+				while (results.next()) {
+					// My depth is the maximum depth from any of my parents, plus one
+					IDfId parentId = results.getId(CmsAttributes.I_FOLDER_ID);
+					if (parentId.isNull() || !parentId.isObjectId()) {
+						continue;
+					}
+					depth = Math.max(depth, calculateDepth(session, parentId, visited) + 1);
+				}
+			} finally {
+				DfUtils.closeQuietly(results);
+			}
+			return depth;
+		} finally {
+			visited.remove(folderId.getId());
+		}
+	}
+
+	@Override
+	protected String calculateBatchId(IDfFolder folder) throws DfException {
+		// Calculate the maximum depth that this folder resides in, from its parents.
+		// Keep track of visited nodes, and explode on a loop.
+		Set<String> visited = new LinkedHashSet<String>();
+		int depth = calculateDepth(folder.getSession(), folder.getObjectId(), visited);
+		// We return it in zero-padded hex to allow for large numbers (up to 2^64
+		// depth), and also maintain consistent sorting
+		return String.format("%016x", depth);
+	}
+
 	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfFolder folder) throws DfException {
 		final String folderId = folder.getObjectId().getId();
+		if (this.log.isDebugEnabled() && !getType().isBatchingSupported()) {
+			String batchId = calculateBatchId(folder);
+			this.log.debug(String.format("DEPTH %s for [%s]", batchId, getLabel()));
+		}
 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
 			String.format(CmsFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
@@ -85,7 +130,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
+				.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -286,10 +331,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(userValue.asString());
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							folder.getObjectId().getId(), getLabel(), userValue.asString()));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								folder.getObjectId().getId(), getLabel(), userValue.asString()));
 					continue;
 				}
 
@@ -360,7 +405,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different folders matching this folder's paths: [%s@%s] and [%s@%s]", existing.getObjectId()
-				.getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
