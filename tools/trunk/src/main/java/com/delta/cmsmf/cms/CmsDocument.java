@@ -6,8 +6,10 @@ package com.delta.cmsmf.cms;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -38,6 +40,7 @@ import com.documentum.fc.common.IDfValue;
 public class CmsDocument extends CmsObject<IDfDocument> {
 
 	private static final String TARGET_PATHS = "targetPaths";
+	private static final String TARGET_PARENTS = "targetParents";
 	private static final String CONTENTS = "contents";
 
 	private static boolean HANDLERS_READY = false;
@@ -61,6 +64,8 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	private PermitDelta antecedentPermitDelta = null;
+	private PermitDelta branchPermitDelta = null;
+	private Map<String, PermitDelta> parentFolderDeltas = null;
 
 	public CmsDocument() {
 		super(IDfDocument.class);
@@ -103,11 +108,14 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException {
 		CmsProperty paths = new CmsProperty(CmsDocument.TARGET_PATHS, CmsDataType.DF_STRING, true);
 		properties.add(paths);
+		CmsProperty parents = new CmsProperty(CmsDocument.TARGET_PARENTS, CmsDataType.DF_ID, true);
+		properties.add(parents);
 		final IDfSession session = document.getSession();
 		for (IDfValue folderId : getAttribute(CmsAttributes.I_FOLDER_ID)) {
 			IDfFolder parent = session.getFolderBySpecification(folderId.asId().getId());
 			if (parent == null) { throw new DfException(String.format(
 				"Document [%s](%s) references non-existent folder [%s]", getLabel(), getId(), folderId.asString())); }
+			parents.addValue(folderId);
 			int pathCount = parent.getFolderPathCount();
 			for (int i = 0; i < pathCount; i++) {
 				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(i)));
@@ -171,6 +179,8 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		// object, it's replaced by this one.
 		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
 		String existingPath = null;
+		// We could do this "the hard way" by seeking out each parent by ID from TARGET_PARENTS,
+		// but we pre-calculated the target paths when we exported the object, so there...sue me :)
 		for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
 			String currentPath = String.format("%s/%s", p.asString(), documentName);
 			IDfPersistentObject current = session.getObjectByPath(currentPath);
@@ -459,9 +469,56 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
+	protected IDfDocument newObject(CmsTransferContext context) throws DfException, CMSMFException {
+		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
+		final boolean root = (Tools.equals(getId(), sourceChronicleId));
+		if (root) { return super.newObject(context); }
+
+		IDfSession session = context.getSession();
+
+		String antecedentId = getAttribute(CmsAttributes.I_ANTECEDENT_ID).getValue().asString();
+		Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
+			antecedentId);
+		if (mapping == null) { throw new CMSMFException(String.format(
+			"Can't create version - antecedent version not found [%s]", antecedentId)); }
+		IDfDocument antecedentVersion = castObject(session.getObject(new DfId(mapping.getTargetValue())));
+		antecedentVersion.fetch(null);
+		this.antecedentPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_VERSION);
+		if (this.antecedentPermitDelta.grant(antecedentVersion)) {
+			antecedentVersion.save();
+		}
+
+		CmsAttribute rVersionLabel = getAttribute(CmsAttributes.R_VERSION_LABEL);
+		String antecedentVersionImplicitVersionLabel = antecedentVersion.getImplicitVersionLabel();
+		String documentImplicitVersionLabel = rVersionLabel.getValue().asString();
+
+		int antecedentDots = StringUtils.countMatches(antecedentVersionImplicitVersionLabel, ".");
+		int documentDots = StringUtils.countMatches(documentImplicitVersionLabel, ".");
+
+		if (documentDots == (antecedentDots + 2)) {
+			// branch
+			IDfId branchID = antecedentVersion.branch(antecedentVersionImplicitVersionLabel);
+			antecedentVersion = castObject(session.getObject(branchID));
+
+			// remove branch versionlabel from repeating attributes
+			// This should be the implicit version label
+			IDfValue removed = rVersionLabel.removeValue(0);
+			removed.hashCode();
+			// If this fails, then we will have to search by version label
+			this.branchPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_WRITE);
+			this.branchPermitDelta.grant(antecedentVersion);
+		} else {
+			// checkout
+			this.branchPermitDelta = null;
+			antecedentVersion.checkout();
+		}
+		return antecedentVersion;
+	}
+
+	@Override
 	protected void prepareForConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
-		this.antecedentPermitDelta = null;
+		this.parentFolderDeltas = null;
 
 		IDfSession session = document.getSession();
 		session.flushCache(false);
@@ -470,24 +527,42 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
 		final boolean root = (Tools.equals(getId(), sourceChronicleId));
 		if (!root && !newObject) {
-			String antecedentId = getAttribute(CmsAttributes.I_ANTECEDENT_ID).getValue().asString();
-			Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
-				antecedentId);
-			if (mapping == null) {
-				// How?
-				antecedentId.hashCode();
+			this.antecedentPermitDelta = new PermitDelta(document, IDfACL.DF_PERMIT_VERSION);
+			if (this.antecedentPermitDelta.grant(document)) {
+				// Not sure this is OK...
+				document.save();
 			}
-			IDfDocument antecedent = castObject(session.getObject(new DfId(mapping.getTargetValue())));
-			antecedent.fetch(null);
-			this.antecedentPermitDelta = new PermitDelta(antecedent, IDfACL.DF_PERMIT_VERSION);
-			if (this.antecedentPermitDelta.grant(antecedent)) {
-				antecedent.save();
+		}
+
+		this.parentFolderDeltas = new HashMap<String, PermitDelta>();
+		for (IDfValue parentId : getProperty(CmsDocument.TARGET_PARENTS)) {
+			Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
+				parentId.asString());
+			if (m == null) {
+				// TODO: HOW??!
+				continue;
 			}
+			String actualParentId = m.getTargetValue();
+			IDfFolder parentFolder = session.getFolderBySpecification(actualParentId);
+
+			// Not sure why?!! We just follow the leader here...
+			session.flush("persistentobjcache", null);
+			session.flushObject(parentFolder.getObjectId());
+			session.flushCache(false);
+
+			parentFolder = session.getFolderBySpecification(actualParentId);
+			parentFolder.fetch(null);
+			// Stow its old permissions
+			PermitDelta newDelta = new PermitDelta(parentFolder, IDfACL.DF_PERMIT_WRITE);
+			if (newDelta.grant(parentFolder)) {
+				parentFolder.save();
+			}
+			this.parentFolderDeltas.put(actualParentId, newDelta);
 		}
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfDocument object, boolean newObject, CmsTransferContext context)
+	protected void finalizeConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
 	}
 
@@ -498,8 +573,41 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected boolean cleanupAfterSave(IDfDocument object, boolean newObject, CmsTransferContext context)
+	protected boolean cleanupAfterSave(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
-		return super.cleanupAfterSave(object, newObject, context);
+		final IDfSession session = document.getSession();
+		for (PermitDelta delta : this.parentFolderDeltas.values()) {
+			final IDfId parentId = new DfId(delta.getObjectId());
+			IDfFolder parentFolder = session.getFolderBySpecification(parentId.getId());
+			if (parentFolder == null) {
+				// TODO: uhm...how?
+				continue;
+			}
+
+			// Not sure why?!! We just follow the leader here...
+			session.flush("persistentobjcache", null);
+			session.flushObject(parentId);
+			session.flushCache(false);
+			parentFolder = session.getFolderBySpecification(parentId.getId());
+			parentFolder.fetch(null);
+			// Stow its old permissions
+			if (delta.revoke(parentFolder)) {
+				parentFolder.save();
+			}
+		}
+
+		IDfId antecedentId = new DfId(this.antecedentPermitDelta.getObjectId());
+		IDfDocument antecedent = castObject(session.getObject(antecedentId));
+		if (antecedent != null) {
+			// When would this be null?
+			session.flush("persistentobjcache", null);
+			session.flushObject(antecedentId);
+			session.flushCache(false);
+			antecedent.fetch(null);
+			if (this.antecedentPermitDelta.revoke(antecedent)) {
+				antecedent.save();
+			}
+		}
+		return super.cleanupAfterSave(document, newObject, context);
 	}
 }
