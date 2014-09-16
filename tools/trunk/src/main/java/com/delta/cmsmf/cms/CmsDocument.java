@@ -207,7 +207,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -620,7 +620,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				session.flushObject(branchId);
 				session.flushCache(false);
 				branch.fetch(null);
-				if (this.antecedentPermitDelta.revoke(branch)) {
+				if (this.branchPermitDelta.revoke(branch)) {
 					branch.save();
 				}
 			}
