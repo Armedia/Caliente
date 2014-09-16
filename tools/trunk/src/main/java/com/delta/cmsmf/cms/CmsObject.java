@@ -34,6 +34,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
+import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
@@ -455,17 +456,25 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			final boolean isNew = (object == null);
 			final boolean updateVersionLabels = isVersionable(object);
 			final CmsImportResult cmsImportResult;
+			final boolean checkOut;
 			if (isNew) {
 				// Create a new object
 				object = newObject(context);
 				cmsImportResult = CmsImportResult.CREATED;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
+					checkOut = sysObject.isCheckedOut();
+				} else {
+					checkOut = false;
 				}
-				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
-					object.getObjectId().getId());
-
+				if (!checkOut) {
+					// DO NOT override mappings...we don't know the new object's ID until checkin is
+					// completed
+					context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
+						object.getObjectId().getId());
+				}
 			} else {
+				checkOut = false;
 				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
 					object.getObjectId().getId());
 
@@ -563,6 +572,22 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			if (cleanupAfterSave(object, isNew, context)) {
 				object.save();
 			}
+
+			if (checkOut) {
+				StringBuilder versionLabels = new StringBuilder();
+				for (IDfValue v : getAttribute(CmsAttributes.R_VERSION_LABEL)) {
+					if (versionLabels.length() > 0) {
+						versionLabels.append(',');
+					}
+					versionLabels.append(v.asString());
+				}
+				String vl = versionLabels.toString();
+				IDfId newId = sysObject.checkin(false, vl);
+				this.log.info(String.format("Checked in %s [%s](%s) to CMS as versions [%s] (newId=%s)", this.type,
+					this.label, this.id, vl, newId.getId()));
+				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id, newId.getId());
+			}
+
 			ok = true;
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s->%s)", this.type,
 				cmsImportResult, this.label, this.id, object.getObjectId().getId()));
