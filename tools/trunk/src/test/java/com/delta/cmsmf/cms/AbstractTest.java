@@ -193,6 +193,13 @@ public abstract class AbstractTest {
 			AbstractTest.CONNECTION_FACTORY, this.pool, null, null, false, true);
 		this.dataSource = new PoolingDataSource(this.pool);
 		this.log.info("Memory-based connection pool ready");
+		try {
+			FileUtils.deleteDirectory(this.fsDir);
+		} catch (IOException e) {
+			throw new RuntimeException(String.format("Failed to delete the directory [%s]",
+				this.fsDir.getAbsolutePath()), e);
+		}
+		this.log.info("FS directory cleaned out");
 		this.fsDir.mkdirs();
 	}
 
@@ -241,13 +248,6 @@ public abstract class AbstractTest {
 		this.pool = null;
 		this.dataSource = null;
 		this.log.info("Closing the memory-based connection pool");
-		try {
-			FileUtils.deleteDirectory(this.fsDir);
-		} catch (IOException e) {
-			throw new RuntimeException(String.format("Failed to delete the directory [%s]",
-				this.fsDir.getAbsolutePath()), e);
-		}
-		this.log.info("FS directory destroyed");
 	}
 
 	protected final DataSource getDataSource() {
