@@ -12,6 +12,8 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.delta.cmsmf.cfg.Constant;
+import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.utils.DfUtils;
@@ -23,7 +25,9 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
+import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -95,6 +99,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException {
 		CmsProperty paths = new CmsProperty(CmsDocument.TARGET_PATHS, CmsDataType.DF_STRING, true);
+		properties.add(paths);
 		final IDfSession session = document.getSession();
 		for (IDfValue folderId : getAttribute(CmsAttributes.I_FOLDER_ID)) {
 			IDfFolder parent = session.getFolderBySpecification(folderId.asId().getId());
@@ -105,14 +110,30 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(i)));
 			}
 		}
-		properties.add(paths);
 	}
 
 	@Override
 	protected IDfDocument locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
-		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
 		final IDfSession session = ctx.getSession();
-		IDfDocument existing = null;
+		IDfDocument existing = locateIdenticalDocument(session);
+		if (existing != null) { return existing; }
+
+		// Nothing there? Ok... let's try to map the chronicle...
+
+		final CmsAttribute antecedent = getAttribute(CmsAttributes.I_ANTECEDENT_ID);
+		final IDfId antecedentId = (antecedent != null ? antecedent.getValue().asId() : DfId.DF_NULLID);
+		if (!antecedentId.isNull()) {
+			Mapping mapping = ctx.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
+				antecedentId.getId());
+			if (mapping != null) {
+				IDfPersistentObject antecedentObject = session.getObject(new DfId(mapping.getTargetValue()));
+				if (antecedentObject != null) {
+					existing = locateSimilarDescendant(antecedentObject);
+				}
+			}
+		}
+
+		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
 		String existingPath = null;
 		for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
 			String currentPath = String.format("%s/%s", p.asString(), documentName);
@@ -140,9 +161,69 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
+	}
+
+	private IDfDocument locateIdenticalDocument(IDfSession session) throws DfException {
+		String objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
+		// If object name contains single quote, replace it with 2 single quotes for DQL
+		objectName = objectName.replaceAll("'", "''");
+
+		final String objectType = getSubtype();
+		final IDfTime createDate = getAttribute(CmsAttributes.R_CREATION_DATE).getValue().asTime();
+
+		// Get the first folder location
+		final CmsProperty targetPaths = getProperty(CmsDocument.TARGET_PATHS);
+		String folderLocation = (targetPaths.hasValues() ? targetPaths.getValue(0).asString() : "");
+
+		// If folder location contains single quote, replace it with 2 single quotes for DQL
+		folderLocation = folderLocation.replaceAll("'", "''");
+
+		// NOTE: Check the i_is_deleted flag. If the object is marked as deleted, the dql will never
+		// find the matching document. Marked as deleted objects need to be queried by going
+		// directly against the dm_sysobject_s table. When you use dm_sysobject_s table in from
+		// clause, you can't use folder predicate. Find out the r_object_id of the /Temp cabinet and
+		// use it in the query.
+
+		final String objectSet;
+		final String extraCond;
+		final String extraTerm;
+		if (getAttribute(CmsAttributes.I_IS_DELETED).getValue().asBoolean()) {
+			objectSet = "dm_sysobject_s";
+			extraCond = "i_cabinet_id = '%s'";
+
+			IDfFolder tempCabinet = session.getFolderByPath("/Temp");
+			extraTerm = tempCabinet.getObjectId().getId();
+		} else {
+			objectSet = String.format("%s (ALL)", objectType);
+			extraCond = "folder('%s')";
+			extraTerm = folderLocation;
+		}
+
+		final String qualification = String.format(
+			"%s where object_name = '%s' and %s and r_creation_date = DATE('%s')", objectSet, objectName,
+			String.format(extraCond, extraTerm), createDate.asString(Constant.DCTM_DATETIME_PATTERN));
+		if (this.log.isDebugEnabled()) {
+			this.log.debug(String.format("Finding identical object using DQL: %s", qualification));
+		}
+
+		// Retrieve the object using the query
+		return castObject(session.getObjectByQualification(qualification));
+	}
+
+	private IDfDocument locateSimilarDescendant(IDfPersistentObject antecedentVersion) throws DfException {
+		final IDfSession session = antecedentVersion.getSession();
+
+		String antecedentId = antecedentVersion.getObjectId().getId();
+		String versionLabel = getAttribute(CmsAttributes.R_VERSION_LABEL).getValue().asString();
+		String objectType = getSubtype();
+
+		// Retrieve the object using the query
+		return castObject(session.getObjectByQualification(String.format(
+			"%s (ALL) where i_antecedent_id = '%s' and any r_version_label = '%s'", objectType, antecedentId,
+			versionLabel)));
 	}
 
 	private List<IDfId> getVersions(boolean prior, IDfDocument document) throws DfException {

@@ -455,7 +455,13 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
 				}
+				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
+					object.getObjectId().getId());
+
 			} else {
+				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
+					object.getObjectId().getId());
+
 				if (isSameObject(object)) { return new SaveResult(CmsImportResult.DUPLICATE, object.getObjectId()
 					.getId()); }
 				cmsImportResult = CmsImportResult.UPDATED;
@@ -493,10 +499,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				// if it's set to true, and the incoming value is false
 				mustImmute |= immutable.getValue().asBoolean();
 			}
-
-			// Mapping idMapping =
-			context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
-				object.getObjectId().getId());
 
 			prepareForConstruction(object, isNew);
 
