@@ -430,7 +430,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		throws DfException, CMSMFException {
 	}
 
-	public final SaveResult saveToCMS(CmsTransferContext context) throws DfException, CMSMFException, SQLException {
+	public final SaveResult saveToCMS(CmsTransferContext context) throws DfException, CMSMFException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 
 		boolean transOpen = false;
@@ -564,32 +564,48 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				object.save();
 			}
 			ok = true;
+			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s->%s)", this.type,
+				cmsImportResult, this.label, this.id, object.getObjectId().getId()));
+
 			return new SaveResult(cmsImportResult, object.getObjectId().getId());
 		} finally {
-			if (ok && (sysObject != null)) {
-				if (mustImmute) {
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Setting immutability status to [%s](%s)", this.label, this.id));
+			try {
+				if (ok && (sysObject != null)) {
+					if (mustImmute) {
+						if (this.log.isDebugEnabled()) {
+							this.log.debug(String
+								.format("Setting immutability status to [%s](%s)", this.label, this.id));
+						}
+						sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
+						sysObject.save();
 					}
-					sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
-					sysObject.save();
-				}
-				if (mustFreeze) {
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Setting frozen status to [%s](%s)", this.label, this.id));
+					if (mustFreeze) {
+						if (this.log.isDebugEnabled()) {
+							this.log.debug(String.format("Setting frozen status to [%s](%s)", this.label, this.id));
+						}
+						sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, true);
+						sysObject.save();
 					}
-					sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, true);
-					sysObject.save();
 				}
+			} catch (DfException e) {
+				ok = false;
+				this.log
+					.error(
+						String
+							.format(
+								"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
+								this.label, this.id), e);
 			}
 			if (transOpen) {
 				if (ok) {
+					this.log.info(String.format("Committing the transaction for [%s](%s)", this.label, this.id));
 					if (localTx != null) {
 						session.commitTransEx(localTx);
 					} else {
 						session.commitTrans();
 					}
 				} else {
+					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.label, this.id));
 					// Clear the mapping
 					context.getAttributeMapper().clearSourceMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id);
 					if (localTx != null) {
