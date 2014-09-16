@@ -7,7 +7,6 @@ package com.delta.cmsmf.cms;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -568,66 +567,55 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	protected void finalizeConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
 		final IDfSession session = document.getSession();
-		for (String parentId : this.parentFolderDeltas.keySet()) {
-			IDfFolder parent = session.getFolderBySpecification(parentId);
-			if (parent == null) {
-				// TODO: HOW??!
-				continue;
-			}
-		}
 
-		Set<String> oldParents = new HashSet<String>();
+		Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
 		int oldParentCount = document.getFolderIdCount();
 		for (int i = 0; i < oldParentCount; i++) {
-			IDfFolder parent = session.getFolderBySpecification(document.getFolderId(i).getId());
+			IDfId parentId = document.getFolderId(i);
+			IDfFolder parent = session.getFolderBySpecification(parentId.getId());
 			if (parent != null) {
-				oldParents.add(parent.getObjectId().getId());
+				oldParents.put(parentId.getId(), parent);
 			}
 		}
 
-		Set<String> newParents = new TreeSet<String>();
+		Map<String, IDfFolder> newParents = new HashMap<String, IDfFolder>();
 		for (String parentId : this.parentFolderDeltas.keySet()) {
-			IDfFolder parent = session.getFolderBySpecification(parentId);
+			// A little efficiency here to better separate the sets
+			IDfFolder parent = oldParents.remove(parentId);
 			if (parent != null) {
-				newParents.add(parent.getObjectId().getId());
+				newParents.put(parentId, parent);
+				continue;
+			}
+
+			parent = session.getFolderBySpecification(parentId);
+			if (parent != null) {
+				newParents.put(parentId, parent);
 			}
 		}
 
 		// Unlink from those who are in the old parent list, but not in the new parent list
-		Set<String> unlinkTargets = new TreeSet<String>(oldParents);
-		unlinkTargets.removeAll(newParents);
+		Set<String> unlinkTargets = new TreeSet<String>(oldParents.keySet());
+		unlinkTargets.removeAll(newParents.keySet());
 
 		// Link to those who are in the new parent list, but not the old parent list
-		Set<String> linkTargets = new TreeSet<String>(newParents);
-		linkTargets.removeAll(oldParents);
-
-		// These are the parents to which the folder will remain linked, but may need to be
-		// processed later
-		Set<String> commonTargets = new TreeSet<String>(newParents);
-		commonTargets.retainAll(oldParents);
+		Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
+		linkTargets.removeAll(oldParents.keySet());
 
 		// Unlink from all the parents we're supposed to unlink from
 		for (String oldParentId : unlinkTargets) {
-			IDfFolder parent = session.getFolderBySpecification(oldParentId);
-			if (parent == null) {
-				// How the hell did this happen?
-				continue;
+			IDfFolder parent = oldParents.get(oldParentId);
+			PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE);
+			if (delta.grant(parent)) {
+				parent.save();
 			}
-
-			PermitDelta delta = this.parentFolderDeltas.remove(oldParentId);
 			document.unlink(oldParentId);
-			if ((delta != null) && delta.revoke(parent)) {
+			if (delta.revoke(parent)) {
 				parent.save();
 			}
 		}
 
-		for (String parentId : newParents) {
-			IDfFolder parent = session.getFolderBySpecification(parentId);
-			if (parent == null) {
-				// How the hell did this happen?
-				continue;
-			}
-
+		for (String parentId : newParents.keySet()) {
+			IDfFolder parent = newParents.get(parentId);
 			// If we should link here, then link!
 			if (linkTargets.contains(parentId)) {
 				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE);

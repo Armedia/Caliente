@@ -190,46 +190,37 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 		Set<String> actualPaths = new TreeSet<String>();
 		if (!"dm_cabinet".equals(getSubtype())) {
 
-			Set<String> oldParents = new HashSet<String>();
+			Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
 			int oldParentCount = folder.getFolderIdCount();
 			for (int i = 0; i < oldParentCount; i++) {
 				String path = folder.getFolderPath(i);
 				IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
 				if (parent != null) {
-					oldParents.add(parent.getObjectId().getId());
+					oldParents.put(parent.getObjectId().getId(), parent);
 				}
 			}
 
-			Set<String> newParents = new TreeSet<String>();
+			Map<String, IDfFolder> newParents = new HashMap<String, IDfFolder>();
 			for (IDfValue v : getAttribute(CmsAttributes.R_FOLDER_PATH)) {
 				String path = v.asString();
 				IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
 				if (parent != null) {
-					newParents.add(parent.getObjectId().getId());
+					newParents.put(parent.getObjectId().getId(), parent);
+					oldParents.remove(parent.getObjectId().getId());
 				}
 			}
 
 			// Unlink from those who are in the old parent list, but not in the new parent list
-			Set<String> unlinkTargets = new TreeSet<String>(oldParents);
-			unlinkTargets.removeAll(newParents);
+			Set<String> unlinkTargets = new HashSet<String>(oldParents.keySet());
+			unlinkTargets.removeAll(newParents.keySet());
 
 			// Link to those who are in the new parent list, but not the old parent list
-			Set<String> linkTargets = new TreeSet<String>(newParents);
-			linkTargets.removeAll(oldParents);
-
-			// These are the parents to which the folder will remain linked, but may need to be
-			// processed later
-			Set<String> commonTargets = new TreeSet<String>(newParents);
-			commonTargets.retainAll(oldParents);
+			Set<String> linkTargets = new HashSet<String>(newParents.keySet());
+			linkTargets.removeAll(oldParents.keySet());
 
 			// Unlink from all the parents we're supposed to unlink from
 			for (String oldParentId : unlinkTargets) {
-				IDfFolder parent = session.getFolderBySpecification(oldParentId);
-				if (parent == null) {
-					// How the hell did this happen?
-					continue;
-				}
-
+				IDfFolder parent = oldParents.get(oldParentId);
 				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
 					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 				if (delta.grant(parent)) {
@@ -242,13 +233,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			}
 
 			this.parentPermitDeltas = new HashMap<String, PermitDelta>();
-			for (String parentId : newParents) {
-				IDfFolder parent = session.getFolderBySpecification(parentId);
-				if (parent == null) {
-					// How the hell did this happen?
-					continue;
-				}
-
+			for (String parentId : newParents.keySet()) {
+				IDfFolder parent = newParents.get(parentId);
 				// If we should link here, then link!
 				if (linkTargets.contains(parentId)) {
 					PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
