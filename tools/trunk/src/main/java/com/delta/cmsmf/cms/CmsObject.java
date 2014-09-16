@@ -99,6 +99,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			this.newXPermit = Collections.unmodifiableCollection(l);
 		}
 
+		public String getObjectId() {
+			return this.objectId;
+		}
+
 		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
 			if (!Tools.equals(this.objectId, object.getObjectId().getId())) { throw new DfException(
 				String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId, object
