@@ -213,7 +213,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -643,6 +643,10 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		});
 
 		// Then, link to the parent folders
+
+		// First, we make a list of the folders the object is currently
+		// linked to, by looking at i_folder_id (we keep track of the
+		// parent folders, to avoid unnecessary lookups later on)
 		Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
 		int oldParentCount = document.getFolderIdCount();
 		for (int i = 0; i < oldParentCount; i++) {
@@ -653,10 +657,14 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			}
 		}
 
+		// Second, we look at the folders to which this object is expected
+		// to be linked to, and store them up as well to avoid unnecessary
+		// lookups. Importantly, if a folder in this list is a folder that
+		// the object already belongs to, we remove it from the "old" list
+		// and keep it in this list.
 		Map<String, IDfFolder> newParents = new HashMap<String, IDfFolder>();
 		for (String parentId : this.parentFolderDeltas.keySet()) {
-			// A little efficiency here to better separate the sets
-			IDfFolder parent = oldParents.remove(parentId);
+			IDfFolder parent = oldParents.get(parentId);
 			if (parent != null) {
 				newParents.put(parentId, parent);
 				continue;
@@ -668,16 +676,12 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			}
 		}
 
-		// Unlink from those who are in the old parent list, but not in the new parent list
+		// The unlink targets are those folders that are in the original
+		// list, but not the new list
 		Set<String> unlinkTargets = new TreeSet<String>(oldParents.keySet());
 		unlinkTargets.removeAll(newParents.keySet());
-
-		// Link to those who are in the new parent list, but not the old parent list
-		Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
-		linkTargets.removeAll(oldParents.keySet());
-
-		// Unlink from all the parents we're supposed to unlink from
 		for (String oldParentId : unlinkTargets) {
+			// The folders for this are in the oldParents map
 			IDfFolder parent = oldParents.get(oldParentId);
 			PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE);
 			if (delta.grant(parent)) {
@@ -689,17 +693,27 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			}
 		}
 
-		for (String parentId : newParents.keySet()) {
+		// The link targets are those folders who are in the new list, but
+		// not the original list
+		Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
+		linkTargets.removeAll(oldParents.keySet());
+		for (String parentId : linkTargets) {
+			// The folders for this are in the newParents map
 			IDfFolder parent = newParents.get(parentId);
-			// If we should link here, then link!
-			if (linkTargets.contains(parentId)) {
-				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE);
-				this.parentFolderDeltas.put(parentId, delta);
-				if (delta.grant(parent)) {
-					parent.save();
-				}
+			PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE);
+			this.parentFolderDeltas.put(parentId, delta);
+			if (delta.grant(parent)) {
+				parent.save();
+			}
 
+			boolean ok = false;
+			try {
 				document.link(parentId);
+				ok = true;
+			} finally {
+				if (!ok) {
+					parentId.hashCode();
+				}
 			}
 		}
 	}

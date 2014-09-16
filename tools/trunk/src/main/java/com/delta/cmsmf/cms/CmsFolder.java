@@ -191,7 +191,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 		if (!"dm_cabinet".equals(getSubtype())) {
 
 			Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
-			int oldParentCount = folder.getFolderIdCount();
+			int oldParentCount = folder.getFolderPathCount();
 			for (int i = 0; i < oldParentCount; i++) {
 				String path = folder.getFolderPath(i);
 				IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
@@ -206,19 +206,12 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
 				if (parent != null) {
 					newParents.put(parent.getObjectId().getId(), parent);
-					oldParents.remove(parent.getObjectId().getId());
 				}
 			}
 
 			// Unlink from those who are in the old parent list, but not in the new parent list
 			Set<String> unlinkTargets = new HashSet<String>(oldParents.keySet());
 			unlinkTargets.removeAll(newParents.keySet());
-
-			// Link to those who are in the new parent list, but not the old parent list
-			Set<String> linkTargets = new HashSet<String>(newParents.keySet());
-			linkTargets.removeAll(oldParents.keySet());
-
-			// Unlink from all the parents we're supposed to unlink from
 			for (String oldParentId : unlinkTargets) {
 				IDfFolder parent = oldParents.get(oldParentId);
 				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
@@ -232,6 +225,9 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				}
 			}
 
+			// Link to those who are in the new parent list, but not the old parent list
+			Set<String> linkTargets = new HashSet<String>(newParents.keySet());
+			linkTargets.removeAll(oldParents.keySet());
 			this.parentPermitDeltas = new HashMap<String, PermitDelta>();
 			for (String parentId : newParents.keySet()) {
 				IDfFolder parent = newParents.get(parentId);
