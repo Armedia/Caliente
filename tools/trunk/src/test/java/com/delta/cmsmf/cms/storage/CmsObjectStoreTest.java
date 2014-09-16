@@ -19,11 +19,13 @@ import com.delta.cmsmf.cms.CmsAttribute;
 import com.delta.cmsmf.cms.CmsAttributeMapper;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.CmsDataType;
+import com.delta.cmsmf.cms.CmsFileSystem;
 import com.delta.cmsmf.cms.CmsMappingUtils;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
 import com.delta.cmsmf.cms.CmsTransferContext;
+import com.delta.cmsmf.cms.DefaultCmsFileSystem;
 import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.DfValueFactory;
 import com.delta.cmsmf.cms.UnsupportedObjectTypeException;
@@ -290,9 +292,10 @@ public class CmsObjectStoreTest extends AbstractTest {
 
 	@Test
 	public void testSerializeObject() throws Throwable {
+		final CmsFileSystem fs = new DefaultCmsFileSystem(getFsDir());
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
-		CmsTransferContext ctx = new DefaultTransferContext(null, null, store);
+		CmsTransferContext ctx = new DefaultTransferContext(null, null, store, fs);
 		try {
 			store.serializeObject(null, ctx);
 			Assert.fail("Did not fail with a null object");
@@ -333,7 +336,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format(
 									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
-										.getType().getName(), t));
+									.getType().getName(), t));
 							}
 							continue;
 						} catch (UnsupportedObjectTypeException e) {
@@ -348,7 +351,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
-						ctx = new DefaultTransferContext(obj.getId(), session, store);
+						ctx = new DefaultTransferContext(obj.getId(), session, store, fs);
 						Assert.assertTrue(store.serializeObject(obj, ctx));
 						Assert.assertEquals(Integer.valueOf(1), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
@@ -394,54 +397,54 @@ public class CmsObjectStoreTest extends AbstractTest {
 									Assert.assertEquals(attr.isRepeating(), repeating);
 									qr.query("select * from dctm_attribute_value where object_id = ? and name = ?",
 										new ResultSetHandler<Void>() {
-											@Override
-											public Void handle(ResultSet rs) throws SQLException {
-												int num = 0;
-												while (rs.next()) {
-													final String objectId = rs.getString("object_id");
-													final String name = rs.getString("name");
-													final int valueNum = rs.getInt("value_number");
-													final String data = rs.getString("data");
-													Assert.assertEquals(obj.getId(), objectId);
-													Assert.assertEquals(attr.getName(), name);
-													Assert.assertEquals(num, valueNum);
-													final IDfValue expected;
-													try {
-														expected = cmsObj.getRepeatingValue(name, valueNum);
-													} catch (DfException e) {
-														Assert.fail(String
-															.format(
-																"Failed to get repeating value #%d for attribute %s for object [%s:%s]",
-																valueNum, name, obj.getType(), obj.getId()));
-														return null;
-													}
-													IDfValue decoded = dataType.decode(data);
-													if (dataType == CmsDataType.DF_STRING) {
-														try {
-															decoded = DfValueFactory.newStringValue(CmsMappingUtils
-																.resolveSpecialUser(cmsObj, decoded.asString()));
-														} catch (DfException e) {
-															Assert.fail(String
-																.format("Failed to resolve the special user attribute"));
-														}
-													}
-													Assert.assertEquals(
-														String.format("Expectation failed on attribute [%s.%s]",
-															obj.getSubtype(), name), dataType.getValue(expected),
-														dataType.getValue(decoded));
-													num++;
-												}
+										@Override
+										public Void handle(ResultSet rs) throws SQLException {
+											int num = 0;
+											while (rs.next()) {
+												final String objectId = rs.getString("object_id");
+												final String name = rs.getString("name");
+												final int valueNum = rs.getInt("value_number");
+												final String data = rs.getString("data");
+												Assert.assertEquals(obj.getId(), objectId);
+												Assert.assertEquals(attr.getName(), name);
+												Assert.assertEquals(num, valueNum);
+												final IDfValue expected;
 												try {
-													Assert.assertEquals(cmsObj.getValueCount(name), num);
+													expected = cmsObj.getRepeatingValue(name, valueNum);
 												} catch (DfException e) {
 													Assert.fail(String
 														.format(
-															"Failed to get value count for attribute %s for object [%s:%s]",
-															name, obj.getType(), obj.getId()));
+															"Failed to get repeating value #%d for attribute %s for object [%s:%s]",
+															valueNum, name, obj.getType(), obj.getId()));
+													return null;
 												}
-												return null;
+												IDfValue decoded = dataType.decode(data);
+												if (dataType == CmsDataType.DF_STRING) {
+													try {
+														decoded = DfValueFactory.newStringValue(CmsMappingUtils
+															.resolveSpecialUser(cmsObj, decoded.asString()));
+													} catch (DfException e) {
+														Assert.fail(String
+															.format("Failed to resolve the special user attribute"));
+													}
+												}
+												Assert.assertEquals(
+													String.format("Expectation failed on attribute [%s.%s]",
+														obj.getSubtype(), name), dataType.getValue(expected),
+														dataType.getValue(decoded));
+												num++;
 											}
-										}, obj.getId(), name);
+											try {
+												Assert.assertEquals(cmsObj.getValueCount(name), num);
+											} catch (DfException e) {
+												Assert.fail(String
+													.format(
+														"Failed to get value count for attribute %s for object [%s:%s]",
+														name, obj.getType(), obj.getId()));
+											}
+											return null;
+										}
+									}, obj.getId(), name);
 								}
 								Assert.assertFalse(
 									String.format("Failed to validate the attributes for object [%s:%s]",
@@ -467,27 +470,27 @@ public class CmsObjectStoreTest extends AbstractTest {
 									Assert.assertEquals(property.isRepeating(), repeating);
 									qr.query("select * from dctm_property_value where object_id = ? and name = ?",
 										new ResultSetHandler<Void>() {
-											@Override
-											public Void handle(ResultSet rs) throws SQLException {
-												int num = 0;
-												while (rs.next()) {
-													final String objectId = rs.getString("object_id");
-													final String name = rs.getString("name");
-													final int valueNum = rs.getInt("value_number");
-													final String data = rs.getString("data");
-													Assert.assertEquals(obj.getId(), objectId);
-													Assert.assertEquals(property.getName(), name);
-													Assert.assertEquals(num, valueNum);
-													IDfValue expected = property.getValue(valueNum);
-													IDfValue decoded = dataType.decode(data);
-													Assert.assertEquals(dataType.getValue(expected),
-														dataType.getValue(decoded));
-													num++;
-												}
-												Assert.assertEquals(property.getValueCount(), num);
-												return null;
+										@Override
+										public Void handle(ResultSet rs) throws SQLException {
+											int num = 0;
+											while (rs.next()) {
+												final String objectId = rs.getString("object_id");
+												final String name = rs.getString("name");
+												final int valueNum = rs.getInt("value_number");
+												final String data = rs.getString("data");
+												Assert.assertEquals(obj.getId(), objectId);
+												Assert.assertEquals(property.getName(), name);
+												Assert.assertEquals(num, valueNum);
+												IDfValue expected = property.getValue(valueNum);
+												IDfValue decoded = dataType.decode(data);
+												Assert.assertEquals(dataType.getValue(expected),
+													dataType.getValue(decoded));
+												num++;
 											}
-										}, obj.getId(), name);
+											Assert.assertEquals(property.getValueCount(), num);
+											return null;
+										}
+									}, obj.getId(), name);
 								}
 								Assert.assertFalse(
 									String.format("Failed to validate the attributes for object [%s:%s]",
@@ -513,6 +516,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 
 	@Test
 	public void testDeserializeObjects() throws Throwable {
+		final CmsFileSystem fs = new DefaultCmsFileSystem(getFsDir());
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		try {
 			store.deserializeObjects(null, null);
@@ -570,7 +574,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format(
 									"Found an object of type [%s] while scanning for objects of type [%s]", cmsObj
-										.getType().getName(), t));
+									.getType().getName(), t));
 							}
 							continue;
 						} catch (UnsupportedObjectTypeException e) {
@@ -582,7 +586,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 							// Unsupported object
 							continue;
 						}
-						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store);
+						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store, fs);
 						store.serializeObject(obj, ctx);
 						expected.put(obj.getId(), obj);
 						if (++count > max) {
@@ -656,6 +660,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 
 	@Test
 	public void testRegisterDependency() throws Throwable {
+		final CmsFileSystem fs = new DefaultCmsFileSystem(getFsDir());
 		final IDfSession session = acquireSourceSession();
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		Map<String, CmsObjectType> dependencies = new HashMap<String, CmsObjectType>();
@@ -666,7 +671,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 				while (results.next()) {
 					String id = results.getString("r_object_id");
 					CmsObjectType type = CmsObjectType.decodeType(results.getString("r_object_type"));
-					CmsTransferContext ctx = new DefaultTransferContext(id, session, store);
+					CmsTransferContext ctx = new DefaultTransferContext(id, session, store, fs);
 					store.persistDependency(type, id, ctx);
 					dependencies.put(id, type);
 				}
@@ -680,11 +685,11 @@ public class CmsObjectStoreTest extends AbstractTest {
 				final String id = e.getKey();
 				final CmsObjectType type = e.getValue();
 				Assert
-				.assertEquals(
-					Integer.valueOf(1),
-					qr.query(
-						"select count(*) from dctm_export_plan where object_type = ? and object_id = ? and traversed = false",
-						AbstractTest.HANDLER_COUNT, type.name(), id));
+					.assertEquals(
+						Integer.valueOf(1),
+						qr.query(
+							"select count(*) from dctm_export_plan where object_type = ? and object_id = ? and traversed = false",
+							AbstractTest.HANDLER_COUNT, type.name(), id));
 			}
 		} finally {
 			releaseSourceSession(session);

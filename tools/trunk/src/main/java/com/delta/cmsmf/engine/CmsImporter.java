@@ -24,6 +24,7 @@ import org.apache.log4j.Level;
 
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsDependencyType;
+import com.delta.cmsmf.cms.CmsFileSystem;
 import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObject.SaveResult;
@@ -60,8 +61,8 @@ public class CmsImporter extends CmsTransferEngine {
 		super(threadCount, backlogSize);
 	}
 
-	public void doImport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager, boolean postProcess)
-		throws DfException, CMSMFException {
+	public void doImport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
+		final CmsFileSystem fileSystem, boolean postProcess) throws DfException, CMSMFException {
 
 		final int threadCount = getThreadCount();
 		final int backlogSize = getBacklogSize();
@@ -113,7 +114,8 @@ public class CmsImporter extends CmsTransferEngine {
 						}
 
 						for (CmsObject<?> next : batch) {
-							CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore);
+							CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore,
+								fileSystem);
 							SaveResult result = null;
 							try {
 								result = next.saveToCMS(ctx);

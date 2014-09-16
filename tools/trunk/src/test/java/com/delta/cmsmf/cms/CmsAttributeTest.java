@@ -43,6 +43,7 @@ public class CmsAttributeTest extends AbstractTest {
 		final IDfSession session = acquireSourceSession();
 		final QueryRunner qr = new QueryRunner(getDataSource());
 		final CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		final CmsFileSystem fs = new DefaultCmsFileSystem(getFsDir());
 		try {
 			IDfCollection collection = DfUtils.executeQuery(session,
 				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
@@ -62,7 +63,7 @@ public class CmsAttributeTest extends AbstractTest {
 						// Unsupported object
 						continue;
 					}
-					CmsTransferContext ctx = new DefaultTransferContext(cmsObj.getId(), session, store);
+					CmsTransferContext ctx = new DefaultTransferContext(cmsObj.getId(), session, store, fs);
 					store.serializeObject(cmsObj, ctx);
 
 					for (final CmsAttribute att : cmsObj.getAllAttributes()) {

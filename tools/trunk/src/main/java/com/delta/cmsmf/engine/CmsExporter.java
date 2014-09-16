@@ -18,6 +18,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.delta.cmsmf.cms.CmsFileSystem;
 import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.DfValueFactory;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
@@ -51,7 +52,7 @@ public class CmsExporter extends CmsTransferEngine {
 	}
 
 	public void doExport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
-		final String dqlPredicate) throws DfException, CMSMFException {
+		final CmsFileSystem fileSystem, final String dqlPredicate) throws DfException, CMSMFException {
 
 		final IDfSession session = sessionManager.acquireSession();
 
@@ -113,7 +114,7 @@ public class CmsExporter extends CmsTransferEngine {
 									.getType().getName(), dfObj.getObjectId().getId()));
 							}
 							objectStore.persistDfObject(dfObj, new DefaultTransferContext(dfObj.getObjectId().getId(),
-								session, objectStore));
+								session, objectStore, fileSystem));
 							if (CmsExporter.this.log.isDebugEnabled()) {
 								CmsExporter.this.log.debug(String.format("Persisted [%s] object with id [%s]", dfObj
 									.getType().getName(), dfObj.getObjectId().getId()));
@@ -179,7 +180,7 @@ public class CmsExporter extends CmsTransferEngine {
 							workQueue.put(exitValue);
 						} catch (InterruptedException e) {
 							// Here we have a problem: we're timing out while adding the exit
-// values...
+							// values...
 							this.log.warn("Interrupted while attempting to request executor thread termination", e);
 							Thread.currentThread().interrupt();
 							break;
@@ -239,10 +240,10 @@ public class CmsExporter extends CmsTransferEngine {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);

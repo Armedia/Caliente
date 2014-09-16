@@ -1,5 +1,6 @@
 package com.delta.cmsmf.cms;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.ResultSet;
@@ -18,6 +19,7 @@ import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
@@ -162,6 +164,21 @@ public abstract class AbstractTest {
 
 	private DataSource dataSource = null;
 	private ObjectPool<PoolableConnection> pool = null;
+	private final File fsDir;
+
+	protected AbstractTest() {
+		File bd;
+		try {
+			bd = new File(System.getProperty("user.dir")).getCanonicalFile();
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to canonicalize the working directory");
+		}
+		this.fsDir = new File(bd, "test-fs");
+	}
+
+	protected final File getFsDir() {
+		return this.fsDir;
+	}
 
 	@Before
 	public void setUp() throws Throwable {
@@ -176,6 +193,7 @@ public abstract class AbstractTest {
 			AbstractTest.CONNECTION_FACTORY, this.pool, null, null, false, true);
 		this.dataSource = new PoolingDataSource(this.pool);
 		this.log.info("Memory-based connection pool ready");
+		this.fsDir.mkdirs();
 	}
 
 	@After
@@ -223,6 +241,13 @@ public abstract class AbstractTest {
 		this.pool = null;
 		this.dataSource = null;
 		this.log.info("Closing the memory-based connection pool");
+		try {
+			FileUtils.deleteDirectory(this.fsDir);
+		} catch (IOException e) {
+			throw new RuntimeException(String.format("Failed to delete the directory [%s]",
+				this.fsDir.getAbsolutePath()), e);
+		}
+		this.log.info("FS directory destroyed");
 	}
 
 	protected final DataSource getDataSource() {

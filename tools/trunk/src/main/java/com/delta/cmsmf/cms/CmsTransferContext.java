@@ -25,4 +25,6 @@ public interface CmsTransferContext {
 
 	public <O extends CmsObject<?>> void deserializeObjects(Class<O> klass, Set<String> ids, ObjectHandler<O> handler)
 		throws CMSMFException;
+
+	public CmsFileSystem getFileSystem();
 }

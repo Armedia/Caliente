@@ -4,9 +4,12 @@
 
 package com.delta.cmsmf.cms;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
+import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.utils.DfUtils;
@@ -453,6 +457,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		}
 
 		// Now, export the content
+		ctx.setValue(CmsContent.DOCUMENT_ID, document.getValue(CmsAttributes.R_OBJECT_ID));
 		for (IDfValue contentId : getProperty(CmsDocument.CONTENTS)) {
 			IDfPersistentObject content = session.getObject(contentId.asId());
 			if (content == null) {
@@ -564,10 +569,80 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
-		throws DfException {
+	protected void finalizeConstruction(final IDfDocument document, boolean newObject, CmsTransferContext context)
+		throws DfException, CMSMFException {
 		final IDfSession session = document.getSession();
 
+		// Now, create the content the contents
+		Set<String> contentIds = new HashSet<String>();
+		for (IDfValue contentId : getProperty(CmsDocument.CONTENTS)) {
+			contentIds.add(contentId.asString());
+		}
+
+		final String contentType = getAttribute(CmsAttributes.A_CONTENT_TYPE).getValue().toString();
+		final CmsFileSystem fs = context.getFileSystem();
+		context.deserializeObjects(CmsContent.class, contentIds, new ObjectHandler<CmsContent>() {
+
+			@Override
+			public boolean newBatch(String batchId) throws CMSMFException {
+				return true;
+			}
+
+			@Override
+			public void handle(CmsContent content) throws CMSMFException {
+				// Step one: what's the content's path in the filesystem?
+				final File path = content.getFsPath();
+				final File fullPath;
+				try {
+					fullPath = fs.getContentFile(path);
+				} catch (IOException e) {
+					throw new CMSMFException(String.format("Failed to locate the actual content path for [%s]",
+						path.getPath()), e);
+				}
+				final String absolutePath = fullPath.getAbsolutePath();
+
+				final int pageNumber = content.getAttribute(CmsAttributes.PAGE).getValue().asInteger();
+				final CmsAttribute renditionNumber = content.getAttribute(CmsAttributes.RENDITION);
+				final String pageModifier = content.getAttribute(CmsAttributes.PAGE_MODIFIER).getValue().asString();
+				String fullFormat = content.getAttribute(CmsAttributes.FULL_FORMAT).getValue().asString();
+
+				if ((renditionNumber == null) || (renditionNumber.getValue().asInteger() == 0)) {
+					if ((fullFormat != null) && !Tools.equals(fullFormat, contentType)) {
+						fullFormat = contentType;
+					}
+					try {
+						document.setFileEx(absolutePath, fullFormat, pageNumber, null);
+						CmsDocument.this.log.info(String.format(
+							"Added the primary content to document [%s](%s) -> {%s/%s/%s}", getLabel(), getId(),
+							absolutePath, fullFormat, pageNumber));
+					} catch (DfException e) {
+						throw new CMSMFException(String.format(
+							"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}", getLabel(),
+							getId(), absolutePath, fullFormat, pageNumber), e);
+					}
+				} else {
+					try {
+						document.addRenditionEx2(absolutePath, fullFormat, pageNumber, pageModifier, null, false,
+							false, false);
+						CmsDocument.this.log.info(String.format(
+							"Added rendition content to document [%s](%s) -> {%s/%s/%s/%s}", getLabel(), getId(),
+							absolutePath, fullFormat, pageNumber, pageModifier));
+					} catch (DfException e) {
+						throw new CMSMFException(String.format(
+							"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}", getLabel(),
+							getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+					}
+				}
+			}
+
+			@Override
+			public boolean closeBatch(boolean ok) throws CMSMFException {
+				return true;
+			}
+
+		});
+
+		// Then, link to the parent folders
 		Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
 		int oldParentCount = document.getFolderIdCount();
 		for (int i = 0; i < oldParentCount; i++) {
@@ -631,7 +706,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 
 	@Override
 	protected boolean postConstruction(IDfDocument object, boolean newObject, CmsTransferContext context)
-		throws DfException {
+		throws DfException, CMSMFException {
 		return super.postConstruction(object, newObject, context);
 	}
 

@@ -97,8 +97,9 @@ public class CmsObjectTest extends AbstractTest {
 	 */
 	@Test
 	public void testCmsObjectPersistence() throws Throwable {
-		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+		final CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
+		final CmsFileSystem fs = new DefaultCmsFileSystem(getFsDir());
 		IDfSession session = acquireSourceSession();
 		try {
 			final int max = 3;
@@ -136,7 +137,7 @@ public class CmsObjectTest extends AbstractTest {
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
-						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store);
+						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store, fs);
 						store.serializeObject(obj, ctx);
 						Assert.assertEquals(Integer.valueOf(1), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
