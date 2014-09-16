@@ -61,6 +61,25 @@ public class CMSMFUtils {
 	}
 
 	/**
+	 * Gets the content path from content id.
+	 *
+	 * @param contentId
+	 *            the content obj id
+	 * @return the content path from content id
+	 */
+	public static File getContentDirectory(String contentId) {
+		if (contentId.length() != 16) { return null; }
+		// 16 character object id in dctm consists of first 2 chars of obj type, next 6 chars of
+		// docbase id in hex and last 8 chars server generated. We will use first 6 characters
+		// of this last 8 characters and generate the unique path.
+		// For ex: if the id is 0600a92b80054db8 than the path would be 80/05/4d
+		String pathComponents = contentId.substring(8, 16);
+		File tier1 = new File(pathComponents.substring(0, 2));
+		File tier2 = new File(tier1, pathComponents.substring(2, 4));
+		return new File(tier2, pathComponents.substring(4, 6));
+	}
+
+	/**
 	 * Runs a dctm job by given name.
 	 *
 	 * @param dctmSession
