@@ -85,8 +85,8 @@ public class CmsObjectStore {
 		 * </p>
 		 *
 		 * @param ok
-		 *            indicates whether processing succeeded normally ({@code true}) or not (
-		 *            {@code false}).
+		 *            {@code true} if processing should continue with the next batch, or
+		 *            {@code false} otherwise
 		 * @return {@code true} if processing should continue with the next batch, or {@code false}
 		 *         otherwise
 		 * @throws CMSMFException
