@@ -41,7 +41,7 @@ public class CmsImporterTest extends AbstractTest {
 					final String columnFormat = "%-12s\t%-12s\t%-16s\t%6s\t%-16s\t%s%n";
 					System.out.printf(columnFormat, "TYPE", "SUBTYPE", "BATCH", "NUMBER", "ID", "LABEL");
 					System.out
-						.printf("==========================================================================================================%n");
+					.printf("==========================================================================================================%n");
 					while (rs.next()) {
 						count++;
 						System.out.printf(columnFormat, rs.getString(1), rs.getString(2), rs.getString(3),
@@ -50,6 +50,6 @@ public class CmsImporterTest extends AbstractTest {
 					return count;
 				}
 			});
-		importer.doImport(store, getTargetSessionManager());
+		importer.doImport(store, getTargetSessionManager(), false);
 	}
 }

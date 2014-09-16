@@ -20,6 +20,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.log4j.Level;
+
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsDependencyType;
 import com.delta.cmsmf.cms.CmsImportResult;
@@ -32,6 +34,8 @@ import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.runtime.DctmConnectionPool;
+import com.delta.cmsmf.utils.CMSMFUtils;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -56,8 +60,8 @@ public class CmsImporter extends CmsTransferEngine {
 		super(threadCount, backlogSize);
 	}
 
-	public void doImport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager) throws DfException,
-		CMSMFException {
+	public void doImport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager, boolean postProcess)
+		throws DfException, CMSMFException {
 
 		final int threadCount = getThreadCount();
 		final int backlogSize = getBacklogSize();
@@ -263,16 +267,35 @@ public class CmsImporter extends CmsTransferEngine {
 					Thread.currentThread().interrupt();
 				}
 			}
+
+			if (postProcess) {
+				this.log.info("Started executing import post process jobs");
+				IDfSession session = DctmConnectionPool.acquireSession();
+				try {
+					// Run a dm_clean job to clean up any unwanted internal acls created
+					CMSMFUtils.runDctmJob(session, "dm_DMClean");
+
+					// Run a UpdateStats job
+					CMSMFUtils.runDctmJob(session, "dm_UpdateStats");
+				} catch (DfException e) {
+					this.log.error("Error running a post import process steps.", e);
+				} finally {
+					DctmConnectionPool.releaseSession(session);
+				}
+				if (this.log.isEnabledFor(Level.INFO)) {
+					this.log.info("Finished executing import post process jobs");
+				}
+			}
 		} finally {
 			executor.shutdownNow();
 			int pending = activeCounter.get();
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -281,7 +304,7 @@ public class CmsImporter extends CmsTransferEngine {
 			}
 			for (CmsObjectType type : CmsObjectType.values()) {
 				this.log
-					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}
