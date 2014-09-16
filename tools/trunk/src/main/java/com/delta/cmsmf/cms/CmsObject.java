@@ -456,11 +456,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			final boolean isNew = (object == null);
 			final boolean updateVersionLabels = isVersionable(object);
 			final CmsImportResult cmsImportResult;
-			final boolean checkOut;
 			if (isNew) {
 				// Create a new object
 				object = newObject(context);
 				cmsImportResult = CmsImportResult.CREATED;
+				final boolean checkOut;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
 					checkOut = sysObject.isCheckedOut();
@@ -474,7 +474,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 						object.getObjectId().getId());
 				}
 			} else {
-				checkOut = false;
 				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
 					object.getObjectId().getId());
 
@@ -566,7 +565,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			finalizeConstruction(object, isNew, context);
 			final IDfId newId;
-			if (checkOut) {
+			if ((sysObject != null) && sysObject.isCheckedOut()) {
 				StringBuilder versionLabels = new StringBuilder();
 				for (IDfValue v : getAttribute(CmsAttributes.R_VERSION_LABEL)) {
 					if (versionLabels.length() > 0) {
@@ -582,6 +581,15 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			} else {
 				newId = object.getObjectId();
 				object.save();
+			}
+
+			if (!Tools.equals(object.getObjectId().getId(), newId.getId())) {
+				// The object has changed due to check-in, etc... so we pull the newly-checked-in
+				// object
+				object = castObject(session.getObject(newId));
+				if (object instanceof IDfSysObject) {
+					sysObject = IDfSysObject.class.cast(object);
+				}
 			}
 
 			if (postConstruction(object, isNew, context)) {

@@ -500,11 +500,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			IDfId branchID = antecedentVersion.branch(antecedentVersionImplicitVersionLabel);
 			antecedentVersion = castObject(session.getObject(branchID));
 
-			// remove branch versionlabel from repeating attributes
+			// remove branch version label from repeating attributes
 			// This should be the implicit version label
-			IDfValue removed = rVersionLabel.removeValue(0);
-			removed.hashCode();
-			// If this fails, then we will have to search by version label
+			rVersionLabel.removeValue(0);
 			this.branchPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_WRITE);
 			this.branchPermitDelta.grant(antecedentVersion);
 		} else {
