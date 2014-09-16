@@ -530,7 +530,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			this.antecedentPermitDelta = new PermitDelta(document, IDfACL.DF_PERMIT_VERSION);
 			if (this.antecedentPermitDelta.grant(document)) {
 				// Not sure this is OK...
-				document.save();
+				if (!document.isCheckedOut()) {
+					document.save();
+				}
 			}
 		}
 
@@ -607,6 +609,21 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				antecedent.fetch(null);
 				if (this.antecedentPermitDelta.revoke(antecedent)) {
 					antecedent.save();
+				}
+			}
+		}
+
+		if (this.branchPermitDelta != null) {
+			IDfId branchId = new DfId(this.branchPermitDelta.getObjectId());
+			IDfDocument branch = castObject(session.getObject(branchId));
+			if (branch != null) {
+				// When would this be null?
+				session.flush("persistentobjcache", null);
+				session.flushObject(branchId);
+				session.flushCache(false);
+				branch.fetch(null);
+				if (this.antecedentPermitDelta.revoke(branch)) {
+					branch.save();
 				}
 			}
 		}
