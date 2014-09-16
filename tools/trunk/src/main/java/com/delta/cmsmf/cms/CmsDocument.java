@@ -17,6 +17,7 @@ import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.utils.DfUtils;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
@@ -58,6 +59,8 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 
 		CmsDocument.HANDLERS_READY = true;
 	}
+
+	private PermitDelta antecedentPermitDelta = null;
 
 	public CmsDocument() {
 		super(IDfDocument.class);
@@ -115,24 +118,57 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	@Override
 	protected IDfDocument locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
 		final IDfSession session = ctx.getSession();
-		IDfDocument existing = locateIdenticalDocument(session);
-		if (existing != null) { return existing; }
 
-		// Nothing there? Ok... let's try to map the chronicle...
+		// First things first: are we the root of the version hierarchy?
+		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
+		final boolean root = (Tools.equals(getId(), sourceChronicleId));
+		final String implicitLabel = getAttribute(CmsAttributes.R_VERSION_LABEL).getValue().asString();
 
-		final CmsAttribute antecedent = getAttribute(CmsAttributes.I_ANTECEDENT_ID);
-		final IDfId antecedentId = (antecedent != null ? antecedent.getValue().asId() : DfId.DF_NULLID);
-		if (!antecedentId.isNull()) {
-			Mapping mapping = ctx.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
-				antecedentId.getId());
-			if (mapping != null) {
-				IDfPersistentObject antecedentObject = session.getObject(new DfId(mapping.getTargetValue()));
-				if (antecedentObject != null) {
-					existing = locateSimilarDescendant(antecedentObject);
+		IDfDocument existing = null;
+
+		if (!root) {
+			// Ok so this isn't the root version... can we find a version attached
+			// to the new chronicle ID (which will already have been mapped) that
+			// matches this document's same implicit version label?
+
+			// Map to the new chronicle ID, from the old one...
+			Mapping chronicleMapping = ctx.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
+				sourceChronicleId);
+			if (chronicleMapping != null) {
+				// We have the chronicle! Try to find our actual match!
+				IDfPersistentObject obj = session.getObjectByQualification(String.format(
+					"%s where i_chronicle_id = '%s' and any r_version_label = '%s'",
+					String.format("%s (ALL)", getSubtype()), chronicleMapping.getTargetValue(), implicitLabel));
+				// If we have it, return it!!
+				if (obj != null) { return castObject(obj); }
+			}
+
+			// Ok...so we didn't find our version on that version tree...
+			if (implicitLabel != null) { return null; }
+
+			// These are adapted versions of Shridev's lookup code...
+			existing = locateIdenticalDocument(session);
+			if (existing != null) { return existing; }
+
+			// Nothing there? Ok... let's try to map the chronicle...
+			final CmsAttribute antecedent = getAttribute(CmsAttributes.I_ANTECEDENT_ID);
+			final IDfId antecedentId = (antecedent != null ? antecedent.getValue().asId() : DfId.DF_NULLID);
+			if (!antecedentId.isNull()) {
+				Mapping mapping = ctx.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
+					antecedentId.getId());
+				if (mapping != null) {
+					IDfPersistentObject antecedentObject = session.getObject(new DfId(mapping.getTargetValue()));
+					if (antecedentObject != null) {
+						existing = locateSimilarDescendant(antecedentObject);
+					}
 				}
 			}
 		}
 
+		// We're the root, we can only search by path...we look at all the paths this
+		// object is expected to take up on the target, and they must refer to either
+		// no existing object, or exactly one existing object. If there is an existing
+		// object, it's replaced by this one.
 		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
 		String existingPath = null;
 		for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
@@ -161,7 +197,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
@@ -423,20 +459,47 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected void prepareForConstruction(IDfDocument object, boolean newObject) throws DfException {
+	protected void prepareForConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
+		throws DfException {
+		this.antecedentPermitDelta = null;
+
+		IDfSession session = document.getSession();
+		session.flushCache(false);
+
+		// Is root?
+		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
+		final boolean root = (Tools.equals(getId(), sourceChronicleId));
+		if (!root && !newObject) {
+			String antecedentId = getAttribute(CmsAttributes.I_ANTECEDENT_ID).getValue().asString();
+			Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
+				antecedentId);
+			if (mapping == null) {
+				// How?
+				antecedentId.hashCode();
+			}
+			IDfDocument antecedent = castObject(session.getObject(new DfId(mapping.getTargetValue())));
+			antecedent.fetch(null);
+			this.antecedentPermitDelta = new PermitDelta(antecedent, IDfACL.DF_PERMIT_VERSION);
+			if (this.antecedentPermitDelta.grant(antecedent)) {
+				antecedent.save();
+			}
+		}
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfDocument object, boolean newObject) throws DfException {
+	protected void finalizeConstruction(IDfDocument object, boolean newObject, CmsTransferContext context)
+		throws DfException {
 	}
 
 	@Override
-	protected boolean postConstruction(IDfDocument object, boolean newObject) throws DfException {
-		return super.postConstruction(object, newObject);
+	protected boolean postConstruction(IDfDocument object, boolean newObject, CmsTransferContext context)
+		throws DfException {
+		return super.postConstruction(object, newObject, context);
 	}
 
 	@Override
-	protected boolean cleanupAfterSave(IDfDocument object, boolean newObject) throws DfException {
-		return super.cleanupAfterSave(object, newObject);
+	protected boolean cleanupAfterSave(IDfDocument object, boolean newObject, CmsTransferContext context)
+		throws DfException {
+		return super.cleanupAfterSave(object, newObject, context);
 	}
 }

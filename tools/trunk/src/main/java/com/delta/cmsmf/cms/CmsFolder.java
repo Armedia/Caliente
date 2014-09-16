@@ -96,8 +96,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected void doPersistRequirements(IDfFolder folder, CmsTransferContext ctx, CmsDependencyManager dependencyManager)
-		throws DfException, CMSMFException {
+	protected void doPersistRequirements(IDfFolder folder, CmsTransferContext ctx,
+		CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
 		final IDfSession session = folder.getSession();
 		// The parent folders
 		final int pathCount = folder.getFolderPathCount();
@@ -154,7 +154,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	private Map<String, PermitDelta> parentPermitDeltas = null;
 
 	@Override
-	protected void prepareForConstruction(IDfFolder folder, boolean newObject) throws DfException {
+	protected void prepareForConstruction(IDfFolder folder, boolean newObject, CmsTransferContext context)
+		throws DfException {
 		this.mainPermitDelta = null;
 		this.parentPermitDeltas = null;
 
@@ -170,7 +171,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfFolder folder, boolean newObject) throws DfException {
+	protected void finalizeConstruction(IDfFolder folder, boolean newObject, CmsTransferContext context)
+		throws DfException {
 
 		final String folderName;
 		if (newObject) {
@@ -259,7 +261,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected boolean postConstruction(IDfFolder folder, boolean newObject) throws DfException {
+	protected boolean postConstruction(IDfFolder folder, boolean newObject, CmsTransferContext context)
+		throws DfException {
 		if (newObject) {
 			// Make sure we apply the original name, since we had to "massage" it to
 			// get things to work later on
@@ -309,7 +312,8 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 	}
 
 	@Override
-	protected boolean cleanupAfterSave(IDfFolder folder, boolean newObject) throws DfException {
+	protected boolean cleanupAfterSave(IDfFolder folder, boolean newObject, CmsTransferContext context)
+		throws DfException {
 
 		boolean changed = false;
 		if (this.mainPermitDelta != null) {

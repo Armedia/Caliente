@@ -145,7 +145,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfACL acl, boolean newObject) throws DfException {
+	protected void finalizeConstruction(IDfACL acl, boolean newObject, CmsTransferContext context) throws DfException {
 		if (newObject) {
 			copyAttributeToObject(CmsAttributes.OWNER_NAME, acl);
 			copyAttributeToObject(CmsAttributes.OBJECT_NAME, acl);

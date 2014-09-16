@@ -187,7 +187,8 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
-	protected void prepareForConstruction(IDfType object, boolean newObject) throws DfException {
+	protected void prepareForConstruction(IDfType object, boolean newObject, CmsTransferContext context)
+		throws DfException {
 	}
 
 	@Override

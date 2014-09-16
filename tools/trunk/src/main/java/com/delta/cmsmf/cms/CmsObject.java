@@ -500,7 +500,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				mustImmute |= immutable.getValue().asBoolean();
 			}
 
-			prepareForConstruction(object, isNew);
+			prepareForConstruction(object, isNew, context);
 
 			if (!isNew) {
 				// If an existing object is being updated, clear out all of its attributes that are
@@ -541,16 +541,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				}
 			}
 
-			finalizeConstruction(object, isNew);
+			finalizeConstruction(object, isNew, context);
 			object.save();
-			if (postConstruction(object, isNew)) {
+			if (postConstruction(object, isNew, context)) {
 				object.save();
 			}
 
 			updateSystemAttributes(object);
 			object.save();
 
-			if (cleanupAfterSave(object, isNew)) {
+			if (cleanupAfterSave(object, isNew, context)) {
 				object.save();
 			}
 			ok = true;
@@ -650,7 +650,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @param object
 	 * @throws DfException
 	 */
-	protected void prepareForConstruction(T object, boolean newObject) throws DfException {
+	protected void prepareForConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException {
 	}
 
 	/**
@@ -663,14 +663,14 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @param object
 	 * @throws DfException
 	 */
-	protected void finalizeConstruction(T object, boolean newObject) throws DfException {
+	protected void finalizeConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException {
 	}
 
-	protected boolean postConstruction(T object, boolean newObject) throws DfException {
+	protected boolean postConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException {
 		return false;
 	}
 
-	protected boolean cleanupAfterSave(T object, boolean newObject) throws DfException {
+	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException {
 		return false;
 	}
 

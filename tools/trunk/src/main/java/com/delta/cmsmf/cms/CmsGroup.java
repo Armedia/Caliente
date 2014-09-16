@@ -49,18 +49,18 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			CmsAttributes.GROUPS_NAMES, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING, CmsAttributes.USERS_NAMES,
 			new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
-				return false;
-			}
+				@Override
+				public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
+					return false;
+				}
 
-			@Override
-			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-				throws DfException {
-				return CmsMappingUtils.substituteSpecialUsers(object, attr);
-			}
+				@Override
+				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+					throws DfException {
+					return CmsMappingUtils.substituteSpecialUsers(object, attr);
+				}
 
-		});
+			});
 		CmsGroup.HANDLERS_READY = true;
 	}
 
@@ -224,7 +224,8 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfGroup group, boolean newObject) throws DfException {
+	protected void finalizeConstruction(IDfGroup group, boolean newObject, CmsTransferContext context)
+		throws DfException {
 		final IDfValue groupName = getAttribute(CmsAttributes.GROUP_NAME).getValue();
 		if (newObject) {
 			copyAttributeToObject(CmsAttributes.GROUP_NAME, group);
@@ -241,10 +242,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(v.asString());
 					this.log
-					.warn(String
-						.format(
-							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-							v.asString(), groupName.asString()));
+						.warn(String
+							.format(
+								"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+								v.asString(), groupName.asString()));
 					continue;
 				}
 				actualUsers.add(v);
@@ -260,10 +261,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfGroup other = session.getGroup(v.asString());
 				if (other == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-							v.asString(), groupName.asString()));
+						.warn(String
+							.format(
+								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
+								v.asString(), groupName.asString()));
 					continue;
 				}
 				actualGroups.add(v);
@@ -281,10 +282,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				IDfUser user = session.getUser(v.asString());
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-							groupName.asString(), v.asString()));
+						.warn(String
+							.format(
+								"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+								groupName.asString(), v.asString()));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());

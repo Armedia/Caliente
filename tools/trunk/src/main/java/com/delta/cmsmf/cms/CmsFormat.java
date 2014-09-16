@@ -34,7 +34,8 @@ public class CmsFormat extends CmsObject<IDfFormat> {
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfFormat object, boolean newObject) throws DfException {
+	protected void finalizeConstruction(IDfFormat object, boolean newObject, CmsTransferContext context)
+		throws DfException {
 		if (newObject) {
 			copyAttributeToObject(CmsAttributes.NAME, object);
 		}

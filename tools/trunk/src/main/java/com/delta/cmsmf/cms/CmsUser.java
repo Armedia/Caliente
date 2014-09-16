@@ -118,8 +118,8 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected void doPersistDependents(IDfUser user, CmsTransferContext ctx, CmsDependencyManager manager) throws DfException,
-	CMSMFException {
+	protected void doPersistDependents(IDfUser user, CmsTransferContext ctx, CmsDependencyManager manager)
+		throws DfException, CMSMFException {
 		final IDfSession session = user.getSession();
 		final IDfPersistentObject[] deps = {
 			session.getGroup(user.getUserGroupName()), session.getFolderByPath(user.getDefaultFolder())
@@ -161,7 +161,8 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected void prepareForConstruction(IDfUser user, boolean newObject) throws DfException {
+	protected void prepareForConstruction(IDfUser user, boolean newObject, CmsTransferContext context)
+		throws DfException {
 
 		CmsAttribute loginDomain = getAttribute(CmsAttributes.USER_LOGIN_DOMAIN);
 		IDfTypedObject serverConfig = user.getSession().getServerConfig();
@@ -180,7 +181,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfUser user, boolean newObject) throws DfException {
+	protected void finalizeConstruction(IDfUser user, boolean newObject, CmsTransferContext context) throws DfException {
 		// First, set the username - only do this for new objects!!
 		if (newObject) {
 			copyAttributeToObject(CmsAttributes.USER_NAME, user);
