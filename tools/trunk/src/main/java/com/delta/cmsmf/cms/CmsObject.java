@@ -234,6 +234,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
+	public void loadCompleted() throws CMSMFException {
+	}
+
 	public final CmsObjectType getType() {
 		return this.type;
 	}
@@ -633,7 +636,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return this.dfClass.cast(object);
 	}
 
-	protected T newObject(CmsTransferContext ctx) throws DfException {
+	protected T newObject(CmsTransferContext ctx) throws DfException, CMSMFException {
 		return castObject(ctx.getSession().newObject(this.subtype));
 	}
 
