@@ -38,7 +38,7 @@ public class CmsImporterTest extends AbstractTest {
 				@Override
 				public Integer handle(ResultSet rs) throws SQLException {
 					int count = 0;
-					final String columnFormat = "%-12s\t%-12s\t%-16s\t%-6s\t%-16s\t%s%n";
+					final String columnFormat = "%-12s\t%-12s\t%-16s\t%6s\t%-16s\t%s%n";
 					System.out.printf(columnFormat, "TYPE", "SUBTYPE", "BATCH", "NUMBER", "ID", "LABEL");
 					System.out
 					.printf("==========================================================================================================%n");
