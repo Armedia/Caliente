@@ -224,7 +224,21 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 			// Unlink from all the parents we're supposed to unlink from
 			for (String oldParentId : unlinkTargets) {
+				IDfFolder parent = session.getFolderBySpecification(oldParentId);
+				if (parent == null) {
+					// How the hell did this happen?
+					continue;
+				}
+
+				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
+					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+				if (delta.grant(parent)) {
+					parent.save();
+				}
 				folder.unlink(oldParentId);
+				if (delta.revoke(parent)) {
+					parent.save();
+				}
 			}
 
 			this.parentPermitDeltas = new HashMap<String, PermitDelta>();
@@ -237,6 +251,13 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 
 				// If we should link here, then link!
 				if (linkTargets.contains(parentId)) {
+					PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
+						IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+					this.parentPermitDeltas.put(parentId, delta);
+					if (delta.grant(parent)) {
+						parent.save();
+					}
+
 					folder.link(parentId);
 				}
 
@@ -245,14 +266,6 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				for (int i = 0; i < pathCount; i++) {
 					String newPath = String.format("%s/%s", parent.getFolderPath(i), folderName);
 					actualPaths.add(newPath);
-				}
-
-				// TODO: The old code used to also modify v_stamp here...
-				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
-					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
-				this.parentPermitDeltas.put(parentId, delta);
-				if (delta.grant(parent)) {
-					parent.save();
 				}
 			}
 		} else {
