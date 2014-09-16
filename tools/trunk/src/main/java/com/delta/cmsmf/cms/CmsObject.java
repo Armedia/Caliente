@@ -474,37 +474,40 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				cmsImportResult = CmsImportResult.UPDATED;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
-					if (sysObject.isFrozen()) {
-						mustFreeze = true;
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("Clearing frozen status from [%s](%s)", this.label, this.id));
-						}
-						sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, false);
-						sysObject.save();
-					}
-					if (sysObject.isImmutable()) {
-						mustImmute = true;
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String
-								.format("Clearing immutable status from [%s](%s)", this.label, this.id));
-						}
-						sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, false);
-						sysObject.save();
-					}
 				}
 			}
 
-			CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
-			if (frozen != null) {
-				// We only copy over the "true" values - we don't override local frozen status
-				// if it's set to true, and the incoming value is false
-				mustFreeze |= frozen.getValue().asBoolean();
-			}
-			CmsAttribute immutable = getAttribute(CmsAttributes.R_IMMUTABLE_FLAG);
-			if (immutable != null) {
-				// We only copy over the "true" values - we don't override local immutable status
-				// if it's set to true, and the incoming value is false
-				mustImmute |= immutable.getValue().asBoolean();
+			// Apparently, this must happen for both new AND old objects...
+			if (sysObject != null) {
+				if (sysObject.isFrozen()) {
+					mustFreeze = true;
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Clearing frozen status from [%s](%s)", this.label, this.id));
+					}
+					sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, false);
+					sysObject.save();
+				}
+				if (sysObject.isImmutable()) {
+					mustImmute = true;
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Clearing immutable status from [%s](%s)", this.label, this.id));
+					}
+					sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, false);
+					sysObject.save();
+				}
+
+				CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
+				if (frozen != null) {
+					// We only copy over the "true" values - we don't override local frozen status
+					// if it's set to true, and the incoming value is false
+					mustFreeze |= frozen.getValue().asBoolean();
+				}
+				CmsAttribute immutable = getAttribute(CmsAttributes.R_IMMUTABLE_FLAG);
+				if (immutable != null) {
+					// We only copy over the "true" values - we don't override local immutable
+					// status if it's set to true, and the incoming value is false
+					mustImmute |= immutable.getValue().asBoolean();
+				}
 			}
 
 			prepareForConstruction(object, isNew, context);
