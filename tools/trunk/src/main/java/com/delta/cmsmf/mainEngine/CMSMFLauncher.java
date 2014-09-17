@@ -54,6 +54,9 @@ public class CMSMFLauncher extends AbstractLauncher {
 
 		// Now, convert the command-line parameters into configuration properties
 		for (CLIParam p : CLIParam.values()) {
+			if (!p.isPresent()) {
+				continue;
+			}
 			String value = p.getString();
 			if ((value != null) && (p.property != null)) {
 				final String key = p.property.name;
