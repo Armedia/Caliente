@@ -148,7 +148,7 @@ public class CmsExporter extends CmsTransferEngine {
 
 		try {
 			// 1: run the query for the given predicate
-			final String dql = String.format("select r_object_id %s", dqlPredicate);
+			final String dql = String.format("select distinct r_object_id %s", dqlPredicate);
 			IDfCollection results = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				// 2: iterate over the results, gathering up the object IDs
@@ -240,10 +240,10 @@ public class CmsExporter extends CmsTransferEngine {
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
