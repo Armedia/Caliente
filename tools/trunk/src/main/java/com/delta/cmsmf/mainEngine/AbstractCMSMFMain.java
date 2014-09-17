@@ -2,6 +2,7 @@ package com.delta.cmsmf.mainEngine;
 
 import java.io.File;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cfg.Constant;
@@ -55,6 +56,10 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 
 		this.objectStore = DefaultCmsObjectStore.init(requiresCleanData());
 		this.fileSystem = new DefaultCmsFileSystem(contentFilesDirectoryLocation);
+		if (requiresCleanData()) {
+			FileUtils.deleteQuietly(contentFilesDirectoryLocation);
+			FileUtils.forceMkdir(contentFilesDirectoryLocation);
+		}
 		this.sessionManager = new DctmSessionManager(CMSMFLauncher.getParameter(CLIParam.docbase),
 			CMSMFLauncher.getParameter(CLIParam.user), CMSMFLauncher.getParameter(CLIParam.password));
 
