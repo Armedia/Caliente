@@ -126,7 +126,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 				if ((count == null) || (count == 0)) {
 					continue;
 				}
-				report.append(String.format("%n%-16s: %-6d", t.name(), count));
+				report.append(String.format("%n%-16s: %6d", t.name(), count));
 				total += count;
 			}
 			report.append(String.format("%n%s%n%-16s: %6d%n", StringUtils.repeat("=", 30), "Total", total));
