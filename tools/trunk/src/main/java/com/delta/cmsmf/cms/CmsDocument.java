@@ -19,7 +19,6 @@ import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -36,7 +35,6 @@ import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
-import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -140,143 +138,77 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 
 		IDfDocument existing = null;
 
-		if (!root) {
+		final String chronicleId;
+		if (root) {
+			// We're the root, we can only search by path...we look at all the paths this
+			// object is expected to take up on the target, and they must refer to either
+			// no existing object, or exactly one existing object. If there is an existing
+			// object, it's replaced by this one.
+			final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
+			String existingPath = null;
+			// We could do this "the hard way" by seeking out each parent by ID from TARGET_PARENTS,
+			// but we pre-calculated the target paths when we exported the object, so there...sue me
+			// :)
+			for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
+				String currentPath = String.format("%s/%s", p.asString(), documentName);
+				IDfPersistentObject current = session.getObjectByPath(currentPath);
+				if (current == null) {
+					// No match, we're good...
+					continue;
+				}
+				if (!(current instanceof IDfDocument)) {
+					// Not a document, so we're not interested
+					continue;
+				}
+				IDfDocument currentDoc = IDfDocument.class.cast(current);
+				if (existing == null) {
+					// First match, keep track of it
+					existing = currentDoc;
+					existingPath = currentPath;
+					continue;
+				}
+				// Second match, is it the same as the first?
+				if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
+					// Same as the first - we have an issue here
+					continue;
+				}
+				// Not the same, this is a problem
+				throw new CMSMFException(String.format(
+					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+			}
+
+			// If we found no match via path, then we can't locate a match
+			if (existing == null) { return null; }
+
+			// We have a match, but it may not be the version we seek, so
+			// track the chronicle so the code below can find the right version.
+			chronicleId = existing.getChronicleId().getId();
+		} else {
 			// Ok so this isn't the root version... can we find a version attached
 			// to the new chronicle ID (which will already have been mapped) that
 			// matches this document's same implicit version label?
 
 			// Map to the new chronicle ID, from the old one...
-			Mapping chronicleMapping = ctx.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
-				sourceChronicleId);
-			if (chronicleMapping != null) {
-				// We have the chronicle! Try to find our actual match!
-				String q = String.format(
-					"dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = '%s'",
-					chronicleMapping.getTargetValue(), implicitLabel);
-				IDfPersistentObject obj = session.getObjectByQualification(q);
-				// If we have it, return it!!
-				if (obj != null) { return castObject(obj); }
-			}
+			final Mapping chronicleMapping = ctx.getAttributeMapper().getTargetMapping(getType(),
+				CmsAttributes.R_OBJECT_ID, sourceChronicleId);
+			// If we don't have a chronicle mapping, and we're not the root, we have a HUGE
+			// problem...
+			if (chronicleMapping == null) { throw new CMSMFException(String.format(
+				"Failed to find the chronicle mapping for the chronicle ID for [%s](%s) - source chronicleId=[%s]",
+				getLabel(), getId(), sourceChronicleId)); }
 
-			// Ok...so we didn't find our version on that version tree...
-			if (implicitLabel != null) { return null; }
-
-			// These are adapted versions of Shridev's lookup code...
-			existing = locateIdenticalDocument(session);
-			if (existing != null) { return existing; }
-
-			// Nothing there? Ok... let's try to map the chronicle...
-			final CmsAttribute antecedent = getAttribute(CmsAttributes.I_ANTECEDENT_ID);
-			final IDfId antecedentId = (antecedent != null ? antecedent.getValue().asId() : DfId.DF_NULLID);
-			if (!antecedentId.isNull()) {
-				Mapping mapping = ctx.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
-					antecedentId.getId());
-				if (mapping != null) {
-					IDfPersistentObject antecedentObject = session.getObject(new DfId(mapping.getTargetValue()));
-					if (antecedentObject != null) {
-						existing = locateSimilarDescendant(antecedentObject);
-					}
-				}
-			}
+			chronicleId = chronicleMapping.getTargetValue();
 		}
 
-		// We're the root, we can only search by path...we look at all the paths this
-		// object is expected to take up on the target, and they must refer to either
-		// no existing object, or exactly one existing object. If there is an existing
-		// object, it's replaced by this one.
-		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
-		String existingPath = null;
-		// We could do this "the hard way" by seeking out each parent by ID from TARGET_PARENTS,
-		// but we pre-calculated the target paths when we exported the object, so there...sue me :)
-		for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
-			String currentPath = String.format("%s/%s", p.asString(), documentName);
-			IDfPersistentObject current = session.getObjectByPath(currentPath);
-			if (current == null) {
-				// No match, we're good...
-				continue;
-			}
-			if (!(current instanceof IDfDocument)) {
-				// Not a document, so we're not interested
-				continue;
-			}
-			IDfDocument currentDoc = IDfDocument.class.cast(current);
-			if (existing == null) {
-				// First match, keep track of it
-				existing = currentDoc;
-				existingPath = currentPath;
-				continue;
-			}
-			// Second match, is it the same as the first?
-			if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
-				// Same as the first - we have an issue here
-				continue;
-			}
-			// Not the same, this is a problem
-			throw new CMSMFException(String.format(
-				"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
-		}
-		return existing;
-	}
+		// We have the chronicle! Try to find our actual match!
+		IDfPersistentObject obj = session.getObjectByQualification(String
+			.format("dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = '%s'", chronicleId,
+				implicitLabel));
 
-	private IDfDocument locateIdenticalDocument(IDfSession session) throws DfException {
-		String objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
-		// If object name contains single quote, replace it with 2 single quotes for DQL
-		objectName = objectName.replaceAll("'", "''");
-
-		final String objectType = getSubtype();
-		final IDfTime createDate = getAttribute(CmsAttributes.R_CREATION_DATE).getValue().asTime();
-
-		// Get the first folder location
-		final CmsProperty targetPaths = getProperty(CmsDocument.TARGET_PATHS);
-		String folderLocation = (targetPaths.hasValues() ? targetPaths.getValue(0).asString() : "");
-
-		// If folder location contains single quote, replace it with 2 single quotes for DQL
-		folderLocation = folderLocation.replaceAll("'", "''");
-
-		// NOTE: Check the i_is_deleted flag. If the object is marked as deleted, the dql will never
-		// find the matching document. Marked as deleted objects need to be queried by going
-		// directly against the dm_sysobject_s table. When you use dm_sysobject_s table in from
-		// clause, you can't use folder predicate. Find out the r_object_id of the /Temp cabinet and
-		// use it in the query.
-
-		final String objectSet;
-		final String extraCond;
-		final String extraTerm;
-		if (getAttribute(CmsAttributes.I_IS_DELETED).getValue().asBoolean()) {
-			objectSet = "dm_sysobject_s";
-			extraCond = "i_cabinet_id = '%s'";
-
-			IDfFolder tempCabinet = session.getFolderByPath("/Temp");
-			extraTerm = tempCabinet.getObjectId().getId();
-		} else {
-			objectSet = String.format("%s (ALL)", objectType);
-			extraCond = "folder('%s')";
-			extraTerm = folderLocation;
-		}
-
-		final String qualification = String.format(
-			"%s where object_name = '%s' and %s and r_creation_date = DATE('%s')", objectSet, objectName,
-			String.format(extraCond, extraTerm), createDate.asString(Constant.DCTM_DATETIME_PATTERN));
-		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Finding identical object using DQL: %s", qualification));
-		}
-
-		// Retrieve the object using the query
-		return castObject(session.getObjectByQualification(qualification));
-	}
-
-	private IDfDocument locateSimilarDescendant(IDfPersistentObject antecedentVersion) throws DfException {
-		final IDfSession session = antecedentVersion.getSession();
-
-		String antecedentId = antecedentVersion.getObjectId().getId();
-		String versionLabel = getAttribute(CmsAttributes.R_VERSION_LABEL).getValue().asString();
-		String objectType = getSubtype();
-
-		// Retrieve the object using the query
-		return castObject(session.getObjectByQualification(String.format(
-			"%s (ALL) where i_antecedent_id = '%s' and any r_version_label = '%s'", objectType, antecedentId,
-			versionLabel)));
+		// Return whatever we found...if we found nothing, then this is a new version
+		// and must be handled as such
+		return castObject(obj);
 	}
 
 	private List<IDfId> getVersions(boolean prior, IDfDocument document) throws DfException {
@@ -488,7 +420,8 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
 			antecedentId);
 		if (mapping == null) { throw new CMSMFException(String.format(
-			"Can't create version - antecedent version not found [%s]", antecedentId)); }
+			"Can't create a new version of [%s](%s) - antecedent version not found [%s]", getLabel(), getId(),
+			antecedentId)); }
 		IDfDocument antecedentVersion = castObject(session.getObject(new DfId(mapping.getTargetValue())));
 		antecedentVersion.fetch(null);
 		this.antecedentPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_VERSION);
@@ -634,6 +567,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 							getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
 					}
 				}
+				// TODO: update the content attributes?
 			}
 
 			@Override
@@ -720,11 +654,64 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected boolean postConstruction(IDfDocument object, boolean newObject, CmsTransferContext context)
+	protected boolean postConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException, CMSMFException {
-		return super.postConstruction(object, newObject, context);
+		// Update the content attributes
+		return false;
 	}
 
+	/*
+	@formatter:off
+	protected final void updateContentAttributes(T object) throws DfException {
+		final IDfSession session = object.getSession();
+		String parentID = object.getObjectId().getId();
+
+		List<CmsContent> contentList = ((DctmDocument) dctmObj).getContentList();
+		for (CmsContent content : contentList) {
+			String setFile = content.getStrSingleAttrValue(DctmAttrNameConstants.SET_FILE);
+			if (StringUtils.isBlank(setFile)) {
+				setFile = " ";
+			}
+			// If setFile contains single quote in its contents, to escape it, replace it with 4
+			// single quotes.
+			setFile = setFile.replaceAll("'", "''''");
+			String setClient = content.getStrSingleAttrValue(DctmAttrNameConstants.SET_CLIENT);
+			if (StringUtils.isBlank(setClient)) {
+				setClient = " ";
+			}
+			IDfTime setTime = new DfTime(content.getDateSingleAttrValue(DctmAttrNameConstants.SET_TIME));
+
+			String pageModifierStr = "";
+			if (!StringUtils.isBlank(content.getPageModifier())) {
+				pageModifierStr = String.format("and dcr.page_modifier = ''%s''", content.getPageModifier());
+			}
+
+			// Prepare the sql to be executed
+			String sql = "" //
+				+ "UPDATE dmr_content_s SET " //
+				+ "       set_file = ''%s'', " //
+				+ "       set_client = ''%s'', " //
+				+ "       set_time = %s " //
+				+ " WHERE r_object_id = (" //
+				+ "           select dcs.r_object_id " //
+				+ "             from dmr_content_s dcs, dmr_content_r dcr " //
+				+ "            where dcr.parent_id = ''%s'' " //
+				+ "              and dcs.r_object_id = dcr.r_object_id " //
+				+ "              and dcs.rendition = %d " //
+				+ "              %s " //
+				+ "              and dcr.page = %d " //
+				+ "              and dcs.full_format = ''%s''" //
+				+ "       )";
+
+			String sqlStr = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime, session),
+				parentID, dctmContent.getIntSingleAttrValue(CmsAttributes.RENDITION), pageModifierStr,
+				dctmContent.getPageNbr(), dctmContent.getStrSingleAttrValue(CmsAttributes.FULL_FORMAT));
+			// Run the exec sql
+			runExecSQL(session, sqlStr);
+		}
+	}
+	 */
+	// 	@formatter:on
 	@Override
 	protected boolean cleanupAfterSave(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
