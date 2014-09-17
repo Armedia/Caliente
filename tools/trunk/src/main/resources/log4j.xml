@@ -50,10 +50,6 @@
 		<level value="INFO"/>
 	</logger>
 
-	<logger name="com.delta.cmsmf.cmsobjects.DctmObject">
-		<level value="INFO"/>
-	</logger>
-
 	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
 
 	<root>
