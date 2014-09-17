@@ -242,7 +242,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 			List<Future<?>> futures = new ArrayList<Future<?>>();
 			List<Collection<CmsObject<?>>> remaining = new ArrayList<Collection<CmsObject<?>>>();
 			importStarted(containedTypes);
-			for (CmsObjectType type : CmsObjectType.values()) {
+			for (final CmsObjectType type : CmsObjectType.values()) {
 				if (type.isSurrogate()) {
 					if (this.log.isDebugEnabled()) {
 						this.log.debug(String.format("Skipping type %s because it is a surrogate of [%s]", type.name(),
@@ -434,7 +434,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	private void objectTypeImportFinished(CmsObjectType objectType, Map<CmsImportResult, Integer> counters) {
 		for (CmsImportEventListener l : getListeners()) {
 			try {
-				l.objectTypeImportCompleted(objectType, counters);
+				l.objectTypeImportFinished(objectType, counters);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}
@@ -444,7 +444,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	private void importConcluded(Map<CmsImportResult, Integer> counters) {
 		for (CmsImportEventListener l : getListeners()) {
 			try {
-				l.importConcluded(counters);
+				l.importFinished(counters);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}

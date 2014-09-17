@@ -208,10 +208,10 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEven
 
 	@Override
 	public void exportFinished(Map<CmsObjectType, Integer> summary) {
-		this.console.info("Export process completed");
+		this.console.info("Export process finished");
 		for (CmsObjectType t : CmsObjectType.values()) {
 			Integer v = summary.get(t);
-			if (v == null) {
+			if ((v == null) || (v.intValue() == 0)) {
 				continue;
 			}
 			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));

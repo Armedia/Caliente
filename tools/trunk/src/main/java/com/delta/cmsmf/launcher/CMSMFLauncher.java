@@ -53,7 +53,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			System.setProperty("logName", logName);
 		}
 		// Make sure log4j is configured
-		Logger.getRootLogger();
+		Logger.getRootLogger().info("Logging active");
 
 		// Now, convert the command-line parameters into configuration properties
 		for (CLIParam p : CLIParam.values()) {

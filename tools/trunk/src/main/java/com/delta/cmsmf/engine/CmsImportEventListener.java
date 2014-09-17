@@ -70,7 +70,7 @@ public interface CmsImportEventListener {
 	 * @param objectType
 	 * @param counters
 	 */
-	public void objectTypeImportCompleted(CmsObjectType objectType, Map<CmsImportResult, Integer> counters);
+	public void objectTypeImportFinished(CmsObjectType objectType, Map<CmsImportResult, Integer> counters);
 
 	/**
 	 * <p>
@@ -80,5 +80,5 @@ public interface CmsImportEventListener {
 	 *
 	 * @param counters
 	 */
-	public void importConcluded(Map<CmsImportResult, Integer> counters);
+	public void importFinished(Map<CmsImportResult, Integer> counters);
 }
