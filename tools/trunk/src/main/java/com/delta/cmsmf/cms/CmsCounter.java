@@ -77,7 +77,7 @@ public final class CmsCounter<R extends Enum<R>> {
 
 	public Map<R, Integer> getCounters(CmsObjectType type) {
 		Map<R, Integer> ret = new EnumMap<R, Integer>(this.rClass);
-		Map<R, AtomicInteger> m = (type != null ? this.counters.get(ret) : this.cummulative);
+		Map<R, AtomicInteger> m = (type != null ? this.counters.get(type) : this.cummulative);
 		this.lock.writeLock().lock();
 		try {
 			for (Map.Entry<R, AtomicInteger> e : m.entrySet()) {
@@ -160,29 +160,55 @@ public final class CmsCounter<R extends Enum<R>> {
 	private String generateReport(Map<R, AtomicInteger> results, int indentLevel, String entryLabel) {
 		this.lock.writeLock().lock();
 		try {
-			StringBuilder s = new StringBuilder();
-			if (indentLevel < 0) {
-				indentLevel = 0;
-			}
-			for (int i = 0; i < indentLevel; i++) {
-				s.append('\t');
-			}
-			final String indent = s.toString();
-			s.setLength(0);
-			int total = 0;
-			for (Map.Entry<R, AtomicInteger> e : results.entrySet()) {
-				final R r = e.getKey();
-				final AtomicInteger i = e.getValue();
-				total += i.get();
-				s.append(indent).append(String.format(this.formatString, entryLabel, r, i.get()));
-			}
-			String totalLine = String.format(this.formatString, entryLabel, CmsCounter.TOTAL_LABEL, total);
-			// PATCH: need to repeat one less than the length of the line, or we'll overflow by 1...
-			s.append(indent).append(StringUtils.repeat("=", totalLine.length() - 1)).append(CmsCounter.NEW_LINE);
-			s.append(indent).append(totalLine).append(CmsCounter.NEW_LINE);
-			return s.toString();
+			return CmsCounter.generateSummary(this.rClass, results, indentLevel, entryLabel, CmsCounter.TOTAL_LABEL,
+				this.formatString);
 		} finally {
 			this.lock.writeLock().unlock();
 		}
+	}
+
+	private static <E extends Enum<E>> String calculateFormatString(Class<E> klass, String totalLabel) {
+		int maxWidth = 0;
+		for (E e : klass.getEnumConstants()) {
+			maxWidth = Math.max(maxWidth, e.name().length());
+		}
+		maxWidth = Math.max(maxWidth, totalLabel.length());
+		return String.format("%%s objects %%-%ds: %%6d%%n", maxWidth);
+	}
+
+	public static <E extends Enum<E>> String generateSummary(Class<E> klass, Map<E, ? extends Number> results,
+		int indentLevel, String entryLabel, String totalLabel) {
+		return CmsCounter.generateSummary(klass, results, indentLevel, entryLabel, totalLabel, null);
+	}
+
+	public static <E extends Enum<E>> String generateSummary(Class<E> klass, Map<E, ? extends Number> results,
+		int indentLevel, String entryLabel, String totalLabel, String formatString) {
+
+		if (formatString == null) {
+			formatString = CmsCounter.calculateFormatString(klass, totalLabel);
+		}
+
+		StringBuilder s = new StringBuilder();
+		if (indentLevel < 0) {
+			indentLevel = 0;
+		}
+		for (int i = 0; i < indentLevel; i++) {
+			s.append('\t');
+		}
+		final String indent = s.toString();
+		s.setLength(0);
+		int total = 0;
+		for (Map.Entry<E, ? extends Number> e : results.entrySet()) {
+			final E r = e.getKey();
+			final Number i = e.getValue();
+			int intValue = i.intValue();
+			total += intValue;
+			s.append(indent).append(String.format(formatString, entryLabel, r, intValue));
+		}
+		String totalLine = String.format(formatString, entryLabel, totalLabel, total);
+		// PATCH: need to repeat one less than the length of the line, or we'll overflow by 1...
+		s.append(indent).append(StringUtils.repeat("=", totalLine.length() - 1)).append(CmsCounter.NEW_LINE);
+		s.append(indent).append(totalLine).append(CmsCounter.NEW_LINE);
+		return s.toString();
 	}
 }
