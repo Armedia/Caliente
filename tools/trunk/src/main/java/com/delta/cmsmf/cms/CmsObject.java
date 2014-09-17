@@ -990,12 +990,12 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 *
 	 * @param session
 	 *            the repository session
-	 * @param sqlQueryString
+	 * @param sql
 	 *            the sql query string
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private final void runExecSQL(IDfSession session, String sql) throws DfException {
+	protected final void runExecSQL(IDfSession session, String sql) throws DfException {
 		IDfCollection resultCol = DfUtils.executeQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
 			IDfQuery.DF_QUERY);
 		try {
