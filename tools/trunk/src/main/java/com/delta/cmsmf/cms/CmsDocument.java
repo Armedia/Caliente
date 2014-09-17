@@ -183,7 +183,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
 			// If we found no match via path, then we can't locate a match at all and must assume
@@ -511,7 +511,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		final String documentId = document.getObjectId().getId();
 		final String contentType = getAttribute(CmsAttributes.A_CONTENT_TYPE).getValue().toString();
 		final CmsFileSystem fs = context.getFileSystem();
-		context.deserializeObjects(CmsContent.class, contentIds, new ObjectHandler<CmsContent>() {
+		context.deserializeObjects(CmsContent.class, contentIds, new ObjectHandler() {
 
 			@Override
 			public boolean newBatch(String batchId) throws CMSMFException {
@@ -519,8 +519,10 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			}
 
 			@Override
-			public void handle(CmsContent content) throws CMSMFException {
+			public void handle(CmsObject<?> obj) throws CMSMFException {
 				// Step one: what's the content's path in the filesystem?
+				if (!(obj instanceof CmsContent)) { return; }
+				final CmsContent content = CmsContent.class.cast(obj);
 				final File path = content.getFsPath();
 				final File fullPath;
 				try {
@@ -609,9 +611,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				} catch (DfException e) {
 					throw new CMSMFException(
 						String
-						.format(
-							"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+							.format(
+								"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
 				}
 
 			}

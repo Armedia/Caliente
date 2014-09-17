@@ -148,7 +148,7 @@ public class CmsImporter extends CmsTransferEngine {
 		// 1: run the query for the given predicate
 		try {
 			final Map<CmsObjectType, Integer> containedTypes = objectStore.getStoredObjectTypes();
-			final ObjectHandler<CmsObject<?>> handler = new ObjectHandler<CmsObject<?>>() {
+			final ObjectHandler handler = new ObjectHandler() {
 				private String batchId = null;
 				private List<CmsObject<?>> batch = null;
 

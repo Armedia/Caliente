@@ -86,7 +86,7 @@ public class DefaultTransferContext implements CmsTransferContext {
 	}
 
 	@Override
-	public <O extends CmsObject<?>> void deserializeObjects(Class<O> klass, Set<String> ids, ObjectHandler<O> handler)
+	public void deserializeObjects(Class<? extends CmsObject<?>> klass, Set<String> ids, ObjectHandler handler)
 		throws CMSMFException {
 		this.objectStore.deserializeObjects(klass, ids, handler);
 	}

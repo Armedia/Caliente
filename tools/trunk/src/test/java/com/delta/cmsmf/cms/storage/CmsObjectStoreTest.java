@@ -531,7 +531,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 			// All is well
 		}
 		try {
-			store.deserializeObjects(null, new ObjectHandler<CmsObject<?>>() {
+			store.deserializeObjects(null, new ObjectHandler() {
 
 				@Override
 				public boolean newBatch(String batchId) throws CMSMFException {
@@ -601,7 +601,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 				}
 
 				// Now, try to deserialize
-				store.deserializeObjects(t.getCmsObjectClass(), new ObjectHandler<CmsObject<?>>() {
+				store.deserializeObjects(t.getCmsObjectClass(), new ObjectHandler() {
 					private String currentBatch = null;
 
 					@Override
