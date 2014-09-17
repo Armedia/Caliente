@@ -241,6 +241,7 @@ public abstract class AbstractTest {
 	}
 
 	protected final void baseTearDown() {
+		FileUtils.deleteQuietly(this.fsDir);
 		try {
 			this.pool.close();
 		} catch (Exception e) {
