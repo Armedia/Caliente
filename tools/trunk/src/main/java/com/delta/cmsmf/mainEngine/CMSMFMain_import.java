@@ -79,15 +79,15 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 			if (v == null) {
 				continue;
 			}
-			report.append(String.format("\t--%s = [%s]%n", p.option.getLongOpt(), v));
+			report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
 		}
 
-		report.append(String.format("%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
+		report.append(String.format("%n%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
 		for (Setting s : Setting.values()) {
-			report.append(String.format("\t%s = [%s]%n", s.name, s.getString()));
+			report.append(String.format("%n\t%s = [%s]", s.name, s.getString()));
 		}
 
-		report.append(String.format("%n%nAction Summary:%n")).append(StringUtils.repeat("=", 30));
+		report.append(String.format("%n%nAction Summary:%n%s%n", StringUtils.repeat("=", 30)));
 		CmsCounter<CmsImportResult> counter = importer.getCounter();
 		for (CmsObjectType t : CmsObjectType.values()) {
 			report.append(String.format("%n%n%n"));
