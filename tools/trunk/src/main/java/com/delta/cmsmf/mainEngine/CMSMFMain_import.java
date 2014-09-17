@@ -1,6 +1,5 @@
 package com.delta.cmsmf.mainEngine;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -9,6 +8,8 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
@@ -35,17 +36,16 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 	 * and executes it against the source repository. It retrieves objects from the repository and
 	 * exports it out.
 	 *
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
 	 * @throws CMSMFException
 	 */
 	@Override
-	public void run() throws IOException, CMSMFException {
+	public void run() throws CMSMFException {
 		// lock
 		final CmsImporter importer = new CmsImporter(Setting.THREADS.getInt());
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();
 		Date end = null;
+		String exceptionReport = null;
 		try {
 			this.log.info("##### Import Process Started #####");
 			importer.doImport(this.objectStore, this.sessionManager, this.fileSystem,
@@ -56,7 +56,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 			PrintWriter pw = new PrintWriter(sw);
 			report.append(String.format("%n%nException caught while attempting an export%n%n"));
 			t.printStackTrace(pw);
-			report.append(sw.toString());
+			exceptionReport = sw.toString();
 		} finally {
 			end = new Date();
 			// unlock
@@ -73,6 +73,21 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 		report.append(String.format("Import process end      : %s%n", dateFormat.format(end)));
 		report.append(String.format("Import process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
 
+		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
+		for (CLIParam p : CLIParam.values()) {
+			String v = CMSMFLauncher.getParameter(p);
+			if (v == null) {
+				continue;
+			}
+			report.append(String.format("\t--%s = [%s]%n", p.option.getLongOpt(), v));
+		}
+
+		report.append(String.format("%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
+		for (Setting s : Setting.values()) {
+			report.append(String.format("\t%s = [%s]%n", s.name, s.getString()));
+		}
+
+		report.append(String.format("%n%nAction Summary:%n")).append(StringUtils.repeat("=", 30));
 		CmsCounter<CmsImportResult> counter = importer.getCounter();
 		for (CmsObjectType t : CmsObjectType.values()) {
 			report.append(String.format("%n%n%n"));
@@ -80,6 +95,10 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 		}
 		report.append(String.format("%n%n%n"));
 		report.append(counter.generateCummulativeReport());
+
+		if (exceptionReport != null) {
+			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
+		}
 
 		String reportString = report.toString();
 		this.log.info(String.format("Action report for import operation:%n%n%s%n", reportString));

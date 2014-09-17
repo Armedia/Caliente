@@ -17,7 +17,7 @@ import com.documentum.fc.tools.RegistryPasswordUtils;
 public class CMSMFMain_decrypt implements CMSMFMain {
 
 	@Override
-	public void run() throws IOException, CMSMFException {
+	public void run() throws CMSMFException {
 		final Console console = System.console();
 		String password = null;
 		if (console != null) {
@@ -27,7 +27,7 @@ public class CMSMFMain_decrypt implements CMSMFMain {
 		try {
 			password = br.readLine();
 		} catch (IOException e) {
-			throw e;
+			throw new CMSMFException("IOException caught reading the password", e);
 		}
 		try {
 			System.out.printf("%s%s%s%n", (console != null ? "The decrypted password is: [" : ""),

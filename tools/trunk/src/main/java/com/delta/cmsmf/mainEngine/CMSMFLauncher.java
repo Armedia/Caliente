@@ -142,6 +142,11 @@ public class CMSMFLauncher extends AbstractLauncher {
 				klass.getName()));
 		}
 
-		main.run();
+		// Lock for single execution
+		try {
+			main.run();
+		} finally {
+			// Unlock from single execution
+		}
 	}
 }

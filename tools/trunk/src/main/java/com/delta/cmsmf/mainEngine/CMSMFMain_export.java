@@ -1,6 +1,5 @@
 package com.delta.cmsmf.mainEngine;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -40,11 +39,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 	 * and executes it against the source repository. It retrieves objects from the repository and
 	 * exports it out.
 	 *
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
 	 */
 	@Override
-	public void run() throws IOException, CMSMFException {
+	public void run() throws CMSMFException {
 
 		CmsExporter exporter = new CmsExporter(Setting.THREADS.getInt());
 
@@ -52,6 +49,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 		Date end = null;
 		StringBuilder report = new StringBuilder();
 		Map<CmsObjectType, Integer> summary = null;
+		String exceptionReport = null;
 		// lock
 		try {
 			this.log.info("##### Export Process Started #####");
@@ -91,7 +89,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 			PrintWriter pw = new PrintWriter(sw);
 			report.append(String.format("%n%nException caught while attempting an export%n%n"));
 			t.printStackTrace(pw);
-			report.append(sw.toString());
+			exceptionReport = sw.toString();
 		} finally {
 			// unlock
 			end = new Date();
@@ -108,8 +106,22 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 		report.append(String.format("Export process end      : %s%n", dateFormat.format(end)));
 		report.append(String.format("Export process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
 
+		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
+		for (CLIParam p : CLIParam.values()) {
+			String v = CMSMFLauncher.getParameter(p);
+			if (v == null) {
+				continue;
+			}
+			report.append(String.format("\t--%s = [%s]%n", p.option.getLongOpt(), v));
+		}
+
+		report.append(String.format("%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
+		for (Setting s : Setting.values()) {
+			report.append(String.format("\t%s = [%s]%n", s.name, s.getString()));
+		}
+
 		if (summary != null) {
-			report.append(String.format("Exported object summary:%n"));
+			report.append(String.format("%n%Exported Object Summary:%n")).append(StringUtils.repeat("=", 30));
 			int total = 0;
 			for (CmsObjectType t : summary.keySet()) {
 				Integer count = summary.get(t);
@@ -120,6 +132,10 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 				total += count;
 			}
 			report.append(String.format("%-16: %-6d%n", "Total", total));
+		}
+
+		if (exceptionReport != null) {
+			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
 		}
 
 		String reportString = report.toString();
