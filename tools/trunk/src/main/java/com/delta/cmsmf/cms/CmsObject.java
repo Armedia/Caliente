@@ -593,7 +593,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				object.save();
 			}
 
-			updateSystemAttributes(object);
+			if (!updateSystemAttributes(object)) { throw new CMSMFException(String.format(
+				"Failed to update the system attributes for [%s](%s)", this.label, this.id)); }
 			object.save();
 
 			if (cleanupAfterSave(object, isNew, context)) {
@@ -851,7 +852,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected final void updateSystemAttributes(T object) throws DfException {
+	protected final boolean updateSystemAttributes(T object) throws DfException {
 		final String sqlStr;
 		if (object instanceof IDfSysObject) {
 			// IDfSysObject sysObject = IDfSysObject.class.cast(object);
@@ -898,9 +899,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			String sql = "" //
 				+ "UPDATE dm_sysobject_s SET " //
 				+ "       r_modify_date = %s, " //
+				+ "       r_modifier = ''%s'', " //
 				+ "       r_creation_date = %s, " //
 				+ "       r_creator_name = ''%s'', " //
-				+ "       r_modifier = ''%s'', " //
 				+ "       acl_name = ''%s'', " //
 				+ "       acl_domain = ''%s'', " //
 				+ "       i_is_deleted = %d " //
@@ -910,15 +911,15 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 			// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
-			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session),
-				DfUtils.generateSqlDateClause(creationDate, session), creatorName, modifierName, aclName, aclDomain,
-				(deletedAtt.getValue().asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
+			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
+				.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
+					.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
 
 		} else {
 
 			final String objType = object.getType().getName();
 			CmsAttribute attribute = getAttribute(CmsAttributes.R_MODIFY_DATE);
-			if (attribute == null) { return; }
+			if (attribute == null) { return true; }
 
 			final IDfValue modifyDate = attribute.getValue();
 			String sql = "" //
@@ -936,7 +937,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					.getObjectId().getId());
 
 		}
-		runExecSQL(object.getSession(), sqlStr);
+		return runExecSQL(object.getSession(), sqlStr);
 	}
 
 	/**
@@ -992,22 +993,26 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected final void runExecSQL(IDfSession session, String sql) throws DfException {
+	protected final boolean runExecSQL(IDfSession session, String sql) throws DfException {
 		IDfCollection resultCol = DfUtils.executeQuery(session, String.format("EXECUTE exec_sql WITH query='%s'", sql),
 			IDfQuery.DF_QUERY);
+		boolean ok = false;
 		try {
 			if (resultCol.next()) {
 				final IDfValue ret = resultCol.getValueAt(0);
 				DfUtils.closeQuietly(resultCol);
 				final String outcome;
 				if (ret.toString().equalsIgnoreCase("F")) {
+					ok = false;
 					outcome = "rollback";
 				} else {
+					ok = true;
 					outcome = "commit";
 				}
 				resultCol = DfUtils.executeQuery(session, String.format("EXECUTE exec_sql with query='%s';", outcome),
 					IDfQuery.DF_QUERY);
 			}
+			return ok;
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
