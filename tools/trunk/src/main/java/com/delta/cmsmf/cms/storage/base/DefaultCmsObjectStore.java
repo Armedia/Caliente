@@ -7,6 +7,8 @@ package com.delta.cmsmf.cms.storage.base;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
@@ -16,10 +18,12 @@ import org.apache.commons.dbcp.PoolableConnection;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
+import org.h2.tools.DeleteDbFiles;
 
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
@@ -92,10 +96,23 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 			throw new CMSMFException(String.format("Failed to canonicalize the path [%s]", targetPath), e);
 		}
 
+		final String finalUrl = StrSubstitutor.replace(jdbcUrl,
+			Collections.singletonMap("target", targetDirectory.getAbsolutePath()));
+
+		// If we're using H2, then we delete the DB if it's in file: protocol
+		Pattern p = Pattern.compile("^jdbc:h2:(?:([^:]+):)?(.*)/([^/;]+)(?:;.*)?$");
+		Matcher m = p.matcher(finalUrl);
+		if (clearData && m.matches()) {
+			String protocol = m.group(1);
+			if ((protocol == null) || StringUtils.equalsIgnoreCase("file", protocol)) {
+				String path = m.group(2);
+				String dbName = m.group(3);
+				DeleteDbFiles.execute(path, dbName, false);
+			}
+		}
+
 		// Replace variables in the URL
-		return DefaultCmsObjectStore.init(driverName,
-			StrSubstitutor.replace(jdbcUrl, Collections.singletonMap("target", targetDirectory.getAbsolutePath())),
-			clearData);
+		return DefaultCmsObjectStore.init(driverName, finalUrl, clearData);
 	}
 
 	public static synchronized void close() {
