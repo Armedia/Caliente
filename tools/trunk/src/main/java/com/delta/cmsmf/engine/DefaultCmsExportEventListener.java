@@ -5,7 +5,7 @@ import java.util.Map;
 import com.delta.cmsmf.cms.CmsExportResult;
 import com.delta.cmsmf.cms.CmsObjectType;
 
-public interface CmsExportEventListener {
+public class DefaultCmsExportEventListener implements CmsExportEventListener {
 
 	/**
 	 * <p>
@@ -13,7 +13,9 @@ public interface CmsExportEventListener {
 	 * </p>
 	 *
 	 */
-	public void exportStarted(String dql);
+	@Override
+	public void exportStarted(String dql) {
+	}
 
 	/**
 	 * <p>
@@ -22,7 +24,9 @@ public interface CmsExportEventListener {
 	 *
 	 * @param objectType
 	 */
-	public void objectTypeExportStarted(CmsObjectType objectType);
+	@Override
+	public void objectTypeExportStarted(CmsObjectType objectType) {
+	}
 
 	/**
 	 * <p>
@@ -32,7 +36,9 @@ public interface CmsExportEventListener {
 	 * @param objectType
 	 * @param objectId
 	 */
-	public void objectExportStarted(CmsObjectType objectType, String objectId);
+	@Override
+	public void objectExportStarted(CmsObjectType objectType, String objectId) {
+	}
 
 	/**
 	 * <p>
@@ -42,7 +48,9 @@ public interface CmsExportEventListener {
 	 * @param objectType
 	 * @param objectId
 	 */
-	public void objectExportFinished(CmsObjectType objectType, String objectId, CmsExportResult result, Throwable thrown);
+	@Override
+	public void objectExportFinished(CmsObjectType objectType, String objectId, CmsExportResult result, Throwable thrown) {
+	}
 
 	/**
 	 * <p>
@@ -51,7 +59,9 @@ public interface CmsExportEventListener {
 	 *
 	 * @param objectType
 	 */
-	public void objectTypeExportCompleted(CmsObjectType objectType);
+	@Override
+	public void objectTypeExportCompleted(CmsObjectType objectType) {
+	}
 
 	/**
 	 * <p>
@@ -59,5 +69,7 @@ public interface CmsExportEventListener {
 	 * </p>
 	 *
 	 */
-	public void exportConcluded(Map<CmsObjectType, Integer> summary);
+	@Override
+	public void exportConcluded(Map<CmsObjectType, Integer> summary) {
+	}
 }
