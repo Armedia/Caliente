@@ -13,14 +13,11 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.log4j.Logger;
 
 /**
- * The Class SettingManager reads the properties from cmsmf properties file and makes them
- * available during
- * application execution. This class implements singleton design pattern to maintain single set of
- * properties
- * through out the execution.
+ * The Class SettingManager reads the properties from cmsmf properties file and makes them available
+ * during application execution. This class implements singleton design pattern to maintain single
+ * set of properties through out the execution.
  * <p>
  * This class uses Apache commons configuration library to manage the properties.
  *
@@ -28,11 +25,9 @@ import org.apache.log4j.Logger;
  */
 public class SettingManager {
 
-	protected static final Logger logger = Logger.getLogger(SettingManager.class);
-
 	/**
-	 * Instantiates a new properties manager. Private constructor to prevent
-	 * new instances being created.
+	 * Instantiates a new properties manager. Private constructor to prevent new instances being
+	 * created.
 	 */
 	private SettingManager() {
 		// no code here; this is a singleton class so private constructor
@@ -65,18 +60,15 @@ public class SettingManager {
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
 		if (!propertyFile.exists()) {
-			SettingManager.logger.warn(String.format("Property file [%s] does not exist, ignoring",
-				propertyFile.getAbsolutePath()));
+			System.err.printf("Property file [%s] does not exist, ignoring", propertyFile.getAbsolutePath());
 			return;
 		}
 		if (!propertyFile.isFile()) {
-			SettingManager.logger.warn(String.format("Property file [%s] is not a regular file, ignoring",
-				propertyFile.getAbsolutePath()));
+			System.err.printf("Property file [%s] is not a regular file, ignoring", propertyFile.getAbsolutePath());
 			return;
 		}
 		if (!propertyFile.canRead()) {
-			SettingManager.logger.warn(String.format("Property file [%s] can't be read, ignoring",
-				propertyFile.getAbsolutePath()));
+			System.err.printf("Property file [%s] can't be read, ignoring", propertyFile.getAbsolutePath());
 			return;
 		}
 		PropertiesConfiguration cfg = new PropertiesConfiguration();
