@@ -35,6 +35,7 @@ import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
+import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -183,7 +184,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
 			// If we found no match via path, then we can't locate a match at all and must assume
@@ -508,6 +509,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 			contentIds.add(contentId.asString());
 		}
 
+		final String documentId = document.getObjectId().getId();
 		final String contentType = getAttribute(CmsAttributes.A_CONTENT_TYPE).getValue().toString();
 		final CmsFileSystem fs = context.getFileSystem();
 		context.deserializeObjects(CmsContent.class, contentIds, new ObjectHandler<CmsContent>() {
@@ -562,7 +564,57 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 							getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
 					}
 				}
-				// TODO: update the content attributes?
+
+				String setFile = content.getAttribute(CmsAttributes.SET_FILE).getValue().asString();
+				if (StringUtils.isBlank(setFile)) {
+					setFile = " ";
+				}
+				// If setFile contains single quote in its contents, to escape it, replace it with 4
+				// single quotes.
+				setFile = setFile.replaceAll("'", "''''");
+
+				String setClient = content.getAttribute(CmsAttributes.SET_CLIENT).getValue().asString();
+				if (StringUtils.isBlank(setClient)) {
+					setClient = " ";
+				}
+
+				IDfTime setTime = content.getAttribute(CmsAttributes.SET_TIME).getValue().asTime();
+
+				String pageModifierClause = "";
+				if (!StringUtils.isBlank(pageModifier)) {
+					pageModifierClause = String.format("and dcr.page_modifier = ''%s''", pageModifier);
+				}
+
+				// Prepare the sql to be executed
+				String sql = "" //
+					+ "UPDATE dmr_content_s SET " //
+					+ "       set_file = ''%s'', " //
+					+ "       set_client = ''%s'', " //
+					+ "       set_time = %s " //
+					+ " WHERE r_object_id = (" //
+					+ "           select dcs.r_object_id " //
+					+ "             from dmr_content_s dcs, dmr_content_r dcr " //
+					+ "            where dcr.parent_id = ''%s'' " //
+					+ "              and dcs.r_object_id = dcr.r_object_id " //
+					+ "              and dcs.rendition = %d " //
+					+ "              %s " //
+					+ "              and dcr.page = %d " //
+					+ "              and dcs.full_format = ''%s''" //
+					+ "       )";
+
+				try {
+					// Run the exec sql
+					runExecSQL(session, String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime,
+						session), documentId, renditionNumber.getValue().asInteger(), pageModifierClause, pageNumber,
+						fullFormat));
+				} catch (DfException e) {
+					throw new CMSMFException(
+						String
+							.format(
+								"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+				}
+
 			}
 
 			@Override
@@ -648,65 +700,6 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		}
 	}
 
-	@Override
-	protected boolean postConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
-		throws DfException, CMSMFException {
-		// Update the content attributes
-		return false;
-	}
-
-	/*
-	@formatter:off
-	protected final void updateContentAttributes(T object) throws DfException {
-		final IDfSession session = object.getSession();
-		String parentID = object.getObjectId().getId();
-
-		List<CmsContent> contentList = ((DctmDocument) dctmObj).getContentList();
-		for (CmsContent content : contentList) {
-			String setFile = content.getStrSingleAttrValue(DctmAttrNameConstants.SET_FILE);
-			if (StringUtils.isBlank(setFile)) {
-				setFile = " ";
-			}
-			// If setFile contains single quote in its contents, to escape it, replace it with 4
-			// single quotes.
-			setFile = setFile.replaceAll("'", "''''");
-			String setClient = content.getStrSingleAttrValue(DctmAttrNameConstants.SET_CLIENT);
-			if (StringUtils.isBlank(setClient)) {
-				setClient = " ";
-			}
-			IDfTime setTime = new DfTime(content.getDateSingleAttrValue(DctmAttrNameConstants.SET_TIME));
-
-			String pageModifierStr = "";
-			if (!StringUtils.isBlank(content.getPageModifier())) {
-				pageModifierStr = String.format("and dcr.page_modifier = ''%s''", content.getPageModifier());
-			}
-
-			// Prepare the sql to be executed
-			String sql = "" //
-				+ "UPDATE dmr_content_s SET " //
-				+ "       set_file = ''%s'', " //
-				+ "       set_client = ''%s'', " //
-				+ "       set_time = %s " //
-				+ " WHERE r_object_id = (" //
-				+ "           select dcs.r_object_id " //
-				+ "             from dmr_content_s dcs, dmr_content_r dcr " //
-				+ "            where dcr.parent_id = ''%s'' " //
-				+ "              and dcs.r_object_id = dcr.r_object_id " //
-				+ "              and dcs.rendition = %d " //
-				+ "              %s " //
-				+ "              and dcr.page = %d " //
-				+ "              and dcs.full_format = ''%s''" //
-				+ "       )";
-
-			String sqlStr = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime, session),
-				parentID, dctmContent.getIntSingleAttrValue(CmsAttributes.RENDITION), pageModifierStr,
-				dctmContent.getPageNbr(), dctmContent.getStrSingleAttrValue(CmsAttributes.FULL_FORMAT));
-			// Run the exec sql
-			runExecSQL(session, sqlStr);
-		}
-	}
-	 */
-	// 	@formatter:on
 	@Override
 	protected boolean cleanupAfterSave(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
