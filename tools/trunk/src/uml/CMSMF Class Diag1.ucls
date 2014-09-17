@@ -54,7 +54,7 @@
       <operations public="true" package="true" protected="true" private="true"/>    
     </display>  
   </class>  
-  <class corner="BOTTOM_RIGHT" language="java" name="com.delta.cmsmf.mainEngine.AbstractCMSMFMain" 
+  <class corner="BOTTOM_RIGHT" language="java" name="com.delta.cmsmf.launcher.AbstractCMSMFMain" 
     project="CMSMigrationFramework" file="/CMSMigrationFramework/src/com/delta/cmsmf/mainEngine/CMSMFMain.java" 
     binary="false">    
     <position x="1039" y="458" width="-1" height="-1"/>    
@@ -63,7 +63,7 @@
       <operations public="true" package="true" protected="true" private="true"/>    
     </display>  
   </class>  
-  <class corner="BOTTOM_RIGHT" language="java" name="com.delta.cmsmf.mainEngine.DctmObjectRetriever" 
+  <class corner="BOTTOM_RIGHT" language="java" name="com.delta.cmsmf.launcher.DctmObjectRetriever" 
     project="CMSMigrationFramework" 
     file="/CMSMigrationFramework/src/com/delta/cmsmf/mainEngine/DctmObjectRetriever.java" binary="false">    
     <position x="968" y="308" width="-1" height="-1"/>    

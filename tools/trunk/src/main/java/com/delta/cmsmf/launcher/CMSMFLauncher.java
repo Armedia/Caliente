@@ -1,4 +1,4 @@
-package com.delta.cmsmf.mainEngine;
+package com.delta.cmsmf.launcher;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -6,13 +6,14 @@ import java.util.Date;
 import java.util.Properties;
 
 import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import com.delta.cmsmf.cfg.CLIParam;
 
 public class CMSMFLauncher extends AbstractLauncher {
 
-	private static final String MAIN_CLASS = "com.delta.cmsmf.mainEngine.CMSMFMain_%s";
+	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.CMSMFMain_%s";
 
 	private static Properties PARAMETER_PROPERTIES = new Properties();
 
@@ -51,6 +52,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 			}
 			System.setProperty("logName", logName);
 		}
+		// Make sure log4j is configured
+		Logger.getRootLogger();
 
 		// Now, convert the command-line parameters into configuration properties
 		for (CLIParam p : CLIParam.values()) {
