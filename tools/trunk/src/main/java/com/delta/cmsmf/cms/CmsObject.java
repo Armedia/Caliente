@@ -477,8 +477,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
 					object.getObjectId().getId());
 
-				if (isSameObject(object)) { return new SaveResult(CmsImportResult.DUPLICATE, object.getObjectId()
-					.getId()); }
+				if (isSameObject(object)) {
+					ok = true;
+					return new SaveResult(CmsImportResult.DUPLICATE, object.getObjectId().getId());
+				}
 				cmsImportResult = CmsImportResult.UPDATED;
 				if (object instanceof IDfSysObject) {
 					sysObject = IDfSysObject.class.cast(object);
