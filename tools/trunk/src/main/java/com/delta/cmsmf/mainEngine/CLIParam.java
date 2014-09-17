@@ -1,7 +1,18 @@
 package com.delta.cmsmf.mainEngine;
 
-import org.apache.commons.cli.Option;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.Setting;
 
 public enum CLIParam {
@@ -50,5 +61,86 @@ public enum CLIParam {
 
 	private CLIParam(Setting property, boolean hasParameter, String description) {
 		this(property, hasParameter, false, description);
+	}
+
+	public Boolean getBoolean() {
+		String s = getString();
+		return (s != null ? Boolean.valueOf(s) : null);
+	}
+
+	public boolean getBoolean(boolean def) {
+		Boolean v = getBoolean();
+		return (v != null ? v.booleanValue() : def);
+	}
+
+	public Integer getInteger() {
+		String s = getString();
+		return (s != null ? Integer.valueOf(s) : null);
+	}
+
+	public int getInteger(int def) {
+		Integer v = getInteger();
+		return (v != null ? v.intValue() : def);
+	}
+
+	public Double getDouble() {
+		String s = getString();
+		return (s != null ? Double.valueOf(s) : null);
+	}
+
+	public double getDouble(double def) {
+		Double v = getDouble();
+		return (v != null ? v.doubleValue() : def);
+	}
+
+	public String getString() {
+		return CLIParam.getString(this);
+	}
+
+	public String getString(String def) {
+		String v = getString();
+		return Tools.coalesce(v, def);
+	}
+
+	private static Map<CLIParam, String> CLI_PARSED = null;
+
+	private static synchronized String getString(CLIParam param) {
+		if (CLIParam.CLI_PARSED == null) { return null; }
+		return CLIParam.CLI_PARSED.get(param);
+	}
+
+	public static synchronized boolean parse(String... args) {
+		// To start off, parse the command line
+		Options options = new Options();
+		for (CLIParam p : CLIParam.values()) {
+			options.addOption(p.option);
+		}
+
+		CommandLineParser parser = new PosixParser();
+		final CommandLine cli;
+		try {
+			cli = parser.parse(options, args);
+		} catch (ParseException e) {
+			new HelpFormatter().printHelp("CMSMF",
+				String.format("%nAvailable Parameters:%n------------------------------%n"), options,
+				String.format("%nERROR: %s%n%n", e.getMessage()), true);
+			return false;
+		}
+
+		if (cli.hasOption(CLIParam.help.option.getLongOpt())) {
+			new HelpFormatter().printHelp("CMSMF",
+				String.format("%nAvailable Parameters:%n------------------------------%n"), options, null, true);
+			return false;
+		}
+
+		// Convert the command-line parameters into "configuration properties"
+		Map<CLIParam, String> cliParams = new EnumMap<CLIParam, String>(CLIParam.class);
+		for (CLIParam p : CLIParam.values()) {
+			if (cli.hasOption(p.option.getLongOpt())) {
+				cliParams.put(p, cli.getOptionValue(p.option.getLongOpt()));
+			}
+		}
+		AbstractLauncher.CLI_PARSED = Collections.unmodifiableMap(cliParams);
+		return true;
 	}
 }
