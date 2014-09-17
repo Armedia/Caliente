@@ -183,7 +183,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
 			// If we found no match via path, then we can't locate a match at all and must assume
@@ -284,8 +284,6 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
 		if (Tools.equals(getId(), ctx.getRootObjectId())) {
-			// TODO: This works for single-threadedness... for multi-threadedness, they must be
-			// stored as separate types
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
 			for (IDfId versionId : getVersions(true, document)) {
 				IDfPersistentObject obj = session.getObject(versionId);
@@ -611,9 +609,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				} catch (DfException e) {
 					throw new CMSMFException(
 						String
-							.format(
-								"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+						.format(
+							"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
 				}
 
 			}
