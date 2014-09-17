@@ -603,9 +603,13 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 
 				try {
 					// Run the exec sql
-					runExecSQL(session, String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime,
-						session), documentId, renditionNumber.getValue().asInteger(), pageModifierClause, pageNumber,
-						fullFormat));
+					sql = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime, session),
+						documentId, renditionNumber.getValue().asInteger(), pageModifierClause, pageNumber, fullFormat);
+					if (!runExecSQL(session, sql)) { throw new CMSMFException(
+						String
+						.format(
+							"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
+							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier, sql)); }
 				} catch (DfException e) {
 					throw new CMSMFException(
 						String
