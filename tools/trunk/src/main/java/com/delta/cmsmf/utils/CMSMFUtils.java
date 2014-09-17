@@ -28,7 +28,7 @@ public class CMSMFUtils {
 	/** The log object used for logging. */
 	static Logger logger = Logger.getLogger(CMSMFUtils.class);
 
-	private static String cmsmfSyncCabinetName = Setting.STATE_CABINET_NAME.getString();
+	private static String cmsmfSyncCabinetName = Setting.STATE_CABINET.getString();
 	private static String cmsmfLastExportObjName = Constant.LAST_EXPORT_OBJ_NAME;
 
 	/**
