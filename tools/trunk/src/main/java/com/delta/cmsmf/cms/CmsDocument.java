@@ -133,14 +133,22 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 
 		// First things first: are we the root of the version hierarchy?
 		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
-		final boolean root = (Tools.equals(getId(), sourceChronicleId));
 		final String implicitLabel = getAttribute(CmsAttributes.R_VERSION_LABEL).getValue().asString();
 
 		IDfDocument existing = null;
 
 		final String chronicleId;
-		if (root) {
-			// We're the root, we can only search by path...we look at all the paths this
+
+		// Map to the new chronicle ID, from the old one...try for the quick win
+		final Mapping chronicleMapping = ctx.getAttributeMapper().getTargetMapping(getType(),
+			CmsAttributes.R_OBJECT_ID, sourceChronicleId);
+
+		// If we don't have a chronicle mapping, we're likely the root document and thus
+		// will have to search by path...
+		if (chronicleMapping != null) {
+			chronicleId = chronicleMapping.getTargetValue();
+		} else {
+			// We don't know the chronicle, so look by path. We look at all the paths this
 			// object is expected to take up on the target, and they must refer to either
 			// no existing object, or exactly one existing object. If there is an existing
 			// object, it's replaced by this one.
@@ -175,33 +183,20 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
-			// If we found no match via path, then we can't locate a match
+			// If we found no match via path, then we can't locate a match at all and must assume
+			// that this object is a new object
 			if (existing == null) { return null; }
 
 			// We have a match, but it may not be the version we seek, so
 			// track the chronicle so the code below can find the right version.
 			chronicleId = existing.getChronicleId().getId();
-		} else {
-			// Ok so this isn't the root version... can we find a version attached
-			// to the new chronicle ID (which will already have been mapped) that
-			// matches this document's same implicit version label?
-
-			// Map to the new chronicle ID, from the old one...
-			final Mapping chronicleMapping = ctx.getAttributeMapper().getTargetMapping(getType(),
-				CmsAttributes.R_OBJECT_ID, sourceChronicleId);
-			// If we don't have a chronicle mapping, and we're not the root, we have a HUGE
-			// problem...
-			if (chronicleMapping == null) { throw new CMSMFException(String.format(
-				"Failed to find the chronicle mapping for the chronicle ID for [%s](%s) - source chronicleId=[%s]",
-				getLabel(), getId(), sourceChronicleId)); }
-
-			chronicleId = chronicleMapping.getTargetValue();
 		}
 
-		// We have the chronicle! Try to find our actual match!
+		// Using the chronicle ID and the implicit version ID, we will seek out
+		// the exact existing version.
 		IDfPersistentObject obj = session.getObjectByQualification(String
 			.format("dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = '%s'", chronicleId,
 				implicitLabel));
