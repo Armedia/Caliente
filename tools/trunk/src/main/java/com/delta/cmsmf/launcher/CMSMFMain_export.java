@@ -14,7 +14,9 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
+import com.delta.cmsmf.cms.CmsExportResult;
 import com.delta.cmsmf.cms.CmsObjectType;
+import com.delta.cmsmf.engine.CmsExportEventListener;
 import com.delta.cmsmf.engine.CmsExporter;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
@@ -26,7 +28,7 @@ import com.documentum.fc.common.DfException;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_export extends AbstractCMSMFMain {
+public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEventListener {
 
 	CMSMFMain_export() throws Throwable {
 		super();
@@ -42,6 +44,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 	public void run() throws CMSMFException {
 
 		CmsExporter exporter = new CmsExporter(Setting.THREADS.getInt());
+		exporter.addListener(this);
 
 		final Date start = new Date();
 		Date end = null;
@@ -180,5 +183,38 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 	@Override
 	public boolean requiresCleanData() {
 		return true;
+	}
+
+	@Override
+	public void exportStarted(String dql) {
+		this.console.info(String.format("Export process started with DQL:%n%n\t%s%n%n", dql));
+	}
+
+	@Override
+	public void objectExportStarted(CmsObjectType objectType, String objectId) {
+		this.console.info(String.format("Object export started for %s[%s]", objectType.name(), objectId));
+	}
+
+	@Override
+	public void objectExportCompleted(CmsObjectType objectType, String objectId, CmsExportResult result) {
+		this.console.info(String.format("Object export completed: %s[%s] %s", objectType.name(), objectId,
+			result.name()));
+	}
+
+	@Override
+	public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
+		this.console.warn(String.format("Object export failed for %s[%s]", objectType.name(), objectId), thrown);
+	}
+
+	@Override
+	public void exportFinished(Map<CmsObjectType, Integer> summary) {
+		this.console.info("Export process completed");
+		for (CmsObjectType t : CmsObjectType.values()) {
+			Integer v = summary.get(t);
+			if (v == null) {
+				continue;
+			}
+			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
+		}
 	}
 }
