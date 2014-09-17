@@ -62,7 +62,14 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 			DefaultCmsObjectStore.LOG.info(String.format("State database will be stored at [%s]", jdbcUrl));
 		}
 		final ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(jdbcUrl, null);
-		ObjectPool<PoolableConnection> connectionPool = new GenericObjectPool<PoolableConnection>();
+		GenericObjectPool<PoolableConnection> connectionPool = new GenericObjectPool<PoolableConnection>();
+		GenericObjectPool.Config cfg = new GenericObjectPool.Config();
+		cfg.whenExhaustedAction = GenericObjectPool.WHEN_EXHAUSTED_GROW;
+		cfg.maxIdle = 10;
+		cfg.minIdle = 5;
+		cfg.testOnBorrow = true;
+		cfg.testOnReturn = true;
+		connectionPool.setConfig(cfg);
 		@SuppressWarnings("unused")
 		final PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory,
 			connectionPool, null, null, false, true);
