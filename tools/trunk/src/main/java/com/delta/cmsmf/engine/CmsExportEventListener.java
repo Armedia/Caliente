@@ -17,15 +17,6 @@ public interface CmsExportEventListener {
 
 	/**
 	 * <p>
-	 * Invoked when exporting objects of the given type has begun.
-	 * </p>
-	 *
-	 * @param objectType
-	 */
-	public void objectTypeExportStarted(CmsObjectType objectType);
-
-	/**
-	 * <p>
 	 * Invoked when export has started for the given object.
 	 * </p>
 	 *
@@ -43,15 +34,6 @@ public interface CmsExportEventListener {
 	 * @param objectId
 	 */
 	public void objectExportFinished(CmsObjectType objectType, String objectId, CmsExportResult result, Throwable thrown);
-
-	/**
-	 * <p>
-	 * Invoked when all the objects of the given type have been exported.
-	 * </p>
-	 *
-	 * @param objectType
-	 */
-	public void objectTypeExportCompleted(CmsObjectType objectType);
 
 	/**
 	 * <p>

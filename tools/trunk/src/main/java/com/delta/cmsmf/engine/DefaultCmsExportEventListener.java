@@ -19,17 +19,6 @@ public class DefaultCmsExportEventListener implements CmsExportEventListener {
 
 	/**
 	 * <p>
-	 * Invoked when exporting objects of the given type has begun.
-	 * </p>
-	 *
-	 * @param objectType
-	 */
-	@Override
-	public void objectTypeExportStarted(CmsObjectType objectType) {
-	}
-
-	/**
-	 * <p>
 	 * Invoked when export has started for the given object.
 	 * </p>
 	 *
@@ -50,17 +39,6 @@ public class DefaultCmsExportEventListener implements CmsExportEventListener {
 	 */
 	@Override
 	public void objectExportFinished(CmsObjectType objectType, String objectId, CmsExportResult result, Throwable thrown) {
-	}
-
-	/**
-	 * <p>
-	 * Invoked when all the objects of the given type have been exported.
-	 * </p>
-	 *
-	 * @param objectType
-	 */
-	@Override
-	public void objectTypeExportCompleted(CmsObjectType objectType) {
 	}
 
 	/**
