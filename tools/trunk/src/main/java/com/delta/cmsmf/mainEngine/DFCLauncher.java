@@ -7,17 +7,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.utils.ProcessFuture;
 
 public class DFCLauncher extends AbstractLauncher {
 
-	private static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
-	private static final String ENV_DOCUMENTUM = "DOCUMENTUM";
-	private static final String DCTM_JAR = "dctm.jar";
-
 	public static void main(String[] args) throws Throwable {
+		if (!CLIParam.parse(args)) { return; }
 
-		Map<CLIParam, String> cliParams = AbstractLauncher.parseArguments(args);
+		Map<CLIParam, String> cliParams = CLIParam.getParsed();
 		if (cliParams == null) { return; }
 
 		Collection<File> classpath = new ArrayList<File>();
@@ -35,14 +33,14 @@ public class DFCLauncher extends AbstractLauncher {
 		classpath.add(tgt);
 
 		// Next, add ${DOCUMENTUM}/config to the classpath
-		var = System.getenv(DFCLauncher.ENV_DOCUMENTUM);
+		var = System.getenv(AbstractLauncher.ENV_DOCUMENTUM);
 		if (cliParams.containsKey(CLIParam.dctm)) {
 			// DFC is specified
 			var = cliParams.get(CLIParam.dctm);
 		} else {
 			// Go with the environment
 			if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
-				DFCLauncher.ENV_DOCUMENTUM)); }
+				AbstractLauncher.ENV_DOCUMENTUM)); }
 		}
 
 		base = new File(var).getCanonicalFile();
@@ -50,7 +48,7 @@ public class DFCLauncher extends AbstractLauncher {
 			base.getAbsolutePath())); }
 
 		// Make sure the environment reflects our changes
-		environment.put(DFCLauncher.ENV_DOCUMENTUM, base.getCanonicalPath());
+		environment.put(AbstractLauncher.ENV_DOCUMENTUM, base.getCanonicalPath());
 
 		tgt = new File(base, "config");
 		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
@@ -59,14 +57,14 @@ public class DFCLauncher extends AbstractLauncher {
 		classpath.add(tgt);
 
 		// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
-		var = System.getenv(DFCLauncher.ENV_DOCUMENTUM_SHARED);
+		var = System.getenv(AbstractLauncher.ENV_DOCUMENTUM_SHARED);
 		if (cliParams.containsKey(CLIParam.dfc)) {
 			// DFC is specified
 			var = cliParams.get(CLIParam.dfc);
 		} else {
 			// Go with the environment
 			if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
-				DFCLauncher.ENV_DOCUMENTUM_SHARED)); }
+				AbstractLauncher.ENV_DOCUMENTUM_SHARED)); }
 		}
 
 		// Next, is it a directory?
@@ -75,10 +73,10 @@ public class DFCLauncher extends AbstractLauncher {
 			base.getAbsolutePath())); }
 
 		// Make sure the environment reflects our changes
-		environment.put(DFCLauncher.ENV_DOCUMENTUM_SHARED, base.getCanonicalPath());
+		environment.put(AbstractLauncher.ENV_DOCUMENTUM_SHARED, base.getCanonicalPath());
 
 		// Next, does dctm.jar exist in there?
-		tgt = new File(base, DFCLauncher.DCTM_JAR);
+		tgt = new File(base, AbstractLauncher.DCTM_JAR);
 		if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
 			tgt.getAbsolutePath())); }
 

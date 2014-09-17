@@ -14,10 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.mainEngine.CLIParam;
-import com.delta.cmsmf.mainEngine.CMSMFLauncher;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
@@ -69,7 +68,7 @@ public class CMSMFUtils {
 	}
 
 	private static IDfSysObject getCmsmfStateObject(IDfSession dctmSession, boolean createIfMissing) throws DfException {
-		final String targetDocbaseName = CMSMFLauncher.getParameter(CLIParam.docbase);
+		final String targetDocbaseName = CLIParam.docbase.getString();
 		final String cabinetPath = "/" + CMSMFUtils.cmsmfSyncCabinetName;
 		final String folderPath = cabinetPath + "/" + targetDocbaseName;
 		final String documentPath = folderPath + "/" + CMSMFUtils.cmsmfLastExportObjName;

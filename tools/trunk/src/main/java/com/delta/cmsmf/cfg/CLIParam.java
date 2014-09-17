@@ -1,8 +1,9 @@
-package com.delta.cmsmf.mainEngine;
+package com.delta.cmsmf.cfg;
 
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -13,7 +14,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cfg.Setting;
 
 public enum CLIParam {
 	//
@@ -63,6 +63,10 @@ public enum CLIParam {
 		this(property, hasParameter, false, description);
 	}
 
+	public boolean isPresent() {
+		return CLIParam.isPresent(this);
+	}
+
 	public Boolean getBoolean() {
 		String s = getString();
 		return (s != null ? Boolean.valueOf(s) : null);
@@ -102,14 +106,31 @@ public enum CLIParam {
 		return Tools.coalesce(v, def);
 	}
 
-	private static Map<CLIParam, String> CLI_PARSED = null;
+	private static final String[] NO_OPTS = new String[0];
+	private static AtomicReference<Map<CLIParam, String>> CLI_PARSED = new AtomicReference<Map<CLIParam, String>>(null);
 
-	private static synchronized String getString(CLIParam param) {
-		if (CLIParam.CLI_PARSED == null) { return null; }
-		return CLIParam.CLI_PARSED.get(param);
+	public static String getString(CLIParam param) {
+		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
+		Map<CLIParam, String> m = CLIParam.getParsed();
+		if (m == null) { return null; }
+		return m.get(param);
+	}
+
+	public static boolean isPresent(CLIParam param) {
+		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
+		Map<CLIParam, String> m = CLIParam.getParsed();
+		if (m == null) { return false; }
+		return m.containsKey(param);
+	}
+
+	public static Map<CLIParam, String> getParsed() {
+		return CLIParam.CLI_PARSED.get();
 	}
 
 	public static synchronized boolean parse(String... args) {
+		if (args == null) {
+			args = CLIParam.NO_OPTS;
+		}
 		// To start off, parse the command line
 		Options options = new Options();
 		for (CLIParam p : CLIParam.values()) {
@@ -140,7 +161,7 @@ public enum CLIParam {
 				cliParams.put(p, cli.getOptionValue(p.option.getLongOpt()));
 			}
 		}
-		AbstractLauncher.CLI_PARSED = Collections.unmodifiableMap(cliParams);
+		CLIParam.CLI_PARSED.set(Collections.unmodifiableMap(cliParams));
 		return true;
 	}
 }

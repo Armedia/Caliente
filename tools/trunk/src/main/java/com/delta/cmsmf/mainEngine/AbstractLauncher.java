@@ -1,54 +1,72 @@
 package com.delta.cmsmf.mainEngine;
 
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.Map;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
+import com.delta.cmsmf.cfg.CLIParam;
+import com.delta.cmsmf.utils.ClasspathPatcher;
 
 abstract class AbstractLauncher {
+	protected static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
+	protected static final String ENV_DOCUMENTUM = "DOCUMENTUM";
+	protected static final String DCTM_JAR = "dctm.jar";
 
-	protected static String[] CLI_ARGS = null;
-	protected static Map<CLIParam, String> CLI_PARSED = null;
+	protected static List<File> generateClasspath() throws IOException {
+		List<File> ret = new ArrayList<File>();
+		String var = null;
+		File base = null;
+		File tgt = null;
 
-	protected static Map<CLIParam, String> parseArguments(String... args) throws Throwable {
-		// To start off, parse the command line
-		Options options = new Options();
-		for (CLIParam p : CLIParam.values()) {
-			options.addOption(p.option);
+		// First, add the ${PWD}/cfg directory to the classpath - whether it exists or not
+		var = System.getProperty("user.dir");
+		base = new File(var);
+		tgt = new File(var, "cfg");
+		ret.add(base);
+		ret.add(tgt);
+
+		// Next, add ${DOCUMENTUM}/config to the classpath
+		var = CLIParam.dctm.getString(System.getenv(AbstractLauncher.ENV_DOCUMENTUM));
+		// Go with the environment
+		if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
+			AbstractLauncher.ENV_DOCUMENTUM)); }
+
+		base = new File(var).getCanonicalFile();
+		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
+			base.getAbsolutePath())); }
+
+		tgt = new File(base, "config");
+		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
+			tgt.getAbsolutePath())); }
+
+		ret.add(tgt);
+
+		// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
+		var = CLIParam.dfc.getString(System.getenv(AbstractLauncher.ENV_DOCUMENTUM_SHARED));
+		// Go with the environment
+		if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
+			AbstractLauncher.ENV_DOCUMENTUM_SHARED)); }
+
+		// Next, is it a directory?
+		base = new File(var).getCanonicalFile();
+		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
+			base.getAbsolutePath())); }
+
+		// Next, does dctm.jar exist in there?
+		tgt = new File(base, AbstractLauncher.DCTM_JAR);
+		if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
+			tgt.getAbsolutePath())); }
+
+		// Next, to the classpath
+		ret.add(tgt);
+		return ret;
+	}
+
+	protected static void patchClasspath() throws IOException {
+		for (File f : AbstractLauncher.generateClasspath()) {
+			ClasspathPatcher.addToClassPath(f);
 		}
-
-		CommandLineParser parser = new PosixParser();
-		final CommandLine cli;
-		try {
-			cli = parser.parse(options, args);
-		} catch (ParseException e) {
-			new HelpFormatter().printHelp("CMSMF",
-				String.format("%nAvailable Parameters:%n------------------------------%n"), options,
-				String.format("%nERROR: %s%n%n", e.getMessage()), true);
-			return null;
-		}
-
-		if (cli.hasOption(CLIParam.help.option.getLongOpt())) {
-			new HelpFormatter().printHelp("CMSMF",
-				String.format("%nAvailable Parameters:%n------------------------------%n"), options, null, true);
-			return null;
-		}
-
-		// Convert the command-line parameters into "configuration properties"
-		Map<CLIParam, String> cliParams = new EnumMap<CLIParam, String>(CLIParam.class);
-		for (CLIParam p : CLIParam.values()) {
-			if (cli.hasOption(p.option.getLongOpt())) {
-				cliParams.put(p, cli.getOptionValue(p.option.getLongOpt()));
-			}
-		}
-		AbstractLauncher.CLI_ARGS = args.clone();
-		AbstractLauncher.CLI_PARSED = Collections.unmodifiableMap(cliParams);
-		return cliParams;
 	}
 }

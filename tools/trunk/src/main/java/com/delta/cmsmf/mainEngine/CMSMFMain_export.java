@@ -11,6 +11,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.CmsObjectType;
@@ -106,7 +107,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
 		for (CLIParam p : CLIParam.values()) {
-			String v = CMSMFLauncher.getParameter(p);
+			String v = p.getString();
 			if (v == null) {
 				continue;
 			}

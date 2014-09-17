@@ -5,6 +5,7 @@ import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cfg.SettingManager;
@@ -37,8 +38,8 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 		SettingManager.addPropertySource(CMSMFLauncher.getParameterProperties());
 
 		// A configuration file has been specifed, so use its values ahead of the defaults
-		if (CMSMFLauncher.getParameter(CLIParam.cfg) != null) {
-			SettingManager.addPropertySource(CMSMFLauncher.getParameter(CLIParam.cfg));
+		if (CLIParam.cfg.getString() != null) {
+			SettingManager.addPropertySource(CLIParam.cfg.getString());
 		}
 
 		// Now, the catch-all, default configuration
@@ -49,7 +50,7 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 
 		// First things first...
 		AbstractCMSMFMain.instance = this;
-		this.log.info(String.format("Launching CMSMF %s mode%n", CMSMFLauncher.getParameter(CLIParam.mode)));
+		this.log.info(String.format("Launching CMSMF %s mode%n", CLIParam.mode.getString()));
 
 		File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
 		File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
@@ -60,8 +61,8 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 			FileUtils.deleteQuietly(contentFilesDirectoryLocation);
 			FileUtils.forceMkdir(contentFilesDirectoryLocation);
 		}
-		this.sessionManager = new DctmSessionManager(CMSMFLauncher.getParameter(CLIParam.docbase),
-			CMSMFLauncher.getParameter(CLIParam.user), CMSMFLauncher.getParameter(CLIParam.password));
+		this.sessionManager = new DctmSessionManager(CLIParam.docbase.getString(),
+			CLIParam.user.getString(), CLIParam.password.getString());
 
 		// Set the filesystem location where files will be created or read from
 		this.log.info(String.format("Using database directory: [%s]", databaseDirectoryLocation));
