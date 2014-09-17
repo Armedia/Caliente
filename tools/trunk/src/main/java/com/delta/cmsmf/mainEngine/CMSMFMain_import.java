@@ -91,10 +91,10 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 		CmsCounter<CmsImportResult> counter = importer.getCounter();
 		for (CmsObjectType t : CmsObjectType.values()) {
 			report.append(String.format("%n%n%n"));
-			report.append(counter.generateReport(t));
+			report.append(counter.generateReport(t, 1));
 		}
 		report.append(String.format("%n%n%n"));
-		report.append(counter.generateCummulativeReport());
+		report.append(counter.generateCummulativeReport(1));
 
 		if (exceptionReport != null) {
 			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
