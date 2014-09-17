@@ -38,6 +38,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.delta.cmsmf.utils.CMSMFUtils;
 import com.delta.cmsmf.utils.DfUtils;
+import com.delta.cmsmf.utils.SynchronizedCounter;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
@@ -74,6 +75,7 @@ public class CmsImporter extends CmsTransferEngine {
 			new LinkedBlockingQueue<Runnable>());
 
 		this.counter.reset();
+		final SynchronizedCounter batchCounter = new SynchronizedCounter(0);
 
 		Runnable worker = new Runnable() {
 			@Override
@@ -82,6 +84,7 @@ public class CmsImporter extends CmsTransferEngine {
 				if (CmsImporter.this.log.isDebugEnabled()) {
 					CmsImporter.this.log.debug(String.format("Got IDfSession [%s]", DfUtils.getSessionId(session)));
 				}
+
 				activeCounter.incrementAndGet();
 				try {
 					while (!Thread.interrupted()) {
@@ -129,6 +132,7 @@ public class CmsImporter extends CmsTransferEngine {
 							} finally {
 								CmsImporter.this.counter.increment(next, (result != null ? result.getResult()
 									: CmsImportResult.FAILED));
+								batchCounter.increment();
 							}
 						}
 					}
@@ -162,23 +166,64 @@ public class CmsImporter extends CmsTransferEngine {
 				@Override
 				public boolean closeBatch(boolean ok) throws CMSMFException {
 					if ((this.batch == null) || this.batch.isEmpty()) { return true; }
-
-					try {
-						workQueue.put(this.batch);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						if (CmsImporter.this.log.isDebugEnabled()) {
-							CmsImporter.this.log.warn(String.format(
-								"Thread interrupted while trying to submit the batch %s containing [%s]", this.batchId,
-								this.batch), e);
-						} else {
-							CmsImporter.this.log.warn(String.format(
-								"Thread interrupted while trying to submit the batch %s containing [%s]", this.batchId,
-								this.batch));
+					CmsObject<?> sample = this.batch.get(0);
+					CmsObjectType type = sample.getType();
+					if (type.isBatchingSupported() && (type.getPeerDependencyType() == CmsDependencyType.HIERARCHY)) {
+						// Batch items are to be run in parallel, waiting for all of them to
+						// complete before we return
+						batchCounter.setValue(0);
+						for (CmsObject<?> o : this.batch) {
+							List<CmsObject<?>> l = new ArrayList<CmsObject<?>>(1);
+							l.add(o);
+							try {
+								workQueue.put(l);
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+								String msg = String.format(
+									"Thread interrupted while trying to submit the batch %s containing [%s]",
+									this.batchId, this.batch);
+								if (CmsImporter.this.log.isDebugEnabled()) {
+									CmsImporter.this.log.warn(msg, e);
+								} else {
+									CmsImporter.this.log.warn(msg);
+								}
+								// Thread is interrupted, take that as a sign to terminate
+								return false;
+							}
 						}
-					} finally {
-						this.batch = null;
-						this.batchId = null;
+						try {
+							batchCounter.waitForValue(this.batch.size());
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							String msg = String.format(
+								"Thread interrupted while trying to submit the batch %s containing [%s]", this.batchId,
+								this.batch);
+							if (CmsImporter.this.log.isDebugEnabled()) {
+								CmsImporter.this.log.warn(msg, e);
+							} else {
+								CmsImporter.this.log.warn(msg);
+							}
+							// Thread is interrupted, take that as a sign to terminate
+							return false;
+						}
+					} else {
+						try {
+							workQueue.put(this.batch);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							String msg = String.format(
+								"Thread interrupted while trying to submit the batch %s containing [%s]", this.batchId,
+								this.batch);
+							if (CmsImporter.this.log.isDebugEnabled()) {
+								CmsImporter.this.log.warn(msg, e);
+							} else {
+								CmsImporter.this.log.warn(msg);
+							}
+							return false;
+						} finally {
+							this.batch = null;
+							this.batchId = null;
+						}
 					}
 					// TODO: Perhaps check the error threshold
 					return true;
@@ -201,7 +246,9 @@ public class CmsImporter extends CmsTransferEngine {
 
 				// Start the workers
 				futures.clear();
-				final int workerCount = (type.getPeerDependencyType() == CmsDependencyType.HIERARCHY ? 1 : threadCount);
+				// If the type is hierarchical, but doesn't support batching, we must serialize
+				final int workerCount = ((type.getPeerDependencyType() == CmsDependencyType.HIERARCHY)
+					&& !type.isBatchingSupported() ? 1 : threadCount);
 				for (int i = 0; i < workerCount; i++) {
 					futures.add(executor.submit(worker));
 				}
