@@ -25,7 +25,7 @@ public enum Setting {
 	SPECIAL_GROUPS("special.groups"),
 	SPECIAL_TYPES("special.types"),
 	POST_PROCESS_IMPORT("import.postprocess"),
-	STATE_CABINET_NAME("state.cabinet"),
+	STATE_CABINET("state.cabinet"),
 	EXPORT_BATCH_SIZE("export.batch.size"),
 	JDBC_DRIVER("jdbc.driver"),
 	JDBC_URL("jdbc.url"),
