@@ -101,7 +101,7 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 	private final Thread shutdownThread = new Thread() {
 		@Override
 		public void run() {
-			terminate();
+			closePool();
 		}
 	};
 
@@ -116,7 +116,7 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 		Runtime.getRuntime().addShutdownHook(this.shutdownThread);
 	}
 
-	public void terminate() {
+	private void closePool() {
 		try {
 			if (this.log.isInfoEnabled()) {
 				this.log.info("Closing the state database connection pool");
@@ -124,6 +124,12 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 			this.connectionPool.close();
 		} catch (Exception e) {
 			this.log.warn("Failed to close the JDBC connection pool", e);
+		}
+	}
+
+	public void terminate() {
+		try {
+			closePool();
 		} finally {
 			Runtime.getRuntime().removeShutdownHook(this.shutdownThread);
 		}

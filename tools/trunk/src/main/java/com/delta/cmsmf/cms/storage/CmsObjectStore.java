@@ -119,8 +119,8 @@ public class CmsObjectStore {
 	"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
-		"order by object_type " + //
-		"having total > 0 ";
+		"having total > 0 " + //
+		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
 	"    select * " + //
@@ -544,16 +544,16 @@ public class CmsObjectStore {
 						// Make sure we're returning the right thing
 						if (objType != type) { throw new CMSMFException(
 							String
-							.format(
-								"Deserialization failure with object #%d [%s](ID=%s) - got type [%s] but expected type [%s]",
-								objNum, objLabel, objId, objType.name(), type.name())); }
+								.format(
+									"Deserialization failure with object #%d [%s](ID=%s) - got type [%s] but expected type [%s]",
+									objNum, objLabel, objId, objType.name(), type.name())); }
 
 						if (!klass.isAssignableFrom(objType.getCmsObjectClass())) { throw new CMSMFException(
 							String
-							.format(
-								"Deserialization failure with %s object #%d [%s](ID=%s) - class [%s] is not assignable as [%s]",
-								objType.name(), objNum, objLabel, objId, objType.getDeclaringClass()
-								.getCanonicalName(), klass.getCanonicalName())); }
+								.format(
+									"Deserialization failure with %s object #%d [%s](ID=%s) - class [%s] is not assignable as [%s]",
+									objType.name(), objNum, objLabel, objId, objType.getDeclaringClass()
+										.getCanonicalName(), klass.getCanonicalName())); }
 
 						if (this.log.isInfoEnabled()) {
 							this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,

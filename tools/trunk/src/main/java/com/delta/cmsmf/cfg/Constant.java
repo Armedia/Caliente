@@ -63,7 +63,7 @@ public class Constant {
 	public static final int MSSQL_DATETIME_PATTERN = 120;
 
 	/** The date pattern in which last export date is stored in the repository. EX: 12/15/2010 */
-	public static final String LAST_EXPORT_DATE_PATTERN = Constant.DCTM_DATETIME_PATTERN;
+	public static final String LAST_EXPORT_DATE_PATTERN = Constant.JAVA_SQL_DATETIME_PATTERN;
 
 	// Generic documentum Constants
 	/** The dm_dbo alias used for ACL domains for system ACLs. */

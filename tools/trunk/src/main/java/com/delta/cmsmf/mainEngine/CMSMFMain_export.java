@@ -2,8 +2,6 @@ package com.delta.cmsmf.mainEngine;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -11,14 +9,13 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.engine.CmsExporter;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.runtime.DctmConnectionPool;
 import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -95,15 +92,16 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 			end = new Date();
 		}
 
-		DateFormat dateFormat = new SimpleDateFormat(Constant.JAVA_SQL_DATETIME_PATTERN);
 		long duration = (end.getTime() - start.getTime());
 		long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);
 		duration -= hours * TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
-		long minutes = duration / (TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS));
+		long minutes = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS);
 		duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
-		long seconds = duration / (TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS));
-		report.append(String.format("Export process start    : %s%n", dateFormat.format(start)));
-		report.append(String.format("Export process end      : %s%n", dateFormat.format(end)));
+		long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS);
+		report.append(String.format("Export process start    : %s%n",
+			DateFormatUtils.format(start, Constant.JAVA_SQL_DATETIME_PATTERN)));
+		report.append(String.format("Export process end      : %s%n",
+			DateFormatUtils.format(end, Constant.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Export process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
@@ -112,26 +110,26 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 			if (v == null) {
 				continue;
 			}
-			report.append(String.format("\t--%s = [%s]%n", p.option.getLongOpt(), v));
+			report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
 		}
 
-		report.append(String.format("%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
+		report.append(String.format("%n%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
 		for (Setting s : Setting.values()) {
-			report.append(String.format("\t%s = [%s]%n", s.name, s.getString()));
+			report.append(String.format("%n\t%s = [%s]", s.name, s.getString()));
 		}
 
 		if (summary != null) {
-			report.append(String.format("%n%Exported Object Summary:%n")).append(StringUtils.repeat("=", 30));
+			report.append(String.format("%n%n%nExported Object Summary:%n")).append(StringUtils.repeat("=", 30));
 			int total = 0;
 			for (CmsObjectType t : summary.keySet()) {
 				Integer count = summary.get(t);
 				if ((count == null) || (count == 0)) {
 					continue;
 				}
-				report.append(String.format("%-16: %-6d%n", t.name(), count));
+				report.append(String.format("%n%-16s: %-6d", t.name(), count));
 				total += count;
 			}
-			report.append(String.format("%-16: %-6d%n", "Total", total));
+			report.append(String.format("%n%-16s: %-6d%n", "Total", total));
 		}
 
 		if (exceptionReport != null) {
@@ -149,14 +147,12 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 
 	private String buildExportQueryString() {
 
-		String exportDQLQuery = "";
-
 		// First check to see if ad-hoc query property has any value. If it does have some value in
 		// it, use it to build the query string. If this value is blank, look into the source
 		// repository to see when was the last export run and pick up the sysobjects modified since
 		// then.
 
-		String predicate = Setting.EXPORT_PREDICATE.getString("");
+		String predicate = Setting.EXPORT_PREDICATE.getString();
 		if (StringUtils.isBlank(predicate)) {
 			// Try to locate a object in source repository that represents a last successful export
 			// to a target repository.
@@ -167,17 +163,17 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 
 			// first get the last export date from the source repository
 			String lastExportRunDate = null;
-			final IDfSession session = DctmConnectionPool.acquireSession();
+			final IDfSession session = this.sessionManager.acquireSession();
 			try {
 				lastExportRunDate = CMSMFUtils.getLastExportDate(session);
 			} finally {
-				DctmConnectionPool.releaseSession(session);
+				this.sessionManager.releaseSession(session);
 			}
-			exportDQLQuery = Constant.DEFAULT_PREDICATE;
-			if (StringUtils.isNotBlank(lastExportRunDate)) { return String.format(" AND r_modify_date >= DATE('%s')",
-				lastExportRunDate); }
+			predicate = Constant.DEFAULT_PREDICATE;
+			if (StringUtils.isNotBlank(lastExportRunDate)) { return String.format("%s AND r_modify_date >= DATE('%s')",
+				predicate, lastExportRunDate); }
 		}
-		return exportDQLQuery;
+		return predicate;
 	}
 
 	@Override

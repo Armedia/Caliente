@@ -2,14 +2,13 @@ package com.delta.cmsmf.mainEngine;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
@@ -62,15 +61,16 @@ public class CMSMFMain_import extends AbstractCMSMFMain {
 			// unlock
 		}
 
-		DateFormat dateFormat = new SimpleDateFormat(Constant.JAVA_SQL_DATETIME_PATTERN);
 		long duration = (end.getTime() - start.getTime());
 		long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);
 		duration -= hours * TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
-		long minutes = duration / (TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS));
+		long minutes = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS);
 		duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
-		long seconds = duration / (TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS));
-		report.append(String.format("Import process start    : %s%n", dateFormat.format(start)));
-		report.append(String.format("Import process end      : %s%n", dateFormat.format(end)));
+		long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS);
+		report.append(String.format("Import process start    : %s%n",
+			DateFormatUtils.format(start, Constant.JAVA_SQL_DATETIME_PATTERN)));
+		report.append(String.format("Import process end      : %s%n",
+			DateFormatUtils.format(end, Constant.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Import process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
