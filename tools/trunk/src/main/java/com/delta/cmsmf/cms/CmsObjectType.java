@@ -3,6 +3,8 @@ package com.delta.cmsmf.cms;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -29,36 +31,39 @@ public enum CmsObjectType {
 	FORMAT(CmsFormat.class, IDfFormat.class),
 	FOLDER(CmsFolder.class, IDfFolder.class, CmsDependencyType.HIERARCHY, null, true),
 	DOCUMENT(CmsDocument.class, IDfDocument.class, CmsDependencyType.PEER, null, true),
-	CONTENT(CmsContent.class, IDfContent.class, "dmr_content"),
-	DOCUMENT_REF(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER);
+	CONTENT(CmsContent.class, IDfContent.class, "dmr_content", DOCUMENT),
+	DOCUMENT_REF(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER, DOCUMENT);
 
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
 	private final Class<? extends CmsObject<?>> objectClass;
 	private final CmsDependencyType peerDependencyType;
 	private final boolean supportsBatching;
+	private final Set<Object> surrogateOf;
 
-	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass, Class<T> dfClass) {
-		this(objectClass, dfClass, null, null);
+	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
+		Class<T> dfClass, CmsObjectType... surrogateOf) {
+		this(objectClass, dfClass, null, null, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
-		Class<T> dfClass, String dmType) {
-		this(objectClass, dfClass, null, dmType);
+		Class<T> dfClass, String dmType, CmsObjectType... surrogateOf) {
+		this(objectClass, dfClass, null, dmType, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
-		Class<T> dfClass, CmsDependencyType peerDependencyType) {
-		this(objectClass, dfClass, peerDependencyType, null);
+		Class<T> dfClass, CmsDependencyType peerDependencyType, CmsObjectType... surrogateOf) {
+		this(objectClass, dfClass, peerDependencyType, null, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
-		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType) {
-		this(objectClass, dfClass, peerDependencyType, dmType, false);
+		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType, CmsObjectType... surrogateOf) {
+		this(objectClass, dfClass, peerDependencyType, dmType, false, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
-		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType, boolean supportsBatching) {
+		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType, boolean supportsBatching,
+		CmsObjectType... surrogateOf) {
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
 		} else {
@@ -68,6 +73,21 @@ public enum CmsObjectType {
 		this.objectClass = objectClass;
 		this.peerDependencyType = Tools.coalesce(peerDependencyType, CmsDependencyType.NONE);
 		this.supportsBatching = supportsBatching;
+		Set<Object> s = new TreeSet<Object>();
+		if (surrogateOf != null) {
+			for (CmsObjectType t : surrogateOf) {
+				s.add(t);
+			}
+		}
+		this.surrogateOf = Collections.unmodifiableSet(s);
+	}
+
+	public final boolean isSurrogate() {
+		return !this.surrogateOf.isEmpty();
+	}
+
+	public final Set<?> getSurrogateOf() {
+		return this.surrogateOf;
 	}
 
 	public final boolean isProperClass(IDfPersistentObject o) {

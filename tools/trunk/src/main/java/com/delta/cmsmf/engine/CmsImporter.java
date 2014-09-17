@@ -240,6 +240,13 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 			List<Future<?>> futures = new ArrayList<Future<?>>();
 			List<Collection<CmsObject<?>>> remaining = new ArrayList<Collection<CmsObject<?>>>();
 			for (CmsObjectType type : CmsObjectType.values()) {
+				if (type.isSurrogate()) {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Skipping type %s because it is a surrogate of [%s]", type.name(),
+							type.getSurrogateOf()));
+					}
+					continue;
+				}
 				final Integer total = containedTypes.get(type);
 				if (total == null) {
 					this.log.warn(String.format("No %s objects are contained in the export", type.name()));
@@ -357,6 +364,9 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 				}
 			}
 			for (CmsObjectType type : CmsObjectType.values()) {
+				if (type.isSurrogate()) {
+					continue;
+				}
 				this.log
 				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
