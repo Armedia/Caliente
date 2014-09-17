@@ -3,6 +3,7 @@ package com.delta.cmsmf.engine;
 import java.util.Map;
 
 import com.delta.cmsmf.cms.CmsImportResult;
+import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 
 public interface CmsImportEventListener {
@@ -34,10 +35,9 @@ public interface CmsImportEventListener {
 	 * Invoked when the import has started for the given object.
 	 * </p>
 	 *
-	 * @param objectType
-	 * @param objectId
+	 * @param object
 	 */
-	public void objectImportStarted(CmsObjectType objectType, String objectId);
+	public void objectImportStarted(CmsObject<?> object);
 
 	/**
 	 * <p>
@@ -45,12 +45,21 @@ public interface CmsImportEventListener {
 	 * operation.
 	 * </p>
 	 *
-	 * @param objectType
-	 * @param objectId
+	 * @param object
 	 * @param cmsImportResult
 	 */
-	public void objectImported(CmsObjectType objectType, String objectId, CmsImportResult cmsImportResult,
-		Throwable thrown);
+	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult);
+
+	/**
+	 * <p>
+	 * Invoked when the import attempt on the given object has failed, and indicating the exception
+	 * that was raised.
+	 * </p>
+	 *
+	 * @param object
+	 * @param thrown
+	 */
+	public void objectImportFailed(CmsObject<?> object, Throwable thrown);
 
 	/**
 	 * <p>

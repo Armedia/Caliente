@@ -31,9 +31,19 @@ public interface CmsExportEventListener {
 	 * </p>
 	 *
 	 * @param objectType
-	 * @param objectId
+	 * @param result
 	 */
-	public void objectExportFinished(CmsObjectType objectType, String objectId, CmsExportResult result, Throwable thrown);
+	public void objectExportCompleted(CmsObjectType objectType, String objectId, CmsExportResult result);
+
+	/**
+	 * <p>
+	 * Invoked when the given object has been exported.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @param thrown
+	 */
+	public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown);
 
 	/**
 	 * <p>
@@ -41,5 +51,5 @@ public interface CmsExportEventListener {
 	 * </p>
 	 *
 	 */
-	public void exportConcluded(Map<CmsObjectType, Integer> summary);
+	public void exportFinished(Map<CmsObjectType, Integer> summary);
 }

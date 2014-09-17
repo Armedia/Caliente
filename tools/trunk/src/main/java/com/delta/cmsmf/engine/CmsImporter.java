@@ -128,11 +128,14 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 								fileSystem);
 							SaveResult result = null;
 							try {
+								objectImportStarted(next);
 								result = next.saveToCMS(ctx);
+								objectImportCompleted(next, result.getResult());
 								if (CmsImporter.this.log.isDebugEnabled()) {
 									CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
 								}
 							} catch (Throwable t) {
+								objectImportFailed(next, t);
 								result = null;
 								// Log the error, move on
 								CmsImporter.this.log.error(String.format("Exception caught processing %s", next), t);
@@ -151,7 +154,6 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 			}
 		};
 
-		// 1: run the query for the given predicate
 		try {
 			final Map<CmsObjectType, Integer> containedTypes = objectStore.getStoredObjectTypes();
 			final ObjectHandler handler = new ObjectHandler() {
@@ -239,6 +241,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 
 			List<Future<?>> futures = new ArrayList<Future<?>>();
 			List<Collection<CmsObject<?>>> remaining = new ArrayList<Collection<CmsObject<?>>>();
+			importStarted(containedTypes);
 			for (CmsObjectType type : CmsObjectType.values()) {
 				if (type.isSurrogate()) {
 					if (this.log.isDebugEnabled()) {
@@ -257,6 +260,8 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 					this.log.warn(String.format("No %s objects available"));
 					continue;
 				}
+
+				objectTypeImportStarted(type, total);
 
 				// Start the workers
 				futures.clear();
@@ -303,6 +308,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 					this.log.info(String.format("All the %s workers are done, continuing with the next object type...",
 						type.name()));
 				} finally {
+					objectTypeImportFinished(type, this.counter.getCounters(type));
 					workQueue.drainTo(remaining);
 					for (Collection<CmsObject<?>> v : remaining) {
 						if (v == exitValue) {
@@ -353,24 +359,95 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
 					Thread.currentThread().interrupt();
 				}
 			}
+			importConcluded(this.counter.getCummulative());
 			for (CmsObjectType type : CmsObjectType.values()) {
 				if (type.isSurrogate()) {
 					continue;
 				}
 				this.log
-				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
+		}
+	}
+
+	private void importStarted(Map<CmsObjectType, Integer> summary) {
+		for (CmsImportEventListener l : getListeners()) {
+			try {
+				l.importStarted(summary);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectTypeImportStarted(CmsObjectType objectType, int totalObjects) {
+		for (CmsImportEventListener l : getListeners()) {
+			try {
+				l.objectTypeImportStarted(objectType, totalObjects);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectImportStarted(CmsObject<?> object) {
+		for (CmsImportEventListener l : getListeners()) {
+			try {
+				l.objectImportStarted(object);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult) {
+		for (CmsImportEventListener l : getListeners()) {
+			try {
+				l.objectImportCompleted(object, cmsImportResult);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectImportFailed(CmsObject<?> object, Throwable thrown) {
+		for (CmsImportEventListener l : getListeners()) {
+			try {
+				l.objectImportFailed(object, thrown);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectTypeImportFinished(CmsObjectType objectType, Map<CmsImportResult, Integer> counters) {
+		for (CmsImportEventListener l : getListeners()) {
+			try {
+				l.objectTypeImportCompleted(objectType, counters);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void importConcluded(Map<CmsImportResult, Integer> counters) {
+		for (CmsImportEventListener l : getListeners()) {
+			try {
+				l.importConcluded(counters);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
 		}
 	}
 }

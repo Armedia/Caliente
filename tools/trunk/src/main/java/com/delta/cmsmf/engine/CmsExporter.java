@@ -120,21 +120,23 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 									.getType().getName(), dfObj.getObjectId().getId()));
 							}
 							type = CmsObjectType.decodeType(dfObj);
-							objectExportStarted(type, dqlPredicate);
-							result = (objectStore.persistDfObject(dfObj, new DefaultTransferContext(dfObj.getObjectId()
-								.getId(), session, objectStore, fileSystem)) ? CmsExportResult.EXPORTED
-								: CmsExportResult.SKIPPED);
+							final String objectId = dfObj.getObjectId().getId();
+
+							objectExportStarted(type, objectId);
+							result = (objectStore.persistDfObject(dfObj, new DefaultTransferContext(objectId, session,
+								objectStore, fileSystem)) ? CmsExportResult.EXPORTED : CmsExportResult.SKIPPED);
+							objectExportCompleted(type, objectId, result);
 							if (CmsExporter.this.log.isDebugEnabled()) {
 								CmsExporter.this.log.debug(String.format("Persisted [%s] object with id [%s]", dfObj
-									.getType().getName(), dfObj.getObjectId().getId()));
+									.getType().getName(), objectId));
 							}
 						} catch (Throwable t) {
 							// Log the error, move on
+							objectExportFailed(type, id.getId(), thrown);
 							thrown = t;
 							CmsExporter.this.log.error(
 								String.format("Exception caught processing object with ID [%s]", id.getId()), t);
 						} finally {
-							objectExportFinished(type, id.getId(), result, thrown);
 						}
 					}
 				} finally {
@@ -253,17 +255,17 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 			} catch (CMSMFException e) {
 				this.log.warn("Exception caught attempting to get the work summary", e);
 			}
-			exportConcluded(summary);
+			exportFinished(summary);
 
 			executor.shutdownNow();
 			int pending = activeCounter.get();
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -295,21 +297,30 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 		}
 	}
 
-	private void objectExportFinished(CmsObjectType objectType, String objectId, CmsExportResult result,
-		Throwable thrown) {
+	private void objectExportCompleted(CmsObjectType objectType, String objectId, CmsExportResult result) {
 		for (CmsExportEventListener l : getListeners()) {
 			try {
-				l.objectExportFinished(objectType, objectId, result, thrown);
+				l.objectExportCompleted(objectType, objectId, result);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}
 		}
 	}
 
-	private void exportConcluded(Map<CmsObjectType, Integer> summary) {
+	private void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
 		for (CmsExportEventListener l : getListeners()) {
 			try {
-				l.exportConcluded(summary);
+				l.objectExportFailed(objectType, objectId, thrown);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void exportFinished(Map<CmsObjectType, Integer> summary) {
+		for (CmsExportEventListener l : getListeners()) {
+			try {
+				l.exportFinished(summary);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}
