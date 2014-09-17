@@ -171,8 +171,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
-	private static final String DEBUG_DUMP = "$debug-dump$";
-
 	protected final Logger log = Logger.getLogger(getClass());
 
 	private final CmsObjectType type;
