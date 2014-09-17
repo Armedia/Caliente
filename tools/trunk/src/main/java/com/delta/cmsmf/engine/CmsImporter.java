@@ -20,8 +20,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Level;
-
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsDependencyType;
 import com.delta.cmsmf.cms.CmsFileSystem;
@@ -83,7 +81,7 @@ public class CmsImporter extends CmsTransferEngine {
 		Runnable worker = new Runnable() {
 			@Override
 			public void run() {
-				IDfSession session = sessionManager.acquireSession();
+				final IDfSession session = sessionManager.acquireSession();
 				if (CmsImporter.this.log.isDebugEnabled()) {
 					CmsImporter.this.log.debug(String.format("Got IDfSession [%s]", DfUtils.getSessionId(session)));
 				}
@@ -334,9 +332,7 @@ public class CmsImporter extends CmsTransferEngine {
 				} finally {
 					sessionManager.releaseSession(session);
 				}
-				if (this.log.isEnabledFor(Level.INFO)) {
-					this.log.info("Finished executing import post process jobs");
-				}
+				this.log.info("Finished executing import post process jobs");
 			}
 		} finally {
 			executor.shutdownNow();
@@ -344,10 +340,10 @@ public class CmsImporter extends CmsTransferEngine {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -356,7 +352,7 @@ public class CmsImporter extends CmsTransferEngine {
 			}
 			for (CmsObjectType type : CmsObjectType.values()) {
 				this.log
-				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}
