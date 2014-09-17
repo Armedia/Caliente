@@ -95,7 +95,7 @@ public class DfUtils {
 		if (dql == null) { throw new IllegalArgumentException("Must provide a DQL statement to execute"); }
 		IDfQuery query = DfUtils.newQuery();
 		if (DfUtils.LOG.isTraceEnabled()) {
-			DfUtils.LOG.trace(String.format("Executing DQL (type=%d): %s", queryType, dql));
+			DfUtils.LOG.trace(String.format("Executing DQL (type=%d):%n%s", queryType, dql));
 		}
 		query.setDQL(dql);
 		boolean ok = false;
@@ -105,7 +105,7 @@ public class DfUtils {
 			return ret;
 		} finally {
 			if (!ok) {
-				DfUtils.LOG.fatal(String.format("Exception raised while executing the query: %s", dql));
+				DfUtils.LOG.fatal(String.format("Exception raised while executing the query:%n%s", dql));
 			}
 		}
 	}
