@@ -2,8 +2,8 @@ package com.delta.cmsmf.engine;
 
 import java.util.Map;
 
-import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsImportResult;
+import com.delta.cmsmf.cms.CmsObjectType;
 
 public interface CmsImportEventListener {
 
@@ -14,9 +14,9 @@ public interface CmsImportEventListener {
 	 * of objects operated upon may not match the total.
 	 * </p>
 	 *
-	 * @param totalObjects
+	 * @param summary
 	 */
-	public void importStarted(int totalObjects);
+	public void importStarted(Map<CmsObjectType, Integer> summary);
 
 	/**
 	 * <p>
@@ -49,7 +49,8 @@ public interface CmsImportEventListener {
 	 * @param objectId
 	 * @param cmsImportResult
 	 */
-	public void objectImported(CmsObjectType objectType, String objectId, CmsImportResult cmsImportResult);
+	public void objectImported(CmsObjectType objectType, String objectId, CmsImportResult cmsImportResult,
+		Throwable thrown);
 
 	/**
 	 * <p>
