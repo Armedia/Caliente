@@ -10,7 +10,7 @@ import com.armedia.commons.utilities.Tools;
  * "r_object_id" attribute from its source value to its target repository value.
  * </p>
  *
- * @author Diego Rivera <diego.rivera@armedia.com>
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
 public abstract class CmsAttributeMapper {
@@ -21,7 +21,7 @@ public abstract class CmsAttributeMapper {
 	 * type it's for, its name, and both values mapped.
 	 * </p>
 	 *
-	 * @author Diego Rivera <diego.rivera@armedia.com>
+	 * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
 	 *
 	 */
 	public static final class Mapping {

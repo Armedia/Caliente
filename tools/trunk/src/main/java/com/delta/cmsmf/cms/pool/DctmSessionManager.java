@@ -19,7 +19,7 @@ import com.documentum.fc.common.IDfLoginInfo;
 import com.documentum.fc.tools.RegistryPasswordUtils;
 
 /**
- * @author Diego Rivera <diego.rivera@armedia.com>
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
 public class DctmSessionManager {

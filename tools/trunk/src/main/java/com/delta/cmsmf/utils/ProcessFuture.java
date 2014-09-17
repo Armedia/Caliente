@@ -21,7 +21,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang3.SystemUtils;
 
 /**
- * @author Diego Rivera <diego.rivera@armedia.com>.rivera@armedia.com
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;.rivera@armedia.com
  *
  */
 public class ProcessFuture {

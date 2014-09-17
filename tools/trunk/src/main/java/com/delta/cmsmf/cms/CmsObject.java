@@ -39,11 +39,11 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author Diego Rivera <diego.rivera@armedia.com>
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
 /**
- * @author Diego Rivera <diego.rivera@armedia.com>
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  * @param <T>
  */

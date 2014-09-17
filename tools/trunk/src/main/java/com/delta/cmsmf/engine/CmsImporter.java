@@ -40,7 +40,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 
 /**
- * @author Diego Rivera <diego.rivera@armedia.com>
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
 public class CmsImporter extends CmsTransferEngine {

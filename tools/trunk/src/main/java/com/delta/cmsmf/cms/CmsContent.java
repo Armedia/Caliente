@@ -23,7 +23,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * @author Diego Rivera <diego.rivera@armedia.com>
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
 public class CmsContent extends CmsObject<IDfContent> {
