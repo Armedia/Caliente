@@ -593,13 +593,14 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				object.save();
 			}
 
-			if (!updateSystemAttributes(object)) { throw new CMSMFException(String.format(
-				"Failed to update the system attributes for [%s](%s)", this.label, this.id)); }
-			object.save();
-
 			if (cleanupAfterSave(object, isNew, context)) {
 				object.save();
 			}
+
+			// This has to be the last thing that happens, else some of the attributes won't take
+			// There is no need to save() the object for this, as this is a direct modification
+			if (!updateSystemAttributes(object)) { throw new CMSMFException(String.format(
+				"Failed to update the system attributes for [%s](%s)", this.label, this.id)); }
 
 			ok = true;
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s->%s)", this.type,
