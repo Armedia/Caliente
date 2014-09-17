@@ -119,7 +119,8 @@ public class CmsObjectStore {
 	"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
-		"order by object_type ";
+		"order by object_type " + //
+		"having total > 0 ";
 
 	private static final String LOAD_OBJECTS_SQL = //
 	"    select * " + //

@@ -62,6 +62,10 @@ public class CmsImporter extends CmsTransferEngine {
 		super(threadCount, backlogSize);
 	}
 
+	public final CmsCounter<CmsImportResult> getCounter() {
+		return this.counter;
+	}
+
 	public void doImport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
 		final CmsFileSystem fileSystem, boolean postProcess) throws DfException, CMSMFException {
 
@@ -341,10 +345,10 @@ public class CmsImporter extends CmsTransferEngine {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -353,7 +357,7 @@ public class CmsImporter extends CmsTransferEngine {
 			}
 			for (CmsObjectType type : CmsObjectType.values()) {
 				this.log
-				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}

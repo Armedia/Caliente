@@ -1,9 +1,8 @@
 package com.delta.cmsmf.cfg;
 
-
 /**
- * The Class Constant. This class contains various constant values used throughout the
- * CMSMF application.
+ * The Class Constant. This class contains various constant values used throughout the CMSMF
+ * application.
  *
  * @author Shridev Makim 6/15/2010
  */
@@ -55,6 +54,9 @@ public class Constant {
 	/** The "sql-neutral" date and time pattern that will be fed for SQL updates to date attributes */
 	public static final String SQL_DATETIME_PATTERN = "yyyy-mm-dd hh:mi:ss";
 
+	/** The "sql-neutral" date and time pattern that will be fed for SQL updates to date attributes */
+	public static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+
 	/** The date and time pattern used in oracle sql query. */
 	public static final String ORACLE_DATETIME_PATTERN = "YYYY-MM-DD HH24:MI:SS";
 
@@ -79,4 +81,6 @@ public class Constant {
 
 	// CMSMF Last Export Related constants
 	public static final String LAST_EXPORT_OBJ_NAME = "cmsmf_last_export";
+
+	public static final String RUN_NOW = "run_now";
 }

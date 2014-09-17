@@ -7,7 +7,11 @@ import org.apache.log4j.Logger;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cfg.SettingManager;
-import com.delta.cmsmf.datastore.DataStore;
+import com.delta.cmsmf.cms.CmsFileSystem;
+import com.delta.cmsmf.cms.DefaultCmsFileSystem;
+import com.delta.cmsmf.cms.pool.DctmSessionManager;
+import com.delta.cmsmf.cms.storage.CmsObjectStore;
+import com.delta.cmsmf.cms.storage.base.DefaultCmsObjectStore;
 
 /**
  * The main method of this class is an entry point for the cmsmf application.
@@ -16,18 +20,14 @@ import com.delta.cmsmf.datastore.DataStore;
  */
 public abstract class AbstractCMSMFMain implements CMSMFMain {
 
-	/** The logger object used for logging. */
-	protected final Logger logger = Logger.getLogger(getClass());
+	/** The log object used for logging. */
+	protected final Logger log = Logger.getLogger(getClass());
 
 	private static AbstractCMSMFMain instance = null;
 
-	/** The directory location where stream files will be created. */
-	protected final File streamFilesDirectoryLocation;
-
-	/** The directory location where content files will be created. */
-	protected final File contentFilesDirectoryLocation;
-
-	protected final boolean testMode;
+	protected final CmsObjectStore objectStore;
+	protected final CmsFileSystem fileSystem;
+	protected final DctmSessionManager sessionManager;
 
 	AbstractCMSMFMain() throws Throwable {
 
@@ -48,36 +48,25 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 
 		// First things first...
 		AbstractCMSMFMain.instance = this;
-		this.logger.info(String.format("Launching CMSMF %s mode%n", CMSMFLauncher.getParameter(CLIParam.mode)));
+		this.log.info(String.format("Launching CMSMF %s mode%n", CMSMFLauncher.getParameter(CLIParam.mode)));
 
-		// Intiialize the data store
-		DataStore.init(requiresCleanData());
+		File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
+		File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
 
-		this.testMode = (CMSMFLauncher.getParameter(CLIParam.test) != null);
+		this.objectStore = DefaultCmsObjectStore.init(requiresCleanData());
+		this.fileSystem = new DefaultCmsFileSystem(contentFilesDirectoryLocation);
+		this.sessionManager = new DctmSessionManager(CMSMFLauncher.getParameter(CLIParam.docbase),
+			CMSMFLauncher.getParameter(CLIParam.user), CMSMFLauncher.getParameter(CLIParam.password));
 
 		// Set the filesystem location where files will be created or read from
-		this.streamFilesDirectoryLocation = new File(Setting.STREAMS_DIRECTORY.getString()).getCanonicalFile();
-		this.logger.info(String.format("Using streams directory: [%s]", this.contentFilesDirectoryLocation));
+		this.log.info(String.format("Using database directory: [%s]", databaseDirectoryLocation));
 
 		// Set the filesystem location where the content files will be created or read from
-		this.contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
-		this.logger.info(String.format("Using content directory: [%s]", this.contentFilesDirectoryLocation));
+		this.log.info(String.format("Using content directory: [%s]", contentFilesDirectoryLocation));
 	}
 
 	public static AbstractCMSMFMain getInstance() {
 		return AbstractCMSMFMain.instance;
-	}
-
-	public File getStreamFilesDirectory() {
-		return this.streamFilesDirectoryLocation;
-	}
-
-	public File getContentFilesDirectory() {
-		return this.contentFilesDirectoryLocation;
-	}
-
-	public boolean isTestMode() {
-		return this.testMode;
 	}
 
 	@Override

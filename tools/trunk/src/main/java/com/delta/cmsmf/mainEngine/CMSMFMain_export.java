@@ -1,31 +1,28 @@
 package com.delta.cmsmf.mainEngine;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
-import org.apache.log4j.Level;
 
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.cmsobjects.DctmObject;
+import com.delta.cmsmf.cms.CmsObjectType;
+import com.delta.cmsmf.engine.CmsExporter;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.exception.CMSMFFatalException;
-import com.delta.cmsmf.exception.CMSMFIOException;
-import com.delta.cmsmf.filestreams.FileStreamsManager;
-import com.delta.cmsmf.runtime.AppCounter;
 import com.delta.cmsmf.runtime.DctmConnectionPool;
-import com.delta.cmsmf.serialization.DctmObjectWriter;
 import com.delta.cmsmf.utils.CMSMFUtils;
-import com.documentum.com.DfClientX;
-import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.DfId;
 
 /**
  * The main method of this class is an entry point for the cmsmf application.
@@ -47,155 +44,90 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 	 *             Signals that an I/O exception has occurred.
 	 */
 	@Override
-	public void run() throws IOException, CMSMFFatalException {
-		// First check to see if import.lock file exists, if it does, that means import didn't
-// finish
-		// cleanly. In that case do not start the export.
-		File importLockFile = new File(this.streamFilesDirectoryLocation, Constant.IMPORT_LOCK_FILE_NAME);
-		if (importLockFile.exists()) {
-			String msg = "_cmsmf_import.lck file exists in the export directory. Unsafe to continue with the export.";
-			throw (new CMSMFFatalException(msg));
-		}
+	public void run() throws IOException, CMSMFException {
 
-		final IDfSession session = DctmConnectionPool.acquireSession();
+		CmsExporter exporter = new CmsExporter(Setting.THREADS.getInt());
+
+		final Date start = new Date();
+		Date end = null;
+		StringBuilder report = new StringBuilder();
+		Map<CmsObjectType, Integer> summary = null;
+		// lock
 		try {
+			this.log.info("##### Export Process Started #####");
+			exporter.doExport(this.objectStore, this.sessionManager, this.fileSystem, buildExportQueryString());
+			this.log.info("##### Export Process Finished #####");
 
-			// Create a export.lock file which will be removed at the of exporting. Import
-			// will not start if this file exists.
-			File exportLockFile = new File(this.streamFilesDirectoryLocation, Constant.EXPORT_LOCK_FILE_NAME);
-			// Make sure that parent folder path exists before trying to create the file.
-			File parentFolderPath = new File(exportLockFile.getAbsolutePath());
-			parentFolderPath.mkdirs();
-			// This is unreliable as per the JDK
-			exportLockFile.createNewFile();
-
-			final Date exportStartTime = new Date();
-			if (this.logger.isEnabledFor(Level.INFO)) {
-				this.logger.info("##### Export Process Started #####");
-			}
-
-			// Load source repository configuration information
-			RepositoryConfiguration srcRepoConfig = RepositoryConfiguration.getRepositoryConfiguration();
+			final IDfSession session = this.sessionManager.acquireSession();
+			boolean ok = false;
 			try {
-				srcRepoConfig.loadRepositoryConfiguration(session);
-			} catch (DfException e1) {
-				this.logger.fatal("Couldn't retrieve repository configuration information", e1);
-			}
-
-			// reset the counters that keeps track of how many objects are exported
-			AppCounter.getObjectCounter().resetCounters();
-
-			// First set the directory path where all of the files will be created
-			FileStreamsManager fsm = FileStreamsManager.getFileStreamManager();
-			fsm.setStreamsDirectoryPath(this.streamFilesDirectoryLocation);
-			fsm.setContentDirectoryPath(this.contentFilesDirectoryLocation);
-
-			// Delete existing cmsmf stream files before export process
-			fsm.deleteStreamFiles();
-
-			// Build the query that will determine what objects will be exported
-			String exportDQLQuery = buildExportQueryString();
-
-			IDfQuery dqlQry = new DfClientX().getQuery();
-			dqlQry.setDQL(exportDQLQuery);
-			dqlQry.setBatchSize(Setting.EXPORT_BATCH_SIZE.getInt());
-			if (this.logger.isEnabledFor(Level.DEBUG)) {
-				this.logger.debug("Export DQL Query is: " + dqlQry.getDQL());
-				this.logger.debug("Export DQL batch size is: " + dqlQry.getBatchSize());
-			}
-
-			IDfCollection resultCol = null;
-			try {
-				resultCol = dqlQry.execute(session, IDfQuery.READ_QUERY);
-				while (resultCol.next()) {
-					String objID = resultCol.getId("r_object_id").getId();
-					// get the object
-					IDfPersistentObject prsstntObj = null;
-					try {
-						prsstntObj = session.getObject(new DfId(objID));
-					} catch (DfException e) {
-						this.logger.error("Couldn't retrieve object by ID: " + objID, e);
-					}
-
-					DctmObjectRetriever dctmObjRetriever = new DctmObjectRetriever();
-					DctmObject<?> dctmObj;
-					try {
-						if (prsstntObj != null) {
-							dctmObj = dctmObjRetriever.retrieveObject(prsstntObj);
-							DctmObjectWriter.writeBinaryObject(dctmObj);
-							// dctmObjWriter.writeXMLObject(xmlEncoder);
-						}
-					} catch (CMSMFException e) {
-						// If for some reason object is not retrieved from the system, or written to
-						// the filesystem, write to an error log and continue on
-						this.logger.error(String.format(
-							"Couldn't retrieve object information from repository for %s with id [%s]", prsstntObj
-								.getType().getName(), objID), e);
-					} catch (IOException e) {
-						// If there is IOException, log the error and exit out
-						this.logger.fatal(String.format(
-							"Couldn't serialize a %s object with id [%s] to the data store", prsstntObj.getType()
-							.getName(), objID), e);
-						// close all of the file streams
-						try {
-							fsm.closeAllStreams();
-						} catch (CMSMFIOException e2) {
-							this.logger.error("Couldn't close all of the filestreams", e2);
-						}
-						throw (e);
-					}
-				} // while (resultCol.next())
-
-				// Export source repository configuration information
-				try {
-					DctmObjectWriter.writeBinaryObject(srcRepoConfig);
-				} catch (CMSMFException e) {
-					this.logger.error("Couldn't serialize the source repository configuration information.", e);
-				}
-			} catch (DfException e) {
-				// If there is a DfException while running the export query, log the error and exit
-// out
-				this.logger.fatal("Export Query failed to run. Query is:  " + exportDQLQuery, e);
-			} finally {
-				try {
-					if (resultCol != null) {
-						resultCol.close();
-					}
-				} catch (DfException e) {
-					this.logger.error("Couldn't close the query collection", e);
-				}
-
-				// close all of the file streams
-				try {
-					fsm.closeAllStreams();
-				} catch (CMSMFIOException e) {
-					this.logger.error("Couldn't close all of the filestreams", e);
-				}
-				exportLockFile.delete();
-			}
-
-			// print the counters to see how many objects were processed
-			AppCounter.getObjectCounter().printCounters();
-
-			// email the counters to see how many objects were processed
-			AppCounter.getObjectCounter().emailCounters("Export", exportDQLQuery);
-
-			if (this.logger.isEnabledFor(Level.INFO)) {
-				this.logger.info("##### Export Process Finished #####");
-			}
-			// If this is auto run type of an export instead of an adhoc query export, store the
-			// value of the current export date in the repository. This value will be looked up in
-			// the next run
-			String fromWhereClause = Setting.EXPORT_PREDICATE.getString();
-			if (StringUtils.isBlank(fromWhereClause)) {
-				// This is indeed an auto run type of export
+				session.beginTrans();
+				// If this is auto run type of an export instead of an adhoc query export, store the
+				// value of the current export date in the repository. This value will be looked up
+				// in the next run. This is indeed an auto run type of export
 				String dateTimePattern = Constant.LAST_EXPORT_DATE_PATTERN;
-				String exportStartDateStr = DateFormatUtils.format(exportStartTime, dateTimePattern);
+				String exportStartDateStr = DateFormatUtils.format(start, dateTimePattern);
 
 				CMSMFUtils.setLastExportDate(session, exportStartDateStr);
+				ok = true;
+			} finally {
+				try {
+					if (ok) {
+						session.commitTrans();
+					} else {
+						session.abortTrans();
+					}
+				} catch (DfException e) {
+					this.log.fatal(String.format(
+						"Exception caught while %s the transaction for saving the export metadata", ok ? "committing"
+							: "aborting"), e);
+				}
+				this.sessionManager.releaseSession(session);
 			}
+
+			summary = this.objectStore.getStoredObjectTypes();
+		} catch (Throwable t) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			report.append(String.format("%n%nException caught while attempting an export%n%n"));
+			t.printStackTrace(pw);
+			report.append(sw.toString());
 		} finally {
-			DctmConnectionPool.releaseSession(session);
+			// unlock
+			end = new Date();
+		}
+
+		DateFormat dateFormat = new SimpleDateFormat(Constant.JAVA_SQL_DATETIME_PATTERN);
+		long duration = (end.getTime() - start.getTime());
+		long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);
+		duration -= hours * TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
+		long minutes = duration / (TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS));
+		duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
+		long seconds = duration / (TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS));
+		report.append(String.format("Export process start    : %s%n", dateFormat.format(start)));
+		report.append(String.format("Export process end      : %s%n", dateFormat.format(end)));
+		report.append(String.format("Export process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
+
+		if (summary != null) {
+			report.append(String.format("Exported object summary:%n"));
+			int total = 0;
+			for (CmsObjectType t : summary.keySet()) {
+				Integer count = summary.get(t);
+				if ((count == null) || (count == 0)) {
+					continue;
+				}
+				report.append(String.format("%-16: %-6d%n", t.name(), count));
+				total += count;
+			}
+			report.append(String.format("%-16: %-6d%n", "Total", total));
+		}
+
+		String reportString = report.toString();
+		this.log.info(String.format("Action report for export operation:%n%n%s%n", reportString));
+		try {
+			CMSMFUtils.postCmsmfMail(String.format("Action report for CMSMF Export"), reportString);
+		} catch (MessagingException e) {
+			this.log.error("Exception caught attempting to send the report e-mail", e);
 		}
 	}
 
@@ -208,19 +140,14 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 		// repository to see when was the last export run and pick up the sysobjects modified since
 		// then.
 
-		String selectClause = Constant.EXPORT_QUERY_SELECT_CLAUSE;
 		String predicate = Setting.EXPORT_PREDICATE.getString("");
-		if (StringUtils.isNotBlank(predicate)) {
-			exportDQLQuery = selectClause + " " + predicate;
-		} else {
+		if (StringUtils.isBlank(predicate)) {
 			// Try to locate a object in source repository that represents a last successful export
 			// to a target repository.
 			// NOTE : We will create a cabinet named 'CMSMF_SYNC' in source repository. We will
-// create a
-			// a folder for each target repository in this cabinet, the name of the folder will be
-// the name
-			// of a target repository. In this folder we will create an object named
-// 'cmsmf_last_export' and
+			// create a folder for each target repository in this cabinet, the name of the folder
+			// will be the name of a target repository. In this folder we will create an object
+			// named 'cmsmf_last_export' and
 
 			// first get the last export date from the source repository
 			String lastExportRunDate = null;
@@ -230,13 +157,10 @@ public class CMSMFMain_export extends AbstractCMSMFMain {
 			} finally {
 				DctmConnectionPool.releaseSession(session);
 			}
-			exportDQLQuery = Constant.EXPORT_QUERY_SELECT_CLAUSE + " " + Constant.DEFAULT_PREDICATE;
-			if (StringUtils.isNotBlank(lastExportRunDate)) {
-				String modifiedWhereCondition = " AND r_modify_date >= DATE('" + lastExportRunDate + "')";
-				exportDQLQuery = exportDQLQuery + modifiedWhereCondition;
-			}
+			exportDQLQuery = Constant.DEFAULT_PREDICATE;
+			if (StringUtils.isNotBlank(lastExportRunDate)) { return String.format(" AND r_modify_date >= DATE('%s')",
+				lastExportRunDate); }
 		}
-
 		return exportDQLQuery;
 	}
 

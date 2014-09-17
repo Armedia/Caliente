@@ -16,8 +16,6 @@ import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.constants.DctmAttrNameConstants;
-import com.delta.cmsmf.constants.DctmTypeConstants;
 import com.delta.cmsmf.mainEngine.CLIParam;
 import com.delta.cmsmf.mainEngine.CMSMFLauncher;
 import com.documentum.fc.client.IDfFolder;
@@ -27,38 +25,11 @@ import com.documentum.fc.common.DfException;
 
 public class CMSMFUtils {
 
-	/** The logger object used for logging. */
+	/** The log object used for logging. */
 	static Logger logger = Logger.getLogger(CMSMFUtils.class);
 
 	private static String cmsmfSyncCabinetName = Setting.STATE_CABINET_NAME.getString();
 	private static String cmsmfLastExportObjName = Constant.LAST_EXPORT_OBJ_NAME;
-
-	/**
-	 * Gets the content path from content id.
-	 *
-	 * @param contentObjID
-	 *            the content obj id
-	 * @return the content path from content id
-	 */
-	public static String getContentPathFromContentID(String contentObjID) {
-		String contentPath = "";
-		String filePathSeparator = File.separator;
-		if (contentObjID.length() == 16) {
-			// 16 character object id in dctm consists of first 2 chars of obj type, next 6 chars of
-// docbase
-			// id in hex and last 8 chars server generated. We will use first 6 characters of this
-// last 8
-			// characters and generate the unique path.
-			// For ex: if the id is 0600a92b80054db8 than the path would be 80\05\4d
-			contentPath = contentObjID.substring(8, 16);
-			contentPath = new StringBuffer(contentPath.substring(0, 2)).append(filePathSeparator)
-				.append(contentPath.subSequence(2, 4)).append(filePathSeparator).append(contentPath.subSequence(4, 6))
-				.toString();
-		}
-
-		return contentPath;
-
-	}
 
 	/**
 	 * Gets the content path from content id.
@@ -93,7 +64,7 @@ public class CMSMFUtils {
 		// Set run_now attribute of a job to true to run a job.
 		IDfSysObject oJob = (IDfSysObject) dctmSession.getObjectByQualification("dm_job where object_name = '"
 			+ jobName + "'");
-		oJob.setBoolean(DctmAttrNameConstants.RUN_NOW, true);
+		oJob.setBoolean(Constant.RUN_NOW, true);
 		oJob.save();
 	}
 
@@ -115,20 +86,20 @@ public class CMSMFUtils {
 					CMSMFUtils.logger.info("Creating cabinet: " + CMSMFUtils.cmsmfSyncCabinetName
 						+ " in source repository");
 					// create the cabinet and folder underneath
-					cmsmfSyncCabinet = (IDfFolder) dctmSession.newObject(DctmTypeConstants.DM_CABINET);
+					cmsmfSyncCabinet = (IDfFolder) dctmSession.newObject("dm_cabinet");
 					cmsmfSyncCabinet.setObjectName(CMSMFUtils.cmsmfSyncCabinetName);
 					cmsmfSyncCabinet.setHidden(true);
 					cmsmfSyncCabinet.save();
 				}
 
 				// create a folder for a target repository in this cabinet.
-				trgtDocbaseFolder = (IDfFolder) dctmSession.newObject(DctmTypeConstants.DM_FOLDER);
+				trgtDocbaseFolder = (IDfFolder) dctmSession.newObject("dm_folder");
 				trgtDocbaseFolder.setObjectName(targetDocbaseName);
 				trgtDocbaseFolder.link(cmsmfSyncCabinet.getObjectId().getId());
 				trgtDocbaseFolder.save();
 			}
 			// Create the object
-			lstExportObj = (IDfSysObject) dctmSession.newObject(DctmTypeConstants.DM_DOCUMENT);
+			lstExportObj = (IDfSysObject) dctmSession.newObject("dm_document");
 			lstExportObj.setObjectName(CMSMFUtils.cmsmfLastExportObjName);
 			lstExportObj.link(trgtDocbaseFolder.getObjectId().getId());
 			lstExportObj.save();
@@ -227,7 +198,7 @@ public class CMSMFUtils {
 		msg.setRecipients(Message.RecipientType.TO, addressTo);
 
 		// Optional : You can also set your custom headers in the Email if you Want
-		msg.addHeader("MyHeaderName", "CMSMF_INFO_HEADER");
+		msg.addHeader("X-CMSMFHeader", "CMSMF_INFO_HEADER");
 
 		// Setting the Subject and Content Type
 		msg.setSubject(subject);

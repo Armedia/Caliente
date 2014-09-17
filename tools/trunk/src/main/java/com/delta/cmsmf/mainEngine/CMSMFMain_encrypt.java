@@ -5,7 +5,7 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.delta.cmsmf.exception.CMSMFFatalException;
+import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.tools.RegistryPasswordUtils;
 
@@ -17,7 +17,7 @@ import com.documentum.fc.tools.RegistryPasswordUtils;
 public class CMSMFMain_encrypt implements CMSMFMain {
 
 	@Override
-	public void run() throws IOException, CMSMFFatalException {
+	public void run() throws IOException, CMSMFException {
 		final Console console = System.console();
 		String password = null;
 		if (console != null) {
@@ -37,7 +37,7 @@ public class CMSMFMain_encrypt implements CMSMFMain {
 			System.out.printf("%s%s%n", (console != null ? "The encrypted password is: " : ""),
 				RegistryPasswordUtils.encrypt(password));
 		} catch (DfException e) {
-			throw new CMSMFFatalException("Failed to decrypt the password", e);
+			throw new CMSMFException("Failed to decrypt the password", e);
 		}
 	}
 

@@ -77,7 +77,7 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 		final String driverName = Setting.JDBC_DRIVER.getString();
 		final String jdbcUrl = Setting.JDBC_URL.getString();
 
-		String targetPath = Setting.STREAMS_DIRECTORY.getString();
+		String targetPath = Setting.DB_DIRECTORY.getString();
 		File targetDirectory = null;
 		try {
 			targetDirectory = new File(targetPath).getCanonicalFile();

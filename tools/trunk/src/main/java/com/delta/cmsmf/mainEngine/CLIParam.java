@@ -7,7 +7,6 @@ import com.delta.cmsmf.cfg.Setting;
 public enum CLIParam {
 	//
 	help(null, false, "This help message"),
-	test(null, false, "Enable test mode"),
 	cfg(null, true, "The configuration file to use"),
 	dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
 	dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
@@ -27,10 +26,8 @@ public enum CLIParam {
 	batch_size(Setting.EXPORT_BATCH_SIZE, true, "The batch size to use when exporting objects from Documentum"),
 	post_process(Setting.POST_PROCESS_IMPORT, false, "Whether to post-process the imported content"),
 	predicate(Setting.EXPORT_PREDICATE, true, "The DQL 'from-where' predicate to use for exporting"),
-	buffer(Setting.CONTENT_READ_BUFFER_SIZE, true, "The size of the read buffer"),
-	streams(Setting.STREAMS_DIRECTORY, true, "The Streams directory to use"),
+	db(Setting.DB_DIRECTORY, true, "The Database directory to use"),
 	content(Setting.CONTENT_DIRECTORY, true, "The Content directory to use"),
-	compress(Setting.COMPRESSDATA_FLAG, false, "Enable compression for the data exported (GZip)"),
 	attributes(Setting.OWNER_ATTRIBUTES, true, "The attributes to check for"),
 	errorCount(Setting.IMPORT_MAX_ERRORS, true, "The number of errors to accept before aborting an import"),
 	defaultPassword(Setting.DEFAULT_USER_PASSWORD, true,

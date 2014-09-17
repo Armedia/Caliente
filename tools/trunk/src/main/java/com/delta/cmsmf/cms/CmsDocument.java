@@ -22,7 +22,6 @@ import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.mainEngine.RepositoryConfiguration;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
@@ -184,7 +183,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
 			// If we found no match via path, then we can't locate a match at all and must assume
@@ -359,10 +358,10 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		}
 
 		// Save filestore name
-		String storageType = document.getStorageType();
-		if (StringUtils.isNotBlank(storageType)) {
-			RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
-		}
+		// String storageType = document.getStorageType();
+		// if (StringUtils.isNotBlank(storageType)) {
+		// RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
+		// }
 
 		// We only export versions if we're the root object of the context operation
 		// There is no actual harm done, since the export engine is smart enough to
@@ -610,9 +609,9 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				} catch (DfException e) {
 					throw new CMSMFException(
 						String
-							.format(
-								"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+						.format(
+							"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
 				}
 
 			}
