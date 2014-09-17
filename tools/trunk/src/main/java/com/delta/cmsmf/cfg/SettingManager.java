@@ -60,15 +60,15 @@ public class SettingManager {
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
 		if (!propertyFile.exists()) {
-			System.err.printf("Property file [%s] does not exist, ignoring", propertyFile.getAbsolutePath());
+			System.err.printf("Property file [%s] does not exist, ignoring%n", propertyFile.getAbsolutePath());
 			return;
 		}
 		if (!propertyFile.isFile()) {
-			System.err.printf("Property file [%s] is not a regular file, ignoring", propertyFile.getAbsolutePath());
+			System.err.printf("Property file [%s] is not a regular file, ignoring%n", propertyFile.getAbsolutePath());
 			return;
 		}
 		if (!propertyFile.canRead()) {
-			System.err.printf("Property file [%s] can't be read, ignoring", propertyFile.getAbsolutePath());
+			System.err.printf("Property file [%s] can't be read, ignoring%n", propertyFile.getAbsolutePath());
 			return;
 		}
 		PropertiesConfiguration cfg = new PropertiesConfiguration();
