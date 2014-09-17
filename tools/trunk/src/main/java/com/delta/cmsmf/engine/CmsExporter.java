@@ -37,7 +37,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsExporter extends CmsTransferEngine {
+public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 
 	public CmsExporter() {
 		super();
@@ -239,10 +239,10 @@ public class CmsExporter extends CmsTransferEngine {
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
