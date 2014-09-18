@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.text.StrTokenizer;
@@ -235,57 +234,56 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		// Keep track of missing users so we don't look for them again.
 		Set<String> missingUsers = new HashSet<String>();
 		if (usersNames != null) {
-			// TODO: Support merging in the future?
-			List<IDfValue> actualUsers = new ArrayList<IDfValue>();
+			group.removeAllUsers();
 			for (IDfValue v : usersNames) {
-				IDfUser user = session.getUser(v.asString());
+				final String actualUser = CmsMappingUtils.resolveSpecialUser(session, v.asString());
+				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
-					missingUsers.add(v.asString());
+					missingUsers.add(actualUser);
 					this.log
 						.warn(String
 							.format(
 								"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-								v.asString(), groupName.asString()));
+								actualUser, groupName.asString()));
 					continue;
 				}
-				actualUsers.add(v);
+				group.addUser(actualUser);
 			}
-			setAttributeOnObject(usersNames, actualUsers, group);
 		}
 
 		CmsAttribute groupsNames = getAttribute(CmsAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
-			// TODO: Support merging in the future?
-			List<IDfValue> actualGroups = new ArrayList<IDfValue>();
+			group.removeAllGroups();
 			for (IDfValue v : groupsNames) {
-				IDfGroup other = session.getGroup(v.asString());
+				final String actualGroup = v.asString();
+				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
 					this.log
 						.warn(String
 							.format(
 								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-								v.asString(), groupName.asString()));
+								actualGroup, groupName.asString()));
 					continue;
 				}
-				actualGroups.add(v);
+				group.addGroup(actualGroup);
 			}
-			setAttributeOnObject(groupsNames, actualGroups, group);
 		}
 
 		// Set this group as users' default group
 		CmsProperty property = getProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP);
 		if (property != null) {
 			for (IDfValue v : property) {
-				if (missingUsers.contains(v.asString())) {
+				final String actualUser = CmsMappingUtils.resolveSpecialUser(session, v.asString());
+				if (missingUsers.contains(actualUser)) {
 					continue;
 				}
-				IDfUser user = session.getUser(v.asString());
+				IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
 						.warn(String
 							.format(
 								"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-								groupName.asString(), v.asString()));
+								groupName.asString(), actualUser));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
