@@ -550,27 +550,35 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 					}
 					try {
 						document.setFileEx(absolutePath, fullFormat, pageNumber, null);
-						String msg = String.format("Added the primary content to document [%s](%s) -> {%s/%s/%s}",
-							getLabel(), getId(), absolutePath, fullFormat, pageNumber);
+						final String msg = String.format(
+							"Added the primary content to document [%s](%s) -> {%s/%s/%s}", getLabel(), getId(),
+							absolutePath, fullFormat, pageNumber);
 						CmsDocument.this.log.info(msg);
 						context.printf("\t%s (item %d of %d)", msg, this.current.incrementAndGet(), contentCount);
 					} catch (DfException e) {
-						throw new CMSMFException(String.format(
+						final String msg = String.format(
 							"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}", getLabel(),
-							getId(), absolutePath, fullFormat, pageNumber), e);
+							getId(), absolutePath, fullFormat, pageNumber);
+						context.printf("\t%s (item %d of %d): %s [%s]", msg, this.current.incrementAndGet(),
+							contentCount, e.getClass().getCanonicalName(), e.getMessage());
+						throw new CMSMFException(msg, e);
 					}
 				} else {
 					try {
 						document.addRenditionEx2(absolutePath, fullFormat, pageNumber, pageModifier, null, false,
 							false, false);
-						String msg = String.format("Added rendition content to document [%s](%s) -> {%s/%s/%s/%s}",
-							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier);
+						final String msg = String.format(
+							"Added rendition content to document [%s](%s) -> {%s/%s/%s/%s}", getLabel(), getId(),
+							absolutePath, fullFormat, pageNumber, pageModifier);
 						CmsDocument.this.log.info(msg);
 						context.printf("\t%s (item %d of %d)", msg, this.current.incrementAndGet(), contentCount);
 					} catch (DfException e) {
-						throw new CMSMFException(String.format(
+						final String msg = String.format(
 							"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}", getLabel(),
-							getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+							getId(), absolutePath, fullFormat, pageNumber, pageModifier);
+						context.printf("\t%s (item %d of %d): %s [%s]", msg, this.current.incrementAndGet(),
+							contentCount, e.getClass().getCanonicalName(), e.getMessage());
+						throw new CMSMFException(msg, e);
 					}
 				}
 
@@ -615,19 +623,23 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 					// Run the exec sql
 					sql = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime, session),
 						documentId, renditionNumber.getValue().asInteger(), pageModifierClause, pageNumber, fullFormat);
-					if (!runExecSQL(session, sql)) { throw new CMSMFException(
-						String
+					if (!runExecSQL(session, sql)) {
+						final String msg = String
 							.format(
 								"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
-								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier, sql)); }
+								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier, sql);
+						context.printf("\t%s (item %d of %d)", msg, this.current.incrementAndGet(), contentCount);
+						throw new CMSMFException(msg);
+					}
 				} catch (DfException e) {
-					throw new CMSMFException(
-						String
-							.format(
-								"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+					final String msg = String
+						.format(
+							"Exception caught generating updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier);
+					context.printf("\t%s (item %d of %d): %s [%s]", msg, this.current.incrementAndGet(), contentCount,
+						e.getClass().getCanonicalName(), e.getMessage());
+					throw new CMSMFException(msg, e);
 				}
-
 			}
 
 			@Override
