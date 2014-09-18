@@ -182,15 +182,16 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEven
 	@Override
 	public void objectImportStarted(CmsObject<?> object) {
 		showProgress(object.getType());
-		this.console.info(String.format("Import started for [%s](%s)", object.getLabel(), object.getId()));
+		this.console.info(String.format("Import started for %s [%s](%s)", object.getType().name(), object.getLabel(),
+			object.getId()));
 	}
 
 	@Override
 	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
-		this.console.info(String.format("Import completed for [%s](%s): %s", object.getLabel(), object.getId(),
-			cmsImportResult.name()));
+		this.console.info(String.format("Import completed for %s [%s](%s): %s", object.getType().name(),
+			object.getLabel(), object.getId(), cmsImportResult.name()));
 		showProgress(object.getType());
 	}
 
@@ -198,7 +199,9 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEven
 	public void objectImportFailed(CmsObject<?> object, Throwable thrown) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
-		this.console.info(String.format("Import failed for [%s](%s)", object.getLabel(), object.getId()), thrown);
+		this.console.info(
+			String.format("Import failed for %s [%s](%s)", object.getType().name(), object.getLabel(), object.getId()),
+			thrown);
 		showProgress(object.getType());
 	}
 
