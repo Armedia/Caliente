@@ -277,7 +277,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (missingUsers.contains(actualUser)) {
 					continue;
 				}
-				IDfUser user = session.getUser(actualUser);
+				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
 						.warn(String
@@ -287,6 +287,18 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
+				user.save();
+				// Update the system attributes, if we can
+				try {
+					restoreUserSystemAttributes(user, context);
+				} catch (CMSMFException e) {
+					this.log
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+									actualUser, group.getGroupName()), e);
+				}
 			}
 		}
 	}

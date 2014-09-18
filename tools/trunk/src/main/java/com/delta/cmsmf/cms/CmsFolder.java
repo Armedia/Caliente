@@ -327,13 +327,14 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				// TODO: How do we decide if we should update the default folder for this user? What
 				// if the user's default folder has been modified on the target CMS and we don't
 				// want to clobber that? That's a decision that needs to be made later...
-				final IDfUser user = session.getUser(userValue.asString());
+				final String actualUser = userValue.asString();
+				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							folder.getObjectId().getId(), getLabel(), userValue.asString()));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								folder.getObjectId().getId(), getLabel(), actualUser));
 					continue;
 				}
 
@@ -345,6 +346,17 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				// Ok...so...we set the path to "whatever"...
 				user.setDefaultFolder(pathValue.asString(), (actual == null));
 				user.save();
+				// Update the system attributes, if we can
+				try {
+					restoreUserSystemAttributes(user, context);
+				} catch (CMSMFException e) {
+					this.log
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+									actualUser, getLabel()), e);
+				}
 			}
 		}
 		return newObject;
@@ -404,7 +416,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different folders matching this folder's paths: [%s@%s] and [%s@%s]", existing.getObjectId()
-				.getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}

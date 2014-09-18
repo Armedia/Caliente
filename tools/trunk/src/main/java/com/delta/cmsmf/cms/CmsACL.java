@@ -171,6 +171,17 @@ public class CmsACL extends CmsObject<IDfACL> {
 				// Ok...so we relate this thing back to its owner as its internal ACL
 				user.setDefaultACLEx(acl.getDomain(), acl.getObjectName());
 				user.save();
+				// Update the system attributes, if we can
+				try {
+					restoreUserSystemAttributes(user, context);
+				} catch (CMSMFException e) {
+					this.log
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+									user.getUserName(), getLabel()), e);
+				}
 			}
 		}
 
