@@ -191,7 +191,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -441,6 +441,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		boolean mustImmute = false;
 		IDfSysObject sysObject = null;
 		final IDfSession session = context.getSession();
+		T object = null;
 		try {
 			if (session.isTransactionActive()) {
 				localTx = session.beginTransEx();
@@ -450,7 +451,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			transOpen = true;
 			if (skipImport(context)) { return new SaveResult(CmsImportResult.SKIPPED, null); }
 
-			T object = locateInCms(context);
+			object = locateInCms(context);
 			final boolean isNew = (object == null);
 			final boolean updateVersionLabels = isVersionable(object);
 			final CmsImportResult cmsImportResult;
@@ -600,11 +601,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				object.save();
 			}
 
-			// This has to be the last thing that happens, else some of the attributes won't take
-			// There is no need to save() the object for this, as this is a direct modification
-			if (!updateSystemAttributes(object)) { throw new CMSMFException(String.format(
-				"Failed to update the system attributes for [%s](%s)", this.label, this.id)); }
-
 			ok = true;
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s->%s)", this.type,
 				cmsImportResult, this.label, this.id, object.getObjectId().getId()));
@@ -612,31 +608,45 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			return new SaveResult(cmsImportResult, object.getObjectId().getId());
 		} finally {
 			try {
-				if (ok && (sysObject != null)) {
-					if (mustImmute) {
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String
-								.format("Setting immutability status to [%s](%s)", this.label, this.id));
+				if (ok) {
+					if (sysObject != null) {
+						if (mustImmute) {
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format("Setting immutability status to [%s](%s)", this.label,
+									this.id));
+							}
+							sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
+							sysObject.save();
 						}
-						sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
-						sysObject.save();
+						if (mustFreeze) {
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format("Setting frozen status to [%s](%s)", this.label, this.id));
+							}
+							sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, true);
+							sysObject.save();
+						}
 					}
-					if (mustFreeze) {
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("Setting frozen status to [%s](%s)", this.label, this.id));
-						}
-						sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, true);
-						sysObject.save();
+
+					// This has to be the last thing that happens, else some of the attributes won't
+					// take. There is no need to save() the object for this, as this is a direct
+					// modification
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(String
+							.format("Updating the system attributes for [%s](%s)", this.label, this.id));
+					}
+					if (!updateSystemAttributes(object)) {
+						this.log.warn(String.format("Failed to update the system attributes for [%s](%s)", this.label,
+							this.id));
 					}
 				}
 			} catch (DfException e) {
 				ok = false;
 				this.log
-				.error(
-					String
-					.format(
-						"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
-						this.label, this.id), e);
+					.error(
+						String
+							.format(
+								"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
+								this.label, this.id), e);
 			}
 			if (transOpen) {
 				if (ok) {
@@ -693,7 +703,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -719,7 +729,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	/**
@@ -733,16 +743,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
@@ -917,7 +927,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 				.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-					.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
+				.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
 
 		} else {
 
