@@ -133,19 +133,12 @@ public class DfUtils {
 			"Failed to identify a supported database from the server version string [%s]", serverVersion));
 	}
 
-	public static String generateSqlDateClause(IDfTime date, IDfSession session, boolean adjustTimezone)
-		throws DfException {
+	public static String generateSqlDateClause(IDfTime date, IDfSession session) throws DfException {
 		// First, output to the "netural" format
-		final String dateString;
-		if (adjustTimezone) {
-			Calendar c = Calendar.getInstance();
-			c.setTime(date.getDate());
-			// TODO: Use UTC or GMT here?
-			c.setTimeZone(TimeZone.getTimeZone("UTC"));
-			dateString = DateFormatUtils.format(c, Constant.JAVA_SQL_DATETIME_PATTERN);
-		} else {
-			dateString = date.asString(Constant.SQL_DATETIME_PATTERN);
-		}
+		Calendar c = Calendar.getInstance();
+		c.setTime(date.getDate());
+		c.setTimeZone(TimeZone.getTimeZone("UTC"));
+		final String dateString = DateFormatUtils.format(c, Constant.JAVA_SQL_DATETIME_PATTERN);
 		// Now, select the database format string
 		final String ret;
 		DbType dbType = DfUtils.getDbType(session);
