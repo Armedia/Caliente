@@ -1,12 +1,14 @@
 package com.delta.cmsmf.launcher;
 
 import java.io.File;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import com.delta.cmsmf.cfg.CLIParam;
@@ -39,7 +41,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			final File cfg = new File(log4j);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
 				LogManager.resetConfiguration();
-				DOMConfigurator.configure(cfg.toURI().toURL());
+				DOMConfigurator.configureAndWatch(cfg.getCanonicalPath());
 				customLog4j = true;
 			}
 		}
@@ -51,6 +53,15 @@ public class CMSMFLauncher extends AbstractLauncher {
 				logName = String.format("cmsmf-%s-%s", mode.toLowerCase(), runTime);
 			}
 			System.setProperty("logName", logName);
+			URL config = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
+			if (config != null) {
+				DOMConfigurator.configure(config);
+			} else {
+				config = Thread.currentThread().getContextClassLoader().getResource("log4j.properties");
+				if (config != null) {
+					PropertyConfigurator.configure(config);
+				}
+			}
 		}
 		// Make sure log4j is configured
 		Logger.getRootLogger().info("Logging active");

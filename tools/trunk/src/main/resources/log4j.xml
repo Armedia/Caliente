@@ -18,30 +18,6 @@
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
 		</layout>
-		<filter class="org.apache.log4j.varia.LevelRangeFilter">
-			<param name="levelMin" value="TRACE"/>
-			<param name="levelMax" value="INFO"/>
-			<param name="AcceptOnMatch" value="true"/>
-		</filter>
-		<filter class="org.apache.log4j.varia.DenyAllFilter"/>
-	</appender>
-
-	<appender name="errors" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="${logName}.err"/>
-		<param name="ImmediateFlush" value="true"/>
-		<param name="Append" value="false"/>
-		<param name="Threshold" value="warn"/>
-		<param name="MaxBackupIndex" value="10"/>
-		<param name="MaxFileSize" value="1024MB"/>
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
-		</layout>
-		<filter class="org.apache.log4j.varia.LevelRangeFilter">
-			<param name="levelMin" value="WARN"/>
-			<param name="levelMax" value="FATAL"/>
-			<param name="AcceptOnMatch" value="true"/>
-		</filter>
-		<filter class="org.apache.log4j.varia.DenyAllFilter"/>
 	</appender>
 
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
@@ -58,8 +34,6 @@
 
 	<root>
 		<level value="INFO"/>
-		<!-- <appender-ref ref="stdout"/> -->
 		<appender-ref ref="default"/>
-		<appender-ref ref="errors"/>
 	</root>
 </log4j:configuration>
