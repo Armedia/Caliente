@@ -1,10 +1,13 @@
 package com.delta.cmsmf.utils;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cfg.Constant;
@@ -130,9 +133,19 @@ public class DfUtils {
 			"Failed to identify a supported database from the server version string [%s]", serverVersion));
 	}
 
-	public static String generateSqlDateClause(IDfTime date, IDfSession session) throws DfException {
+	public static String generateSqlDateClause(IDfTime date, IDfSession session, boolean adjustTimezone)
+		throws DfException {
 		// First, output to the "netural" format
-		String dateString = date.asString(Constant.SQL_DATETIME_PATTERN);
+		final String dateString;
+		if (adjustTimezone) {
+			Calendar c = Calendar.getInstance();
+			c.setTime(date.getDate());
+			// TODO: Use UTC or GMT here?
+			c.setTimeZone(TimeZone.getTimeZone("UTC"));
+			dateString = DateFormatUtils.format(c, Constant.JAVA_SQL_DATETIME_PATTERN);
+		} else {
+			dateString = date.asString(Constant.SQL_DATETIME_PATTERN);
+		}
 		// Now, select the database format string
 		final String ret;
 		DbType dbType = DfUtils.getDbType(session);
@@ -147,7 +160,8 @@ public class DfUtils {
 				throw new UnsupportedOperationException(String.format("Unsupported database type [%s]", dbType));
 		}
 		if (DfUtils.LOG.isTraceEnabled()) {
-			DfUtils.LOG.trace(String.format("Generated %s SQL Date string [%s]", dbType, ret));
+			DfUtils.LOG.trace(String.format("Generated %s SQL Date string [%s] from [%s](%d)", dbType, ret,
+				date.asString(Constant.SQL_DATETIME_PATTERN), date.getDate().getTime()));
 		}
 		return ret;
 	}

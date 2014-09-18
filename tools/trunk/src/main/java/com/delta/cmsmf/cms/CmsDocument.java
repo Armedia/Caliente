@@ -183,7 +183,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
 			// If we found no match via path, then we can't locate a match at all and must assume
@@ -603,19 +603,19 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 
 				try {
 					// Run the exec sql
-					sql = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime, session),
+					sql = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime, session, true),
 						documentId, renditionNumber.getValue().asInteger(), pageModifierClause, pageNumber, fullFormat);
 					if (!runExecSQL(session, sql)) { throw new CMSMFException(
 						String
-						.format(
-							"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
-							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier, sql)); }
+							.format(
+								"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
+								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier, sql)); }
 				} catch (DfException e) {
 					throw new CMSMFException(
 						String
-						.format(
-							"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+							.format(
+								"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
 				}
 
 			}

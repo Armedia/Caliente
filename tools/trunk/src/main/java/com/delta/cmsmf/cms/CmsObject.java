@@ -915,9 +915,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 			// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
-			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
-				.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-				.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
+			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session, true), modifierName,
+				DfUtils.generateSqlDateClause(creationDate, session, true), creatorName, aclName, aclDomain,
+				(deletedAtt.getValue().asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
 
 		} else {
 
@@ -936,9 +936,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 
-			sqlStr = String.format(sql, objType,
-				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-				.getObjectId().getId());
+			sqlStr = String.format(sql, objType, DfUtils.generateSqlDateClause(modifyDate.asTime(),
+				object.getSession(), true), vstampFlag, object.getObjectId().getId());
 
 		}
 		return runExecSQL(object.getSession(), sqlStr);
