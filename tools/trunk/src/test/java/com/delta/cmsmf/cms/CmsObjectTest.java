@@ -151,9 +151,9 @@ public class CmsObjectTest extends AbstractTest {
 						qr.query("select * from dctm_attribute where object_id = ?", new ResultSetHandler<Void>() {
 							@Override
 							public Void handle(ResultSet rs) throws SQLException {
-								boolean explode = true;
+								int a = 0;
 								while (rs.next()) {
-									explode = false;
+									a++;
 									final String objectId = rs.getString("object_id");
 									final String name = rs.getString("name");
 									final CmsDataType dataType = CmsDataType.valueOf(rs.getString("data_type"));
@@ -208,10 +208,10 @@ public class CmsObjectTest extends AbstractTest {
 													if (dataType == CmsDataType.DF_STRING) {
 														try {
 															decoded = DfValueFactory.newStringValue(CmsMappingUtils
-															.resolveSpecialUser(cmsObj, decoded.asString()));
+																.resolveSpecialUser(cmsObj, decoded.asString()));
 														} catch (DfException e) {
 															Assert.fail(String
-															.format("Failed to resolve the special user attribute"));
+																.format("Failed to resolve the special user attribute"));
 														}
 													}
 													Assert.assertEquals(
@@ -232,18 +232,18 @@ public class CmsObjectTest extends AbstractTest {
 											}
 										}, obj.getId(), name);
 								}
-								Assert.assertFalse(
+								Assert.assertEquals(
 									String.format("Failed to validate the attributes for object [%s:%s]",
-										obj.getType(), obj.getId()), explode);
+										obj.getType(), obj.getId()), obj.getAttributeCount(), a);
 								return null;
 							}
 						}, id.getId());
 						qr.query("select * from dctm_property where object_id = ?", new ResultSetHandler<Void>() {
 							@Override
 							public Void handle(ResultSet rs) throws SQLException {
-								boolean explode = true;
+								int p = 0;
 								while (rs.next()) {
-									explode = false;
+									p++;
 									final String objectId = rs.getString("object_id");
 									final String name = rs.getString("name");
 									final CmsDataType dataType = CmsDataType.valueOf(rs.getString("data_type"));
@@ -278,9 +278,9 @@ public class CmsObjectTest extends AbstractTest {
 											}
 										}, obj.getId(), name);
 								}
-								Assert.assertFalse(
+								Assert.assertEquals(
 									String.format("Failed to validate the attributes for object [%s:%s]",
-										obj.getType(), obj.getId()), explode);
+										obj.getType(), obj.getId()), obj.getPropertyCount(), p);
 								return null;
 							}
 						}, id.getId());
