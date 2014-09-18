@@ -4,7 +4,7 @@
 
 	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
 		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
+			<param name="ConversionPattern" value="%d{ISO8601} [%-16t] %m%n"/>
 		</layout>
 	</appender>
 
