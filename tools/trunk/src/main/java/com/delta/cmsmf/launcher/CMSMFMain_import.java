@@ -146,10 +146,12 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEven
 		// Is it time to show progress? Have 10 seconds passed?
 		long now = System.currentTimeMillis();
 		long last = this.progressReporter.get();
-		if (milestone || ((now - last) >= TimeUnit.MILLISECONDS.convert(5, TimeUnit.SECONDS))) {
+		boolean shouldDisplay = (milestone || ((now - last) >= TimeUnit.MILLISECONDS.convert(5, TimeUnit.SECONDS)));
+		// This avoids a race condition where we don't show successive progress reports from
+		// different threads
+		if (shouldDisplay && this.progressReporter.compareAndSet(last, now)) {
 			this.console.info(String.format("PROGRESS REPORT%s%n\tProcessed %d/%d objects in total (%.2f%%)",
 				objectLine, aggregateCurrent.intValue(), aggregateTotal.intValue(), aggregatePct));
-			this.progressReporter.set(now);
 		}
 	}
 
@@ -202,7 +204,6 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEven
 
 	@Override
 	public void objectTypeImportFinished(CmsObjectType objectType, Map<CmsImportResult, Integer> counters) {
-		showProgress(objectType);
 		this.console.info(String.format("Finished importing %s objects", objectType.name()));
 		for (CmsImportResult r : CmsImportResult.values()) {
 			Integer v = counters.get(r);
