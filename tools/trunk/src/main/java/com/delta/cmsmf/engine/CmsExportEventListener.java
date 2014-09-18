@@ -2,7 +2,7 @@ package com.delta.cmsmf.engine;
 
 import java.util.Map;
 
-import com.delta.cmsmf.cms.CmsExportResult;
+import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 
 public interface CmsExportEventListener {
@@ -30,10 +30,19 @@ public interface CmsExportEventListener {
 	 * Invoked when the given object has been exported.
 	 * </p>
 	 *
-	 * @param objectType
-	 * @param result
+	 * @param object
 	 */
-	public void objectExportCompleted(CmsObjectType objectType, String objectId, CmsExportResult result);
+	public void objectExportCompleted(CmsObject<?> object);
+
+	/**
+	 * <p>
+	 * Invoked when the given object has been skipped.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @param objectId
+	 */
+	public void objectSkipped(CmsObjectType objectType, String objectId);
 
 	/**
 	 * <p>

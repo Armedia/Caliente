@@ -14,7 +14,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.cms.CmsExportResult;
+import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.engine.CmsExportEventListener;
 import com.delta.cmsmf.engine.CmsExporter;
@@ -196,9 +196,14 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEven
 	}
 
 	@Override
-	public void objectExportCompleted(CmsObjectType objectType, String objectId, CmsExportResult result) {
-		this.console.info(String.format("Object export completed: %s[%s] %s", objectType.name(), objectId,
-			result.name()));
+	public void objectExportCompleted(CmsObject<?> object) {
+		this.console.info(String.format("%s export completed for [%s](%s)", object.getType().name(), object.getLabel(),
+			object.getId()));
+	}
+
+	@Override
+	public void objectSkipped(CmsObjectType objectType, String objectId) {
+		this.console.info(String.format("%s object [%s] was skipped", objectType.name(), objectId));
 	}
 
 	@Override

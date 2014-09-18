@@ -849,7 +849,7 @@ public class CmsObjectStore {
 		}
 	}
 
-	public Boolean persistDfObject(IDfPersistentObject dfObject, final CmsTransferContext ctx) throws DfException,
+	public CmsObject<?> persistDfObject(IDfPersistentObject dfObject, final CmsTransferContext ctx) throws DfException,
 	CMSMFException {
 		final CmsObjectType objectType;
 		try {
@@ -858,7 +858,7 @@ public class CmsObjectStore {
 			if (this.log.isDebugEnabled()) {
 				this.log.warn(e.getMessage());
 			}
-			return false;
+			return null;
 		}
 		final String objectId = dfObject.getObjectId().getId();
 		// If it's already serialized, we skip it
@@ -866,18 +866,18 @@ public class CmsObjectStore {
 			persistDependency(objectType, objectId, ctx);
 		} catch (CMSMFException e) {
 			// Check again...maybe it was a PK violation...
-			if (!persistDependency(objectType, objectId, ctx)) { return false; }
+			if (!persistDependency(objectType, objectId, ctx)) { return null; }
 			// It wasn't... raise an error
 			throw new CMSMFException(String.format(
 				"Exception caught while trying to create the mutex lock for [%s::%s]", objectType.name(), objectId), e);
 		}
-		if (isSerialized(objectId)) { return false; }
+		if (isSerialized(objectId)) { return null; }
 
 		// Not already serialized, so we do the deed.
 		CmsObject<?> obj = objectType.newInstance();
 		if (!obj.loadFromCMS(dfObject)) {
 			// The object is not supported
-			return false;
+			return null;
 		}
 		// We try to traverse its dependencies
 		CmsDependencyManager dependencyManager = new CmsDependencyManager() {
@@ -888,16 +888,16 @@ public class CmsObjectStore {
 
 			@Override
 			public Boolean persistDfObject(IDfPersistentObject dfObject) throws DfException, CMSMFException {
-				return CmsObjectStore.this.persistDfObject(dfObject, ctx);
+				return (CmsObjectStore.this.persistDfObject(dfObject, ctx) != null);
 			}
 		};
 
 		obj.persistRequirements(dfObject, ctx, dependencyManager);
 		// If somehow it got serialized underneath us (perhaps by another thread), we skip it
-		if (!serializeObject(obj, ctx)) { return false; }
+		if (!serializeObject(obj, ctx)) { return null; }
 		obj.persistDependents(dfObject, ctx, dependencyManager);
 		// markTraversed(obj.getId());
-		return true;
+		return obj;
 	}
 
 	private boolean markTraversed(Connection c, String objectId) throws CMSMFException {

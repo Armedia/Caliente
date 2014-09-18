@@ -20,8 +20,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.delta.cmsmf.cms.CmsExportResult;
 import com.delta.cmsmf.cms.CmsFileSystem;
+import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.DfValueFactory;
@@ -112,7 +112,6 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 							CmsExporter.this.log.debug(String.format("Got IDfSession [%s]",
 								DfUtils.getSessionId(session)));
 						}
-						CmsExportResult result = CmsExportResult.FAILED;
 						try {
 							IDfPersistentObject dfObj = session.getObject(id);
 							if (CmsExporter.this.log.isDebugEnabled()) {
@@ -123,9 +122,13 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 							final String objectId = dfObj.getObjectId().getId();
 
 							objectExportStarted(type, objectId);
-							result = (objectStore.persistDfObject(dfObj, new DefaultTransferContext(objectId, session,
-								objectStore, fileSystem)) ? CmsExportResult.EXPORTED : CmsExportResult.SKIPPED);
-							objectExportCompleted(type, objectId, result);
+							CmsObject<?> object = objectStore.persistDfObject(dfObj, new DefaultTransferContext(
+								objectId, session, objectStore, fileSystem));
+							if (object != null) {
+								objectExportCompleted(object);
+							} else {
+								objectSkipped(type, objectId);
+							}
 							if (CmsExporter.this.log.isDebugEnabled()) {
 								CmsExporter.this.log.debug(String.format("Persisted [%s] object with id [%s]", dfObj
 									.getType().getName(), objectId));
@@ -297,10 +300,20 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 		}
 	}
 
-	private void objectExportCompleted(CmsObjectType objectType, String objectId, CmsExportResult result) {
+	private void objectExportCompleted(CmsObject<?> object) {
 		for (CmsExportEventListener l : getListeners()) {
 			try {
-				l.objectExportCompleted(objectType, objectId, result);
+				l.objectExportCompleted(object);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectSkipped(CmsObjectType objectType, String objectId) {
+		for (CmsExportEventListener l : getListeners()) {
+			try {
+				l.objectSkipped(objectType, objectId);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}
