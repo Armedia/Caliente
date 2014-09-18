@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -183,7 +184,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
 			// If we found no match via path, then we can't locate a match at all and must assume
@@ -496,7 +497,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 	}
 
 	@Override
-	protected void finalizeConstruction(final IDfDocument document, boolean newObject, CmsTransferContext context)
+	protected void finalizeConstruction(final IDfDocument document, boolean newObject, final CmsTransferContext context)
 		throws DfException, CMSMFException {
 		final IDfSession session = document.getSession();
 
@@ -509,10 +510,17 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 		final String documentId = document.getObjectId().getId();
 		final String contentType = getAttribute(CmsAttributes.A_CONTENT_TYPE).getValue().toString();
 		final CmsFileSystem fs = context.getFileSystem();
+		final int contentCount = contentIds.size();
 		context.deserializeObjects(CmsContent.class, contentIds, new ObjectHandler() {
+
+			private final AtomicInteger current = new AtomicInteger(0);
 
 			@Override
 			public boolean newBatch(String batchId) throws CMSMFException {
+				this.current.set(0);
+				String msg = String.format("Content addition started for document [%s](%s)", getLabel(), getId());
+				CmsDocument.this.log.info(msg);
+				context.printf("\t%s (%d items)", msg, contentCount);
 				return true;
 			}
 
@@ -542,9 +550,10 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 					}
 					try {
 						document.setFileEx(absolutePath, fullFormat, pageNumber, null);
-						CmsDocument.this.log.info(String.format(
-							"Added the primary content to document [%s](%s) -> {%s/%s/%s}", getLabel(), getId(),
-							absolutePath, fullFormat, pageNumber));
+						String msg = String.format("Added the primary content to document [%s](%s) -> {%s/%s/%s}",
+							getLabel(), getId(), absolutePath, fullFormat, pageNumber);
+						CmsDocument.this.log.info(msg);
+						context.printf("\t%s (item %d of %d)", msg, this.current.incrementAndGet(), contentCount);
 					} catch (DfException e) {
 						throw new CMSMFException(String.format(
 							"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}", getLabel(),
@@ -554,9 +563,10 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 					try {
 						document.addRenditionEx2(absolutePath, fullFormat, pageNumber, pageModifier, null, false,
 							false, false);
-						CmsDocument.this.log.info(String.format(
-							"Added rendition content to document [%s](%s) -> {%s/%s/%s/%s}", getLabel(), getId(),
-							absolutePath, fullFormat, pageNumber, pageModifier));
+						String msg = String.format("Added rendition content to document [%s](%s) -> {%s/%s/%s/%s}",
+							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier);
+						CmsDocument.this.log.info(msg);
+						context.printf("\t%s (item %d of %d)", msg, this.current.incrementAndGet(), contentCount);
 					} catch (DfException e) {
 						throw new CMSMFException(String.format(
 							"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}", getLabel(),
@@ -607,21 +617,24 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 						documentId, renditionNumber.getValue().asInteger(), pageModifierClause, pageNumber, fullFormat);
 					if (!runExecSQL(session, sql)) { throw new CMSMFException(
 						String
-						.format(
-							"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
-							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier, sql)); }
+							.format(
+								"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
+								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier, sql)); }
 				} catch (DfException e) {
 					throw new CMSMFException(
 						String
-						.format(
-							"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-							getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
+							.format(
+								"Exception caught generating the SQL to update the content attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+								getLabel(), getId(), absolutePath, fullFormat, pageNumber, pageModifier), e);
 				}
 
 			}
 
 			@Override
 			public boolean closeBatch(boolean ok) throws CMSMFException {
+				String msg = String.format("Content addition finished for document [%s](%s)", getLabel(), getId());
+				CmsDocument.this.log.info(msg);
+				context.printf("\t%s (%d items)", msg, contentCount);
 				return true;
 			}
 
