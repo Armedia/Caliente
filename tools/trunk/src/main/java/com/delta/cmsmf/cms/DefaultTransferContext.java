@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -26,19 +28,21 @@ public class DefaultTransferContext implements CmsTransferContext {
 	private final CmsAttributeMapper mapper;
 	private final Map<String, IDfValue> values = new HashMap<String, IDfValue>();
 	private final CmsFileSystem fileSystem;
+	private final Logger output;
 
 	public DefaultTransferContext(String rootId, IDfSession session, CmsObjectStore objectStore,
-		CmsFileSystem fileSystem) {
-		this(rootId, session, objectStore, fileSystem, null);
+		CmsFileSystem fileSystem, Logger output) {
+		this(rootId, session, objectStore, fileSystem, null, output);
 	}
 
 	public DefaultTransferContext(String rootId, IDfSession session, CmsObjectStore objectStore,
-		CmsFileSystem fileSystem, CmsAttributeMapper mapper) {
+		CmsFileSystem fileSystem, CmsAttributeMapper mapper, Logger output) {
 		this.rootId = rootId;
 		this.session = session;
 		this.objectStore = objectStore;
 		this.mapper = (mapper != null ? mapper : objectStore.getAttributeMapper());
 		this.fileSystem = fileSystem;
+		this.output = output;
 	}
 
 	@Override
@@ -94,5 +98,12 @@ public class DefaultTransferContext implements CmsTransferContext {
 	@Override
 	public CmsFileSystem getFileSystem() {
 		return this.fileSystem;
+	}
+
+	@Override
+	public void printf(String format, Object... args) {
+		if (this.output != null) {
+			this.output.info(String.format(format, args));
+		}
 	}
 }

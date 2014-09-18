@@ -20,6 +20,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.log4j.Logger;
+
 import com.delta.cmsmf.cms.CmsFileSystem;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
@@ -43,16 +45,33 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 
+	private final Logger output;
+
 	public CmsExporter() {
-		super();
+		this(null);
 	}
 
 	public CmsExporter(int threadCount) {
-		super(threadCount);
+		this(null, threadCount);
 	}
 
 	public CmsExporter(int threadCount, int backlogSize) {
+		this(null, threadCount, backlogSize);
+	}
+
+	public CmsExporter(Logger output) {
+		super();
+		this.output = output;
+	}
+
+	public CmsExporter(Logger output, int threadCount) {
+		super(threadCount);
+		this.output = output;
+	}
+
+	public CmsExporter(Logger output, int threadCount, int backlogSize) {
 		super(threadCount, backlogSize);
+		this.output = output;
 	}
 
 	public void doExport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
@@ -123,7 +142,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 
 							objectExportStarted(type, objectId);
 							CmsObject<?> object = objectStore.persistDfObject(dfObj, new DefaultTransferContext(
-								objectId, session, objectStore, fileSystem));
+								objectId, session, objectStore, fileSystem, CmsExporter.this.output));
 							if (object != null) {
 								objectExportCompleted(object);
 							} else {

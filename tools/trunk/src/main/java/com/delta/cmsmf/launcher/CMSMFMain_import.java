@@ -54,7 +54,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEven
 	@Override
 	public void run() throws CMSMFException {
 		// lock
-		final CmsImporter importer = new CmsImporter(Setting.THREADS.getInt());
+		final CmsImporter importer = new CmsImporter(this.console, Setting.THREADS.getInt());
 		importer.addListener(this);
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();

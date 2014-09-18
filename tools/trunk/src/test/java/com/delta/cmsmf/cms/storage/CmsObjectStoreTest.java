@@ -295,7 +295,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 		final CmsFileSystem fs = new DefaultCmsFileSystem(getFsDir());
 		CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
-		CmsTransferContext ctx = new DefaultTransferContext(null, null, store, fs);
+		CmsTransferContext ctx = new DefaultTransferContext(null, null, store, fs, null);
 		try {
 			store.serializeObject(null, ctx);
 			Assert.fail("Did not fail with a null object");
@@ -351,7 +351,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
-						ctx = new DefaultTransferContext(obj.getId(), session, store, fs);
+						ctx = new DefaultTransferContext(obj.getId(), session, store, fs, null);
 						Assert.assertTrue(store.serializeObject(obj, ctx));
 						Assert.assertEquals(Integer.valueOf(1), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
@@ -586,7 +586,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 							// Unsupported object
 							continue;
 						}
-						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store, fs);
+						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store, fs, null);
 						store.serializeObject(obj, ctx);
 						expected.put(obj.getId(), obj);
 						if (++count > max) {
@@ -671,7 +671,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 				while (results.next()) {
 					String id = results.getString("r_object_id");
 					CmsObjectType type = CmsObjectType.decodeType(results.getString("r_object_type"));
-					CmsTransferContext ctx = new DefaultTransferContext(id, session, store, fs);
+					CmsTransferContext ctx = new DefaultTransferContext(id, session, store, fs, null);
 					store.persistDependency(type, id, ctx);
 					dependencies.put(id, type);
 				}

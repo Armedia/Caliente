@@ -20,6 +20,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.log4j.Logger;
+
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsDependencyType;
 import com.delta.cmsmf.cms.CmsFileSystem;
@@ -46,17 +48,33 @@ import com.documentum.fc.common.DfException;
 public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 
 	private final CmsCounter<CmsImportResult> counter = new CmsCounter<CmsImportResult>(CmsImportResult.class);
+	private final Logger output;
 
 	public CmsImporter() {
-		super();
+		this(null);
 	}
 
 	public CmsImporter(int threadCount) {
-		super(threadCount);
+		this(null, threadCount);
 	}
 
 	public CmsImporter(int threadCount, int backlogSize) {
+		this(null, threadCount, backlogSize);
+	}
+
+	public CmsImporter(Logger output) {
+		super();
+		this.output = output;
+	}
+
+	public CmsImporter(Logger output, int threadCount) {
+		super(threadCount);
+		this.output = output;
+	}
+
+	public CmsImporter(Logger output, int threadCount, int backlogSize) {
 		super(threadCount, backlogSize);
+		this.output = output;
 	}
 
 	public final CmsCounter<CmsImportResult> getCounter() {
@@ -125,7 +143,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 
 						for (CmsObject<?> next : batch) {
 							CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore,
-								fileSystem);
+								fileSystem, CmsImporter.this.output);
 							SaveResult result = null;
 							try {
 								objectImportStarted(next);
@@ -359,10 +377,10 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -375,7 +393,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 					continue;
 				}
 				this.log
-					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}

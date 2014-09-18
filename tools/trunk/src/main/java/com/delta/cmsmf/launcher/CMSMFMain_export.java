@@ -43,7 +43,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEven
 	@Override
 	public void run() throws CMSMFException {
 
-		CmsExporter exporter = new CmsExporter(Setting.THREADS.getInt());
+		CmsExporter exporter = new CmsExporter(this.console, Setting.THREADS.getInt());
 		exporter.addListener(this);
 
 		final Date start = new Date();
