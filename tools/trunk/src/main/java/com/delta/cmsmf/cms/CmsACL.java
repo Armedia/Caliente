@@ -146,8 +146,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 	@Override
 	protected void finalizeConstruction(IDfACL acl, boolean newObject, CmsTransferContext context) throws DfException {
 		if (newObject) {
-			copyAttributeToObject(CmsAttributes.OWNER_NAME, acl);
-			copyAttributeToObject(CmsAttributes.OBJECT_NAME, acl);
+			String user = getAttribute(CmsAttributes.OWNER_NAME).getValue().asString();
+			user = CmsMappingUtils.resolveSpecialUser(acl.getSession(), user);
+			acl.setDomain(user);
+			acl.setObjectName(getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString());
 			acl.save();
 		}
 		CmsProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
