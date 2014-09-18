@@ -4,6 +4,7 @@ import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
 import com.documentum.fc.common.IDfAttr;
+import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public enum CmsDataType {
@@ -111,7 +112,7 @@ public enum CmsDataType {
 	DF_TIME(IDfValue.DF_TIME) {
 		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
 		private final String nullDate = this.nullValue.asString();
-		private final String timePattern = "yyyy/MM/dd HH:mm:ss";
+		private final String timePattern = IDfTime.DF_TIME_PATTERN26;
 
 		@Override
 		public String doEncode(IDfValue value) {
@@ -287,8 +288,7 @@ public enum CmsDataType {
 	protected abstract Object doGetValue(IDfValue value);
 
 	/*
-	public static CmsDataType fromDfConstant(int constant) {
-	}
+	 * public static CmsDataType fromDfConstant(int constant) { }
 	 */
 
 	public static CmsDataType fromAttribute(IDfAttr attribute) {
