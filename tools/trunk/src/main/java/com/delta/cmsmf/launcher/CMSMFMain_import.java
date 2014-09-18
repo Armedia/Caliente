@@ -131,18 +131,24 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEven
 		final Double aggregateCurrent = this.aggregateCurrent.doubleValue();
 		final Double aggregatePct = (aggregateCurrent / aggregateTotal) * 100.0;
 
-		final Double itemTotal = this.total.get(objectType).doubleValue();
-		final Double itemCurrent = this.current.get(objectType).doubleValue();
-		final Double itemPct = (itemCurrent / itemTotal) * 100.0;
+		boolean milestone = (aggregateTotal.intValue() == aggregateCurrent.intValue());
+
+		String objectLine = "";
+		if (objectType != null) {
+			final Double itemTotal = this.total.get(objectType).doubleValue();
+			final Double itemCurrent = this.current.get(objectType).doubleValue();
+			final Double itemPct = (itemCurrent / itemTotal) * 100.0;
+			objectLine = String.format("%n\tProcessed %d/%d %s objects (%.2f%%)", itemCurrent.intValue(),
+				itemTotal.intValue(), objectType.name(), itemPct);
+			milestone |= (itemTotal.intValue() == itemCurrent.intValue());
+		}
 
 		// Is it time to show progress? Have 10 seconds passed?
 		long now = System.currentTimeMillis();
 		long last = this.progressReporter.get();
-		if ((now - last) >= TimeUnit.MILLISECONDS.convert(5, TimeUnit.SECONDS)) {
-			this.console.info(String.format(
-				"PROGRESS REPORT%n\tProcessed %d/%d %s objects (%.2f%%)%n\tProcessed %d/%d objects in total (%.2f%%)",
-				itemCurrent.intValue(), itemTotal.intValue(), objectType.name(), itemPct, aggregateCurrent.intValue(),
-				aggregateTotal.intValue(), aggregatePct));
+		if (milestone || ((now - last) >= TimeUnit.MILLISECONDS.convert(5, TimeUnit.SECONDS))) {
+			this.console.info(String.format("PROGRESS REPORT%s%n\tProcessed %d/%d objects in total (%.2f%%)",
+				objectLine, aggregateCurrent.intValue(), aggregateTotal.intValue(), aggregatePct));
 			this.progressReporter.set(now);
 		}
 	}
@@ -155,7 +161,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEven
 		this.console.info("Import process started");
 		for (CmsObjectType t : CmsObjectType.values()) {
 			Integer v = summary.get(t);
-			if ((v == null) || (v.intValue() == 0)) {
+			if ((v == null) || (v.intValue() == 0) || t.isSurrogate()) {
 				continue;
 			}
 			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
