@@ -473,6 +473,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 						object.getObjectId().getId());
 				}
 			} else {
+				// Is this correct?
+				object.lockEx(true);
 				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
 					object.getObjectId().getId());
 
