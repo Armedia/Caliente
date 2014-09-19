@@ -318,9 +318,6 @@ public class CmsObjectStoreTest extends AbstractTest {
 		try {
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
-				if (t == CmsObjectType.DOCUMENT_REF) {
-					continue;
-				}
 				final CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
 				final DocumentumType dt = DocumentumType.decode(obj);
 				IDfCollection results = DfUtils.executeQuery(session,
@@ -557,9 +554,6 @@ public class CmsObjectStoreTest extends AbstractTest {
 			final int max = 3;
 			for (final CmsObjectType t : CmsObjectType.values()) {
 				final Map<String, CmsObject<?>> expected = new HashMap<String, CmsObject<?>>();
-				if (t == CmsObjectType.DOCUMENT_REF) {
-					continue;
-				}
 				final DocumentumType dt = DocumentumType.decode(t);
 				IDfCollection results = DfUtils.executeQuery(session,
 					String.format("select r_object_id from %s", dt.dmTable, max, max), IDfQuery.DF_EXECREAD_QUERY);

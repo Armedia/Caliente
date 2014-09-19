@@ -31,8 +31,7 @@ public enum CmsObjectType {
 	FORMAT(CmsFormat.class, IDfFormat.class),
 	FOLDER(CmsFolder.class, IDfFolder.class, CmsDependencyType.HIERARCHY, null, true),
 	DOCUMENT(CmsDocument.class, IDfDocument.class, CmsDependencyType.PEER, null, true),
-	CONTENT(CmsContent.class, IDfContent.class, "dmr_content", DOCUMENT),
-	DOCUMENT_REF(CmsDocumentReference.class, IDfDocument.class, CmsDependencyType.PEER, DOCUMENT);
+	CONTENT(CmsContent.class, IDfContent.class, "dmr_content", DOCUMENT);
 
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
@@ -124,7 +123,7 @@ public enum CmsObjectType {
 	private static Map<String, CmsObjectType> CLASS_DECODER = null;
 
 	public static CmsObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedObjectTypeException {
+	UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		IDfType type = object.getType();
 		while (type != null) {

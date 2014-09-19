@@ -78,14 +78,7 @@ public abstract class AbstractTest {
 			}
 			if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
 			DocumentumType ret = DocumentumType.MAP.get(type);
-			if (ret == null) {
-				switch (type) {
-					case DOCUMENT_REF:
-						return DocumentumType.DM_DOCUMENT;
-					default:
-						throw new IllegalArgumentException(String.format("Unsupported type [%s]", type));
-				}
-			}
+			if (ret == null) { throw new IllegalArgumentException(String.format("Unsupported type [%s]", type)); }
 			return ret;
 		}
 	}

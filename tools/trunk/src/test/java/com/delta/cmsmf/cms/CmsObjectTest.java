@@ -46,9 +46,6 @@ public class CmsObjectTest extends AbstractTest {
 		try {
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
-				if (t == CmsObjectType.DOCUMENT_REF) {
-					continue;
-				}
 				CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
 				final DocumentumType dt = DocumentumType.decode(obj);
 				IDfCollection results = DfUtils.executeQuery(session,
@@ -104,9 +101,6 @@ public class CmsObjectTest extends AbstractTest {
 		try {
 			final int max = 3;
 			for (CmsObjectType t : CmsObjectType.values()) {
-				if (t == CmsObjectType.DOCUMENT_REF) {
-					continue;
-				}
 				final CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
 				final DocumentumType dt = DocumentumType.decode(obj);
 				IDfCollection results = DfUtils.executeQuery(session,
