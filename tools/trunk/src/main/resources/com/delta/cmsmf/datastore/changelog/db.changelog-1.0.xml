@@ -8,7 +8,7 @@
 			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
 				<constraints nullable="false" />
 			</column>
-			<column name="value" type="tet" remarks="The property's value">
+			<column name="value" type="text" remarks="The property's value">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
