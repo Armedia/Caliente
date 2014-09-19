@@ -25,10 +25,7 @@ import com.documentum.fc.common.DfException;
 public class CMSMFUtils {
 
 	/** The log object used for logging. */
-	static Logger logger = Logger.getLogger(CMSMFUtils.class);
-
-	private static String cmsmfSyncCabinetName = Setting.STATE_CABINET.getString();
-	private static String cmsmfLastExportObjName = Constant.LAST_EXPORT_OBJ_NAME;
+	static Logger log = Logger.getLogger(CMSMFUtils.class);
 
 	/**
 	 * Gets the content path from content id.
@@ -61,17 +58,19 @@ public class CMSMFUtils {
 	 */
 	public static void runDctmJob(IDfSession dctmSession, String jobName) throws DfException {
 		// Set run_now attribute of a job to true to run a job.
-		IDfSysObject oJob = (IDfSysObject) dctmSession.getObjectByQualification("dm_job where object_name = '"
-			+ jobName + "'");
+		String qualification = String.format("dm_job where object_name = '%s'", jobName);
+		IDfSysObject oJob = (IDfSysObject) dctmSession.getObjectByQualification(qualification);
 		oJob.setBoolean(Constant.RUN_NOW, true);
 		oJob.save();
 	}
 
 	private static IDfSysObject getCmsmfStateObject(IDfSession dctmSession, boolean createIfMissing) throws DfException {
 		final String targetDocbaseName = CLIParam.docbase.getString();
-		final String cabinetPath = "/" + CMSMFUtils.cmsmfSyncCabinetName;
-		final String folderPath = cabinetPath + "/" + targetDocbaseName;
-		final String documentPath = folderPath + "/" + CMSMFUtils.cmsmfLastExportObjName;
+		final String cabinetName = Setting.STATE_CABINET.getString();
+		final String objectName = Constant.LAST_EXPORT_OBJ_NAME;
+		final String cabinetPath = String.format("/", cabinetName);
+		final String folderPath = String.format("%s/%s", cabinetPath, targetDocbaseName);
+		final String documentPath = String.format("%s/%s", folderPath, objectName);
 		IDfSysObject lstExportObj = (IDfSysObject) dctmSession.getObjectByPath(documentPath);
 		if ((lstExportObj == null) && createIfMissing) {
 			// Object does not exist, create one.
@@ -82,11 +81,10 @@ public class CMSMFUtils {
 				// try to locate the cmsmf_sync cabinet and create one if it doesn't exist
 				IDfFolder cmsmfSyncCabinet = dctmSession.getFolderByPath(cabinetPath);
 				if (cmsmfSyncCabinet == null) {
-					CMSMFUtils.logger.info("Creating cabinet: " + CMSMFUtils.cmsmfSyncCabinetName
-						+ " in source repository");
+					CMSMFUtils.log.info(String.format("Creating cabinet [%s] in source repository", cabinetName));
 					// create the cabinet and folder underneath
 					cmsmfSyncCabinet = (IDfFolder) dctmSession.newObject("dm_cabinet");
-					cmsmfSyncCabinet.setObjectName(CMSMFUtils.cmsmfSyncCabinetName);
+					cmsmfSyncCabinet.setObjectName(cabinetName);
 					cmsmfSyncCabinet.setHidden(true);
 					cmsmfSyncCabinet.save();
 				}
@@ -99,7 +97,7 @@ public class CMSMFUtils {
 			}
 			// Create the object
 			lstExportObj = (IDfSysObject) dctmSession.newObject("dm_document");
-			lstExportObj.setObjectName(CMSMFUtils.cmsmfLastExportObjName);
+			lstExportObj.setObjectName(objectName);
 			lstExportObj.link(trgtDocbaseFolder.getObjectId().getId());
 			lstExportObj.save();
 		}
@@ -125,12 +123,12 @@ public class CMSMFUtils {
 			} else {
 				message = "No previous export date";
 			}
-			if (CMSMFUtils.logger.isInfoEnabled()) {
-				CMSMFUtils.logger.info(message);
+			if (CMSMFUtils.log.isInfoEnabled()) {
+				CMSMFUtils.log.info(message);
 			}
 			return lastExportDate;
 		} catch (DfException e) {
-			CMSMFUtils.logger.error("Error occured while retrieving last export run date", e);
+			CMSMFUtils.log.error("Error occured while retrieving last export run date", e);
 		}
 		return lastExportDate;
 	}
@@ -149,11 +147,11 @@ public class CMSMFUtils {
 			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession, true);
 			lstExportObj.setSubject(exportDate);
 			lstExportObj.save();
-			if (CMSMFUtils.logger.isInfoEnabled()) {
-				CMSMFUtils.logger.info(String.format("Last export date set to [%s]", exportDate));
+			if (CMSMFUtils.log.isInfoEnabled()) {
+				CMSMFUtils.log.info(String.format("Last export date set to [%s]", exportDate));
 			}
 		} catch (DfException e) {
-			CMSMFUtils.logger.error("Error occured while setting last export run date", e);
+			CMSMFUtils.log.error("Error occured while setting last export run date", e);
 		}
 	}
 
@@ -226,7 +224,7 @@ public class CMSMFUtils {
 		String smtpHostAddress = Setting.MAIL_SMTP_HOST.getString();
 
 		if ((recipients.length == 0) || StringUtils.isBlank(mailFromAddress) || StringUtils.isBlank(smtpHostAddress)) {
-			CMSMFUtils.logger.error("Please check recipients, mail from address or smtp host address"
+			CMSMFUtils.log.error("Please check recipients, mail from address or smtp host address"
 				+ " properties in CMSMF_app.properties. Unable to post an email from CMSMF application.");
 		} else {
 			CMSMFUtils.postMail(smtpHostAddress, recipients, subject, message, mailFromAddress);
