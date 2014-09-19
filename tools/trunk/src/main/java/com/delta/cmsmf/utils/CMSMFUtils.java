@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
+import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
@@ -68,7 +69,7 @@ public class CMSMFUtils {
 		final String targetDocbaseName = CLIParam.docbase.getString();
 		final String cabinetName = Setting.STATE_CABINET.getString();
 		final String objectName = Constant.LAST_EXPORT_OBJ_NAME;
-		final String cabinetPath = String.format("/", cabinetName);
+		final String cabinetPath = String.format("/%s", cabinetName);
 		final String folderPath = String.format("%s/%s", cabinetPath, targetDocbaseName);
 		final String documentPath = String.format("%s/%s", folderPath, objectName);
 		IDfSysObject lstExportObj = (IDfSysObject) dctmSession.getObjectByPath(documentPath);
@@ -83,20 +84,20 @@ public class CMSMFUtils {
 				if (cmsmfSyncCabinet == null) {
 					CMSMFUtils.log.info(String.format("Creating cabinet [%s] in source repository", cabinetName));
 					// create the cabinet and folder underneath
-					cmsmfSyncCabinet = (IDfFolder) dctmSession.newObject("dm_cabinet");
+					cmsmfSyncCabinet = IDfFolder.class.cast(dctmSession.newObject("dm_cabinet"));
 					cmsmfSyncCabinet.setObjectName(cabinetName);
 					cmsmfSyncCabinet.setHidden(true);
 					cmsmfSyncCabinet.save();
 				}
 
 				// create a folder for a target repository in this cabinet.
-				trgtDocbaseFolder = (IDfFolder) dctmSession.newObject("dm_folder");
+				trgtDocbaseFolder = IDfFolder.class.cast(dctmSession.newObject("dm_folder"));
 				trgtDocbaseFolder.setObjectName(targetDocbaseName);
 				trgtDocbaseFolder.link(cmsmfSyncCabinet.getObjectId().getId());
 				trgtDocbaseFolder.save();
 			}
 			// Create the object
-			lstExportObj = (IDfSysObject) dctmSession.newObject("dm_document");
+			lstExportObj = IDfDocument.class.cast(dctmSession.newObject("dm_document"));
 			lstExportObj.setObjectName(objectName);
 			lstExportObj.link(trgtDocbaseFolder.getObjectId().getId());
 			lstExportObj.save();
