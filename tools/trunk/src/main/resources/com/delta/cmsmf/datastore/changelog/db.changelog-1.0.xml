@@ -3,6 +3,17 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 	<changeSet author="master" id="1">
+		<!-- The CMSMF info table -->
+		<createTable tableName="cmsmf_info">
+			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
+				<constraints nullable="false" />
+			</column>
+			<column name="value" type="tet" remarks="The property's value">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmsmf_info" columnNames="name" />
+
 		<!-- The export plan table -->
 		<createTable tableName="dctm_export_plan">
 			<column name="object_id" type="varchar(32)" remarks="The object which is to be exported">
