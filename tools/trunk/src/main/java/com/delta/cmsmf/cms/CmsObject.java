@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
@@ -34,7 +35,6 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
-import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
@@ -191,7 +191,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -644,11 +644,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			} catch (DfException e) {
 				ok = false;
 				this.log
-					.error(
-						String
-							.format(
-								"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
-								this.label, this.id), e);
+				.error(
+					String
+					.format(
+						"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
+						this.label, this.id), e);
 			}
 			if (transOpen) {
 				if (ok) {
@@ -705,7 +705,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -731,7 +731,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 	}
 
 	/**
@@ -745,16 +745,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		return false;
 	}
 
@@ -860,6 +860,51 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
+	protected final boolean updateSystemAttributes(final IDfPersistentObject targetObject, CmsTransferContext context)
+		throws DfException, CMSMFException {
+		if (targetObject == null) { throw new IllegalArgumentException("Must provide a target object to update"); }
+		if (context == null) { throw new IllegalArgumentException("Must provide a context to update with"); }
+
+		// Update the system attributes, if we can
+		final String objectId = targetObject.getObjectId().getId();
+		final CmsObjectType targetType;
+		try {
+			targetType = CmsObjectType.decodeType(targetObject);
+		} catch (UnsupportedObjectTypeException e) {
+			throw new CMSMFException(String.format("Failed to decode the object type for [%s]", targetObject.getType()
+				.getName()), e);
+		}
+		Mapping m = context.getAttributeMapper().getSourceMapping(targetType, CmsAttributes.R_OBJECT_ID, objectId);
+		if (m == null) { return false; }
+
+		Set<String> s = Collections.singleton(m.getSourceValue());
+		final AtomicBoolean success = new AtomicBoolean(false);
+		context.deserializeObjects(targetType.getCmsObjectClass(), s, new ObjectHandler() {
+
+			@Override
+			public boolean newBatch(String batchId) throws CMSMFException {
+				return true;
+			}
+
+			@Override
+			public void handle(CmsObject<?> dataObject) throws CMSMFException {
+				try {
+					success.set(dataObject.updateSystemAttributes(targetObject));
+				} catch (DfException e) {
+					throw new CMSMFException(String.format(
+						"Failed to update the system attributes for %s object [%s](%s)", dataObject.getType().name(),
+						dataObject.getLabel(), objectId), e);
+				}
+			}
+
+			@Override
+			public boolean closeBatch(boolean ok) throws CMSMFException {
+				return true;
+			}
+		});
+		return success.get();
+	}
+
 	/**
 	 * Updates modify date attribute of an persistent object using execsql.
 	 *
@@ -868,7 +913,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	protected final boolean updateSystemAttributes(T object) throws DfException {
+	private final boolean updateSystemAttributes(IDfPersistentObject object) throws DfException {
 		final String sqlStr;
 		if (object instanceof IDfSysObject) {
 			// IDfSysObject sysObject = IDfSysObject.class.cast(object);
@@ -929,7 +974,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 				.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-				.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
+					.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
 
 		} else {
 
@@ -950,7 +995,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-					.getObjectId().getId());
+				.getObjectId().getId());
 
 		}
 		return runExecSQL(object.getSession(), sqlStr);
@@ -1057,48 +1102,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			object.unlink(id);
 		}
 		return ret;
-	}
-
-	protected final void restoreUserSystemAttributes(String user, CmsTransferContext context) throws DfException,
-		CMSMFException {
-		if (user == null) { throw new IllegalArgumentException("Must provide a username to update"); }
-		if (context == null) { throw new IllegalArgumentException("Must provide a context to update with"); }
-		restoreUserSystemAttributes(context.getSession().getUser(user), context);
-	}
-
-	protected final void restoreUserSystemAttributes(final IDfUser user, CmsTransferContext context)
-		throws DfException, CMSMFException {
-		if (user == null) { throw new IllegalArgumentException("Must provide a user to update"); }
-		if (context == null) { throw new IllegalArgumentException("Must provide a context to update with"); }
-		final String actualUser = user.getUserName();
-		Mapping m = context.getAttributeMapper().getSourceMapping(CmsObjectType.USER, CmsAttributes.R_OBJECT_ID,
-			user.getObjectId().getId());
-		if (m == null) { return; }
-		// Update the system attributes, if we can
-		Set<String> s = Collections.singleton(m.getSourceValue());
-		context.deserializeObjects(CmsUser.class, s, new ObjectHandler() {
-
-			@Override
-			public boolean newBatch(String batchId) throws CMSMFException {
-				return true;
-			}
-
-			@Override
-			public void handle(CmsObject<?> dataObject) throws CMSMFException {
-				CmsUser u = CmsUser.class.cast(dataObject);
-				try {
-					u.updateSystemAttributes(user);
-				} catch (DfException e) {
-					throw new CMSMFException(String.format("Failed to update the system attributes for user [%s]",
-						actualUser), e);
-				}
-			}
-
-			@Override
-			public boolean closeBatch(boolean ok) throws CMSMFException {
-				return true;
-			}
-		});
 	}
 
 	@Override

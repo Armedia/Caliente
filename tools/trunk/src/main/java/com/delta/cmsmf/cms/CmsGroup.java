@@ -290,7 +290,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				user.save();
 				// Update the system attributes, if we can
 				try {
-					restoreUserSystemAttributes(user, context);
+					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
 						.warn(
