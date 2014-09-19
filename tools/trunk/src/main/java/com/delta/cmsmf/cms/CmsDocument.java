@@ -42,7 +42,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsDocument extends CmsObject<IDfDocument> {
+public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	private static final String TARGET_PATHS = "targetPaths";
 	private static final String TARGET_PARENTS = "targetParents";
@@ -184,7 +184,7 @@ public class CmsDocument extends CmsObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
 			// If we found no match via path, then we can't locate a match at all and must assume

@@ -7,17 +7,14 @@ package com.delta.cmsmf.cms;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
@@ -26,19 +23,14 @@ import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
-import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
-import com.documentum.fc.client.IDfPermit;
-import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
-import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -53,89 +45,6 @@ import com.documentum.fc.common.IDfValue;
 public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
-
-	private static final Collection<String> NO_PERMITS = Collections.emptySet();
-
-	protected final class PermitDelta {
-		private final String objectId;
-		private final IDfPermit oldPermit;
-		private final IDfPermit newPermit;
-		private final Collection<IDfPermit> newXPermit;
-
-		public PermitDelta(IDfSysObject object, int newPermission, String... newXPermits) throws DfException {
-			this(object, newPermission, (newXPermits == null ? CmsObject.NO_PERMITS : Arrays.asList(newXPermits)));
-		}
-
-		public PermitDelta(IDfSysObject object, int newPermission, Collection<String> newXPermits) throws DfException {
-			this.objectId = object.getObjectId().getId();
-			final String userName = object.getSession().getLoginUserName();
-
-			// Does it have the required access permission?
-			int oldPermission = object.getPermit();
-			if (oldPermission < newPermission) {
-				this.oldPermit = new DfPermit();
-				this.oldPermit.setAccessorName(userName);
-				this.oldPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
-				this.oldPermit.setPermitValue(DfUtils.decodeAccessPermission(oldPermission));
-				this.newPermit = new DfPermit();
-				this.newPermit.setAccessorName(userName);
-				this.newPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
-				this.newPermit.setPermitValue(DfUtils.decodeAccessPermission(newPermission));
-			} else {
-				this.oldPermit = null;
-				this.newPermit = null;
-			}
-
-			Set<String> s = new HashSet<String>(StrTokenizer.getCSVInstance(object.getXPermitList()).getTokenList());
-			List<IDfPermit> l = new ArrayList<IDfPermit>();
-			for (String x : newXPermits) {
-				if (x == null) {
-					continue;
-				}
-				if (!s.contains(x)) {
-					IDfPermit xpermit = new DfPermit();
-					xpermit.setAccessorName(userName);
-					xpermit.setPermitType(IDfPermitType.EXTENDED_PERMIT);
-					xpermit.setPermitValue(x);
-					l.add(xpermit);
-				}
-			}
-			this.newXPermit = Collections.unmodifiableCollection(l);
-		}
-
-		public String getObjectId() {
-			return this.objectId;
-		}
-
-		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
-			if (!Tools.equals(this.objectId, object.getObjectId().getId())) { throw new DfException(
-				String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId, object
-					.getObjectId().getId())); }
-			boolean ret = false;
-			IDfPermit access = (grant ? this.newPermit : this.oldPermit);
-			if (access != null) {
-				object.grantPermit(access);
-				ret = true;
-			}
-			for (IDfPermit p : this.newXPermit) {
-				if (grant) {
-					object.grantPermit(p);
-				} else {
-					object.revokePermit(p);
-				}
-				ret = true;
-			}
-			return ret;
-		}
-
-		public boolean grant(IDfSysObject object) throws DfException {
-			return apply(object, true);
-		}
-
-		public boolean revoke(IDfSysObject object) throws DfException {
-			return apply(object, false);
-		}
-	}
 
 	public static final class SaveResult {
 		private final CmsImportResult cmsImportResult;
@@ -191,7 +100,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -429,6 +338,22 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		throws DfException, CMSMFException {
 	}
 
+	protected boolean isTransitoryObject(T object) throws DfException, CMSMFException {
+		return false;
+	}
+
+	protected void prepareOperation(T object) throws DfException, CMSMFException {
+	}
+
+	protected IDfId persistChanges(T object, CmsTransferContext context) throws DfException, CMSMFException {
+		IDfId newId = object.getObjectId();
+		object.save();
+		return newId;
+	}
+
+	protected void finalizeOperation(T sysObject) throws DfException, CMSMFException {
+	}
+
 	public final SaveResult saveToCMS(CmsTransferContext context) throws DfException, CMSMFException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 
@@ -437,9 +362,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 		// We assume the worst, out of the gate
 		IDfLocalTransaction localTx = null;
-		boolean mustFreeze = false;
-		boolean mustImmute = false;
-		IDfSysObject sysObject = null;
 		final IDfSession session = context.getSession();
 		T object = null;
 		try {
@@ -459,14 +381,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				// Create a new object
 				object = newObject(context);
 				cmsImportResult = CmsImportResult.CREATED;
-				final boolean checkOut;
-				if (object instanceof IDfSysObject) {
-					sysObject = IDfSysObject.class.cast(object);
-					checkOut = sysObject.isCheckedOut();
-				} else {
-					checkOut = false;
-				}
-				if (!checkOut) {
+				if (!isTransitoryObject(object)) {
 					// DO NOT override mappings...we don't know the new object's ID until checkin is
 					// completed
 					context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
@@ -485,48 +400,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					return new SaveResult(CmsImportResult.DUPLICATE, object.getObjectId().getId());
 				}
 				cmsImportResult = CmsImportResult.UPDATED;
-				if (object instanceof IDfSysObject) {
-					sysObject = IDfSysObject.class.cast(object);
-				}
 			}
 
-			// Apparently, this must happen for both new AND old objects...
-			if (sysObject != null) {
-				if (sysObject.isFrozen()) {
-					mustFreeze = true;
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Clearing frozen status from [%s](%s)", this.label, this.id));
-					}
-					sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, false);
-					if (!sysObject.isCheckedOut()) {
-						sysObject.save();
-					}
-				}
-				if (sysObject.isImmutable()) {
-					mustImmute = true;
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Clearing immutable status from [%s](%s)", this.label, this.id));
-					}
-					sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, false);
-					if (!sysObject.isCheckedOut()) {
-						sysObject.save();
-					}
-				}
-
-				CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
-				if (frozen != null) {
-					// We only copy over the "true" values - we don't override local frozen status
-					// if it's set to true, and the incoming value is false
-					mustFreeze |= frozen.getValue().asBoolean();
-				}
-				CmsAttribute immutable = getAttribute(CmsAttributes.R_IMMUTABLE_FLAG);
-				if (immutable != null) {
-					// We only copy over the "true" values - we don't override local immutable
-					// status if it's set to true, and the incoming value is false
-					mustImmute |= immutable.getValue().asBoolean();
-				}
-			}
-
+			prepareOperation(object);
 			prepareForConstruction(object, isNew, context);
 
 			if (!isNew) {
@@ -569,32 +445,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			}
 
 			finalizeConstruction(object, isNew, context);
-			final IDfId newId;
-			if ((sysObject != null) && sysObject.isCheckedOut()) {
-				StringBuilder versionLabels = new StringBuilder();
-				for (IDfValue v : getAttribute(CmsAttributes.R_VERSION_LABEL)) {
-					if (versionLabels.length() > 0) {
-						versionLabels.append(',');
-					}
-					versionLabels.append(v.asString());
-				}
-				String vl = versionLabels.toString();
-				newId = sysObject.checkin(false, vl);
-				this.log.info(String.format("Checked in %s [%s](%s) to CMS as versions [%s] (newId=%s)", this.type,
-					this.label, this.id, vl, newId.getId()));
-				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id, newId.getId());
-			} else {
-				newId = object.getObjectId();
-				object.save();
-			}
+			final IDfId newId = persistChanges(object, context);
 
 			if (!Tools.equals(object.getObjectId().getId(), newId.getId())) {
-				// The object has changed due to check-in, etc... so we pull the newly-checked-in
-				// object
+				// The object has changed... so we pull the newly-persisted object
 				object = castObject(session.getObject(newId));
-				if (object instanceof IDfSysObject) {
-					sysObject = IDfSysObject.class.cast(object);
-				}
 			}
 
 			if (postConstruction(object, isNew, context)) {
@@ -613,23 +468,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		} finally {
 			try {
 				if (ok) {
-					if (sysObject != null) {
-						if (mustImmute) {
-							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Setting immutability status to [%s](%s)", this.label,
-									this.id));
-							}
-							sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
-							sysObject.save();
-						}
-						if (mustFreeze) {
-							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Setting frozen status to [%s](%s)", this.label, this.id));
-							}
-							sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, true);
-							sysObject.save();
-						}
-					}
+					finalizeOperation(object);
 
 					// This has to be the last thing that happens, else some of the attributes won't
 					// take. There is no need to save() the object for this, as this is a direct
@@ -646,11 +485,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			} catch (DfException e) {
 				ok = false;
 				this.log
-				.error(
-					String
-					.format(
-						"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
-						this.label, this.id), e);
+					.error(
+						String
+							.format(
+								"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
+								this.label, this.id), e);
 			}
 			if (transOpen) {
 				if (ok) {
@@ -707,7 +546,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -733,7 +572,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	/**
@@ -747,16 +586,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
@@ -907,6 +746,27 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return success.get();
 	}
 
+	protected String generateSystemAttributesSQL(IDfPersistentObject object) throws DfException {
+
+		final String objType = object.getType().getName();
+		CmsAttribute attribute = getAttribute(CmsAttributes.R_MODIFY_DATE);
+		if (attribute == null) { return null; }
+
+		final IDfValue modifyDate = attribute.getValue();
+		String sql = "" //
+			+ "UPDATE %s_s SET " //
+			+ "       r_modify_date = %s " //
+			+ "       %s " //
+			+ " WHERE r_object_id = ''%s''";
+		String vstampFlag = "";
+		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
+		// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
+		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
+
+		return String.format(sql, objType, DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()),
+			vstampFlag, object.getObjectId().getId());
+	}
+
 	/**
 	 * Updates modify date attribute of an persistent object using execsql.
 	 *
@@ -915,91 +775,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private final boolean updateSystemAttributes(IDfPersistentObject object) throws DfException {
-		final String sqlStr;
-		if (object instanceof IDfSysObject) {
-			// IDfSysObject sysObject = IDfSysObject.class.cast(object);
-			final IDfSession session = object.getSession();
-
-			// prepare sql to be executed
-			CmsAttribute modifyDateAtt = getAttribute(CmsAttributes.R_MODIFY_DATE);
-			CmsAttribute modifierNameAtt = getAttribute(CmsAttributes.R_MODIFIER);
-			CmsAttribute creationDateAtt = getAttribute(CmsAttributes.R_CREATION_DATE);
-			CmsAttribute creatorNameAtt = getAttribute(CmsAttributes.R_CREATOR_NAME);
-			CmsAttribute deletedAtt = getAttribute(CmsAttributes.I_IS_DELETED);
-			CmsAttribute aclDomainAtt = getAttribute(CmsAttributes.ACL_DOMAIN);
-
-			// Important: REPLACE QUOTES!!
-
-			// Make sure we ALWAYS store this, even if it's "null"...default to the connected user
-			// if not set
-			String creatorName = creatorNameAtt.getValue().asString();
-			if (creatorName.length() == 0) {
-				creatorName = "${owner_name}";
-			}
-			creatorName = CmsMappingUtils.resolveSpecialUser(session, creatorName);
-			creatorName = creatorName.replaceAll("'", "''''");
-
-			String modifierName = modifierNameAtt.getValue().asString();
-			if (modifierName.length() == 0) {
-				modifierName = "${owner_name}";
-			}
-			modifierName = CmsMappingUtils.resolveSpecialUser(session, modifierName);
-			modifierName = modifierName.replaceAll("'", "''''");
-
-			String aclDomain = aclDomainAtt.getValue().asString();
-			if (aclDomain.length() == 0) {
-				aclDomain = "${owner_name}";
-			}
-			aclDomain = CmsMappingUtils.resolveSpecialUser(session, aclDomain);
-			aclDomain = aclDomain.replaceAll("'", "''''");
-
-			String aclName = getAttribute(CmsAttributes.ACL_NAME).getValue().asString();
-
-			IDfTime modifyDate = modifyDateAtt.getValue().asTime();
-			IDfTime creationDate = creationDateAtt.getValue().asTime();
-
-			String sql = "" //
-				+ "UPDATE dm_sysobject_s SET " //
-				+ "       r_modify_date = %s, " //
-				+ "       r_modifier = ''%s'', " //
-				+ "       r_creation_date = %s, " //
-				+ "       r_creator_name = ''%s'', " //
-				+ "       acl_name = ''%s'', " //
-				+ "       acl_domain = ''%s'', " //
-				+ "       i_is_deleted = %d " //
-				+ "       %s " //
-				+ " WHERE r_object_id = ''%s''";
-			String vstampFlag = "";
-			// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
-			// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
-			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
-			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
-				.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-					.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
-
-		} else {
-
-			final String objType = object.getType().getName();
-			CmsAttribute attribute = getAttribute(CmsAttributes.R_MODIFY_DATE);
-			if (attribute == null) { return true; }
-
-			final IDfValue modifyDate = attribute.getValue();
-			String sql = "" //
-				+ "UPDATE %s_s SET " //
-				+ "       r_modify_date = %s " //
-				+ "       %s " //
-				+ " WHERE r_object_id = ''%s''";
-			String vstampFlag = "";
-			// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
-			// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
-			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
-
-			sqlStr = String.format(sql, objType,
-				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-				.getObjectId().getId());
-
-		}
+	private boolean updateSystemAttributes(IDfPersistentObject object) throws DfException {
+		final String sqlStr = generateSystemAttributesSQL(object);
+		if (sqlStr == null) { return true; }
 		return runExecSQL(object.getSession(), sqlStr);
 	}
 
@@ -1029,21 +807,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		final String objId = obj.getObjectId().getId();
 		runExecSQL(obj.getSession(),
 			String.format("UPDATE %s SET i_vstamp = %d WHERE r_object_id = ''%s''", tableName, vStamp, objId));
-	}
-
-	protected void updateIsDeletedAttribute(IDfSession session, List<String> objectIds) throws DfException {
-		// Prepare list of object ids for IN clause
-		StringBuilder b = new StringBuilder();
-		for (String id : objectIds) {
-			if (b.length() > 0) {
-				b.append(", ");
-			}
-			b.append("''").append(id).append("''");
-		}
-
-		// prepare sql to be executed
-		String sql = "UPDATE dm_sysobject_s SET i_is_deleted = 1 WHERE r_object_id IN ( %s )";
-		runExecSQL(session, String.format(sql, b));
 	}
 
 	/**
@@ -1079,31 +842,6 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
-	}
-
-	/**
-	 * Removes all links of an object in CMS.
-	 *
-	 * @param object
-	 *            the DFC sysObject who is being unlinked
-	 * @throws DfException
-	 *             Signals that Dctm Server error has occurred.
-	 */
-	protected final Set<String> removeAllLinks(IDfSysObject object) throws DfException {
-		Set<String> ret = new HashSet<String>();
-		int folderIdCount = object.getFolderIdCount();
-		for (int i = 0; i < folderIdCount; i++) {
-			// We have to do it backwards, instead of forwards, because it's
-			// faster. Otherwise, when we remove an "earlier" element, the ones
-			// down the list have to be shifted "forward" by DCTM, and that takes
-			// time, which we try to avoid by being smart...
-			String id = object.getFolderId(folderIdCount - i - 1).getId();
-			if (!ret.contains(id)) {
-				ret.add(id);
-			}
-			object.unlink(id);
-		}
-		return ret;
 	}
 
 	@Override

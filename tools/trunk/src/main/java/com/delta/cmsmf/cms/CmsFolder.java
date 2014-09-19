@@ -32,7 +32,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsFolder extends CmsObject<IDfFolder> {
+public class CmsFolder extends CmsSysObject<IDfFolder> {
 
 	private static final String USERS_WITH_DEFAULT_FOLDER = "usersWithDefaultFolder";
 	private static final String USERS_DEFAULT_FOLDER_PATHS = "usersDefaultFolderPaths";
@@ -129,7 +129,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
+				.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -331,10 +331,10 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								folder.getObjectId().getId(), getLabel(), actualUser));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							folder.getObjectId().getId(), getLabel(), actualUser));
 					continue;
 				}
 
@@ -351,11 +351,11 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-									actualUser, getLabel()), e);
+					.warn(
+						String
+						.format(
+							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+							actualUser, getLabel()), e);
 				}
 			}
 		}
@@ -416,7 +416,7 @@ public class CmsFolder extends CmsObject<IDfFolder> {
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
 				"Found two different folders matching this folder's paths: [%s@%s] and [%s@%s]", existing.getObjectId()
-					.getId(), existingPath, current.getObjectId().getId(), currentPath));
+				.getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
 		return existing;
 	}
