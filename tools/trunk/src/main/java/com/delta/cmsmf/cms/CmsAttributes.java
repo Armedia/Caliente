@@ -113,6 +113,21 @@ public class CmsAttributes {
 	public static final String USERS_NAMES = "users_names";
 
 	// dm_acl Attributes
+	/** The acl_class attribute of dm_acl. */
+	public static final String ACL_CLASS = "acl_class";
+
+	/** The globally_managed attribute of dm_acl. */
+	public static final String GLOBALLY_MANAGED = "globally_managed";
+
+	/** The i_has_access_restrictions attribute of dm_acl. */
+	public static final String I_HAS_ACCESS_RESTRICTIONS = "i_has_access_restrictions";
+
+	/** The i_has_required_groups attribute of dm_acl. */
+	public static final String I_HAS_REQUIRED_GROUPS = "i_has_required_groups";
+
+	/** The i_has_required_group_set attribute of dm_acl. */
+	public static final String I_HAS_REQUIRED_GROUP_SET = "i_has_required_group_set";
+
 	/** The r_accessor_name attribute of dm_acl. */
 	public static final String R_ACCESSOR_NAME = "r_accessor_name";
 
@@ -122,8 +137,14 @@ public class CmsAttributes {
 	/** The r_accessor_xpermit attribute of dm_acl. */
 	public static final String R_ACCESSOR_XPERMIT = "r_accessor_xpermit";
 
+	/** The r_application_permit attribute of dm_acl. */
+	public static final String R_APPLICATION_PERMIT = "r_application_permit";
+
 	/** The r_is_group attribute of dm_acl. */
 	public static final String R_IS_GROUP = "r_is_group";
+
+	/** The r_permit_type attribute of dm_acl. */
+	public static final String R_PERMIT_TYPE = "r_permit_type";
 
 	/** The accessor_name_dm_world attribute of dm_acl. */
 	public static final String ACCESSOR_NAME_DM_WORLD = "dm_world";

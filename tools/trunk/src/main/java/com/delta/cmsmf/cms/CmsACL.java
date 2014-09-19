@@ -5,7 +5,10 @@
 package com.delta.cmsmf.cms;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfACL;
@@ -24,6 +27,75 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class CmsACL extends CmsObject<IDfACL> {
+
+	private static class Permit implements Comparable<Permit> {
+		private final String name;
+		private final int permit;
+		private final int xpermit;
+		private final String appPermit;
+		private final boolean group;
+		private final int permitType;
+
+		private Permit(IDfACL acl, int pos) throws DfException {
+			this.name = acl.getAccessorName(pos);
+			this.permit = acl.getAccessorPermit(pos);
+			this.xpermit = acl.getAccessorXPermit(pos);
+			this.appPermit = acl.getAccessorApplicationPermit(pos);
+			this.group = acl.isGroup(pos);
+			this.permitType = acl.getAccessorPermitType(pos);
+		}
+
+		private Permit(CmsACL acl, int pos) {
+			CmsAttribute att = null;
+			att = acl.getAttribute(CmsAttributes.R_ACCESSOR_NAME);
+			this.name = att.getValue(pos).asString();
+			att = acl.getAttribute(CmsAttributes.R_ACCESSOR_PERMIT);
+			this.permit = att.getValue(pos).asInteger();
+			att = acl.getAttribute(CmsAttributes.R_ACCESSOR_XPERMIT);
+			this.xpermit = att.getValue(pos).asInteger();
+			att = acl.getAttribute(CmsAttributes.R_APPLICATION_PERMIT);
+			this.appPermit = att.getValue(pos).asString();
+			att = acl.getAttribute(CmsAttributes.R_IS_GROUP);
+			this.group = att.getValue(pos).asBoolean();
+			att = acl.getAttribute(CmsAttributes.R_PERMIT_TYPE);
+			this.permitType = att.getValue(pos).asInteger();
+		}
+
+		@Override
+		public int hashCode() {
+			return Tools.hashTool(this, null, this.name, this.permit, this.xpermit, this.appPermit, this.group,
+				this.permitType);
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (!Tools.baseEquals(this, o)) { return false; }
+			Permit other = Permit.class.cast(o);
+			if (!Tools.equals(this.name, other.name)) { return false; }
+			if (this.permit != other.permit) { return false; }
+			if (this.xpermit != other.xpermit) { return false; }
+			if (!Tools.equals(this.appPermit, other.appPermit)) { return false; }
+			if (this.group != other.group) { return false; }
+			if (this.permitType != other.permitType) { return false; }
+			return true;
+		}
+
+		// This isn't really required, but it will help if we need to debug
+		@Override
+		public int compareTo(Permit o) {
+			if (o == null) { return 1; }
+			if (this.permitType != o.permitType) { return this.permitType - o.permitType; }
+			if (!this.group && o.group) { return -1; }
+			if (this.group && !o.group) { return 1; }
+			return Tools.compare(this.name, o.name);
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Permit [name=%s, permit=%s, xpermit=%s, appPermit=%s, group=%s, permitType=%s]",
+				this.name, this.permit, this.xpermit, this.appPermit, this.group, this.permitType);
+		}
+	}
 
 	private static final String USERS_WITH_DEFAULT_ACL = "usersWithDefaultACL";
 	private static final String ACCESSORS = "accessors";
@@ -67,6 +139,70 @@ public class CmsACL extends CmsObject<IDfACL> {
 	@Override
 	protected String calculateLabel(IDfACL acl) throws DfException {
 		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
+	}
+
+	@Override
+	protected IDfACL locateInCms(CmsTransferContext ctx) throws DfException {
+		final IDfValue ownerName = getAttribute(CmsAttributes.OWNER_NAME).getValue();
+		final IDfValue objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
+		final IDfSession session = ctx.getSession();
+		return session.getACL(ownerName != null ? CmsMappingUtils.resolveSpecialUser(session, ownerName.asString())
+			: null, objectName.asString());
+	}
+
+	@Override
+	protected boolean isSameObject(IDfACL acl) throws DfException {
+		// TODO: Fix this comparison for ACL-specific lookups
+		// ACL's don't have a modification date, so we actually have to compare them
+		// if this is a potential match, then it was found using domain and object name,
+		// so we don't need to check those two, but we do need to check the permissions
+		// granted to see if they match. In particular, the target ACL may be a superset
+		// of the one we're trying to bring in on top of it, but never a subset.
+		CmsAttribute att = null;
+
+		att = getAttribute(CmsAttributes.ACL_CLASS);
+		if (att.getValue().asInteger() != acl.getACLClass()) { return false; }
+
+		att = getAttribute(CmsAttributes.GLOBALLY_MANAGED);
+		if (att.getValue().asBoolean() != acl.isGloballyManaged()) { return false; }
+
+		att = getAttribute(CmsAttributes.I_HAS_ACCESS_RESTRICTIONS);
+		if (att.getValue().asBoolean() != acl.getBoolean(att.getName())) { return false; }
+
+		att = getAttribute(CmsAttributes.I_HAS_REQUIRED_GROUPS);
+		if (att.getValue().asBoolean() != acl.getBoolean(att.getName())) { return false; }
+
+		att = getAttribute(CmsAttributes.I_HAS_REQUIRED_GROUP_SET);
+		if (att.getValue().asBoolean() != acl.getBoolean(att.getName())) { return false; }
+
+		// Now, do the accessors
+		att = getAttribute(CmsAttributes.R_ACCESSOR_NAME);
+		final int accessorCount = acl.getAccessorCount();
+		if (accessorCount < att.getValueCount()) {
+			// If the target has the same or more elements as the ones
+			// we're bringin in, then we have to compare the sets
+			return false;
+		}
+
+		Set<Permit> existing = new HashSet<Permit>();
+		Set<Permit> incoming = new HashSet<Permit>();
+		for (int i = 0; i < accessorCount; i++) {
+			existing.add(new Permit(acl, i));
+			incoming.add(new Permit(this, i));
+		}
+
+		// The ACLs are considered the same only if the existing set contains
+		// every element in the incoming set, and possibly more. That means
+		// that we subtract the existing permissions from incoming, and if
+		// the resulting set is empty, then this is the same ACL and doesn't need
+		// to be updated.
+		incoming.removeAll(existing);
+
+		boolean ret = incoming.isEmpty();
+		if (!ret) {
+			incoming.size();
+		}
+		return ret;
 	}
 
 	@Override
@@ -231,14 +367,5 @@ public class CmsACL extends CmsObject<IDfACL> {
 			// TODO: How to preserve permit types?
 			acl.grant(name, perm, xperm);
 		}
-	}
-
-	@Override
-	protected IDfACL locateInCms(CmsTransferContext ctx) throws DfException {
-		final IDfValue ownerName = getAttribute(CmsAttributes.OWNER_NAME).getValue();
-		final IDfValue objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
-		final IDfSession session = ctx.getSession();
-		return session.getACL(ownerName != null ? CmsMappingUtils.resolveSpecialUser(session, ownerName.asString())
-			: null, objectName.asString());
 	}
 }
