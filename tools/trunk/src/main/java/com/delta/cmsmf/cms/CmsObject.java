@@ -191,11 +191,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
-	public void load(ResultSet rs) throws SQLException {
+	public final void load(ResultSet rs) throws SQLException {
 		this.id = rs.getString("object_id");
 		this.batchId = rs.getString("batch_id");
 		this.label = rs.getString("object_label");
@@ -204,7 +204,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.properties.clear();
 	}
 
-	public void loadAttributes(ResultSet rs) throws SQLException {
+	public final void loadAttributes(ResultSet rs) throws SQLException {
 		boolean ok = false;
 		try {
 			this.attributes.clear();
@@ -220,7 +220,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		}
 	}
 
-	public void loadProperties(ResultSet rs) throws SQLException {
+	public final void loadProperties(ResultSet rs) throws SQLException {
 		boolean ok = false;
 		try {
 			this.properties.clear();
@@ -646,11 +646,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			} catch (DfException e) {
 				ok = false;
 				this.log
-					.error(
-						String
-							.format(
-								"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
-								this.label, this.id), e);
+				.error(
+					String
+					.format(
+						"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
+						this.label, this.id), e);
 			}
 			if (transOpen) {
 				if (ok) {
@@ -707,7 +707,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -733,7 +733,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 	}
 
 	/**
@@ -747,16 +747,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		return false;
 	}
 
@@ -976,7 +976,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 			sqlStr = String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 				.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-				.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
+					.asBoolean() ? 1 : 0), vstampFlag, object.getObjectId().getId());
 
 		} else {
 
@@ -997,7 +997,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			sqlStr = String.format(sql, objType,
 				DfUtils.generateSqlDateClause(modifyDate.asTime(), object.getSession()), vstampFlag, object
-					.getObjectId().getId());
+				.getObjectId().getId());
 
 		}
 		return runExecSQL(object.getSession(), sqlStr);
