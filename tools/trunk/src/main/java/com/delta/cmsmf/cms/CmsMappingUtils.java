@@ -56,9 +56,25 @@ public class CmsMappingUtils {
 	public static List<IDfValue> substituteSpecialUsers(IDfTypedObject object, Collection<IDfValue> values)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
+		return CmsMappingUtils.substituteSpecialUsers(object.getSession(), values);
+	}
+
+	public static String substituteSpecialUsers(IDfSession session, String user) throws DfException {
+		if (user == null) { throw new IllegalArgumentException("Must provide a user to substitute"); }
+		return CmsMappingUtils.substituteSpecialUsers(session, DfValueFactory.newStringValue(user)).asString();
+	}
+
+	public static IDfValue substituteSpecialUsers(IDfSession session, IDfValue value) throws DfException {
+		if (value == null) { throw new IllegalArgumentException("Must provide a value to substitute"); }
+		return CmsMappingUtils.substituteSpecialUsers(session, Collections.singleton(value)).get(0);
+	}
+
+	public static List<IDfValue> substituteSpecialUsers(IDfSession session, Collection<IDfValue> values)
+		throws DfException {
+		if (session == null) { throw new IllegalArgumentException(
+			"Must provide a session to calculate the mappings from"); }
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
 		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
-		IDfSession session = object.getSession();
 		IDfTypedObject[] srcObjects = {
 			session.getDocbaseConfig(), session.getServerConfig()
 		};
