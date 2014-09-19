@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
@@ -325,14 +327,32 @@ public class CmsACL extends CmsObject<IDfACL> {
 		final IDfList existingPermissions = acl.getPermissions();
 		final int existingPermissionCount = existingPermissions.getCount();
 		for (int i = 0; i < existingPermissionCount; i++) {
-			acl.revokePermit(IDfPermit.class.cast(existingPermissions.get(i)));
+			IDfPermit permit = IDfPermit.class.cast(existingPermissions.get(i));
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("PERMIT REVOKED on [%s]: [%s|%d|%d (%s)]", getLabel(),
+					permit.getAccessorName(), permit.getPermitType(), permit.getPermitValueInt(),
+					permit.getPermitValueString()));
+			}
+			acl.revokePermit(permit);
 		}
 
 		// Now, apply the new permissions
 		CmsProperty accessors = getProperty(CmsACL.ACCESSORS);
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(String.format("[%s]: %s", getLabel(), accessors));
+		}
 		CmsProperty permissions = getProperty(CmsACL.REGULAR_PERMISSIONS);
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(String.format("[%s]: %s", getLabel(), permissions));
+		}
 		CmsProperty extended = getProperty(CmsACL.EXTENDED_PERMISSIONS);
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(String.format("[%s]: %s", getLabel(), extended));
+		}
 		CmsProperty accessorIsGroup = getProperty(CmsACL.ACCESSOR_IS_GROUP);
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(String.format("[%s]: %s", getLabel(), accessorIsGroup));
+		}
 		final int accessorCount = accessors.getValueCount();
 		IDfSession session = acl.getSession();
 		for (int i = 0; i < accessorCount; i++) {
@@ -365,7 +385,15 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 			// TODO: How to support copying over application permissions?
 			// TODO: How to preserve permit types?
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("PERMIT GRANTED on [%s]: [%s|%d|%s]", getLabel(), name, perm, xperm));
+			}
 			acl.grant(name, perm, xperm);
+			if (StringUtils.isBlank(xperm)) {
+				// Default permits will be added - this is not acceptable!! Revoke them manually
+				acl.revoke(name, IDfACL.DF_XPERMIT_EXECUTE_PROC_STR);
+				acl.revoke(name, IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+			}
 		}
 	}
 }
