@@ -23,6 +23,7 @@ import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
+import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
@@ -271,7 +272,7 @@ public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> 
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 			.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-				.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
+			.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
 	}
 
 	/**
@@ -297,5 +298,78 @@ public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> 
 			object.unlink(id);
 		}
 		return ret;
+	}
+
+	protected boolean isReference() {
+		return getAttribute(CmsAttributes.I_IS_REFERENCE).getValue().asBoolean();
+	}
+
+	protected abstract Collection<IDfValue> getTargetPaths() throws DfException, CMSMFException;
+
+	protected T locateExistingByPath(CmsTransferContext ctx) throws CMSMFException, DfException {
+		final IDfSession session = ctx.getSession();
+		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
+		final String quotedDocumentName = documentName.replace("'", "''");
+
+		final String dqlBase = String.format("%s (ALL) where object_name = '%s' and folder('%%s')", getSubtype(),
+			quotedDocumentName);
+
+		final boolean seeksReference = isReference();
+		String existingPath = null;
+		T existing = null;
+		final IDfType type = session.getType(getSubtype());
+		final Class<T> dfClass = getDfClass();
+		for (IDfValue p : getTargetPaths()) {
+			final String dql = String.format(dqlBase, p.asString());
+			final String currentPath = String.format("%s/%s", p.asString(), documentName);
+			IDfPersistentObject current = session.getObjectByQualification(dql);
+			if (current == null) {
+				// No match, we're good...
+				continue;
+			}
+
+			// Verify hierarchy
+			if (!current.getType().isTypeOf(type.getName())) {
+				// Not a document...we have a problem
+				throw new CMSMFException(String.format(
+					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
+					getSubtype(), getLabel(), getSubtype(), currentPath, current.getType().getName(), current
+						.getObjectId().getId()));
+			}
+
+			T currentObj = dfClass.cast(current);
+			if (currentObj.isReference() != seeksReference) {
+				// The target document's reference flag is different from ours...problem!
+				throw new CMSMFException(String.format(
+					"Reference flag mismatch between objects. The [%s] %s collides with a %sreference at [%s] (%s:%s)",
+					getLabel(), getSubtype(), (seeksReference ? "non-" : ""), currentPath, current.getType().getName(),
+					current.getObjectId().getId()));
+			}
+
+			if (existing == null) {
+				// First match, keep track of it
+				existing = currentObj;
+				existingPath = currentPath;
+				continue;
+			}
+
+			// Second match, is it the same as the first?
+			if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
+				// Same as the first - we have no issue here
+				continue;
+			}
+
+			// Not the same, this is a problem
+			throw new CMSMFException(String.format(
+				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]", getLabel(),
+				existing.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+		}
+
+		return existing;
+	}
+
+	@Override
+	protected T locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
+		return locateExistingByPath(ctx);
 	}
 }

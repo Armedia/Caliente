@@ -4,17 +4,18 @@
 
 package com.delta.cmsmf.cms;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfACL;
@@ -23,6 +24,7 @@ import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
@@ -129,7 +131,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-				.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
+					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -232,8 +234,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 
 		// Only do the linking/unlinking for non-cabinets
 		Set<String> actualPaths = new TreeSet<String>();
-		if (!"dm_cabinet".equals(getSubtype())) {
-
+		if (!folder.getType().isTypeOf("dm_cabinet")) {
 			Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
 			int oldParentCount = folder.getFolderPathCount();
 			for (int i = 0; i < oldParentCount; i++) {
@@ -331,10 +332,10 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							folder.getObjectId().getId(), getLabel(), actualUser));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								folder.getObjectId().getId(), getLabel(), actualUser));
 					continue;
 				}
 
@@ -351,11 +352,11 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-							actualUser, getLabel()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+									actualUser, getLabel()), e);
 				}
 			}
 		}
@@ -390,34 +391,27 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 	}
 
 	@Override
-	protected IDfFolder locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
-		IDfFolder existing = null;
-		String existingPath = null;
-		final IDfSession session = ctx.getSession();
-		for (IDfValue path : getAttribute(CmsAttributes.R_FOLDER_PATH)) {
-			String currentPath = path.asString();
-			IDfFolder current = session.getFolderByPath(currentPath);
-			if (current == null) {
-				// No match, we're good...
-				continue;
+	protected Collection<IDfValue> getTargetPaths() {
+		Collection<IDfValue> paths = getAttribute(CmsAttributes.R_FOLDER_PATH).getValues();
+		List<IDfValue> ret = new ArrayList<IDfValue>(paths.size());
+		for (IDfValue v : paths) {
+			String p = v.asString();
+			// Remove everything after the last slash
+			p = p.substring(0, p.lastIndexOf('/'));
+			if (p.length() > 0) {
+				ret.add(DfValueFactory.newStringValue(p));
 			}
-			// We have a match...
-			if (existing == null) {
-				// First match, keep track of it
-				existing = current;
-				existingPath = currentPath;
-				continue;
-			}
-			// Second match, is it the same as the first?
-			if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
-				// Same as the first - we have an issue here
-				continue;
-			}
-			// Not the same, this is a problem
-			throw new CMSMFException(String.format(
-				"Found two different folders matching this folder's paths: [%s@%s] and [%s@%s]", existing.getObjectId()
-				.getId(), existingPath, current.getObjectId().getId(), currentPath));
 		}
-		return existing;
+		return ret;
+	}
+
+	@Override
+	protected IDfFolder locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
+		// If I'm a cabinet, then find it by cabinet name
+		IDfSession session = ctx.getSession();
+		IDfType t = session.getType(getSubtype());
+		if (t.isTypeOf("dm_cabinet")) { return session.getFolderByPath(String.format("/%s",
+			getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString())); }
+		return super.locateInCms(ctx);
 	}
 }

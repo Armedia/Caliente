@@ -146,68 +146,9 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 	}
 
-	private boolean isReference() {
-		return getAttribute(CmsAttributes.I_IS_REFERENCE).getValue().asBoolean();
-	}
-
-	private IDfDocument locateExistingByPath(CmsTransferContext ctx) throws CMSMFException, DfException {
-		final IDfSession session = ctx.getSession();
-		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
-		final String quotedDocumentName = documentName.replace("'", "''");
-
-		final String dqlBase = String.format("%s (ALL) where object_name = '%s' and folder('%%s')", getSubtype(),
-			quotedDocumentName);
-
-		final boolean seeksReference = isReference();
-		String existingPath = null;
-		IDfDocument existing = null;
-		for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
-			final String dql = String.format(dqlBase, p.asString());
-			final String currentPath = String.format("%s/%s", p.asString(), documentName);
-			IDfPersistentObject current = session.getObjectByQualification(dql);
-			if (current == null) {
-				// No match, we're good...
-				continue;
-			}
-
-			if (!(current instanceof IDfDocument)) {
-				// Not a document...we have a problem
-				throw new CMSMFException(String.format(
-					"Found a non-document in one of the [%s] document's intended paths: [%s] = [%s:%s]", getLabel(),
-					currentPath, current.getType().getName(), current.getObjectId().getId()));
-			}
-
-			IDfDocument currentDoc = IDfDocument.class.cast(current);
-			if (currentDoc.isReference() != seeksReference) {
-				// The target document's reference flag is different from ours...problem!
-				throw new CMSMFException(
-					String
-						.format(
-							"Reference flag mismatch between documents. The [%s] document collides with a %sreference at [%s] (%s:%s)",
-							getLabel(), (seeksReference ? "non-" : ""), currentPath, current.getType().getName(),
-							current.getObjectId().getId()));
-			}
-
-			if (existing == null) {
-				// First match, keep track of it
-				existing = currentDoc;
-				existingPath = currentPath;
-				continue;
-			}
-
-			// Second match, is it the same as the first?
-			if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
-				// Same as the first - we have no issue here
-				continue;
-			}
-
-			// Not the same, this is a problem
-			throw new CMSMFException(String.format(
-				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]", getLabel(),
-				existing.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
-		}
-
-		return existing;
+	@Override
+	protected Collection<IDfValue> getTargetPaths() throws DfException, CMSMFException {
+		return getProperty(CmsDocument.TARGET_PATHS).getValues();
 	}
 
 	@Override
