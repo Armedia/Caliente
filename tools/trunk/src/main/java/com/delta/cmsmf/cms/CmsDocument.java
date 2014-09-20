@@ -33,6 +33,8 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfUser;
+import com.documentum.fc.client.distributed.IDfReference;
+import com.documentum.fc.client.distributed.impl.ReferenceFinder;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -144,6 +146,25 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(i)));
 			}
 		}
+
+		if (!document.isReference()) { return; }
+
+		// TODO: this is untidy - using an undocumented API??
+		IDfReference ref = ReferenceFinder.getForMirrorId(document.getObjectId(), session);
+		properties.add(new CmsProperty(CmsAttributes.BINDING_CONDITION, CmsDataType.DF_STRING, false, DfValueFactory
+			.newStringValue(ref.getBindingCondition())));
+		properties.add(new CmsProperty(CmsAttributes.BINDING_LABEL, CmsDataType.DF_STRING, false, DfValueFactory
+			.newStringValue(ref.getBindingLabel())));
+		properties.add(new CmsProperty(CmsAttributes.LOCAL_FOLDER_LINK, CmsDataType.DF_STRING, false, DfValueFactory
+			.newStringValue(ref.getLocalFolderLink())));
+		properties.add(new CmsProperty(CmsAttributes.REFERENCE_DB_NAME, CmsDataType.DF_STRING, false, DfValueFactory
+			.newStringValue(ref.getReferenceDbName())));
+		properties.add(new CmsProperty(CmsAttributes.REFERENCE_BY_ID, CmsDataType.DF_ID, false, DfValueFactory
+			.newIdValue(ref.getReferenceById())));
+		properties.add(new CmsProperty(CmsAttributes.REFERENCE_BY_NAME, CmsDataType.DF_STRING, false, DfValueFactory
+			.newStringValue(ref.getReferenceByName())));
+		properties.add(new CmsProperty(CmsAttributes.REFRESH_INTERVAL, CmsDataType.DF_INTEGER, false, DfValueFactory
+			.newIntValue(ref.getRefreshInterval())));
 	}
 
 	@Override
@@ -422,9 +443,9 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	private IDfDocument newReference(CmsTransferContext context) throws DfException, CMSMFException {
 		IDfPersistentObject target = null;
 		IDfSession session = context.getSession();
-		IDfValue referenceById = getAttribute(CmsAttributes.REFERENCE_BY_ID).getValue();
-		IDfValue bindingCondition = getAttribute(CmsAttributes.BINDING_CONDITION).getValue();
-		IDfValue bindingLabel = getAttribute(CmsAttributes.BINDING_LABEL).getValue();
+		IDfValue bindingCondition = getProperty(CmsAttributes.BINDING_CONDITION).getValue();
+		IDfValue bindingLabel = getProperty(CmsAttributes.BINDING_LABEL).getValue();
+		IDfValue referenceById = getProperty(CmsAttributes.REFERENCE_BY_ID).getValue();
 
 		target = session.getObject(referenceById.asId());
 		if (target == null) { throw new CMSMFException(String.format(
