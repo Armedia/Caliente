@@ -286,7 +286,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 
 		// We do nothing else for references, as we need nothing else
-		if (document.isReference()) { return; }
+		// if (document.isReference()) { return; }
 
 		// Export the object type
 		dependencyManager.persistRelatedObject(document.getType());
@@ -345,11 +345,13 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 		final IDfSession session = document.getSession();
 
+		/*
 		if (document.isReference()) {
 			// References need only this
 			dependencyManager.persistRelatedObject(document.getACL());
 			return;
 		}
+		 */
 
 		String owner = CmsMappingUtils.substituteSpecialUsers(session, document.getOwnerName());
 		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
@@ -415,21 +417,22 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	}
 
 	@Override
+	protected boolean isReference() {
+		// Turn this off, for now
+		// return super.isReference();
+		return false;
+	}
+
+	@Override
 	protected boolean isVersionable(IDfDocument object) throws DfException {
 		// TODO: Are references versionable, per-se?
 		return true;
 	}
 
 	@Override
-	protected boolean isShortConstructionCycle() {
-		// References require a modified algorithm...
-		return isReference();
-	}
-
-	@Override
 	protected IDfId persistChanges(IDfDocument document, CmsTransferContext context) throws DfException, CMSMFException {
 		// Apparently, references require no saving
-		if (document.isReference()) { return document.getObjectId(); }
+		if (isReference()) { return document.getObjectId(); }
 		return super.persistChanges(document, context);
 	}
 

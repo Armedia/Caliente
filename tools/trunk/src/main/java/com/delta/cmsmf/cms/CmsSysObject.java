@@ -272,7 +272,7 @@ public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> 
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 			.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-			.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
+				.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
 	}
 
 	/**
@@ -334,7 +334,7 @@ public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> 
 				throw new CMSMFException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
 					getSubtype(), getLabel(), getSubtype(), currentPath, current.getType().getName(), current
-						.getObjectId().getId()));
+					.getObjectId().getId()));
 			}
 
 			T currentObj = dfClass.cast(current);
@@ -371,5 +371,11 @@ public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> 
 	@Override
 	protected T locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
 		return locateExistingByPath(ctx);
+	}
+
+	@Override
+	protected boolean isShortConstructionCycle() {
+		// References require a modified algorithm...
+		return isReference();
 	}
 }
