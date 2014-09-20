@@ -4,8 +4,10 @@
 
 package com.delta.cmsmf.cms;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
@@ -282,11 +284,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-									user.getUserName(), getLabel()), e);
+					.warn(
+						String
+						.format(
+							"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+							user.getUserName(), getLabel()), e);
 				}
 			}
 		}
@@ -319,6 +321,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		}
 		final int accessorCount = accessors.getValueCount();
 		IDfSession session = acl.getSession();
+		List<IDfPermit> extendedPerms = new ArrayList<IDfPermit>(accessorCount);
 		DfPermit p = new DfPermit();
 		for (int i = 0; i < accessorCount; i++) {
 			String name = accessors.getValue(i).asString();
@@ -354,10 +357,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 					if (!exists) {
 						// This shouldn't be necessary
 						this.log
-							.warn(String
-								.format(
-									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-									getLabel(), name));
+						.warn(String
+							.format(
+								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+								getLabel(), name));
 						exists = (acl.getSession().getGroup(name) != null);
 						accessorType = "accessor (user or group)";
 					}
@@ -382,7 +385,30 @@ public class CmsACL extends CmsObject<IDfACL> {
 			p.setPermitType(type);
 			p.setPermitValue(perm);
 
+			if ((type == IDfPermit.DF_EXTENDED_PERMIT) || (type == IDfPermit.DF_EXTENDED_RESTRICTION)) {
+				extendedPerms.add(p);
+				// We need a new object...
+				p = new DfPermit();
+				continue;
+			}
+
 			acl.grantPermit(p);
+
+			// Sadly, these need to be revoked - see below
+			p.setPermitType(IDfPermit.DF_EXTENDED_PERMIT);
+			p.setPermitValue(IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+			acl.revokePermit(p);
+			p.setPermitValue(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR);
+			acl.revokePermit(p);
+		}
+		// We have to do it in two passes because EMC (god bless their souls) decided that it
+		// would be wise for additional extended permissions to be added automatically as part
+		// of adding regular permissions. So in the above cycle we defer the granting of those
+		// extended permissions so we can clean out the extended permissions that are added
+		// automatically (should they be granted), and proceed to grant the *CORRECT* extended
+		// permissions on a separate loop. Thank you, EMC.
+		for (IDfPermit permit : extendedPerms) {
+			acl.grantPermit(permit);
 		}
 	}
 }
