@@ -45,7 +45,7 @@ public class Constant {
 		+ "and not folder('/System', descend)"; // and r_modify_date >= DATE('XX_PLACE_HOLDER_XX')";
 
 	/** The file name and path of the properties file used in CMSMF application. */
-	public static final String FULLY_QUALIFIED_CONFIG_FILE_NAME = "cfg/default.properties";
+	public static final String FULLY_QUALIFIED_CONFIG_FILE_NAME = "cmsmf.properties";
 
 	// Time patterns
 	/** The date and time pattern commonly used in documentum repository. */
@@ -64,20 +64,6 @@ public class Constant {
 
 	/** The date pattern in which last export date is stored in the repository. EX: 12/15/2010 */
 	public static final String LAST_EXPORT_DATE_PATTERN = Constant.JAVA_SQL_DATETIME_PATTERN;
-
-	// Generic documentum Constants
-	/** The dm_dbo alias used for ACL domains for system ACLs. */
-	public static final String DM_DBO = "dm_dbo";
-
-	/** The Constant DM_SYSOBJECT_E_ALREADY_LINKED_MESSAGE_ID. */
-	public static final String DM_SYSOBJECT_E_ALREADY_LINKED_MESSAGE_ID = "DM_SYSOBJECT_E_ALREADY_LINKED";
-
-	/** The Constant DM_SYSOBJECT_E_LINK_PERMIT2_MESSAGE_ID. */
-	public static final String DM_SYSOBJECT_E_LINK_PERMIT2_MESSAGE_ID = "DM_SYSOBJECT_E_LINK_PERMIT2";
-
-	// CMSMF Lock File Names
-	public static final String EXPORT_LOCK_FILE_NAME = "_cmsmf_export.lck";
-	public static final String IMPORT_LOCK_FILE_NAME = "_cmsmf_import.lck";
 
 	// CMSMF Last Export Related constants
 	public static final String LAST_EXPORT_OBJ_NAME = "cmsmf_last_export";
