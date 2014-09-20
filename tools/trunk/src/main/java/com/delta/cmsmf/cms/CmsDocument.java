@@ -184,7 +184,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				// Not the same, this is a problem
 				throw new CMSMFException(String.format(
 					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-						.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
 			}
 
 			// If we found no match via path, then we can't locate a match at all and must assume
@@ -334,7 +334,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 		final IDfSession session = document.getSession();
 
-		String owner = CmsMappingUtils.resolveSpecialUser(session, document.getOwnerName());
+		String owner = CmsMappingUtils.substituteSpecialUsers(session, document.getOwnerName());
 		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
 			IDfUser user = session.getUser(document.getOwnerName());
 			if (user != null) {
