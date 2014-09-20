@@ -1,6 +1,15 @@
 package com.delta.cmsmf.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
 
@@ -175,8 +184,8 @@ public class CMSMFUtils {
 	 * @throws MessagingException
 	 *             the messaging exception
 	 */
-	public static void postMail(String smtpHost, String recipients[], String subject, String message, String from)
-		throws MessagingException {
+	public static void postMail(String smtpHost, Collection<String> recipients, String subject, String message,
+		String from) throws MessagingException {
 		boolean debug = false;
 
 		// Set the host smtp address
@@ -194,14 +203,16 @@ public class CMSMFUtils {
 		InternetAddress addressFrom = new InternetAddress(from);
 		msg.setFrom(addressFrom);
 
-		InternetAddress[] addressTo = new InternetAddress[recipients.length];
-		for (int i = 0; i < recipients.length; i++) {
-			addressTo[i] = new InternetAddress(recipients[i]);
+		InternetAddress[] addressTo = new InternetAddress[recipients.size()];
+		int i = 0;
+		for (String recipient : recipients) {
+			addressTo[i] = new InternetAddress(recipient);
+			i++;
 		}
 		msg.setRecipients(Message.RecipientType.TO, addressTo);
 
 		// Optional : You can also set your custom headers in the Email if you Want
-		msg.addHeader("X-CMSMFHeader", "CMSMF_INFO_HEADER");
+		msg.addHeader("X-CMSMFHeader", "CMSMF-Related");
 
 		// Setting the Subject and Content Type
 		msg.setSubject(subject);
@@ -223,17 +234,91 @@ public class CMSMFUtils {
 
 		String mailRecipients = Setting.MAIL_RECIPIENTS.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(mailRecipients);
-		String[] recipients = strTokenizer.getTokenArray();
+		Collection<String> recipients = strTokenizer.getTokenList();
+
+		if (recipients.isEmpty()) {
+			CMSMFUtils.log.warn("No recipients found for submitting the e-mail.");
+			return;
+		}
 
 		String mailFromAddress = Setting.MAIL_FROM_ADDX.getString();
+		if (StringUtils.isBlank(mailFromAddress)) {
+			CMSMFUtils.log.warn(String.format(
+				"No FROM address for the e-mail, the intended recipients (%s) won't receive an e-mail.", recipients));
+			return;
+		}
 
 		String smtpHostAddress = Setting.MAIL_SMTP_HOST.getString();
-
-		if ((recipients.length == 0) || StringUtils.isBlank(mailFromAddress) || StringUtils.isBlank(smtpHostAddress)) {
-			CMSMFUtils.log.error("Please check recipients, mail from address or smtp host address"
-				+ " properties in CMSMF_app.properties. Unable to post an email from CMSMF application.");
-		} else {
-			CMSMFUtils.postMail(smtpHostAddress, recipients, subject, message, mailFromAddress);
+		if (StringUtils.isBlank(smtpHostAddress)) {
+			CMSMFUtils.log.warn(String
+				.format("No HOST address to send the e-mail, the intended recipients (%s) won't receive an e-mail.",
+					recipients));
+			return;
 		}
+
+		int smtpHostPort = Setting.MAIL_SMTP_PORT.getInt();
+		if ((smtpHostPort < 1) || (smtpHostPort > 0xFFFF)) {
+			CMSMFUtils.log.warn(String.format(
+				"SMTP Port [%d] is out of range (1-65535), the intended recipients (%s) won't receive an e-mail",
+				smtpHostPort, recipients));
+			return;
+		}
+
+		if (!CMSMFUtils.validateSmtp(smtpHostAddress, smtpHostPort)) {
+			CMSMFUtils.log
+				.warn(String
+					.format(
+						"Host [%s] is not running an SMTP server on port 25. The intended recipients (%s) won't receive an e-mail.",
+						smtpHostAddress, recipients));
+			return;
+		}
+
+		if (CMSMFUtils.log.isTraceEnabled()) {
+			CMSMFUtils.log.info(String.format("Sending this message as [%s] via [%s], to %s:%n%n%s%n", mailFromAddress,
+				smtpHostAddress, recipients, message));
+		} else {
+			CMSMFUtils.log.info(String.format("Sending the message as [%s] via [%s], to %s", mailFromAddress,
+				smtpHostAddress, recipients));
+		}
+		CMSMFUtils.postMail(smtpHostAddress, recipients, subject, message, mailFromAddress);
+	}
+
+	private static boolean validateSmtp(String address, int port) {
+		Socket s = null;
+		try {
+			InetAddress addx = InetAddress.getByName(address);
+			s = new Socket(addx, 25);
+			OutputStream out = s.getOutputStream();
+			PrintWriter pw = new PrintWriter(out);
+			InputStream in = s.getInputStream();
+			BufferedReader r = new BufferedReader(new InputStreamReader(in));
+			// Read up...
+			while (r.readLine() != null) {
+				;
+			}
+			// Send the hello...
+			pw.printf("HELO%n");
+			while (true) {
+				String str = r.readLine();
+				if (str == null) {
+					break;
+				}
+				// Make sure the command elicited a "OK" response
+				if (str.matches("^\\s*250(\\s.*)?$")) { return true; }
+			}
+		} catch (Throwable t) {
+			if (CMSMFUtils.log.isTraceEnabled()) {
+				CMSMFUtils.log.trace("Exception raised trying to determine if localhost has an SMTP server running", t);
+			}
+		} finally {
+			if (s != null) {
+				try {
+					s.close();
+				} catch (IOException e) {
+					// do nothing
+				}
+			}
+		}
+		return false;
 	}
 }
