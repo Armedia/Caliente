@@ -1,10 +1,8 @@
 package com.delta.cmsmf.utils;
 
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -135,10 +133,7 @@ public class DfUtils {
 
 	public static String generateSqlDateClause(IDfTime date, IDfSession session) throws DfException {
 		// First, output to the "netural" format
-		Calendar c = Calendar.getInstance();
-		c.setTime(date.getDate());
-		c.setTimeZone(TimeZone.getTimeZone("UTC"));
-		final String dateString = DateFormatUtils.format(c, Constant.JAVA_SQL_DATETIME_PATTERN);
+		final String dateString = DateFormatUtils.formatUTC(date.getDate(), Constant.JAVA_SQL_DATETIME_PATTERN);
 		// Now, select the database format string
 		final String ret;
 		DbType dbType = DfUtils.getDbType(session);
