@@ -38,6 +38,29 @@ public class CmsAttributes {
 
 	/** The i_antecedent_id attribute of dm_sysobject. */
 	public static final String I_CHRONICLE_ID = "i_chronicle_id";
+	/** The i_is_reference attribute of dm_sysobject. */
+	public static final String I_IS_REFERENCE = "i_is_reference";
+
+	/** The binding_condition attribute of dm_sysobject. */
+	public static final String BINDING_CONDITION = "binding_condition";
+
+	/** The binding_label attribute of dm_sysobject. */
+	public static final String BINDING_LABEL = "binding_label";
+
+	/** The local_folder_link attribute of dm_sysobject. */
+	public static final String LOCAL_FOLDER_LINK = "local_folder_link";
+
+	/** The reference_db_name attribute of dm_sysobject. */
+	public static final String REFERENCE_DB_NAME = "reference_db_name";
+
+	/** The reference_by_id attribute of dm_sysobject. */
+	public static final String REFERENCE_BY_ID = "reference_by_id";
+
+	/** The reference_by_name attribute of dm_sysobject. */
+	public static final String REFERENCE_BY_NAME = "reference_by_name";
+
+	/** The refresh_interval attribute of dm_sysobject. */
+	public static final String REFRESH_INTERVAL = "refresh_interval";
 
 	/** The r_version_label attribute of dm_sysobject. */
 	public static final String R_VERSION_LABEL = "r_version_label";

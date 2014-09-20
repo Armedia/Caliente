@@ -83,4 +83,8 @@ public class Constant {
 	public static final String LAST_EXPORT_OBJ_NAME = "cmsmf_last_export";
 
 	public static final String RUN_NOW = "run_now";
+
+	public static final String EXACT_ID = "EXACT_ID";
+
+	public static final String VERSION_LABEL = "VERSION_LABEL";
 }

@@ -31,6 +31,7 @@ import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
@@ -64,6 +65,23 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			CmsAttributes.OWNER_NAME, CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_STRING,
 			CmsAttributes.ACL_DOMAIN, CmsAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_ID,
+			CmsAttributes.BINDING_CONDITION, CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_ID,
+			CmsAttributes.BINDING_LABEL, CmsAttributeHandlers.NO_IMPORT_HANDLER);
+
+		// We don't use these, but we should keep them from being copied over
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_ID,
+			CmsAttributes.LOCAL_FOLDER_LINK, CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_ID,
+			CmsAttributes.REFERENCE_DB_NAME, CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_ID,
+			CmsAttributes.REFERENCE_BY_ID, CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_ID,
+			CmsAttributes.REFERENCE_BY_NAME, CmsAttributeHandlers.NO_IMPORT_HANDLER);
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.DOCUMENT, CmsDataType.DF_ID,
+			CmsAttributes.REFRESH_INTERVAL, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 
 		CmsDocument.HANDLERS_READY = true;
 	}
@@ -128,9 +146,75 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 	}
 
+	private boolean isReference() {
+		return getAttribute(CmsAttributes.I_IS_REFERENCE).getValue().asBoolean();
+	}
+
+	private IDfDocument locateExistingByPath(CmsTransferContext ctx) throws CMSMFException, DfException {
+		final IDfSession session = ctx.getSession();
+		final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
+		final String quotedDocumentName = documentName.replace("'", "''");
+
+		final String dqlBase = String.format("%s (ALL) where object_name = '%s' and folder('%%s')", getSubtype(),
+			quotedDocumentName);
+
+		final boolean seeksReference = isReference();
+		String existingPath = null;
+		IDfDocument existing = null;
+		for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
+			final String dql = String.format(dqlBase, p.asString());
+			final String currentPath = String.format("%s/%s", p.asString(), documentName);
+			IDfPersistentObject current = session.getObjectByQualification(dql);
+			if (current == null) {
+				// No match, we're good...
+				continue;
+			}
+
+			if (!(current instanceof IDfDocument)) {
+				// Not a document...we have a problem
+				throw new CMSMFException(String.format(
+					"Found a non-document in one of the [%s] document's intended paths: [%s] = [%s:%s]", getLabel(),
+					currentPath, current.getType().getName(), current.getObjectId().getId()));
+			}
+
+			IDfDocument currentDoc = IDfDocument.class.cast(current);
+			if (currentDoc.isReference() != seeksReference) {
+				// The target document's reference flag is different from ours...problem!
+				throw new CMSMFException(
+					String
+						.format(
+							"Reference flag mismatch between documents. The [%s] document collides with a %sreference at [%s] (%s:%s)",
+							getLabel(), (seeksReference ? "non-" : ""), currentPath, current.getType().getName(),
+							current.getObjectId().getId()));
+			}
+
+			if (existing == null) {
+				// First match, keep track of it
+				existing = currentDoc;
+				existingPath = currentPath;
+				continue;
+			}
+
+			// Second match, is it the same as the first?
+			if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
+				// Same as the first - we have no issue here
+				continue;
+			}
+
+			// Not the same, this is a problem
+			throw new CMSMFException(String.format(
+				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]", getLabel(),
+				existing.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+		}
+
+		return existing;
+	}
+
 	@Override
 	protected IDfDocument locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
 		final IDfSession session = ctx.getSession();
+
+		if (isReference()) { return locateExistingByPath(ctx); }
 
 		// First things first: are we the root of the version hierarchy?
 		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
@@ -153,39 +237,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			// object is expected to take up on the target, and they must refer to either
 			// no existing object, or exactly one existing object. If there is an existing
 			// object, it's replaced by this one.
-			final String documentName = getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString();
-			String existingPath = null;
-			// We could do this "the hard way" by seeking out each parent by ID from TARGET_PARENTS,
-			// but we pre-calculated the target paths when we exported the object, so there...sue me
-			// :)
-			for (IDfValue p : getProperty(CmsDocument.TARGET_PATHS)) {
-				String currentPath = String.format("%s/%s", p.asString(), documentName);
-				IDfPersistentObject current = session.getObjectByPath(currentPath);
-				if (current == null) {
-					// No match, we're good...
-					continue;
-				}
-				if (!(current instanceof IDfDocument)) {
-					// Not a document, so we're not interested
-					continue;
-				}
-				IDfDocument currentDoc = IDfDocument.class.cast(current);
-				if (existing == null) {
-					// First match, keep track of it
-					existing = currentDoc;
-					existingPath = currentPath;
-					continue;
-				}
-				// Second match, is it the same as the first?
-				if (Tools.equals(existing.getObjectId().getId(), current.getObjectId().getId())) {
-					// Same as the first - we have an issue here
-					continue;
-				}
-				// Not the same, this is a problem
-				throw new CMSMFException(String.format(
-					"Found two different documents matching this document's paths: [%s@%s] and [%s@%s]", existing
-					.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
-			}
+			existing = locateExistingByPath(ctx);
 
 			// If we found no match via path, then we can't locate a match at all and must assume
 			// that this object is a new object
@@ -329,10 +381,13 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	protected void doPersistDependents(IDfDocument document, CmsTransferContext ctx,
 		CmsDependencyManager dependencyManager) throws DfException, CMSMFException {
 
-		// We do nothing else for references, as we need nothing else
-		if (document.isReference()) { return; }
-
 		final IDfSession session = document.getSession();
+
+		if (document.isReference()) {
+			// References need only this
+			dependencyManager.persistRelatedObject(document.getACL());
+			return;
+		}
 
 		String owner = CmsMappingUtils.substituteSpecialUsers(session, document.getOwnerName());
 		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
@@ -399,11 +454,63 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	@Override
 	protected boolean isVersionable(IDfDocument object) throws DfException {
+		// TODO: Are references versionable, per-se?
 		return true;
 	}
 
 	@Override
+	protected boolean isShortConstructionCycle() {
+		// References require a modified algorithm...
+		return isReference();
+	}
+
+	@Override
+	protected IDfId persistChanges(IDfDocument document, CmsTransferContext context) throws DfException, CMSMFException {
+		// Apparently, references require no saving
+		if (document.isReference()) { return document.getObjectId(); }
+		return super.persistChanges(document, context);
+	}
+
+	@Override
+	protected boolean isSameObject(IDfDocument object) throws DfException {
+		// If we're a reference, and there's something there already, we don't import...
+		if (isReference()) { return true; }
+		return super.isSameObject(object);
+	}
+
+	private IDfDocument newReference(CmsTransferContext context) throws DfException, CMSMFException {
+		IDfPersistentObject target = null;
+		IDfSession session = context.getSession();
+		IDfValue referenceById = getAttribute(CmsAttributes.REFERENCE_BY_ID).getValue();
+		IDfValue bindingCondition = getAttribute(CmsAttributes.BINDING_CONDITION).getValue();
+		IDfValue bindingLabel = getAttribute(CmsAttributes.BINDING_LABEL).getValue();
+
+		target = session.getObject(referenceById.asId());
+		if (target == null) { throw new CMSMFException(String.format(
+			"Reference [%s] target object [%s] could not be found", getLabel(), referenceById.asString())); }
+
+		if (!(target instanceof IDfSysObject)) { throw new CMSMFException(String.format(
+			"Reference [%s] target object [%s] is not an IDfSysObject instance", getLabel(), referenceById.asString())); }
+
+		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
+		IDfValue mainFolderAtt = getProperty(CmsDocument.TARGET_PARENTS).getValue();
+		Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
+			mainFolderAtt.asString());
+		if (m == null) { throw new CMSMFException(String.format(
+			"Reference [%s] mapping for its parent folder [%s->???] could not be found", getLabel(),
+			mainFolderAtt.asString())); }
+
+		IDfId mainFolderId = new DfId(m.getTargetValue());
+		// TODO: Can a reference be *linked* to other folders?
+		IDfId newId = targetSysObj.addReference(mainFolderId, bindingCondition.asString(), bindingLabel.asString());
+		return castObject(session.getObject(newId));
+	}
+
+	@Override
 	protected IDfDocument newObject(CmsTransferContext context) throws DfException, CMSMFException {
+
+		if (isReference()) { return newReference(context); }
+
 		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
 		final boolean root = (Tools.equals(getId(), sourceChronicleId));
 		if (root) { return super.newObject(context); }
@@ -499,6 +606,10 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	@Override
 	protected void finalizeConstruction(final IDfDocument document, boolean newObject, final CmsTransferContext context)
 		throws DfException, CMSMFException {
+
+		// References don't require any of this being done
+		if (isReference()) { return; }
+
 		final IDfSession session = document.getSession();
 
 		// Now, create the content the contents
@@ -586,8 +697,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				if (StringUtils.isBlank(setFile)) {
 					setFile = " ";
 				}
-				// If setFile contains single quote in its contents, to escape it, replace it with 4
-				// single quotes.
+				// If setFile contains single quote in its contents, to escape it, replace it
+				// with 4 single quotes.
 				setFile = setFile.replaceAll("'", "''''");
 
 				String setClient = content.getAttribute(CmsAttributes.SET_CLIENT).getValue().asString();
@@ -652,7 +763,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 		});
 
-		// Then, link to the parent folders
+		// Now, link to the parent folders
 
 		// First, we make a list of the folders the object is currently
 		// linked to, by looking at i_folder_id (we keep track of the
