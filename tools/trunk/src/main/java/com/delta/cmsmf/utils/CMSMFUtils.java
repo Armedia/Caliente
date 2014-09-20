@@ -1,6 +1,7 @@
 package com.delta.cmsmf.utils;
 
 import java.io.File;
+import java.util.Date;
 import java.util.Properties;
 
 import javax.mail.Message;
@@ -12,6 +13,8 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
 
 import com.delta.cmsmf.cfg.CLIParam;
@@ -112,12 +115,12 @@ public class CMSMFUtils {
 	 *            the dctm session
 	 * @return the last export date
 	 */
-	public static String getLastExportDate(IDfSession dctmSession) {
-		String lastExportDate = "";
+	public static Date getLastExportDate(IDfSession dctmSession) {
 		try {
 			// Try to locate the last export object to read the date from subject attribute
 			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession, false);
 			final String message;
+			String lastExportDate = null;
 			if (lstExportObj != null) {
 				lastExportDate = lstExportObj.getSubject();
 				message = String.format("The last export date was [%s]", lastExportDate);
@@ -127,11 +130,12 @@ public class CMSMFUtils {
 			if (CMSMFUtils.log.isInfoEnabled()) {
 				CMSMFUtils.log.info(message);
 			}
-			return lastExportDate;
-		} catch (DfException e) {
-			CMSMFUtils.log.error("Error occured while retrieving last export run date", e);
+			return (lastExportDate != null ? DateUtils.parseDate(lastExportDate,
+				DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern()) : null);
+		} catch (Throwable t) {
+			CMSMFUtils.log.error("Error occured while retrieving last export run date", t);
 		}
-		return lastExportDate;
+		return null;
 	}
 
 	/**
@@ -142,14 +146,15 @@ public class CMSMFUtils {
 	 * @param exportDate
 	 *            the export date
 	 */
-	public static void setLastExportDate(IDfSession dctmSession, String exportDate) {
+	public static void setLastExportDate(IDfSession dctmSession, Date exportDate) {
 		try {
 			// Try to locate the last export object to read the date from subject attribute
 			IDfSysObject lstExportObj = CMSMFUtils.getCmsmfStateObject(dctmSession, true);
-			lstExportObj.setSubject(exportDate);
+			String lastExport = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(exportDate);
+			lstExportObj.setSubject(lastExport);
 			lstExportObj.save();
 			if (CMSMFUtils.log.isInfoEnabled()) {
-				CMSMFUtils.log.info(String.format("Last export date set to [%s]", exportDate));
+				CMSMFUtils.log.info(String.format("Last export date set to [%s]", lastExport));
 			}
 		} catch (DfException e) {
 			CMSMFUtils.log.error("Error occured while setting last export run date", e);

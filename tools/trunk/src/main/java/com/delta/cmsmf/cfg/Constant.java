@@ -1,5 +1,7 @@
 package com.delta.cmsmf.cfg;
 
+import com.documentum.fc.common.IDfTime;
+
 /**
  * The Class Constant. This class contains various constant values used throughout the CMSMF
  * application.
@@ -49,7 +51,7 @@ public class Constant {
 
 	// Time patterns
 	/** The date and time pattern commonly used in documentum repository. */
-	public static final String DCTM_DATETIME_PATTERN = "mm/dd/yyyy hh:mi:ss";
+	public static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
 	/** The "sql-neutral" date and time pattern that will be fed for SQL updates to date attributes */
 	public static final String SQL_DATETIME_PATTERN = "yyyy-mm-dd hh:mi:ss";

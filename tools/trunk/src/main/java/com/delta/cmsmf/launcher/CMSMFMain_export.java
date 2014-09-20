@@ -22,6 +22,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfTime;
 
 /**
  * The main method of this class is an entry point for the cmsmf application.
@@ -64,10 +65,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEven
 				// If this is auto run type of an export instead of an adhoc query export, store the
 				// value of the current export date in the repository. This value will be looked up
 				// in the next run. This is indeed an auto run type of export
-				String dateTimePattern = Constant.LAST_EXPORT_DATE_PATTERN;
-				String exportStartDateStr = DateFormatUtils.format(start, dateTimePattern);
-
-				CMSMFUtils.setLastExportDate(session, exportStartDateStr);
+				CMSMFUtils.setLastExportDate(session, start);
 				ok = true;
 			} finally {
 				try {
@@ -166,7 +164,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEven
 			// named 'cmsmf_last_export' and
 
 			// first get the last export date from the source repository
-			String lastExportRunDate = null;
+			Date lastExportRunDate = null;
 			final IDfSession session = this.sessionManager.acquireSession();
 			try {
 				lastExportRunDate = CMSMFUtils.getLastExportDate(session);
@@ -174,8 +172,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEven
 				this.sessionManager.releaseSession(session);
 			}
 			predicate = Constant.DEFAULT_PREDICATE;
-			if (StringUtils.isNotBlank(lastExportRunDate)) { return String.format("%s AND r_modify_date >= DATE('%s')",
-				predicate, lastExportRunDate); }
+			if (lastExportRunDate != null) { return String.format("%s AND r_modify_date >= DATE('%s', '%s')",
+				predicate, new DfTime(lastExportRunDate).asString(Constant.LAST_EXPORT_DATETIME_PATTERN),
+				Constant.LAST_EXPORT_DATETIME_PATTERN); }
 		}
 		return predicate;
 	}
