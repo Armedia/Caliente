@@ -141,6 +141,7 @@ public class CmsMappingUtils {
 						continue;
 					}
 					ret.add(src.getValue(serverAttribute));
+					break;
 				}
 			} else {
 				ret.add(oldValue);
