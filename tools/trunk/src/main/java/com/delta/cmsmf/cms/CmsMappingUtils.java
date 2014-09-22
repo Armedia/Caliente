@@ -127,7 +127,7 @@ public class CmsMappingUtils {
 		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
 		IDfTypedObject[] srcObjects = null;
 		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
-		for (IDfValue oldValue : values) {
+		outer: for (IDfValue oldValue : values) {
 			Matcher m = CmsMappingUtils.SUBSTITUTION.matcher(oldValue.asString());
 			if (m.matches()) {
 				final String serverAttribute = m.group(1);
@@ -135,17 +135,17 @@ public class CmsMappingUtils {
 					// We delay this until we actually need it, to reduce performance hits
 					srcObjects = CmsMappingUtils.getSources(object);
 				}
-				for (IDfTypedObject src : srcObjects) {
+				inner: for (IDfTypedObject src : srcObjects) {
 					int idx = src.findAttrIndex(serverAttribute);
 					if (idx < 0) {
-						continue;
+						continue inner;
 					}
 					ret.add(src.getValue(serverAttribute));
-					break;
+					continue outer;
 				}
-			} else {
-				ret.add(oldValue);
 			}
+			// Mapping failed, or no mapping found
+			ret.add(oldValue);
 		}
 		return ret;
 	}
