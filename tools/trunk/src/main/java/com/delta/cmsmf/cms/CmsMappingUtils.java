@@ -33,8 +33,8 @@ public class CmsMappingUtils {
 	// TODO: Make this configurable via a configuration setting/CLI parameter
 	private static final String[] SUBSTITUTION_ATTRIBUTES = {
 		// DO NOT modify this order...this is CRITICAL!
-		CmsAttributes.OWNER_NAME, CmsAttributes.OPERATOR_NAME, CmsAttributes.R_INSTALL_OWNER,
-		CmsAttributes.R_CREATOR_NAME
+		CmsAttributes.R_CREATOR_NAME, CmsAttributes.R_INSTALL_OWNER, CmsAttributes.OPERATOR_NAME,
+		CmsAttributes.OWNER_NAME
 	};
 
 	public static List<IDfValue> substituteMappableUsers(IDfTypedObject object, IDfAttr attr) throws DfException {
@@ -75,9 +75,7 @@ public class CmsMappingUtils {
 			"Must provide a session to calculate the mappings from"); }
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
 		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
-		IDfTypedObject[] srcObjects = {
-			session.getDocbaseConfig(), session.getServerConfig()
-		};
+		IDfTypedObject[] srcObjects = CmsMappingUtils.getSources(session);
 		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
 		Map<String, String> valueMap = new HashMap<String, String>();
 		for (String serverAttribute : CmsMappingUtils.SUBSTITUTION_ATTRIBUTES) {
@@ -86,7 +84,11 @@ public class CmsMappingUtils {
 				if (idx < 0) {
 					continue;
 				}
-				valueMap.put(src.getString(serverAttribute), serverAttribute);
+				final String key = src.getString(serverAttribute);
+				if (!valueMap.containsKey(key)) {
+					// Avoid duplicates - we already have a higher-priority mapping
+					valueMap.put(key, serverAttribute);
+				}
 			}
 		}
 		for (IDfValue value : values) {
@@ -112,6 +114,7 @@ public class CmsMappingUtils {
 
 	private static IDfTypedObject[] getSources(IDfSession session) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to get the sources from"); }
+		// Always add the sources in priority order
 		return new IDfTypedObject[] {
 			session.getDocbaseConfig(), session.getServerConfig()
 		};
