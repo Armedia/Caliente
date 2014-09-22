@@ -54,11 +54,12 @@ public class CmsMappingUtils {
 	private static Map<String, IDfValue> getMappings(boolean returnForward, IDfSession session) throws DfException {
 		String docbase = session.getDocbaseScope();
 		Map<String, IDfValue> forward = CmsMappingUtils.FWD_MAPPINGS.get(docbase);
-		Map<String, IDfValue> reverse = null;
-		if (forward == null) {
+		Map<String, IDfValue> reverse = CmsMappingUtils.REV_MAPPINGS.get(docbase);
+		if ((forward == null) || (reverse == null)) {
 			synchronized (CmsMappingUtils.class) {
 				forward = CmsMappingUtils.FWD_MAPPINGS.get(docbase);
-				if (forward == null) {
+				reverse = CmsMappingUtils.REV_MAPPINGS.get(docbase);
+				if ((forward == null) || (reverse == null)) {
 					forward = new HashMap<String, IDfValue>();
 					reverse = new HashMap<String, IDfValue>();
 					for (IDfTypedObject src : CmsMappingUtils.getSources(session)) {
@@ -76,9 +77,12 @@ public class CmsMappingUtils {
 							}
 						}
 					}
-					CmsMappingUtils.LOG.info(String.format("Mappings configured for [%s]: %s", docbase, forward));
 					CmsMappingUtils.FWD_MAPPINGS.put(docbase, Collections.unmodifiableMap(forward));
 					CmsMappingUtils.REV_MAPPINGS.put(docbase, Collections.unmodifiableMap(reverse));
+					CmsMappingUtils.LOG.info(String.format("User Mapping Substitutions configured for [%s]: %s",
+						docbase, reverse));
+					CmsMappingUtils.LOG.info(String.format("User Mapping Resolutions configured for [%s]: %s", docbase,
+						forward));
 				}
 			}
 		}
