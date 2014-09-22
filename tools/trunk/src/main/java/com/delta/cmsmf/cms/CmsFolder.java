@@ -334,8 +334,8 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					this.log
 						.warn(String
 							.format(
-								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								folder.getObjectId().getId(), getLabel(), actualUser));
+								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								getLabel(), folder.getObjectId().getId(), actualUser));
 					continue;
 				}
 
