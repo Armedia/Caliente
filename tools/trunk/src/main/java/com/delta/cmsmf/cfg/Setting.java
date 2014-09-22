@@ -28,7 +28,7 @@ public enum Setting {
 	DEFAULT_USER_PASSWORD("default.user.password"),
 	OWNER_ATTRIBUTES("owner.attributes"),
 	MAIL_RECIPIENTS("mail.recipients"),
-	MAIL_FROM_ADDX("mail.fromAddress"),
+	MAIL_FROM_ADDX("mail.from"),
 	MAIL_SMTP_HOST("mail.smtp.host"),
 	MAIL_SMTP_PORT("mail.smtp.port"),
 	THREADS("threads"),
