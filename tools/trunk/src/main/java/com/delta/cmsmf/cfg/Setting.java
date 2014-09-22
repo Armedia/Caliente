@@ -1,5 +1,6 @@
 package com.delta.cmsmf.cfg;
 
+import java.io.File;
 import java.net.URL;
 
 import org.apache.commons.configuration.Configuration;
@@ -10,7 +11,19 @@ public enum Setting {
 	//
 	EXPORT_PREDICATE("export.predicate"),
 	IMPORT_MAX_ERRORS("import.max.errors"),
-	CONTENT_DIRECTORY("content.directory"),
+	CONTENT_DIRECTORY("content.directory") {
+
+		// By default, this goes to a subdirectory of the database
+		// directory.
+		@Override
+		public String getString() {
+			String str = super.getString(null);
+			if (str != null) { return str; }
+			str = DB_DIRECTORY.getString();
+			return new File(new File(str), "content").getPath();
+		}
+
+	},
 	DB_DIRECTORY("db.directory"),
 	DEFAULT_USER_PASSWORD("default.user.password"),
 	OWNER_ATTRIBUTES("owner.attributes"),
