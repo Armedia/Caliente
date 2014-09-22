@@ -29,11 +29,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
-/**
- * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
- *
- */
-public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
+abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 	private static final Collection<String> NO_PERMITS = Collections.emptySet();
 
@@ -301,7 +297,23 @@ public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> 
 	}
 
 	protected boolean isReference() {
-		return getAttribute(CmsAttributes.I_IS_REFERENCE).getValue().asBoolean();
+		// TODO: No reference support...yet...uncomment this when testing
+		// the reference support
+		// return getAttribute(CmsAttributes.I_IS_REFERENCE).getValue().asBoolean();
+		return false;
+	}
+
+	protected boolean isDfReference(T object) throws DfException {
+		// TODO: No reference support...yet...uncomment this when testing
+		// the reference support
+		// return object.isReference();
+		return false;
+	}
+
+	@Override
+	protected boolean isShortConstructionCycle() {
+		// References require a modified algorithm...
+		return isReference();
 	}
 
 	protected abstract Collection<IDfValue> getTargetPaths() throws DfException, CMSMFException;
@@ -338,7 +350,7 @@ public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> 
 			}
 
 			T currentObj = dfClass.cast(current);
-			if (currentObj.isReference() != seeksReference) {
+			if (isDfReference(currentObj) != seeksReference) {
 				// The target document's reference flag is different from ours...problem!
 				throw new CMSMFException(String.format(
 					"Reference flag mismatch between objects. The [%s] %s collides with a %sreference at [%s] (%s:%s)",
@@ -371,11 +383,5 @@ public abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> 
 	@Override
 	protected T locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
 		return locateExistingByPath(ctx);
-	}
-
-	@Override
-	protected boolean isShortConstructionCycle() {
-		// References require a modified algorithm...
-		return isReference();
 	}
 }

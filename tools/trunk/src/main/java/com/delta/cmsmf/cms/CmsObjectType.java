@@ -123,7 +123,7 @@ public enum CmsObjectType {
 	private static Map<String, CmsObjectType> CLASS_DECODER = null;
 
 	public static CmsObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedObjectTypeException {
+		UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		IDfType type = object.getType();
 		while (type != null) {

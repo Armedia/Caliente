@@ -70,12 +70,6 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 	}
 
 	@Override
-	protected boolean isReference() {
-		// Turn off reference support, for now
-		return false;
-	}
-
-	@Override
 	protected String calculateLabel(IDfFolder folder) throws DfException {
 		return folder.getFolderPath(0);
 	}
@@ -137,7 +131,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-				.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
+					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -338,10 +332,10 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							folder.getObjectId().getId(), getLabel(), actualUser));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s:%s] to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								folder.getObjectId().getId(), getLabel(), actualUser));
 					continue;
 				}
 
@@ -358,11 +352,11 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-							actualUser, getLabel()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+									actualUser, getLabel()), e);
 				}
 			}
 		}

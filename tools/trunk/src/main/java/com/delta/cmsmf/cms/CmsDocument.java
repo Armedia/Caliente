@@ -28,6 +28,7 @@ import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -147,7 +148,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			}
 		}
 
-		if (!document.isReference()) { return; }
+		if (!isDfReference(document)) { return; }
 
 		// TODO: this is untidy - using an undocumented API??
 		IDfReference ref = ReferenceFinder.getForMirrorId(document.getObjectId(), session);
@@ -286,7 +287,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 
 		// We do nothing else for references, as we need nothing else
-		// if (document.isReference()) { return; }
+		if (isDfReference(document)) { return; }
 
 		// Export the object type
 		dependencyManager.persistRelatedObject(document.getType());
@@ -345,13 +346,10 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 		final IDfSession session = document.getSession();
 
-		/*
-		if (document.isReference()) {
-			// References need only this
-			dependencyManager.persistRelatedObject(document.getACL());
-			return;
-		}
-		 */
+		dependencyManager.persistRelatedObject(document.getACL());
+
+		// References need only the ACL as a dependent
+		if (isDfReference(document)) { return; }
 
 		String owner = CmsMappingUtils.substituteSpecialUsers(session, document.getOwnerName());
 		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
@@ -361,18 +359,9 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			}
 		}
 
-		// Do the others
-		IDfPersistentObject[] dep = {
-			// The group
-			session.getGroup(document.getGroupName()),
-			// The ACL
-			document.getACL()
-		};
-		for (IDfPersistentObject obj : dep) {
-			if (obj == null) {
-				continue;
-			}
-			dependencyManager.persistRelatedObject(obj);
+		IDfGroup group = session.getGroup(document.getGroupName());
+		if (group != null) {
+			dependencyManager.persistRelatedObject(group);
 		}
 
 		// Save filestore name
@@ -417,13 +406,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	}
 
 	@Override
-	protected boolean isReference() {
-		// Turn this off, for now
-		// return super.isReference();
-		return false;
-	}
-
-	@Override
 	protected boolean isVersionable(IDfDocument object) throws DfException {
 		// TODO: Are references versionable, per-se?
 		return true;
@@ -443,7 +425,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		return super.isSameObject(object);
 	}
 
-	private IDfDocument newReference(CmsTransferContext context) throws DfException, CMSMFException {
+	protected IDfDocument newReference(CmsTransferContext context) throws DfException, CMSMFException {
 		IDfPersistentObject target = null;
 		IDfSession session = context.getSession();
 		IDfValue bindingCondition = getProperty(CmsAttributes.BINDING_CONDITION).getValue();
