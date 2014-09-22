@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -18,6 +20,8 @@ import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 public class CmsMappingUtils {
+
+	private static final Logger LOG = Logger.getLogger(CmsMappingUtils.class);
 
 	public static final Set<String> SPECIAL_NAMES;
 	static {
@@ -29,6 +33,8 @@ public class CmsMappingUtils {
 	}
 
 	private static final Pattern SUBSTITUTION = Pattern.compile("^\\$\\{([\\w]+)\\}$");
+	private static final Map<String, Map<String, IDfValue>> FWD_MAPPINGS = new HashMap<String, Map<String, IDfValue>>();
+	private static final Map<String, Map<String, IDfValue>> REV_MAPPINGS = new HashMap<String, Map<String, IDfValue>>();
 
 	// TODO: Make this configurable via a configuration setting/CLI parameter
 	private static final String[] SUBSTITUTION_ATTRIBUTES = {
@@ -36,6 +42,56 @@ public class CmsMappingUtils {
 		CmsAttributes.R_CREATOR_NAME, CmsAttributes.R_INSTALL_OWNER, CmsAttributes.OPERATOR_NAME,
 		CmsAttributes.OWNER_NAME
 	};
+
+	private static IDfTypedObject[] getSources(IDfSession session) throws DfException {
+		if (session == null) { throw new IllegalArgumentException("Must provide a session to get the sources from"); }
+		// Always add the sources in priority order
+		return new IDfTypedObject[] {
+			session.getDocbaseConfig(), session.getServerConfig()
+		};
+	}
+
+	private static Map<String, IDfValue> getMappings(boolean returnForward, IDfSession session) throws DfException {
+		String docbase = session.getDocbaseScope();
+		Map<String, IDfValue> forward = CmsMappingUtils.FWD_MAPPINGS.get(docbase);
+		Map<String, IDfValue> reverse = null;
+		if (forward == null) {
+			synchronized (CmsMappingUtils.class) {
+				forward = CmsMappingUtils.FWD_MAPPINGS.get(docbase);
+				if (forward == null) {
+					forward = new HashMap<String, IDfValue>();
+					reverse = new HashMap<String, IDfValue>();
+					for (IDfTypedObject src : CmsMappingUtils.getSources(session)) {
+						for (String serverAttribute : CmsMappingUtils.SUBSTITUTION_ATTRIBUTES) {
+							int idx = src.findAttrIndex(serverAttribute);
+							if (idx < 0) {
+								continue;
+							}
+							if (!forward.containsKey(serverAttribute)) {
+								final IDfValue value = src.getValue(serverAttribute);
+								final IDfValue substitution = DfValueFactory.newStringValue(String.format("${%s}",
+									serverAttribute));
+								forward.put(substitution.asString(), value);
+								reverse.put(value.asString(), substitution);
+							}
+						}
+					}
+					CmsMappingUtils.LOG.info(String.format("Mappings configured for [%s]: %s", docbase, forward));
+					CmsMappingUtils.FWD_MAPPINGS.put(docbase, Collections.unmodifiableMap(forward));
+					CmsMappingUtils.REV_MAPPINGS.put(docbase, Collections.unmodifiableMap(reverse));
+				}
+			}
+		}
+		return (returnForward ? forward : reverse);
+	}
+
+	private static Map<String, IDfValue> getSubstitutionMappings(IDfSession session) throws DfException {
+		return CmsMappingUtils.getMappings(false, session);
+	}
+
+	private static Map<String, IDfValue> getResolutionMappings(IDfSession session) throws DfException {
+		return CmsMappingUtils.getMappings(true, session);
+	}
 
 	public static List<IDfValue> substituteMappableUsers(IDfTypedObject object, IDfAttr attr) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
@@ -75,28 +131,17 @@ public class CmsMappingUtils {
 			"Must provide a session to calculate the mappings from"); }
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
 		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
-		IDfTypedObject[] srcObjects = CmsMappingUtils.getSources(session);
 		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
-		Map<String, String> valueMap = new HashMap<String, String>();
-		for (String serverAttribute : CmsMappingUtils.SUBSTITUTION_ATTRIBUTES) {
-			for (IDfTypedObject src : srcObjects) {
-				int idx = src.findAttrIndex(serverAttribute);
-				if (idx < 0) {
-					continue;
-				}
-				final String key = src.getString(serverAttribute);
-				if (!valueMap.containsKey(key)) {
-					// Avoid duplicates - we already have a higher-priority mapping
-					valueMap.put(key, serverAttribute);
-				}
+		// These are the mappings indexed by username
+		Map<String, IDfValue> substitutions = CmsMappingUtils.getSubstitutionMappings(session);
+		for (IDfValue user : values) {
+			IDfValue substitution = substitutions.get(user.asString());
+			if (substitution != null) {
+				CmsMappingUtils.LOG.info(String.format("Substituted user [%s] as %s", user.asString(),
+					substitution.asString()));
+				user = substitution;
 			}
-		}
-		for (IDfValue value : values) {
-			String mapping = valueMap.get(value.asString());
-			if (mapping != null) {
-				value = DfValueFactory.newStringValue(String.format("${%s}", mapping));
-			}
-			ret.add(value);
+			ret.add(user);
 		}
 		return ret;
 	}
@@ -107,41 +152,25 @@ public class CmsMappingUtils {
 		return CmsMappingUtils.resolveMappableUsers(object, property.getValues());
 	}
 
-	private static IDfTypedObject[] getSources(IDfTypedObject src) throws DfException {
-		if (src == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
-		return CmsMappingUtils.getSources(src.getSession());
-	}
-
-	private static IDfTypedObject[] getSources(IDfSession session) throws DfException {
-		if (session == null) { throw new IllegalArgumentException("Must provide a session to get the sources from"); }
-		// Always add the sources in priority order
-		return new IDfTypedObject[] {
-			session.getDocbaseConfig(), session.getServerConfig()
-		};
-	}
-
 	public static List<IDfValue> resolveMappableUsers(IDfTypedObject object, Collection<IDfValue> values)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
 		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
-		IDfTypedObject[] srcObjects = null;
+		Map<String, IDfValue> resolutions = null;
 		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
-		outer: for (IDfValue oldValue : values) {
+		for (IDfValue oldValue : values) {
 			Matcher m = CmsMappingUtils.SUBSTITUTION.matcher(oldValue.asString());
 			if (m.matches()) {
-				final String serverAttribute = m.group(1);
-				if (srcObjects == null) {
+				if (resolutions == null) {
 					// We delay this until we actually need it, to reduce performance hits
-					srcObjects = CmsMappingUtils.getSources(object);
+					resolutions = CmsMappingUtils.getResolutionMappings(object.getSession());
 				}
-				inner: for (IDfTypedObject src : srcObjects) {
-					int idx = src.findAttrIndex(serverAttribute);
-					if (idx < 0) {
-						continue inner;
-					}
-					ret.add(src.getValue(serverAttribute));
-					continue outer;
+				IDfValue actual = resolutions.get(oldValue.asString());
+				if (actual != null) {
+					CmsMappingUtils.LOG.info(String.format("Resolved user %s as [%s]", oldValue.asString(),
+						actual.asString()));
+					oldValue = actual;
 				}
 			}
 			// Mapping failed, or no mapping found
@@ -150,44 +179,31 @@ public class CmsMappingUtils {
 		return ret;
 	}
 
-	public static String resolveMappableUser(IDfSession session, String user) throws DfException {
-		if (session == null) { throw new IllegalArgumentException("Must provide a session to resolve through"); }
-		if (user == null) { throw new IllegalArgumentException("Must provide a username to resolve"); }
-		Matcher m = CmsMappingUtils.SUBSTITUTION.matcher(user);
-		if (m.matches()) {
-			IDfTypedObject[] srcObjects = CmsMappingUtils.getSources(session);
-			final String serverAttribute = m.group(1);
-			for (IDfTypedObject src : srcObjects) {
-				int idx = src.findAttrIndex(serverAttribute);
-				if (idx < 0) {
-					continue;
-				}
-				return src.getString(serverAttribute);
-			}
-		}
-		return user;
-	}
-
 	public static String resolveMappableUser(IDfTypedObject object, String user) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		return CmsMappingUtils.resolveMappableUser(object.getSession(), user);
 	}
 
+	public static String resolveMappableUser(IDfSession session, String user) throws DfException {
+		if (session == null) { throw new IllegalArgumentException("Must provide a session to resolve through"); }
+		if (user == null) { throw new IllegalArgumentException("Must provide a username to resolve"); }
+		Matcher m = CmsMappingUtils.SUBSTITUTION.matcher(user);
+		if (m.matches()) {
+			// We delay this until we actually need it, to reduce performance hits
+			Map<String, IDfValue> resolutions = CmsMappingUtils.getResolutionMappings(session);
+			IDfValue actual = resolutions.get(user);
+			if (actual != null) {
+				CmsMappingUtils.LOG.info(String.format("Resolved user %s as [%s]", user, actual.asString()));
+				return actual.asString();
+			}
+		}
+		return user;
+	}
+
 	public static boolean isMappableUser(IDfSession session, String user) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to analyze with"); }
 		if (user == null) { throw new IllegalArgumentException("Must provide a username to analyze"); }
-		IDfTypedObject[] srcObjects = CmsMappingUtils.getSources(session);
-		Map<String, String> valueMap = new HashMap<String, String>();
-		for (String serverAttribute : CmsMappingUtils.SUBSTITUTION_ATTRIBUTES) {
-			for (IDfTypedObject src : srcObjects) {
-				int idx = src.findAttrIndex(serverAttribute);
-				if (idx < 0) {
-					continue;
-				}
-				valueMap.put(src.getString(serverAttribute), serverAttribute);
-			}
-		}
-		return (valueMap.get(user) != null);
+		return CmsMappingUtils.getResolutionMappings(session).containsKey(user);
 	}
 
 	public static boolean isSubstitutionForMappableUser(String user) throws DfException {
