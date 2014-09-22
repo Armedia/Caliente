@@ -229,21 +229,21 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		if (creatorName.length() == 0) {
 			creatorName = "${owner_name}";
 		}
-		creatorName = CmsMappingUtils.resolveSpecialUser(session, creatorName);
+		creatorName = CmsMappingUtils.resolveMappableUser(session, creatorName);
 		creatorName = creatorName.replaceAll("'", "''''");
 
 		String modifierName = modifierNameAtt.getValue().asString();
 		if (modifierName.length() == 0) {
 			modifierName = "${owner_name}";
 		}
-		modifierName = CmsMappingUtils.resolveSpecialUser(session, modifierName);
+		modifierName = CmsMappingUtils.resolveMappableUser(session, modifierName);
 		modifierName = modifierName.replaceAll("'", "''''");
 
 		String aclDomain = aclDomainAtt.getValue().asString();
 		if (aclDomain.length() == 0) {
 			aclDomain = "${owner_name}";
 		}
-		aclDomain = CmsMappingUtils.resolveSpecialUser(session, aclDomain);
+		aclDomain = CmsMappingUtils.resolveMappableUser(session, aclDomain);
 		aclDomain = aclDomain.replaceAll("'", "''''");
 
 		String aclName = getAttribute(CmsAttributes.ACL_NAME).getValue().asString();

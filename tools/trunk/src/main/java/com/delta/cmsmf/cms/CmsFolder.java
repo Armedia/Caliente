@@ -131,7 +131,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-					.addValue(CmsMappingUtils.substituteSpecialUsers(folder, resultCol.getValueAt(0)));
+					.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -164,8 +164,8 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 		throws DfException, CMSMFException {
 
 		final IDfSession session = folder.getSession();
-		String owner = CmsMappingUtils.resolveSpecialUser(session, folder.getOwnerName());
-		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
+		String owner = CmsMappingUtils.resolveMappableUser(session, folder.getOwnerName());
+		if (!CmsMappingUtils.isSubstitutionForMappableUser(owner)) {
 			IDfUser user = session.getUser(folder.getOwnerName());
 			if (user != null) {
 				dependencyManager.persistRelatedObject(user);
@@ -319,9 +319,9 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				IDfValue userValue = usersWithDefaultFolder.getValue(i);
 				IDfValue pathValue = usersDefaultFolderPaths.getValue(i);
 
-				if (CmsMappingUtils.isSpecialUserSubstitution(userValue.asString())) {
+				if (CmsMappingUtils.isSubstitutionForMappableUser(userValue.asString())) {
 					this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
-						CmsMappingUtils.resolveSpecialUser(session, userValue.asString())));
+						CmsMappingUtils.resolveMappableUser(session, userValue.asString())));
 					continue;
 				}
 

@@ -37,39 +37,39 @@ public class CmsMappingUtils {
 		CmsAttributes.R_CREATOR_NAME
 	};
 
-	public static List<IDfValue> substituteSpecialUsers(IDfTypedObject object, IDfAttr attr) throws DfException {
+	public static List<IDfValue> substituteMappableUsers(IDfTypedObject object, IDfAttr attr) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		if (attr == null) { throw new IllegalArgumentException("Must provide an attribute to expand"); }
-		return CmsMappingUtils.substituteSpecialUsers(object, DfValueFactory.getAllRepeatingValues(attr, object));
+		return CmsMappingUtils.substituteMappableUsers(object, DfValueFactory.getAllRepeatingValues(attr, object));
 	}
 
-	public static String substituteSpecialUsers(IDfTypedObject object, String user) throws DfException {
+	public static String substituteMappableUsers(IDfTypedObject object, String user) throws DfException {
 		if (user == null) { throw new IllegalArgumentException("Must provide a user to substitute"); }
-		return CmsMappingUtils.substituteSpecialUsers(object, DfValueFactory.newStringValue(user)).asString();
+		return CmsMappingUtils.substituteMappableUsers(object, DfValueFactory.newStringValue(user)).asString();
 	}
 
-	public static IDfValue substituteSpecialUsers(IDfTypedObject object, IDfValue value) throws DfException {
+	public static IDfValue substituteMappableUsers(IDfTypedObject object, IDfValue value) throws DfException {
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to substitute"); }
-		return CmsMappingUtils.substituteSpecialUsers(object, Collections.singleton(value)).get(0);
+		return CmsMappingUtils.substituteMappableUsers(object, Collections.singleton(value)).get(0);
 	}
 
-	public static List<IDfValue> substituteSpecialUsers(IDfTypedObject object, Collection<IDfValue> values)
+	public static List<IDfValue> substituteMappableUsers(IDfTypedObject object, Collection<IDfValue> values)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
-		return CmsMappingUtils.substituteSpecialUsers(object.getSession(), values);
+		return CmsMappingUtils.substituteMappableUsers(object.getSession(), values);
 	}
 
-	public static String substituteSpecialUsers(IDfSession session, String user) throws DfException {
+	public static String substituteMappableUsers(IDfSession session, String user) throws DfException {
 		if (user == null) { throw new IllegalArgumentException("Must provide a user to substitute"); }
-		return CmsMappingUtils.substituteSpecialUsers(session, DfValueFactory.newStringValue(user)).asString();
+		return CmsMappingUtils.substituteMappableUsers(session, DfValueFactory.newStringValue(user)).asString();
 	}
 
-	public static IDfValue substituteSpecialUsers(IDfSession session, IDfValue value) throws DfException {
+	public static IDfValue substituteMappableUsers(IDfSession session, IDfValue value) throws DfException {
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to substitute"); }
-		return CmsMappingUtils.substituteSpecialUsers(session, Collections.singleton(value)).get(0);
+		return CmsMappingUtils.substituteMappableUsers(session, Collections.singleton(value)).get(0);
 	}
 
-	public static List<IDfValue> substituteSpecialUsers(IDfSession session, Collection<IDfValue> values)
+	public static List<IDfValue> substituteMappableUsers(IDfSession session, Collection<IDfValue> values)
 		throws DfException {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session to calculate the mappings from"); }
@@ -99,10 +99,10 @@ public class CmsMappingUtils {
 		return ret;
 	}
 
-	public static List<IDfValue> resolveSpecialUsers(IDfTypedObject object, CmsProperty property) throws DfException {
+	public static List<IDfValue> resolveMappableUsers(IDfTypedObject object, CmsProperty property) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to expand"); }
-		return CmsMappingUtils.resolveSpecialUsers(object, property.getValues());
+		return CmsMappingUtils.resolveMappableUsers(object, property.getValues());
 	}
 
 	private static IDfTypedObject[] getSources(IDfTypedObject src) throws DfException {
@@ -117,7 +117,7 @@ public class CmsMappingUtils {
 		};
 	}
 
-	public static List<IDfValue> resolveSpecialUsers(IDfTypedObject object, Collection<IDfValue> values)
+	public static List<IDfValue> resolveMappableUsers(IDfTypedObject object, Collection<IDfValue> values)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
@@ -146,7 +146,7 @@ public class CmsMappingUtils {
 		return ret;
 	}
 
-	public static String resolveSpecialUser(IDfSession session, String user) throws DfException {
+	public static String resolveMappableUser(IDfSession session, String user) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to resolve through"); }
 		if (user == null) { throw new IllegalArgumentException("Must provide a username to resolve"); }
 		Matcher m = CmsMappingUtils.SUBSTITUTION.matcher(user);
@@ -164,12 +164,12 @@ public class CmsMappingUtils {
 		return user;
 	}
 
-	public static String resolveSpecialUser(IDfTypedObject object, String user) throws DfException {
+	public static String resolveMappableUser(IDfTypedObject object, String user) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
-		return CmsMappingUtils.resolveSpecialUser(object.getSession(), user);
+		return CmsMappingUtils.resolveMappableUser(object.getSession(), user);
 	}
 
-	public static boolean isSpecialUser(IDfSession session, String user) throws DfException {
+	public static boolean isMappableUser(IDfSession session, String user) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to analyze with"); }
 		if (user == null) { throw new IllegalArgumentException("Must provide a username to analyze"); }
 		IDfTypedObject[] srcObjects = CmsMappingUtils.getSources(session);
@@ -186,7 +186,7 @@ public class CmsMappingUtils {
 		return (valueMap.get(user) != null);
 	}
 
-	public static boolean isSpecialUserSubstitution(String user) throws DfException {
+	public static boolean isSubstitutionForMappableUser(String user) throws DfException {
 		if (user == null) { throw new IllegalArgumentException("Must provide a username to analyze"); }
 		return CmsMappingUtils.SUBSTITUTION.matcher(user).matches();
 	}

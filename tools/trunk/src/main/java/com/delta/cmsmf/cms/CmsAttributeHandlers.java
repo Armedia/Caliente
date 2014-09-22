@@ -85,13 +85,13 @@ class CmsAttributeHandlers {
 	static final AttributeHandler SESSION_CONFIG_USER_HANDLER = new AttributeHandler() {
 		@Override
 		public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
-			return CmsMappingUtils.substituteSpecialUsers(object, attr);
+			return CmsMappingUtils.substituteMappableUsers(object, attr);
 		}
 
 		@Override
 		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmsAttribute attribute)
 			throws DfException {
-			return CmsMappingUtils.resolveSpecialUsers(object, attribute);
+			return CmsMappingUtils.resolveMappableUsers(object, attribute);
 		}
 	};
 

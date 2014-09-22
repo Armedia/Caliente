@@ -141,7 +141,7 @@ public class CmsUser extends CmsObject<IDfUser> {
 		// If that search failed, go by username
 		final IDfSession session = ctx.getSession();
 		String userName = getAttribute(CmsAttributes.USER_NAME).getValue().asString();
-		userName = CmsMappingUtils.resolveSpecialUser(session, userName);
+		userName = CmsMappingUtils.resolveMappableUser(session, userName);
 		IDfUser ret = session.getUser(userName);
 		return ret;
 	}

@@ -351,8 +351,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		// References need only the ACL as a dependent
 		if (isDfReference(document)) { return; }
 
-		String owner = CmsMappingUtils.substituteSpecialUsers(session, document.getOwnerName());
-		if (!CmsMappingUtils.isSpecialUserSubstitution(owner)) {
+		String owner = CmsMappingUtils.substituteMappableUsers(session, document.getOwnerName());
+		if (!CmsMappingUtils.isSubstitutionForMappableUser(owner)) {
 			IDfUser user = session.getUser(document.getOwnerName());
 			if (user != null) {
 				dependencyManager.persistRelatedObject(user);

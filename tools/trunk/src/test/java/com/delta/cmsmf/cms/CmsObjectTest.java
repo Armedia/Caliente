@@ -202,7 +202,7 @@ public class CmsObjectTest extends AbstractTest {
 												if (dataType == CmsDataType.DF_STRING) {
 													try {
 														decoded = DfValueFactory.newStringValue(CmsMappingUtils
-															.resolveSpecialUser(cmsObj, decoded.asString()));
+															.resolveMappableUser(cmsObj, decoded.asString()));
 													} catch (DfException e) {
 														Assert.fail(String
 															.format("Failed to resolve the special user attribute"));

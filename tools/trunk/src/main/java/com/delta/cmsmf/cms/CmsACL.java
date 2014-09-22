@@ -45,7 +45,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		private Permit(IDfSession session, CmsACL acl, int pos) throws DfException {
 			CmsProperty prop = null;
 			prop = acl.getProperty(CmsACL.ACCESSORS);
-			this.name = CmsMappingUtils.resolveSpecialUser(session, prop.getValue(pos).asString());
+			this.name = CmsMappingUtils.resolveMappableUser(session, prop.getValue(pos).asString());
 			prop = acl.getProperty(CmsACL.PERMIT_TYPE);
 			this.type = prop.getValue(pos).asInteger();
 			prop = acl.getProperty(CmsACL.PERMIT_VALUE);
@@ -128,7 +128,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		final IDfValue ownerName = getAttribute(CmsAttributes.OWNER_NAME).getValue();
 		final IDfValue objectName = getAttribute(CmsAttributes.OBJECT_NAME).getValue();
 		final IDfSession session = ctx.getSession();
-		return session.getACL(ownerName != null ? CmsMappingUtils.resolveSpecialUser(session, ownerName.asString())
+		return session.getACL(ownerName != null ? CmsMappingUtils.resolveMappableUser(session, ownerName.asString())
 			: null, objectName.asString());
 	}
 
@@ -200,7 +200,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		final int permitCount = permits.getCount();
 		for (int i = 0; i < permitCount; i++) {
 			IDfPermit p = IDfPermit.class.cast(permits.get(i));
-			accessors.addValue(DfValueFactory.newStringValue(CmsMappingUtils.substituteSpecialUsers(acl,
+			accessors.addValue(DfValueFactory.newStringValue(CmsMappingUtils.substituteMappableUsers(acl,
 				p.getAccessorName())));
 			permitTypes.addValue(DfValueFactory.newIntValue(p.getPermitType()));
 			permitValues.addValue(DfValueFactory.newStringValue(p.getPermitValueString()));
@@ -220,7 +220,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			final boolean group = acl.isGroup(i);
 
 			if (!group) {
-				if (CmsMappingUtils.isSpecialUser(session, name)) {
+				if (CmsMappingUtils.isMappableUser(session, name)) {
 					// User is mapped to a special user, so we shouldn't include it as a dependency
 					// because it will be mapped on the target
 					continue;
@@ -242,7 +242,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 		// Do the owner
 		final String owner = acl.getDomain();
-		if (CmsMappingUtils.isSpecialUser(session, owner)) {
+		if (CmsMappingUtils.isMappableUser(session, owner)) {
 			this.log.warn(String.format("Skipping export of special user [%s]", owner));
 		} else {
 			IDfUser user = session.getUser(acl.getDomain());
@@ -255,7 +255,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 	protected void finalizeConstruction(IDfACL acl, boolean newObject, CmsTransferContext context) throws DfException {
 		if (newObject) {
 			String user = getAttribute(CmsAttributes.OWNER_NAME).getValue().asString();
-			user = CmsMappingUtils.resolveSpecialUser(acl.getSession(), user);
+			user = CmsMappingUtils.resolveMappableUser(acl.getSession(), user);
 			acl.setDomain(user);
 			acl.setObjectName(getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString());
 			acl.save();
@@ -263,7 +263,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		CmsProperty usersWithDefaultACL = getProperty(CmsACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
-			for (IDfValue value : CmsMappingUtils.resolveSpecialUsers(acl, usersWithDefaultACL)) {
+			for (IDfValue value : CmsMappingUtils.resolveMappableUsers(acl, usersWithDefaultACL)) {
 
 				// TODO: How do we decide if we should update the default ACL for this user? What if
 				// the user's default ACL has been modified on the target CMS and we don't want to
@@ -284,11 +284,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-							user.getUserName(), getLabel()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+									user.getUserName(), getLabel()), e);
 				}
 			}
 		}
@@ -341,7 +341,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			// it to its true value if necessary. We only do this for
 			// users.
 			if (!group) {
-				name = CmsMappingUtils.resolveSpecialUser(session, name);
+				name = CmsMappingUtils.resolveMappableUser(session, name);
 			}
 
 			boolean exists = false;
@@ -357,10 +357,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 					if (!exists) {
 						// This shouldn't be necessary
 						this.log
-						.warn(String
-							.format(
-								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-								getLabel(), name));
+							.warn(String
+								.format(
+									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+									getLabel(), name));
 						exists = (acl.getSession().getGroup(name) != null);
 						accessorType = "accessor (user or group)";
 					}

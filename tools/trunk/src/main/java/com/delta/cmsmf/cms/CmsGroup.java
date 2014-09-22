@@ -56,7 +56,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				@Override
 				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
 					throws DfException {
-					return CmsMappingUtils.substituteSpecialUsers(object, attr);
+					return CmsMappingUtils.substituteMappableUsers(object, attr);
 				}
 
 			});
@@ -125,7 +125,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		throws DfException, CMSMFException {
 		final IDfSession session = group.getSession();
 		String groupOwner = group.getOwnerName();
-		if (!CmsMappingUtils.isSpecialUser(session, groupOwner) && !CmsUser.isSpecialUser(groupOwner)) {
+		if (!CmsMappingUtils.isMappableUser(session, groupOwner) && !CmsUser.isSpecialUser(groupOwner)) {
 			IDfUser owner = session.getUser(groupOwner);
 			if (owner != null) {
 				dependencyManager.persistRelatedObject(owner);
@@ -140,7 +140,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		}
 
 		String groupAdmin = group.getGroupAdmin();
-		if (!CmsMappingUtils.isSpecialUser(session, groupAdmin) && !CmsUser.isSpecialUser(groupAdmin)) {
+		if (!CmsMappingUtils.isMappableUser(session, groupAdmin) && !CmsUser.isSpecialUser(groupAdmin)) {
 			IDfUser admin = session.getUser(groupAdmin);
 			if (admin != null) {
 				dependencyManager.persistRelatedObject(admin);
@@ -162,7 +162,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			it = getUsersWithDefaultGroup(group);
 		}
 		for (IDfValue v : it) {
-			if (CmsMappingUtils.isSpecialUser(session, v.asString())) {
+			if (CmsMappingUtils.isMappableUser(session, v.asString())) {
 				// This is a special user, we don't add it as a dependency
 				continue;
 			}
@@ -189,7 +189,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				// We can check against whether the user is ${...} or a normal one because
 				// we will have already performed the mappings, hence why we use getAttribute()
 				// instead of getting the attribute direct from the object
-				if (CmsMappingUtils.isSpecialUserSubstitution(userName)) {
+				if (CmsMappingUtils.isSubstitutionForMappableUser(userName)) {
 					// User is mapped to a special user, so we shouldn't include it as a dependency
 					// because it will be mapped on the target
 					continue;
@@ -236,7 +236,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		if (usersNames != null) {
 			group.removeAllUsers();
 			for (IDfValue v : usersNames) {
-				final String actualUser = CmsMappingUtils.resolveSpecialUser(session, v.asString());
+				final String actualUser = CmsMappingUtils.resolveMappableUser(session, v.asString());
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					missingUsers.add(actualUser);
@@ -273,7 +273,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		CmsProperty property = getProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP);
 		if (property != null) {
 			for (IDfValue v : property) {
-				final String actualUser = CmsMappingUtils.resolveSpecialUser(session, v.asString());
+				final String actualUser = CmsMappingUtils.resolveMappableUser(session, v.asString());
 				if (missingUsers.contains(actualUser)) {
 					continue;
 				}
