@@ -204,11 +204,14 @@ public class CmsUser extends CmsObject<IDfUser> {
 		}
 
 		// Next, set the home docbase
+		// TODO: Disabled, for now...for some reason the dm_job was failing on SPDMS_SI
+		/*
 		final IDfValue newHomeDocbase = getAttribute(CmsAttributes.HOME_DOCBASE).getValue();
 		final String docbase = newHomeDocbase.asString();
 		final String existingDocbase = user.getHomeDocbase();
 		if (!docbase.equals("") && !Tools.equals(docbase, existingDocbase)) {
 			user.changeHomeDocbase(docbase, true);
 		}
+		 */
 	}
 }
