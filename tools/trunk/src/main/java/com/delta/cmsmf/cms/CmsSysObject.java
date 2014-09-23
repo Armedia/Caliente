@@ -462,7 +462,6 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			DfUtils.closeQuietly(versions);
 		}
 
-		final IDfSession session = object.getSession();
 		while (!deferred.isEmpty()) {
 			Iterator<IDfTypedObject> it = deferred.iterator();
 			boolean modified = false;
@@ -479,30 +478,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				}
 			}
 
-			// If we didn't resolve anyone on that pass, then we try a little
-			// harder to see if it's simply a bug in getVersions()
 			if (!modified) {
-				// If there have been no changes, then the remaining items' antecedents aren't
-				// returned by getVersion()...try to find them manually by ID
-				it = deferred.iterator();
-				List<IDfTypedObject> def2 = new ArrayList<IDfTypedObject>();
-				while (it.hasNext()) {
-					IDfTypedObject v = it.next();
-					IDfId antecedentId = v.getId(CmsAttributes.I_ANTECEDENT_ID);
-					IDfPersistentObject antecedent = session.getObject(antecedentId);
-					if (antecedent != null) {
-						// ok so we found the antecedent... we shall add it to the deferred list
-						def2.add(antecedent);
-						modified = true;
-					}
-				}
-
-				if (modified) {
-					// We have found new items to be resolved...
-					deferred.addAll(def2);
-					continue;
-				}
-
 				// We can't have done two passes without resolving at least one object because
 				// that means we have a broken version tree...which is unsupported
 				throw new CMSMFException(String.format(
