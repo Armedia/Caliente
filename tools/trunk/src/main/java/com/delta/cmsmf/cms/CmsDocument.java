@@ -580,7 +580,9 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 				final int pageNumber = content.getAttribute(CmsAttributes.PAGE).getValue().asInteger();
 				final CmsAttribute renditionNumber = content.getAttribute(CmsAttributes.RENDITION);
-				final String pageModifier = content.getAttribute(CmsAttributes.PAGE_MODIFIER).getValue().asString();
+				final CmsAttribute pageModifierAtt = content.getAttribute(CmsAttributes.PAGE_MODIFIER);
+				final String pageModifier = (pageModifierAtt.hasValues() ? pageModifierAtt.getValue().asString()
+					: CmsDataType.DF_STRING.getNullEncoding());
 				String fullFormat = content.getAttribute(CmsAttributes.FULL_FORMAT).getValue().asString();
 
 				if ((renditionNumber == null) || (renditionNumber.getValue().asInteger() == 0)) {
