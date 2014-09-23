@@ -242,6 +242,13 @@ public class CmsType extends CmsObject<IDfType> {
 	}
 
 	@Override
+	protected boolean isSameObject(IDfType object) throws DfException {
+		// It's "impossible" to compare types...rather - it's far too complicated to do
+		// anything if the type is already there...so we just check names...
+		return Tools.equals(object.getName(), getAttribute(CmsAttributes.NAME).getValue().asString());
+	}
+
+	@Override
 	protected void prepareForConstruction(IDfType object, boolean newObject, CmsTransferContext context)
 		throws DfException {
 	}
