@@ -22,10 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cms.CmsExportListener;
 import com.delta.cmsmf.cms.CmsFileSystem;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.DfValueFactory;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
@@ -43,9 +43,32 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
+public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 
 	private final Logger output;
+
+	private final CmsExportListener exportListener = new CmsExportListener() {
+
+		@Override
+		public void objectSkipped(CmsObjectType objectType, String objectId) {
+			CmsExporter.this.objectSkipped(objectType, objectId);
+		}
+
+		@Override
+		public void objectExportStarted(CmsObjectType objectType, String objectId) {
+			CmsExporter.this.objectExportStarted(objectType, objectId);
+		}
+
+		@Override
+		public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
+			CmsExporter.this.objectExportFailed(objectType, objectId, thrown);
+		}
+
+		@Override
+		public void objectExportCompleted(CmsObject<?> object) {
+			CmsExporter.this.objectExportCompleted(object);
+		}
+	};
 
 	public CmsExporter() {
 		this(null);
@@ -141,8 +164,9 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 							final String objectId = dfObj.getObjectId().getId();
 
 							objectExportStarted(type, objectId);
-							CmsObject<?> object = objectStore.persistDfObject(dfObj, new DefaultTransferContext(
-								objectId, session, objectStore, fileSystem, CmsExporter.this.output));
+							CmsObject<?> object = objectStore.persistDfObject(dfObj, new DefaultExportContext(objectId,
+								session, objectStore, fileSystem, CmsExporter.this.output,
+								CmsExporter.this.exportListener));
 							if (object != null) {
 								objectExportCompleted(object);
 							} else {
@@ -284,10 +308,10 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -300,7 +324,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 	}
 
 	private void exportStarted(String dql) {
-		for (CmsExportEventListener l : getListeners()) {
+		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.exportStarted(dql);
 			} catch (Throwable t) {
@@ -310,7 +334,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 	}
 
 	private void objectExportStarted(CmsObjectType objectType, String objectId) {
-		for (CmsExportEventListener l : getListeners()) {
+		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.objectExportStarted(objectType, objectId);
 			} catch (Throwable t) {
@@ -320,7 +344,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 	}
 
 	private void objectExportCompleted(CmsObject<?> object) {
-		for (CmsExportEventListener l : getListeners()) {
+		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.objectExportCompleted(object);
 			} catch (Throwable t) {
@@ -330,7 +354,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 	}
 
 	private void objectSkipped(CmsObjectType objectType, String objectId) {
-		for (CmsExportEventListener l : getListeners()) {
+		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.objectSkipped(objectType, objectId);
 			} catch (Throwable t) {
@@ -340,7 +364,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 	}
 
 	private void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
-		for (CmsExportEventListener l : getListeners()) {
+		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.objectExportFailed(objectType, objectId, thrown);
 			} catch (Throwable t) {
@@ -350,7 +374,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEventListener> {
 	}
 
 	private void exportFinished(Map<CmsObjectType, Integer> summary) {
-		for (CmsExportEventListener l : getListeners()) {
+		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.exportFinished(summary);
 			} catch (Throwable t) {

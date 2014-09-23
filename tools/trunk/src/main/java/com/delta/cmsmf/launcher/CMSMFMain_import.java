@@ -21,7 +21,7 @@ import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.engine.CmsImportEventListener;
+import com.delta.cmsmf.engine.CmsImportEngineListener;
 import com.delta.cmsmf.engine.CmsImporter;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
@@ -31,7 +31,7 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEventListener {
+public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);

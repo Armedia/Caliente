@@ -1,19 +1,6 @@
-package com.delta.cmsmf.engine;
+package com.delta.cmsmf.cms;
 
-import java.util.Map;
-
-import com.delta.cmsmf.cms.CmsObject;
-import com.delta.cmsmf.cms.CmsObjectType;
-
-public interface CmsExportEventListener {
-
-	/**
-	 * <p>
-	 * Invoked when the export has begun.
-	 * </p>
-	 *
-	 */
-	public void exportStarted(String dql);
+public interface CmsExportListener {
 
 	/**
 	 * <p>
@@ -54,11 +41,4 @@ public interface CmsExportEventListener {
 	 */
 	public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown);
 
-	/**
-	 * <p>
-	 * Invoked when the export process has concluded.
-	 * </p>
-	 *
-	 */
-	public void exportFinished(Map<CmsObjectType, Integer> summary);
 }

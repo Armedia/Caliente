@@ -36,6 +36,7 @@ import com.delta.cmsmf.cms.CmsAttributeMapper;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.CmsDataType;
 import com.delta.cmsmf.cms.CmsDependencyManager;
+import com.delta.cmsmf.cms.CmsExportContext;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
@@ -855,8 +856,43 @@ public class CmsObjectStore {
 		}
 	}
 
-	public CmsObject<?> persistDfObject(IDfPersistentObject dfObject, final CmsTransferContext ctx) throws DfException,
+	public CmsObject<?> persistDfObject(IDfPersistentObject dfObject, final CmsExportContext ctx) throws DfException,
 		CMSMFException {
+		final String objectId = dfObject.getObjectId().getId();
+		final CmsObjectType type;
+		try {
+			type = CmsObjectType.decodeType(dfObject);
+		} catch (UnsupportedObjectTypeException e) {
+			if (this.log.isDebugEnabled()) {
+				this.log.warn(e.getMessage());
+			}
+			ctx.objectSkipped(null, objectId);
+			return null;
+		}
+		ctx.objectExportStarted(type, objectId);
+		try {
+			CmsObject<?> ret = doPersistDfObject(dfObject, ctx);
+			if (ret == null) {
+				ctx.objectSkipped(type, objectId);
+			} else {
+				ctx.objectExportCompleted(ret);
+			}
+			return ret;
+		} catch (DfException e) {
+			ctx.objectExportFailed(type, objectId, e);
+			throw new DfException(e);
+		} catch (CMSMFException e) {
+			ctx.objectExportFailed(type, objectId, e);
+			throw new CMSMFException(e);
+		} catch (Throwable t) {
+			// Catch anything else
+			ctx.objectExportFailed(type, objectId, t);
+			throw RuntimeException.class.cast(t);
+		}
+	}
+
+	private CmsObject<?> doPersistDfObject(IDfPersistentObject dfObject, final CmsExportContext ctx)
+		throws DfException, CMSMFException {
 		final CmsObjectType objectType;
 		try {
 			objectType = CmsObjectType.decodeType(dfObject);

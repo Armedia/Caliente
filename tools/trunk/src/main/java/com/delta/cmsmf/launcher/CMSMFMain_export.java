@@ -16,7 +16,7 @@ import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.engine.CmsExportEventListener;
+import com.delta.cmsmf.engine.CmsExportEngineListener;
 import com.delta.cmsmf.engine.CmsExporter;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
@@ -29,7 +29,7 @@ import com.documentum.fc.common.DfTime;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEventListener {
+public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngineListener {
 
 	CMSMFMain_export() throws Throwable {
 		super();

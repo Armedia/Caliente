@@ -45,7 +45,7 @@ import com.documentum.fc.common.DfException;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
+public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 
 	private final CmsCounter<CmsImportResult> counter = new CmsCounter<CmsImportResult>(CmsImportResult.class);
 	private final Logger output;
@@ -400,7 +400,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	}
 
 	private void importStarted(Map<CmsObjectType, Integer> summary) {
-		for (CmsImportEventListener l : getListeners()) {
+		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.importStarted(summary);
 			} catch (Throwable t) {
@@ -410,7 +410,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	}
 
 	private void objectTypeImportStarted(CmsObjectType objectType, int totalObjects) {
-		for (CmsImportEventListener l : getListeners()) {
+		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.objectTypeImportStarted(objectType, totalObjects);
 			} catch (Throwable t) {
@@ -420,7 +420,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	}
 
 	private void objectImportStarted(CmsObject<?> object) {
-		for (CmsImportEventListener l : getListeners()) {
+		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.objectImportStarted(object);
 			} catch (Throwable t) {
@@ -430,7 +430,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	}
 
 	private void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult) {
-		for (CmsImportEventListener l : getListeners()) {
+		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.objectImportCompleted(object, cmsImportResult);
 			} catch (Throwable t) {
@@ -440,7 +440,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	}
 
 	private void objectImportFailed(CmsObject<?> object, Throwable thrown) {
-		for (CmsImportEventListener l : getListeners()) {
+		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.objectImportFailed(object, thrown);
 			} catch (Throwable t) {
@@ -450,7 +450,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	}
 
 	private void objectTypeImportFinished(CmsObjectType objectType, Map<CmsImportResult, Integer> counters) {
-		for (CmsImportEventListener l : getListeners()) {
+		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.objectTypeImportFinished(objectType, counters);
 			} catch (Throwable t) {
@@ -460,7 +460,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEventListener> {
 	}
 
 	private void importConcluded(Map<CmsImportResult, Integer> counters) {
-		for (CmsImportEventListener l : getListeners()) {
+		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.importFinished(counters);
 			} catch (Throwable t) {

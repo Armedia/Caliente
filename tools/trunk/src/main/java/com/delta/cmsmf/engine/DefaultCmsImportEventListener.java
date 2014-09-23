@@ -6,7 +6,7 @@ import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 
-public class DefaultCmsImportEventListener implements CmsImportEventListener {
+public class DefaultCmsImportEventListener implements CmsImportEngineListener {
 
 	@Override
 	public void importStarted(Map<CmsObjectType, Integer> summary) {

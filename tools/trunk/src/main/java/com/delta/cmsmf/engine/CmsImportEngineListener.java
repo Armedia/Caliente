@@ -6,7 +6,7 @@ import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 
-public interface CmsImportEventListener {
+public interface CmsImportEngineListener {
 
 	/**
 	 * <p>
