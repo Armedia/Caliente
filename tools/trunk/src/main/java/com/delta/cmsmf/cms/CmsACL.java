@@ -198,10 +198,37 @@ public class CmsACL extends CmsObject<IDfACL> {
 		CmsProperty permitValues = new CmsProperty(CmsACL.PERMIT_VALUE, CmsDataType.DF_STRING, true);
 		IDfList permits = acl.getPermissions();
 		final int permitCount = permits.getCount();
+		final IDfSession session = acl.getSession();
+		Set<String> missingAccessors = new HashSet<String>();
 		for (int i = 0; i < permitCount; i++) {
 			IDfPermit p = IDfPermit.class.cast(permits.get(i));
-			accessors.addValue(DfValueFactory.newStringValue(CmsMappingUtils.substituteMappableUsers(acl,
-				p.getAccessorName())));
+			// First, validate the accessor
+			final String accessor = p.getAccessorName();
+			final boolean group;
+			switch (p.getPermitType()) {
+				case IDfPermit.DF_REQUIRED_GROUP:
+				case IDfPermit.DF_REQUIRED_GROUP_SET:
+					group = true;
+					break;
+
+				default:
+					group = false;
+					break;
+			}
+
+			IDfPersistentObject o = (group ? session.getGroup(accessor) : session.getUser(accessor));
+			if (o == null) {
+				// Accessor not there, skip it...
+				if (!missingAccessors.contains(accessor)) {
+					this.log.warn(String.format(
+						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", getLabel(),
+						(group ? "group" : "user"), accessor));
+					missingAccessors.add(accessor);
+				}
+				continue;
+			}
+
+			accessors.addValue(DfValueFactory.newStringValue(CmsMappingUtils.substituteMappableUsers(acl, accessor)));
 			permitTypes.addValue(DfValueFactory.newIntValue(p.getPermitType()));
 			permitValues.addValue(DfValueFactory.newStringValue(p.getPermitValueString()));
 		}
@@ -234,9 +261,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 			}
 
 			final IDfPersistentObject obj = (group ? session.getGroup(name) : session.getUser(name));
-			if (obj == null) { throw new CMSMFException(String.format(
-				"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectName(),
-				(group ? "group" : "user"), name)); }
+			if (obj == null) {
+				this.log.warn(String.format("Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)",
+					acl.getObjectName(), (group ? "group" : "user"), name));
+				continue;
+			}
 			dependencyManager.persistRelatedObject(obj);
 		}
 
@@ -284,11 +313,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-									user.getUserName(), getLabel()), e);
+					.warn(
+						String
+						.format(
+							"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+							user.getUserName(), getLabel()), e);
 				}
 			}
 		}
@@ -357,10 +386,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 					if (!exists) {
 						// This shouldn't be necessary
 						this.log
-							.warn(String
-								.format(
-									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-									getLabel(), name));
+						.warn(String
+							.format(
+								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+								getLabel(), name));
 						exists = (acl.getSession().getGroup(name) != null);
 						accessorType = "accessor (user or group)";
 					}
