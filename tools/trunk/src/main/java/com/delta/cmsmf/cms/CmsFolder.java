@@ -7,11 +7,11 @@ package com.delta.cmsmf.cms;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
@@ -255,10 +255,16 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			}
 
 			// Unlink from those who are in the old parent list, but not in the new parent list
-			Set<String> unlinkTargets = new HashSet<String>(oldParents.keySet());
+			// We use a TreeSet to ensure that locks are attempted always in the same order
+			Set<String> unlinkTargets = new TreeSet<String>(oldParents.keySet());
 			unlinkTargets.removeAll(newParents.keySet());
 			for (String oldParentId : unlinkTargets) {
 				IDfFolder parent = oldParents.get(oldParentId);
+				if (parent == null) {
+					continue;
+				}
+				parent.lockEx(true);
+				parent.fetch(null);
 				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
 					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 				if (delta.grant(parent)) {
@@ -271,13 +277,18 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			}
 
 			// Link to those who are in the new parent list, but not the old parent list
-			Set<String> linkTargets = new HashSet<String>(newParents.keySet());
+			// We use a TreeSet to ensure that locks are attempted always in the same order
+			Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
 			linkTargets.removeAll(oldParents.keySet());
-			this.parentPermitDeltas = new HashMap<String, PermitDelta>();
+			// We use a TreeMap for the permit deltas map to ensure that the locks are
+			// traversed in the correct order later on
+			this.parentPermitDeltas = new TreeMap<String, PermitDelta>();
 			for (String parentId : newParents.keySet()) {
 				IDfFolder parent = newParents.get(parentId);
 				// If we should link here, then link!
 				if (linkTargets.contains(parentId)) {
+					parent.lockEx(true);
+					parent.fetch(null);
 					PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
 						IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 					this.parentPermitDeltas.put(parentId, delta);
@@ -345,6 +356,8 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				IDfFolder actual = session.getFolderByPath(pathValue.asString());
 
 				// Ok...so...we set the path to "whatever"...
+				user.lockEx(true);
+				user.fetch(null);
 				user.setDefaultFolder(pathValue.asString(), (actual == null));
 				user.save();
 				// Update the system attributes, if we can
@@ -380,6 +393,8 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					// Again...how the hell?
 					continue;
 				}
+				parent.lockEx(true);
+				parent.fetch(null);
 				if (this.parentPermitDeltas.get(parentId).revoke(parent)) {
 					parent.save();
 				}
