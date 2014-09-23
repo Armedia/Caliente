@@ -504,6 +504,21 @@ public class CmsProperty implements Iterable<IDfValue> {
 		};
 	}
 
+	public final String getConcatenatedString(String sep) {
+		if (sep == null) {
+			sep = "";
+		}
+		if (!this.repeating) { return this.singleValue.asString(); }
+		StringBuilder b = new StringBuilder();
+		for (IDfValue v : this.values) {
+			if ((b.length() > 0) && (sep.length() > 0)) {
+				b.append(sep);
+			}
+			b.append(v.asString());
+		}
+		return b.toString();
+	}
+
 	@Override
 	public String toString() {
 		return String.format("CmsProperty [name=%s, type=%s, repeating=%s, %s=%s]", this.name, this.type,
