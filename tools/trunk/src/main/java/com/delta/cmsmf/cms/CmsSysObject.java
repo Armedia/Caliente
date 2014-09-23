@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 
@@ -36,6 +37,7 @@ import com.documentum.fc.common.IDfValue;
 
 abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
+	private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
 	private static final Collection<String> NO_PERMITS = Collections.emptySet();
 
 	protected final class PermitDelta {
@@ -181,7 +183,12 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			if (versionLabels.length() > 0) {
 				versionLabels.append(',');
 			}
-			versionLabels.append(v.asString());
+			final String label = v.asString();
+			// Ignore "internal" version labels
+			if (CmsSysObject.INTERNAL_VL.matcher(label).matches()) {
+				continue;
+			}
+			versionLabels.append(label);
 		}
 		String vl = versionLabels.toString();
 		final IDfId newId = sysObject.checkin(false, vl);
@@ -273,7 +280,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 			.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-			.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
+				.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
 	}
 
 	/**
@@ -351,7 +358,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				throw new CMSMFException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
 					getSubtype(), getLabel(), getSubtype(), currentPath, current.getType().getName(), current
-						.getObjectId().getId()));
+					.getObjectId().getId()));
 			}
 
 			T currentObj = dfClass.cast(current);
@@ -475,7 +482,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				// that means we have a broken version tree...which is unsupported
 				throw new CMSMFException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-						.getId(), deferred));
+					.getId(), deferred));
 			}
 		}
 		return history;
