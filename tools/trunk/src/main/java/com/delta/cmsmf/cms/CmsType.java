@@ -158,60 +158,62 @@ public class CmsType extends CmsObject<IDfType> {
 			}
 		}
 
-		int attrCount = getAttribute(CmsAttributes.ATTR_COUNT).getValue().asInteger();
-		int startPosition = getAttribute(CmsAttributes.START_POS).getValue().asInteger();
-		CmsAttribute attrNames = getAttribute(CmsAttributes.ATTR_NAME);
-		CmsAttribute attrTypes = getAttribute(CmsAttributes.ATTR_TYPE);
-		CmsAttribute attrLengths = getAttribute(CmsAttributes.ATTR_LENGTH);
-		CmsAttribute attrRepeating = getAttribute(CmsAttributes.ATTR_REPEATING);
+		final int attrCount = getAttribute(CmsAttributes.ATTR_COUNT).getValue().asInteger();
+		final int startPosition = getAttribute(CmsAttributes.START_POS).getValue().asInteger();
+		final CmsAttribute attrNames = getAttribute(CmsAttributes.ATTR_NAME);
+		final CmsAttribute attrTypes = getAttribute(CmsAttributes.ATTR_TYPE);
+		final CmsAttribute attrLengths = getAttribute(CmsAttributes.ATTR_LENGTH);
+		final CmsAttribute attrRepeating = getAttribute(CmsAttributes.ATTR_REPEATING);
 
 		// Start the DQL
-		StringBuilder dql = new StringBuilder();
-		dql.append("Create Type \"").append(typeName).append("\"( ");
+		final StringBuilder dql = new StringBuilder();
+		dql.append("create type \"").append(typeName).append("\"( ");
 		// Iterate through only the custom attributes of the type object and add them to the dql
 		// string
-		for (int iIndex = startPosition; iIndex < attrCount; ++iIndex) {
-			String attrName = attrNames.getValue(iIndex).asString();
-			dql.append(attrName).append(" ");
-			int attrType = attrTypes.getValue(iIndex).asInteger();
-			switch (attrType) {
+		for (int i = startPosition; i < attrCount; ++i) {
+			// If we're not the first, we need a comma
+			if (i > startPosition) {
+				dql.append(", ");
+			}
+			dql.append(attrNames.getValue(i).asString()).append(" ");
+			switch (attrTypes.getValue(i).asInteger()) {
 				case IDfAttr.DM_BOOLEAN:
 					dql.append("boolean");
 					break;
 				case IDfAttr.DM_INTEGER:
-					dql.append("Integer");
+					dql.append("integer");
 					break;
 				case IDfAttr.DM_STRING:
-					int attrLength = attrLengths.getValue(iIndex).asInteger();
-					dql.append("String(").append(attrLength).append(")");
+					int attrLength = attrLengths.getValue(i).asInteger();
+					dql.append("string(").append(attrLength).append(")");
 					break;
 				case IDfAttr.DM_ID:
-					dql.append("ID");
+					dql.append("id");
 					break;
 				case IDfAttr.DM_TIME:
-					dql.append("Date");
+					dql.append("date");
 					break;
 				case IDfAttr.DM_DOUBLE:
 					dql.append("double");
 					break;
 				case IDfAttr.DM_UNDEFINED:
-					dql.append("Undefined");
+					dql.append("undefined");
 					break;
 				default:
 					break;
 			}
-			boolean isRepeating = attrRepeating.getValue(iIndex).asBoolean();
+			boolean isRepeating = attrRepeating.getValue(i).asBoolean();
 			if (isRepeating) {
-				dql.append(" Repeating");
-			}
-
-			if (iIndex != (attrCount - 1)) {
-				dql.append(", ");
+				dql.append(" repeating");
 			}
 		}
 
 		// Add the supertype phrase if needed
-		dql.append(") With SuperType ").append((superType != null) ? superTypeName : "Null ").append(" Publish");
+		dql.append(") with supertype ").append((superType != null) ? superTypeName : "null").append(" publish");
+
+		if (this.log.isInfoEnabled()) {
+			this.log.info(String.format("Creating new type [%s] with DQL:%n%n%s%n", typeName, dql));
+		}
 
 		IDfCollection resultCol = DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_QUERY);
 		try {
