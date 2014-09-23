@@ -23,6 +23,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
+import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -226,6 +227,18 @@ public class CmsType extends CmsObject<IDfType> {
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
+	}
+
+	@Override
+	protected IDfId persistChanges(IDfType object, CmsTransferContext context) throws DfException, CMSMFException {
+		// In particular, we don't persist changes to types
+		return object.getObjectId();
+	}
+
+	@Override
+	protected boolean isShortConstructionCycle() {
+		// Types require the short construction cycle
+		return true;
 	}
 
 	@Override
