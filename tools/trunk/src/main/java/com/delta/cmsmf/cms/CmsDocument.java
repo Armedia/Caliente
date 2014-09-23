@@ -237,7 +237,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			final List<IDfId> priorVersions = new LinkedList<IDfId>();
 			final List<IDfId> laterVersions = new LinkedList<IDfId>();
 			List<IDfId> target = priorVersions;
-			List<IDfId> history = getAllVersions(document);
+			List<IDfId> history = getVersionHistory(document);
 			for (IDfId id : history) {
 				if (Tools.equals(id.getId(), document.getObjectId().getId())) {
 					// Once we've found the "reference" object in the history, we skip adding it

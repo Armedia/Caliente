@@ -29,6 +29,7 @@ import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
@@ -421,12 +422,13 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	 * @throws DfException
 	 * @throws CMSMFException
 	 */
-	protected final List<IDfId> getAllVersions(T object) throws DfException, CMSMFException {
+	protected final List<IDfId> getVersionHistory(T object) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
 
 		IDfCollection versions = object
 			.getVersions("r_object_id, r_modify_date, r_version_label, i_chronicle_id, i_antecedent_id, i_latest_flag, i_direct_dsc");
 		Set<String> finished = new HashSet<String>();
+		finished.add(DfId.DF_NULLID_STR); // This helps, below
 		LinkedList<IDfId> history = new LinkedList<IDfId>();
 		LinkedList<IDfTypedObject> deferred = new LinkedList<IDfTypedObject>();
 		try {
@@ -437,8 +439,8 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 					continue;
 				}
 				IDfId antecedentId = versions.getId(CmsAttributes.I_ANTECEDENT_ID);
-				if (antecedentId.isNull()) {
-					// No antecedent, goes straight in b/c this is the root
+				if (finished.contains(antecedentId.getId())) {
+					// Antecedent is already in place, add this version
 					history.add(objectId);
 					finished.add(objectId.getId());
 				} else {
