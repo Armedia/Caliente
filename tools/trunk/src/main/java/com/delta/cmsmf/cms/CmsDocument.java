@@ -92,6 +92,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	private PermitDelta antecedentPermitDelta = null;
 	private PermitDelta branchPermitDelta = null;
 	private Map<String, PermitDelta> parentFolderDeltas = null;
+	private List<IDfId> priorVersions = null;
+	private List<IDfId> laterVersions = null;
 
 	public CmsDocument() {
 		super(IDfDocument.class);
@@ -222,7 +224,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		return castObject(obj);
 	}
 
-	private List<IDfId> getVersions(boolean prior, IDfDocument document) throws DfException {
+	private List<IDfId> getVersions(boolean prior, IDfDocument document) throws DfException, CMSMFException {
 		if (document == null) { throw new IllegalArgumentException("Must provide a document whose versions to analyze"); }
 
 		// Is this the root of the version hierarchy? If so, then there are no prior versions
@@ -231,45 +233,24 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			return new ArrayList<IDfId>();
 		}
 
-		IDfCollection versions = document.getVersions(null);
-		try {
-			final IDfId currentId = document.getObjectId();
-			LinkedList<IDfId> ret = new LinkedList<IDfId>();
-			boolean caughtUp = false;
-			while (versions.next()) {
-				IDfId versionId = versions.getId("r_object_id");
-				if (versionId.isNull()) {
-					// Shouldn't happen, but better safe than sorry...
+		if ((this.priorVersions == null) || (this.laterVersions == null)) {
+			final List<IDfId> priorVersions = new LinkedList<IDfId>();
+			final List<IDfId> laterVersions = new LinkedList<IDfId>();
+			List<IDfId> target = priorVersions;
+			List<IDfId> history = getAllVersions(document);
+			for (IDfId id : history) {
+				if (Tools.equals(id.getId(), document.getObjectId().getId())) {
+					// Once we've found the "reference" object in the history, we skip adding it
+					// since it will be added explicitly, and we start adding later versions
+					target = laterVersions;
 					continue;
 				}
-
-				boolean current = Tools.equals(currentId.getId(), versionId.getId());
-				caughtUp |= current;
-				// This logic can be condensed, but it's better to leave it simple
-				// to understand
-				if (prior) {
-					// If we're looking for prior versions, then we have to wait until
-					// we find this one, and then start adding
-					if (!caughtUp || current) {
-						continue;
-					}
-				} else {
-					// If we're looking for later versions, then we start adding them
-					// all, until we find this one
-					if (caughtUp) {
-						// We've caught up with the present, break the cycle
-						break;
-					}
-				}
-
-				// Add this version at the head, since it's older than the existing ones
-				ret.addFirst(versionId);
+				target.add(id);
 			}
-
-			return ret;
-		} finally {
-			DfUtils.closeQuietly(versions);
+			this.priorVersions = priorVersions;
+			this.laterVersions = laterVersions;
 		}
+		return (prior ? this.priorVersions : this.laterVersions);
 	}
 
 	@Override

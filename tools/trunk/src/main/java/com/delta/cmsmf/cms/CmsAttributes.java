@@ -38,6 +38,13 @@ public class CmsAttributes {
 
 	/** The i_antecedent_id attribute of dm_sysobject. */
 	public static final String I_CHRONICLE_ID = "i_chronicle_id";
+
+	/** The i_latest_flag attribute of dm_sysobject. */
+	public static final String I_LATEST_FLAG = "i_latest_flag";
+
+	/** The i_latest_flag attribute of dm_sysobject. */
+	public static final String I_DIRECT_DSC = "i_direct_dsc";
+
 	/** The i_is_reference attribute of dm_sysobject. */
 	public static final String I_IS_REFERENCE = "i_is_reference";
 
