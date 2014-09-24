@@ -6,8 +6,10 @@ package com.delta.cmsmf.engine;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -46,6 +48,8 @@ import com.documentum.fc.common.IDfValue;
 public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 
 	private final Logger output;
+
+	private final Set<String> noiseTracker = Collections.synchronizedSet(new HashSet<String>());
 
 	private final CmsExportListener exportListener = new CmsExportListener() {
 
@@ -95,6 +99,15 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 	public CmsExporter(Logger output, int threadCount, int backlogSize) {
 		super(threadCount, backlogSize);
 		this.output = output;
+	}
+
+	private boolean isTracked(CmsObjectType objectType, String objectId) {
+		String key = String.format("%s[%s]", objectType.name(), objectId);
+		return (CmsExporter.this.noiseTracker.add(key) == false);
+	}
+
+	private boolean isTracked(CmsObject<?> object) {
+		return isTracked(object.getType(), object.getId());
 	}
 
 	public void doExport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
@@ -308,10 +321,10 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -334,6 +347,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 	}
 
 	private void objectExportStarted(CmsObjectType objectType, String objectId) {
+		if (isTracked(objectType, objectId)) { return; }
 		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.objectExportStarted(objectType, objectId);
@@ -344,6 +358,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 	}
 
 	private void objectExportCompleted(CmsObject<?> object) {
+		isTracked(object);
 		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.objectExportCompleted(object);
@@ -354,6 +369,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 	}
 
 	private void objectSkipped(CmsObjectType objectType, String objectId) {
+		if (isTracked(objectType, objectId)) { return; }
 		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.objectSkipped(objectType, objectId);
@@ -364,6 +380,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 	}
 
 	private void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
+		if (isTracked(objectType, objectId)) { return; }
 		for (CmsExportEngineListener l : getListeners()) {
 			try {
 				l.objectExportFailed(objectType, objectId, thrown);
