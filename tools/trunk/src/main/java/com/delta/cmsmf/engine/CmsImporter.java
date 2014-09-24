@@ -141,10 +141,21 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 							CmsImporter.this.log.debug(String.format("Polled a batch with %d items", batch.size()));
 						}
 
+						boolean failBatch = false;
 						for (CmsObject<?> next : batch) {
+							if (failBatch) {
+								CmsImporter.this.log
+								.error(String.format("Batch has been failed - will not process [%s](%s)",
+									next.getLabel(), next.getId()));
+								objectImportFailed(next, null);
+								CmsImporter.this.counter.increment(next, CmsImportResult.FAILED);
+								continue;
+							}
+
 							CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore,
 								fileSystem, CmsImporter.this.output);
 							SaveResult result = null;
+							final CmsObjectType type = next.getType();
 							try {
 								objectImportStarted(next);
 								result = next.saveToCMS(ctx);
@@ -157,6 +168,17 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 								result = null;
 								// Log the error, move on
 								CmsImporter.this.log.error(String.format("Exception caught processing %s", next), t);
+								if (type.isFailureInterruptsBatch()) {
+									// If we're supposed to kill the batch, fail all the other
+									// objects
+									failBatch = true;
+									CmsImporter.this.log
+									.debug(String
+										.format(
+											"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+											type));
+									continue;
+								}
 							} finally {
 								CmsImporter.this.counter.increment(next, (result != null ? result.getResult()
 									: CmsImportResult.FAILED));
@@ -377,10 +399,10 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -393,7 +415,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 					continue;
 				}
 				this.log
-				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}
