@@ -13,6 +13,7 @@ import java.util.Set;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
+import com.documentum.fc.client.DfACLException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
@@ -343,7 +344,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 				// Bad accessor...try to revoke but don't explode if it fails
 				try {
 					acl.revokePermit(permit);
-				} catch (DfException e) {
+				} catch (DfACLException e) {
 					if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
 						// we can survive this...
 						this.log.warn(String.format(

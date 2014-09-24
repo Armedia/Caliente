@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
@@ -93,12 +94,17 @@ public class CmsContent extends CmsObject<IDfContent> {
 		if (documentId == null) { throw new CMSMFException(String.format(
 			"Could not locate the document ID in the context, for which content [%s] is to be exported", contentId)); }
 		final IDfSession session = content.getSession();
-		final IDfPersistentObject document = session.getObject(documentId.asId());
-		if (document == null) { throw new CMSMFException(String.format(
-			"Failed to locate document with id [%s] for content [%s]", documentId, contentId)); }
+		final IDfPersistentObject document;
+		try {
+			document = session.getObject(documentId.asId());
+		} catch (DfIdNotFoundException e) {
+			throw new CMSMFException(String.format("Failed to locate document with id [%s] for content [%s]",
+				documentId, contentId));
+		}
+
 		if (!(document instanceof IDfSysObject)) { throw new CMSMFException(String.format(
 			"Document with id [%s] for content [%s] is not a dm_sysobject: %s (%s)", documentId, contentId, document
-			.getType().getName(), document.getClass().getCanonicalName())); }
+				.getType().getName(), document.getClass().getCanonicalName())); }
 
 		String format = content.getString(CmsAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(CmsAttributes.PAGE);
