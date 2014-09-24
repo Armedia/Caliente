@@ -112,7 +112,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 
 	public void doExport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
 		final CmsFileSystem fileSystem, final String dqlPredicate) throws DfException, CMSMFException {
-
+		this.noiseTracker.clear();
 		final IDfSession session = sessionManager.acquireSession();
 
 		final int threadCount = getThreadCount();
@@ -308,6 +308,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 				}
 			}
 		} finally {
+			this.noiseTracker.clear();
 			Map<CmsObjectType, Integer> summary = Collections.emptyMap();
 			try {
 				summary = objectStore.getStoredObjectTypes();
