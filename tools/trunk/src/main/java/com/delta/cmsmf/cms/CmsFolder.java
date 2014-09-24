@@ -393,8 +393,6 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					// Again...how the hell?
 					continue;
 				}
-				parent.lockEx(true);
-				parent.fetch(null);
 				if (this.parentPermitDeltas.get(parentId).revoke(parent)) {
 					parent.save();
 				}
