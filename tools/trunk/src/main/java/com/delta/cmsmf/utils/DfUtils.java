@@ -12,6 +12,7 @@ import com.delta.cmsmf.cfg.Constant;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -62,13 +63,38 @@ public class DfUtils {
 		}
 	}
 
+	private static enum PermitType {
+		//
+		DF_ACCESS_PERMIT(IDfPermit.DF_ACCESS_PERMIT, IDfPermit.DF_ACCESS_PERMIT_STR),
+		DF_ACCESS_RESTRICTION(IDfPermit.DF_ACCESS_RESTRICTION, IDfPermit.DF_ACCESS_RESTRICTION_STR),
+		DF_APPLICATION_PERMIT(IDfPermit.DF_APPLICATION_PERMIT, IDfPermit.DF_APPLICATION_PERMIT_STR),
+		DF_APPLICATION_RESTRICTION(IDfPermit.DF_APPLICATION_RESTRICTION, IDfPermit.DF_APPLICATION_RESTRICTION_STR),
+		DF_EXTENDED_PERMIT(IDfPermit.DF_EXTENDED_PERMIT, IDfPermit.DF_EXTENDED_PERMIT_STR),
+		DF_EXTENDED_RESTRICTION(IDfPermit.DF_EXTENDED_RESTRICTION, IDfPermit.DF_EXTENDED_RESTRICTION_STR),
+		DF_REQUIRED_GROUP(IDfPermit.DF_REQUIRED_GROUP, IDfPermit.DF_REQUIRED_GROUP_STR),
+		DF_REQUIRED_GROUP_SET(IDfPermit.DF_REQUIRED_GROUP_SET, IDfPermit.DF_REQUIRED_GROUP_SET_STR);
+		private final int num;
+		private final String str;
+
+		private PermitType(int num, String str) {
+			this.str = str;
+			this.num = num;
+		}
+	}
+
 	private static final Map<String, Integer> PERMISSIONS_MAP;
+	private static final Map<String, Integer> PERMIT_TYPES_MAP;
 	static {
 		Map<String, Integer> m = new HashMap<String, Integer>();
 		for (Permission p : Permission.values()) {
 			m.put(p.str, p.num);
 		}
 		PERMISSIONS_MAP = Collections.unmodifiableMap(m);
+		m = new HashMap<String, Integer>();
+		for (PermitType p : PermitType.values()) {
+			m.put(p.str, p.num);
+		}
+		PERMIT_TYPES_MAP = Collections.unmodifiableMap(m);
 	}
 
 	public static void closeQuietly(IDfCollection c) {
@@ -180,6 +206,35 @@ public class DfUtils {
 		if (permission == null) { throw new IllegalArgumentException("Must provide a permission to map"); }
 		Integer ret = DfUtils.PERMISSIONS_MAP.get(permission);
 		if (ret == null) { throw new DfException(String.format("Unknown permissions value [%s] detected", permission)); }
+		return ret;
+	}
+
+	public static String decodePermitType(int permitType) throws DfException {
+		switch (permitType) {
+			case IDfPermit.DF_ACCESS_PERMIT:
+				return IDfPermit.DF_ACCESS_PERMIT_STR;
+			case IDfPermit.DF_ACCESS_RESTRICTION:
+				return IDfPermit.DF_ACCESS_RESTRICTION_STR;
+			case IDfPermit.DF_APPLICATION_PERMIT:
+				return IDfPermit.DF_APPLICATION_PERMIT_STR;
+			case IDfPermit.DF_APPLICATION_RESTRICTION:
+				return IDfPermit.DF_APPLICATION_RESTRICTION_STR;
+			case IDfPermit.DF_EXTENDED_PERMIT:
+				return IDfPermit.DF_EXTENDED_PERMIT_STR;
+			case IDfPermit.DF_EXTENDED_RESTRICTION:
+				return IDfPermit.DF_EXTENDED_RESTRICTION_STR;
+			case IDfPermit.DF_REQUIRED_GROUP:
+				return IDfPermit.DF_REQUIRED_GROUP_STR;
+			case IDfPermit.DF_REQUIRED_GROUP_SET:
+				return IDfPermit.DF_REQUIRED_GROUP_SET_STR;
+		}
+		throw new DfException(String.format("Unknown permit type [%d] detected", permitType));
+	}
+
+	public static int decodePermitType(String permitType) throws DfException {
+		if (permitType == null) { throw new IllegalArgumentException("Must provide a permit type to map"); }
+		Integer ret = DfUtils.PERMIT_TYPES_MAP.get(permitType);
+		if (ret == null) { throw new DfException(String.format("Unknown permit type value [%s] detected", permitType)); }
 		return ret;
 	}
 }
