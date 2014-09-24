@@ -16,6 +16,7 @@ import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -34,12 +35,14 @@ public class CmsACL extends CmsObject<IDfACL> {
 	private static class Permit implements Comparable<Permit> {
 		private final String name;
 		private final int type;
+		private final String typeStr;
 		private final String value;
 
 		private Permit(IDfSession session, IDfPermit permit) throws DfException {
 			this.name = permit.getAccessorName();
 			this.type = permit.getPermitType();
 			this.value = permit.getPermitValueString();
+			this.typeStr = DfUtils.decodePermitType(this.type);
 		}
 
 		private Permit(IDfSession session, CmsACL acl, int pos) throws DfException {
@@ -50,6 +53,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			this.type = prop.getValue(pos).asInteger();
 			prop = acl.getProperty(CmsACL.PERMIT_VALUE);
 			this.value = prop.getValue(pos).asString();
+			this.typeStr = DfUtils.decodePermitType(this.type);
 		}
 
 		@Override
@@ -76,7 +80,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 		@Override
 		public String toString() {
-			return String.format("Permit [name=%s, type=%s, value=%s]", this.name, this.type, this.value);
+			return String.format("Permit [name=%s, type=%s, value=%s]", this.name, this.typeStr, this.value);
 		}
 	}
 
@@ -325,6 +329,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 		// Clear any existing permissions
 		final IDfList existingPermissions = acl.getPermissions();
 		final int existingPermissionCount = existingPermissions.getCount();
+		final IDfSession session = acl.getSession();
 		for (int i = 0; i < existingPermissionCount; i++) {
 			IDfPermit permit = IDfPermit.class.cast(existingPermissions.get(i));
 			if (this.log.isDebugEnabled()) {
@@ -332,7 +337,27 @@ public class CmsACL extends CmsObject<IDfACL> {
 					permit.getAccessorName(), permit.getPermitType(), permit.getPermitValueInt(),
 					permit.getPermitValueString()));
 			}
-			acl.revokePermit(permit);
+			IDfGroup g = session.getGroup(permit.getAccessorName());
+			IDfUser u = session.getUser(permit.getAccessorName());
+			if ((u == null) && (g == null)) {
+				// Bad accessor...try to revoke but don't explode if it fails
+				try {
+					acl.revokePermit(permit);
+				} catch (DfException e) {
+					if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
+						// we can survive this...
+						this.log.warn(String.format(
+							"Could not revoke permit [%s/%s] from accessor [%s] - ACE not found",
+							DfUtils.decodePermitType(permit.getPermitType()), permit.getPermitValueString(),
+							permit.getAccessorName()));
+						continue;
+					}
+					// something else? don't snuff it...
+					throw new DfException(e);
+				}
+			} else {
+				acl.revokePermit(permit);
+			}
 		}
 
 		// Now, apply the new permissions
@@ -349,7 +374,6 @@ public class CmsACL extends CmsObject<IDfACL> {
 			this.log.trace(String.format("[%s]: %s", getLabel(), permitValues));
 		}
 		final int accessorCount = accessors.getValueCount();
-		IDfSession session = acl.getSession();
 		List<IDfPermit> extendedPerms = new ArrayList<IDfPermit>(accessorCount);
 		DfPermit p = new DfPermit();
 		for (int i = 0; i < accessorCount; i++) {
