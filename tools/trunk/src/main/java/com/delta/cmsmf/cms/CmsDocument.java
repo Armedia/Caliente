@@ -116,16 +116,20 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	}
 
 	@Override
-	protected String calculateLabel(IDfDocument document) throws DfException {
-		IDfId id = document.getFolderId(0);
-		String path = "(unknown)";
-		if (id != null) {
-			IDfFolder f = IDfFolder.class.cast(document.getSession().getObject(id));
+	protected String calculateLabel(IDfDocument document) throws DfException, CMSMFException {
+		final int folderCount = document.getFolderIdCount();
+		for (int i = 0; i < folderCount; i++) {
+			IDfId id = document.getFolderId(i);
+			IDfFolder f = IDfFolder.class.cast(document.getSession().getFolderBySpecification(id.getId()));
 			if (f != null) {
-				path = f.getFolderPath(0);
+				String path = (f.getFolderPathCount() > 0 ? f.getFolderPath(0) : String.format("(unknown-folder:[%s])",
+					id.getId()));
+				return String.format("%s/%s [%s]", path, document.getObjectName(),
+					calculateVersionString(document, true));
 			}
 		}
-		return String.format("%s/%s [%s]", path, document.getObjectName(), calculateVersionString(document, true));
+		throw new CMSMFException(String.format("None of the parent paths for object [%s] were found", document
+			.getObjectId().getId()));
 	}
 
 	@Override
@@ -285,10 +289,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
 			for (IDfId versionId : getVersions(true, document)) {
 				IDfPersistentObject obj = session.getObject(versionId);
-				if (obj == null) {
-					// WTF?? Shouldn't happen...
-					continue;
-				}
 				IDfDocument versionDoc = IDfDocument.class.cast(obj);
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Adding prior version [%s]", calculateVersionString(document, false)));
@@ -360,10 +360,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			// Now, also do the *SUBSEQUENT* versions...
 			for (IDfId versionId : getVersions(false, document)) {
 				IDfPersistentObject obj = session.getObject(versionId);
-				if (obj == null) {
-					// WTF?? Shouldn't happen...
-					continue;
-				}
 				IDfDocument versionDoc = IDfDocument.class.cast(obj);
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Adding subsequent version [%s]",
@@ -377,12 +373,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		ctx.setValue(CmsContent.DOCUMENT_ID, document.getValue(CmsAttributes.R_OBJECT_ID));
 		for (IDfValue contentId : getProperty(CmsDocument.CONTENTS)) {
 			IDfPersistentObject content = session.getObject(contentId.asId());
-			if (content == null) {
-				// Impossible, but defend against it anyway
-				this.log.warn(String.format("Missing content %s for document [%s](%s)", contentId.asString(),
-					getLabel(), getId()));
-				continue;
-			}
 			dependencyManager.persistRelatedObject(content);
 		}
 	}
@@ -415,9 +405,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		IDfValue referenceById = getProperty(CmsAttributes.REFERENCE_BY_ID).getValue();
 
 		target = session.getObject(referenceById.asId());
-		if (target == null) { throw new CMSMFException(String.format(
-			"Reference [%s] target object [%s] could not be found", getLabel(), referenceById.asString())); }
-
 		if (!(target instanceof IDfSysObject)) { throw new CMSMFException(String.format(
 			"Reference [%s] target object [%s] is not an IDfSysObject instance", getLabel(), referenceById.asString())); }
 
@@ -713,6 +700,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			IDfId parentId = document.getFolderId(i);
 			IDfFolder parent = session.getFolderBySpecification(parentId.getId());
 			if (parent != null) {
+				// We do this check to be resillient against broken source data
 				oldParents.put(parentId.getId(), parent);
 			}
 		}
@@ -732,6 +720,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 			parent = session.getFolderBySpecification(parentId);
 			if (parent != null) {
+				// We do this check to be resillient against broken source data
 				newParents.put(parentId, parent);
 			}
 		}
@@ -805,30 +794,24 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		if (this.antecedentPermitDelta != null) {
 			IDfId antecedentId = new DfId(this.antecedentPermitDelta.getObjectId());
 			IDfDocument antecedent = castObject(session.getObject(antecedentId));
-			if (antecedent != null) {
-				// When would this be null?
-				session.flush("persistentobjcache", null);
-				session.flushObject(antecedentId);
-				session.flushCache(false);
-				antecedent.fetch(null);
-				if (this.antecedentPermitDelta.revoke(antecedent)) {
-					antecedent.save();
-				}
+			session.flush("persistentobjcache", null);
+			session.flushObject(antecedentId);
+			session.flushCache(false);
+			antecedent.fetch(null);
+			if (this.antecedentPermitDelta.revoke(antecedent)) {
+				antecedent.save();
 			}
 		}
 
 		if (this.branchPermitDelta != null) {
 			IDfId branchId = new DfId(this.branchPermitDelta.getObjectId());
 			IDfDocument branch = castObject(session.getObject(branchId));
-			if (branch != null) {
-				// When would this be null?
-				session.flush("persistentobjcache", null);
-				session.flushObject(branchId);
-				session.flushCache(false);
-				branch.fetch(null);
-				if (this.branchPermitDelta.revoke(branch)) {
-					branch.save();
-				}
+			session.flush("persistentobjcache", null);
+			session.flushObject(branchId);
+			session.flushCache(false);
+			branch.fetch(null);
+			if (this.branchPermitDelta.revoke(branch)) {
+				branch.save();
 			}
 		}
 

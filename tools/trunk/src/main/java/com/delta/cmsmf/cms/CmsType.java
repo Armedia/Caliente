@@ -17,7 +17,6 @@ import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
@@ -219,8 +218,7 @@ public class CmsType extends CmsObject<IDfType> {
 		IDfCollection resultCol = DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_QUERY);
 		try {
 			while (resultCol.next()) {
-				IDfPersistentObject obj = session.getObject(resultCol.getId(CmsAttributes.NEW_OBJECT_ID));
-				return castObject(obj);
+				return castObject(session.getObject(resultCol.getId(CmsAttributes.NEW_OBJECT_ID)));
 			}
 			// Nothing was created... we should explode
 			throw new DfException(String.format("Failed to create the type [%s] with DQL: %s", typeName, dql));
