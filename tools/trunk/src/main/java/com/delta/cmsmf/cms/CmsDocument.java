@@ -453,6 +453,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		int antecedentDots = StringUtils.countMatches(antecedentVersionImplicitVersionLabel, ".");
 		int documentDots = StringUtils.countMatches(documentImplicitVersionLabel, ".");
 
+		detectAndClearMutability(antecedentVersion);
 		if (documentDots == (antecedentDots + 2)) {
 			// branch
 			IDfId branchID = antecedentVersion.branch(antecedentVersionImplicitVersionLabel);

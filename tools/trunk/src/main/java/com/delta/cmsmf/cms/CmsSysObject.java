@@ -136,8 +136,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		return sysObject.isCheckedOut();
 	}
 
-	@Override
-	protected void prepareOperation(T sysObject) throws DfException, CMSMFException {
+	protected final void detectAndClearMutability(T sysObject) throws DfException {
 		this.mustFreeze = false;
 		this.mustImmute = false;
 		if (sysObject.isFrozen()) {
@@ -175,6 +174,27 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		}
 	}
 
+	protected final void restoreMutability(T sysObject) throws DfException {
+		if (this.mustImmute) {
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Setting immutability status to [%s](%s)", getLabel(), getId()));
+			}
+			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
+			sysObject.save();
+		}
+		if (this.mustFreeze) {
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Setting frozen status to [%s](%s)", getLabel(), getId()));
+			}
+			sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, true);
+			sysObject.save();
+		}
+	}
+
+	@Override
+	protected void prepareOperation(T sysObject) throws DfException, CMSMFException {
+	}
+
 	@Override
 	protected IDfId persistChanges(T sysObject, CmsTransferContext context) throws DfException, CMSMFException {
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
@@ -200,20 +220,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 	@Override
 	protected void finalizeOperation(T sysObject) throws DfException, CMSMFException {
-		if (this.mustImmute) {
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting immutability status to [%s](%s)", getLabel(), getId()));
-			}
-			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
-			sysObject.save();
-		}
-		if (this.mustFreeze) {
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting frozen status to [%s](%s)", getLabel(), getId()));
-			}
-			sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, true);
-			sysObject.save();
-		}
+		restoreMutability(sysObject);
 	}
 
 	@Override
