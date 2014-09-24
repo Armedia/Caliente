@@ -144,11 +144,12 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 						boolean failBatch = false;
 						for (CmsObject<?> next : batch) {
 							if (failBatch) {
-								CmsImporter.this.log
-								.error(String.format("Batch has been failed - will not process [%s](%s)",
-									next.getLabel(), next.getId()));
-								objectImportFailed(next, null);
-								CmsImporter.this.counter.increment(next, CmsImportResult.FAILED);
+								final CmsImportResult result = CmsImportResult.SKIPPED;
+								CmsImporter.this.log.error(String.format(
+									"Batch has been failed - will not process [%s](%s) (%s)", next.getLabel(),
+									next.getId(), result.name()));
+								objectImportCompleted(next, result);
+								CmsImporter.this.counter.increment(next, result);
 								continue;
 							}
 
