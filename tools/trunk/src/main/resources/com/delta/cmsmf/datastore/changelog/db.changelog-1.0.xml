@@ -51,7 +51,7 @@
 			<column name="object_number" type="long" remarks="The export ordinal number of the object (import will be done in this order as well)">
 				<constraints nullable="false" unique="true"/>
 			</column>
-			<column name="object_label" type="varchar(128)" remarks="A label to quickly identify the object">
+			<column name="object_label" type="text" remarks="A label to quickly identify the object">
 				<constraints nullable="true" />
 			</column>
 		</createTable>
