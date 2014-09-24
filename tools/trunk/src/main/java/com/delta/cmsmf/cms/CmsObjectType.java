@@ -27,10 +27,10 @@ public enum CmsObjectType {
 	USER(CmsUser.class, IDfUser.class),
 	GROUP(CmsGroup.class, IDfGroup.class, CmsDependencyType.PEER),
 	ACL(CmsACL.class, IDfACL.class),
-	TYPE(CmsType.class, IDfType.class, CmsDependencyType.HIERARCHY, null, true),
+	TYPE(CmsType.class, IDfType.class, CmsDependencyType.HIERARCHY, null, true, false),
 	FORMAT(CmsFormat.class, IDfFormat.class),
-	FOLDER(CmsFolder.class, IDfFolder.class, CmsDependencyType.HIERARCHY, null, true),
-	DOCUMENT(CmsDocument.class, IDfDocument.class, CmsDependencyType.PEER, null, true),
+	FOLDER(CmsFolder.class, IDfFolder.class, CmsDependencyType.HIERARCHY, null, true, false),
+	DOCUMENT(CmsDocument.class, IDfDocument.class, CmsDependencyType.PEER, null, true, true),
 	CONTENT(CmsContent.class, IDfContent.class, "dmr_content", DOCUMENT);
 
 	private final String dmType;
@@ -38,6 +38,7 @@ public enum CmsObjectType {
 	private final Class<? extends CmsObject<?>> objectClass;
 	private final CmsDependencyType peerDependencyType;
 	private final boolean supportsBatching;
+	private final boolean failureInterruptsBatch;
 	private final Set<Object> surrogateOf;
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
@@ -57,12 +58,12 @@ public enum CmsObjectType {
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
 		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType, CmsObjectType... surrogateOf) {
-		this(objectClass, dfClass, peerDependencyType, dmType, false, surrogateOf);
+		this(objectClass, dfClass, peerDependencyType, dmType, false, false, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject, C extends CmsObject<T>> CmsObjectType(Class<C> objectClass,
 		Class<T> dfClass, CmsDependencyType peerDependencyType, String dmType, boolean supportsBatching,
-		CmsObjectType... surrogateOf) {
+		boolean failureInterruptsBatch, CmsObjectType... surrogateOf) {
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
 		} else {
@@ -72,6 +73,7 @@ public enum CmsObjectType {
 		this.objectClass = objectClass;
 		this.peerDependencyType = Tools.coalesce(peerDependencyType, CmsDependencyType.NONE);
 		this.supportsBatching = supportsBatching;
+		this.failureInterruptsBatch = failureInterruptsBatch;
 		Set<Object> s = new TreeSet<Object>();
 		if (surrogateOf != null) {
 			for (CmsObjectType t : surrogateOf) {
@@ -117,6 +119,10 @@ public enum CmsObjectType {
 
 	public final boolean isBatchingSupported() {
 		return this.supportsBatching;
+	}
+
+	public final boolean isFailureInterruptsBatch() {
+		return this.failureInterruptsBatch;
 	}
 
 	private static Map<String, CmsObjectType> DM_TYPE_DECODER = null;
