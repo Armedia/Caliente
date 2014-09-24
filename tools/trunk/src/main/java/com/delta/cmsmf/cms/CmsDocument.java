@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -504,7 +505,9 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			}
 		}
 
-		this.parentFolderDeltas = new HashMap<String, PermitDelta>();
+		// We have to do this in two passes, because we MUST obtain the locks in a specific order
+		// to avoid deadlocks - in particular, lowest-id-first
+		Set<String> parentIds = new TreeSet<String>();
 		for (IDfValue parentId : getProperty(CmsDocument.TARGET_PARENTS)) {
 			Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
 				parentId.asString());
@@ -512,7 +515,12 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				// TODO: HOW??!
 				continue;
 			}
-			String actualParentId = m.getTargetValue();
+			parentIds.add(m.getTargetValue());
+		}
+
+		// We also need the deltas to go in the same order as above...
+		this.parentFolderDeltas = new TreeMap<String, PermitDelta>();
+		for (String actualParentId : parentIds) {
 			IDfFolder parentFolder = session.getFolderBySpecification(actualParentId);
 
 			// Not sure why?!! We just follow the leader here...
@@ -521,6 +529,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			session.flushCache(false);
 
 			parentFolder = session.getFolderBySpecification(actualParentId);
+			parentFolder.lockEx(true);
 			parentFolder.fetch(null);
 			// Stow its old permissions
 			PermitDelta newDelta = new PermitDelta(parentFolder, IDfACL.DF_PERMIT_WRITE);
