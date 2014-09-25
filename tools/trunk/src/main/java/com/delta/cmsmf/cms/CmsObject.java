@@ -100,7 +100,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -488,10 +488,21 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 			return new SaveResult(cmsImportResult, object.getObjectId().getId());
 		} finally {
-			try {
-				if (ok) {
+			if (ok) {
+				try {
 					finalizeOperation(object);
-
+				} catch (DfException e) {
+					ok = false;
+					this.log
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.label, this.id), e);
+				}
+			}
+			if (transOpen) {
+				if (ok) {
 					// This has to be the last thing that happens, else some of the attributes won't
 					// take. There is no need to save() the object for this, as this is a direct
 					// modification
@@ -499,22 +510,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 						this.log.trace(String
 							.format("Updating the system attributes for [%s](%s)", this.label, this.id));
 					}
+
 					if (!updateSystemAttributes(object)) {
 						this.log.warn(String.format("Failed to update the system attributes for [%s](%s)", this.label,
 							this.id));
 					}
-				}
-			} catch (DfException e) {
-				ok = false;
-				this.log
-				.error(
-					String
-					.format(
-						"Caught an exception while trying to set frozen/immutable status for [%s](%s) - aborting the transaction",
-						this.label, this.id), e);
-			}
-			if (transOpen) {
-				if (ok) {
 					this.log.info(String.format("Committing the transaction for [%s](%s)", this.label, this.id));
 					if (localTx != null) {
 						session.commitTransEx(localTx);
@@ -568,7 +568,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -594,7 +594,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	/**
@@ -608,16 +608,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
