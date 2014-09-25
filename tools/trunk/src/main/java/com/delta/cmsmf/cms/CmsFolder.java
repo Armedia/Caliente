@@ -4,12 +4,8 @@
 
 package com.delta.cmsmf.cms;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -112,12 +108,10 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfFolder folder) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfFolder folder) throws DfException,
+		CMSMFException {
+		super.getDataProperties(properties, folder);
 		final String folderId = folder.getObjectId().getId();
-		if (this.log.isDebugEnabled() && !getType().isBatchingSupported()) {
-			String batchId = calculateBatchId(folder);
-			this.log.debug(String.format("DEPTH %s for [%s]", batchId, getLabel()));
-		}
 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
 			String.format(CmsFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
@@ -129,7 +123,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-				.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
+					.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -264,10 +258,10 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							getLabel(), folder.getObjectId().getId(), actualUser));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								getLabel(), folder.getObjectId().getId(), actualUser));
 					continue;
 				}
 
@@ -286,11 +280,11 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-							actualUser, getLabel()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+									actualUser, getLabel()), e);
 				}
 			}
 		}
@@ -309,21 +303,6 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 	}
 
 	@Override
-	protected Collection<IDfValue> getTargetPaths() {
-		Collection<IDfValue> paths = getAttribute(CmsAttributes.R_FOLDER_PATH).getValues();
-		List<IDfValue> ret = new ArrayList<IDfValue>(paths.size());
-		for (IDfValue v : paths) {
-			String p = v.asString();
-			// Remove everything after the last slash
-			p = p.substring(0, p.lastIndexOf('/'));
-			if (p.length() > 0) {
-				ret.add(DfValueFactory.newStringValue(p));
-			}
-		}
-		return ret;
-	}
-
-	@Override
 	protected IDfFolder locateInCms(CmsTransferContext ctx) throws CMSMFException, DfException {
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
@@ -331,35 +310,5 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 		if (t.isTypeOf("dm_cabinet")) { return session.getFolderByPath(String.format("/%s",
 			getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString())); }
 		return super.locateInCms(ctx);
-	}
-
-	@Override
-	protected Map<String, IDfFolder> getCurrentParents(IDfFolder folder, CmsTransferContext ctx) throws DfException {
-		IDfSession session = folder.getSession();
-		final int oldParentCount = folder.getFolderPathCount();
-		Map<String, IDfFolder> parents = new HashMap<String, IDfFolder>(oldParentCount);
-		for (int i = 0; i < oldParentCount; i++) {
-			String path = folder.getFolderPath(i);
-			IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
-			if (parent != null) {
-				parents.put(parent.getObjectId().getId(), parent);
-			}
-		}
-		return parents;
-	}
-
-	@Override
-	protected Map<String, IDfFolder> getProspectiveParents(CmsTransferContext ctx) throws DfException {
-		final IDfSession session = ctx.getSession();
-		CmsAttribute folderPath = getAttribute(CmsAttributes.R_FOLDER_PATH);
-		Map<String, IDfFolder> parents = new HashMap<String, IDfFolder>(folderPath.getValueCount());
-		for (IDfValue v : folderPath) {
-			String path = v.asString();
-			IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
-			if (parent != null) {
-				parents.put(parent.getObjectId().getId(), parent);
-			}
-		}
-		return parents;
 	}
 }

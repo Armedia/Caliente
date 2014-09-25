@@ -8,11 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,7 +21,6 @@ import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
-import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -48,8 +45,6 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CmsDocument extends CmsSysObject<IDfDocument> {
 
-	private static final String TARGET_PATHS = "targetPaths";
-	private static final String TARGET_PARENTS = "targetParents";
 	private static final String CONTENTS = "contents";
 
 	private static boolean HANDLERS_READY = false;
@@ -136,27 +131,12 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException {
-		CmsProperty paths = new CmsProperty(CmsDocument.TARGET_PATHS, CmsDataType.DF_STRING, true);
-		properties.add(paths);
-		CmsProperty parents = new CmsProperty(CmsDocument.TARGET_PARENTS, CmsDataType.DF_ID, true);
-		properties.add(parents);
-		final IDfSession session = document.getSession();
-		for (IDfValue folderId : getAttribute(CmsAttributes.I_FOLDER_ID)) {
-			IDfFolder parent = session.getFolderBySpecification(folderId.asId().getId());
-			if (parent == null) {
-				this.log.warn(String.format("Document [%s](%s) references non-existent folder [%s]", getLabel(),
-					getId(), folderId.asString()));
-				continue;
-			}
-			parents.addValue(folderId);
-			int pathCount = parent.getFolderPathCount();
-			for (int i = 0; i < pathCount; i++) {
-				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(i)));
-			}
-		}
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException,
+		CMSMFException {
+		super.getDataProperties(properties, document);
 
 		if (!isDfReference(document)) { return; }
+		final IDfSession session = document.getSession();
 
 		// TODO: this is untidy - using an undocumented API??
 		IDfReference ref = ReferenceFinder.getForMirrorId(document.getObjectId(), session);
@@ -174,11 +154,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			.newStringValue(ref.getReferenceByName())));
 		properties.add(new CmsProperty(CmsAttributes.REFRESH_INTERVAL, CmsDataType.DF_INTEGER, false, DfValueFactory
 			.newIntValue(ref.getRefreshInterval())));
-	}
-
-	@Override
-	protected Collection<IDfValue> getTargetPaths() throws DfException, CMSMFException {
-		return getProperty(CmsDocument.TARGET_PATHS).getValues();
 	}
 
 	@Override
@@ -410,7 +385,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			"Reference [%s] target object [%s] is not an IDfSysObject instance", getLabel(), referenceById.asString())); }
 
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
-		IDfValue mainFolderAtt = getProperty(CmsDocument.TARGET_PARENTS).getValue();
+		IDfValue mainFolderAtt = getProperty(CmsSysObject.TARGET_PARENTS).getValue();
 		Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
 			mainFolderAtt.asString());
 		if (m == null) { throw new CMSMFException(String.format(
@@ -476,9 +451,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	@Override
 	protected void prepareForConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
-
-		IDfSession session = document.getSession();
-		session.flushCache(false);
 
 		// Is root?
 		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
@@ -670,9 +642,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		if (this.antecedentPermitDelta != null) {
 			IDfId antecedentId = new DfId(this.antecedentPermitDelta.getObjectId());
 			IDfDocument antecedent = castObject(session.getObject(antecedentId));
-			session.flush("persistentobjcache", null);
 			session.flushObject(antecedentId);
-			session.flushCache(false);
 			antecedent.fetch(null);
 			if (this.antecedentPermitDelta.revoke(antecedent)) {
 				antecedent.save();
@@ -682,9 +652,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		if (this.branchPermitDelta != null) {
 			IDfId branchId = new DfId(this.branchPermitDelta.getObjectId());
 			IDfDocument branch = castObject(session.getObject(branchId));
-			session.flush("persistentobjcache", null);
 			session.flushObject(branchId);
-			session.flushCache(false);
 			branch.fetch(null);
 			if (this.branchPermitDelta.revoke(branch)) {
 				branch.save();
@@ -692,53 +660,5 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 
 		return super.cleanupAfterSave(document, newObject, context);
-	}
-
-	@Override
-	protected Map<String, IDfFolder> getCurrentParents(IDfDocument document, CmsTransferContext ctx) throws DfException {
-		IDfSession session = document.getSession();
-		final int oldParentCount = document.getFolderIdCount();
-		Map<String, IDfFolder> parents = new HashMap<String, IDfFolder>(oldParentCount);
-		for (int i = 0; i < oldParentCount; i++) {
-			IDfId parentId = document.getFolderId(i);
-			try {
-				IDfFolder parent = session.getFolderBySpecification(parentId.getId());
-				parents.put(parent.getObjectId().getId(), parent);
-			} catch (DfIdNotFoundException e) {
-				// HUH?
-				this.log.warn(String.format(
-					"Target document [%s](%s) references parent object [%s], but it couldn't be found", getLabel(),
-					document.getObjectId().getId(), parentId.getId()));
-				continue;
-			}
-		}
-		return parents;
-	}
-
-	@Override
-	protected Map<String, IDfFolder> getProspectiveParents(CmsTransferContext context) throws DfException {
-		final IDfSession session = context.getSession();
-		Map<String, IDfFolder> newParents = new HashMap<String, IDfFolder>();
-		for (IDfValue p : getProperty(CmsDocument.TARGET_PARENTS)) {
-			Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
-				p.asString());
-			if (m == null) {
-				// TODO: HOW??!
-				continue;
-			}
-
-			final String parentId = m.getTargetValue();
-			try {
-				IDfFolder parent = session.getFolderBySpecification(parentId);
-				newParents.put(parent.getObjectId().getId(), parent);
-			} catch (DfIdNotFoundException e) {
-				// HUH?
-				this.log.warn(String.format(
-					"Source document [%s](%s) references parent object [%s], but it couldn't be found", getLabel(),
-					getId(), parentId));
-				continue;
-			}
-		}
-		return newParents;
 	}
 }

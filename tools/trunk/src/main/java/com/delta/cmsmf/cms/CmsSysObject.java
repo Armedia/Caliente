@@ -4,9 +4,11 @@
 
 package com.delta.cmsmf.cms;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -20,8 +22,10 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
+import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
@@ -43,6 +47,9 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 	private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
 	private static final Collection<String> NO_PERMITS = Collections.emptySet();
+
+	protected static final String TARGET_PATHS = "targetPaths";
+	protected static final String TARGET_PARENTS = "targetParents";
 
 	private static final Set<String> AUTO_PERMITS;
 
@@ -196,17 +203,17 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	protected static final class ParentFolderAction implements Comparable<ParentFolderAction> {
 		private final Logger log = Logger.getLogger(getClass());
 
-		private final IDfFolder parent;
+		private final IDfSysObject parent;
 		private final String parentId;
 		private final PermitDelta permitDelta;
 		private final boolean link;
 		private boolean locked = false;
 
-		protected ParentFolderAction(IDfFolder parent, boolean link, String... xperms) throws DfException {
+		protected ParentFolderAction(IDfSysObject parent, boolean link) throws DfException {
 			this.parent = parent;
 			this.parentId = parent.getObjectId().getId();
 			this.link = link;
-			this.permitDelta = new PermitDelta(parent, IDfACL.DF_PERMIT_DELETE, xperms);
+			this.permitDelta = new PermitDelta(parent, IDfACL.DF_PERMIT_DELETE, IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 		}
 
 		private void ensureLocked() throws DfException {
@@ -214,11 +221,11 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				boolean ok = false;
 				try {
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("LOCKING [%s]", this.parent.getObjectId().getId()));
+						this.log.debug(String.format("LOCKING [%s]", this.parentId));
 					}
 					this.parent.lock();
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("LOCKED [%s]", this.parent.getObjectId().getId()));
+						this.log.debug(String.format("LOCKED [%s]", this.parentId));
 					}
 					ok = true;
 				} finally {
@@ -245,6 +252,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			} else {
 				child.unlink(this.parentId);
 			}
+			child.save();
 		}
 
 		protected void cleanUp() throws DfException {
@@ -285,7 +293,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	private boolean mustFreeze = false;
 	private boolean mustImmute = false;
 	private PermitDelta existingPermitDelta = null;
-	private Set<ParentFolderAction> parentLinkActions = null;
+	private Collection<ParentFolderAction> parentLinkActions = null;
 
 	/**
 	 * @param dfClass
@@ -358,6 +366,30 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			ret |= true;
 		}
 		return ret;
+	}
+
+	@Override
+	protected void getDataProperties(Collection<CmsProperty> properties, T object) throws DfException, CMSMFException {
+		IDfSession session = object.getSession();
+		CmsProperty paths = new CmsProperty(CmsSysObject.TARGET_PATHS, CmsDataType.DF_STRING, true);
+		properties.add(paths);
+		CmsProperty parents = new CmsProperty(CmsSysObject.TARGET_PARENTS, CmsDataType.DF_ID, true);
+		properties.add(parents);
+		for (IDfValue folderId : getAttribute(CmsAttributes.I_FOLDER_ID)) {
+			final IDfFolder parent;
+			try {
+				parent = session.getFolderBySpecification(folderId.asId().getId());
+			} catch (DfIdNotFoundException e) {
+				this.log.warn(String.format("%s [%s](%s) references non-existent folder [%s]", getType().name(),
+					getLabel(), getId(), folderId.asString()));
+				continue;
+			}
+			parents.addValue(folderId);
+			int pathCount = parent.getFolderPathCount();
+			for (int i = 0; i < pathCount; i++) {
+				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(i)));
+			}
+		}
 	}
 
 	@Override
@@ -515,7 +547,9 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		return isReference();
 	}
 
-	protected abstract Collection<IDfValue> getTargetPaths() throws DfException, CMSMFException;
+	protected Collection<IDfValue> getTargetPaths() throws DfException, CMSMFException {
+		return getProperty(CmsSysObject.TARGET_PATHS).getValues();
+	}
 
 	protected T locateExistingByPath(CmsTransferContext ctx) throws CMSMFException, DfException {
 		final IDfSession session = ctx.getSession();
@@ -676,41 +710,94 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		return history;
 	}
 
-	protected abstract Map<String, IDfFolder> getCurrentParents(T sysObject, CmsTransferContext ctx) throws DfException;
+	protected List<String> getProspectiveParents(CmsTransferContext context) throws DfException {
+		CmsProperty parents = getProperty(CmsSysObject.TARGET_PARENTS);
+		List<String> newParents = new ArrayList<String>(parents.getValueCount());
+		CmsAttributeMapper mapper = context.getAttributeMapper();
+		for (int i = 0; i < parents.getValueCount(); i++) {
+			IDfId parentId = parents.getValue(i).asId();
+			// We already know the parents are folders, b/c that's how we harvested them in the
+			// export, so we stick to that
+			Mapping m = mapper.getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID, parentId.getId());
+			if (m == null) {
+				// TODO: HOW??! Must have been an import failure on the parent...
+				continue;
+			}
 
-	protected abstract Map<String, IDfFolder> getProspectiveParents(CmsTransferContext ctx) throws DfException;
+			newParents.add(m.getTargetValue());
+		}
+		return newParents;
+	}
 
-	protected final void linkToParents(T sysObject, CmsTransferContext ctx) throws DfException, CMSMFException {
-		Map<String, IDfFolder> oldParents = getCurrentParents(sysObject, ctx);
-		Map<String, IDfFolder> newParents = getProspectiveParents(ctx);
+	protected final boolean linkToParents(T sysObject, CmsTransferContext ctx) throws DfException, CMSMFException {
+		final IDfSession session = sysObject.getSession();
 
-		this.parentLinkActions = new TreeSet<ParentFolderAction>();
-
-		// Unlink from those who are in the old parent list, but not in the new parent list
-		// We use a TreeSet to ensure that locks are attempted always in the same order
-		Set<String> unlinkTargets = new TreeSet<String>(oldParents.keySet());
-		unlinkTargets.removeAll(newParents.keySet());
-		for (String oldParentId : unlinkTargets) {
-			this.parentLinkActions.add(new ParentFolderAction(oldParents.get(oldParentId), false,
-				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR));
+		// First, get the list of the current parents, and reverse its order.
+		// The reverse order will accelerate the unlinking process later on
+		final int cpcount = sysObject.getFolderIdCount();
+		LinkedList<String> oldParents = new LinkedList<String>();
+		for (int i = 0; i < cpcount; i++) {
+			oldParents.addLast(sysObject.getFolderId(i).getId());
 		}
 
-		// Link to those who are in the new parent list, but not the old parent list
-		// We use a TreeSet to ensure that locks are attempted always in the same order
-		Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
-		linkTargets.removeAll(oldParents.keySet());
-		for (String parentId : linkTargets) {
-			this.parentLinkActions.add(new ParentFolderAction(newParents.get(parentId), true,
-				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR));
+		List<String> newParents = getProspectiveParents(ctx);
+		if (newParents.isEmpty()) {
+			getProspectiveParents(ctx);
 		}
 
 		// This ensures that we acquire ALL locks in the correct lowest-id-first order,
 		// since parentLinkActions will be a sorted tree in that order.
-		for (ParentFolderAction action : this.parentLinkActions) {
+		Set<String> lockingOrder = new TreeSet<String>();
+		lockingOrder.addAll(oldParents);
+		lockingOrder.addAll(newParents);
+
+		Set<String> common = new HashSet<String>(oldParents);
+		common.retainAll(newParents);
+
+		// If the "common" set is the same size as the "lockingOrder" set,
+		// then they forcibly have the same elements, so we don't have to do
+		// any linking/unlinking
+		if (common.size() == lockingOrder.size()) {
+			// For safety...
+			this.parentLinkActions = Collections.emptyList();
+			return false;
+		}
+
+		// Ok...so first things first: lock the objects, and pull them in for
+		// processing
+		Map<String, IDfSysObject> parentCache = new HashMap<String, IDfSysObject>(lockingOrder.size());
+		for (String parentId : lockingOrder) {
+			// We HAVE to lock everything in the correct order prior to modification
+			final IDfId id = new DfId(parentId);
+			session.flushObject(id);
+			final IDfSysObject parent = IDfSysObject.class.cast(session.getObject(id));
+			parent.lock();
+			parent.fetch(null);
+			parentCache.put(parentId, parent);
+		}
+
+		// Ok...so now we have the parents locked, in the right order, and the object
+		// for the parent is cached...proceed with the unlink first
+		this.parentLinkActions = new ArrayList<ParentFolderAction>(lockingOrder.size());
+		for (String parentId : oldParents) {
+			IDfSysObject parent = parentCache.get(parentId);
+			ParentFolderAction action = new ParentFolderAction(parent, false);
 			this.log.debug(String.format("Applying %s", action));
 			action.apply(sysObject);
 			this.log.debug(String.format("Applied %s", action));
+			this.parentLinkActions.add(action);
 		}
+
+		for (String parentId : newParents) {
+			IDfSysObject parent = parentCache.get(parentId);
+			ParentFolderAction action = new ParentFolderAction(parent, true);
+			this.log.debug(String.format("Applying %s", action));
+			action.apply(sysObject);
+			this.log.debug(String.format("Applied %s", action));
+			this.parentLinkActions.add(action);
+		}
+
+		return true;
 	}
 
 	protected final void cleanUpParents(IDfSession session) throws DfException, CMSMFException {
