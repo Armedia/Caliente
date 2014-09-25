@@ -30,6 +30,7 @@
 	<logger name="console">
 		<level value="INFO"/>
 		<appender-ref ref="stdout"/>
+		<appender-ref ref="default"/>
 	</logger>
 
 	<root>
