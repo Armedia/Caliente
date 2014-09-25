@@ -79,12 +79,16 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 			// Does it have the required access permission?
 			object.fetch(null);
-			int oldPermission = object.getPermit();
+			int oldPermission = object.getPermitEx(userName);
 			if (oldPermission < newPermission) {
-				this.oldPermit = new DfPermit();
-				this.oldPermit.setAccessorName(userName);
-				this.oldPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
-				this.oldPermit.setPermitValue(DfUtils.decodeAccessPermission(oldPermission));
+				if (oldPermission > 0) {
+					this.oldPermit = new DfPermit();
+					this.oldPermit.setAccessorName(userName);
+					this.oldPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
+					this.oldPermit.setPermitValue(DfUtils.decodeAccessPermission(oldPermission));
+				} else {
+					this.oldPermit = null;
+				}
 				this.newPermit = new DfPermit();
 				this.newPermit.setAccessorName(userName);
 				this.newPermit.setPermitType(IDfPermitType.ACCESS_PERMIT);
@@ -129,16 +133,20 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			if (this.newPermit != null) {
 				IDfPermit toGrant = (grant ? this.newPermit : this.oldPermit);
 				IDfPermit toRevoke = (grant ? this.oldPermit : this.newPermit);
-				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("REVOKING [%s] on [%s]", toRevoke.getPermitValueString(),
-						object.getObjectId()));
+				if (toRevoke != null) {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("REVOKING [%s] on [%s]", toRevoke.getPermitValueString(),
+							object.getObjectId()));
+					}
+					object.revokePermit(toRevoke);
 				}
-				object.revokePermit(toRevoke);
-				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("GRANTING [%s] on [%s]", toGrant.getPermitValueString(),
-						object.getObjectId()));
+				if (toGrant != null) {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("GRANTING [%s] on [%s]", toGrant.getPermitValueString(),
+							object.getObjectId()));
+					}
+					object.grantPermit(toGrant);
 				}
-				object.grantPermit(toGrant);
 
 				// Sadly, if we're messing with access permissions, we may have to clear these out
 				// if they're added automagically by Documentum
@@ -331,7 +339,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			this.mustImmute = true;
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("Clearing immutable status from [%s](%s){%s}", getLabel(), getId(), newId));
+				.debug(String.format("Clearing immutable status from [%s](%s){%s}", getLabel(), getId(), newId));
 			}
 			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, false);
 			if (!sysObject.isCheckedOut()) {
@@ -373,7 +381,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		} else if (this.mustImmute) {
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
+				.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
 			}
 			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
@@ -409,13 +417,15 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	protected void prepareOperation(T sysObject) throws DfException, CMSMFException {
 		if (!isTransitoryObject(sysObject)) {
 			this.existingPermitDelta = new PermitDelta(sysObject, IDfACL.DF_PERMIT_DELETE);
-			this.existingPermitDelta.grant(sysObject);
+			if (this.existingPermitDelta.grant(sysObject)) {
+				sysObject.save();
+			}
 		}
 	}
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingPermitDelta != null) && this.existingPermitDelta.revoke(object);
 		return ret;
@@ -512,7 +522,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 			.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-			.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
+				.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
 	}
 
 	/**
@@ -592,7 +602,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				throw new CMSMFException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
 					getSubtype(), getLabel(), getSubtype(), currentPath, current.getType().getName(), current
-						.getObjectId().getId()));
+					.getObjectId().getId()));
 			}
 
 			T currentObj = dfClass.cast(current);
@@ -717,7 +727,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				// that means we have a broken version tree...which is unsupported
 				throw new CMSMFException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-						.getId(), deferred));
+					.getId(), deferred));
 			}
 		}
 		return history;
