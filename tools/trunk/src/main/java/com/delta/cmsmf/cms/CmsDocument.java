@@ -691,8 +691,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			}
 		}
 
-		super.cleanupAfterSave(document, newObject, context);
-		return false;
+		return super.cleanupAfterSave(document, newObject, context);
 	}
 
 	@Override

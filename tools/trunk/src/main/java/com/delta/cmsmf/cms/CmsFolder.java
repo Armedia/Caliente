@@ -129,7 +129,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-					.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
+				.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -264,10 +264,10 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								getLabel(), folder.getObjectId().getId(), actualUser));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							getLabel(), folder.getObjectId().getId(), actualUser));
 					continue;
 				}
 
@@ -286,11 +286,11 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-									actualUser, getLabel()), e);
+					.warn(
+						String
+						.format(
+							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+							actualUser, getLabel()), e);
 				}
 			}
 		}
@@ -305,7 +305,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 	protected boolean cleanupAfterSave(IDfFolder folder, boolean newObject, CmsTransferContext context)
 		throws DfException, CMSMFException {
 		cleanUpParents(folder.getSession());
-		return false;
+		return super.cleanupAfterSave(folder, newObject, context);
 	}
 
 	@Override
