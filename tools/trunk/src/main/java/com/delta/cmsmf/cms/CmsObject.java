@@ -100,7 +100,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-				.getCanonicalName(), dfClass.getCanonicalName())); }
+			.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -342,7 +342,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		return false;
 	}
 
-	protected void prepareOperation(T object) throws DfException, CMSMFException {
+	protected void prepareOperation(T object, boolean newObject) throws DfException, CMSMFException {
 	}
 
 	protected IDfId persistChanges(T object, CmsTransferContext context) throws DfException, CMSMFException {
@@ -424,7 +424,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				return new SaveResult(cmsImportResult, object.getObjectId().getId());
 			}
 
-			prepareOperation(object);
+			prepareOperation(object, isNew);
 			prepareForConstruction(object, isNew, context);
 
 			if (!isNew) {
@@ -494,11 +494,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.label, this.id), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.label, this.id), e);
 				}
 			}
 			if (transOpen) {
@@ -568,7 +568,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -594,7 +594,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 	}
 
 	/**
@@ -608,16 +608,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		return false;
 	}
 

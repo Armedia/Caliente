@@ -132,7 +132,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		super.getDataProperties(properties, document);
 
 		if (!isDfReference(document)) { return; }
@@ -444,8 +444,19 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			// checkout
 			this.branchPermitDelta = null;
 			antecedentVersion.checkout();
+			antecedentVersion.fetch(null);
 		}
 		return antecedentVersion;
+	}
+
+	@Override
+	protected void prepareOperation(IDfDocument sysObject, boolean newObject) throws DfException, CMSMFException {
+		super.prepareOperation(sysObject, newObject);
+		if (!newObject) {
+			// We only do this for old objects because new objects will have been
+			// "fixed" in this respect in newObject()
+			detectAndClearMutability(sysObject);
+		}
 	}
 
 	@Override
