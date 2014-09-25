@@ -290,7 +290,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		}
 	}
 
-	// private boolean mustFreeze = false;
+	private boolean mustFreeze = false;
 	private boolean mustImmute = false;
 	private PermitDelta existingPermitDelta = null;
 	private Collection<ParentFolderAction> parentLinkActions = null;
@@ -308,22 +308,26 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	}
 
 	protected final void detectAndClearMutability(T sysObject) throws DfException {
-		// this.mustFreeze = false;
+		this.mustFreeze = false;
 		this.mustImmute = false;
 		final String newId = sysObject.getObjectId().getId();
 		/*
 		if (sysObject.isFrozen()) {
+			// An object being frozen implies immutability
 			this.mustFreeze = true;
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Clearing frozen status from [%s](%s){%s}", getLabel(), getId(), newId));
 			}
-			sysObject.setBoolean(CmsAttributes.R_FROZEN_FLAG, false);
+			// TODO: How to determine if we use false or true here? Stick to false, for now...
+			sysObject.unfreeze(false);
 			if (!sysObject.isCheckedOut()) {
 				sysObject.save();
 			}
 		}
 		 */
-		if (sysObject.isImmutable()) {
+		// Freezing implies immutability
+		if (!this.mustFreeze && sysObject.isImmutable()) {
+			// An object may be immutable, yet not frozen
 			this.mustImmute = true;
 			if (this.log.isDebugEnabled()) {
 				this.log
@@ -336,25 +340,37 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		}
 
 		/*
-		CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
-		if (frozen != null) {
-			// We only copy over the "true" values - we don't override local frozen status
-			// if it's set to true, and the incoming value is false
-			this.mustFreeze |= frozen.getValue().asBoolean();
+		if (!this.mustFreeze) {
+			CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
+			if (frozen != null) {
+				// We only copy over the "true" values - we don't override local frozen status
+				// if it's set to true, and the incoming value is false
+				this.mustFreeze |= frozen.getValue().asBoolean();
+			}
 		}
 		 */
-		CmsAttribute immutable = getAttribute(CmsAttributes.R_IMMUTABLE_FLAG);
-		if (immutable != null) {
-			// We only copy over the "true" values - we don't override local immutable
-			// status if it's set to true, and the incoming value is false
-			this.mustImmute |= immutable.getValue().asBoolean();
+		if (!this.mustFreeze) {
+			CmsAttribute immutable = getAttribute(CmsAttributes.R_IMMUTABLE_FLAG);
+			if (immutable != null) {
+				// We only copy over the "true" values - we don't override local immutable
+				// status if it's set to true, and the incoming value is false
+				this.mustImmute |= immutable.getValue().asBoolean();
+			}
 		}
 	}
 
 	protected final boolean restoreMutability(T sysObject) throws DfException {
 		boolean ret = false;
 		final String newId = sysObject.getObjectId().getId();
-		if (this.mustImmute) {
+		if (this.mustFreeze) {
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", getLabel(), getId(), newId));
+			}
+			// TODO: assembly support?
+			// TODO: How to determine if we use false or true here? Stick to false, for now...
+			sysObject.freeze(false);
+			ret |= true;
+		} else if (this.mustImmute) {
 			if (this.log.isDebugEnabled()) {
 				this.log
 					.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
@@ -362,16 +378,6 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
 		}
-		/*
-		if (this.mustFreeze) {
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", getLabel(), getId(), newId));
-			}
-			// TODO: assembly support?
-			sysObject.freeze(false);
-			ret |= true;
-		}
-		 */
 		return ret;
 	}
 
