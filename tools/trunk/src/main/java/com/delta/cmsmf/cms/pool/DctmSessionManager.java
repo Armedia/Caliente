@@ -8,6 +8,7 @@ import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.DfClient;
 import com.documentum.fc.client.DfServiceException;
 import com.documentum.fc.client.IDfClient;
@@ -23,6 +24,21 @@ import com.documentum.fc.tools.RegistryPasswordUtils;
  *
  */
 public class DctmSessionManager {
+
+	private static enum DfCache {
+		//
+		querycache,
+		aclcache,
+		groupcache,
+		// ddcache,
+		// registrycache,
+		persistentcache,
+		persistentobjcache;
+
+		public void flush(IDfSession session, String cacheKey) throws DfException {
+			session.flush(name(), cacheKey);
+		}
+	}
 
 	private static final Logger LOG = Logger.getLogger(DctmSessionManager.class);
 	private static final IDfClient CLIENT;
@@ -57,6 +73,29 @@ public class DctmSessionManager {
 
 	private final PoolableObjectFactory<IDfSession> FACTORY = new PoolableObjectFactory<IDfSession>() {
 
+		private void flushCaches(IDfSession session) throws DfException {
+			final String sessionId = DfUtils.getSessionId(session);
+			if (DctmSessionManager.LOG.isDebugEnabled()) {
+				DctmSessionManager.LOG.debug(String.format("Flushing all the session caches for session [%s]",
+					sessionId));
+			}
+			for (DfCache cache : DfCache.values()) {
+				if (DctmSessionManager.LOG.isDebugEnabled()) {
+					DctmSessionManager.LOG.debug(String.format("Flushing the [%s] cache for session [%s]",
+						cache.name(), sessionId));
+				}
+				try {
+					cache.flush(session, null);
+				} catch (DfException e) {
+					if (DctmSessionManager.LOG.isDebugEnabled()) {
+						DctmSessionManager.LOG.error(String.format(
+							"Exception caught flushing the [%s] cache for session [%s]", cache.name(), sessionId), e);
+					}
+				}
+			}
+			session.flushCache(true);
+		}
+
 		@Override
 		public IDfSession makeObject() throws Exception {
 			IDfSession session = DctmSessionManager.this.sessionManager.newSession(DctmSessionManager.this.docbase);
@@ -90,13 +129,13 @@ public class DctmSessionManager {
 		@Override
 		public void activateObject(IDfSession obj) throws Exception {
 			if (obj == null) { return; }
-			// do nothing
+			flushCaches(obj);
 		}
 
 		@Override
 		public void passivateObject(IDfSession obj) throws Exception {
 			if (obj == null) { return; }
-			// do nothing
+			flushCaches(obj);
 		}
 	};
 
@@ -175,9 +214,9 @@ public class DctmSessionManager {
 			this.pool.returnObject(session);
 		} catch (Exception e) {
 			DctmSessionManager.LOG
-			.warn(
-				String.format("Exception caught returning session [%s] to the pool",
-					DctmSessionManager.getId(session)), e);
+				.warn(
+					String.format("Exception caught returning session [%s] to the pool",
+						DctmSessionManager.getId(session)), e);
 		}
 	}
 
