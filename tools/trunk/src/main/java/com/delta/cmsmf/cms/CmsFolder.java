@@ -11,7 +11,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
@@ -131,7 +130,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-					.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
+				.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -197,18 +196,18 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 	}
 
 	private PermitDelta mainPermitDelta = null;
-	private Map<String, PermitDelta> parentPermitDeltas = null;
+	private Set<ParentFolderAction> parentLinkActions = null;
 
 	@Override
 	protected void prepareForConstruction(IDfFolder folder, boolean newObject, CmsTransferContext context)
 		throws DfException {
 		this.mainPermitDelta = null;
-		this.parentPermitDeltas = null;
+		this.parentLinkActions = null;
 
 		// If updating an existing folder object, make sure that you have write
 		// permissions and CHANGE_LOCATION. If you don't, grant them, and reset it later on.
 		if (!newObject) {
-			this.mainPermitDelta = new PermitDelta(folder, IDfACL.DF_PERMIT_WRITE,
+			this.mainPermitDelta = new PermitDelta(folder, IDfACL.DF_PERMIT_DELETE,
 				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 			if (this.mainPermitDelta.grant(folder)) {
 				folder.save();
@@ -233,7 +232,6 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 		final IDfSession session = folder.getSession();
 
 		// Only do the linking/unlinking for non-cabinets
-		Set<String> actualPaths = new TreeSet<String>();
 		if (!folder.getType().isTypeOf("dm_cabinet")) {
 			Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
 			int oldParentCount = folder.getFolderPathCount();
@@ -254,60 +252,32 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				}
 			}
 
+			this.parentLinkActions = new TreeSet<ParentFolderAction>();
+
 			// Unlink from those who are in the old parent list, but not in the new parent list
 			// We use a TreeSet to ensure that locks are attempted always in the same order
 			Set<String> unlinkTargets = new TreeSet<String>(oldParents.keySet());
 			unlinkTargets.removeAll(newParents.keySet());
 			for (String oldParentId : unlinkTargets) {
-				IDfFolder parent = oldParents.get(oldParentId);
-				if (parent == null) {
-					continue;
-				}
-				parent.lockEx(true);
-				parent.fetch(null);
-				PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
-					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
-				if (delta.grant(parent)) {
-					parent.save();
-				}
-				folder.unlink(oldParentId);
-				if (delta.revoke(parent)) {
-					parent.save();
-				}
+				this.parentLinkActions.add(new ParentFolderAction(oldParents.get(oldParentId), false,
+					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR));
 			}
 
 			// Link to those who are in the new parent list, but not the old parent list
 			// We use a TreeSet to ensure that locks are attempted always in the same order
 			Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
 			linkTargets.removeAll(oldParents.keySet());
-			// We use a TreeMap for the permit deltas map to ensure that the locks are
-			// traversed in the correct order later on
-			this.parentPermitDeltas = new TreeMap<String, PermitDelta>();
-			for (String parentId : newParents.keySet()) {
-				IDfFolder parent = newParents.get(parentId);
-				// If we should link here, then link!
-				if (linkTargets.contains(parentId)) {
-					parent.lockEx(true);
-					parent.fetch(null);
-					PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE,
-						IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
-					this.parentPermitDeltas.put(parentId, delta);
-					if (delta.grant(parent)) {
-						parent.save();
-					}
-
-					folder.link(parentId);
-				}
-
-				// Keep track of the paths
-				int pathCount = parent.getFolderPathCount();
-				for (int i = 0; i < pathCount; i++) {
-					String newPath = String.format("%s/%s", parent.getFolderPath(i), folderName);
-					actualPaths.add(newPath);
-				}
+			for (String parentId : linkTargets) {
+				this.parentLinkActions.add(new ParentFolderAction(newParents.get(parentId), true,
+					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR));
 			}
-		} else {
-			actualPaths.add(String.format("/%s", folderName));
+
+			// This ensures that we acquire ALL locks in the correct lowest-id-first order
+			for (ParentFolderAction action : this.parentLinkActions) {
+				this.log.debug(String.format("Applying %s", action));
+				action.apply(folder);
+				this.log.debug(String.format("Applied %s", action));
+			}
 		}
 	}
 
@@ -343,10 +313,10 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								getLabel(), folder.getObjectId().getId(), actualUser));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							getLabel(), folder.getObjectId().getId(), actualUser));
 					continue;
 				}
 
@@ -356,7 +326,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				IDfFolder actual = session.getFolderByPath(pathValue.asString());
 
 				// Ok...so...we set the path to "whatever"...
-				user.lockEx(true);
+				user.lock();
 				user.fetch(null);
 				user.setDefaultFolder(pathValue.asString(), (actual == null));
 				user.save();
@@ -365,11 +335,11 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-									actualUser, getLabel()), e);
+					.warn(
+						String
+						.format(
+							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+							actualUser, getLabel()), e);
 				}
 			}
 		}
@@ -385,17 +355,9 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			changed = this.mainPermitDelta.revoke(folder);
 		}
 
-		if (this.parentPermitDeltas != null) {
-			IDfSession session = folder.getSession();
-			for (String parentId : this.parentPermitDeltas.keySet()) {
-				IDfFolder parent = session.getFolderBySpecification(parentId);
-				if (parent == null) {
-					// Again...how the hell?
-					continue;
-				}
-				if (this.parentPermitDeltas.get(parentId).revoke(parent)) {
-					parent.save();
-				}
+		if (this.parentLinkActions != null) {
+			for (ParentFolderAction action : this.parentLinkActions) {
+				action.cleanUp();
 			}
 		}
 

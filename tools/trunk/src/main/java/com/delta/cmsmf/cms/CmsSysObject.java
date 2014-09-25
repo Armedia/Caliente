@@ -4,7 +4,6 @@
 
 package com.delta.cmsmf.cms;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,15 +12,19 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.DfPermit;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -40,11 +43,23 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
 	private static final Collection<String> NO_PERMITS = Collections.emptySet();
 
-	protected final class PermitDelta {
+	private static final Set<String> AUTO_PERMITS;
+
+	static {
+		Set<String> s = new HashSet<String>();
+		s.add(IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+		s.add(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR);
+		AUTO_PERMITS = Collections.unmodifiableSet(s);
+	}
+
+	protected static final class PermitDelta {
+		private final Logger log = Logger.getLogger(getClass());
+
 		private final String objectId;
 		private final IDfPermit oldPermit;
 		private final IDfPermit newPermit;
-		private final Collection<IDfPermit> newXPermit;
+		private final Set<String> newXPermit;
+		private final Set<String> autoRemove;
 
 		public PermitDelta(IDfSysObject object, int newPermission, String... newXPermits) throws DfException {
 			this(object, newPermission, (newXPermits == null ? CmsSysObject.NO_PERMITS : Arrays.asList(newXPermits)));
@@ -55,6 +70,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			final String userName = object.getSession().getLoginUserName();
 
 			// Does it have the required access permission?
+			object.fetch(null);
 			int oldPermission = object.getPermit();
 			if (oldPermission < newPermission) {
 				this.oldPermit = new DfPermit();
@@ -71,20 +87,26 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			}
 
 			Set<String> s = new HashSet<String>(StrTokenizer.getCSVInstance(object.getXPermitList()).getTokenList());
-			List<IDfPermit> l = new ArrayList<IDfPermit>();
+			Set<String> autoRemove = new HashSet<String>();
+			for (String x : CmsSysObject.AUTO_PERMITS) {
+				if (!s.contains(x)) {
+					autoRemove.add(x);
+				}
+			}
+			this.autoRemove = Collections.unmodifiableSet(autoRemove);
+
+			// Now the ones we're adding
+			Set<String> nx = new TreeSet<String>();
 			for (String x : newXPermits) {
 				if (x == null) {
 					continue;
 				}
-				if (!s.contains(x)) {
-					IDfPermit xpermit = new DfPermit();
-					xpermit.setAccessorName(userName);
-					xpermit.setPermitType(IDfPermitType.EXTENDED_PERMIT);
-					xpermit.setPermitValue(x);
-					l.add(xpermit);
+				if (s.contains(x)) {
+					continue;
 				}
+				nx.add(x);
 			}
-			this.newXPermit = Collections.unmodifiableCollection(l);
+			this.newXPermit = Collections.unmodifiableSet(nx);
 		}
 
 		public String getObjectId() {
@@ -96,16 +118,57 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId, object
 					.getObjectId().getId())); }
 			boolean ret = false;
-			IDfPermit access = (grant ? this.newPermit : this.oldPermit);
-			if (access != null) {
-				object.grantPermit(access);
+			if (this.newPermit != null) {
+				IDfPermit toGrant = (grant ? this.newPermit : this.oldPermit);
+				IDfPermit toRevoke = (grant ? this.oldPermit : this.newPermit);
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("REVOKING [%s] on [%s]", toRevoke.getPermitValueString(),
+						object.getObjectId()));
+				}
+				object.revokePermit(toRevoke);
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("GRANTING [%s] on [%s]", toGrant.getPermitValueString(),
+						object.getObjectId()));
+				}
+				object.grantPermit(toGrant);
+
+				// Sadly, if we're messing with access permissions, we may have to clear these out
+				// if they're added automagically by Documentum
+				IDfPermit auto = null;
+				for (String p : this.autoRemove) {
+					if (auto == null) {
+						auto = new DfPermit();
+						auto.setAccessorName(this.newPermit.getAccessorName());
+						auto.setPermitType(IDfPermit.DF_EXTENDED_PERMIT);
+					}
+					auto.setPermitValue(p);
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("REVOKING AUTO-XPERM [%s] on [%s]", auto.getPermitValueString(),
+							object.getObjectId()));
+					}
+					object.revokePermit(auto);
+				}
 				ret = true;
 			}
-			for (IDfPermit p : this.newXPermit) {
+
+			// Apply the x-permit deltas
+			IDfPermit xperm = null;
+			for (String p : this.newXPermit) {
+				if (xperm == null) {
+					xperm = new DfPermit();
+					xperm.setAccessorName(this.newPermit.getAccessorName());
+					xperm.setPermitType(IDfPermit.DF_EXTENDED_PERMIT);
+				}
+				xperm.setPermitValue(p);
+
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("%s [%s] on [%s]", (grant ? "GRANTING" : "REVOKING"), p,
+						object.getObjectId()));
+				}
 				if (grant) {
-					object.grantPermit(p);
+					object.grantPermit(xperm);
 				} else {
-					object.revokePermit(p);
+					object.revokePermit(xperm);
 				}
 				ret = true;
 			}
@@ -119,10 +182,108 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		public boolean revoke(IDfSysObject object) throws DfException {
 			return apply(object, false);
 		}
+
+		@Override
+		public String toString() {
+			String op = (this.oldPermit != null ? this.oldPermit.getPermitValueString() : "(N/A)");
+			String np = (this.newPermit != null ? this.newPermit.getPermitValueString() : "(N/A)");
+			return String.format("PermitDelta [objectId=%s, oldPermit=%s, newPermit=%s, newXPermit=%s, autoRemove=%s]",
+				this.objectId, op, np, this.newXPermit, this.autoRemove);
+		}
+	}
+
+	protected static final class ParentFolderAction implements Comparable<ParentFolderAction> {
+		private final Logger log = Logger.getLogger(getClass());
+
+		private final IDfFolder parent;
+		private final String parentId;
+		private final PermitDelta permitDelta;
+		private final boolean link;
+		private boolean locked = false;
+
+		protected ParentFolderAction(IDfFolder parent, boolean link, String... xperms) throws DfException {
+			this.parent = parent;
+			this.parentId = parent.getObjectId().getId();
+			this.link = link;
+			this.permitDelta = new PermitDelta(parent, IDfACL.DF_PERMIT_DELETE, xperms);
+		}
+
+		private void ensureLocked() throws DfException {
+			if (!this.locked) {
+				boolean ok = false;
+				try {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("LOCKING [%s]", this.parent.getObjectId().getId()));
+					}
+					this.parent.lock();
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("LOCKED [%s]", this.parent.getObjectId().getId()));
+					}
+					ok = true;
+				} finally {
+					if (!ok) {
+						hashCode();
+					}
+				}
+				this.parent.fetch(null);
+				this.locked = true;
+			}
+		}
+
+		protected void apply(IDfSysObject child) throws DfException {
+			ensureLocked();
+			if (this.permitDelta.grant(this.parent)) {
+				this.parent.save();
+			}
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("LINKING [%s] --> [%s]", this.link ? "" : "UN", child.getObjectId()
+					.getId(), this.parent.getObjectId().getId()));
+			}
+			if (this.link) {
+				child.link(this.parentId);
+			} else {
+				child.unlink(this.parentId);
+			}
+		}
+
+		protected void cleanUp() throws DfException {
+			ensureLocked();
+			if (this.permitDelta.revoke(this.parent)) {
+				this.parent.save();
+			}
+		}
+
+		@Override
+		public int compareTo(ParentFolderAction o) {
+			// Sort unlinks before links
+			if (this.link != o.link) { return (this.link ? 1 : -1); }
+			return Tools.compare(this.parentId, o.parentId);
+		}
+
+		@Override
+		public int hashCode() {
+			return Tools.hashTool(this, null, this.parentId, this.link);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!Tools.baseEquals(this, obj)) { return false; }
+			ParentFolderAction other = ParentFolderAction.class.cast(obj);
+			if (this.link != other.link) { return false; }
+			if (!Tools.equals(this.parentId, other.parentId)) { return false; }
+			return true;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("ParentFolderAction [parentId=%s, link=%s, locked=%s, permitDelta=%s]", this.parentId,
+				this.link, this.locked, this.permitDelta);
+		}
 	}
 
 	private boolean mustFreeze = false;
 	private boolean mustImmute = false;
+	private PermitDelta existingPermitDelta = null;
 
 	/**
 	 * @param dfClass
@@ -193,6 +354,16 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 	@Override
 	protected void prepareOperation(T sysObject) throws DfException, CMSMFException {
+		if (!isTransitoryObject(sysObject)) {
+			this.existingPermitDelta = new PermitDelta(sysObject, IDfACL.DF_PERMIT_DELETE);
+			this.existingPermitDelta.grant(sysObject);
+		}
+	}
+
+	@Override
+	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
+	CMSMFException {
+		return (this.existingPermitDelta != null) && this.existingPermitDelta.revoke(object);
 	}
 
 	@Override

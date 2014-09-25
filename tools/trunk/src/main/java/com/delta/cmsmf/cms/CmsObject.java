@@ -383,6 +383,9 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			final CmsImportResult cmsImportResult;
 			if (isNew) {
 				// Create a new object
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Creating a new object for [%s](%s)", getLabel(), getId()));
+				}
 				object = newObject(context);
 				cmsImportResult = CmsImportResult.CREATED;
 				if (!isTransitoryObject(object)) {
@@ -394,7 +397,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			} else {
 				// Is this correct?
 				this.log.info(String.format("Acquiring lock on %s [%s](%s)", this.type.name(), this.label, this.id));
-				object.lockEx(true);
+				object.lock();
+				object.fetch(null);
 				this.log.info(String.format("Acquired lock on %s [%s](%s)", this.type.name(), this.label, this.id));
 				context.getAttributeMapper().setMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id,
 					object.getObjectId().getId());

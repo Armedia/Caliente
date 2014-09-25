@@ -23,7 +23,7 @@
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
 
 	<logger name="com.delta.cmsmf">
-		<level value="INFO"/>
+		<level value="DEBUG"/>
 	</logger>
 
 	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->

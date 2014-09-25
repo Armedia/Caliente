@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -92,7 +91,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	private PermitDelta antecedentPermitDelta = null;
 	private PermitDelta branchPermitDelta = null;
-	private Map<String, PermitDelta> parentFolderDeltas = null;
+	private Set<ParentFolderAction> parentLinkActions = null;
 	private List<IDfId> priorVersions = null;
 	private List<IDfId> laterVersions = null;
 
@@ -146,8 +145,11 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		final IDfSession session = document.getSession();
 		for (IDfValue folderId : getAttribute(CmsAttributes.I_FOLDER_ID)) {
 			IDfFolder parent = session.getFolderBySpecification(folderId.asId().getId());
-			if (parent == null) { throw new DfException(String.format(
-				"Document [%s](%s) references non-existent folder [%s]", getLabel(), getId(), folderId.asString())); }
+			if (parent == null) {
+				this.log.warn(String.format("Document [%s](%s) references non-existent folder [%s]", getLabel(),
+					getId(), folderId.asString()));
+				continue;
+			}
 			parents.addValue(folderId);
 			int pathCount = parent.getFolderPathCount();
 			for (int i = 0; i < pathCount; i++) {
@@ -441,7 +443,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			antecedentId)); }
 		IDfDocument antecedentVersion = castObject(session.getObject(new DfId(mapping.getTargetValue())));
 		antecedentVersion.fetch(null);
-		this.antecedentPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_VERSION);
+		this.antecedentPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
 		if (this.antecedentPermitDelta.grant(antecedentVersion)) {
 			antecedentVersion.save();
 		}
@@ -462,7 +464,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			// remove branch version label from repeating attributes
 			// This should be the implicit version label
 			rVersionLabel.removeValue(0);
-			this.branchPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_WRITE);
+			this.branchPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
 			this.branchPermitDelta.grant(antecedentVersion);
 		} else {
 			// checkout
@@ -475,7 +477,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	@Override
 	protected void prepareForConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
-		this.parentFolderDeltas = null;
+		this.parentLinkActions = null;
 
 		IDfSession session = document.getSession();
 		session.flushCache(false);
@@ -491,40 +493,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 					document.save();
 				}
 			}
-		}
-
-		// We have to do this in two passes, because we MUST obtain the locks in a specific order
-		// to avoid deadlocks - in particular, lowest-id-first
-		Set<String> parentIds = new TreeSet<String>();
-		for (IDfValue parentId : getProperty(CmsDocument.TARGET_PARENTS)) {
-			Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
-				parentId.asString());
-			if (m == null) {
-				// TODO: HOW??!
-				continue;
-			}
-			parentIds.add(m.getTargetValue());
-		}
-
-		// We also need the deltas to go in the same order as above...
-		this.parentFolderDeltas = new TreeMap<String, PermitDelta>();
-		for (String actualParentId : parentIds) {
-			IDfFolder parentFolder = session.getFolderBySpecification(actualParentId);
-
-			// Not sure why?!! We just follow the leader here...
-			session.flush("persistentobjcache", null);
-			session.flushObject(parentFolder.getObjectId());
-			session.flushCache(false);
-
-			parentFolder = session.getFolderBySpecification(actualParentId);
-			parentFolder.lockEx(true);
-			parentFolder.fetch(null);
-			// Stow its old permissions
-			PermitDelta newDelta = new PermitDelta(parentFolder, IDfACL.DF_PERMIT_WRITE);
-			if (newDelta.grant(parentFolder)) {
-				parentFolder.save();
-			}
-			this.parentFolderDeltas.put(actualParentId, newDelta);
 		}
 	}
 
@@ -712,7 +680,15 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		// the object already belongs to, we remove it from the "old" list
 		// and keep it in this list.
 		Map<String, IDfFolder> newParents = new HashMap<String, IDfFolder>();
-		for (String parentId : this.parentFolderDeltas.keySet()) {
+		for (IDfValue p : getProperty(CmsDocument.TARGET_PARENTS)) {
+			Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
+				p.asString());
+			if (m == null) {
+				// TODO: HOW??!
+				continue;
+			}
+
+			final String parentId = m.getTargetValue();
 			IDfFolder parent = oldParents.get(parentId);
 			if (parent != null) {
 				newParents.put(parentId, parent);
@@ -721,74 +697,46 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 			parent = session.getFolderBySpecification(parentId);
 			if (parent != null) {
-				// We do this check to be resillient against broken source data
+				// We do this check to be resilient against broken source data
 				newParents.put(parentId, parent);
 			}
 		}
 
+		this.parentLinkActions = new TreeSet<ParentFolderAction>();
+
 		// The unlink targets are those folders that are in the original
 		// list, but not the new list
-		Set<String> unlinkTargets = new TreeSet<String>(oldParents.keySet());
+		Set<String> unlinkTargets = new HashSet<String>(oldParents.keySet());
 		unlinkTargets.removeAll(newParents.keySet());
 		for (String oldParentId : unlinkTargets) {
 			// The folders for this are in the oldParents map
-			IDfFolder parent = oldParents.get(oldParentId);
-			PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE);
-			if (delta.grant(parent)) {
-				parent.save();
-			}
-			document.unlink(oldParentId);
-			if (delta.revoke(parent)) {
-				parent.save();
-			}
+			this.parentLinkActions.add(new ParentFolderAction(oldParents.get(oldParentId), false));
 		}
 
 		// The link targets are those folders who are in the new list, but
 		// not the original list
-		Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
+		Set<String> linkTargets = new HashSet<String>(newParents.keySet());
 		linkTargets.removeAll(oldParents.keySet());
 		for (String parentId : linkTargets) {
 			// The folders for this are in the newParents map
-			IDfFolder parent = newParents.get(parentId);
-			PermitDelta delta = new PermitDelta(parent, IDfACL.DF_PERMIT_WRITE);
-			this.parentFolderDeltas.put(parentId, delta);
-			if (delta.grant(parent)) {
-				parent.save();
-			}
+			this.parentLinkActions.add(new ParentFolderAction(newParents.get(parentId), true));
+		}
 
-			boolean ok = false;
-			try {
-				document.link(parentId);
-				ok = true;
-			} finally {
-				if (!ok) {
-					parentId.hashCode();
-				}
-			}
+		// This ensures that we acquire ALL locks in the correct lowest-id-first order
+		for (ParentFolderAction action : this.parentLinkActions) {
+			this.log.debug(String.format("Applying %s", action));
+			action.apply(document);
+			this.log.debug(String.format("Applied %s", action));
 		}
 	}
 
 	@Override
 	protected boolean cleanupAfterSave(IDfDocument document, boolean newObject, CmsTransferContext context)
-		throws DfException {
+		throws DfException, CMSMFException {
 		final IDfSession session = document.getSession();
-		for (PermitDelta delta : this.parentFolderDeltas.values()) {
-			final IDfId parentId = new DfId(delta.getObjectId());
-			IDfFolder parentFolder = session.getFolderBySpecification(parentId.getId());
-			if (parentFolder == null) {
-				// TODO: uhm...how?
-				continue;
-			}
-
-			// Not sure why?!! We just follow the leader here...
-			session.flush("persistentobjcache", null);
-			session.flushObject(parentId);
-			session.flushCache(false);
-			parentFolder = session.getFolderBySpecification(parentId.getId());
-			parentFolder.fetch(null);
-			// Stow its old permissions
-			if (delta.revoke(parentFolder)) {
-				parentFolder.save();
+		if (this.parentLinkActions != null) {
+			for (ParentFolderAction action : this.parentLinkActions) {
+				action.cleanUp();
 			}
 		}
 
@@ -816,6 +764,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			}
 		}
 
+		super.cleanupAfterSave(document, newObject, context);
 		return true;
 	}
 }
