@@ -14,7 +14,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +23,7 @@ import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -91,7 +91,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	private PermitDelta antecedentPermitDelta = null;
 	private PermitDelta branchPermitDelta = null;
-	private Set<ParentFolderAction> parentLinkActions = null;
 	private List<IDfId> priorVersions = null;
 	private List<IDfId> laterVersions = null;
 
@@ -477,7 +476,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	@Override
 	protected void prepareForConstruction(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException {
-		this.parentLinkActions = null;
 
 		IDfSession session = document.getSession();
 		session.flushCache(false);
@@ -659,86 +657,15 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		});
 
 		// Now, link to the parent folders
-
-		// First, we make a list of the folders the object is currently
-		// linked to, by looking at i_folder_id (we keep track of the
-		// parent folders, to avoid unnecessary lookups later on)
-		Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
-		int oldParentCount = document.getFolderIdCount();
-		for (int i = 0; i < oldParentCount; i++) {
-			IDfId parentId = document.getFolderId(i);
-			IDfFolder parent = session.getFolderBySpecification(parentId.getId());
-			if (parent != null) {
-				// We do this check to be resillient against broken source data
-				oldParents.put(parentId.getId(), parent);
-			}
-		}
-
-		// Second, we look at the folders to which this object is expected
-		// to be linked to, and store them up as well to avoid unnecessary
-		// lookups. Importantly, if a folder in this list is a folder that
-		// the object already belongs to, we remove it from the "old" list
-		// and keep it in this list.
-		Map<String, IDfFolder> newParents = new HashMap<String, IDfFolder>();
-		for (IDfValue p : getProperty(CmsDocument.TARGET_PARENTS)) {
-			Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
-				p.asString());
-			if (m == null) {
-				// TODO: HOW??!
-				continue;
-			}
-
-			final String parentId = m.getTargetValue();
-			IDfFolder parent = oldParents.get(parentId);
-			if (parent != null) {
-				newParents.put(parentId, parent);
-				continue;
-			}
-
-			parent = session.getFolderBySpecification(parentId);
-			if (parent != null) {
-				// We do this check to be resilient against broken source data
-				newParents.put(parentId, parent);
-			}
-		}
-
-		this.parentLinkActions = new TreeSet<ParentFolderAction>();
-
-		// The unlink targets are those folders that are in the original
-		// list, but not the new list
-		Set<String> unlinkTargets = new HashSet<String>(oldParents.keySet());
-		unlinkTargets.removeAll(newParents.keySet());
-		for (String oldParentId : unlinkTargets) {
-			// The folders for this are in the oldParents map
-			this.parentLinkActions.add(new ParentFolderAction(oldParents.get(oldParentId), false));
-		}
-
-		// The link targets are those folders who are in the new list, but
-		// not the original list
-		Set<String> linkTargets = new HashSet<String>(newParents.keySet());
-		linkTargets.removeAll(oldParents.keySet());
-		for (String parentId : linkTargets) {
-			// The folders for this are in the newParents map
-			this.parentLinkActions.add(new ParentFolderAction(newParents.get(parentId), true));
-		}
-
-		// This ensures that we acquire ALL locks in the correct lowest-id-first order
-		for (ParentFolderAction action : this.parentLinkActions) {
-			this.log.debug(String.format("Applying %s", action));
-			action.apply(document);
-			this.log.debug(String.format("Applied %s", action));
-		}
+		linkToParents(document, context);
 	}
 
 	@Override
 	protected boolean cleanupAfterSave(IDfDocument document, boolean newObject, CmsTransferContext context)
 		throws DfException, CMSMFException {
 		final IDfSession session = document.getSession();
-		if (this.parentLinkActions != null) {
-			for (ParentFolderAction action : this.parentLinkActions) {
-				action.cleanUp();
-			}
-		}
+
+		cleanUpParents(session);
 
 		if (this.antecedentPermitDelta != null) {
 			IDfId antecedentId = new DfId(this.antecedentPermitDelta.getObjectId());
@@ -765,6 +692,54 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 
 		super.cleanupAfterSave(document, newObject, context);
-		return true;
+		return false;
+	}
+
+	@Override
+	protected Map<String, IDfFolder> getCurrentParents(IDfDocument document, CmsTransferContext ctx) throws DfException {
+		IDfSession session = document.getSession();
+		final int oldParentCount = document.getFolderIdCount();
+		Map<String, IDfFolder> parents = new HashMap<String, IDfFolder>(oldParentCount);
+		for (int i = 0; i < oldParentCount; i++) {
+			IDfId parentId = document.getFolderId(i);
+			try {
+				IDfFolder parent = session.getFolderBySpecification(parentId.getId());
+				parents.put(parent.getObjectId().getId(), parent);
+			} catch (DfIdNotFoundException e) {
+				// HUH?
+				this.log.warn(String.format(
+					"Target document [%s](%s) references parent object [%s], but it couldn't be found", getLabel(),
+					document.getObjectId().getId(), parentId.getId()));
+				continue;
+			}
+		}
+		return parents;
+	}
+
+	@Override
+	protected Map<String, IDfFolder> getProspectiveParents(CmsTransferContext context) throws DfException {
+		final IDfSession session = context.getSession();
+		Map<String, IDfFolder> newParents = new HashMap<String, IDfFolder>();
+		for (IDfValue p : getProperty(CmsDocument.TARGET_PARENTS)) {
+			Mapping m = context.getAttributeMapper().getTargetMapping(CmsObjectType.FOLDER, CmsAttributes.R_OBJECT_ID,
+				p.asString());
+			if (m == null) {
+				// TODO: HOW??!
+				continue;
+			}
+
+			final String parentId = m.getTargetValue();
+			try {
+				IDfFolder parent = session.getFolderBySpecification(parentId);
+				newParents.put(parent.getObjectId().getId(), parent);
+			} catch (DfIdNotFoundException e) {
+				// HUH?
+				this.log.warn(String.format(
+					"Source document [%s](%s) references parent object [%s], but it couldn't be found", getLabel(),
+					getId(), parentId));
+				continue;
+			}
+		}
+		return newParents;
 	}
 }

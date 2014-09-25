@@ -11,7 +11,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -130,7 +129,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
 				usersWithDefaultFolder
-				.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
+					.addValue(CmsMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -196,13 +195,11 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 	}
 
 	private PermitDelta mainPermitDelta = null;
-	private Set<ParentFolderAction> parentLinkActions = null;
 
 	@Override
 	protected void prepareForConstruction(IDfFolder folder, boolean newObject, CmsTransferContext context)
 		throws DfException {
 		this.mainPermitDelta = null;
-		this.parentLinkActions = null;
 
 		// If updating an existing folder object, make sure that you have write
 		// permissions and CHANGE_LOCATION. If you don't, grant them, and reset it later on.
@@ -217,7 +214,7 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 
 	@Override
 	protected void finalizeConstruction(IDfFolder folder, boolean newObject, CmsTransferContext context)
-		throws DfException {
+		throws DfException, CMSMFException {
 
 		final String folderName;
 		if (newObject) {
@@ -229,55 +226,9 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			folderName = folder.getObjectName();
 		}
 
-		final IDfSession session = folder.getSession();
-
 		// Only do the linking/unlinking for non-cabinets
 		if (!folder.getType().isTypeOf("dm_cabinet")) {
-			Map<String, IDfFolder> oldParents = new HashMap<String, IDfFolder>();
-			int oldParentCount = folder.getFolderPathCount();
-			for (int i = 0; i < oldParentCount; i++) {
-				String path = folder.getFolderPath(i);
-				IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
-				if (parent != null) {
-					oldParents.put(parent.getObjectId().getId(), parent);
-				}
-			}
-
-			Map<String, IDfFolder> newParents = new HashMap<String, IDfFolder>();
-			for (IDfValue v : getAttribute(CmsAttributes.R_FOLDER_PATH)) {
-				String path = v.asString();
-				IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
-				if (parent != null) {
-					newParents.put(parent.getObjectId().getId(), parent);
-				}
-			}
-
-			this.parentLinkActions = new TreeSet<ParentFolderAction>();
-
-			// Unlink from those who are in the old parent list, but not in the new parent list
-			// We use a TreeSet to ensure that locks are attempted always in the same order
-			Set<String> unlinkTargets = new TreeSet<String>(oldParents.keySet());
-			unlinkTargets.removeAll(newParents.keySet());
-			for (String oldParentId : unlinkTargets) {
-				this.parentLinkActions.add(new ParentFolderAction(oldParents.get(oldParentId), false,
-					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR));
-			}
-
-			// Link to those who are in the new parent list, but not the old parent list
-			// We use a TreeSet to ensure that locks are attempted always in the same order
-			Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
-			linkTargets.removeAll(oldParents.keySet());
-			for (String parentId : linkTargets) {
-				this.parentLinkActions.add(new ParentFolderAction(newParents.get(parentId), true,
-					IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR));
-			}
-
-			// This ensures that we acquire ALL locks in the correct lowest-id-first order
-			for (ParentFolderAction action : this.parentLinkActions) {
-				this.log.debug(String.format("Applying %s", action));
-				action.apply(folder);
-				this.log.debug(String.format("Applied %s", action));
-			}
+			linkToParents(folder, context);
 		}
 	}
 
@@ -313,10 +264,10 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							getLabel(), folder.getObjectId().getId(), actualUser));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								getLabel(), folder.getObjectId().getId(), actualUser));
 					continue;
 				}
 
@@ -335,34 +286,26 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-							actualUser, getLabel()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+									actualUser, getLabel()), e);
 				}
 			}
+		}
+
+		if (this.mainPermitDelta != null) {
+			newObject |= this.mainPermitDelta.revoke(folder);
 		}
 		return newObject;
 	}
 
 	@Override
 	protected boolean cleanupAfterSave(IDfFolder folder, boolean newObject, CmsTransferContext context)
-		throws DfException {
-
-		boolean changed = false;
-		if (this.mainPermitDelta != null) {
-			changed = this.mainPermitDelta.revoke(folder);
-		}
-
-		if (this.parentLinkActions != null) {
-			for (ParentFolderAction action : this.parentLinkActions) {
-				action.cleanUp();
-			}
-		}
-
-		// Return true so this object is saved afterwards
-		return changed;
+		throws DfException, CMSMFException {
+		cleanUpParents(folder.getSession());
+		return false;
 	}
 
 	@Override
@@ -388,5 +331,35 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 		if (t.isTypeOf("dm_cabinet")) { return session.getFolderByPath(String.format("/%s",
 			getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString())); }
 		return super.locateInCms(ctx);
+	}
+
+	@Override
+	protected Map<String, IDfFolder> getCurrentParents(IDfFolder folder, CmsTransferContext ctx) throws DfException {
+		IDfSession session = folder.getSession();
+		final int oldParentCount = folder.getFolderPathCount();
+		Map<String, IDfFolder> parents = new HashMap<String, IDfFolder>(oldParentCount);
+		for (int i = 0; i < oldParentCount; i++) {
+			String path = folder.getFolderPath(i);
+			IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
+			if (parent != null) {
+				parents.put(parent.getObjectId().getId(), parent);
+			}
+		}
+		return parents;
+	}
+
+	@Override
+	protected Map<String, IDfFolder> getProspectiveParents(CmsTransferContext ctx) throws DfException {
+		final IDfSession session = ctx.getSession();
+		CmsAttribute folderPath = getAttribute(CmsAttributes.R_FOLDER_PATH);
+		Map<String, IDfFolder> parents = new HashMap<String, IDfFolder>(folderPath.getValueCount());
+		for (IDfValue v : folderPath) {
+			String path = v.asString();
+			IDfFolder parent = session.getFolderByPath(path.substring(0, path.lastIndexOf("/")));
+			if (parent != null) {
+				parents.put(parent.getObjectId().getId(), parent);
+			}
+		}
+		return parents;
 	}
 }

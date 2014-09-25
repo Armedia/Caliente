@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -284,6 +285,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	private boolean mustFreeze = false;
 	private boolean mustImmute = false;
 	private PermitDelta existingPermitDelta = null;
+	private Set<ParentFolderAction> parentLinkActions = null;
 
 	/**
 	 * @param dfClass
@@ -665,5 +667,50 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			}
 		}
 		return history;
+	}
+
+	protected abstract Map<String, IDfFolder> getCurrentParents(T sysObject, CmsTransferContext ctx) throws DfException;
+
+	protected abstract Map<String, IDfFolder> getProspectiveParents(CmsTransferContext ctx) throws DfException;
+
+	protected final void linkToParents(T sysObject, CmsTransferContext ctx) throws DfException, CMSMFException {
+		Map<String, IDfFolder> oldParents = getCurrentParents(sysObject, ctx);
+		Map<String, IDfFolder> newParents = getProspectiveParents(ctx);
+
+		this.parentLinkActions = new TreeSet<ParentFolderAction>();
+
+		// Unlink from those who are in the old parent list, but not in the new parent list
+		// We use a TreeSet to ensure that locks are attempted always in the same order
+		Set<String> unlinkTargets = new TreeSet<String>(oldParents.keySet());
+		unlinkTargets.removeAll(newParents.keySet());
+		for (String oldParentId : unlinkTargets) {
+			this.parentLinkActions.add(new ParentFolderAction(oldParents.get(oldParentId), false,
+				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR));
+		}
+
+		// Link to those who are in the new parent list, but not the old parent list
+		// We use a TreeSet to ensure that locks are attempted always in the same order
+		Set<String> linkTargets = new TreeSet<String>(newParents.keySet());
+		linkTargets.removeAll(oldParents.keySet());
+		for (String parentId : linkTargets) {
+			this.parentLinkActions.add(new ParentFolderAction(newParents.get(parentId), true,
+				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR));
+		}
+
+		// This ensures that we acquire ALL locks in the correct lowest-id-first order,
+		// since parentLinkActions will be a sorted tree in that order.
+		for (ParentFolderAction action : this.parentLinkActions) {
+			this.log.debug(String.format("Applying %s", action));
+			action.apply(sysObject);
+			this.log.debug(String.format("Applied %s", action));
+		}
+	}
+
+	protected final void cleanUpParents(IDfSession session) throws DfException, CMSMFException {
+		if (this.parentLinkActions != null) {
+			for (ParentFolderAction action : this.parentLinkActions) {
+				action.cleanUp();
+			}
+		}
 	}
 }
