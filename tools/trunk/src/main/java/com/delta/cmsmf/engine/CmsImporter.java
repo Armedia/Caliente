@@ -105,12 +105,8 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 		Runnable worker = new Runnable() {
 			@Override
 			public void run() {
-				final IDfSession session = sessionManager.acquireSession();
-				if (CmsImporter.this.log.isDebugEnabled()) {
-					CmsImporter.this.log.debug(String.format("Got IDfSession [%s]", DfUtils.getSessionId(session)));
-				}
-
 				activeCounter.incrementAndGet();
+				IDfSession session = null;
 				try {
 					while (!Thread.interrupted()) {
 						if (CmsImporter.this.log.isDebugEnabled()) {
@@ -141,56 +137,75 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 							CmsImporter.this.log.debug(String.format("Polled a batch with %d items", batch.size()));
 						}
 
-						boolean failBatch = false;
-						for (CmsObject<?> next : batch) {
-							if (failBatch) {
-								final CmsImportResult result = CmsImportResult.SKIPPED;
-								CmsImporter.this.log.error(String.format(
-									"Batch has been failed - will not process [%s](%s) (%s)", next.getLabel(),
-									next.getId(), result.name()));
-								objectImportCompleted(next, result);
-								CmsImporter.this.counter.increment(next, result);
-								continue;
-							}
+						session = sessionManager.acquireSession();
+						if (CmsImporter.this.log.isDebugEnabled()) {
+							CmsImporter.this.log.debug(String.format("Got IDfSession [%s]",
+								DfUtils.getSessionId(session)));
+						}
 
-							CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore,
-								fileSystem, CmsImporter.this.output);
-							SaveResult result = null;
-							final CmsObjectType type = next.getType();
-							try {
-								objectImportStarted(next);
-								result = next.saveToCMS(ctx);
-								objectImportCompleted(next, result.getResult());
-								if (CmsImporter.this.log.isDebugEnabled()) {
-									CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
-								}
-							} catch (Throwable t) {
-								objectImportFailed(next, t);
-								result = null;
-								// Log the error, move on
-								CmsImporter.this.log.error(String.format("Exception caught processing %s", next), t);
-								if (type.isFailureInterruptsBatch()) {
-									// If we're supposed to kill the batch, fail all the other
-									// objects
-									failBatch = true;
-									CmsImporter.this.log
-									.debug(String
-										.format(
-											"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-											type));
+						try {
+							boolean failBatch = false;
+							for (CmsObject<?> next : batch) {
+								if (failBatch) {
+									final CmsImportResult result = CmsImportResult.SKIPPED;
+									CmsImporter.this.log.error(String.format(
+										"Batch has been failed - will not process [%s](%s) (%s)", next.getLabel(),
+										next.getId(), result.name()));
+									objectImportCompleted(next, result);
+									CmsImporter.this.counter.increment(next, result);
 									continue;
 								}
+
+								CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore,
+									fileSystem, CmsImporter.this.output);
+								SaveResult result = null;
+								final CmsObjectType type = next.getType();
+								try {
+									objectImportStarted(next);
+									result = next.saveToCMS(ctx);
+									objectImportCompleted(next, result.getResult());
+									if (CmsImporter.this.log.isDebugEnabled()) {
+										CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
+									}
+								} catch (Throwable t) {
+									objectImportFailed(next, t);
+									result = null;
+									// Log the error, move on
+									CmsImporter.this.log
+									.error(String.format("Exception caught processing %s", next), t);
+									if (type.isFailureInterruptsBatch()) {
+										// If we're supposed to kill the batch, fail all the other
+										// objects
+										failBatch = true;
+										CmsImporter.this.log
+										.debug(String
+											.format(
+												"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+												type));
+										continue;
+									}
+								} finally {
+									CmsImporter.this.counter.increment(next, (result != null ? result.getResult()
+										: CmsImportResult.FAILED));
+									batchCounter.increment();
+								}
+							}
+						} finally {
+							// Paranoid...yes :)
+							try {
+								sessionManager.releaseSession(session);
 							} finally {
-								CmsImporter.this.counter.increment(next, (result != null ? result.getResult()
-									: CmsImportResult.FAILED));
-								batchCounter.increment();
+								session = null;
 							}
 						}
 					}
 				} finally {
 					CmsImporter.this.log.debug("Worker exiting...");
 					activeCounter.decrementAndGet();
-					sessionManager.releaseSession(session);
+					// Just in case
+					if (session != null) {
+						sessionManager.releaseSession(session);
+					}
 				}
 			}
 		};
