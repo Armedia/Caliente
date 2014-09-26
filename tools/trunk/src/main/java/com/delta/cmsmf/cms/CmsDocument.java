@@ -415,11 +415,20 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		if (mapping == null) { throw new CMSMFException(String.format(
 			"Can't create a new version of [%s](%s) - antecedent version not found [%s]", getLabel(), getId(),
 			antecedentId)); }
-		IDfDocument antecedentVersion = castObject(session.getObject(new DfId(mapping.getTargetValue())));
+		IDfId id = new DfId(mapping.getTargetValue());
+		session.flushObject(id);
+		IDfDocument antecedentVersion = castObject(session.getObject(id));
 		antecedentVersion.fetch(null);
 		this.antecedentTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
 		if (this.antecedentTemporaryPermission.grant(antecedentVersion)) {
 			antecedentVersion.save();
+		}
+
+		// This is so later on we can decide whether we should set or clear the immutable flag,
+		// but only if we're a leaf node
+		CmsAttribute descendantCount = getAttribute(CmsAttributes.I_DIRECT_DSC);
+		if ((descendantCount != null) && (descendantCount.getValue().asInteger() == 0)) {
+			detectIncomingMutability();
 		}
 
 		CmsAttribute rVersionLabel = getAttribute(CmsAttributes.R_VERSION_LABEL);
@@ -429,7 +438,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		int antecedentDots = StringUtils.countMatches(antecedentVersionImplicitVersionLabel, ".");
 		int documentDots = StringUtils.countMatches(documentImplicitVersionLabel, ".");
 
-		detectAndClearMutability(antecedentVersion);
 		if (documentDots == (antecedentDots + 2)) {
 			// branch
 			IDfId branchID = antecedentVersion.branch(antecedentVersionImplicitVersionLabel);
