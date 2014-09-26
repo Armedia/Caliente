@@ -196,7 +196,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 			case CREATED:
 			case UPDATED:
 			case DUPLICATE:
-				suffix = String.format(" as [%s](%s]", newLabel, newId);
+				suffix = String.format(" as [%s](%s)", newLabel, newId);
 				break;
 			default:
 				suffix = "";
