@@ -222,7 +222,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			}
 
 			IDfPersistentObject o = (group ? session.getGroup(accessor) : session.getUser(accessor));
-			if (o == null) {
+			if ((o == null) && !CmsMappingUtils.SPECIAL_NAMES.contains(accessor)) {
 				// Accessor not there, skip it...
 				if (!missingAccessors.contains(accessor)) {
 					this.log.warn(String.format(
@@ -318,11 +318,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-							user.getUserName(), getLabel()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+									user.getUserName(), getLabel()), e);
 				}
 			}
 		}
@@ -411,10 +411,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 					if (!exists) {
 						// This shouldn't be necessary
 						this.log
-						.warn(String
-							.format(
-								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-								getLabel(), name));
+							.warn(String
+								.format(
+									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+									getLabel(), name));
 						exists = (acl.getSession().getGroup(name) != null);
 						accessorType = "accessor (user or group)";
 					}
