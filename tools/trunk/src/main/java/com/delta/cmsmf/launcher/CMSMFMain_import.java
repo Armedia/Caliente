@@ -187,11 +187,23 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult) {
+	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult, String newLabel,
+		String newId) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
-		this.console.info(String.format("Import completed for %s [%s](%s): %s", object.getType().name(),
-			object.getLabel(), object.getId(), cmsImportResult.name()));
+		String suffix = null;
+		switch (cmsImportResult) {
+			case CREATED:
+			case UPDATED:
+			case DUPLICATE:
+				suffix = String.format(" as [%s](%s]", newLabel, newId);
+				break;
+			default:
+				suffix = "";
+				break;
+		}
+		this.console.info(String.format("Import completed for %s [%s](%s): %s%s", object.getType().name(),
+			object.getLabel(), object.getId(), cmsImportResult.name(), suffix));
 		showProgress(object.getType());
 	}
 

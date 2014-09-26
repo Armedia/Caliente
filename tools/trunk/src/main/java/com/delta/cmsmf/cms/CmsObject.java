@@ -48,15 +48,21 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	public static final class SaveResult {
 		private final CmsImportResult cmsImportResult;
+		private final String objectLabel;
 		private final String objectId;
 
-		private SaveResult(CmsImportResult cmsImportResult, String objectId) {
+		private SaveResult(CmsImportResult cmsImportResult, String objectLabel, String objectId) {
 			this.cmsImportResult = cmsImportResult;
+			this.objectLabel = objectLabel;
 			this.objectId = objectId;
 		}
 
 		public CmsImportResult getResult() {
 			return this.cmsImportResult;
+		}
+
+		public String getObjectLabel() {
+			return this.objectLabel;
 		}
 
 		public String getObjectId() {
@@ -65,7 +71,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 		@Override
 		public int hashCode() {
-			return Tools.hashTool(this, null, this.cmsImportResult, this.objectId);
+			return Tools.hashTool(this, null, this.cmsImportResult, this.objectLabel, this.objectId);
 		}
 
 		@Override
@@ -73,13 +79,15 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			if (!Tools.baseEquals(this, obj)) { return false; }
 			SaveResult other = SaveResult.class.cast(obj);
 			if (!Tools.equals(this.cmsImportResult, other.cmsImportResult)) { return false; }
+			if (!Tools.equals(this.objectLabel, other.objectLabel)) { return false; }
 			if (!Tools.equals(this.objectId, other.objectId)) { return false; }
 			return true;
 		}
 
 		@Override
 		public String toString() {
-			return String.format("SaveResult [cmsImportResult=%s, objectId=%s]", this.cmsImportResult, this.objectId);
+			return String.format("SaveResult [cmsImportResult=%s, objectLabel=%s, objectId=%s]", this.cmsImportResult,
+				this.objectLabel, this.objectId);
 		}
 	}
 
@@ -375,12 +383,13 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				session.beginTrans();
 			}
 			transOpen = true;
-			if (skipImport(context)) { return new SaveResult(CmsImportResult.SKIPPED, null); }
+			if (skipImport(context)) { return new SaveResult(CmsImportResult.SKIPPED, null, null); }
 
 			object = locateInCms(context);
 			final boolean isNew = (object == null);
 			final boolean updateVersionLabels = isVersionable(object);
 			final CmsImportResult cmsImportResult;
+			String newLabel = null;
 			if (isNew) {
 				// Create a new object
 				if (this.log.isDebugEnabled()) {
@@ -396,6 +405,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				}
 			} else {
 				// Is this correct?
+				newLabel = calculateLabel(object);
 				this.log.info(String.format("Acquiring lock on %s [%s](%s)", this.type.name(), this.label, this.id));
 				object.lock();
 				object.fetch(null);
@@ -405,7 +415,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 				if (isSameObject(object)) {
 					ok = true;
-					return new SaveResult(CmsImportResult.DUPLICATE, object.getObjectId().getId());
+					return new SaveResult(CmsImportResult.DUPLICATE, newLabel, object.getObjectId().getId());
 				}
 				cmsImportResult = CmsImportResult.UPDATED;
 			}
@@ -417,11 +427,14 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					// The object has changed... so we pull the newly-persisted object
 					object = castObject(session.getObject(newId));
 				}
+				if (newLabel == null) {
+					newLabel = calculateLabel(object);
+				}
 				ok = true;
-				this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s->%s)", this.type,
-					cmsImportResult, this.label, this.id, object.getObjectId().getId()));
+				this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
+					this.type, cmsImportResult, this.label, this.id, newLabel, object.getObjectId().getId()));
 
-				return new SaveResult(cmsImportResult, object.getObjectId().getId());
+				return new SaveResult(cmsImportResult, newLabel, object.getObjectId().getId());
 			}
 
 			prepareOperation(object, isNew);
@@ -472,6 +485,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			if (!Tools.equals(object.getObjectId().getId(), newId.getId())) {
 				// The object has changed... so we pull the newly-persisted object
 				object = castObject(session.getObject(newId));
+				newLabel = calculateLabel(object);
 			}
 
 			if (postConstruction(object, isNew, context)) {
@@ -482,19 +496,14 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				object.save();
 			}
 
-			String newLabel = null;
-			try {
+			if (newLabel == null) {
 				newLabel = calculateLabel(object);
-			} catch (Throwable t) {
-				this.log.warn(String.format("Failed to calculate the label for the new %s for [%s](%s){%s}", this.type,
-					getLabel(), getId(), object.getObjectId().getId()), t);
-				newLabel = String.format("{unknown-label-%s}", object.getObjectId().getId());
 			}
 			ok = true;
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
 				this.type, cmsImportResult, this.label, this.id, newLabel, object.getObjectId().getId()));
 
-			return new SaveResult(cmsImportResult, object.getObjectId().getId());
+			return new SaveResult(cmsImportResult, newLabel, object.getObjectId().getId());
 		} finally {
 			if (ok) {
 				try {

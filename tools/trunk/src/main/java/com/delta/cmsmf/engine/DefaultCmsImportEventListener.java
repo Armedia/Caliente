@@ -21,7 +21,8 @@ public class DefaultCmsImportEventListener implements CmsImportEngineListener {
 	}
 
 	@Override
-	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult) {
+	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult, String newLabel,
+		String newId) {
 	}
 
 	@Override

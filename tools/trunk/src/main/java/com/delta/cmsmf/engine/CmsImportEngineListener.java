@@ -48,7 +48,8 @@ public interface CmsImportEngineListener {
 	 * @param object
 	 * @param cmsImportResult
 	 */
-	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult);
+	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult, String newLabel,
+		String newId);
 
 	/**
 	 * <p>

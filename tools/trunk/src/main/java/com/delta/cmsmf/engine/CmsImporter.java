@@ -163,7 +163,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 								try {
 									objectImportStarted(next);
 									result = next.saveToCMS(ctx);
-									objectImportCompleted(next, result.getResult());
+									objectImportCompleted(next, result);
 									if (CmsImporter.this.log.isDebugEnabled()) {
 										CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
 									}
@@ -467,10 +467,20 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 		}
 	}
 
-	private void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult) {
+	private void objectImportCompleted(CmsObject<?> object, CmsImportResult result) {
 		for (CmsImportEngineListener l : getListeners()) {
 			try {
-				l.objectImportCompleted(object, cmsImportResult);
+				l.objectImportCompleted(object, result, null, null);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectImportCompleted(CmsObject<?> object, SaveResult result) {
+		for (CmsImportEngineListener l : getListeners()) {
+			try {
+				l.objectImportCompleted(object, result.getResult(), result.getObjectLabel(), result.getObjectId());
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}
