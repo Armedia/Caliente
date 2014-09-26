@@ -73,7 +73,8 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			this(object, newPermission, (newXPermits == null ? CmsSysObject.NO_PERMITS : Arrays.asList(newXPermits)));
 		}
 
-		public TemporaryPermission(IDfSysObject object, int newPermission, Collection<String> newXPermits) throws DfException {
+		public TemporaryPermission(IDfSysObject object, int newPermission, Collection<String> newXPermits)
+			throws DfException {
 			this.objectId = object.getObjectId().getId();
 			final String userName = object.getSession().getLoginUserName();
 
@@ -203,7 +204,8 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		public String toString() {
 			String op = (this.oldPermit != null ? this.oldPermit.getPermitValueString() : "(N/A)");
 			String np = (this.newPermit != null ? this.newPermit.getPermitValueString() : "(N/A)");
-			return String.format("TemporaryPermission [objectId=%s, oldPermit=%s, newPermit=%s, newXPermit=%s, autoRemove=%s]",
+			return String.format(
+				"TemporaryPermission [objectId=%s, oldPermit=%s, newPermit=%s, newXPermit=%s, autoRemove=%s]",
 				this.objectId, op, np, this.newXPermit, this.autoRemove);
 		}
 	}
@@ -221,7 +223,8 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			this.parent = parent;
 			this.parentId = parent.getObjectId().getId();
 			this.link = link;
-			this.TemporaryPermission = new TemporaryPermission(parent, IDfACL.DF_PERMIT_DELETE, IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+			this.TemporaryPermission = new TemporaryPermission(parent, IDfACL.DF_PERMIT_DELETE,
+				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 		}
 
 		private void ensureLocked() throws DfException {
@@ -293,8 +296,8 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 		@Override
 		public String toString() {
-			return String.format("ParentFolderAction [parentId=%s, link=%s, locked=%s, TemporaryPermission=%s]", this.parentId,
-				this.link, this.locked, this.TemporaryPermission);
+			return String.format("ParentFolderAction [parentId=%s, link=%s, locked=%s, TemporaryPermission=%s]",
+				this.parentId, this.link, this.locked, this.TemporaryPermission);
 		}
 	}
 
@@ -315,11 +318,29 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		return sysObject.isCheckedOut();
 	}
 
+	protected final void detectIncomingMutability() {
+		if (!this.mustFreeze) {
+			CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
+			if (frozen != null) {
+				// We only copy over the "true" values - we don't override local frozen status
+				// if it's set to true, and the incoming value is false
+				this.mustFreeze |= frozen.getValue().asBoolean();
+			}
+		}
+		if (!this.mustFreeze) {
+			CmsAttribute immutable = getAttribute(CmsAttributes.R_IMMUTABLE_FLAG);
+			if (immutable != null) {
+				// We only copy over the "true" values - we don't override local immutable
+				// status if it's set to true, and the incoming value is false
+				this.mustImmute |= immutable.getValue().asBoolean();
+			}
+		}
+	}
+
 	protected final void detectAndClearMutability(T sysObject) throws DfException {
 		this.mustFreeze = false;
 		this.mustImmute = false;
 		final String newId = sysObject.getObjectId().getId();
-		/*
 		if (sysObject.isFrozen()) {
 			// An object being frozen implies immutability
 			this.mustFreeze = true;
@@ -332,7 +353,6 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				sysObject.save();
 			}
 		}
-		 */
 		// Freezing implies immutability
 		if (!this.mustFreeze && sysObject.isImmutable()) {
 			// An object may be immutable, yet not frozen
@@ -346,25 +366,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				sysObject.save();
 			}
 		}
-
-		/*
-		if (!this.mustFreeze) {
-			CmsAttribute frozen = getAttribute(CmsAttributes.R_FROZEN_FLAG);
-			if (frozen != null) {
-				// We only copy over the "true" values - we don't override local frozen status
-				// if it's set to true, and the incoming value is false
-				this.mustFreeze |= frozen.getValue().asBoolean();
-			}
-		}
-		 */
-		if (!this.mustFreeze) {
-			CmsAttribute immutable = getAttribute(CmsAttributes.R_IMMUTABLE_FLAG);
-			if (immutable != null) {
-				// We only copy over the "true" values - we don't override local immutable
-				// status if it's set to true, and the incoming value is false
-				this.mustImmute |= immutable.getValue().asBoolean();
-			}
-		}
+		detectIncomingMutability();
 	}
 
 	protected final boolean restoreMutability(T sysObject) throws DfException {
