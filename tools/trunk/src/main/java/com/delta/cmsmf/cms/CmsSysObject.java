@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
@@ -45,7 +44,8 @@ import com.documentum.fc.common.IDfValue;
 
 abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
-	private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
+	// Disable, for now, since it messes up with version number copying
+	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
 	private static final Collection<String> NO_PERMITS = Collections.emptySet();
 
 	protected static final String TARGET_PATHS = "targetPaths";
@@ -358,7 +358,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			this.mustImmute = true;
 			if (this.log.isDebugEnabled()) {
 				this.log
-				.debug(String.format("Clearing immutable status from [%s](%s){%s}", getLabel(), getId(), newId));
+					.debug(String.format("Clearing immutable status from [%s](%s){%s}", getLabel(), getId(), newId));
 			}
 			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, false);
 			if (!sysObject.isCheckedOut()) {
@@ -382,7 +382,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		} else if (this.mustImmute) {
 			if (this.log.isDebugEnabled()) {
 				this.log
-				.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
+					.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
 			}
 			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
@@ -426,7 +426,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -435,19 +435,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	@Override
 	protected IDfId persistChanges(T sysObject, CmsTransferContext context) throws DfException, CMSMFException {
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
-		StringBuilder versionLabels = new StringBuilder();
-		for (IDfValue v : getAttribute(CmsAttributes.R_VERSION_LABEL)) {
-			if (versionLabels.length() > 0) {
-				versionLabels.append(',');
-			}
-			final String label = v.asString();
-			// Ignore "internal" version labels
-			if (CmsSysObject.INTERNAL_VL.matcher(label).matches()) {
-				continue;
-			}
-			versionLabels.append(label);
-		}
-		String vl = versionLabels.toString();
+		final String vl = getAttribute(CmsAttributes.R_VERSION_LABEL).getConcatenatedString(",");
 		final IDfId newId = sysObject.checkin(false, vl);
 		this.log.info(String.format("Checked in %s [%s](%s) to CMS as versions [%s] (newId=%s)", getType(), getLabel(),
 			getId(), vl, newId.getId()));
@@ -523,7 +511,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 			.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-				.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
+			.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
 	}
 
 	/**
@@ -603,7 +591,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				throw new CMSMFException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
 					getSubtype(), getLabel(), getSubtype(), currentPath, current.getType().getName(), current
-					.getObjectId().getId()));
+						.getObjectId().getId()));
 			}
 
 			T currentObj = dfClass.cast(current);
@@ -728,7 +716,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				// that means we have a broken version tree...which is unsupported
 				throw new CMSMFException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-					.getId(), deferred));
+						.getId(), deferred));
 			}
 		}
 		return history;
