@@ -132,7 +132,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		super.getDataProperties(properties, document);
 
 		if (!isDfReference(document)) { return; }
@@ -438,14 +438,12 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		int antecedentDots = StringUtils.countMatches(antecedentVersionImplicitVersionLabel, ".");
 		int documentDots = StringUtils.countMatches(documentImplicitVersionLabel, ".");
 
-		if (documentDots == (antecedentDots + 2)) {
+		final boolean shouldBranch = (documentDots == (antecedentDots + 2));
+		context.setValue(CmsSysObject.BRANCH_MARKER, DfValueFactory.newBooleanValue(shouldBranch));
+		if (shouldBranch) {
 			// branch
 			IDfId branchID = antecedentVersion.branch(antecedentVersionImplicitVersionLabel);
 			antecedentVersion = castObject(session.getObject(branchID));
-
-			// remove branch version label from repeating attributes
-			// This should be the implicit version label
-			rVersionLabel.removeValue(0);
 			this.branchTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
 			this.branchTemporaryPermission.grant(antecedentVersion);
 		} else {
