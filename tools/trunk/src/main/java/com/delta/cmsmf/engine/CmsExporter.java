@@ -47,8 +47,6 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 
-	private final Logger output;
-
 	private final Set<String> noiseTracker = Collections.synchronizedSet(new HashSet<String>());
 
 	private final CmsExportListener exportListener = new CmsExportListener() {
@@ -74,46 +72,59 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 		}
 	};
 
-	public CmsExporter() {
-		this(null);
+	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem) {
+		super(objectStore, fileSystem);
 	}
 
-	public CmsExporter(int threadCount) {
-		this(null, threadCount);
+	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount) {
+		super(objectStore, fileSystem, threadCount);
 	}
 
-	public CmsExporter(int threadCount, int backlogSize) {
-		this(null, threadCount, backlogSize);
+	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount, int backlogSize) {
+		super(objectStore, fileSystem, threadCount, backlogSize);
 	}
 
-	public CmsExporter(Logger output) {
-		super();
-		this.output = output;
+	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output) {
+		super(objectStore, fileSystem, output);
 	}
 
-	public CmsExporter(Logger output, int threadCount) {
-		super(threadCount);
-		this.output = output;
+	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount) {
+		super(objectStore, fileSystem, output, threadCount);
 	}
 
-	public CmsExporter(Logger output, int threadCount, int backlogSize) {
-		super(threadCount, backlogSize);
-		this.output = output;
+	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount,
+		int backlogSize) {
+		super(objectStore, fileSystem, output, threadCount, backlogSize);
 	}
 
 	private boolean isTracked(CmsObjectType objectType, String objectId) {
-		String key = String.format("%s[%s]", objectType.name(), objectId);
-		return (CmsExporter.this.noiseTracker.add(key) == false);
+		boolean ret = false;
+		try {
+			ret = getObjectStore().isSerialized(objectType, objectId);
+		} catch (CMSMFException e) {
+			if (this.log.isDebugEnabled()) {
+				this.log.error(
+					String.format("Failed to check whether %s[%s] was serialized", objectType.name(), objectId), e);
+			}
+			ret = false;
+		}
+		if (!ret) {
+			// Some objects aren't persisted, but should still be tracked...
+			String key = String.format("%s[%s]", objectType.name(), objectId);
+			ret = !this.noiseTracker.add(key);
+		}
+		return ret;
 	}
 
 	private boolean isTracked(CmsObject<?> object) {
 		return isTracked(object.getType(), object.getId());
 	}
 
-	public void doExport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
-		final CmsFileSystem fileSystem, final String dqlPredicate) throws DfException, CMSMFException {
-		this.noiseTracker.clear();
+	public void doExport(final DctmSessionManager sessionManager, final String dqlPredicate) throws DfException,
+		CMSMFException {
 		final IDfSession session = sessionManager.acquireSession();
+		final CmsObjectStore objectStore = getObjectStore();
+		final CmsFileSystem fileSystem = getFileSystem();
 
 		final int threadCount = getThreadCount();
 		final int backlogSize = getBacklogSize();
@@ -127,7 +138,8 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 		Runnable worker = new Runnable() {
 			@Override
 			public void run() {
-				IDfSession session = sessionManager.acquireSession();
+				final IDfSession session = sessionManager.acquireSession();
+				final Logger output = getOutput();
 				boolean transOk = false;
 				try {
 					session.beginTrans();
@@ -178,8 +190,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 
 							objectExportStarted(type, objectId);
 							CmsObject<?> object = objectStore.persistDfObject(dfObj, new DefaultExportContext(objectId,
-								session, objectStore, fileSystem, CmsExporter.this.output,
-								CmsExporter.this.exportListener));
+								session, objectStore, fileSystem, output, CmsExporter.this.exportListener));
 							if (object != null) {
 								objectExportCompleted(object);
 							} else {
@@ -308,7 +319,6 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 				}
 			}
 		} finally {
-			this.noiseTracker.clear();
 			Map<CmsObjectType, Integer> summary = Collections.emptyMap();
 			try {
 				summary = objectStore.getStoredObjectTypes();

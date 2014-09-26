@@ -48,41 +48,38 @@ import com.documentum.fc.common.DfException;
 public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 
 	private final CmsCounter<CmsImportResult> counter = new CmsCounter<CmsImportResult>(CmsImportResult.class);
-	private final Logger output;
 
-	public CmsImporter() {
-		this(null);
+	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem) {
+		super(objectStore, fileSystem);
 	}
 
-	public CmsImporter(int threadCount) {
-		this(null, threadCount);
+	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount) {
+		super(objectStore, fileSystem, threadCount);
 	}
 
-	public CmsImporter(int threadCount, int backlogSize) {
-		this(null, threadCount, backlogSize);
+	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount, int backlogSize) {
+		super(objectStore, fileSystem, threadCount, backlogSize);
 	}
 
-	public CmsImporter(Logger output) {
-		super();
-		this.output = output;
+	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output) {
+		super(objectStore, fileSystem, output);
 	}
 
-	public CmsImporter(Logger output, int threadCount) {
-		super(threadCount);
-		this.output = output;
+	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount) {
+		super(objectStore, fileSystem, output, threadCount);
 	}
 
-	public CmsImporter(Logger output, int threadCount, int backlogSize) {
-		super(threadCount, backlogSize);
-		this.output = output;
+	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount,
+		int backlogSize) {
+		super(objectStore, fileSystem, output, threadCount, backlogSize);
 	}
 
 	public final CmsCounter<CmsImportResult> getCounter() {
 		return this.counter;
 	}
 
-	public void doImport(final CmsObjectStore objectStore, final DctmSessionManager sessionManager,
-		final CmsFileSystem fileSystem, boolean postProcess) throws DfException, CMSMFException {
+	public void doImport(final DctmSessionManager sessionManager, boolean postProcess) throws DfException,
+	CMSMFException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -90,6 +87,8 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 		// this.log.info("Clearing all previous mappings");
 		// objectStore.clearAllMappings();
 
+		final CmsObjectStore objectStore = getObjectStore();
+		final CmsFileSystem fileSystem = getFileSystem();
 		final int threadCount = getThreadCount();
 		final int backlogSize = getBacklogSize();
 		final AtomicInteger activeCounter = new AtomicInteger(0);
@@ -106,6 +105,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 			@Override
 			public void run() {
 				activeCounter.incrementAndGet();
+				final Logger output = getOutput();
 				IDfSession session = null;
 				try {
 					while (!Thread.interrupted()) {
@@ -157,7 +157,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 								}
 
 								CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore,
-									fileSystem, CmsImporter.this.output);
+									fileSystem, output);
 								SaveResult result = null;
 								final CmsObjectType type = next.getType();
 								try {
@@ -172,16 +172,16 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 									result = null;
 									// Log the error, move on
 									CmsImporter.this.log
-									.error(String.format("Exception caught processing %s", next), t);
+										.error(String.format("Exception caught processing %s", next), t);
 									if (type.isFailureInterruptsBatch()) {
 										// If we're supposed to kill the batch, fail all the other
 										// objects
 										failBatch = true;
 										CmsImporter.this.log
-										.debug(String
-											.format(
-												"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-												type));
+											.debug(String
+												.format(
+													"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+													type));
 										continue;
 									}
 								} finally {
@@ -415,10 +415,10 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -431,7 +431,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 					continue;
 				}
 				this.log
-					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}

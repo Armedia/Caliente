@@ -44,7 +44,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 	@Override
 	public void run() throws CMSMFException {
 
-		CmsExporter exporter = new CmsExporter(this.console, Setting.THREADS.getInt());
+		CmsExporter exporter = new CmsExporter(this.objectStore, this.fileSystem, this.console,
+			Setting.THREADS.getInt());
 		exporter.addListener(this);
 
 		final Date start = new Date();
@@ -55,7 +56,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 		// lock
 		try {
 			this.log.info("##### Export Process Started #####");
-			exporter.doExport(this.objectStore, this.sessionManager, this.fileSystem, buildExportQueryString());
+			exporter.doExport(this.sessionManager, buildExportQueryString());
 			this.log.info("##### Export Process Finished #####");
 
 			final IDfSession session = this.sessionManager.acquireSession();

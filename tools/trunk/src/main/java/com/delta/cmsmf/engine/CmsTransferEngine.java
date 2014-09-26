@@ -6,6 +6,9 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cms.CmsFileSystem;
+import com.delta.cmsmf.cms.storage.CmsObjectStore;
+
 public abstract class CmsTransferEngine<T> {
 
 	protected final Logger log = Logger.getLogger(getClass());
@@ -19,16 +22,32 @@ public abstract class CmsTransferEngine<T> {
 
 	private final int backlogSize;
 	private final int threadCount;
+	private final CmsObjectStore objectStore;
+	private final CmsFileSystem fileSystem;
+	private final Logger output;
 
-	public CmsTransferEngine() {
-		this(CmsTransferEngine.DEFAULT_THREAD_COUNT);
+	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem) {
+		this(objectStore, fileSystem, null);
 	}
 
-	public CmsTransferEngine(int threadCount) {
-		this(threadCount, CmsTransferEngine.DEFAULT_BACKLOG_SIZE);
+	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount) {
+		this(objectStore, fileSystem, null, threadCount);
 	}
 
-	public CmsTransferEngine(int threadCount, int backlogSize) {
+	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount, int backlogSize) {
+		this(objectStore, fileSystem, null, threadCount, backlogSize);
+	}
+
+	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output) {
+		this(objectStore, fileSystem, output, CmsTransferEngine.DEFAULT_THREAD_COUNT);
+	}
+
+	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount) {
+		this(objectStore, fileSystem, output, threadCount, CmsTransferEngine.DEFAULT_BACKLOG_SIZE);
+	}
+
+	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount,
+		int backlogSize) {
 		if (threadCount <= 0) {
 			threadCount = 1;
 		}
@@ -43,6 +62,21 @@ public abstract class CmsTransferEngine<T> {
 		}
 		this.threadCount = threadCount;
 		this.backlogSize = backlogSize;
+		this.objectStore = objectStore;
+		this.fileSystem = fileSystem;
+		this.output = output;
+	}
+
+	protected final CmsObjectStore getObjectStore() {
+		return this.objectStore;
+	}
+
+	protected final CmsFileSystem getFileSystem() {
+		return this.fileSystem;
+	}
+
+	protected final Logger getOutput() {
+		return this.output;
 	}
 
 	public final synchronized boolean addListener(T listener) {

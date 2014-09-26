@@ -54,7 +54,8 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	@Override
 	public void run() throws CMSMFException {
 		// lock
-		final CmsImporter importer = new CmsImporter(this.console, Setting.THREADS.getInt());
+		final CmsImporter importer = new CmsImporter(this.objectStore, this.fileSystem, this.console,
+			Setting.THREADS.getInt());
 		importer.addListener(this);
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();
@@ -62,8 +63,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 		String exceptionReport = null;
 		try {
 			this.log.info("##### Import Process Started #####");
-			importer.doImport(this.objectStore, this.sessionManager, this.fileSystem,
-				Setting.POST_PROCESS_IMPORT.getBoolean());
+			importer.doImport(this.sessionManager, Setting.POST_PROCESS_IMPORT.getBoolean());
 			this.log.info("##### Import Process Completed #####");
 		} catch (Throwable t) {
 			StringWriter sw = new StringWriter();
