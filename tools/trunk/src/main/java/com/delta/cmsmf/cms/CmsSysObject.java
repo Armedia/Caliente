@@ -60,7 +60,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		AUTO_PERMITS = Collections.unmodifiableSet(s);
 	}
 
-	protected static final class PermitDelta {
+	protected static final class TemporaryPermission {
 		private final Logger log = Logger.getLogger(getClass());
 
 		private final String objectId;
@@ -69,11 +69,11 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		private final Set<String> newXPermit;
 		private final Set<String> autoRemove;
 
-		public PermitDelta(IDfSysObject object, int newPermission, String... newXPermits) throws DfException {
+		public TemporaryPermission(IDfSysObject object, int newPermission, String... newXPermits) throws DfException {
 			this(object, newPermission, (newXPermits == null ? CmsSysObject.NO_PERMITS : Arrays.asList(newXPermits)));
 		}
 
-		public PermitDelta(IDfSysObject object, int newPermission, Collection<String> newXPermits) throws DfException {
+		public TemporaryPermission(IDfSysObject object, int newPermission, Collection<String> newXPermits) throws DfException {
 			this.objectId = object.getObjectId().getId();
 			final String userName = object.getSession().getLoginUserName();
 
@@ -203,7 +203,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		public String toString() {
 			String op = (this.oldPermit != null ? this.oldPermit.getPermitValueString() : "(N/A)");
 			String np = (this.newPermit != null ? this.newPermit.getPermitValueString() : "(N/A)");
-			return String.format("PermitDelta [objectId=%s, oldPermit=%s, newPermit=%s, newXPermit=%s, autoRemove=%s]",
+			return String.format("TemporaryPermission [objectId=%s, oldPermit=%s, newPermit=%s, newXPermit=%s, autoRemove=%s]",
 				this.objectId, op, np, this.newXPermit, this.autoRemove);
 		}
 	}
@@ -213,7 +213,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 		private final IDfSysObject parent;
 		private final String parentId;
-		private final PermitDelta permitDelta;
+		private final TemporaryPermission TemporaryPermission;
 		private final boolean link;
 		private boolean locked = false;
 
@@ -221,7 +221,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			this.parent = parent;
 			this.parentId = parent.getObjectId().getId();
 			this.link = link;
-			this.permitDelta = new PermitDelta(parent, IDfACL.DF_PERMIT_DELETE, IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+			this.TemporaryPermission = new TemporaryPermission(parent, IDfACL.DF_PERMIT_DELETE, IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 		}
 
 		private void ensureLocked() throws DfException {
@@ -248,7 +248,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 		protected void apply(IDfSysObject child) throws DfException {
 			ensureLocked();
-			if (this.permitDelta.grant(this.parent)) {
+			if (this.TemporaryPermission.grant(this.parent)) {
 				this.parent.save();
 			}
 			if (this.log.isDebugEnabled()) {
@@ -265,7 +265,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 		protected void cleanUp() throws DfException {
 			ensureLocked();
-			if (this.permitDelta.revoke(this.parent)) {
+			if (this.TemporaryPermission.revoke(this.parent)) {
 				this.parent.save();
 			}
 		}
@@ -293,14 +293,14 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 		@Override
 		public String toString() {
-			return String.format("ParentFolderAction [parentId=%s, link=%s, locked=%s, permitDelta=%s]", this.parentId,
-				this.link, this.locked, this.permitDelta);
+			return String.format("ParentFolderAction [parentId=%s, link=%s, locked=%s, TemporaryPermission=%s]", this.parentId,
+				this.link, this.locked, this.TemporaryPermission);
 		}
 	}
 
 	private boolean mustFreeze = false;
 	private boolean mustImmute = false;
-	private PermitDelta existingPermitDelta = null;
+	private TemporaryPermission existingTemporaryPermission = null;
 	private Collection<ParentFolderAction> parentLinkActions = null;
 
 	/**
@@ -416,8 +416,8 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	@Override
 	protected void prepareOperation(T sysObject, boolean newObject) throws DfException, CMSMFException {
 		if (!isTransitoryObject(sysObject)) {
-			this.existingPermitDelta = new PermitDelta(sysObject, IDfACL.DF_PERMIT_DELETE);
-			if (this.existingPermitDelta.grant(sysObject)) {
+			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
+			if (this.existingTemporaryPermission.grant(sysObject)) {
 				sysObject.save();
 			}
 		}
@@ -427,7 +427,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
 		CMSMFException {
 		boolean ret = restoreMutability(object);
-		ret |= (this.existingPermitDelta != null) && this.existingPermitDelta.revoke(object);
+		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
 	}
 

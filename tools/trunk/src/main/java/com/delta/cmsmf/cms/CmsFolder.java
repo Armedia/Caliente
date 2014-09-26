@@ -188,19 +188,19 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 		// }
 	}
 
-	private PermitDelta mainPermitDelta = null;
+	private TemporaryPermission mainTemporaryPermission = null;
 
 	@Override
 	protected void prepareForConstruction(IDfFolder folder, boolean newObject, CmsTransferContext context)
 		throws DfException {
-		this.mainPermitDelta = null;
+		this.mainTemporaryPermission = null;
 
 		// If updating an existing folder object, make sure that you have write
 		// permissions and CHANGE_LOCATION. If you don't, grant them, and reset it later on.
 		if (!newObject) {
-			this.mainPermitDelta = new PermitDelta(folder, IDfACL.DF_PERMIT_DELETE,
+			this.mainTemporaryPermission = new TemporaryPermission(folder, IDfACL.DF_PERMIT_DELETE,
 				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
-			if (this.mainPermitDelta.grant(folder)) {
+			if (this.mainTemporaryPermission.grant(folder)) {
 				folder.save();
 			}
 		}
@@ -289,8 +289,8 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			}
 		}
 
-		if (this.mainPermitDelta != null) {
-			newObject |= this.mainPermitDelta.revoke(folder);
+		if (this.mainTemporaryPermission != null) {
+			newObject |= this.mainTemporaryPermission.revoke(folder);
 		}
 		return newObject;
 	}

@@ -84,8 +84,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		CmsDocument.HANDLERS_READY = true;
 	}
 
-	private PermitDelta antecedentPermitDelta = null;
-	private PermitDelta branchPermitDelta = null;
+	private TemporaryPermission antecedentTemporaryPermission = null;
+	private TemporaryPermission branchTemporaryPermission = null;
 	private List<IDfId> priorVersions = null;
 	private List<IDfId> laterVersions = null;
 
@@ -417,8 +417,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			antecedentId)); }
 		IDfDocument antecedentVersion = castObject(session.getObject(new DfId(mapping.getTargetValue())));
 		antecedentVersion.fetch(null);
-		this.antecedentPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
-		if (this.antecedentPermitDelta.grant(antecedentVersion)) {
+		this.antecedentTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
+		if (this.antecedentTemporaryPermission.grant(antecedentVersion)) {
 			antecedentVersion.save();
 		}
 
@@ -438,11 +438,11 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			// remove branch version label from repeating attributes
 			// This should be the implicit version label
 			rVersionLabel.removeValue(0);
-			this.branchPermitDelta = new PermitDelta(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
-			this.branchPermitDelta.grant(antecedentVersion);
+			this.branchTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
+			this.branchTemporaryPermission.grant(antecedentVersion);
 		} else {
 			// checkout
-			this.branchPermitDelta = null;
+			this.branchTemporaryPermission = null;
 			antecedentVersion.checkout();
 			antecedentVersion.fetch(null);
 		}
@@ -467,8 +467,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
 		final boolean root = (Tools.equals(getId(), sourceChronicleId));
 		if (!root && !newObject) {
-			this.antecedentPermitDelta = new PermitDelta(document, IDfACL.DF_PERMIT_VERSION);
-			if (this.antecedentPermitDelta.grant(document)) {
+			this.antecedentTemporaryPermission = new TemporaryPermission(document, IDfACL.DF_PERMIT_VERSION);
+			if (this.antecedentTemporaryPermission.grant(document)) {
 				// Not sure this is OK...
 				if (!document.isCheckedOut()) {
 					document.save();
@@ -650,22 +650,22 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 		cleanUpParents(session);
 
-		if (this.antecedentPermitDelta != null) {
-			IDfId antecedentId = new DfId(this.antecedentPermitDelta.getObjectId());
+		if (this.antecedentTemporaryPermission != null) {
+			IDfId antecedentId = new DfId(this.antecedentTemporaryPermission.getObjectId());
 			IDfDocument antecedent = castObject(session.getObject(antecedentId));
 			session.flushObject(antecedentId);
 			antecedent.fetch(null);
-			if (this.antecedentPermitDelta.revoke(antecedent)) {
+			if (this.antecedentTemporaryPermission.revoke(antecedent)) {
 				antecedent.save();
 			}
 		}
 
-		if (this.branchPermitDelta != null) {
-			IDfId branchId = new DfId(this.branchPermitDelta.getObjectId());
+		if (this.branchTemporaryPermission != null) {
+			IDfId branchId = new DfId(this.branchTemporaryPermission.getObjectId());
 			IDfDocument branch = castObject(session.getObject(branchId));
 			session.flushObject(branchId);
 			branch.fetch(null);
-			if (this.branchPermitDelta.revoke(branch)) {
+			if (this.branchTemporaryPermission.revoke(branch)) {
 				branch.save();
 			}
 		}
