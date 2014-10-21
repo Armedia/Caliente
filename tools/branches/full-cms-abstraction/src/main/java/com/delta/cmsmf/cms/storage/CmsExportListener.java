@@ -30,7 +30,7 @@ public interface CmsExportListener {
 	 * @param objectType
 	 * @param objectId
 	 */
-	public void objectSkipped(CmsObjectType objectType, String objectId);
+	public void objectExportSkipped(CmsObjectType objectType, String objectId);
 
 	/**
 	 * <p>

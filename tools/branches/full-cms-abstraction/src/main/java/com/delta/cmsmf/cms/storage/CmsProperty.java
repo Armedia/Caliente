@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.common.DfException;
 
 public class CmsProperty implements Iterable<CmsValue<?>> {
 
@@ -32,7 +31,7 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 * </p>
 	 *
 	 * @param attr
-	 * @throws DfException
+	 * @throws SQLException
 	 */
 	CmsProperty(ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }

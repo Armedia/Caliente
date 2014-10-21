@@ -106,53 +106,53 @@ public class CmsObjectStore {
 	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from dctm_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-		"   select object_type, count(*) as total " + //
+	"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-		"    select o.* " + //
+	"    select o.* " + //
 		"  from dctm_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -530,9 +530,9 @@ public class CmsObjectStore {
 						// Make sure we're returning the right thing
 						if (objType != type) { throw new CMSMFException(
 							String
-							.format(
-								"Deserialization failure with object #%d [%s](ID=%s) - got type [%s] but expected type [%s]",
-								objNum, objLabel, objId, objType.name(), type.name())); }
+								.format(
+									"Deserialization failure with object #%d [%s](ID=%s) - got type [%s] but expected type [%s]",
+									objNum, objLabel, objId, objType.name(), type.name())); }
 
 						if (this.log.isInfoEnabled()) {
 							this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
@@ -685,7 +685,7 @@ public class CmsObjectStore {
 			qr.insert(c, CmsObjectStore.INSERT_MAPPING_SQL, CmsObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
-			.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
 				targetValue));
@@ -852,7 +852,7 @@ public class CmsObjectStore {
 		try {
 			Long ret = doPersistObject(object, ctx);
 			if (ret == null) {
-				ctx.objectSkipped(type, objectId);
+				ctx.objectExportSkipped(type, objectId);
 			} else {
 				ctx.objectExportCompleted(object, ret);
 			}
@@ -955,26 +955,26 @@ public class CmsObjectStore {
 		try {
 			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<CmsObjectType, Integer>>() {
-				@Override
-				public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
-					Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
-					while (rs.next()) {
-						String t = rs.getString("object_type");
-						if ((t == null) || rs.wasNull()) {
-							CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-							continue;
+					@Override
+					public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
+						while (rs.next()) {
+							String t = rs.getString("object_type");
+							if ((t == null) || rs.wasNull()) {
+								CmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
+							try {
+								ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
+							} catch (IllegalArgumentException e) {
+								CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
+									t));
+								continue;
+							}
 						}
-						try {
-							ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
-						} catch (IllegalArgumentException e) {
-							CmsObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]",
-								t));
-							continue;
-						}
+						return ret;
 					}
-					return ret;
-				}
-			});
+				});
 		} catch (SQLException e) {
 			throw new CMSMFException("Failed to retrieve the stored object types", e);
 		}
