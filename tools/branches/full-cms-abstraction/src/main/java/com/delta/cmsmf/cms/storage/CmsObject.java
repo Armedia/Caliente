@@ -14,8 +14,6 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.exception.CMSMFException;
 
 /**
@@ -25,51 +23,6 @@ import com.delta.cmsmf.exception.CMSMFException;
 public abstract class CmsObject {
 
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
-
-	public static final class SaveResult {
-		private final CmsImportResult cmsImportResult;
-		private final String objectLabel;
-		private final String objectId;
-
-		private SaveResult(CmsImportResult cmsImportResult, String objectLabel, String objectId) {
-			this.cmsImportResult = cmsImportResult;
-			this.objectLabel = objectLabel;
-			this.objectId = objectId;
-		}
-
-		public CmsImportResult getResult() {
-			return this.cmsImportResult;
-		}
-
-		public String getObjectLabel() {
-			return this.objectLabel;
-		}
-
-		public String getObjectId() {
-			return this.objectId;
-		}
-
-		@Override
-		public int hashCode() {
-			return Tools.hashTool(this, null, this.cmsImportResult, this.objectLabel, this.objectId);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (!Tools.baseEquals(this, obj)) { return false; }
-			SaveResult other = SaveResult.class.cast(obj);
-			if (!Tools.equals(this.cmsImportResult, other.cmsImportResult)) { return false; }
-			if (!Tools.equals(this.objectLabel, other.objectLabel)) { return false; }
-			if (!Tools.equals(this.objectId, other.objectId)) { return false; }
-			return true;
-		}
-
-		@Override
-		public String toString() {
-			return String.format("SaveResult [cmsImportResult=%s, objectLabel=%s, objectId=%s]", this.cmsImportResult,
-				this.objectLabel, this.objectId);
-		}
-	}
 
 	protected final Logger log = Logger.getLogger(getClass());
 
@@ -95,7 +48,7 @@ public abstract class CmsObject {
 	}
 
 	public CmsObject(ResultSet rs) throws SQLException, UnsupportedObjectTypeException {
-		this.type = CmsObjectType.valueOf(rs.getString("object_type"));
+		this.type = CmsObjectType.decode(rs.getString("object_type"));
 		this.id = rs.getString("object_id");
 		this.batchId = rs.getString("batch_id");
 		this.label = rs.getString("object_label");
