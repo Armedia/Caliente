@@ -20,7 +20,7 @@ import com.delta.cmsmf.exception.CMSMFException;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class CmsObject {
+public final class CmsObject {
 
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 

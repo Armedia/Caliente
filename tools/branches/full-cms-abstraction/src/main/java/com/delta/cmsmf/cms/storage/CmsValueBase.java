@@ -56,6 +56,11 @@ abstract class CmsValueBase<T extends Object> implements CmsValue<T> {
 	}
 
 	@Override
+	public final String getEncoded() {
+		return encode(this.value);
+	}
+
+	@Override
 	public final CmsValue<?> convert(CmsDataType type) {
 		if (supports(type)) {
 			switch (type) {

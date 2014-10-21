@@ -22,6 +22,8 @@ public interface CmsValue<T extends Object> {
 
 	public boolean isNull();
 
+	public String getEncoded();
+
 	public CmsValue<?> convert(CmsDataType newType);
 
 	@Override

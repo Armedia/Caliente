@@ -31,21 +31,8 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cms.CmsAttribute;
-import com.delta.cmsmf.cms.CmsAttributeMapper;
-import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
-import com.delta.cmsmf.cms.CmsDataType;
-import com.delta.cmsmf.cms.CmsDependencyManager;
-import com.delta.cmsmf.cms.CmsExportContext;
-import com.delta.cmsmf.cms.CmsObject;
-import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.cms.CmsProperty;
-import com.delta.cmsmf.cms.CmsTransferContext;
-import com.delta.cmsmf.cms.UnsupportedObjectTypeException;
+import com.delta.cmsmf.cms.storage.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfValue;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -77,7 +64,7 @@ public class CmsObjectStore {
 		 * @param dataObject
 		 * @throws CMSMFException
 		 */
-		public void handle(CmsObject<?> dataObject) throws CMSMFException;
+		public void handle(CmsObject dataObject) throws CMSMFException;
 
 		/**
 		 * <p>
@@ -174,6 +161,14 @@ public class CmsObjectStore {
 	private static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
 		@Override
 		public Object handle(ResultSet rs) throws SQLException {
+			return null;
+		}
+	};
+
+	private static final ResultSetHandler<Long> HANDLER_OBJECT_NUMBER = new ResultSetHandler<Long>() {
+		@Override
+		public Long handle(ResultSet rs) throws SQLException {
+			if (rs.next()) { return rs.getLong(1); }
 			return null;
 		}
 	};
@@ -277,8 +272,7 @@ public class CmsObjectStore {
 		return q;
 	}
 
-	private boolean serializeObject(Connection c, CmsObject<?> object, CmsTransferContext ctx) throws DfException,
-	CMSMFException {
+	private Long serializeObject(Connection c, CmsObject object, CmsTransferContext ctx) throws CMSMFException {
 		final String objectId = object.getId();
 		final CmsObjectType objectType = object.getType();
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
@@ -295,7 +289,7 @@ public class CmsObjectStore {
 			QueryRunner qr = CmsObjectStore.getQueryRunner();
 			if (isSerialized(c, objectType, objectId)) {
 				// Object is already there, so do nothing
-				return false;
+				return null;
 			}
 			persistDependency(c, object.getType(), object.getId(), ctx);
 			final String sql = "select * from dctm_export_plan where traversed = false and object_id = ? and not exists ( select o.object_id from dctm_object o where o.object_id = dctm_export_plan.object_id ) for update";
@@ -304,7 +298,7 @@ public class CmsObjectStore {
 			lockRS = lockPS.executeQuery();
 			if (!lockRS.next()) {
 				// Already serialized...
-				return false;
+				return null;
 			}
 
 			// Then, insert its attributes
@@ -314,12 +308,6 @@ public class CmsObjectStore {
 				final String name = attribute.getName();
 				final boolean repeating = attribute.isRepeating();
 				final CmsDataType type = attribute.getType();
-
-				// DO NOT process "undefined" attribute values
-				if (type == CmsDataType.DF_UNDEFINED) {
-					this.log.warn(String.format("Ignoring attribute of type UNDEFINED [{%s}.%s]", objectId, name));
-					continue;
-				}
 
 				attData[1] = name;
 				attData[2] = attribute.getId();
@@ -339,9 +327,9 @@ public class CmsObjectStore {
 				Object[][] values = new Object[attribute.getValueCount()][];
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				for (IDfValue value : attribute) {
+				for (CmsValue<?> value : attribute) {
 					attValue[2] = v;
-					attValue[3] = type.encode(value);
+					attValue[3] = value.getEncoded();
 					values[v] = attValue.clone();
 					attributeValueParameters.add(attValue.clone());
 					v++;
@@ -354,12 +342,6 @@ public class CmsObjectStore {
 				final CmsProperty property = object.getProperty(name);
 				final CmsDataType type = property.getType();
 
-				// DO NOT process "undefined" property values
-				if (type == CmsDataType.DF_UNDEFINED) {
-					this.log.warn(String.format("Ignoring property of type UNDEFINED [{%s}.%s]", objectId, name));
-					continue;
-				}
-
 				propData[1] = name;
 				propData[2] = type.name();
 				propData[3] = property.isRepeating();
@@ -371,9 +353,9 @@ public class CmsObjectStore {
 				Object[][] values = new Object[property.getValueCount()][];
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				for (IDfValue value : property) {
+				for (CmsValue<?> value : property) {
 					attValue[2] = v;
-					attValue[3] = type.encode(value);
+					attValue[3] = value.getEncoded();
 					values[v] = attValue.clone();
 					propertyValueParameters.add(attValue.clone());
 					v++;
@@ -381,8 +363,8 @@ public class CmsObjectStore {
 			}
 
 			// Do all the inserts in a row
-			qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_NULL, objectId, objectType.name(),
-				object.getSubtype(), object.getLabel(), object.getBatchId());
+			Long ret = qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_OBJECT_NUMBER, objectId,
+				objectType.name(), object.getSubtype(), object.getLabel(), object.getBatchId());
 			qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_SQL, CmsObjectStore.HANDLER_NULL,
 				attributeParameters.toArray(CmsObjectStore.NO_PARAMS));
 			qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
@@ -393,7 +375,7 @@ public class CmsObjectStore {
 				propertyValueParameters.toArray(CmsObjectStore.NO_PARAMS));
 			// lockRS.updateBoolean(1, true);
 			// lockRS.updateRow();
-			return true;
+			return ret;
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to serialize %s", object), e);
 		} finally {
@@ -415,8 +397,7 @@ public class CmsObjectStore {
 		}
 	}
 
-	public boolean serializeObject(CmsObject<?> object, final CmsTransferContext ctx) throws DfException,
-	CMSMFException {
+	public Long serializeObject(CmsObject object, final CmsTransferContext ctx) throws CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to serialize with"); }
 		boolean ok = false;
@@ -426,7 +407,7 @@ public class CmsObjectStore {
 			// First, make sure no "left behind" garbage gets committed
 			c.rollback();
 			c.setAutoCommit(false);
-			boolean ret = serializeObject(c, object, ctx);
+			Long ret = serializeObject(c, object, ctx);
 			ok = true;
 			return ret;
 		} catch (SQLException e) {
@@ -446,19 +427,17 @@ public class CmsObjectStore {
 		}
 	}
 
-	public void deserializeObjects(Class<? extends CmsObject<?>> klass, ObjectHandler handler) throws CMSMFException {
-		deserializeObjects(klass, null, handler);
+	public void deserializeObjects(final CmsObjectType type, ObjectHandler handler) throws CMSMFException {
+		deserializeObjects(type, null, handler);
 	}
 
-	public void deserializeObjects(Class<? extends CmsObject<?>> klass, Set<String> ids, ObjectHandler handler)
+	public void deserializeObjects(final CmsObjectType type, Set<String> ids, ObjectHandler handler)
 		throws CMSMFException {
-		if (klass == null) { throw new IllegalArgumentException("Must provide an object class to deserialize"); }
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to deserialize"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
 		Connection objConn = null;
 		Connection attConn = null;
-
-		final CmsObjectType type = CmsObjectType.decodeFromClass(klass);
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return; }
@@ -517,8 +496,10 @@ public class CmsObjectStore {
 						// If batching is not required, then we simply use the object number
 						// as the batch ID, to ensure that object_number remains the sole
 						// ordering factor
-						final String batchId = (type.isBatchingSupported() ? objRS.getString("batch_id") : String
-							.valueOf(objNum));
+						boolean batchingSupported = false;
+						// TODO: batchingSupported = type.isBatchingSupported();
+						final String batchId = (batchingSupported ? objRS.getString("batch_id") : String.format("%08x",
+							objNum));
 						if (!Tools.equals(currentBatch, batchId)) {
 							if (currentBatch != null) {
 								if (this.log.isDebugEnabled()) {
@@ -553,19 +534,20 @@ public class CmsObjectStore {
 								"Deserialization failure with object #%d [%s](ID=%s) - got type [%s] but expected type [%s]",
 								objNum, objLabel, objId, objType.name(), type.name())); }
 
-						if (!klass.isAssignableFrom(objType.getCmsObjectClass())) { throw new CMSMFException(
-							String
-							.format(
-								"Deserialization failure with %s object #%d [%s](ID=%s) - class [%s] is not assignable as [%s]",
-								objType.name(), objNum, objLabel, objId, objType.getDeclaringClass()
-								.getCanonicalName(), klass.getCanonicalName())); }
-
 						if (this.log.isInfoEnabled()) {
 							this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
 								objLabel, objId));
 						}
-						CmsObject<?> obj = objType.newInstance();
-						obj.load(objRS);
+
+						CmsObject obj = null;
+						try {
+							obj = new CmsObject(objRS);
+						} catch (UnsupportedObjectTypeException e) {
+							// skip this one
+							this.log.warn(String.format("Object #%d: %s", objNum, e.getMessage()));
+							continue;
+						}
+
 						if (this.log.isTraceEnabled()) {
 							this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 						} else if (this.log.isDebugEnabled()) {
@@ -856,31 +838,25 @@ public class CmsObjectStore {
 		}
 	}
 
-	public CmsObject<?> persistDfObject(IDfPersistentObject dfObject, final CmsExportContext ctx) throws DfException,
-	CMSMFException {
-		final String objectId = dfObject.getObjectId().getId();
-		final CmsObjectType type;
-		try {
-			type = CmsObjectType.decodeType(dfObject);
-		} catch (UnsupportedObjectTypeException e) {
-			if (this.log.isDebugEnabled()) {
-				this.log.warn(e.getMessage());
-			}
-			ctx.objectSkipped(null, objectId);
-			return null;
-		}
+	/**
+	 *
+	 * @param object
+	 * @param ctx
+	 * @return the object number with which this object was persisted
+	 * @throws CMSMFException
+	 */
+	public Long persistObject(CmsObject object, final CmsExportContext ctx) throws CMSMFException {
+		final String objectId = object.getId();
+		final CmsObjectType type = object.getType();
 		ctx.objectExportStarted(type, objectId);
 		try {
-			CmsObject<?> ret = doPersistDfObject(dfObject, ctx);
+			Long ret = doPersistObject(object, ctx);
 			if (ret == null) {
 				ctx.objectSkipped(type, objectId);
 			} else {
-				ctx.objectExportCompleted(ret);
+				ctx.objectExportCompleted(object, ret);
 			}
 			return ret;
-		} catch (DfException e) {
-			ctx.objectExportFailed(type, objectId, e);
-			throw new DfException(e);
 		} catch (CMSMFException e) {
 			ctx.objectExportFailed(type, objectId, e);
 			throw new CMSMFException(e);
@@ -891,18 +867,9 @@ public class CmsObjectStore {
 		}
 	}
 
-	private CmsObject<?> doPersistDfObject(IDfPersistentObject dfObject, final CmsExportContext ctx)
-		throws DfException, CMSMFException {
-		final CmsObjectType objectType;
-		try {
-			objectType = CmsObjectType.decodeType(dfObject);
-		} catch (UnsupportedObjectTypeException e) {
-			if (this.log.isDebugEnabled()) {
-				this.log.warn(e.getMessage());
-			}
-			return null;
-		}
-		final String objectId = dfObject.getObjectId().getId();
+	private Long doPersistObject(CmsObject object, final CmsExportContext ctx) throws CMSMFException {
+		final CmsObjectType objectType = object.getType();
+		final String objectId = object.getId();
 		// If it's already serialized, we skip it
 		try {
 			persistDependency(objectType, objectId, ctx);
@@ -915,13 +882,8 @@ public class CmsObjectStore {
 		}
 		if (isSerialized(objectType, objectId)) { return null; }
 
-		// Not already serialized, so we do the deed.
-		CmsObject<?> obj = objectType.newInstance();
-		if (!obj.loadFromCMS(dfObject)) {
-			// The object is not supported
-			return null;
-		}
 		// We try to traverse its dependencies
+		/*
 		CmsDependencyManager dependencyManager = new CmsDependencyManager() {
 			@Override
 			protected boolean persistDependency(Dependency dependency) throws CMSMFException {
@@ -933,13 +895,17 @@ public class CmsObjectStore {
 				return (CmsObjectStore.this.persistDfObject(dfObject, ctx) != null);
 			}
 		};
+		 */
 
-		obj.persistRequirements(dfObject, ctx, dependencyManager);
+		// TODO: reimplement
+		// obj.persistRequirements(dfObject, ctx, dependencyManager);
 		// If somehow it got serialized underneath us (perhaps by another thread), we skip it
-		if (!serializeObject(obj, ctx)) { return null; }
-		obj.persistDependents(dfObject, ctx, dependencyManager);
+		Long ret = serializeObject(object, ctx);
+		if (ret == null) { return null; }
+		// TODO: reimplement
+		// obj.persistDependents(dfObject, ctx, dependencyManager);
 		// markTraversed(obj.getId());
-		return obj;
+		return ret;
 	}
 
 	private boolean markTraversed(Connection c, String objectId) throws CMSMFException {
