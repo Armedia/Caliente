@@ -178,6 +178,14 @@ public class CmsObjectStore {
 		}
 	};
 
+	private static final ResultSetHandler<Long> HANDLER_OBJECT_NUMBER = new ResultSetHandler<Long>() {
+		@Override
+		public Long handle(ResultSet rs) throws SQLException {
+			if (rs.next()) { return rs.getLong(1); }
+			return null;
+		}
+	};
+
 	private static final ResultSetHandler<Boolean> HANDLER_EXISTS = new ResultSetHandler<Boolean>() {
 		@Override
 		public Boolean handle(ResultSet rs) throws SQLException {
@@ -381,8 +389,8 @@ public class CmsObjectStore {
 			}
 
 			// Do all the inserts in a row
-			qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_NULL, objectId, objectType.name(),
-				object.getSubtype(), object.getLabel(), object.getBatchId());
+			Long objectNumber = qr.insert(c, CmsObjectStore.INSERT_OBJECT_SQL, CmsObjectStore.HANDLER_OBJECT_NUMBER,
+				objectId, objectType.name(), object.getSubtype(), object.getLabel(), object.getBatchId());
 			qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_SQL, CmsObjectStore.HANDLER_NULL,
 				attributeParameters.toArray(CmsObjectStore.NO_PARAMS));
 			qr.insertBatch(c, CmsObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
@@ -391,6 +399,10 @@ public class CmsObjectStore {
 				propertyParameters.toArray(CmsObjectStore.NO_PARAMS));
 			qr.insertBatch(c, CmsObjectStore.INSERT_PROPERTY_VALUE_SQL, CmsObjectStore.HANDLER_NULL,
 				propertyValueParameters.toArray(CmsObjectStore.NO_PARAMS));
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Object %s (%s) with id [%s](%s) was persisted in position #%d",
+					object.getType(), object.getSubtype(), object.getId(), object.getLabel(), objectNumber));
+			}
 			// lockRS.updateBoolean(1, true);
 			// lockRS.updateRow();
 			return true;
