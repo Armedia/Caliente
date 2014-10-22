@@ -26,14 +26,15 @@ import org.apache.log4j.Logger;
 import org.h2.tools.DeleteDbFiles;
 
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.cms.storage.CmsObjectStore;
+import com.delta.cmsmf.cms.storage.CmsStorageException;
+import com.delta.cmsmf.cms.storage.jdbc.JdbcCmsObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 
 /**
  * @author diego
  *
  */
-public class DefaultCmsObjectStore extends CmsObjectStore {
+public class DefaultCmsObjectStore extends JdbcCmsObjectStore {
 
 	private static final Logger LOG = Logger.getLogger(DefaultCmsObjectStore.class);
 
@@ -79,7 +80,12 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 			connectionPool, null, null, false, true);
 		DataSource dataSource = new PoolingDataSource(connectionPool);
 
-		DefaultCmsObjectStore.INSTANCE = new DefaultCmsObjectStore(new InitData(dataSource, connectionPool), clearData);
+		try {
+			DefaultCmsObjectStore.INSTANCE = new DefaultCmsObjectStore(new InitData(dataSource, connectionPool),
+				clearData);
+		} catch (CmsStorageException e) {
+			throw new CMSMFException("Failed to initialize the object store", e);
+		}
 		return DefaultCmsObjectStore.INSTANCE;
 	}
 
@@ -134,7 +140,7 @@ public class DefaultCmsObjectStore extends CmsObjectStore {
 	 * @param clearData
 	 * @throws CMSMFException
 	 */
-	private DefaultCmsObjectStore(InitData data, boolean clearData) throws CMSMFException {
+	private DefaultCmsObjectStore(InitData data, boolean clearData) throws CmsStorageException {
 		super(data.dataSource, clearData);
 		this.connectionPool = data.connectionPool;
 		Runtime.getRuntime().addShutdownHook(this.shutdownThread);
