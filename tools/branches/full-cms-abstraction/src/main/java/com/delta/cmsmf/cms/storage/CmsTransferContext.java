@@ -2,8 +2,6 @@ package com.delta.cmsmf.cms.storage;
 
 import java.util.Set;
 
-import com.delta.cmsmf.cms.CmsFileSystem;
-
 public interface CmsTransferContext {
 	public String getRootObjectId();
 

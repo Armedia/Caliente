@@ -1,5 +1,8 @@
 package com.delta.cmsmf.cms.storage;
 
+import java.util.Map;
+import java.util.Set;
+
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -190,4 +193,36 @@ public abstract class CmsAttributeMapper {
 	 *         if no such mapping can be found.
 	 */
 	public abstract Mapping getSourceMapping(CmsObjectType objectType, String mappingName, String targetValue);
+
+	/**
+	 * <p>
+	 * Retrieves all the available mappings in the system, per object type. Each object type will
+	 * contain a set of mapping names that have been defined.
+	 * </p>
+	 *
+	 * @return the mappings available in the system
+	 */
+	public abstract Map<CmsObjectType, Set<String>> getAvailableMappings();
+
+	/**
+	 * <p>
+	 * Retrieves the set of mapping names defined for a given object type in the system.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @return the set of mapping names defined for a given object type in the system.
+	 */
+	public abstract Set<String> getAvailableMappings(CmsObjectType objectType);
+
+	/**
+	 * <p>
+	 * Retrieves the actual mappings for a given object type and mapping name as defined in the
+	 * system. The key is the source mapping, and the value is the target mapping.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @param mappingName
+	 * @return the actual mappings for a given object type and mapping name as defined in the system
+	 */
+	public abstract Map<String, String> getMappings(CmsObjectType objectType, String mappingName);
 }

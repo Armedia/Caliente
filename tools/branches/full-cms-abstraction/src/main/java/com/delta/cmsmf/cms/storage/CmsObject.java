@@ -14,8 +14,6 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.exception.CMSMFException;
-
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
@@ -87,9 +85,6 @@ public final class CmsObject {
 				this.properties.clear();
 			}
 		}
-	}
-
-	public void loadCompleted() throws CMSMFException {
 	}
 
 	public final CmsObjectType getType() {

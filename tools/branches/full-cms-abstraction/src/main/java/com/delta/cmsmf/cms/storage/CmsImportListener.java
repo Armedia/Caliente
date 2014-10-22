@@ -1,7 +1,5 @@
 package com.delta.cmsmf.cms.storage;
 
-import com.delta.cmsmf.cms.CmsImportResult;
-
 public interface CmsImportListener {
 	/**
 	 * <p>
