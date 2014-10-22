@@ -37,7 +37,6 @@ import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.storage.CmsAttributeMapper.Mapping;
-import com.delta.cmsmf.exception.CMSMFException;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -58,9 +57,9 @@ public class CmsObjectStore {
 		 * @param batchId
 		 * @return {@code true} if the batch should be processed, {@code false} if it should be
 		 *         skipped
-		 * @throws CMSMFException
+		 * @throws CmsStorageException
 		 */
-		public boolean newBatch(String batchId) throws CMSMFException;
+		public boolean newBatch(String batchId) throws CmsStorageException;
 
 		/**
 		 * <p>
@@ -70,11 +69,11 @@ public class CmsObjectStore {
 		 * </p>
 		 *
 		 * @param dataObject
-		 * @throws CMSMFException
+		 * @throws CmsStorageException
 		 * @return {@code true} if more objects should be loaded, or {@code false} if this should be
 		 *         the last object load attempted.
 		 */
-		public boolean handleObject(CmsObject dataObject) throws CMSMFException;
+		public boolean handleObject(CmsObject dataObject) throws CmsStorageException;
 
 		/**
 		 * <p>
@@ -101,9 +100,9 @@ public class CmsObjectStore {
 		 *            {@code false} otherwise
 		 * @return {@code true} if processing should continue with the next batch, or {@code false}
 		 *         otherwise
-		 * @throws CMSMFException
+		 * @throws CmsStorageException
 		 */
-		public boolean closeBatch(boolean ok) throws CMSMFException;
+		public boolean closeBatch(boolean ok) throws CmsStorageException;
 	}
 
 	private static final Object[][] NO_PARAMS = new Object[0][0];
@@ -251,14 +250,14 @@ public class CmsObjectStore {
 
 	private final DataSource dataSource;
 
-	public CmsObjectStore(DataSource dataSource, boolean writeMode) throws CMSMFException {
+	public CmsObjectStore(DataSource dataSource, boolean writeMode) throws CmsStorageException {
 		this.dataSource = dataSource;
 
 		Connection c = null;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to get a SQL Connection to validate the schema", e);
+			throw new CmsStorageException("Failed to get a SQL Connection to validate the schema", e);
 		}
 		boolean ok = false;
 		try {
@@ -285,15 +284,15 @@ public class CmsObjectStore {
 			}
 			ok = true;
 		} catch (DatabaseException e) {
-			throw new CMSMFException("Failed to generate the SQL schema", e);
+			throw new CmsStorageException("Failed to generate the SQL schema", e);
 		} catch (LiquibaseException e) {
 			if (writeMode) {
-				throw new CMSMFException("Failed to generate the SQL schema", e);
+				throw new CmsStorageException("Failed to generate the SQL schema", e);
 			} else {
-				throw new CMSMFException("The SQL schema is of the wrong version or structure", e);
+				throw new CmsStorageException("The SQL schema is of the wrong version or structure", e);
 			}
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to generate the SQL schema", e);
+			throw new CmsStorageException("Failed to generate the SQL schema", e);
 		} finally {
 			if (ok) {
 				DbUtils.commitAndCloseQuietly(c);
@@ -314,7 +313,7 @@ public class CmsObjectStore {
 		return q;
 	}
 
-	private Long storeObject(Connection c, CmsObject object) throws CMSMFException {
+	private Long storeObject(Connection c, CmsObject object) throws CmsStorageException {
 		final CmsObjectType objectType = object.getType();
 		final String objectId = object.getId();
 
@@ -322,11 +321,11 @@ public class CmsObjectStore {
 		boolean marked = false;
 		try {
 			marked = markDependency(c, objectType, objectId);
-		} catch (CMSMFException e) {
+		} catch (CmsStorageException e) {
 			// Check again...maybe it was a PK violation...
 			marked = markDependency(c, objectType, objectId);
 			// It wasn't... raise an error
-			if (!marked) { throw new CMSMFException(String.format(
+			if (!marked) { throw new CmsStorageException(String.format(
 				"Exception caught while trying to create the mutex lock for [%s::%s]", objectType.name(), objectId), e); }
 		}
 
@@ -465,7 +464,7 @@ public class CmsObjectStore {
 		}
 	}
 
-	public Long storeObject(CmsObject object) throws CMSMFException {
+	public Long storeObject(CmsObject object) throws CmsStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
 		boolean ok = false;
 		Connection c = null;
@@ -478,7 +477,7 @@ public class CmsObjectStore {
 			ok = true;
 			return ret;
 		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to serialize %s", object), e);
+			throw new CmsStorageException(String.format("Failed to serialize %s", object), e);
 		} finally {
 			if (ok) {
 				if (this.log.isDebugEnabled()) {
@@ -494,11 +493,12 @@ public class CmsObjectStore {
 		}
 	}
 
-	public Collection<CmsObject> loadObjects(final CmsObjectType type, String... ids) throws CMSMFException {
+	public Collection<CmsObject> loadObjects(final CmsObjectType type, String... ids) throws CmsStorageException {
 		return loadObjects(type, (ids != null ? Arrays.asList(ids) : null));
 	}
 
-	public Collection<CmsObject> loadObjects(final CmsObjectType type, Collection<String> ids) throws CMSMFException {
+	public Collection<CmsObject> loadObjects(final CmsObjectType type, Collection<String> ids)
+		throws CmsStorageException {
 		final List<CmsObject> ret = new ArrayList<CmsObject>(ids.size());
 		Set<String> actualIds = null;
 		if (ids != null) {
@@ -513,12 +513,12 @@ public class CmsObjectStore {
 		}
 		loadObjects(type, actualIds, new ObjectHandler() {
 			@Override
-			public boolean newBatch(String batchId) throws CMSMFException {
+			public boolean newBatch(String batchId) throws CmsStorageException {
 				return true;
 			}
 
 			@Override
-			public boolean handleObject(CmsObject dataObject) throws CMSMFException {
+			public boolean handleObject(CmsObject dataObject) throws CmsStorageException {
 				ret.add(dataObject);
 				return true;
 			}
@@ -529,19 +529,19 @@ public class CmsObjectStore {
 			}
 
 			@Override
-			public boolean closeBatch(boolean ok) throws CMSMFException {
+			public boolean closeBatch(boolean ok) throws CmsStorageException {
 				return true;
 			}
 		});
 		return ret;
 	}
 
-	public int loadObjects(final CmsObjectType type, ObjectHandler handler) throws CMSMFException {
+	public int loadObjects(final CmsObjectType type, ObjectHandler handler) throws CmsStorageException {
 		return loadObjects(type, null, handler);
 	}
 
 	public int loadObjects(final CmsObjectType type, Collection<String> ids, ObjectHandler handler)
-		throws CMSMFException {
+		throws CmsStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to deserialize"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
@@ -693,7 +693,7 @@ public class CmsObjectStore {
 								}
 							}
 						} catch (SQLException e) {
-							if (!handler.handleException(e)) { throw new CMSMFException(
+							if (!handler.handleException(e)) { throw new CmsStorageException(
 								"Exception raised while loading objects - ObjectHandler did not handle the exception",
 								e); }
 							continue;
@@ -718,7 +718,7 @@ public class CmsObjectStore {
 					if (currentBatch != null) {
 						try {
 							handler.closeBatch(ok);
-						} catch (CMSMFException e) {
+						} catch (CmsStorageException e) {
 							this.log.error(String
 								.format("Exception caught attempting to close the pending batch [%s] (ok=%s)",
 									currentBatch, ok), e);
@@ -734,8 +734,8 @@ public class CmsObjectStore {
 				DbUtils.closeQuietly(objPS);
 			}
 		} catch (SQLException e) {
-			throw new CMSMFException(
-				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
+			throw new CmsStorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
+				type), e);
 		} finally {
 			DbUtils.rollbackAndCloseQuietly(attConn);
 			DbUtils.rollbackAndCloseQuietly(objConn);
@@ -841,30 +841,31 @@ public class CmsObjectStore {
 		}
 	}
 
-	private boolean isSerialized(Connection c, CmsObjectType type, String objectId) throws CMSMFException, SQLException {
+	private boolean isSerialized(Connection c, CmsObjectType type, String objectId) throws CmsStorageException,
+		SQLException {
 		return CmsObjectStore.getQueryRunner().query(c, CmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL,
 			CmsObjectStore.HANDLER_EXISTS, objectId, type.name());
 	}
 
-	public boolean isStored(CmsObjectType type, String objectId) throws CMSMFException {
+	public boolean isStored(CmsObjectType type, String objectId) throws CmsStorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to connect to the object store's database", e);
+			throw new CmsStorageException("Failed to connect to the object store's database", e);
 		}
 		try {
 			c.setAutoCommit(false);
 			return isSerialized(c, type, objectId);
 		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to check whether object [%s] was already serialized",
+			throw new CmsStorageException(String.format("Failed to check whether object [%s] was already serialized",
 				objectId), e);
 		} finally {
 			DbUtils.rollbackAndCloseQuietly(c);
 		}
 	}
 
-	private boolean markDependency(Connection c, CmsObjectType type, String id) throws CMSMFException {
+	private boolean markDependency(Connection c, CmsObjectType type, String id) throws CmsStorageException {
 		QueryRunner qr = CmsObjectStore.getQueryRunner();
 		try {
 			if (qr.query(c, CmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, CmsObjectStore.HANDLER_EXISTS, id)) {
@@ -883,18 +884,19 @@ public class CmsObjectStore {
 			}
 			return true;
 		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
+			throw new CmsStorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id),
+				e);
 		}
 	}
 
-	protected boolean markDependency(CmsObjectType type, String id) throws CMSMFException {
+	protected boolean markDependency(CmsObjectType type, String id) throws CmsStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to persist a dependency"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide an ID for the dependency to be persisted"); }
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to connect to the object store's database", e);
+			throw new CmsStorageException("Failed to connect to the object store's database", e);
 		}
 		boolean ok = false;
 		try {
@@ -903,7 +905,7 @@ public class CmsObjectStore {
 			ok = true;
 			return ret;
 		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to register the dependency [%s::%s]", type, id), e);
+			throw new CmsStorageException(String.format("Failed to register the dependency [%s::%s]", type, id), e);
 		} finally {
 			if (ok) {
 				DbUtils.commitAndCloseQuietly(c);
@@ -913,21 +915,22 @@ public class CmsObjectStore {
 		}
 	}
 
-	private boolean markTraversed(Connection c, String objectId) throws CMSMFException {
+	private boolean markTraversed(Connection c, String objectId) throws CmsStorageException {
 		QueryRunner qr = CmsObjectStore.getQueryRunner();
 		try {
 			return (qr.update(c, CmsObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
 		} catch (SQLException e) {
-			throw new CMSMFException(String.format("Failed to mark the dependency for [%s] as traversed", objectId), e);
+			throw new CmsStorageException(
+				String.format("Failed to mark the dependency for [%s] as traversed", objectId), e);
 		}
 	}
 
-	public boolean markTraversed(String objectId) throws CMSMFException {
+	public boolean markTraversed(String objectId) throws CmsStorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to connect to the object store's database", e);
+			throw new CmsStorageException("Failed to connect to the object store's database", e);
 		}
 		boolean ok = false;
 		try {
@@ -955,7 +958,7 @@ public class CmsObjectStore {
 		return this.mapper.constructMapping(objectType, mappingName, mappedValue, targetValue);
 	}
 
-	private Map<CmsObjectType, Integer> getStoredObjectTypes(Connection c) throws CMSMFException {
+	private Map<CmsObjectType, Integer> getStoredObjectTypes(Connection c) throws CmsStorageException {
 		QueryRunner qr = new QueryRunner();
 		try {
 			return qr.query(c, CmsObjectStore.LOAD_OBJECT_TYPES_SQL,
@@ -981,16 +984,16 @@ public class CmsObjectStore {
 					}
 				});
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to retrieve the stored object types", e);
+			throw new CmsStorageException("Failed to retrieve the stored object types", e);
 		}
 	}
 
-	public Map<CmsObjectType, Integer> getStoredObjectTypes() throws CMSMFException {
+	public Map<CmsObjectType, Integer> getStoredObjectTypes() throws CmsStorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to connect to the object store's database", e);
+			throw new CmsStorageException("Failed to connect to the object store's database", e);
 		}
 		try {
 			return getStoredObjectTypes(c);
@@ -1003,21 +1006,21 @@ public class CmsObjectStore {
 		return this.mapper;
 	}
 
-	private int clearAttributeMappings(Connection c) throws CMSMFException {
+	private int clearAttributeMappings(Connection c) throws CmsStorageException {
 		QueryRunner qr = new QueryRunner();
 		try {
 			return qr.update(c, CmsObjectStore.CLEAR_ALL_MAPPINGS_SQL);
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to clear all the stored mappings", e);
+			throw new CmsStorageException("Failed to clear all the stored mappings", e);
 		}
 	}
 
-	public int clearAttributeMappings() throws CMSMFException {
+	public int clearAttributeMappings() throws CmsStorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CMSMFException("Failed to connect to the object store's database", e);
+			throw new CmsStorageException("Failed to connect to the object store's database", e);
 		}
 		try {
 			return clearAttributeMappings(c);
