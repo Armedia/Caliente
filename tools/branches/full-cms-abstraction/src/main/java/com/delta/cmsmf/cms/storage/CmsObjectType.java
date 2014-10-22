@@ -10,13 +10,4 @@ public enum CmsObjectType {
 	FOLDER,
 	DOCUMENT,
 	CONTENT_STREAM;
-
-	public static CmsObjectType decode(String str) throws UnsupportedObjectTypeException {
-		if (str == null) { throw new IllegalArgumentException("Must provide a valid string to decode"); }
-		try {
-			return CmsObjectType.valueOf(str);
-		} catch (IllegalArgumentException e) {
-			throw new UnsupportedObjectTypeException(str);
-		}
-	}
 }

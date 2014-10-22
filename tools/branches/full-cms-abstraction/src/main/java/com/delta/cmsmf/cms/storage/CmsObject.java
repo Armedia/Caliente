@@ -45,8 +45,8 @@ public final class CmsObject {
 		this.subtype = subtype;
 	}
 
-	public CmsObject(ResultSet rs) throws SQLException, UnsupportedObjectTypeException {
-		this.type = CmsObjectType.decode(rs.getString("object_type"));
+	public CmsObject(ResultSet rs) throws SQLException {
+		this.type = CmsObjectType.valueOf(rs.getString("object_type"));
 		this.id = rs.getString("object_id");
 		this.batchId = rs.getString("batch_id");
 		this.label = rs.getString("object_label");
