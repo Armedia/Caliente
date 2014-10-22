@@ -8,12 +8,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import com.armedia.cmf.storage.CmsAttributeMapper.Mapping;
@@ -83,32 +80,6 @@ public abstract class CmsObjectStore {
 		 * @throws CmsStorageException
 		 */
 		public boolean closeBatch(boolean ok) throws CmsStorageException;
-	}
-
-	private static final Map<String, CmsObjectStoreFactory> FACTORIES;
-
-	static {
-		ServiceLoader<CmsObjectStoreFactory> loader = ServiceLoader.load(CmsObjectStoreFactory.class);
-		Map<String, CmsObjectStoreFactory> m = new HashMap<String, CmsObjectStoreFactory>();
-		for (CmsObjectStoreFactory f : loader) {
-			String key = f.getClass().getCanonicalName();
-			if (m.containsKey(key)) { throw new RuntimeException(String.format(
-				"Duplicate factories found with class name [%s]", key)); }
-			m.put(key, f);
-		}
-		if (m.isEmpty()) {
-			FACTORIES = Collections.emptyMap();
-		} else {
-			FACTORIES = Collections.unmodifiableMap(m);
-		}
-	}
-
-	public static CmsObjectStore getInstance(String name) throws CmsStorageException {
-		return CmsObjectStore.getInstance(null, name);
-	}
-
-	public static <T extends CmsObjectStore> T getInstance(Class<T> klazz, String name) throws CmsStorageException {
-		return null;
 	}
 
 	private class Mapper extends CmsAttributeMapper {
