@@ -49,13 +49,13 @@ public abstract class CmsObjectStoreFactory {
 		for (CmsObjectStoreFactory f : loader) {
 			Class<? extends CmsObjectStore> c = f.getObjectStoreClass();
 			if (c == null) {
-				CmsObjectStoreFactory.LOG.warn("CmsObjectStoreFactory [%s] returned null for an object store class", f
+				CmsObjectStoreFactory.LOG.warn("CmsObjectStoreFactory [{}] returned null for an object store class", f
 					.getClass().getCanonicalName());
 				continue;
 			}
 			String key = c.getCanonicalName();
 			if (m.containsKey(key)) {
-				CmsObjectStoreFactory.LOG.warn("Duplicate factories found with target class name [%s]", key);
+				CmsObjectStoreFactory.LOG.warn("Duplicate factories found with target class name [{}]", key);
 				continue;
 			}
 			m.put(key, f);
