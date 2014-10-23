@@ -4,7 +4,6 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum Setting implements ConfigurationSetting {
 	//
-	RESOURCE_NAME,
 	LOCATION_TYPE,
 	JDBC_URL,
 	JDBC_DRIVER;

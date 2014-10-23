@@ -1,8 +1,2 @@
 # For direct definition
 com.armedia.cmf.storage.jdbc.DirectDataSourceLocator
-
-# For using JNDI (via InitialContext)
-com.armedia.cmf.storage.jdbc.JndiDataSourceLocator
-
-# For using Spring (needs a helper!)
-com.armedia.cmf.storage.jdbc.SpringDataSourceLocator
