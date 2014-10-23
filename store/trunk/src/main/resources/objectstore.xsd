@@ -83,5 +83,5 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:element name="objecstores" type="tns:objectstores.t"/>
+	<xsd:element name="objectstores" type="tns:objectstores.t"/>
 </xsd:schema>

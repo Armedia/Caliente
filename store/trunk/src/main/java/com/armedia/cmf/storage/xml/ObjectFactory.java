@@ -8,7 +8,7 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-	public static final String NAMESPACE = "http://www.armedia.com/ns/cmf/objectstores";
+	public static final String NAMESPACE = "http://www.armedia.com/ns/cmf/objectstore";
 
 	private final static QName _Objectstores_QNAME = new QName(ObjectFactory.NAMESPACE, "objecstores");
 
@@ -46,7 +46,8 @@ public class ObjectFactory {
 
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "objectstores")
 	public JAXBElement<CmsObjectStoreDefinitions> createObjectstores(CmsObjectStoreDefinitions value) {
-		return new JAXBElement<CmsObjectStoreDefinitions>(ObjectFactory._Objectstores_QNAME, CmsObjectStoreDefinitions.class, null, value);
+		return new JAXBElement<CmsObjectStoreDefinitions>(ObjectFactory._Objectstores_QNAME,
+			CmsObjectStoreDefinitions.class, null, value);
 	}
 
 }
