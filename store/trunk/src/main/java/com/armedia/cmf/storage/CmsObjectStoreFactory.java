@@ -17,16 +17,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.storage.xml.CmsObjectStoreConfiguration;
+import com.armedia.cmf.storage.xml.CmsObjectStoreDefinitions;
 import com.armedia.commons.utilities.XmlTools;
 
 public abstract class CmsObjectStoreFactory {
 
+	private static final Logger LOG = LoggerFactory.getLogger(CmsObjectStoreFactory.class);
+
 	private final Class<? extends CmsObjectStore> storeClass;
-
-	private interface Cfg {
-
-	}
 
 	protected CmsObjectStoreFactory(Class<? extends CmsObjectStore> storeClass) {
 		this.storeClass = storeClass;
@@ -45,9 +47,17 @@ public abstract class CmsObjectStoreFactory {
 		ServiceLoader<CmsObjectStoreFactory> loader = ServiceLoader.load(CmsObjectStoreFactory.class);
 		Map<String, CmsObjectStoreFactory> m = new HashMap<String, CmsObjectStoreFactory>();
 		for (CmsObjectStoreFactory f : loader) {
-			String key = f.getObjectStoreClass().getCanonicalName();
-			if (m.containsKey(key)) { throw new RuntimeException(String.format(
-				"Duplicate factories found with class name [%s]", key)); }
+			Class<? extends CmsObjectStore> c = f.getObjectStoreClass();
+			if (c == null) {
+				CmsObjectStoreFactory.LOG.warn("CmsObjectStoreFactory [%s] returned null for an object store class", f
+					.getClass().getCanonicalName());
+				continue;
+			}
+			String key = c.getCanonicalName();
+			if (m.containsKey(key)) {
+				CmsObjectStoreFactory.LOG.warn("Duplicate factories found with target class name [%s]", key);
+				continue;
+			}
 			m.put(key, f);
 		}
 		if (m.isEmpty()) {
@@ -62,20 +72,37 @@ public abstract class CmsObjectStoreFactory {
 			configs = cl.getResources("META-INF/com/armedia/cmf/objectstore.xml");
 			while (configs.hasMoreElements()) {
 				URL config = configs.nextElement();
-				// TODO: Parse the XML into the configuration object
 				Reader r = null;
 				try {
 					r = new InputStreamReader(config.openStream());
-				} catch (IOException e) {
-					// Error - report it, don't die
+					CmsObjectStoreDefinitions cfg = CmsObjectStoreFactory.parseConfiguration(r);
+					int i = 0;
+					for (CmsObjectStoreConfiguration storeCfg : cfg.getObjectStores()) {
+						i++;
+						try {
+							CmsObjectStoreFactory.createInstance(storeCfg);
+						} catch (Throwable t) {
+							String msg = String
+								.format(
+									"Exception raised attempting to initialize object store #%d from the definitions at [%s]",
+									i, config);
+							if (CmsObjectStoreFactory.LOG.isDebugEnabled()) {
+								CmsObjectStoreFactory.LOG.warn(msg, t);
+							} else {
+								CmsObjectStoreFactory.LOG.warn(msg);
+							}
+						}
+					}
+				} catch (Throwable t) {
+					String msg = String.format(
+						"Exception raised attempting to load the CmsObjectStoreDefinitions from [%s]", config);
+					if (CmsObjectStoreFactory.LOG.isDebugEnabled()) {
+						CmsObjectStoreFactory.LOG.warn(msg, t);
+					} else {
+						CmsObjectStoreFactory.LOG.warn(msg);
+					}
 				} finally {
 					IOUtils.closeQuietly(r);
-				}
-
-				try {
-					CmsObjectStoreFactory.createInstance(r);
-				} catch (Throwable t) {
-					// Log, but do not croak
 				}
 			}
 		} catch (IOException e) {
@@ -83,38 +110,49 @@ public abstract class CmsObjectStoreFactory {
 		}
 	}
 
-	public static <T extends CmsObjectStore> T createInstance(File settings) throws CmsStorageException,
-		CmsDuplicateObjectStoreException, IOException {
+	protected static CmsObjectStoreDefinitions parseConfiguration(File settings) throws CmsStorageException,
+	IOException, JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
-		return CmsObjectStoreFactory.createInstance(settings.toURI().toURL());
+		return CmsObjectStoreFactory.parseConfiguration(settings.toURI().toURL());
 	}
 
-	public static <T extends CmsObjectStore> T createInstance(URL settings) throws CmsStorageException,
-		CmsDuplicateObjectStoreException, IOException {
+	protected static CmsObjectStoreDefinitions parseConfiguration(URL settings) throws CmsStorageException,
+	IOException, JAXBException {
 		Reader xml = null;
 		try {
 			xml = new InputStreamReader(settings.openStream());
-			return CmsObjectStoreFactory.createInstance(xml);
+			return CmsObjectStoreFactory.parseConfiguration(xml);
 		} finally {
 			IOUtils.closeQuietly(xml);
 		}
 	}
 
-	public static <T extends CmsObjectStore> T createInstance(Reader xml) throws CmsStorageException,
-	CmsDuplicateObjectStoreException {
-		try {
-			return CmsObjectStoreFactory.createInstance(XmlTools.unmarshal(Cfg.class, "objectstore.xsd", xml));
-		} catch (JAXBException e) {
-			throw new CmsStorageException("Failed to parse the XML configuration", e);
-		}
+	protected static CmsObjectStoreDefinitions parseConfiguration(Reader xml) throws CmsStorageException, JAXBException {
+		return XmlTools.unmarshal(CmsObjectStoreDefinitions.class, "objectstore.xsd", xml);
 	}
 
-	public static <T extends CmsObjectStore> T createInstance(Cfg configuration) throws CmsStorageException,
-		CmsDuplicateObjectStoreException {
+	public static CmsObjectStore createInstance(CmsObjectStoreConfiguration configuration) throws CmsStorageException,
+	CmsDuplicateObjectStoreException {
+		if (configuration == null) { throw new IllegalArgumentException(
+			"Must provide a configuration to construct the instance from"); }
+		final String id = configuration.getId();
+		if (id == null) { throw new IllegalArgumentException("The configuration does not specify the object store id"); }
+		final String className = configuration.getClassName();
+		if (className == null) { throw new IllegalArgumentException(
+			"The configuration does not specify the object store class"); }
 		Lock l = CmsObjectStoreFactory.STORE_LOCK.writeLock();
 		l.lock();
 		try {
-			return null;
+			CmsObjectStore dupe = CmsObjectStoreFactory.STORES.get(id);
+			if (dupe != null) { throw new CmsDuplicateObjectStoreException(String.format(
+				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
+				.getCanonicalName())); }
+			CmsObjectStoreFactory factory = CmsObjectStoreFactory.FACTORIES.get(className);
+			if (factory == null) { throw new CmsStorageException(String.format(
+				"No factory found for object store class [%s]", className)); }
+			CmsObjectStore instance = factory.newInstance(configuration);
+			CmsObjectStoreFactory.STORES.put(id, instance);
+			return instance;
 		} finally {
 			l.unlock();
 		}
@@ -129,4 +167,6 @@ public abstract class CmsObjectStoreFactory {
 			l.unlock();
 		}
 	}
+
+	protected abstract CmsObjectStore newInstance(CmsObjectStoreConfiguration cfg) throws CmsStorageException;
 }
