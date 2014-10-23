@@ -1,0 +1,36 @@
+package com.armedia.cmf.storage.jdbc;
+
+import com.armedia.commons.utilities.ConfigurationSetting;
+
+enum Setting implements ConfigurationSetting {
+	//
+	RESOURCE_NAME,
+	LOCATION_TYPE,
+	JDBC_URL,
+	JDBC_DRIVER;
+
+	private final String label;
+	private final Object defaultValue;
+
+	private Setting() {
+		this(null);
+	}
+
+	private Setting(Object defaultValue) {
+		String l = name();
+		l = l.toLowerCase();
+		l = l.replaceAll("_", ".");
+		this.label = l;
+		this.defaultValue = defaultValue;
+	}
+
+	@Override
+	public String getLabel() {
+		return this.label;
+	}
+
+	@Override
+	public Object getDefaultValue() {
+		return this.defaultValue;
+	}
+}
