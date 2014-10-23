@@ -2,7 +2,7 @@ package com.armedia.cmf.storage.jdbc;
 
 import com.armedia.commons.utilities.ConfigurationSetting;
 
-enum Setting implements ConfigurationSetting {
+public enum Setting implements ConfigurationSetting {
 	//
 	RESOURCE_NAME,
 	LOCATION_TYPE,
