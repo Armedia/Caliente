@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.armedia.cmf.storage.CmsAttributeMapper.Mapping;
 
 /**
@@ -149,15 +152,10 @@ public abstract class CmsObjectStore {
 		}
 	}
 
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 	private final Mapper mapper = new Mapper();
-	private final boolean writeMode;
 
-	protected CmsObjectStore(boolean writeMode) throws CmsStorageException {
-		this.writeMode = writeMode;
-	}
-
-	public final boolean isWriteMode() {
-		return this.writeMode;
+	protected CmsObjectStore() throws CmsStorageException {
 	}
 
 	protected void init(Map<String, String> settings) throws CmsStorageException {
@@ -293,4 +291,6 @@ public abstract class CmsObjectStore {
 	}
 
 	protected abstract Map<String, String> doGetMappings(CmsObjectType type, String name) throws CmsStorageException;
+
+	public abstract void clearAllObjects() throws CmsStorageException;
 }
