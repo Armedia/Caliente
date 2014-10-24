@@ -59,16 +59,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>commons-pool</groupId>
-			<artifactId>commons-pool</artifactId>
-			<version>1.6</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>commons-dbcp</groupId>
-			<artifactId>commons-dbcp</artifactId>
-			<version>1.4</version>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>datasource-locator-api</artifactId>
+			<version>0.0.1</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -77,13 +70,6 @@
 			<artifactId>commons-dbutils</artifactId>
 			<version>1.6</version>
 			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<version>3.0.5.RELEASE</version>
-			<scope>provided</scope>
 		</dependency>
 
 		<dependency>

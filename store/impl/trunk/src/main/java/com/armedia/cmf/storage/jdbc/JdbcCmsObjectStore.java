@@ -39,6 +39,7 @@ import com.armedia.cmf.storage.CmsObjectType;
 import com.armedia.cmf.storage.CmsProperty;
 import com.armedia.cmf.storage.CmsStorageException;
 import com.armedia.cmf.storage.CmsValue;
+import com.armedia.commons.dslocator.DataSourceLocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -148,13 +149,15 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		}
 	};
 
-	private final boolean transactional;
+	private final boolean managedTransactions;
 	private final DataSource dataSource;
 
-	public JdbcCmsObjectStore(DataSource dataSource, boolean transactional) throws CmsStorageException {
-		if (dataSource == null) { throw new IllegalArgumentException("Must provide a valid DataSource instance"); }
-		this.transactional = transactional;
-		this.dataSource = dataSource;
+	public JdbcCmsObjectStore(DataSourceDescriptor dataSourceDescriptor, boolean updateSchema)
+		throws CmsStorageException {
+		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
+			"Must provide a valid DataSource instance"); }
+		this.managedTransactions = !dataSourceDescriptor.isManagedTransactions();
+		this.dataSource = dataSourceDescriptor.getDataSource();
 
 		Connection c = null;
 		try {
@@ -162,12 +165,12 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		} catch (SQLException e) {
 			throw new CmsStorageException("Failed to get a SQL Connection to validate the schema", e);
 		}
+
 		boolean ok = false;
 		try {
 			Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(c));
 			Liquibase liquibase = new Liquibase("db.changelog.xml", new ClassLoaderResourceAccessor(), database);
-			if (transactional /* writeMode */) {
-				clearAllObjects();
+			if (updateSchema) {
 				liquibase.update((String) null);
 			} else {
 				liquibase.validate();
@@ -176,10 +179,10 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		} catch (DatabaseException e) {
 			throw new CmsStorageException("Failed to generate the SQL schema", e);
 		} catch (LiquibaseException e) {
-			if (transactional /* writeMode */) {
-				throw new CmsStorageException("Failed to generate the SQL schema", e);
-			} else {
+			if (updateSchema) {
 				throw new CmsStorageException("The SQL schema is of the wrong version or structure", e);
+			} else {
+				throw new CmsStorageException("Failed to generate the SQL schema", e);
 			}
 		} finally {
 			finalizeTransaction(c, ok);
@@ -187,7 +190,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	private void finalizeTransaction(Connection c, boolean commit) {
-		if (!this.transactional) {
+		if (this.managedTransactions) {
 			// We're not owning the transaction
 			DbUtils.closeQuietly(c);
 		} else if (commit) {
