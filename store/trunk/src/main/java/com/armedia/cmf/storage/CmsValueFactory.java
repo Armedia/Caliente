@@ -34,6 +34,24 @@ public final class CmsValueFactory {
 		return CmsValueFactory.getNullValueBase(type).decodeNew(value);
 	}
 
+	public static CmsValue<?> newValue(CmsDataType type, Object v) {
+		if (type == null) { throw new IllegalArgumentException("Must provide a value type"); }
+		switch (type) {
+			case BOOLEAN:
+				return new CmsValueBoolean(Boolean.class.cast(v));
+			case INTEGER:
+				return new CmsValueInteger(Integer.class.cast(v));
+			case DOUBLE:
+				return new CmsValueDouble(Double.class.cast(v));
+			case STRING:
+				return new CmsValueString(String.class.cast(v));
+			case TEMPORAL:
+				return new CmsValueTemporal(Date.class.cast(v));
+			default:
+				throw new IllegalArgumentException(String.format("Unsupported type [%s]", type));
+		}
+	}
+
 	public static CmsValue<Boolean> newBooleanValue(boolean v) {
 		return new CmsValueBoolean(v);
 	}

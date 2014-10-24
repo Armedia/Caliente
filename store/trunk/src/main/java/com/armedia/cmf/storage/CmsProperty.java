@@ -268,6 +268,20 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 
 	/**
 	 * <p>
+	 * Adds all the given values to this repeating instance. This operation is not allowed for
+	 * single-valued instances.
+	 * </p>
+	 *
+	 * @param values
+	 */
+	public final void addValues(Collection<CmsValue<?>> values) {
+		for (CmsValue<?> v : values) {
+			addValue(v);
+		}
+	}
+
+	/**
+	 * <p>
 	 * Sets value for this instance. If this is a repeating value instance, it clears all stored
 	 * values and leaves only the submitted value. If the given {@code value} parameter is
 	 * {@code null}, then the {@link CmsDataType}'s null value (as calculated by
