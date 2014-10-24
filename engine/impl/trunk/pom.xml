@@ -51,6 +51,12 @@
 	</pluginRepositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-export-api</artifactId>
+			<version>0.0.1</version>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
