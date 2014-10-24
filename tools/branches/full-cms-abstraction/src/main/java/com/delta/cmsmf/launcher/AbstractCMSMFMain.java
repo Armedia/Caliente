@@ -14,7 +14,7 @@ import com.delta.cmsmf.cms.CmsFileSystem;
 import com.delta.cmsmf.cms.DefaultCmsFileSystem;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
-import com.delta.cmsmf.cms.storage.base.DefaultCmsObjectStore;
+import com.delta.cmsmf.cms.storage.DefaultCmsObjectStore;
 
 /**
  * The main method of this class is an entry point for the cmsmf application.

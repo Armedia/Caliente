@@ -2,7 +2,7 @@
  *
  */
 
-package com.delta.cmsmf.cms.storage.base;
+package com.delta.cmsmf.cms.storage;
 
 import java.io.File;
 import java.io.IOException;
