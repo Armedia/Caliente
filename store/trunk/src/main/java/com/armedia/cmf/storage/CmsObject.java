@@ -4,8 +4,6 @@
 
 package com.armedia.cmf.storage;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,7 +14,7 @@ import java.util.Set;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public final class CmsObject {
+public class CmsObject {
 
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
@@ -39,48 +37,6 @@ public final class CmsObject {
 		this.batchId = batchId;
 		this.label = label;
 		this.subtype = subtype;
-	}
-
-	public CmsObject(ResultSet rs) throws SQLException {
-		this.type = CmsObjectType.valueOf(rs.getString("object_type"));
-		this.id = rs.getString("object_id");
-		this.batchId = rs.getString("batch_id");
-		this.label = rs.getString("object_label");
-		this.subtype = rs.getString("object_subtype");
-		this.attributes.clear();
-		this.properties.clear();
-	}
-
-	public final void loadAttributes(ResultSet rs) throws SQLException {
-		boolean ok = false;
-		try {
-			this.attributes.clear();
-			while (rs.next()) {
-				CmsAttribute attribute = new CmsAttribute(rs);
-				this.attributes.put(attribute.getName(), attribute);
-			}
-			ok = true;
-		} finally {
-			if (!ok) {
-				this.attributes.clear();
-			}
-		}
-	}
-
-	public final void loadProperties(ResultSet rs) throws SQLException {
-		boolean ok = false;
-		try {
-			this.properties.clear();
-			while (rs.next()) {
-				CmsProperty property = new CmsProperty(rs);
-				this.properties.put(property.getName(), property);
-			}
-			ok = true;
-		} finally {
-			if (!ok) {
-				this.properties.clear();
-			}
-		}
 	}
 
 	public final CmsObjectType getType() {
@@ -126,8 +82,15 @@ public final class CmsObject {
 		return this.attributes.remove(name);
 	}
 
-	public final Collection<CmsAttribute> getAllAttributes() {
+	public final Collection<CmsAttribute> getAttributes() {
 		return Collections.unmodifiableCollection(this.attributes.values());
+	}
+
+	public final void setAttributes(Collection<CmsAttribute> attributes) {
+		this.attributes.clear();
+		for (CmsAttribute att : attributes) {
+			setAttribute(att);
+		}
 	}
 
 	public final int getPropertyCount() {
@@ -153,13 +116,26 @@ public final class CmsObject {
 		return this.properties.remove(name);
 	}
 
-	public final Collection<CmsProperty> getAllProperties() {
+	public final Collection<CmsProperty> getProperties() {
 		return Collections.unmodifiableCollection(this.properties.values());
 	}
 
+	public final void setProperties(Collection<CmsProperty> properties) {
+		this.attributes.clear();
+		for (CmsProperty prop : properties) {
+			setProperty(prop);
+		}
+	}
+
+	protected String toStringTrailer() {
+		return "";
+	}
+
 	@Override
-	public String toString() {
-		return String.format("CmsObject [type=%s, subtype=%s, id=%s, label=%s]", this.type, this.subtype, this.id,
-			this.label);
+	public final String toString() {
+		final String trailer = toStringTrailer();
+		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
+		return String.format("%s [type=%s, subtype=%s, id=%s, batchId=%s, label=%s%s%s]", getClass().getSimpleName(),
+			this.type, this.subtype, this.id, this.batchId, this.label, trailerSep, trailer);
 	}
 }

@@ -1,7 +1,5 @@
 package com.armedia.cmf.storage;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -13,20 +11,13 @@ public class CmsAttribute extends CmsProperty {
 	private final boolean qualifiable;
 	private final int length;
 
-	CmsAttribute(ResultSet rs) throws SQLException {
-		super(rs);
-		this.id = rs.getString("id");
-		this.qualifiable = rs.getBoolean("qualifiable");
-		this.length = rs.getInt("length");
-	}
-
-	public CmsAttribute(String name, CmsDataType type, String id, int length, boolean repeating, boolean qualifiable,
-		CmsValue<?>... values) {
+	public CmsAttribute(String name, String type, String id, int length, boolean repeating, boolean qualifiable,
+		String... values) {
 		this(name, type, id, length, repeating, qualifiable, Arrays.asList(values));
 	}
 
-	public CmsAttribute(String name, CmsDataType type, String id, int length, boolean repeating, boolean qualifiable,
-		Collection<CmsValue<?>> values) {
+	public CmsAttribute(String name, String type, String id, int length, boolean repeating, boolean qualifiable,
+		Collection<String> values) {
 		super(name, type, repeating, values);
 		if (id == null) { throw new IllegalArgumentException("Must provide a non-null attribute id"); }
 		this.id = id;

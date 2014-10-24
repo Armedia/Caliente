@@ -1,7 +1,5 @@
 package com.armedia.cmf.storage;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,85 +10,30 @@ import java.util.NoSuchElementException;
 
 import com.armedia.commons.utilities.Tools;
 
-public class CmsProperty implements Iterable<CmsValue<?>> {
+public class CmsProperty implements Iterable<String> {
 
-	protected static final CmsValue<?>[] NO_VALUES = new CmsValue<?>[0];
+	protected static final String[] NO_VALUES = new String[0];
 
 	private final String name;
-	private final CmsDataType type;
+	private final String type;
 	private final boolean repeating;
 
-	private CmsValue<?> singleValue = null;
-	private final List<CmsValue<?>> values;
+	private String singleValue = null;
+	private final List<String> values;
 
-	/**
-	 * <p>
-	 * Constructs a new instance, reading its structural information from the given
-	 * {@link ResultSet} instance. No values are assigned to it. If those values are also to be
-	 * loaded from a {@link ResultSet}, {@link #loadValues(ResultSet)} should be used.
-	 * </p>
-	 *
-	 * @param attr
-	 * @throws SQLException
-	 */
-	CmsProperty(ResultSet rs) throws SQLException {
-		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		this.name = rs.getString("name");
-		this.type = CmsDataType.valueOf(rs.getString("data_type"));
-		this.repeating = rs.getBoolean("repeating");
-		this.values = new ArrayList<CmsValue<?>>();
-		if (!this.repeating) {
-			this.singleValue = CmsValueFactory.getNullValue(this.type);
-		}
-	}
-
-	/**
-	 * <p>
-	 * Loads the values for this instance from the given {@link ResultSet}. If this is a
-	 * single-valued instance, then only the first record in the {@link ResultSet} will be used.
-	 * </p>
-	 *
-	 * @param rs
-	 * @throws SQLException
-	 */
-	public void loadValues(ResultSet rs) throws SQLException {
-		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
-		boolean ok = false;
-		try {
-			this.values.clear();
-			this.singleValue = (this.repeating ? null : CmsValueFactory.getNullValue(this.type));
-			while (rs.next()) {
-				CmsValue<?> next = CmsValueFactory.decode(this.type, rs.getString("data"));
-				if (this.repeating) {
-					this.values.add(next);
-					continue;
-				}
-				// Single-valued, so we set it and break out
-				this.singleValue = next;
-				break;
-			}
-			ok = true;
-		} finally {
-			if (!ok) {
-				this.values.clear();
-				this.singleValue = (this.repeating ? null : CmsValueFactory.getNullValue(this.type));
-			}
-		}
-	}
-
-	public CmsProperty(String name, CmsDataType type, CmsValue<?>... values) {
+	public CmsProperty(String name, String type, String... values) {
 		this(name, type, true, Arrays.asList(values));
 	}
 
-	public CmsProperty(String name, CmsDataType type, boolean repeating, CmsValue<?>... values) {
+	public CmsProperty(String name, String type, boolean repeating, String... values) {
 		this(name, type, repeating, Arrays.asList(values));
 	}
 
-	public CmsProperty(String name, CmsDataType type, Collection<CmsValue<?>> values) {
+	public CmsProperty(String name, String type, Collection<String> values) {
 		this(name, type, true, values);
 	}
 
-	public CmsProperty(String name, CmsDataType type, boolean repeating, Collection<CmsValue<?>> values) {
+	public CmsProperty(String name, String type, boolean repeating, Collection<String> values) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
 		if (values == null) {
@@ -100,7 +43,7 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 		this.type = type;
 		final int valueCount = values.size();
 		this.repeating = repeating;
-		this.values = new ArrayList<CmsValue<?>>(valueCount);
+		this.values = new ArrayList<String>(valueCount);
 		setValues(values);
 	}
 
@@ -117,12 +60,12 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 
 	/**
 	 * <p>
-	 * Returns the {@link CmsDataType} associated to this instance.
+	 * Returns the type associated to this instance.
 	 * </p>
 	 *
-	 * @return the {@link CmsDataType} associated to this instance.
+	 * @return the type associated to this instance.
 	 */
-	public final CmsDataType getType() {
+	public final String getType() {
 		return this.type;
 	}
 
@@ -180,16 +123,13 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 * single-valued instance, then only the first element of the array will be stored as the single
 	 * value. If there were no elements in the array, then an empty array (of length 0) will be used
 	 * in its stead. In the case of single-valued instances, if the array is empty, then only the
-	 * {@code null}-equivalent value (as determined by
-	 * {@link CmsValueFactory#getNullValue(CmsDataType)}) will be used. No {@code null} values will
-	 * be stored - every single null value encountered will be translated to the value returned by
-	 * {@link CmsValueFactory#getNullValue(CmsDataType)}.
+	 * {@code null}-value will be used.
 	 * </p>
 	 *
 	 * @param values
 	 *            the values to set.
 	 */
-	public final void setValues(CmsValue<?>... values) {
+	public final void setValues(String... values) {
 		setValues(Arrays.asList(values));
 	}
 
@@ -199,34 +139,27 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 * a single-valued instance, then only the first element of the collection will be stored as the
 	 * single value. If the collection was {@code null}, then an empty collection will be used in
 	 * its stead. In the case of single-valued instances, if the collection is empty, then only the
-	 * {@code null}-equivalent value (as determined by
-	 * {@link CmsValueFactory#getNullValue(CmsDataType)}) will be used. No {@code null} values will
-	 * be stored - every single null value encountered will be translated to the value returned by
-	 * {@link CmsValueFactory#getNullValue(CmsDataType)}.
+	 * {@code null}-value will be used.
 	 * </p>
 	 *
 	 * @param values
 	 *            the values to set.
 	 */
-	public final void setValues(Collection<CmsValue<?>> values) {
+	public final void setValues(Collection<String> values) {
 		this.values.clear();
 		if (values == null) {
 			values = Collections.emptyList();
 		}
 		if (this.repeating) {
-			for (CmsValue<?> value : values) {
-				@SuppressWarnings("unchecked")
-				CmsValue<? extends Object> coalesce = Tools.coalesce(value, CmsValueFactory.getNullValue(this.type));
-				this.values.add(coalesce);
+			for (String value : values) {
+				this.values.add(value);
 			}
 		} else {
-			CmsValue<?> value = null;
+			String value = null;
 			if (!values.isEmpty()) {
 				value = values.iterator().next();
 			}
-			@SuppressWarnings("unchecked")
-			CmsValue<? extends Object> coalesce = Tools.coalesce(value, CmsValueFactory.getNullValue(this.type));
-			this.singleValue = coalesce;
+			this.singleValue = value;
 		}
 	}
 
@@ -239,9 +172,9 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 *
 	 * @return a list containing all the values in this instance
 	 */
-	public final List<CmsValue<?>> getValues() {
+	public final List<String> getValues() {
 		if (this.repeating) { return this.values; }
-		List<CmsValue<?>> l = new ArrayList<CmsValue<?>>(1);
+		List<String> l = new ArrayList<String>(1);
 		l.add(this.singleValue);
 		return l;
 	}
@@ -249,17 +182,13 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	/**
 	 * <p>
 	 * Adds a value to this repeating instance. This operation is not allowed for single-valued
-	 * instances.If the given {@code value} parameter is {@code null}, then the {@link CmsDataType}
-	 * 's null value (as calculated by {@link CmsValueFactory#getNullValue(CmsDataType)}) is used.
+	 * instances.If the given {@code value} parameter is {@code null}, that value is used.
 	 * </p>
 	 *
 	 * @param value
 	 */
-	public final void addValue(CmsValue<?> value) {
+	public final void addValue(String value) {
 		if (this.repeating) {
-			if (value == null) {
-				value = CmsValueFactory.getNullValue(this.type);
-			}
 			this.values.add(value);
 		} else {
 			throw new UnsupportedOperationException("This is a single-valued property, cannot add another value");
@@ -274,8 +203,8 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 *
 	 * @param values
 	 */
-	public final void addValues(Collection<CmsValue<?>> values) {
-		for (CmsValue<?> v : values) {
+	public final void addValues(Collection<String> values) {
+		for (String v : values) {
 			addValue(v);
 		}
 	}
@@ -284,15 +213,11 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 * <p>
 	 * Sets value for this instance. If this is a repeating value instance, it clears all stored
 	 * values and leaves only the submitted value. If the given {@code value} parameter is
-	 * {@code null}, then the {@link CmsDataType}'s null value (as calculated by
-	 * {@link CmsValueFactory#getNullValue(CmsDataType)}) is used. If the desire is to clear all
-	 * repeating values, use {@link #clearValue()} instead.
+	 * {@code null}, then that value is used. If the desire is to clear all repeating values, use
+	 * {@link #clearValue()} instead.
 	 * </p>
 	 */
-	public final void setValue(CmsValue<?> value) {
-		if (value == null) {
-			value = CmsValueFactory.getNullValue(this.type);
-		}
+	public final void setValue(String value) {
 		if (this.repeating) {
 			this.values.clear();
 			this.values.add(value);
@@ -316,7 +241,7 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 			this.values.clear();
 			return !empty;
 		} else {
-			this.singleValue = CmsValueFactory.getNullValue(this.type);
+			this.singleValue = null;
 			return true;
 		}
 	}
@@ -338,11 +263,11 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 * @param idx
 	 * @return the removed value
 	 */
-	public final CmsValue<?> removeValue(int idx) {
+	public final String removeValue(int idx) {
 		idx = sanitizeIndex(idx);
 		if (this.repeating) { return this.values.remove(idx); }
-		CmsValue<?> old = this.singleValue;
-		this.singleValue = CmsValueFactory.getNullValue(this.type);
+		String old = this.singleValue;
+		this.singleValue = null;
 		return old;
 	}
 
@@ -363,7 +288,7 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 * @return the removed value
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public final CmsValue<?> getValue(int idx) {
+	public final String getValue(int idx) {
 		idx = sanitizeIndex(idx);
 		if (this.repeating) { return this.values.get(idx); }
 		return this.singleValue;
@@ -376,7 +301,7 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 *
 	 * @return the 0-th value in this element.
 	 */
-	public final CmsValue<?> getValue() {
+	public final String getValue() {
 		return getValue(0);
 	}
 
@@ -401,11 +326,11 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 
 	public boolean isSameValues(CmsProperty other) {
 		if (!isSame(other)) { return false; }
-		if (!this.repeating) { return Tools.equals(this.singleValue.getValue(), other.singleValue.getValue()); }
+		if (!this.repeating) { return Tools.equals(this.singleValue, other.singleValue); }
 		final int valueCount = this.values.size();
 		if (valueCount != other.getValueCount()) { return false; }
 		for (int i = 0; i < valueCount; i++) {
-			if (!Tools.equals(this.values.get(i).getValue(), other.values.get(i).getValue())) { return false; }
+			if (!Tools.equals(this.values.get(i), other.values.get(i))) { return false; }
 		}
 		return true;
 	}
@@ -415,14 +340,13 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 	 * Returns an {@link Iterator} to walk over the values for this instance. The iterator is backed
 	 * by the object at all times. That means that invoking {@link Iterator#remove()} will have the
 	 * effect of removing values from the instance. For single-valued instances, this means that the
-	 * single value will be set to the {@code null}-equivalent, as determined by
-	 * {@link CmsValueFactory#getNullValue(CmsDataType)}.
+	 * single value will be set to the {@code null}-value.
 	 * </p>
 	 */
 	@Override
-	public final Iterator<CmsValue<?>> iterator() {
+	public final Iterator<String> iterator() {
 		if (this.repeating) { return this.values.iterator(); }
-		return new Iterator<CmsValue<?>>() {
+		return new Iterator<String>() {
 			boolean retrieved = false;
 			boolean removed = false;
 
@@ -432,7 +356,7 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 			}
 
 			@Override
-			public CmsValue<?> next() {
+			public String next() {
 				if (this.retrieved) { throw new NoSuchElementException(); }
 				this.retrieved = true;
 				return CmsProperty.this.singleValue;
@@ -442,7 +366,7 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 			public void remove() {
 				if (!this.retrieved) { throw new IllegalStateException("No element to remove()"); }
 				if (this.removed) { throw new IllegalStateException("Element already removed"); }
-				CmsProperty.this.singleValue = CmsValueFactory.getNullValue(CmsProperty.this.type);
+				CmsProperty.this.singleValue = null;
 				this.removed = true;
 			}
 		};
@@ -452,13 +376,13 @@ public class CmsProperty implements Iterable<CmsValue<?>> {
 		if (sep == null) {
 			sep = "";
 		}
-		if (!this.repeating) { return this.singleValue.asString(); }
+		if (!this.repeating) { return this.singleValue; }
 		StringBuilder b = new StringBuilder();
-		for (CmsValue<?> v : this.values) {
+		for (String v : this.values) {
 			if ((b.length() > 0) && (sep.length() > 0)) {
 				b.append(sep);
 			}
-			b.append(v.asString());
+			b.append(v);
 		}
 		return b.toString();
 	}

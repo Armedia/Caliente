@@ -9,5 +9,6 @@ public enum CmsObjectType {
 	FORMAT,
 	FOLDER,
 	DOCUMENT,
+	WORKFLOW,
 	CONTENT_STREAM;
 }
