@@ -32,13 +32,11 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
 import com.armedia.cmf.storage.CmsAttribute;
-import com.armedia.cmf.storage.CmsDataType;
 import com.armedia.cmf.storage.CmsObject;
 import com.armedia.cmf.storage.CmsObjectStore;
 import com.armedia.cmf.storage.CmsObjectType;
 import com.armedia.cmf.storage.CmsProperty;
 import com.armedia.cmf.storage.CmsStorageException;
-import com.armedia.cmf.storage.CmsValue;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
 
@@ -273,14 +271,14 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
 			attValue[0] = objectId; // This should never change within the loop
-			for (final CmsAttribute attribute : object.getAllAttributes()) {
+			for (final CmsAttribute attribute : object.getAttributes()) {
 				final String name = attribute.getName();
 				final boolean repeating = attribute.isRepeating();
-				final CmsDataType type = attribute.getType();
+				final String type = attribute.getType();
 
 				attData[1] = name;
 				attData[2] = attribute.getId();
-				attData[3] = type.name();
+				attData[3] = type;
 				attData[4] = attribute.getLength();
 				attData[5] = attribute.isQualifiable();
 				attData[6] = repeating;
@@ -296,9 +294,9 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 				Object[][] values = new Object[attribute.getValueCount()][];
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				for (CmsValue<?> value : attribute) {
+				for (String value : attribute) {
 					attValue[2] = v;
-					attValue[3] = value.getEncoded();
+					attValue[3] = value;
 					values[v] = attValue.clone();
 					attributeValueParameters.add(attValue.clone());
 					v++;
@@ -309,10 +307,10 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			propData[0] = objectId; // This should never change within the loop
 			for (final String name : object.getPropertyNames()) {
 				final CmsProperty property = object.getProperty(name);
-				final CmsDataType type = property.getType();
+				final String type = property.getType();
 
 				propData[1] = name;
-				propData[2] = type.name();
+				propData[2] = type;
 				propData[3] = property.isRepeating();
 
 				// Insert the attribute
@@ -322,9 +320,9 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 				Object[][] values = new Object[property.getValueCount()][];
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				for (CmsValue<?> value : property) {
+				for (String value : property) {
 					attValue[2] = v;
-					attValue[3] = value.getEncoded();
+					attValue[3] = value;
 					values[v] = attValue.clone();
 					propertyValueParameters.add(attValue.clone());
 					v++;
@@ -500,7 +498,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 									objLabel, objId));
 							}
 
-							obj = new CmsObject(objRS);
+							obj = JdbcCmsObjectLoader.loadObject(objRS);
 							if (this.log.isTraceEnabled()) {
 								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 							} else if (this.log.isDebugEnabled()) {
@@ -512,18 +510,18 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 							attPS.setString(1, obj.getId());
 							attRS = attPS.executeQuery();
 							try {
-								obj.loadAttributes(attRS);
+								JdbcCmsObjectLoader.loadAttributes(attRS, obj);
 							} finally {
 								DbUtils.closeQuietly(attRS);
 							}
 
 							valPS.clearParameters();
 							valPS.setString(1, obj.getId());
-							for (CmsAttribute att : obj.getAllAttributes()) {
+							for (CmsAttribute att : obj.getAttributes()) {
 								valPS.setString(2, att.getName());
 								valRS = valPS.executeQuery();
 								try {
-									att.loadValues(valRS);
+									JdbcCmsObjectLoader.loadValues(valRS, att);
 								} finally {
 									DbUtils.closeQuietly(valRS);
 								}
@@ -533,18 +531,18 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 							propPS.setString(1, obj.getId());
 							propRS = propPS.executeQuery();
 							try {
-								obj.loadProperties(propRS);
+								JdbcCmsObjectLoader.loadProperties(propRS, obj);
 							} finally {
 								DbUtils.closeQuietly(propRS);
 							}
 
 							pvalPS.clearParameters();
 							pvalPS.setString(1, obj.getId());
-							for (CmsProperty prop : obj.getAllProperties()) {
+							for (CmsProperty prop : obj.getProperties()) {
 								pvalPS.setString(2, prop.getName());
 								valRS = pvalPS.executeQuery();
 								try {
-									prop.loadValues(valRS);
+									JdbcCmsObjectLoader.loadValues(valRS, prop);
 								} finally {
 									DbUtils.closeQuietly(valRS);
 								}

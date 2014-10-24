@@ -20,7 +20,6 @@ public class JdbcCmsObjectStoreFactory extends CmsObjectStoreFactory {
 
 	@Override
 	protected CmsObjectStore newInstance(CmsObjectStoreConfiguration configuration) throws CmsStorageException {
-		// TODO: Define the data store from the configuration...
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		final String locationType = cfg.getString("location.type");
