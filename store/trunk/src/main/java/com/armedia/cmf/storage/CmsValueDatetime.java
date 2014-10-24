@@ -6,34 +6,34 @@ import java.util.Date;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
-public final class CmsValueTemporal extends CmsValueBase<Date> {
+public final class CmsValueDatetime extends CmsValueBase<Date> {
 
 	static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss.SSS";
 
-	public CmsValueTemporal(Date value) {
-		super(CmsDataType.TEMPORAL, value);
+	public CmsValueDatetime(Date value) {
+		super(CmsDataType.DATETIME, value);
 	}
 
 	@Override
-	protected CmsValueTemporal constructNew(Date v) {
-		return new CmsValueTemporal(v);
+	protected CmsValueDatetime constructNew(Date v) {
+		return new CmsValueDatetime(v);
 	}
 
 	@Override
 	protected String encode(Date value) {
 		if (isNull()) { return null; }
-		return DateFormatUtils.format(getValue(), CmsValueTemporal.DATE_FORMAT);
+		return DateFormatUtils.format(getValue(), CmsValueDatetime.DATE_FORMAT);
 	}
 
 	@Override
 	protected Date decode(String value) {
-		return CmsValueTemporal.doDecode(value);
+		return CmsValueDatetime.doDecode(value);
 	}
 
 	@Override
 	public boolean supportsConversionTo(CmsDataType targetType) {
 		switch (targetType) {
-			case TEMPORAL:
+			case DATETIME:
 			case STRING:
 				return true;
 			default:
@@ -49,7 +49,7 @@ public final class CmsValueTemporal extends CmsValueBase<Date> {
 			case STRING:
 				return encode(v);
 
-			case TEMPORAL:
+			case DATETIME:
 				return v;
 
 			default:
@@ -61,7 +61,7 @@ public final class CmsValueTemporal extends CmsValueBase<Date> {
 	static Date doDecode(String value) {
 		if (value == null) { return null; }
 		try {
-			return DateUtils.parseDate(value, CmsValueTemporal.DATE_FORMAT);
+			return DateUtils.parseDate(value, CmsValueDatetime.DATE_FORMAT);
 		} catch (ParseException e) {
 			throw new RuntimeException(String.format("Failed to convert the string [%s] to a temporal value", value), e);
 		}

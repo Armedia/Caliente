@@ -31,7 +31,7 @@ public final class CmsValueDouble extends CmsValueBase<Double> {
 
 	@Override
 	public boolean supportsConversionTo(CmsDataType targetType) {
-		return (targetType != CmsDataType.TEMPORAL);
+		return (targetType != CmsDataType.DATETIME);
 	}
 
 	@Override

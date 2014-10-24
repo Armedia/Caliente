@@ -37,7 +37,7 @@ public final class CmsValueInteger extends CmsValueBase<Integer> {
 
 	@Override
 	public boolean supportsConversionTo(CmsDataType targetType) {
-		return (targetType != CmsDataType.TEMPORAL);
+		return (targetType != CmsDataType.DATETIME);
 	}
 
 	@Override

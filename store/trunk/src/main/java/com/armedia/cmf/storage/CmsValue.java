@@ -18,7 +18,7 @@ public interface CmsValue<T extends Object> {
 
 	public String asString();
 
-	public Date asTemporal();
+	public Date asDate();
 
 	public boolean isNull();
 

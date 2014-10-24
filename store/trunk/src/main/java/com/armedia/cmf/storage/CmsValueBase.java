@@ -46,8 +46,8 @@ abstract class CmsValueBase<T extends Object> implements CmsValue<T> {
 	}
 
 	@Override
-	public final Date asTemporal() {
-		return convertValue(Date.class, CmsDataType.TEMPORAL);
+	public final Date asDate() {
+		return convertValue(Date.class, CmsDataType.DATETIME);
 	}
 
 	@Override
@@ -72,8 +72,8 @@ abstract class CmsValueBase<T extends Object> implements CmsValue<T> {
 					return new CmsValueDouble(convertValue(Double.class, type));
 				case STRING:
 					return new CmsValueString(convertValue(String.class, type));
-				case TEMPORAL:
-					return new CmsValueTemporal(convertValue(Date.class, type));
+				case DATETIME:
+					return new CmsValueDatetime(convertValue(Date.class, type));
 			}
 		}
 		throw new CmsValueConversionException(getDataType(), type, getValue());

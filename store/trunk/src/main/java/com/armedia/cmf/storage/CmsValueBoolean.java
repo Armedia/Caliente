@@ -25,7 +25,7 @@ public final class CmsValueBoolean extends CmsValueBase<Boolean> {
 
 	@Override
 	protected boolean supportsConversionTo(CmsDataType targetType) {
-		return (targetType != CmsDataType.TEMPORAL);
+		return (targetType != CmsDataType.DATETIME);
 	}
 
 	@Override

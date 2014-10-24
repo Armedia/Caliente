@@ -6,5 +6,5 @@ public enum CmsDataType {
 	INTEGER,
 	DOUBLE,
 	STRING,
-	TEMPORAL;
+	DATETIME;
 }

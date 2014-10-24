@@ -14,7 +14,7 @@ public final class CmsValueFactory {
 		m.put(CmsDataType.INTEGER, new CmsValueInteger((Integer) null));
 		m.put(CmsDataType.DOUBLE, new CmsValueDouble((Double) null));
 		m.put(CmsDataType.STRING, new CmsValueString(null));
-		m.put(CmsDataType.TEMPORAL, new CmsValueTemporal(null));
+		m.put(CmsDataType.DATETIME, new CmsValueDatetime(null));
 		NULL = Collections.unmodifiableMap(m);
 	}
 
@@ -45,8 +45,8 @@ public final class CmsValueFactory {
 				return new CmsValueDouble(Double.class.cast(v));
 			case STRING:
 				return new CmsValueString(String.class.cast(v));
-			case TEMPORAL:
-				return new CmsValueTemporal(Date.class.cast(v));
+			case DATETIME:
+				return new CmsValueDatetime(Date.class.cast(v));
 			default:
 				throw new IllegalArgumentException(String.format("Unsupported type [%s]", type));
 		}
@@ -73,7 +73,7 @@ public final class CmsValueFactory {
 	}
 
 	public static CmsValue<Date> newTimeValue(Date v) {
-		return new CmsValueTemporal(v);
+		return new CmsValueDatetime(v);
 	}
 
 	public static CmsValue<Double> newDoubleValue(float v) {

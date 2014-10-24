@@ -44,8 +44,8 @@ public final class CmsValueString extends CmsValueBase<String> {
 			case STRING:
 				return v;
 
-			case TEMPORAL:
-				return CmsValueTemporal.doDecode(v);
+			case DATETIME:
+				return CmsValueDatetime.doDecode(v);
 
 			default:
 				// Should never happen, but choke anyway
