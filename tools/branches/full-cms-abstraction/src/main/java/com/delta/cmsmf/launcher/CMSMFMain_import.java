@@ -19,10 +19,10 @@ import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.CmsCounter;
 import com.delta.cmsmf.cms.CmsImportResult;
-import com.delta.cmsmf.cms.CmsObject;
-import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.engine.CmsImportEngineListener;
-import com.delta.cmsmf.engine.CmsImporter;
+import com.delta.cmsmf.cms.CmsBaseObject;
+import com.delta.cmsmf.cms.CmsBaseObjectType;
+import com.delta.cmsmf.engine.ImportEngineListener;
+import com.delta.cmsmf.engine.Importer;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
@@ -31,14 +31,14 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngineListener {
+public class CMSMFMain_import extends AbstractCMSMFMain implements ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
 	private final AtomicInteger aggregateCurrent = new AtomicInteger(0);
 
-	private final Map<CmsObjectType, Integer> total = new HashMap<CmsObjectType, Integer>();
-	private final Map<CmsObjectType, AtomicInteger> current = new HashMap<CmsObjectType, AtomicInteger>();
+	private final Map<CmsBaseObjectType, Integer> total = new HashMap<CmsBaseObjectType, Integer>();
+	private final Map<CmsBaseObjectType, AtomicInteger> current = new HashMap<CmsBaseObjectType, AtomicInteger>();
 
 	CMSMFMain_import() throws Throwable {
 		super();
@@ -54,7 +54,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	@Override
 	public void run() throws CMSMFException {
 		// lock
-		final CmsImporter importer = new CmsImporter(this.objectStore, this.fileSystem, this.console,
+		final Importer importer = new Importer(this.objectStore, this.fileSystem, this.console,
 			Setting.THREADS.getInt());
 		importer.addListener(this);
 		final StringBuilder report = new StringBuilder();
@@ -104,7 +104,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 
 		report.append(String.format("%n%nAction Summary:%n%s%n", StringUtils.repeat("=", 30)));
 		CmsCounter<CmsImportResult> counter = importer.getCounter();
-		for (CmsObjectType t : CmsObjectType.values()) {
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
 			report.append(String.format("%n%n%n"));
 			report.append(counter.generateReport(t, 1));
 		}
@@ -126,7 +126,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 		}
 	}
 
-	private void showProgress(CmsObjectType objectType) {
+	private void showProgress(CmsBaseObjectType objectType) {
 		final Double aggregateTotal = this.aggregateTotal.doubleValue();
 		final Double aggregateCurrent = this.aggregateCurrent.doubleValue();
 		final Double aggregatePct = (aggregateCurrent / aggregateTotal) * 100.0;
@@ -156,12 +156,12 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void importStarted(Map<CmsObjectType, Integer> summary) {
+	public void importStarted(Map<CmsBaseObjectType, Integer> summary) {
 		this.aggregateCurrent.set(0);
 		this.total.clear();
 		this.current.clear();
 		this.console.info("Import process started");
-		for (CmsObjectType t : CmsObjectType.values()) {
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
 			Integer v = summary.get(t);
 			if ((v == null) || (v.intValue() == 0) || t.isSurrogate()) {
 				continue;
@@ -174,20 +174,20 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void objectTypeImportStarted(CmsObjectType objectType, int totalObjects) {
+	public void objectTypeImportStarted(CmsBaseObjectType objectType, int totalObjects) {
 		showProgress(objectType);
 		this.console.info(String.format("Object import started for %d %s objects", totalObjects, objectType.name()));
 	}
 
 	@Override
-	public void objectImportStarted(CmsObject<?> object) {
+	public void objectImportStarted(CmsBaseObject<?> object) {
 		showProgress(object.getType());
 		this.console.info(String.format("Import started for %s [%s](%s)", object.getType().name(), object.getLabel(),
 			object.getId()));
 	}
 
 	@Override
-	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult, String newLabel,
+	public void objectImportCompleted(CmsBaseObject<?> object, CmsImportResult cmsImportResult, String newLabel,
 		String newId) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
@@ -208,7 +208,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void objectImportFailed(CmsObject<?> object, Throwable thrown) {
+	public void objectImportFailed(CmsBaseObject<?> object, Throwable thrown) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
 		this.console.info(
@@ -218,7 +218,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void objectTypeImportFinished(CmsObjectType objectType, Map<CmsImportResult, Integer> counters) {
+	public void objectTypeImportFinished(CmsBaseObjectType objectType, Map<CmsImportResult, Integer> counters) {
 		this.console.info(String.format("Finished importing %s objects", objectType.name()));
 		for (CmsImportResult r : CmsImportResult.values()) {
 			Integer v = counters.get(r);

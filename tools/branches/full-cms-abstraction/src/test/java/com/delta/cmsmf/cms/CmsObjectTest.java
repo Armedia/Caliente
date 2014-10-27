@@ -17,7 +17,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.delta.cmsmf.cms.storage.CmsObjectStore;
+import com.delta.cmsmf.cms.storage.CmsBaseObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
@@ -33,20 +33,20 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsObjectTest extends AbstractTest {
+public class CmsBaseObjectTest extends AbstractTest {
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#CmsObject(java.lang.Class)} .
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#CmsBaseObject(java.lang.Class)} .
 	 *
 	 * @throws CMSMFException
 	 */
 	@Test
-	public void testCmsObjectConstruction() throws Throwable {
+	public void testCmsBaseObjectConstruction() throws Throwable {
 		IDfSession session = acquireSourceSession();
 		try {
 			final int max = 3;
-			for (CmsObjectType t : CmsObjectType.values()) {
-				CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
+			for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+				CmsBaseObject<? extends IDfPersistentObject> obj = t.newInstance();
 				final DocumentumType dt = DocumentumType.decode(obj);
 				IDfCollection results = DfUtils.executeQuery(session,
 					String.format("select r_object_id from %s", dt.dmTable, max, max), IDfQuery.DF_EXECREAD_QUERY);
@@ -56,7 +56,7 @@ public class CmsObjectTest extends AbstractTest {
 						IDfId id = results.getId("r_object_id");
 						IDfPersistentObject cmsObj = session.getObject(id);
 						try {
-							CmsObjectType.decodeType(cmsObj);
+							CmsBaseObjectType.decodeType(cmsObj);
 						} catch (IllegalArgumentException e) {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format(
@@ -90,18 +90,18 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#load(java.sql.ResultSet)}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#load(java.sql.ResultSet)}.
 	 */
 	@Test
-	public void testCmsObjectPersistence() throws Throwable {
-		final CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
+	public void testCmsBaseObjectPersistence() throws Throwable {
+		final CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
-		final CmsFileSystem fs = new DefaultCmsFileSystem(getFsDir());
+		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
 		IDfSession session = acquireSourceSession();
 		try {
 			final int max = 3;
-			for (CmsObjectType t : CmsObjectType.values()) {
-				final CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
+			for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+				final CmsBaseObject<? extends IDfPersistentObject> obj = t.newInstance();
 				final DocumentumType dt = DocumentumType.decode(obj);
 				IDfCollection results = DfUtils.executeQuery(session,
 					String.format("select r_object_id from %s", dt.dmTable, max, max), IDfQuery.DF_EXECREAD_QUERY);
@@ -111,7 +111,7 @@ public class CmsObjectTest extends AbstractTest {
 						IDfId id = results.getId("r_object_id");
 						final IDfPersistentObject cmsObj = session.getObject(id);
 						try {
-							CmsObjectType.decodeType(cmsObj);
+							CmsBaseObjectType.decodeType(cmsObj);
 						} catch (IllegalArgumentException e) {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format(
@@ -131,7 +131,7 @@ public class CmsObjectTest extends AbstractTest {
 						Assert.assertEquals(Integer.valueOf(0), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
 							id.getId()));
-						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store, fs, null);
+						DctmTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store, fs, null);
 						store.serializeObject(obj, ctx);
 						Assert.assertEquals(Integer.valueOf(1), qr.query(
 							"select count(*) from dctm_object where object_id = ?", AbstractTest.HANDLER_COUNT,
@@ -150,7 +150,7 @@ public class CmsObjectTest extends AbstractTest {
 									a++;
 									final String objectId = rs.getString("object_id");
 									final String name = rs.getString("name");
-									final CmsDataType dataType = CmsDataType.valueOf(rs.getString("data_type"));
+									final DctmDataType dataType = DctmDataType.valueOf(rs.getString("data_type"));
 									final String id = rs.getString("id");
 									final int length = rs.getInt("length");
 									final boolean qualifiable = rs.getBoolean("qualifiable");
@@ -162,13 +162,13 @@ public class CmsObjectTest extends AbstractTest {
 										String msg = String.format(
 											"Failed to retrieve attribute [%s] for object [%s:%s]", name,
 											obj.getType(), obj.getId());
-										CmsObjectTest.this.log.fatal(msg, e);
+										CmsBaseObjectTest.this.log.fatal(msg, e);
 										Assert.fail(msg);
 										return null;
 									}
 									Assert.assertNotNull(attr);
 									Assert.assertEquals(obj.getId(), objectId);
-									Assert.assertEquals(CmsDataType.fromAttribute(attr), dataType);
+									Assert.assertEquals(DctmDataType.fromAttribute(attr), dataType);
 									Assert.assertEquals(attr.getName(), name);
 									Assert.assertEquals(attr.getId(), id);
 									Assert.assertEquals(attr.getLength(), length);
@@ -199,9 +199,9 @@ public class CmsObjectTest extends AbstractTest {
 													return null;
 												}
 												IDfValue decoded = dataType.decode(data);
-												if (dataType == CmsDataType.DF_STRING) {
+												if (dataType == DctmDataType.DF_STRING) {
 													try {
-														decoded = DfValueFactory.newStringValue(CmsMappingUtils
+														decoded = DfValueFactory.newStringValue(DctmMappingUtils
 															.resolveMappableUser(cmsObj, decoded.asString()));
 													} catch (DfException e) {
 														Assert.fail(String
@@ -240,9 +240,9 @@ public class CmsObjectTest extends AbstractTest {
 									p++;
 									final String objectId = rs.getString("object_id");
 									final String name = rs.getString("name");
-									final CmsDataType dataType = CmsDataType.valueOf(rs.getString("data_type"));
+									final DctmDataType dataType = DctmDataType.valueOf(rs.getString("data_type"));
 									final boolean repeating = rs.getBoolean("repeating");
-									final CmsProperty property = obj.getProperty(name);
+									final StoredProperty property = obj.getProperty(name);
 									Assert.assertNotNull(property);
 									Assert.assertEquals(obj.getId(), objectId);
 									Assert.assertEquals(property.getType(), dataType);
@@ -295,37 +295,37 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getType()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getType()}.
 	 */
 	@Test
 	public void testGetType() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			Assert.assertEquals(t, obj.getType());
 		}
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getDfClass()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getDfClass()}.
 	 */
 	@Test
 	public void testGetDfClass() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			Assert.assertEquals(t.getDfClass(), obj.getDfClass());
 		}
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getAttributeCount()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getAttributeCount()}.
 	 */
 	@Test
 	public void testGetAttributeCount() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			int count = 0;
 			for (int i = 0; i < 100; i++) {
-				CmsAttribute attribute = new CmsAttribute(String.format("attribute-%03d", i), CmsDataType.DF_STRING,
+				StoredAttribute attribute = new StoredAttribute(String.format("attribute-%03d", i), DctmDataType.DF_STRING,
 					"", 0, false, false);
 				obj.setAttribute(attribute);
 				count++;
@@ -335,16 +335,16 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getAttributeNames()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getAttributeNames()}.
 	 */
 	@Test
 	public void testGetAttributeNames() throws Throwable {
 		Set<String> names = new HashSet<String>();
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("attribute-%03d", i);
-				CmsAttribute attribute = new CmsAttribute(name, CmsDataType.DF_STRING, "", 0, false, false);
+				StoredAttribute attribute = new StoredAttribute(name, DctmDataType.DF_STRING, "", 0, false, false);
 				obj.setAttribute(attribute);
 				names.add(name);
 			}
@@ -353,23 +353,23 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getAttribute(java.lang.String)}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getAttribute(java.lang.String)}.
 	 */
 	@Test
 	public void testGetSetAttribute() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("attribute-%03d", i);
 				final String value = String.format("value-%08x", i);
-				CmsAttribute attribute = new CmsAttribute(name, CmsDataType.DF_STRING, "", 0, false, false);
+				StoredAttribute attribute = new StoredAttribute(name, DctmDataType.DF_STRING, "", 0, false, false);
 				attribute.setValue(DfValueFactory.newStringValue(value));
 				obj.setAttribute(attribute);
 			}
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("attribute-%03d", i);
 				final String value = String.format("value-%08x", i);
-				CmsAttribute attribute = obj.getAttribute(name);
+				StoredAttribute attribute = obj.getAttribute(name);
 				Assert.assertEquals(name, attribute.getName());
 				Assert.assertEquals(value, attribute.getValue().asString());
 			}
@@ -377,22 +377,22 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#removeAttribute(java.lang.String)}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#removeAttribute(java.lang.String)}.
 	 */
 	@Test
 	public void testRemoveAttribute() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("attribute-%03d", i);
 				final String value = String.format("value-%08x", i);
-				CmsAttribute attribute = new CmsAttribute(name, CmsDataType.DF_STRING, "", 0, false, false);
+				StoredAttribute attribute = new StoredAttribute(name, DctmDataType.DF_STRING, "", 0, false, false);
 				attribute.setValue(DfValueFactory.newStringValue(value));
 				obj.setAttribute(attribute);
 			}
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("attribute-%03d", i);
-				CmsAttribute attribute = obj.getAttribute(name);
+				StoredAttribute attribute = obj.getAttribute(name);
 				Assert.assertNotNull(attribute);
 				obj.removeAttribute(name);
 				Assert.assertNull(obj.getAttribute(name));
@@ -401,26 +401,26 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getAllAttributes()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getAllAttributes()}.
 	 */
 	@Test
 	public void testGetAllAttributes() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			Map<String, String> values = new HashMap<String, String>();
 			int count = 0;
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("attribute-%03d", i);
 				final String value = String.format("value-%08x", i);
 				values.put(name, value);
-				CmsAttribute attribute = new CmsAttribute(name, CmsDataType.DF_STRING, "", 0, false, false);
+				StoredAttribute attribute = new StoredAttribute(name, DctmDataType.DF_STRING, "", 0, false, false);
 				attribute.setValue(DfValueFactory.newStringValue(value));
 				obj.setAttribute(attribute);
 				count++;
 			}
-			Collection<CmsAttribute> attributes = obj.getAllAttributes();
+			Collection<StoredAttribute> attributes = obj.getAllAttributes();
 			Assert.assertEquals(count, attributes.size());
-			for (CmsAttribute attribute : attributes) {
+			for (StoredAttribute attribute : attributes) {
 				String value = values.get(attribute.getName());
 				Assert.assertNotNull(value);
 				Assert.assertEquals(value, attribute.getValue().asString());
@@ -429,15 +429,15 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getPropertyCount()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getPropertyCount()}.
 	 */
 	@Test
 	public void testGetPropertyCount() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			int count = 0;
 			for (int i = 0; i < 100; i++) {
-				CmsProperty property = new CmsProperty(String.format("property-%03d", i), CmsDataType.DF_STRING, false);
+				StoredProperty property = new StoredProperty(String.format("property-%03d", i), DctmDataType.DF_STRING, false);
 				obj.setProperty(property);
 				count++;
 			}
@@ -446,16 +446,16 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getPropertyNames()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getPropertyNames()}.
 	 */
 	@Test
 	public void testGetPropertyNames() throws Throwable {
 		Set<String> names = new HashSet<String>();
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("property-%03d", i);
-				CmsProperty property = new CmsProperty(name, CmsDataType.DF_STRING, false);
+				StoredProperty property = new StoredProperty(name, DctmDataType.DF_STRING, false);
 				obj.setProperty(property);
 				names.add(name);
 			}
@@ -464,23 +464,23 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getProperty(java.lang.String)}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getProperty(java.lang.String)}.
 	 */
 	@Test
 	public void testGetSetProperty() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("property-%03d", i);
 				final String value = String.format("value-%08x", i);
-				CmsProperty property = new CmsProperty(name, CmsDataType.DF_STRING, false);
+				StoredProperty property = new StoredProperty(name, DctmDataType.DF_STRING, false);
 				property.setValue(DfValueFactory.newStringValue(value));
 				obj.setProperty(property);
 			}
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("property-%03d", i);
 				final String value = String.format("value-%08x", i);
-				CmsProperty property = obj.getProperty(name);
+				StoredProperty property = obj.getProperty(name);
 				Assert.assertEquals(name, property.getName());
 				Assert.assertEquals(value, property.getValue().asString());
 			}
@@ -488,22 +488,22 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#removeProperty(java.lang.String)}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#removeProperty(java.lang.String)}.
 	 */
 	@Test
 	public void testRemoveProperty() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("property-%03d", i);
 				final String value = String.format("value-%08x", i);
-				CmsProperty property = new CmsProperty(name, CmsDataType.DF_STRING, false);
+				StoredProperty property = new StoredProperty(name, DctmDataType.DF_STRING, false);
 				property.setValue(DfValueFactory.newStringValue(value));
 				obj.setProperty(property);
 			}
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("property-%03d", i);
-				CmsProperty property = obj.getProperty(name);
+				StoredProperty property = obj.getProperty(name);
 				Assert.assertNotNull(property);
 				obj.removeProperty(name);
 				Assert.assertNull(obj.getProperty(name));
@@ -512,26 +512,26 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getAllProperties()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getAllProperties()}.
 	 */
 	@Test
 	public void testGetAllProperties() throws Throwable {
-		for (CmsObjectType t : CmsObjectType.values()) {
-			CmsObject<?> obj = t.newInstance();
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
+			CmsBaseObject<?> obj = t.newInstance();
 			Map<String, String> values = new HashMap<String, String>();
 			int count = 0;
 			for (int i = 0; i < 100; i++) {
 				final String name = String.format("property-%03d", i);
 				final String value = String.format("value-%08x", i);
 				values.put(name, value);
-				CmsProperty property = new CmsProperty(name, CmsDataType.DF_STRING, false);
+				StoredProperty property = new StoredProperty(name, DctmDataType.DF_STRING, false);
 				property.setValue(DfValueFactory.newStringValue(value));
 				obj.setProperty(property);
 				count++;
 			}
-			Collection<CmsProperty> propertys = obj.getAllProperties();
+			Collection<StoredProperty> propertys = obj.getAllProperties();
 			Assert.assertEquals(count, propertys.size());
-			for (CmsProperty property : propertys) {
+			for (StoredProperty property : propertys) {
 				String value = values.get(property.getName());
 				Assert.assertNotNull(value);
 				Assert.assertEquals(value, property.getValue().asString());
@@ -541,7 +541,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#loadFromCMS(com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#loadFromCMS(com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -549,7 +549,7 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#saveToCMS(CmsTransferContext)} .
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#saveToCMS(DctmTransferContext)} .
 	 */
 	@Test
 	public void testSaveToCMS() {
@@ -557,7 +557,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#getAttributeHandler(com.documentum.fc.common.IDfAttr)}.
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#getAttributeHandler(com.documentum.fc.common.IDfAttr)}.
 	 */
 	@Test
 	public void testGetAttributeHandlerIDfAttr() {
@@ -565,7 +565,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#getAttributeHandler(com.delta.cmsmf.cms.CmsAttribute)}.
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#getAttributeHandler(com.delta.cmsmf.cms.StoredAttribute)}.
 	 */
 	@Test
 	public void testGetAttributeHandlerCmsAttribute() {
@@ -573,7 +573,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#getAttributeHandler(com.delta.cmsmf.cms.CmsDataType, java.lang.String)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#getAttributeHandler(com.delta.cmsmf.cms.DctmDataType, java.lang.String)}
 	 * .
 	 */
 	@Test
@@ -582,7 +582,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#castObject(com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#castObject(com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -590,14 +590,14 @@ public class CmsObjectTest extends AbstractTest {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#locateInCms(CmsTransferContext)}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#locateInCms(DctmTransferContext)}.
 	 */
 	@Test
 	public void testLocateInCms() {
 	}
 
 	/**
-	 * Test method for {@link com.delta.cmsmf.cms.CmsObject#getId()}.
+	 * Test method for {@link com.delta.cmsmf.cms.CmsBaseObject#getId()}.
 	 */
 	@Test
 	public void testGetId() {
@@ -605,7 +605,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#copyAttributeToObject(java.lang.String, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#copyAttributeToObject(java.lang.String, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -614,7 +614,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#copyAttributeToObject(com.delta.cmsmf.cms.CmsAttribute, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#copyAttributeToObject(com.delta.cmsmf.cms.StoredAttribute, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -623,7 +623,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#setAttributeOnObject(java.lang.String, com.documentum.fc.common.IDfValue, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#setAttributeOnObject(java.lang.String, com.documentum.fc.common.IDfValue, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -632,7 +632,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#setAttributeOnObject(java.lang.String, java.util.Collection, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#setAttributeOnObject(java.lang.String, java.util.Collection, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -641,7 +641,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#setAttributeOnObject(com.delta.cmsmf.cms.CmsAttribute, com.documentum.fc.common.IDfValue, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#setAttributeOnObject(com.delta.cmsmf.cms.StoredAttribute, com.documentum.fc.common.IDfValue, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -650,7 +650,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#setAttributeOnObject(com.delta.cmsmf.cms.CmsAttribute, java.util.Collection, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#setAttributeOnObject(com.delta.cmsmf.cms.StoredAttribute, java.util.Collection, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -659,7 +659,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#clearAttributeFromObject(java.lang.String, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#clearAttributeFromObject(java.lang.String, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -668,7 +668,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#clearAttributeFromObject(com.delta.cmsmf.cms.CmsAttribute, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#clearAttributeFromObject(com.delta.cmsmf.cms.StoredAttribute, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -677,7 +677,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#clearAttributeFromObject(com.documentum.fc.common.IDfAttr, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#clearAttributeFromObject(com.documentum.fc.common.IDfAttr, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -686,7 +686,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#clearAttributeFromObject(java.lang.String, com.delta.cmsmf.cms.CmsDataType, boolean, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#clearAttributeFromObject(java.lang.String, com.delta.cmsmf.cms.DctmDataType, boolean, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -695,7 +695,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#updateVStamp(int, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#updateVStamp(int, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test
@@ -704,7 +704,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#updateVStamp(java.lang.String, int, com.documentum.fc.client.IDfPersistentObject)}
+	 * {@link com.delta.cmsmf.cms.CmsBaseObject#updateVStamp(java.lang.String, int, com.documentum.fc.client.IDfPersistentObject)}
 	 * .
 	 */
 	@Test

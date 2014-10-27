@@ -1,6 +1,7 @@
 package com.delta.cmsmf.utils;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -16,7 +17,6 @@ import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfTime;
 
 public class DfUtils {
 
@@ -157,9 +157,9 @@ public class DfUtils {
 			"Failed to identify a supported database from the server version string [%s]", serverVersion));
 	}
 
-	public static String generateSqlDateClause(IDfTime date, IDfSession session) throws DfException {
+	public static String generateSqlDateClause(Date date, IDfSession session) throws DfException {
 		// First, output to the "netural" format
-		final String dateString = DateFormatUtils.formatUTC(date.getDate(), Constant.JAVA_SQL_DATETIME_PATTERN);
+		final String dateString = DateFormatUtils.formatUTC(date, Constant.JAVA_SQL_DATETIME_PATTERN);
 		// Now, select the database format string
 		final String ret;
 		DbType dbType = DfUtils.getDbType(session);
@@ -175,7 +175,7 @@ public class DfUtils {
 		}
 		if (DfUtils.LOG.isTraceEnabled()) {
 			DfUtils.LOG.trace(String.format("Generated %s SQL Date string [%s] from [%s](%d)", dbType, ret,
-				date.asString(Constant.SQL_DATETIME_PATTERN), date.getDate().getTime()));
+				DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(date), date.getTime()));
 		}
 		return ret;
 	}

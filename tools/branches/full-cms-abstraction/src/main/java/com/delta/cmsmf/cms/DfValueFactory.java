@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.armedia.cmf.storage.StoredAttribute;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
@@ -18,35 +19,35 @@ public final class DfValueFactory {
 	}
 
 	public static IDfValue newBooleanValue(boolean v) {
-		CmsDataType type = CmsDataType.DF_BOOLEAN;
+		DctmDataType type = DctmDataType.DF_BOOLEAN;
 		return new DfValue(String.valueOf(v), type.getDfConstant());
 	}
 
 	public static IDfValue newIntValue(int v) {
-		CmsDataType type = CmsDataType.DF_INTEGER;
+		DctmDataType type = DctmDataType.DF_INTEGER;
 		return new DfValue(String.valueOf(v), type.getDfConstant());
 	}
 
 	public static IDfValue newIntValue(long v) {
-		CmsDataType type = CmsDataType.DF_INTEGER;
+		DctmDataType type = DctmDataType.DF_INTEGER;
 		return new DfValue(String.valueOf((int) v), type.getDfConstant());
 	}
 
 	public static IDfValue newStringValue(String v) {
 		if (v == null) { return null; }
-		CmsDataType type = CmsDataType.DF_STRING;
+		DctmDataType type = DctmDataType.DF_STRING;
 		return new DfValue(v, type.getDfConstant());
 	}
 
 	public static IDfValue newIdValue(IDfId v) {
 		if (v == null) { return null; }
-		CmsDataType type = CmsDataType.DF_ID;
+		DctmDataType type = DctmDataType.DF_ID;
 		return new DfValue(v.toString(), type.getDfConstant());
 	}
 
 	public static IDfValue newIdValue(String v) {
 		if (v == null) { return null; }
-		CmsDataType type = CmsDataType.DF_ID;
+		DctmDataType type = DctmDataType.DF_ID;
 		return new DfValue(v, type.getDfConstant());
 	}
 
@@ -64,12 +65,12 @@ public final class DfValueFactory {
 	}
 
 	public static IDfValue newDoubleValue(float v) {
-		CmsDataType type = CmsDataType.DF_DOUBLE;
+		DctmDataType type = DctmDataType.DF_DOUBLE;
 		return new DfValue(Double.toHexString(v), type.getDfConstant());
 	}
 
 	public static IDfValue newDoubleValue(double v) {
-		CmsDataType type = CmsDataType.DF_DOUBLE;
+		DctmDataType type = DctmDataType.DF_DOUBLE;
 		return new DfValue(Double.toHexString(v), type.getDfConstant());
 	}
 
@@ -77,7 +78,8 @@ public final class DfValueFactory {
 		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(CmsAttribute attr, IDfTypedObject object) throws DfException {
+	public static List<IDfValue> getAllRepeatingValues(StoredAttribute<IDfValue> attr,
+		IDfTypedObject object) throws DfException {
 		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
 	}
 

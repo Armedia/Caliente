@@ -29,17 +29,17 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testCmsPropertyStringCmsDataTypeIDfValueArray() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_BOOLEAN;
-		CmsProperty prop = null;
+		final DctmDataType type = DctmDataType.DF_BOOLEAN;
+		StoredProperty prop = null;
 
 		try {
-			new CmsProperty(null, type, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(null, type, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null name");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			new CmsProperty(name, null, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(name, null, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null type");
 		} catch (IllegalArgumentException e) {
 			// All is well
@@ -52,7 +52,7 @@ public class CmsPropertyTest extends AbstractTest {
 		}
 		IDfValue[] valueArr = values.toArray(CmsPropertyTest.NO_VALUES);
 
-		prop = new CmsProperty(name, type, valueArr);
+		prop = new StoredProperty(name, type, valueArr);
 		Assert.assertTrue(prop.isRepeating());
 		Assert.assertEquals(valueArr.length, prop.getValueCount());
 		Assert.assertEquals(valueArr.length > 0, prop.hasValues());
@@ -64,17 +64,17 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testCmsPropertyStringCmsDataTypeCollectionOfIDfValue() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_BOOLEAN;
-		CmsProperty prop = null;
+		final DctmDataType type = DctmDataType.DF_BOOLEAN;
+		StoredProperty prop = null;
 
 		try {
-			new CmsProperty(null, type, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(null, type, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null name");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			new CmsProperty(name, null, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(name, null, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null type");
 		} catch (IllegalArgumentException e) {
 			// All is well
@@ -86,7 +86,7 @@ public class CmsPropertyTest extends AbstractTest {
 			values.add(DfValueFactory.newStringValue(uuid.toString()));
 		}
 
-		prop = new CmsProperty(name, type, values);
+		prop = new StoredProperty(name, type, values);
 		Assert.assertTrue(prop.isRepeating());
 		Assert.assertEquals(values.size(), prop.getValueCount());
 		Assert.assertNotEquals(values.isEmpty(), prop.hasValues());
@@ -95,7 +95,7 @@ public class CmsPropertyTest extends AbstractTest {
 		}
 
 		values = null;
-		prop = new CmsProperty(name, type, values);
+		prop = new StoredProperty(name, type, values);
 		Assert.assertTrue(prop.isRepeating());
 		Assert.assertEquals(0, prop.getValueCount());
 		Assert.assertFalse(prop.hasValues());
@@ -104,29 +104,29 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testCmsPropertyStringCmsDataTypeBooleanIDfValueArray() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_BOOLEAN;
-		CmsProperty prop = null;
+		final DctmDataType type = DctmDataType.DF_BOOLEAN;
+		StoredProperty prop = null;
 
 		try {
-			new CmsProperty(null, type, false, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(null, type, false, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null name");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			new CmsProperty(null, type, true, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(null, type, true, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null name");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			new CmsProperty(name, null, false, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(name, null, false, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null type");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			new CmsProperty(name, null, true, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(name, null, true, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null type");
 		} catch (IllegalArgumentException e) {
 			// All is well
@@ -139,13 +139,13 @@ public class CmsPropertyTest extends AbstractTest {
 		}
 		IDfValue[] valueArr = values.toArray(CmsPropertyTest.NO_VALUES);
 
-		prop = new CmsProperty(name, type, false, valueArr);
+		prop = new StoredProperty(name, type, false, valueArr);
 		Assert.assertFalse(prop.isRepeating());
 		Assert.assertEquals(1, prop.getValueCount());
 		Assert.assertTrue(prop.hasValues());
 		Assert.assertEquals(valueArr[0], prop.getValue());
 
-		prop = new CmsProperty(name, type, true, valueArr);
+		prop = new StoredProperty(name, type, true, valueArr);
 		Assert.assertTrue(prop.isRepeating());
 		Assert.assertEquals(valueArr.length, prop.getValueCount());
 		Assert.assertEquals(valueArr.length > 0, prop.hasValues());
@@ -157,29 +157,29 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testCmsPropertyStringCmsDataTypeBooleanCollectionOfIDfValue() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_BOOLEAN;
-		CmsProperty prop = null;
+		final DctmDataType type = DctmDataType.DF_BOOLEAN;
+		StoredProperty prop = null;
 
 		try {
-			new CmsProperty(null, type, false, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(null, type, false, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null name");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			new CmsProperty(null, type, true, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(null, type, true, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null name");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			new CmsProperty(name, null, false, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(name, null, false, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null type");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		try {
-			new CmsProperty(name, null, true, CmsPropertyTest.NO_VALUES);
+			new StoredProperty(name, null, true, CmsPropertyTest.NO_VALUES);
 			Assert.fail("Did not fail with null type");
 		} catch (IllegalArgumentException e) {
 			// All is well
@@ -191,13 +191,13 @@ public class CmsPropertyTest extends AbstractTest {
 			values.add(DfValueFactory.newStringValue(uuid.toString()));
 		}
 
-		prop = new CmsProperty(name, type, false, values);
+		prop = new StoredProperty(name, type, false, values);
 		Assert.assertFalse(prop.isRepeating());
 		Assert.assertEquals(1, prop.getValueCount());
 		Assert.assertTrue(prop.hasValues());
 		Assert.assertEquals(values.get(0), prop.getValue());
 
-		prop = new CmsProperty(name, type, true, values);
+		prop = new StoredProperty(name, type, true, values);
 		Assert.assertTrue(prop.isRepeating());
 		Assert.assertEquals(values.size(), prop.getValueCount());
 		Assert.assertNotEquals(values.isEmpty(), prop.hasValues());
@@ -206,13 +206,13 @@ public class CmsPropertyTest extends AbstractTest {
 		}
 
 		values = null;
-		prop = new CmsProperty(name, type, false, values);
+		prop = new StoredProperty(name, type, false, values);
 		Assert.assertFalse(prop.isRepeating());
 		Assert.assertEquals(1, prop.getValueCount());
 		Assert.assertTrue(prop.hasValues());
 		Assert.assertEquals(type.getValue(type.getNullValue()), type.getValue(prop.getValue()));
 
-		prop = new CmsProperty(name, type, true, values);
+		prop = new StoredProperty(name, type, true, values);
 		Assert.assertTrue(prop.isRepeating());
 		Assert.assertEquals(0, prop.getValueCount());
 		Assert.assertFalse(prop.hasValues());
@@ -220,10 +220,10 @@ public class CmsPropertyTest extends AbstractTest {
 
 	@Test
 	public void testGetName() {
-		final CmsDataType type = CmsDataType.DF_BOOLEAN;
+		final DctmDataType type = DctmDataType.DF_BOOLEAN;
 		for (int i = 0; i < 10; i++) {
 			UUID uuid = UUID.randomUUID();
-			CmsProperty prop = new CmsProperty(uuid.toString(), type, false);
+			StoredProperty prop = new StoredProperty(uuid.toString(), type, false);
 			Assert.assertEquals(uuid.toString(), prop.getName());
 		}
 	}
@@ -231,9 +231,9 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testGetType() {
 		final String name = "attributeName";
-		for (final CmsDataType type : CmsDataType.values()) {
+		for (final DctmDataType type : DctmDataType.values()) {
 			try {
-				CmsProperty prop = new CmsProperty(name, type, false);
+				StoredProperty prop = new StoredProperty(name, type, false);
 				Assert.assertEquals(type, prop.getType());
 			} catch (UnsupportedOperationException e) {
 				String msg = e.getMessage();
@@ -241,7 +241,7 @@ public class CmsPropertyTest extends AbstractTest {
 			}
 		}
 		try {
-			new CmsProperty(name, null, false);
+			new StoredProperty(name, null, false);
 			Assert.fail("Did not fail with null type");
 		} catch (IllegalArgumentException e) {
 			// All is well
@@ -251,20 +251,20 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testIsRepeating() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_BOOLEAN;
-		CmsProperty prop = null;
-		prop = new CmsProperty(name, type, false);
+		final DctmDataType type = DctmDataType.DF_BOOLEAN;
+		StoredProperty prop = null;
+		prop = new StoredProperty(name, type, false);
 		Assert.assertFalse(prop.isRepeating());
-		prop = new CmsProperty(name, type, true);
+		prop = new StoredProperty(name, type, true);
 		Assert.assertTrue(prop.isRepeating());
 	}
 
 	@Test
 	public void testGetValueCount() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final List<IDfValue> values = new ArrayList<IDfValue>();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 		for (int i = 10; i < 100; i++) {
 			values.clear();
 			for (int c = 0; c < i; c++) {
@@ -275,14 +275,14 @@ public class CmsPropertyTest extends AbstractTest {
 				}
 			}
 			// First, try single-valued
-			prop = new CmsProperty(name, type, false, values);
+			prop = new StoredProperty(name, type, false, values);
 			Assert.assertEquals(1, prop.getValueCount());
 
 			// Now, try multi-valued
-			prop = new CmsProperty(name, type, true, values);
+			prop = new StoredProperty(name, type, true, values);
 			Assert.assertEquals(values.size(), prop.getValueCount());
 
-			prop = new CmsProperty(name, type, true, values.toArray(CmsPropertyTest.NO_VALUES));
+			prop = new StoredProperty(name, type, true, values.toArray(CmsPropertyTest.NO_VALUES));
 			Assert.assertEquals(values.size(), prop.getValueCount());
 		}
 	}
@@ -290,9 +290,9 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testHasValues() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final List<IDfValue> values = new ArrayList<IDfValue>();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 		for (int i = 10; i < 100; i++) {
 			values.clear();
 			for (int c = 0; c < i; c++) {
@@ -303,14 +303,14 @@ public class CmsPropertyTest extends AbstractTest {
 				}
 			}
 			// First, try single-valued
-			prop = new CmsProperty(name, type, false, values);
+			prop = new StoredProperty(name, type, false, values);
 			Assert.assertTrue(prop.hasValues());
 
 			// Now, try multi-valued
-			prop = new CmsProperty(name, type, true, values);
+			prop = new StoredProperty(name, type, true, values);
 			Assert.assertNotEquals(values.isEmpty(), prop.hasValues());
 
-			prop = new CmsProperty(name, type, true, values.toArray(CmsPropertyTest.NO_VALUES));
+			prop = new StoredProperty(name, type, true, values.toArray(CmsPropertyTest.NO_VALUES));
 			Assert.assertNotEquals(values.isEmpty(), prop.hasValues());
 		}
 	}
@@ -318,10 +318,10 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testSetValuesIDfValueArray() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
 		final List<IDfValue> values = new ArrayList<IDfValue>();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 
 		for (int i = 0; i < 100; i++) {
 			values.clear();
@@ -330,7 +330,7 @@ public class CmsPropertyTest extends AbstractTest {
 			}
 
 			// First, try single-valued
-			prop = new CmsProperty(name, type, false);
+			prop = new StoredProperty(name, type, false);
 			Assert.assertEquals(NULL, prop.getValue());
 			prop.setValues(values.toArray(CmsPropertyTest.NO_VALUES));
 			Assert.assertEquals(values.isEmpty() ? NULL : values.get(0), prop.getValue());
@@ -338,7 +338,7 @@ public class CmsPropertyTest extends AbstractTest {
 			Assert.assertEquals(NULL, prop.getValue());
 
 			// Now, try multi-valued
-			prop = new CmsProperty(name, type, true);
+			prop = new StoredProperty(name, type, true);
 			Assert.assertFalse(prop.hasValues());
 			Assert.assertEquals(0, prop.getValueCount());
 			prop.setValues(values.toArray(CmsPropertyTest.NO_VALUES));
@@ -359,12 +359,12 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testSetValuesCollectionOfIDfValue() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
 		final List<IDfValue> values = new ArrayList<IDfValue>();
 		final List<IDfValue> EMPTY = Collections.emptyList();
 		final List<IDfValue> NULL_LIST = null;
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 
 		for (int i = 0; i < 100; i++) {
 			values.clear();
@@ -373,7 +373,7 @@ public class CmsPropertyTest extends AbstractTest {
 			}
 
 			// First, try single-valued
-			prop = new CmsProperty(name, type, false);
+			prop = new StoredProperty(name, type, false);
 			Assert.assertEquals(NULL, prop.getValue());
 			prop.setValues(values);
 			Assert.assertEquals(values.isEmpty() ? NULL : values.get(0), prop.getValue());
@@ -387,7 +387,7 @@ public class CmsPropertyTest extends AbstractTest {
 			Assert.assertEquals(1, prop.getValueCount());
 
 			// Now, try multi-valued
-			prop = new CmsProperty(name, type, true);
+			prop = new StoredProperty(name, type, true);
 			Assert.assertFalse(prop.hasValues());
 			Assert.assertEquals(0, prop.getValueCount());
 			prop.setValues(values);
@@ -415,10 +415,10 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testGetValues() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
 		final List<IDfValue> values = new ArrayList<IDfValue>();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 		List<IDfValue> actualValues = null;
 
 		for (int i = 0; i < 100; i++) {
@@ -428,7 +428,7 @@ public class CmsPropertyTest extends AbstractTest {
 			}
 
 			// First, try single-valued
-			prop = new CmsProperty(name, type, false, values);
+			prop = new StoredProperty(name, type, false, values);
 			actualValues = prop.getValues();
 			Assert.assertFalse(actualValues.isEmpty());
 			Assert.assertEquals(1, actualValues.size());
@@ -436,7 +436,7 @@ public class CmsPropertyTest extends AbstractTest {
 			Assert.assertEquals(values.isEmpty() ? NULL : values.get(0), actualValues.get(0));
 
 			// Now, try multi-valued
-			prop = new CmsProperty(name, type, true, values);
+			prop = new StoredProperty(name, type, true, values);
 			actualValues = prop.getValues();
 			Assert.assertEquals(i <= 0, actualValues.isEmpty());
 			Assert.assertEquals(values.size(), actualValues.size());
@@ -454,11 +454,11 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testAddValue() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 
-		prop = new CmsProperty(name, type, false);
+		prop = new StoredProperty(name, type, false);
 		try {
 			prop.addValue(null);
 			Assert.fail("Did not fail when adding value to a single-valued property");
@@ -472,7 +472,7 @@ public class CmsPropertyTest extends AbstractTest {
 			// failed
 		}
 
-		prop = new CmsProperty(name, type, true);
+		prop = new StoredProperty(name, type, true);
 		for (int i = 0; i < 100; i++) {
 			final IDfValue next;
 			// Every 3rd value will be null
@@ -501,12 +501,12 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testSetValue() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 
 		// First, single-valued
-		prop = new CmsProperty(name, type, false);
+		prop = new StoredProperty(name, type, false);
 		prop.setValue(null);
 		Assert.assertNotNull(prop.getValue());
 		Assert.assertEquals(NULL, prop.getValue());
@@ -521,7 +521,7 @@ public class CmsPropertyTest extends AbstractTest {
 		}
 
 		// Now, multi-valued
-		prop = new CmsProperty(name, type, true);
+		prop = new StoredProperty(name, type, true);
 		for (int i = 10; i < 100; i++) {
 			prop.clearValue();
 			for (int c = 0; c < i; c++) {
@@ -549,12 +549,12 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testClearValue() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 
 		// First, single-valued
-		prop = new CmsProperty(name, type, false);
+		prop = new StoredProperty(name, type, false);
 		for (int i = 1; i <= 100; i++) {
 			final IDfValue next = DfValueFactory.newIntValue(i);
 			prop.setValue(next);
@@ -565,7 +565,7 @@ public class CmsPropertyTest extends AbstractTest {
 		}
 
 		// Now, multi-valued
-		prop = new CmsProperty(name, type, true);
+		prop = new StoredProperty(name, type, true);
 		for (int i = 10; i < 100; i++) {
 			prop.clearValue();
 			for (int c = 0; c < i; c++) {
@@ -583,13 +583,13 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testRemoveValue() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
 		final List<IDfValue> values = new ArrayList<IDfValue>();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 
 		// First, try single-valued
-		prop = new CmsProperty(name, type, false, values);
+		prop = new StoredProperty(name, type, false, values);
 		Assert.assertNotNull(prop.getValue());
 		IDfValue value = DfValueFactory.newIntValue(System.currentTimeMillis());
 		prop.setValue(value);
@@ -619,7 +619,7 @@ public class CmsPropertyTest extends AbstractTest {
 				}
 			}
 
-			prop = new CmsProperty(name, type, true, values);
+			prop = new StoredProperty(name, type, true, values);
 			// Remove roughly half from both lists, then compare them, they should be identical
 			for (int v = 0; v < (i / 2); v++) {
 				int idx = r.nextInt(values.size());
@@ -640,10 +640,10 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testGetValueInt() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
 		final List<IDfValue> values = new ArrayList<IDfValue>();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 		for (int i = 0; i < 100; i++) {
 			values.clear();
 			for (int c = 0; c < i; c++) {
@@ -654,7 +654,7 @@ public class CmsPropertyTest extends AbstractTest {
 				}
 			}
 			// First, try single-valued
-			prop = new CmsProperty(name, type, false, values);
+			prop = new StoredProperty(name, type, false, values);
 			IDfValue single = NULL;
 			if (!values.isEmpty()) {
 				single = Tools.coalesce(values.get(0), NULL);
@@ -666,7 +666,7 @@ public class CmsPropertyTest extends AbstractTest {
 			Assert.assertEquals(single, prop.getValue(Integer.MIN_VALUE)); // test folding to 0
 
 			// Now, try multi-valued
-			prop = new CmsProperty(name, type, true, values);
+			prop = new StoredProperty(name, type, true, values);
 			for (int v = 0; v < values.size(); v++) {
 				IDfValue pVal = prop.getValue(v);
 				IDfValue oVal = Tools.coalesce(values.get(v), NULL);
@@ -680,7 +680,7 @@ public class CmsPropertyTest extends AbstractTest {
 				// all is well
 			}
 
-			prop = new CmsProperty(name, type, true, values.toArray(CmsPropertyTest.NO_VALUES));
+			prop = new StoredProperty(name, type, true, values.toArray(CmsPropertyTest.NO_VALUES));
 			for (int v = 0; v < values.size(); v++) {
 				IDfValue pVal = prop.getValue(v);
 				IDfValue oVal = Tools.coalesce(values.get(v), NULL);
@@ -699,10 +699,10 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testGetValue() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
 		final List<IDfValue> values = new ArrayList<IDfValue>();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 		for (int i = 0; i < 10; i++) {
 			values.clear();
 			for (int c = 0; c < i; c++) {
@@ -713,7 +713,7 @@ public class CmsPropertyTest extends AbstractTest {
 				}
 			}
 			// First, try single-valued
-			prop = new CmsProperty(name, type, false, values);
+			prop = new StoredProperty(name, type, false, values);
 			IDfValue single = type.getNullValue();
 			if (!values.isEmpty()) {
 				single = Tools.coalesce(values.get(0), NULL);
@@ -722,7 +722,7 @@ public class CmsPropertyTest extends AbstractTest {
 			Assert.assertEquals(single, prop.getValue());
 
 			// Now, try multi-valued
-			prop = new CmsProperty(name, type, true, values);
+			prop = new StoredProperty(name, type, true, values);
 			for (int v = 0; v < values.size(); v++) {
 				IDfValue pVal = prop.getValue();
 				IDfValue oVal = Tools.coalesce(values.get(0), NULL);
@@ -730,7 +730,7 @@ public class CmsPropertyTest extends AbstractTest {
 				Assert.assertEquals(oVal, pVal);
 			}
 
-			prop = new CmsProperty(name, type, true, values.toArray(CmsPropertyTest.NO_VALUES));
+			prop = new StoredProperty(name, type, true, values.toArray(CmsPropertyTest.NO_VALUES));
 			for (int v = 0; v < values.size(); v++) {
 				IDfValue pVal = prop.getValue();
 				IDfValue oVal = Tools.coalesce(values.get(0), NULL);
@@ -751,24 +751,24 @@ public class CmsPropertyTest extends AbstractTest {
 		};
 
 		for (final String aName : names) {
-			for (final CmsDataType aType : CmsDataType.values()) {
-				if (aType == CmsDataType.DF_UNDEFINED) {
+			for (final DctmDataType aType : DctmDataType.values()) {
+				if (aType == DctmDataType.DF_UNDEFINED) {
 					continue;
 				}
 				for (final boolean aRep : repeating) {
-					final CmsProperty aProp = new CmsProperty(aName, aType, aRep, DfValueFactory.newStringValue(String
+					final StoredProperty aProp = new StoredProperty(aName, aType, aRep, DfValueFactory.newStringValue(String
 						.format("A = %s-%s-%s", aName, aType, aRep)));
 
 					Assert.assertFalse(aProp.isSame(null));
 					Assert.assertTrue(aProp.isSame(aProp));
 
 					for (final String bName : names) {
-						for (final CmsDataType bType : CmsDataType.values()) {
-							if (bType == CmsDataType.DF_UNDEFINED) {
+						for (final DctmDataType bType : DctmDataType.values()) {
+							if (bType == DctmDataType.DF_UNDEFINED) {
 								continue;
 							}
 							for (final boolean bRep : repeating) {
-								final CmsProperty bProp = new CmsProperty(bName, bType, bRep,
+								final StoredProperty bProp = new StoredProperty(bName, bType, bRep,
 									DfValueFactory.newStringValue(String.format("A = %s-%s-%s", bName, bType, bRep)));
 								Assert.assertTrue(bProp.isSame(bProp));
 
@@ -789,15 +789,15 @@ public class CmsPropertyTest extends AbstractTest {
 	@Test
 	public void testIterator() {
 		final String name = "attributeName";
-		final CmsDataType type = CmsDataType.DF_INTEGER;
+		final DctmDataType type = DctmDataType.DF_INTEGER;
 		final IDfValue NULL = type.getNullValue();
 		final List<IDfValue> values = new ArrayList<IDfValue>();
-		CmsProperty prop = null;
+		StoredProperty prop = null;
 
 		// First, single-valued
 		final IDfValue single = DfValueFactory.newIntValue(System.currentTimeMillis());
 		Iterator<IDfValue> singleIt = null;
-		prop = new CmsProperty(name, type, false);
+		prop = new StoredProperty(name, type, false);
 
 		singleIt = prop.iterator();
 		Assert.assertTrue(singleIt.hasNext());
@@ -856,7 +856,7 @@ public class CmsPropertyTest extends AbstractTest {
 				}
 			}
 
-			prop = new CmsProperty(name, type, true, values);
+			prop = new StoredProperty(name, type, true, values);
 			Iterator<IDfValue> a = values.iterator();
 			Iterator<IDfValue> b = prop.iterator();
 			int j = 0;

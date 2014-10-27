@@ -10,8 +10,12 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cms.storage.CmsObjectStore;
-import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
+import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.ObjectStore;
+import com.armedia.cmf.storage.StoredAttributeMapper;
+import com.armedia.cmf.storage.StoredObjectHandler;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -20,23 +24,23 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class DefaultTransferContext implements CmsTransferContext {
+public class DefaultTransferContext implements DctmTransferContext {
 
 	private final String rootId;
 	private final IDfSession session;
-	private final CmsObjectStore objectStore;
-	private final CmsAttributeMapper mapper;
+	private final ObjectStore objectStore;
+	private final StoredAttributeMapper mapper;
 	private final Map<String, IDfValue> values = new HashMap<String, IDfValue>();
-	private final CmsFileSystem fileSystem;
+	private final ContentStreamStore fileSystem;
 	private final Logger output;
 
-	public DefaultTransferContext(String rootId, IDfSession session, CmsObjectStore objectStore,
-		CmsFileSystem fileSystem, Logger output) {
+	public DefaultTransferContext(String rootId, IDfSession session, ObjectStore objectStore,
+		ContentStreamStore fileSystem, Logger output) {
 		this(rootId, session, objectStore, fileSystem, null, output);
 	}
 
-	public DefaultTransferContext(String rootId, IDfSession session, CmsObjectStore objectStore,
-		CmsFileSystem fileSystem, CmsAttributeMapper mapper, Logger output) {
+	public DefaultTransferContext(String rootId, IDfSession session, ObjectStore objectStore,
+		ContentStreamStore fileSystem, StoredAttributeMapper mapper, Logger output) {
 		this.rootId = rootId;
 		this.session = session;
 		this.objectStore = objectStore;
@@ -56,7 +60,7 @@ public class DefaultTransferContext implements CmsTransferContext {
 	}
 
 	@Override
-	public CmsAttributeMapper getAttributeMapper() {
+	public StoredAttributeMapper getAttributeMapper() {
 		return this.mapper;
 	}
 
@@ -90,13 +94,19 @@ public class DefaultTransferContext implements CmsTransferContext {
 	}
 
 	@Override
-	public void deserializeObjects(Class<? extends CmsObject<?>> klass, Set<String> ids, ObjectHandler handler)
-		throws CMSMFException {
-		this.objectStore.deserializeObjects(klass, ids, handler);
+	public void deserializeObjects(Class<? extends DctmPersistentObject<?>> klass, Set<String> ids,
+		StoredObjectHandler<IDfValue> handler) throws CMSMFException {
+		ObjectStorageTranslator<IDfValue> translator = null;
+		StoredObjectType type = DctmObjectType.decodeFromClass(klass).getCmsType();
+		try {
+			this.objectStore.loadObjects(translator, type, ids, handler);
+		} catch (Exception e) {
+			throw new CMSMFException(String.format("Failed to load objects of type [%s] in set %s", type, ids), e);
+		}
 	}
 
 	@Override
-	public CmsFileSystem getFileSystem() {
+	public ContentStreamStore getContentStreamStore() {
 		return this.fileSystem;
 	}
 

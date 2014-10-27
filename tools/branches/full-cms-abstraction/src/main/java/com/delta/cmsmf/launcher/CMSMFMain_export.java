@@ -11,13 +11,13 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.cms.CmsObject;
-import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.engine.CmsExportEngineListener;
-import com.delta.cmsmf.engine.CmsExporter;
+import com.delta.cmsmf.engine.ExportEngineListener;
+import com.delta.cmsmf.engine.Exporter;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.fc.client.IDfSession;
@@ -29,7 +29,7 @@ import com.documentum.fc.common.DfTime;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngineListener {
+public class CMSMFMain_export extends AbstractCMSMFMain implements ExportEngineListener {
 
 	CMSMFMain_export() throws Throwable {
 		super();
@@ -44,14 +44,13 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 	@Override
 	public void run() throws CMSMFException {
 
-		CmsExporter exporter = new CmsExporter(this.objectStore, this.fileSystem, this.console,
-			Setting.THREADS.getInt());
+		Exporter exporter = new Exporter(this.objectStore, this.fileSystem, this.console, Setting.THREADS.getInt());
 		exporter.addListener(this);
 
 		final Date start = new Date();
 		Date end = null;
 		StringBuilder report = new StringBuilder();
-		Map<CmsObjectType, Integer> summary = null;
+		Map<StoredObjectType, Integer> summary = null;
 		String exceptionReport = null;
 		// lock
 		try {
@@ -124,7 +123,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 		if (summary != null) {
 			report.append(String.format("%n%n%nExported Object Summary:%n")).append(StringUtils.repeat("=", 30));
 			int total = 0;
-			for (CmsObjectType t : summary.keySet()) {
+			for (StoredObjectType t : summary.keySet()) {
 				Integer count = summary.get(t);
 				if ((count == null) || (count == 0)) {
 					continue;
@@ -191,30 +190,30 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 	}
 
 	@Override
-	public void objectExportStarted(CmsObjectType objectType, String objectId) {
+	public void objectExportStarted(StoredObjectType objectType, String objectId) {
 		this.console.info(String.format("Object export started for %s[%s]", objectType.name(), objectId));
 	}
 
 	@Override
-	public void objectExportCompleted(CmsObject<?> object) {
+	public void objectExportCompleted(StoredObject<?> object) {
 		this.console.info(String.format("%s export completed for [%s](%s)", object.getType().name(), object.getLabel(),
 			object.getId()));
 	}
 
 	@Override
-	public void objectSkipped(CmsObjectType objectType, String objectId) {
+	public void objectSkipped(StoredObjectType objectType, String objectId) {
 		this.console.info(String.format("%s object [%s] was skipped", objectType.name(), objectId));
 	}
 
 	@Override
-	public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
+	public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
 		this.console.warn(String.format("Object export failed for %s[%s]", objectType.name(), objectId), thrown);
 	}
 
 	@Override
-	public void exportFinished(Map<CmsObjectType, Integer> summary) {
+	public void exportFinished(Map<StoredObjectType, Integer> summary) {
 		this.console.info("Export process finished");
-		for (CmsObjectType t : CmsObjectType.values()) {
+		for (CmsBaseObjectType t : CmsBaseObjectType.values()) {
 			Integer v = summary.get(t);
 			if ((v == null) || (v.intValue() == 0)) {
 				continue;

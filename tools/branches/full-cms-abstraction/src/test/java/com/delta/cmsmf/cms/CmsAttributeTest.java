@@ -16,7 +16,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.delta.cmsmf.cms.storage.CmsObjectStore;
+import com.delta.cmsmf.cms.storage.CmsBaseObjectStore;
 import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -35,20 +35,20 @@ public class CmsAttributeTest extends AbstractTest {
 	@Test
 	public void testCmsAttributeResultSet() throws Throwable {
 		try {
-			new CmsAttribute(null);
+			new StoredAttribute(null);
 			Assert.fail("Did not fail with a null ResultSet");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 		final IDfSession session = acquireSourceSession();
 		final QueryRunner qr = new QueryRunner(getDataSource());
-		final CmsObjectStore store = new CmsObjectStore(getDataSource(), true);
-		final CmsFileSystem fs = new DefaultCmsFileSystem(getFsDir());
+		final CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
+		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
 		try {
 			IDfCollection collection = DfUtils.executeQuery(session,
 				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);
 			try {
-				final CmsObjectType type = CmsObjectType.DOCUMENT;
+				final CmsBaseObjectType type = CmsBaseObjectType.DOCUMENT;
 				final int max = 3;
 				int c = 0;
 				while (collection.next()) {
@@ -58,15 +58,15 @@ public class CmsAttributeTest extends AbstractTest {
 					IDfId id = collection.getId("r_object_id");
 					IDfPersistentObject dfObj = session.getObject(id);
 					Assert.assertNotNull(dfObj);
-					final CmsObject<?> cmsObj = type.newInstance();
+					final CmsBaseObject<?> cmsObj = type.newInstance();
 					if (!cmsObj.loadFromCMS(dfObj)) {
 						// Unsupported object
 						continue;
 					}
-					CmsTransferContext ctx = new DefaultTransferContext(cmsObj.getId(), session, store, fs, null);
+					DctmTransferContext ctx = new DefaultTransferContext(cmsObj.getId(), session, store, fs, null);
 					store.serializeObject(cmsObj, ctx);
 
-					for (final CmsAttribute att : cmsObj.getAllAttributes()) {
+					for (final StoredAttribute att : cmsObj.getAllAttributes()) {
 						qr.query("select * from dctm_attribute where object_id = ? and name = ?",
 							new ResultSetHandler<Void>() {
 								@Override
@@ -76,7 +76,7 @@ public class CmsAttributeTest extends AbstractTest {
 										"No data found for attribute [%s] for object [%s:%s]", att.getName(),
 										cmsObj.getType(), cmsObj.getId()));
 									}
-									final CmsAttribute actual = new CmsAttribute(rs);
+									final StoredAttribute actual = new StoredAttribute(rs);
 									try {
 										actual.loadValues(null);
 										Assert.fail("LoadValues did not fail with a null ResultSet");
@@ -104,7 +104,7 @@ public class CmsAttributeTest extends AbstractTest {
 									for (int i = 0; i < att.getValueCount(); i++) {
 										IDfValue vExp = att.getValue(i);
 										IDfValue vAct = actual.getValue(i);
-										CmsDataType type = att.getType();
+										DctmDataType type = att.getType();
 										Assert.assertEquals(type.getValue(vExp), type.getValue(vAct));
 									}
 									return null;
@@ -141,32 +141,32 @@ public class CmsAttributeTest extends AbstractTest {
 					final int attCount = dfObj.getAttrCount();
 					for (int i = 0; i < attCount; i++) {
 						final IDfAttr expected = dfObj.getAttr(i);
-						final CmsDataType expectedType = CmsDataType.fromAttribute(expected);
+						final DctmDataType expectedType = DctmDataType.fromAttribute(expected);
 						try {
-							new CmsAttribute(null, dfObj);
+							new StoredAttribute(null, dfObj);
 							Assert.fail("Did not fail with a null attribute");
 						} catch (IllegalArgumentException e) {
 							// All is well
 						}
 						try {
-							new CmsAttribute(null, (Collection<IDfValue>) null);
+							new StoredAttribute(null, (Collection<IDfValue>) null);
 							Assert.fail("Did not fail with a null attribute");
 						} catch (IllegalArgumentException e) {
 							// All is well
 						}
 						try {
-							new CmsAttribute(null, (IDfValue[]) null);
+							new StoredAttribute(null, (IDfValue[]) null);
 							Assert.fail("Did not fail with a null attribute");
 						} catch (IllegalArgumentException e) {
 							// All is well
 						}
 						try {
-							new CmsAttribute(null, (IDfValue) null);
+							new StoredAttribute(null, (IDfValue) null);
 							Assert.fail("Did not fail with a null attribute");
 						} catch (IllegalArgumentException e) {
 							// All is well
 						}
-						CmsAttribute actual = new CmsAttribute(expected, IDfPersistentObject.class.cast(null));
+						StoredAttribute actual = new StoredAttribute(expected, IDfPersistentObject.class.cast(null));
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -180,7 +180,7 @@ public class CmsAttributeTest extends AbstractTest {
 							Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
 								expectedType.getValue(actual.getValue()));
 						}
-						actual = new CmsAttribute(expected);
+						actual = new StoredAttribute(expected);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -194,7 +194,7 @@ public class CmsAttributeTest extends AbstractTest {
 							Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
 								expectedType.getValue(actual.getValue()));
 						}
-						actual = new CmsAttribute(expected, (IDfValue) null);
+						actual = new StoredAttribute(expected, (IDfValue) null);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -204,7 +204,7 @@ public class CmsAttributeTest extends AbstractTest {
 						Assert.assertEquals(1, actual.getValueCount());
 						Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
 							expectedType.getValue(actual.getValue(0)));
-						actual = new CmsAttribute(expected, (IDfValue[]) null);
+						actual = new StoredAttribute(expected, (IDfValue[]) null);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -218,7 +218,7 @@ public class CmsAttributeTest extends AbstractTest {
 							Assert.assertEquals(expectedType.getValue(expectedType.getNullValue()),
 								expectedType.getValue(actual.getValue()));
 						}
-						actual = new CmsAttribute(expected, (Collection<IDfValue>) null);
+						actual = new StoredAttribute(expected, (Collection<IDfValue>) null);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -235,7 +235,7 @@ public class CmsAttributeTest extends AbstractTest {
 
 						final int valueCount = dfObj.getValueCount(expected.getName());
 
-						actual = new CmsAttribute(expected, DfValueFactory.getAllRepeatingValues(expected, dfObj));
+						actual = new StoredAttribute(expected, DfValueFactory.getAllRepeatingValues(expected, dfObj));
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -249,8 +249,8 @@ public class CmsAttributeTest extends AbstractTest {
 							Assert.assertEquals(expectedType.getValue(vExp), expectedType.getValue(vAct));
 						}
 
-						actual = new CmsAttribute(expected, DfValueFactory.getAllRepeatingValues(expected, dfObj)
-							.toArray(CmsProperty.NO_VALUES));
+						actual = new StoredAttribute(expected, DfValueFactory.getAllRepeatingValues(expected, dfObj)
+							.toArray(StoredProperty.NO_VALUES));
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -264,7 +264,7 @@ public class CmsAttributeTest extends AbstractTest {
 							Assert.assertEquals(expectedType.getValue(vExp), expectedType.getValue(vAct));
 						}
 
-						actual = new CmsAttribute(expected, dfObj);
+						actual = new StoredAttribute(expected, dfObj);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -313,8 +313,8 @@ public class CmsAttributeTest extends AbstractTest {
 							values[v] = dfObj.getRepeatingValue(expected.getName(), v);
 						}
 
-						CmsAttribute actual = new CmsAttribute(expected, values);
-						final CmsDataType expectedType = CmsDataType.fromAttribute(expected);
+						StoredAttribute actual = new StoredAttribute(expected, values);
+						final DctmDataType expectedType = DctmDataType.fromAttribute(expected);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -363,8 +363,8 @@ public class CmsAttributeTest extends AbstractTest {
 							values.add(dfObj.getRepeatingValue(expected.getName(), v));
 						}
 
-						CmsAttribute actual = new CmsAttribute(expected, values);
-						final CmsDataType expectedType = CmsDataType.fromAttribute(expected);
+						StoredAttribute actual = new StoredAttribute(expected, values);
+						final DctmDataType expectedType = DctmDataType.fromAttribute(expected);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -413,10 +413,10 @@ public class CmsAttributeTest extends AbstractTest {
 							values[v] = dfObj.getRepeatingValue(expected.getName(), v);
 						}
 
-						CmsAttribute actual = new CmsAttribute(expected.getName(), CmsDataType.fromAttribute(expected),
+						StoredAttribute actual = new StoredAttribute(expected.getName(), DctmDataType.fromAttribute(expected),
 							expected.getId(), expected.getLength(), expected.isRepeating(), expected.isQualifiable(),
 							values);
-						final CmsDataType expectedType = CmsDataType.fromAttribute(expected);
+						final DctmDataType expectedType = DctmDataType.fromAttribute(expected);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -465,10 +465,10 @@ public class CmsAttributeTest extends AbstractTest {
 							values.add(dfObj.getRepeatingValue(expected.getName(), v));
 						}
 
-						CmsAttribute actual = new CmsAttribute(expected.getName(), CmsDataType.fromAttribute(expected),
+						StoredAttribute actual = new StoredAttribute(expected.getName(), DctmDataType.fromAttribute(expected),
 							expected.getId(), expected.getLength(), expected.isRepeating(), expected.isQualifiable(),
 							values);
-						final CmsDataType expectedType = CmsDataType.fromAttribute(expected);
+						final DctmDataType expectedType = DctmDataType.fromAttribute(expected);
 						Assert.assertEquals(expectedType, actual.getType());
 						Assert.assertEquals(expected.getName(), actual.getName());
 						Assert.assertEquals(expected.isRepeating(), actual.isRepeating());
@@ -494,35 +494,35 @@ public class CmsAttributeTest extends AbstractTest {
 
 	@Test
 	public void testIsQualifiable() {
-		CmsAttribute actual = null;
+		StoredAttribute actual = null;
 
-		actual = new CmsAttribute("name", CmsDataType.DF_BOOLEAN, "id", 0, false, true);
+		actual = new StoredAttribute("name", DctmDataType.DF_BOOLEAN, "id", 0, false, true);
 		Assert.assertTrue(actual.isQualifiable());
-		actual = new CmsAttribute("name", CmsDataType.DF_BOOLEAN, "id", 0, false, false);
+		actual = new StoredAttribute("name", DctmDataType.DF_BOOLEAN, "id", 0, false, false);
 		Assert.assertFalse(actual.isQualifiable());
 	}
 
 	@Test
 	public void testGetId() {
-		CmsAttribute actual = null;
+		StoredAttribute actual = null;
 
 		try {
-			actual = new CmsAttribute("name", CmsDataType.DF_BOOLEAN, null, 0, false, false);
+			actual = new StoredAttribute("name", DctmDataType.DF_BOOLEAN, null, 0, false, false);
 			Assert.fail("Did not fail with null ID");
 		} catch (IllegalArgumentException e) {
 			// all is well
 		}
 
 		String uuid = UUID.randomUUID().toString();
-		actual = new CmsAttribute("name", CmsDataType.DF_BOOLEAN, uuid, 0, false, false);
+		actual = new StoredAttribute("name", DctmDataType.DF_BOOLEAN, uuid, 0, false, false);
 		Assert.assertEquals(uuid, actual.getId());
 	}
 
 	@Test
 	public void testGetLength() {
-		CmsAttribute actual = null;
+		StoredAttribute actual = null;
 		for (int i = 0; i < 100; i++) {
-			actual = new CmsAttribute("name", CmsDataType.DF_BOOLEAN, "", i, false, false);
+			actual = new StoredAttribute("name", DctmDataType.DF_BOOLEAN, "", i, false, false);
 			Assert.assertEquals(i, actual.getLength());
 		}
 	}
@@ -539,8 +539,8 @@ public class CmsAttributeTest extends AbstractTest {
 			false, true
 		};
 		for (String name : strings) {
-			for (CmsDataType type : CmsDataType.values()) {
-				if (type == CmsDataType.DF_UNDEFINED) {
+			for (DctmDataType type : DctmDataType.values()) {
+				if (type == DctmDataType.DF_UNDEFINED) {
 					continue;
 				}
 				for (String id : strings) {
@@ -549,12 +549,12 @@ public class CmsAttributeTest extends AbstractTest {
 							for (boolean q : booleans) {
 								for (String vA : strings) {
 									final IDfValue a = DfValueFactory.newStringValue(vA);
-									final CmsAttribute attA = new CmsAttribute(name, type, id, length, r, q,
+									final StoredAttribute attA = new StoredAttribute(name, type, id, length, r, q,
 										Collections.singleton(a));
 									Assert.assertTrue(attA.isSame(attA));
 									for (String vB : strings) {
 										final IDfValue b = DfValueFactory.newStringValue(vB);
-										final CmsAttribute attB = new CmsAttribute(name, type, id, length, r, q,
+										final StoredAttribute attB = new StoredAttribute(name, type, id, length, r, q,
 											Collections.singleton(b));
 										Assert.assertTrue(attA.isSame(attB));
 										Assert.assertTrue(attB.isSame(attA));
@@ -567,8 +567,8 @@ public class CmsAttributeTest extends AbstractTest {
 			}
 		}
 		for (String nameA : strings) {
-			for (CmsDataType typeA : CmsDataType.values()) {
-				if (typeA == CmsDataType.DF_UNDEFINED) {
+			for (DctmDataType typeA : DctmDataType.values()) {
+				if (typeA == DctmDataType.DF_UNDEFINED) {
 					continue;
 				}
 				for (String idA : strings) {
@@ -576,11 +576,11 @@ public class CmsAttributeTest extends AbstractTest {
 						for (boolean rA : booleans) {
 							for (boolean qA : booleans) {
 								for (String vA : strings) {
-									final CmsAttribute attA = new CmsAttribute(nameA, typeA, idA, lengthA, rA, qA,
+									final StoredAttribute attA = new StoredAttribute(nameA, typeA, idA, lengthA, rA, qA,
 										Collections.singleton(DfValueFactory.newStringValue(vA)));
 									for (String nameB : strings) {
-										for (CmsDataType typeB : CmsDataType.values()) {
-											if (typeB == CmsDataType.DF_UNDEFINED) {
+										for (DctmDataType typeB : DctmDataType.values()) {
+											if (typeB == DctmDataType.DF_UNDEFINED) {
 												continue;
 											}
 											for (String idB : strings) {
@@ -588,7 +588,7 @@ public class CmsAttributeTest extends AbstractTest {
 													for (boolean rB : booleans) {
 														for (boolean qB : booleans) {
 															for (String vB : strings) {
-																final CmsAttribute attB = new CmsAttribute(nameB,
+																final StoredAttribute attB = new StoredAttribute(nameB,
 																	typeB, idB, lengthB, rB, qB,
 																	Collections.singleton(DfValueFactory
 																		.newStringValue(vB)));

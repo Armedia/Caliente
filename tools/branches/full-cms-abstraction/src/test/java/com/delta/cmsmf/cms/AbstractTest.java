@@ -36,23 +36,23 @@ public abstract class AbstractTest {
 
 	protected enum DocumentumType {
 		//
-		DM_USER(CmsObjectType.USER),
-		DM_GROUP(CmsObjectType.GROUP),
-		DM_ACL(CmsObjectType.ACL),
-		DM_TYPE(CmsObjectType.TYPE),
-		DM_FORMAT(CmsObjectType.FORMAT),
-		DM_FOLDER(CmsObjectType.FOLDER),
-		DM_DOCUMENT(CmsObjectType.DOCUMENT),
-		DM_CONTENT(CmsObjectType.CONTENT, "dmr_content");
+		DM_USER(CmsBaseObjectType.USER),
+		DM_GROUP(CmsBaseObjectType.GROUP),
+		DM_ACL(CmsBaseObjectType.ACL),
+		DM_TYPE(CmsBaseObjectType.TYPE),
+		DM_FORMAT(CmsBaseObjectType.FORMAT),
+		DM_FOLDER(CmsBaseObjectType.FOLDER),
+		DM_DOCUMENT(CmsBaseObjectType.DOCUMENT),
+		DM_CONTENT(CmsBaseObjectType.CONTENT, "dmr_content");
 
-		public final CmsObjectType cmsType;
+		public final CmsBaseObjectType cmsType;
 		public final String dmTable;
 
-		private DocumentumType(CmsObjectType cmsType) {
+		private DocumentumType(CmsBaseObjectType cmsType) {
 			this(cmsType, null);
 		}
 
-		private DocumentumType(CmsObjectType cmsType, String dmTable) {
+		private DocumentumType(CmsBaseObjectType cmsType, String dmTable) {
 			this.cmsType = cmsType;
 			if (dmTable == null) {
 				dmTable = name().toLowerCase();
@@ -60,15 +60,15 @@ public abstract class AbstractTest {
 			this.dmTable = dmTable;
 		}
 
-		private static Map<CmsObjectType, DocumentumType> MAP = new EnumMap<CmsObjectType, DocumentumType>(
-			CmsObjectType.class);
+		private static Map<CmsBaseObjectType, DocumentumType> MAP = new EnumMap<CmsBaseObjectType, DocumentumType>(
+			CmsBaseObjectType.class);
 
-		public static DocumentumType decode(CmsObject<?> object) {
+		public static DocumentumType decode(CmsBaseObject<?> object) {
 			if (object == null) { throw new IllegalArgumentException("Must provide an object to decode from"); }
 			return DocumentumType.decode(object.getType());
 		}
 
-		public static DocumentumType decode(CmsObjectType type) {
+		public static DocumentumType decode(CmsBaseObjectType type) {
 			synchronized (DocumentumType.MAP) {
 				if (DocumentumType.MAP.isEmpty()) {
 					for (DocumentumType t : DocumentumType.values()) {

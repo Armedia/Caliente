@@ -5,16 +5,16 @@ import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
+import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cfg.SettingManager;
-import com.delta.cmsmf.cms.CmsFileSystem;
-import com.delta.cmsmf.cms.DefaultCmsFileSystem;
+import com.delta.cmsmf.cms.DefaultContentStreamStore;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
-import com.delta.cmsmf.cms.storage.CmsObjectStore;
-import com.delta.cmsmf.cms.storage.DefaultCmsObjectStore;
+import com.delta.cmsmf.cms.storage.DefaultObjectStore;
 
 /**
  * The main method of this class is an entry point for the cmsmf application.
@@ -29,8 +29,8 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 
 	private static AbstractCMSMFMain instance = null;
 
-	protected final CmsObjectStore objectStore;
-	protected final CmsFileSystem fileSystem;
+	protected final ObjectStore objectStore;
+	protected final ContentStreamStore fileSystem;
 	protected final DctmSessionManager sessionManager;
 
 	AbstractCMSMFMain() throws Throwable {
@@ -60,8 +60,8 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 		File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
 
 		this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
-		this.objectStore = DefaultCmsObjectStore.init(requiresCleanData());
-		this.fileSystem = new DefaultCmsFileSystem(contentFilesDirectoryLocation);
+		this.objectStore = DefaultObjectStore.init(requiresCleanData());
+		this.fileSystem = new DefaultContentStreamStore(contentFilesDirectoryLocation);
 		if (requiresCleanData()) {
 			this.console.info(String.format("Cleaning out the content export directory at [%s]",
 				contentFilesDirectoryLocation));

@@ -21,40 +21,40 @@ import com.documentum.fc.common.IDfValue;
 
 public class CmsDataTypeTest extends AbstractTest {
 
-	private static final Map<CmsDataType, String> NULL_ENCODING;
-	private static final Map<CmsDataType, IDfValue> NULL_VALUE;
-	private static final Map<CmsDataType, List<IDfValue>> VALUE_LIST;
-	private static final Map<CmsDataType, List<String>> ENCODING_LIST;
+	private static final Map<DctmDataType, String> NULL_ENCODING;
+	private static final Map<DctmDataType, IDfValue> NULL_VALUE;
+	private static final Map<DctmDataType, List<IDfValue>> VALUE_LIST;
+	private static final Map<DctmDataType, List<String>> ENCODING_LIST;
 
 	static {
-		Map<CmsDataType, String> nullEncodings = new EnumMap<CmsDataType, String>(CmsDataType.class);
-		nullEncodings.put(CmsDataType.DF_BOOLEAN, "false");
-		nullEncodings.put(CmsDataType.DF_INTEGER, "0");
-		nullEncodings.put(CmsDataType.DF_STRING, "");
-		nullEncodings.put(CmsDataType.DF_ID, DfId.DF_NULLID_STR);
-		nullEncodings.put(CmsDataType.DF_TIME, DfTime.DF_NULLDATE_STR);
-		nullEncodings.put(CmsDataType.DF_DOUBLE, "0x0.0p0");
+		Map<DctmDataType, String> nullEncodings = new EnumMap<DctmDataType, String>(DctmDataType.class);
+		nullEncodings.put(DctmDataType.DF_BOOLEAN, "false");
+		nullEncodings.put(DctmDataType.DF_INTEGER, "0");
+		nullEncodings.put(DctmDataType.DF_STRING, "");
+		nullEncodings.put(DctmDataType.DF_ID, DfId.DF_NULLID_STR);
+		nullEncodings.put(DctmDataType.DF_TIME, DfTime.DF_NULLDATE_STR);
+		nullEncodings.put(DctmDataType.DF_DOUBLE, "0x0.0p0");
 		NULL_ENCODING = Collections.unmodifiableMap(nullEncodings);
 
-		Map<CmsDataType, IDfValue> nullValues = new EnumMap<CmsDataType, IDfValue>(CmsDataType.class);
-		nullValues.put(CmsDataType.DF_BOOLEAN, DfValueFactory.newBooleanValue(false));
-		nullValues.put(CmsDataType.DF_INTEGER, DfValueFactory.newIntValue(0));
-		nullValues.put(CmsDataType.DF_STRING, DfValueFactory.newStringValue(""));
-		nullValues.put(CmsDataType.DF_ID, DfValueFactory.newIdValue(DfId.DF_NULLID));
-		nullValues.put(CmsDataType.DF_TIME, DfValueFactory.newTimeValue(DfTime.DF_NULLDATE));
-		nullValues.put(CmsDataType.DF_DOUBLE, DfValueFactory.newDoubleValue(0.0));
+		Map<DctmDataType, IDfValue> nullValues = new EnumMap<DctmDataType, IDfValue>(DctmDataType.class);
+		nullValues.put(DctmDataType.DF_BOOLEAN, DfValueFactory.newBooleanValue(false));
+		nullValues.put(DctmDataType.DF_INTEGER, DfValueFactory.newIntValue(0));
+		nullValues.put(DctmDataType.DF_STRING, DfValueFactory.newStringValue(""));
+		nullValues.put(DctmDataType.DF_ID, DfValueFactory.newIdValue(DfId.DF_NULLID));
+		nullValues.put(DctmDataType.DF_TIME, DfValueFactory.newTimeValue(DfTime.DF_NULLDATE));
+		nullValues.put(DctmDataType.DF_DOUBLE, DfValueFactory.newDoubleValue(0.0));
 		NULL_VALUE = Collections.unmodifiableMap(nullValues);
 
-		Map<CmsDataType, List<IDfValue>> valueLists = new EnumMap<CmsDataType, List<IDfValue>>(CmsDataType.class);
-		Map<CmsDataType, List<String>> encodingLists = new EnumMap<CmsDataType, List<String>>(CmsDataType.class);
+		Map<DctmDataType, List<IDfValue>> valueLists = new EnumMap<DctmDataType, List<IDfValue>>(DctmDataType.class);
+		Map<DctmDataType, List<String>> encodingLists = new EnumMap<DctmDataType, List<String>>(DctmDataType.class);
 
 		List<IDfValue> values = null;
 		List<String> encodings = null;
 
 		values = Arrays.asList(DfValueFactory.newBooleanValue(false), DfValueFactory.newBooleanValue(true));
-		valueLists.put(CmsDataType.DF_BOOLEAN, Collections.unmodifiableList(values));
+		valueLists.put(DctmDataType.DF_BOOLEAN, Collections.unmodifiableList(values));
 		encodings = Arrays.asList("false", "true");
-		encodingLists.put(CmsDataType.DF_BOOLEAN, Collections.unmodifiableList(encodings));
+		encodingLists.put(DctmDataType.DF_BOOLEAN, Collections.unmodifiableList(encodings));
 
 		values = new ArrayList<IDfValue>();
 		encodings = new ArrayList<String>();
@@ -65,8 +65,8 @@ public class CmsDataTypeTest extends AbstractTest {
 			values.add(DfValueFactory.newIntValue(I));
 			encodings.add(String.valueOf(I));
 		}
-		valueLists.put(CmsDataType.DF_INTEGER, Collections.unmodifiableList(values));
-		encodingLists.put(CmsDataType.DF_INTEGER, Collections.unmodifiableList(encodings));
+		valueLists.put(DctmDataType.DF_INTEGER, Collections.unmodifiableList(values));
+		encodingLists.put(DctmDataType.DF_INTEGER, Collections.unmodifiableList(encodings));
 
 		values = new ArrayList<IDfValue>();
 		encodings = new ArrayList<String>();
@@ -75,8 +75,8 @@ public class CmsDataTypeTest extends AbstractTest {
 			values.add(DfValueFactory.newStringValue(s));
 			encodings.add(s);
 		}
-		valueLists.put(CmsDataType.DF_STRING, Collections.unmodifiableList(values));
-		encodingLists.put(CmsDataType.DF_STRING, Collections.unmodifiableList(encodings));
+		valueLists.put(DctmDataType.DF_STRING, Collections.unmodifiableList(values));
+		encodingLists.put(DctmDataType.DF_STRING, Collections.unmodifiableList(encodings));
 
 		values = new ArrayList<IDfValue>();
 		encodings = new ArrayList<String>();
@@ -89,8 +89,8 @@ public class CmsDataTypeTest extends AbstractTest {
 			values.add(DfValueFactory.newIdValue(s));
 			encodings.add(s);
 		}
-		valueLists.put(CmsDataType.DF_ID, Collections.unmodifiableList(values));
-		encodingLists.put(CmsDataType.DF_ID, Collections.unmodifiableList(encodings));
+		valueLists.put(DctmDataType.DF_ID, Collections.unmodifiableList(values));
+		encodingLists.put(DctmDataType.DF_ID, Collections.unmodifiableList(encodings));
 
 		values = new ArrayList<IDfValue>();
 		encodings = new ArrayList<String>();
@@ -103,8 +103,8 @@ public class CmsDataTypeTest extends AbstractTest {
 			values.add(DfValueFactory.newTimeValue(d));
 			encodings.add(fmt.format(d));
 		}
-		valueLists.put(CmsDataType.DF_TIME, Collections.unmodifiableList(values));
-		encodingLists.put(CmsDataType.DF_TIME, Collections.unmodifiableList(encodings));
+		valueLists.put(DctmDataType.DF_TIME, Collections.unmodifiableList(values));
+		encodingLists.put(DctmDataType.DF_TIME, Collections.unmodifiableList(encodings));
 
 		values = new ArrayList<IDfValue>();
 		encodings = new ArrayList<String>();
@@ -116,8 +116,8 @@ public class CmsDataTypeTest extends AbstractTest {
 			values.add(DfValueFactory.newDoubleValue(d));
 			encodings.add(Double.toHexString(d));
 		}
-		valueLists.put(CmsDataType.DF_DOUBLE, Collections.unmodifiableList(values));
-		encodingLists.put(CmsDataType.DF_DOUBLE, Collections.unmodifiableList(encodings));
+		valueLists.put(DctmDataType.DF_DOUBLE, Collections.unmodifiableList(values));
+		encodingLists.put(DctmDataType.DF_DOUBLE, Collections.unmodifiableList(encodings));
 
 		VALUE_LIST = Collections.unmodifiableMap(valueLists);
 		ENCODING_LIST = Collections.unmodifiableMap(encodingLists);
@@ -133,22 +133,22 @@ public class CmsDataTypeTest extends AbstractTest {
 
 	@Test
 	public void testGetDfConstant() {
-		Assert.assertEquals(IDfValue.DF_BOOLEAN, CmsDataType.DF_BOOLEAN.getDfConstant());
-		Assert.assertEquals(IDfValue.DF_INTEGER, CmsDataType.DF_INTEGER.getDfConstant());
-		Assert.assertEquals(IDfValue.DF_STRING, CmsDataType.DF_STRING.getDfConstant());
-		Assert.assertEquals(IDfValue.DF_ID, CmsDataType.DF_ID.getDfConstant());
-		Assert.assertEquals(IDfValue.DF_TIME, CmsDataType.DF_TIME.getDfConstant());
-		Assert.assertEquals(IDfValue.DF_DOUBLE, CmsDataType.DF_DOUBLE.getDfConstant());
-		Assert.assertEquals(IDfValue.DF_UNDEFINED, CmsDataType.DF_UNDEFINED.getDfConstant());
+		Assert.assertEquals(IDfValue.DF_BOOLEAN, DctmDataType.DF_BOOLEAN.getDfConstant());
+		Assert.assertEquals(IDfValue.DF_INTEGER, DctmDataType.DF_INTEGER.getDfConstant());
+		Assert.assertEquals(IDfValue.DF_STRING, DctmDataType.DF_STRING.getDfConstant());
+		Assert.assertEquals(IDfValue.DF_ID, DctmDataType.DF_ID.getDfConstant());
+		Assert.assertEquals(IDfValue.DF_TIME, DctmDataType.DF_TIME.getDfConstant());
+		Assert.assertEquals(IDfValue.DF_DOUBLE, DctmDataType.DF_DOUBLE.getDfConstant());
+		Assert.assertEquals(IDfValue.DF_UNDEFINED, DctmDataType.DF_UNDEFINED.getDfConstant());
 	}
 
 	@Test
 	public void testGetNullEncoding() {
-		for (CmsDataType type : CmsDataTypeTest.NULL_ENCODING.keySet()) {
+		for (DctmDataType type : CmsDataTypeTest.NULL_ENCODING.keySet()) {
 			Assert.assertEquals(CmsDataTypeTest.NULL_ENCODING.get(type), type.getNullEncoding());
 		}
 		try {
-			Assert.assertEquals(null, CmsDataType.DF_UNDEFINED.getNullEncoding());
+			Assert.assertEquals(null, DctmDataType.DF_UNDEFINED.getNullEncoding());
 			Assert.fail("Undefined didn't fail an unsupported operation");
 		} catch (UnsupportedOperationException e) {
 			// All is well
@@ -157,11 +157,11 @@ public class CmsDataTypeTest extends AbstractTest {
 
 	@Test
 	public void testGetNullValue() {
-		for (CmsDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
+		for (DctmDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
 			Assert.assertEquals(CmsDataTypeTest.NULL_VALUE.get(type), type.getNullValue());
 		}
 		try {
-			Assert.assertEquals(null, CmsDataType.DF_UNDEFINED.getNullValue());
+			Assert.assertEquals(null, DctmDataType.DF_UNDEFINED.getNullValue());
 			Assert.fail("Undefined didn't fail an unsupported operation");
 		} catch (UnsupportedOperationException e) {
 			// All is well
@@ -170,7 +170,7 @@ public class CmsDataTypeTest extends AbstractTest {
 
 	@Test
 	public void testGetValue() {
-		for (CmsDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
+		for (DctmDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
 			IDfValue n = CmsDataTypeTest.NULL_VALUE.get(type);
 			final Object N;
 			switch (type) {
@@ -231,14 +231,14 @@ public class CmsDataTypeTest extends AbstractTest {
 
 	@Test
 	public void testFromAttribute() {
-		for (CmsDataType a : CmsDataType.values()) {
+		for (DctmDataType a : DctmDataType.values()) {
 			Attribute A = new Attribute(a.name(), false, a.getDfConstant());
-			CmsDataType tA = CmsDataType.fromAttribute(A);
+			DctmDataType tA = DctmDataType.fromAttribute(A);
 			Assert.assertNotNull(tA);
 			Assert.assertEquals(a, tA);
-			for (CmsDataType b : CmsDataType.values()) {
+			for (DctmDataType b : DctmDataType.values()) {
 				Attribute B = new Attribute(a.name(), false, b.getDfConstant());
-				CmsDataType tB = CmsDataType.fromAttribute(B);
+				DctmDataType tB = DctmDataType.fromAttribute(B);
 				Assert.assertNotNull(tB);
 				if (a == b) {
 					// Make sure there are no collisions
@@ -249,7 +249,7 @@ public class CmsDataTypeTest extends AbstractTest {
 			}
 		}
 		try {
-			CmsDataType.fromAttribute(null);
+			DctmDataType.fromAttribute(null);
 			Assert.fail("Did not fail with a null attribute");
 		} catch (IllegalArgumentException e) {
 			// All is well
@@ -258,7 +258,7 @@ public class CmsDataTypeTest extends AbstractTest {
 
 	@Test
 	public void testEncode() {
-		for (CmsDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
+		for (DctmDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
 			Assert.assertEquals(CmsDataTypeTest.NULL_ENCODING.get(type), type.encode(null));
 			List<IDfValue> values = CmsDataTypeTest.VALUE_LIST.get(type);
 			List<String> encodings = CmsDataTypeTest.ENCODING_LIST.get(type);
@@ -272,7 +272,7 @@ public class CmsDataTypeTest extends AbstractTest {
 
 	@Test
 	public void testDecode() {
-		for (CmsDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
+		for (DctmDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
 			Assert.assertEquals(CmsDataTypeTest.NULL_ENCODING.get(type),
 				type.encode(CmsDataTypeTest.NULL_VALUE.get(type)));
 			Assert.assertEquals(CmsDataTypeTest.NULL_ENCODING.get(type), type.encode(null));
@@ -289,7 +289,7 @@ public class CmsDataTypeTest extends AbstractTest {
 
 	@Test
 	public void testEncodeDecode() {
-		for (CmsDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
+		for (DctmDataType type : CmsDataTypeTest.NULL_VALUE.keySet()) {
 			Assert.assertEquals(type.getValue(CmsDataTypeTest.NULL_VALUE.get(type)),
 				type.getValue(type.decode(CmsDataTypeTest.NULL_ENCODING.get(type))));
 			Assert.assertEquals(type.getValue(CmsDataTypeTest.NULL_VALUE.get(type)), type.getValue(type.decode(null)));
@@ -310,8 +310,8 @@ public class CmsDataTypeTest extends AbstractTest {
 
 	@Test
 	public void testEncodeDF_UNDEFINED() {
-		final CmsDataType type = CmsDataType.DF_UNDEFINED;
-		final IDfValue NULL = CmsDataTypeTest.NULL_VALUE.get(CmsDataType.DF_STRING);
+		final DctmDataType type = DctmDataType.DF_UNDEFINED;
+		final IDfValue NULL = CmsDataTypeTest.NULL_VALUE.get(DctmDataType.DF_STRING);
 		try {
 			type.encode(null);
 			Assert.fail("DF_UNDEFINED did not fail when encoding null");
