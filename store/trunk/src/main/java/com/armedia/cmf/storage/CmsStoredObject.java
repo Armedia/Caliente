@@ -14,7 +14,7 @@ import java.util.Set;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsObject {
+public class CmsStoredObject {
 
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
@@ -27,7 +27,7 @@ public class CmsObject {
 	private final Map<String, CmsAttribute> attributes = new HashMap<String, CmsAttribute>();
 	private final Map<String, CmsProperty> properties = new HashMap<String, CmsProperty>();
 
-	public CmsObject(CmsObjectType type, String id, String batchId, String label, String subtype) {
+	public CmsStoredObject(CmsObjectType type, String id, String batchId, String label, String subtype) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }

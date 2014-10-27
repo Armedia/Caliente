@@ -27,13 +27,13 @@ import com.armedia.cmf.storage.CmsAttributeMapper.Mapping;
  */
 public abstract class CmsObjectStore {
 
-	public static interface ObjectHandler {
+	public static interface StoredObjectHandler {
 
 		/**
 		 * <p>
 		 * Signal the beginning of a new batch, with the given ID. Returns {@code true} if the batch
 		 * should be processed, {@code false} if it should be skipped. If the batch is skipped,
-		 * Neither {@link #closeBatch(boolean)} nor {@link #handleObject(CmsObject)} will be
+		 * Neither {@link #closeBatch(boolean)} nor {@link #handleObject(CmsStoredObject)} will be
 		 * invoked.
 		 * </p>
 		 *
@@ -56,7 +56,7 @@ public abstract class CmsObjectStore {
 		 * @return {@code true} if more objects should be loaded, or {@code false} if this should be
 		 *         the last object load attempted.
 		 */
-		public boolean handleObject(CmsObject dataObject) throws CmsStorageException;
+		public boolean handleObject(CmsStoredObject dataObject) throws CmsStorageException;
 
 		/**
 		 * <p>
@@ -205,7 +205,7 @@ public abstract class CmsObjectStore {
 	protected void doInit(Map<String, String> settings) throws CmsStorageException {
 	}
 
-	public final Long storeObject(CmsObject object) throws CmsStorageException {
+	public final Long storeObject(CmsStoredObject object) throws CmsStorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -215,9 +215,9 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract Long doStoreObject(CmsObject object) throws CmsStorageException;
+	protected abstract Long doStoreObject(CmsStoredObject object) throws CmsStorageException;
 
-	public final Collection<CmsObject> loadObjects(final CmsObjectType type, String... ids) throws CmsStorageException {
+	public final Collection<CmsStoredObject> loadObjects(final CmsObjectType type, String... ids) throws CmsStorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -227,12 +227,12 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	public final Collection<CmsObject> loadObjects(final CmsObjectType type, Collection<String> ids)
+	public final Collection<CmsStoredObject> loadObjects(final CmsObjectType type, Collection<String> ids)
 		throws CmsStorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
-			final List<CmsObject> ret = new ArrayList<CmsObject>(ids.size());
+			final List<CmsStoredObject> ret = new ArrayList<CmsStoredObject>(ids.size());
 			Set<String> actualIds = null;
 			if (ids != null) {
 				if (ids.isEmpty()) { return ret; }
@@ -244,14 +244,14 @@ public abstract class CmsObjectStore {
 					actualIds.add(s);
 				}
 			}
-			loadObjects(type, actualIds, new ObjectHandler() {
+			loadObjects(type, actualIds, new StoredObjectHandler() {
 				@Override
 				public boolean newBatch(String batchId) throws CmsStorageException {
 					return true;
 				}
 
 				@Override
-				public boolean handleObject(CmsObject dataObject) throws CmsStorageException {
+				public boolean handleObject(CmsStoredObject dataObject) throws CmsStorageException {
 					ret.add(dataObject);
 					return true;
 				}
@@ -272,11 +272,11 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	public final int loadObjects(final CmsObjectType type, ObjectHandler handler) throws CmsStorageException {
+	public final int loadObjects(final CmsObjectType type, StoredObjectHandler handler) throws CmsStorageException {
 		return loadObjects(type, null, handler);
 	}
 
-	public final int loadObjects(final CmsObjectType type, Collection<String> ids, ObjectHandler handler)
+	public final int loadObjects(final CmsObjectType type, Collection<String> ids, StoredObjectHandler handler)
 		throws CmsStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
@@ -290,7 +290,7 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract int doLoadObjects(final CmsObjectType type, Collection<String> ids, ObjectHandler handler)
+	protected abstract int doLoadObjects(final CmsObjectType type, Collection<String> ids, StoredObjectHandler handler)
 		throws CmsStorageException;
 
 	public final boolean isStored(CmsObjectType type, String objectId) throws CmsStorageException {
