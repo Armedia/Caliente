@@ -14,9 +14,7 @@ import java.util.Set;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class StoredObject {
-
-	public static final String NULL_BATCH_ID = "[NO BATCHING]";
+public class StoredObject<V> {
 
 	private final StoredObjectType type;
 
@@ -24,8 +22,8 @@ public class StoredObject {
 	private final String batchId;
 	private final String label;
 	private final String subtype;
-	private final Map<String, StoredAttribute> attributes = new HashMap<String, StoredAttribute>();
-	private final Map<String, StoredProperty> properties = new HashMap<String, StoredProperty>();
+	private final Map<String, StoredAttribute<V>> attributes = new HashMap<String, StoredAttribute<V>>();
+	private final Map<String, StoredProperty<V>> properties = new HashMap<String, StoredProperty<V>>();
 
 	public StoredObject(StoredObjectType type, String id, String batchId, String label, String subtype) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
@@ -67,28 +65,28 @@ public class StoredObject {
 		return Collections.unmodifiableSet(this.attributes.keySet());
 	}
 
-	public final StoredAttribute getAttribute(String name) {
+	public final StoredAttribute<V> getAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
 		return this.attributes.get(name);
 	}
 
-	public final StoredAttribute setAttribute(StoredAttribute attribute) {
+	public final StoredAttribute<V> setAttribute(StoredAttribute<V> attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set"); }
 		return this.attributes.put(attribute.getName(), attribute);
 	}
 
-	public final StoredAttribute removeAttribute(String name) {
+	public final StoredAttribute<V> removeAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to remove"); }
 		return this.attributes.remove(name);
 	}
 
-	public final Collection<StoredAttribute> getAttributes() {
+	public final Collection<StoredAttribute<V>> getAttributes() {
 		return Collections.unmodifiableCollection(this.attributes.values());
 	}
 
-	public final void setAttributes(Collection<StoredAttribute> attributes) {
+	public final void setAttributes(Collection<StoredAttribute<V>> attributes) {
 		this.attributes.clear();
-		for (StoredAttribute att : attributes) {
+		for (StoredAttribute<V> att : attributes) {
 			setAttribute(att);
 		}
 	}
@@ -101,28 +99,28 @@ public class StoredObject {
 		return Collections.unmodifiableSet(this.properties.keySet());
 	}
 
-	public final StoredProperty getProperty(String name) {
+	public final StoredProperty<V> getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return this.properties.get(name);
 	}
 
-	public final StoredProperty setProperty(StoredProperty property) {
+	public final StoredProperty<V> setProperty(StoredProperty<V> property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
 		return this.properties.put(property.getName(), property);
 	}
 
-	public final StoredProperty removeProperty(String name) {
+	public final StoredProperty<V> removeProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to remove"); }
 		return this.properties.remove(name);
 	}
 
-	public final Collection<StoredProperty> getProperties() {
+	public final Collection<StoredProperty<V>> getProperties() {
 		return Collections.unmodifiableCollection(this.properties.values());
 	}
 
-	public final void setProperties(Collection<StoredProperty> properties) {
+	public final void setProperties(Collection<StoredProperty<V>> properties) {
 		this.attributes.clear();
-		for (StoredProperty prop : properties) {
+		for (StoredProperty<V> prop : properties) {
 			setProperty(prop);
 		}
 	}

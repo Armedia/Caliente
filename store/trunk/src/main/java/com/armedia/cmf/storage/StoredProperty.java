@@ -1,7 +1,6 @@
 package com.armedia.cmf.storage;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -10,30 +9,36 @@ import java.util.NoSuchElementException;
 
 import com.armedia.commons.utilities.Tools;
 
-public class StoredProperty implements Iterable<String> {
-
-	protected static final String[] NO_VALUES = new String[0];
+public class StoredProperty<V> implements Iterable<V> {
 
 	private final String name;
-	private final String type;
+	private final StoredDataType type;
 	private final boolean repeating;
 
-	private String singleValue = null;
-	private final List<String> values;
+	private V singleValue = null;
+	private final List<V> values;
 
-	public StoredProperty(String name, String type, String... values) {
-		this(name, type, true, Arrays.asList(values));
+	public StoredProperty(String name, StoredDataType type) {
+		this(name, type, true, (V) null);
 	}
 
-	public StoredProperty(String name, String type, boolean repeating, String... values) {
-		this(name, type, repeating, Arrays.asList(values));
+	public StoredProperty(String name, StoredDataType type, boolean repeating) {
+		this(name, type, repeating, (V) null);
 	}
 
-	public StoredProperty(String name, String type, Collection<String> values) {
+	public StoredProperty(String name, StoredDataType type, V value) {
+		this(name, type, false, value);
+	}
+
+	public StoredProperty(String name, StoredDataType type, boolean repeating, V value) {
+		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
+	}
+
+	public StoredProperty(String name, StoredDataType type, Collection<V> values) {
 		this(name, type, true, values);
 	}
 
-	public StoredProperty(String name, String type, boolean repeating, Collection<String> values) {
+	public StoredProperty(String name, StoredDataType type, boolean repeating, Collection<V> values) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
 		if (values == null) {
@@ -43,7 +48,7 @@ public class StoredProperty implements Iterable<String> {
 		this.type = type;
 		final int valueCount = values.size();
 		this.repeating = repeating;
-		this.values = new ArrayList<String>(valueCount);
+		this.values = new ArrayList<V>(valueCount);
 		setValues(values);
 	}
 
@@ -65,7 +70,7 @@ public class StoredProperty implements Iterable<String> {
 	 *
 	 * @return the type associated to this instance.
 	 */
-	public final String getType() {
+	public final StoredDataType getType() {
 		return this.type;
 	}
 
@@ -119,22 +124,6 @@ public class StoredProperty implements Iterable<String> {
 
 	/**
 	 * <p>
-	 * Sets the values for this instance to match the given parameter array. If this instance is a
-	 * single-valued instance, then only the first element of the array will be stored as the single
-	 * value. If there were no elements in the array, then an empty array (of length 0) will be used
-	 * in its stead. In the case of single-valued instances, if the array is empty, then only the
-	 * {@code null}-value will be used.
-	 * </p>
-	 *
-	 * @param values
-	 *            the values to set.
-	 */
-	public final void setValues(String... values) {
-		setValues(Arrays.asList(values));
-	}
-
-	/**
-	 * <p>
 	 * Sets the values for this instance to match the given {@link Collection}. If this instance is
 	 * a single-valued instance, then only the first element of the collection will be stored as the
 	 * single value. If the collection was {@code null}, then an empty collection will be used in
@@ -145,17 +134,17 @@ public class StoredProperty implements Iterable<String> {
 	 * @param values
 	 *            the values to set.
 	 */
-	public final void setValues(Collection<String> values) {
+	public final void setValues(Collection<V> values) {
 		this.values.clear();
 		if (values == null) {
 			values = Collections.emptyList();
 		}
 		if (this.repeating) {
-			for (String value : values) {
+			for (V value : values) {
 				this.values.add(value);
 			}
 		} else {
-			String value = null;
+			V value = null;
 			if (!values.isEmpty()) {
 				value = values.iterator().next();
 			}
@@ -172,9 +161,9 @@ public class StoredProperty implements Iterable<String> {
 	 *
 	 * @return a list containing all the values in this instance
 	 */
-	public final List<String> getValues() {
+	public final List<V> getValues() {
 		if (this.repeating) { return this.values; }
-		List<String> l = new ArrayList<String>(1);
+		List<V> l = new ArrayList<V>(1);
 		l.add(this.singleValue);
 		return l;
 	}
@@ -187,7 +176,7 @@ public class StoredProperty implements Iterable<String> {
 	 *
 	 * @param value
 	 */
-	public final void addValue(String value) {
+	public final void addValue(V value) {
 		if (this.repeating) {
 			this.values.add(value);
 		} else {
@@ -203,8 +192,8 @@ public class StoredProperty implements Iterable<String> {
 	 *
 	 * @param values
 	 */
-	public final void addValues(Collection<String> values) {
-		for (String v : values) {
+	public final void addValues(Collection<V> values) {
+		for (V v : values) {
 			addValue(v);
 		}
 	}
@@ -217,7 +206,7 @@ public class StoredProperty implements Iterable<String> {
 	 * {@link #clearValue()} instead.
 	 * </p>
 	 */
-	public final void setValue(String value) {
+	public final void setValue(V value) {
 		if (this.repeating) {
 			this.values.clear();
 			this.values.add(value);
@@ -263,10 +252,10 @@ public class StoredProperty implements Iterable<String> {
 	 * @param idx
 	 * @return the removed value
 	 */
-	public final String removeValue(int idx) {
+	public final V removeValue(int idx) {
 		idx = sanitizeIndex(idx);
 		if (this.repeating) { return this.values.remove(idx); }
-		String old = this.singleValue;
+		V old = this.singleValue;
 		this.singleValue = null;
 		return old;
 	}
@@ -288,7 +277,7 @@ public class StoredProperty implements Iterable<String> {
 	 * @return the removed value
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public final String getValue(int idx) {
+	public final V getValue(int idx) {
 		idx = sanitizeIndex(idx);
 		if (this.repeating) { return this.values.get(idx); }
 		return this.singleValue;
@@ -301,7 +290,7 @@ public class StoredProperty implements Iterable<String> {
 	 *
 	 * @return the 0-th value in this element.
 	 */
-	public final String getValue() {
+	public final V getValue() {
 		return getValue(0);
 	}
 
@@ -315,7 +304,7 @@ public class StoredProperty implements Iterable<String> {
 	 * @param other
 	 * @return {@code true} if the basic typing structure matches, {@code false} otherwise
 	 */
-	public boolean isSame(StoredProperty other) {
+	public boolean isSame(StoredProperty<?> other) {
 		if (other == null) { return false; }
 		if (other == this) { return true; }
 		if (!this.name.equals(other.name)) { return false; }
@@ -324,7 +313,7 @@ public class StoredProperty implements Iterable<String> {
 		return true;
 	}
 
-	public boolean isSameValues(StoredProperty other) {
+	public boolean isSameValues(StoredProperty<?> other) {
 		if (!isSame(other)) { return false; }
 		if (!this.repeating) { return Tools.equals(this.singleValue, other.singleValue); }
 		final int valueCount = this.values.size();
@@ -344,9 +333,9 @@ public class StoredProperty implements Iterable<String> {
 	 * </p>
 	 */
 	@Override
-	public final Iterator<String> iterator() {
+	public final Iterator<V> iterator() {
 		if (this.repeating) { return this.values.iterator(); }
-		return new Iterator<String>() {
+		return new Iterator<V>() {
 			boolean retrieved = false;
 			boolean removed = false;
 
@@ -356,7 +345,7 @@ public class StoredProperty implements Iterable<String> {
 			}
 
 			@Override
-			public String next() {
+			public V next() {
 				if (this.retrieved) { throw new NoSuchElementException(); }
 				this.retrieved = true;
 				return StoredProperty.this.singleValue;
@@ -370,21 +359,6 @@ public class StoredProperty implements Iterable<String> {
 				this.removed = true;
 			}
 		};
-	}
-
-	public final String getConcatenatedString(String sep) {
-		if (sep == null) {
-			sep = "";
-		}
-		if (!this.repeating) { return this.singleValue; }
-		StringBuilder b = new StringBuilder();
-		for (String v : this.values) {
-			if ((b.length() > 0) && (sep.length() > 0)) {
-				b.append(sep);
-			}
-			b.append(v);
-		}
-		return b.toString();
 	}
 
 	@Override

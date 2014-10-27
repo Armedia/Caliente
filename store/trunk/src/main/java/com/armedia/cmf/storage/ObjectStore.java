@@ -27,67 +27,6 @@ import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
  */
 public abstract class ObjectStore {
 
-	public static interface StoredObjectHandler {
-
-		/**
-		 * <p>
-		 * Signal the beginning of a new batch, with the given ID. Returns {@code true} if the batch
-		 * should be processed, {@code false} if it should be skipped. If the batch is skipped,
-		 * Neither {@link #closeBatch(boolean)} nor {@link #handleObject(StoredObject)} will be
-		 * invoked.
-		 * </p>
-		 *
-		 * @param batchId
-		 * @return {@code true} if the batch should be processed, {@code false} if it should be
-		 *         skipped
-		 * @throws StorageException
-		 */
-		public boolean newBatch(String batchId) throws StorageException;
-
-		/**
-		 * <p>
-		 * Handle the given object instance in the context of the currently-open batch. This method
-		 * should return {@code true} if the loop is to be continued, or {@code false} if no further
-		 * attempt should be made to obtain objects.
-		 * </p>
-		 *
-		 * @param dataObject
-		 * @throws StorageException
-		 * @return {@code true} if more objects should be loaded, or {@code false} if this should be
-		 *         the last object load attempted.
-		 */
-		public boolean handleObject(StoredObject dataObject) throws StorageException;
-
-		/**
-		 * <p>
-		 * Indicate that the load attempt failed for the object with the given ID, and provides the
-		 * exception that describes the failure. It should return {@code true} if the code is
-		 * expected to continue attempting to load objects, or {@code false} if the load attempt
-		 * should be aborted.
-		 * </p>
-		 *
-		 * @param e
-		 * @return {@code true} if the load process should continue, {@code false} if it should be
-		 *         aborted.
-		 */
-		public boolean handleException(SQLException e);
-
-		/**
-		 * <p>
-		 * Close the current batch, returning {@code true} if processing should continue with the
-		 * next batch, or {@code false} otherwise.
-		 * </p>
-		 *
-		 * @param ok
-		 *            {@code true} if processing should continue with the next batch, or
-		 *            {@code false} otherwise
-		 * @return {@code true} if processing should continue with the next batch, or {@code false}
-		 *         otherwise
-		 * @throws StorageException
-		 */
-		public boolean closeBatch(boolean ok) throws StorageException;
-	}
-
 	private class Mapper extends StoredAttributeMapper {
 
 		private Mapping constructMapping(StoredObjectType type, String name, String source, String target) {
@@ -205,34 +144,37 @@ public abstract class ObjectStore {
 	protected void doInit(Map<String, String> settings) throws StorageException {
 	}
 
-	public final Long storeObject(StoredObject object) throws StorageException {
+	public final <V> Long storeObject(StoredObject<V> object, ObjectStorageTranslator<V> translator)
+		throws StorageException, StoredValueEncoderException {
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doStoreObject(object);
+			return doStoreObject(object, translator);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected abstract Long doStoreObject(StoredObject object) throws StorageException;
+	protected abstract <V> Long doStoreObject(StoredObject<V> object, ObjectStorageTranslator<V> translator)
+		throws StorageException, StoredValueEncoderException;
 
-	public final Collection<StoredObject> loadObjects(final StoredObjectType type, String... ids) throws StorageException {
+	public final <V> Collection<StoredObject<V>> loadObjects(ObjectStorageTranslator<V> translator,
+		final StoredObjectType type, String... ids) throws StorageException, StoredValueDecoderException {
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return loadObjects(type, (ids != null ? Arrays.asList(ids) : null));
+			return loadObjects(translator, type, (ids != null ? Arrays.asList(ids) : null));
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	public final Collection<StoredObject> loadObjects(final StoredObjectType type, Collection<String> ids)
-		throws StorageException {
+	public final <V> Collection<StoredObject<V>> loadObjects(ObjectStorageTranslator<V> translator,
+		final StoredObjectType type, Collection<String> ids) throws StorageException, StoredValueDecoderException {
 		getReadLock().lock();
 		try {
 			assertOpen();
-			final List<StoredObject> ret = new ArrayList<StoredObject>(ids.size());
+			final List<StoredObject<V>> ret = new ArrayList<StoredObject<V>>(ids.size());
 			Set<String> actualIds = null;
 			if (ids != null) {
 				if (ids.isEmpty()) { return ret; }
@@ -244,14 +186,14 @@ public abstract class ObjectStore {
 					actualIds.add(s);
 				}
 			}
-			loadObjects(type, actualIds, new StoredObjectHandler() {
+			loadObjects(translator, type, actualIds, new StoredObjectHandler<V>() {
 				@Override
 				public boolean newBatch(String batchId) throws StorageException {
 					return true;
 				}
 
 				@Override
-				public boolean handleObject(StoredObject dataObject) throws StorageException {
+				public boolean handleObject(StoredObject<V> dataObject) throws StorageException {
 					ret.add(dataObject);
 					return true;
 				}
@@ -272,26 +214,27 @@ public abstract class ObjectStore {
 		}
 	}
 
-	public final int loadObjects(final StoredObjectType type, StoredObjectHandler handler) throws StorageException {
-		return loadObjects(type, null, handler);
+	public final <V> int loadObjects(ObjectStorageTranslator<V> translator, final StoredObjectType type,
+		StoredObjectHandler<V> handler) throws StorageException, StoredValueDecoderException {
+		return loadObjects(translator, type, null, handler);
 	}
 
-	public final int loadObjects(final StoredObjectType type, Collection<String> ids, StoredObjectHandler handler)
-		throws StorageException {
+	public final <V> int loadObjects(ObjectStorageTranslator<V> translator, final StoredObjectType type,
+		Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException, StoredValueDecoderException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doLoadObjects(type, ids, handler);
+			return doLoadObjects(translator, type, ids, handler);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected abstract int doLoadObjects(final StoredObjectType type, Collection<String> ids, StoredObjectHandler handler)
-		throws StorageException;
+	protected abstract <V> int doLoadObjects(ObjectStorageTranslator<V> translator, StoredObjectType type,
+		Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException, StoredValueDecoderException;
 
 	public final boolean isStored(StoredObjectType type, String objectId) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
