@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -31,12 +33,18 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.ObjectStore;
+import com.armedia.cmf.storage.StorageException;
+import com.armedia.cmf.storage.StoredAttribute;
+import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.StorageException;
+import com.armedia.cmf.storage.StoredValueCodec;
+import com.armedia.cmf.storage.StoredValueDecoderException;
+import com.armedia.cmf.storage.StoredValueEncoderException;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
 
@@ -151,8 +159,7 @@ public class JdbcObjectStore extends ObjectStore {
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
 
-	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema)
-		throws StorageException {
+	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema) throws StorageException {
 		super(true);
 		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
 			"Must provide a valid DataSource instance"); }
@@ -216,7 +223,8 @@ public class JdbcObjectStore extends ObjectStore {
 		return q;
 	}
 
-	private Long storeObject(Connection c, StoredObject object) throws StorageException {
+	private <V> Long storeObject(Connection c, StoredObject<V> object, ObjectStorageTranslator<V> translator)
+		throws StorageException, StoredValueEncoderException {
 		final StoredObjectType objectType = object.getType();
 		final String objectId = object.getId();
 
@@ -271,10 +279,10 @@ public class JdbcObjectStore extends ObjectStore {
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
 			attValue[0] = objectId; // This should never change within the loop
-			for (final StoredAttribute attribute : object.getAttributes()) {
+			for (final StoredAttribute<V> attribute : object.getAttributes()) {
 				final String name = attribute.getName();
 				final boolean repeating = attribute.isRepeating();
-				final String type = attribute.getType();
+				final String type = translator.encodeValue(attribute.getType());
 
 				attData[1] = name;
 				attData[2] = attribute.getId();
@@ -294,9 +302,10 @@ public class JdbcObjectStore extends ObjectStore {
 				Object[][] values = new Object[attribute.getValueCount()][];
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				for (String value : attribute) {
+				final StoredValueCodec<V> codec = translator.getCodec(attribute.getType());
+				for (V value : attribute) {
 					attValue[2] = v;
-					attValue[3] = value;
+					attValue[3] = codec.encodeValue(value);
 					values[v] = attValue.clone();
 					attributeValueParameters.add(attValue.clone());
 					v++;
@@ -306,8 +315,8 @@ public class JdbcObjectStore extends ObjectStore {
 			// Then, the properties
 			propData[0] = objectId; // This should never change within the loop
 			for (final String name : object.getPropertyNames()) {
-				final StoredProperty property = object.getProperty(name);
-				final String type = property.getType();
+				final StoredProperty<V> property = object.getProperty(name);
+				final String type = translator.encodeValue(property.getType());
 
 				propData[1] = name;
 				propData[2] = type;
@@ -320,9 +329,10 @@ public class JdbcObjectStore extends ObjectStore {
 				Object[][] values = new Object[property.getValueCount()][];
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				for (String value : property) {
+				final StoredValueCodec<V> codec = translator.getCodec(property.getType());
+				for (V value : property) {
 					attValue[2] = v;
-					attValue[3] = value;
+					attValue[3] = codec.encodeValue(value);
 					values[v] = attValue.clone();
 					propertyValueParameters.add(attValue.clone());
 					v++;
@@ -330,8 +340,8 @@ public class JdbcObjectStore extends ObjectStore {
 			}
 
 			// Do all the inserts in a row
-			Long ret = qr.insert(c, JdbcObjectStore.INSERT_OBJECT_SQL, JdbcObjectStore.HANDLER_OBJECT_NUMBER,
-				objectId, objectType.name(), object.getSubtype(), object.getLabel(), object.getBatchId());
+			Long ret = qr.insert(c, JdbcObjectStore.INSERT_OBJECT_SQL, JdbcObjectStore.HANDLER_OBJECT_NUMBER, objectId,
+				objectType.name(), object.getSubtype(), object.getLabel(), object.getBatchId());
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_SQL, JdbcObjectStore.HANDLER_NULL,
 				attributeParameters.toArray(JdbcObjectStore.NO_PARAMS));
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
@@ -368,7 +378,8 @@ public class JdbcObjectStore extends ObjectStore {
 	}
 
 	@Override
-	protected Long doStoreObject(StoredObject object) throws StorageException {
+	protected <V> Long doStoreObject(StoredObject<V> object, ObjectStorageTranslator<V> translator)
+		throws StorageException, StoredValueEncoderException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
 		boolean ok = false;
 		Connection c = null;
@@ -377,7 +388,7 @@ public class JdbcObjectStore extends ObjectStore {
 			// First, make sure no "left behind" garbage gets committed
 			c.rollback();
 			c.setAutoCommit(false);
-			Long ret = storeObject(c, object);
+			Long ret = storeObject(c, object, translator);
 			ok = true;
 			return ret;
 		} catch (SQLException e) {
@@ -398,8 +409,8 @@ public class JdbcObjectStore extends ObjectStore {
 	}
 
 	@Override
-	protected int doLoadObjects(final StoredObjectType type, Collection<String> ids, StoredObjectHandler handler)
-		throws StorageException {
+	protected <V> int doLoadObjects(ObjectStorageTranslator<V> translator, final StoredObjectType type,
+		Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException, StoredValueDecoderException {
 		Connection objConn = null;
 		Connection attConn = null;
 
@@ -457,7 +468,7 @@ public class JdbcObjectStore extends ObjectStore {
 				int ret = 0;
 				try {
 					while (objRS.next()) {
-						final StoredObject obj;
+						final StoredObject<V> obj;
 						try {
 							final int objNum = objRS.getInt("object_number");
 							// If batching is not required, then we simply use the object number
@@ -498,7 +509,7 @@ public class JdbcObjectStore extends ObjectStore {
 									objLabel, objId));
 							}
 
-							obj = JdbcStoredObjectLoader.loadObject(objRS);
+							obj = loadObject(objRS);
 							if (this.log.isTraceEnabled()) {
 								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 							} else if (this.log.isDebugEnabled()) {
@@ -510,18 +521,18 @@ public class JdbcObjectStore extends ObjectStore {
 							attPS.setString(1, obj.getId());
 							attRS = attPS.executeQuery();
 							try {
-								JdbcStoredObjectLoader.loadAttributes(attRS, obj);
+								loadAttributes(translator, attRS, obj);
 							} finally {
 								DbUtils.closeQuietly(attRS);
 							}
 
 							valPS.clearParameters();
 							valPS.setString(1, obj.getId());
-							for (StoredAttribute att : obj.getAttributes()) {
+							for (StoredAttribute<V> att : obj.getAttributes()) {
 								valPS.setString(2, att.getName());
 								valRS = valPS.executeQuery();
 								try {
-									JdbcStoredObjectLoader.loadValues(valRS, att);
+									loadValues(translator.getCodec(att.getType()), valRS, att);
 								} finally {
 									DbUtils.closeQuietly(valRS);
 								}
@@ -531,18 +542,18 @@ public class JdbcObjectStore extends ObjectStore {
 							propPS.setString(1, obj.getId());
 							propRS = propPS.executeQuery();
 							try {
-								JdbcStoredObjectLoader.loadProperties(propRS, obj);
+								loadProperties(translator, propRS, obj);
 							} finally {
 								DbUtils.closeQuietly(propRS);
 							}
 
 							pvalPS.clearParameters();
 							pvalPS.setString(1, obj.getId());
-							for (StoredProperty prop : obj.getProperties()) {
+							for (StoredProperty<V> prop : obj.getProperties()) {
 								pvalPS.setString(2, prop.getName());
 								valRS = pvalPS.executeQuery();
 								try {
-									JdbcStoredObjectLoader.loadValues(valRS, prop);
+									loadValues(translator.getCodec(prop.getType()), valRS, prop);
 								} finally {
 									DbUtils.closeQuietly(valRS);
 								}
@@ -635,8 +646,8 @@ public class JdbcObjectStore extends ObjectStore {
 		// we're already good to go on the insert. Otherwise, we have to check for an
 		// existing, identical mapping
 		if ((deleteCount > 0)
-			|| !qr.query(c, JdbcObjectStore.FIND_EXACT_MAPPING_SQL, JdbcObjectStore.HANDLER_EXISTS, type.name(),
-				name, sourceValue, targetValue)) {
+			|| !qr.query(c, JdbcObjectStore.FIND_EXACT_MAPPING_SQL, JdbcObjectStore.HANDLER_EXISTS, type.name(), name,
+				sourceValue, targetValue)) {
 			// New mapping...so...we need to delete anything that points to this source, and
 			// anything that points to this target, since we don't accept duplicates on either
 			// column
@@ -687,8 +698,7 @@ public class JdbcObjectStore extends ObjectStore {
 				return rs.getString(1);
 			}
 		};
-		final String sql = (source ? JdbcObjectStore.FIND_TARGET_MAPPING_SQL
-			: JdbcObjectStore.FIND_SOURCE_MAPPING_SQL);
+		final String sql = (source ? JdbcObjectStore.FIND_TARGET_MAPPING_SQL : JdbcObjectStore.FIND_SOURCE_MAPPING_SQL);
 		try {
 			return qr.query(sql, h, type.name(), name, value);
 		} catch (SQLException e) {
@@ -740,8 +750,7 @@ public class JdbcObjectStore extends ObjectStore {
 			}
 			return true;
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id),
-				e);
+			throw new StorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
 		}
 	}
 
@@ -776,8 +785,8 @@ public class JdbcObjectStore extends ObjectStore {
 		try {
 			return (qr.update(c, JdbcObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
 		} catch (SQLException e) {
-			throw new StorageException(
-				String.format("Failed to mark the dependency for [%s] as traversed", objectId), e);
+			throw new StorageException(String.format("Failed to mark the dependency for [%s] as traversed", objectId),
+				e);
 		}
 	}
 
@@ -809,7 +818,8 @@ public class JdbcObjectStore extends ObjectStore {
 				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
 					@Override
 					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(StoredObjectType.class);
+						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
+						StoredObjectType.class);
 						while (rs.next()) {
 							String t = rs.getString("object_type");
 							if ((t == null) || rs.wasNull()) {
@@ -874,7 +884,8 @@ public class JdbcObjectStore extends ObjectStore {
 	@Override
 	protected Map<StoredObjectType, Set<String>> doGetAvailableMappings() {
 		final QueryRunner qr = new QueryRunner(this.dataSource);
-		final Map<StoredObjectType, Set<String>> ret = new EnumMap<StoredObjectType, Set<String>>(StoredObjectType.class);
+		final Map<StoredObjectType, Set<String>> ret = new EnumMap<StoredObjectType, Set<String>>(
+			StoredObjectType.class);
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {
@@ -984,5 +995,70 @@ public class JdbcObjectStore extends ObjectStore {
 				DbUtils.rollbackAndCloseQuietly(c);
 			}
 		}
+	}
+
+	private <V> StoredObject<V> loadObject(ResultSet rs) throws SQLException {
+		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
+		StoredObjectType type = StoredObjectType.valueOf(rs.getString("object_type"));
+		String id = rs.getString("object_id");
+		String batchId = rs.getString("batch_id");
+		String label = rs.getString("object_label");
+		String subtype = rs.getString("object_subtype");
+		return new StoredObject<V>(type, id, batchId, label, subtype);
+	}
+
+	private <V> StoredProperty<V> loadProperty(ObjectStorageTranslator<V> translator, ResultSet rs)
+		throws SQLException, StoredValueDecoderException {
+		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
+		String name = rs.getString("name");
+		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
+		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
+		return new StoredProperty<V>(name, type, repeating);
+	}
+
+	private <V> StoredAttribute<V> loadAttribute(ObjectStorageTranslator<V> translator, ResultSet rs)
+		throws SQLException, StoredValueDecoderException {
+		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
+		String name = rs.getString("name");
+		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
+		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
+		String id = rs.getString("id");
+		boolean qualifiable = rs.getBoolean("qualifiable") && !rs.wasNull();
+		int length = rs.getInt("length");
+		return new StoredAttribute<V>(name, type, id, length, repeating, qualifiable);
+	}
+
+	private <V> void loadValues(StoredValueCodec<V> codec, ResultSet rs, StoredProperty<V> property)
+		throws SQLException, StoredValueDecoderException {
+		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
+		List<V> values = new LinkedList<V>();
+		while (rs.next()) {
+			String data = rs.getString("data");
+			values.add(codec.decodeValue(data));
+			if (!property.isRepeating()) {
+				break;
+			}
+		}
+		property.setValues(values);
+	}
+
+	private <V> void loadAttributes(ObjectStorageTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
+		throws SQLException, StoredValueDecoderException {
+		List<StoredAttribute<V>> attributes = new LinkedList<StoredAttribute<V>>();
+		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
+		while (rs.next()) {
+			attributes.add(loadAttribute(translator, rs));
+		}
+		obj.setAttributes(attributes);
+	}
+
+	private <V> void loadProperties(ObjectStorageTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
+		throws SQLException, StoredValueDecoderException {
+		List<StoredProperty<V>> properties = new LinkedList<StoredProperty<V>>();
+		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
+		while (rs.next()) {
+			properties.add(loadProperty(translator, rs));
+		}
+		obj.setProperties(properties);
 	}
 }
