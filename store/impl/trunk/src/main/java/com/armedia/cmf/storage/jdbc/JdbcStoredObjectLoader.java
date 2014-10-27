@@ -5,32 +5,32 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.armedia.cmf.storage.CmsAttribute;
-import com.armedia.cmf.storage.CmsObject;
-import com.armedia.cmf.storage.CmsObjectType;
-import com.armedia.cmf.storage.CmsProperty;
+import com.armedia.cmf.storage.StoredAttribute;
+import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
 
-public class JdbcCmsObjectLoader {
+public class JdbcStoredObjectLoader {
 
-	static CmsObject loadObject(ResultSet rs) throws SQLException {
+	static StoredObject loadObject(ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		CmsObjectType type = CmsObjectType.valueOf(rs.getString("object_type"));
+		StoredObjectType type = StoredObjectType.valueOf(rs.getString("object_type"));
 		String id = rs.getString("object_id");
 		String batchId = rs.getString("batch_id");
 		String label = rs.getString("object_label");
 		String subtype = rs.getString("object_subtype");
-		return new CmsObject(type, id, batchId, label, subtype);
+		return new StoredObject(type, id, batchId, label, subtype);
 	}
 
-	static CmsProperty loadProperty(ResultSet rs) throws SQLException {
+	static StoredProperty loadProperty(ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
 		String type = rs.getString("data_type");
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
-		return new CmsProperty(name, type, repeating);
+		return new StoredProperty(name, type, repeating);
 	}
 
-	static CmsAttribute loadAttribute(ResultSet rs) throws SQLException {
+	static StoredAttribute loadAttribute(ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
 		String type = rs.getString("data_type");
@@ -38,10 +38,10 @@ public class JdbcCmsObjectLoader {
 		String id = rs.getString("id");
 		boolean qualifiable = rs.getBoolean("qualifiable") && !rs.wasNull();
 		int length = rs.getInt("length");
-		return new CmsAttribute(name, type, id, length, repeating, qualifiable);
+		return new StoredAttribute(name, type, id, length, repeating, qualifiable);
 	}
 
-	static void loadValues(ResultSet rs, CmsProperty property) throws SQLException {
+	static void loadValues(ResultSet rs, StoredProperty property) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		List<String> values = new LinkedList<String>();
 		while (rs.next()) {
@@ -53,20 +53,20 @@ public class JdbcCmsObjectLoader {
 		property.setValues(values);
 	}
 
-	static void loadAttributes(ResultSet rs, CmsObject obj) throws SQLException {
-		List<CmsAttribute> attributes = new LinkedList<CmsAttribute>();
+	static void loadAttributes(ResultSet rs, StoredObject obj) throws SQLException {
+		List<StoredAttribute> attributes = new LinkedList<StoredAttribute>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
-			attributes.add(JdbcCmsObjectLoader.loadAttribute(rs));
+			attributes.add(JdbcStoredObjectLoader.loadAttribute(rs));
 		}
 		obj.setAttributes(attributes);
 	}
 
-	static void loadProperties(ResultSet rs, CmsObject obj) throws SQLException {
-		List<CmsProperty> properties = new LinkedList<CmsProperty>();
+	static void loadProperties(ResultSet rs, StoredObject obj) throws SQLException {
+		List<StoredProperty> properties = new LinkedList<StoredProperty>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
-			properties.add(JdbcCmsObjectLoader.loadProperty(rs));
+			properties.add(JdbcStoredObjectLoader.loadProperty(rs));
 		}
 		obj.setProperties(properties);
 	}

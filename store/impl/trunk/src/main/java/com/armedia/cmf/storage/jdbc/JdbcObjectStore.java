@@ -31,12 +31,12 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
-import com.armedia.cmf.storage.CmsAttribute;
-import com.armedia.cmf.storage.CmsObject;
-import com.armedia.cmf.storage.CmsObjectStore;
-import com.armedia.cmf.storage.CmsObjectType;
-import com.armedia.cmf.storage.CmsProperty;
-import com.armedia.cmf.storage.CmsStorageException;
+import com.armedia.cmf.storage.StoredAttribute;
+import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.ObjectStore;
+import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.StorageException;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
 
@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class JdbcCmsObjectStore extends CmsObjectStore {
+public class JdbcObjectStore extends ObjectStore {
 
 	private static final Object[][] NO_PARAMS = new Object[0][0];
 
@@ -151,8 +151,8 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
 
-	public JdbcCmsObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema)
-		throws CmsStorageException {
+	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema)
+		throws StorageException {
 		super(true);
 		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
 			"Must provide a valid DataSource instance"); }
@@ -164,7 +164,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to get a SQL Connection to validate the schema", e);
+			throw new StorageException("Failed to get a SQL Connection to validate the schema", e);
 		}
 
 		boolean ok = false;
@@ -178,12 +178,12 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			}
 			ok = true;
 		} catch (DatabaseException e) {
-			throw new CmsStorageException("Failed to find a supported database for the given connection", e);
+			throw new StorageException("Failed to find a supported database for the given connection", e);
 		} catch (LiquibaseException e) {
 			if (updateSchema) {
-				throw new CmsStorageException("Failed to generate/update the SQL schema", e);
+				throw new StorageException("Failed to generate/update the SQL schema", e);
 			} else {
-				throw new CmsStorageException("The SQL schema is of the wrong version or structure", e);
+				throw new StorageException("The SQL schema is of the wrong version or structure", e);
 			}
 		} finally {
 			finalizeTransaction(c, ok);
@@ -208,27 +208,27 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	private static final ThreadLocal<QueryRunner> QUERY_RUNNER = new ThreadLocal<QueryRunner>();
 
 	private static QueryRunner getQueryRunner() {
-		QueryRunner q = JdbcCmsObjectStore.QUERY_RUNNER.get();
+		QueryRunner q = JdbcObjectStore.QUERY_RUNNER.get();
 		if (q == null) {
 			q = new QueryRunner();
-			JdbcCmsObjectStore.QUERY_RUNNER.set(q);
+			JdbcObjectStore.QUERY_RUNNER.set(q);
 		}
 		return q;
 	}
 
-	private Long storeObject(Connection c, CmsObject object) throws CmsStorageException {
-		final CmsObjectType objectType = object.getType();
+	private Long storeObject(Connection c, StoredObject object) throws StorageException {
+		final StoredObjectType objectType = object.getType();
 		final String objectId = object.getId();
 
 		// If it's already serialized, we skip it
 		boolean marked = false;
 		try {
 			marked = markDependency(c, objectType, objectId);
-		} catch (CmsStorageException e) {
+		} catch (StorageException e) {
 			// Check again...maybe it was a PK violation...
 			marked = markDependency(c, objectType, objectId);
 			// It wasn't... raise an error
-			if (!marked) { throw new CmsStorageException(String.format(
+			if (!marked) { throw new StorageException(String.format(
 				"Exception caught while trying to create the mutex lock for [%s::%s]", objectType.name(), objectId), e); }
 		}
 
@@ -253,7 +253,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		PreparedStatement lockPS = null;
 		ResultSet lockRS = null;
 		try {
-			QueryRunner qr = JdbcCmsObjectStore.getQueryRunner();
+			QueryRunner qr = JdbcObjectStore.getQueryRunner();
 			if (doIsStored(c, objectType, objectId)) {
 				// Object is already there, so do nothing
 				return null;
@@ -271,7 +271,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
 			attValue[0] = objectId; // This should never change within the loop
-			for (final CmsAttribute attribute : object.getAttributes()) {
+			for (final StoredAttribute attribute : object.getAttributes()) {
 				final String name = attribute.getName();
 				final boolean repeating = attribute.isRepeating();
 				final String type = attribute.getType();
@@ -306,7 +306,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			// Then, the properties
 			propData[0] = objectId; // This should never change within the loop
 			for (final String name : object.getPropertyNames()) {
-				final CmsProperty property = object.getProperty(name);
+				final StoredProperty property = object.getProperty(name);
 				final String type = property.getType();
 
 				propData[1] = name;
@@ -330,16 +330,16 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			}
 
 			// Do all the inserts in a row
-			Long ret = qr.insert(c, JdbcCmsObjectStore.INSERT_OBJECT_SQL, JdbcCmsObjectStore.HANDLER_OBJECT_NUMBER,
+			Long ret = qr.insert(c, JdbcObjectStore.INSERT_OBJECT_SQL, JdbcObjectStore.HANDLER_OBJECT_NUMBER,
 				objectId, objectType.name(), object.getSubtype(), object.getLabel(), object.getBatchId());
-			qr.insertBatch(c, JdbcCmsObjectStore.INSERT_ATTRIBUTE_SQL, JdbcCmsObjectStore.HANDLER_NULL,
-				attributeParameters.toArray(JdbcCmsObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcCmsObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, JdbcCmsObjectStore.HANDLER_NULL,
-				attributeValueParameters.toArray(JdbcCmsObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcCmsObjectStore.INSERT_PROPERTY_SQL, JdbcCmsObjectStore.HANDLER_NULL,
-				propertyParameters.toArray(JdbcCmsObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcCmsObjectStore.INSERT_PROPERTY_VALUE_SQL, JdbcCmsObjectStore.HANDLER_NULL,
-				propertyValueParameters.toArray(JdbcCmsObjectStore.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_SQL, JdbcObjectStore.HANDLER_NULL,
+				attributeParameters.toArray(JdbcObjectStore.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
+				attributeValueParameters.toArray(JdbcObjectStore.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_PROPERTY_SQL, JdbcObjectStore.HANDLER_NULL,
+				propertyParameters.toArray(JdbcObjectStore.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_PROPERTY_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
+				propertyValueParameters.toArray(JdbcObjectStore.NO_PARAMS));
 			// lockRS.updateBoolean(1, true);
 			// lockRS.updateRow();
 			if (this.log.isDebugEnabled()) {
@@ -368,7 +368,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	@Override
-	protected Long doStoreObject(CmsObject object) throws CmsStorageException {
+	protected Long doStoreObject(StoredObject object) throws StorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
 		boolean ok = false;
 		Connection c = null;
@@ -381,7 +381,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			ok = true;
 			return ret;
 		} catch (SQLException e) {
-			throw new CmsStorageException(String.format("Failed to serialize %s", object), e);
+			throw new StorageException(String.format("Failed to serialize %s", object), e);
 		} finally {
 			if (ok) {
 				if (this.log.isDebugEnabled()) {
@@ -398,8 +398,8 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	@Override
-	protected int doLoadObjects(final CmsObjectType type, Collection<String> ids, ObjectHandler handler)
-		throws CmsStorageException {
+	protected int doLoadObjects(final StoredObjectType type, Collection<String> ids, StoredObjectHandler handler)
+		throws StorageException {
 		Connection objConn = null;
 		Connection attConn = null;
 
@@ -419,21 +419,21 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 				boolean limitByIDs = false;
 				boolean useSqlArray = false;
 				if (ids == null) {
-					objPS = objConn.prepareStatement(JdbcCmsObjectStore.LOAD_OBJECTS_SQL);
+					objPS = objConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_SQL);
 				} else {
 					limitByIDs = true;
 					try {
-						objPS = objConn.prepareStatement(JdbcCmsObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
+						objPS = objConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
 						useSqlArray = true;
 					} catch (SQLException e) {
-						objPS = objConn.prepareStatement(JdbcCmsObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
+						objPS = objConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
 					}
 				}
 
-				attPS = attConn.prepareStatement(JdbcCmsObjectStore.LOAD_ATTRIBUTES_SQL);
-				valPS = attConn.prepareStatement(JdbcCmsObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
-				propPS = attConn.prepareStatement(JdbcCmsObjectStore.LOAD_PROPERTIES_SQL);
-				pvalPS = attConn.prepareStatement(JdbcCmsObjectStore.LOAD_PROPERTY_VALUES_SQL);
+				attPS = attConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTES_SQL);
+				valPS = attConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
+				propPS = attConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTIES_SQL);
+				pvalPS = attConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTY_VALUES_SQL);
 
 				ResultSet objRS = null;
 				ResultSet attRS = null;
@@ -457,7 +457,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 				int ret = 0;
 				try {
 					while (objRS.next()) {
-						final CmsObject obj;
+						final StoredObject obj;
 						try {
 							final int objNum = objRS.getInt("object_number");
 							// If batching is not required, then we simply use the object number
@@ -498,7 +498,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 									objLabel, objId));
 							}
 
-							obj = JdbcCmsObjectLoader.loadObject(objRS);
+							obj = JdbcStoredObjectLoader.loadObject(objRS);
 							if (this.log.isTraceEnabled()) {
 								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 							} else if (this.log.isDebugEnabled()) {
@@ -510,18 +510,18 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 							attPS.setString(1, obj.getId());
 							attRS = attPS.executeQuery();
 							try {
-								JdbcCmsObjectLoader.loadAttributes(attRS, obj);
+								JdbcStoredObjectLoader.loadAttributes(attRS, obj);
 							} finally {
 								DbUtils.closeQuietly(attRS);
 							}
 
 							valPS.clearParameters();
 							valPS.setString(1, obj.getId());
-							for (CmsAttribute att : obj.getAttributes()) {
+							for (StoredAttribute att : obj.getAttributes()) {
 								valPS.setString(2, att.getName());
 								valRS = valPS.executeQuery();
 								try {
-									JdbcCmsObjectLoader.loadValues(valRS, att);
+									JdbcStoredObjectLoader.loadValues(valRS, att);
 								} finally {
 									DbUtils.closeQuietly(valRS);
 								}
@@ -531,24 +531,24 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 							propPS.setString(1, obj.getId());
 							propRS = propPS.executeQuery();
 							try {
-								JdbcCmsObjectLoader.loadProperties(propRS, obj);
+								JdbcStoredObjectLoader.loadProperties(propRS, obj);
 							} finally {
 								DbUtils.closeQuietly(propRS);
 							}
 
 							pvalPS.clearParameters();
 							pvalPS.setString(1, obj.getId());
-							for (CmsProperty prop : obj.getProperties()) {
+							for (StoredProperty prop : obj.getProperties()) {
 								pvalPS.setString(2, prop.getName());
 								valRS = pvalPS.executeQuery();
 								try {
-									JdbcCmsObjectLoader.loadValues(valRS, prop);
+									JdbcStoredObjectLoader.loadValues(valRS, prop);
 								} finally {
 									DbUtils.closeQuietly(valRS);
 								}
 							}
 						} catch (SQLException e) {
-							if (!handler.handleException(e)) { throw new CmsStorageException(
+							if (!handler.handleException(e)) { throw new StorageException(
 								"Exception raised while loading objects - ObjectHandler did not handle the exception",
 								e); }
 							continue;
@@ -573,7 +573,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 					if (currentBatch != null) {
 						try {
 							handler.closeBatch(ok);
-						} catch (CmsStorageException e) {
+						} catch (StorageException e) {
 							this.log.error(String
 								.format("Exception caught attempting to close the pending batch [%s] (ok=%s)",
 									currentBatch, ok), e);
@@ -589,7 +589,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 				DbUtils.closeQuietly(objPS);
 			}
 		} catch (SQLException e) {
-			throw new CmsStorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
+			throw new StorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
 				type), e);
 		} finally {
 			DbUtils.rollbackAndCloseQuietly(attConn);
@@ -603,7 +603,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	 * </p>
 	 *
 	 */
-	protected void doCreateMappedValue(Connection c, CmsObjectType type, String name, String sourceValue,
+	protected void doCreateMappedValue(Connection c, StoredObjectType type, String name, String sourceValue,
 		String targetValue) throws SQLException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
@@ -613,8 +613,8 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 
 		if ((targetValue == null) || (sourceValue == null)) {
 			// Delete instead
-			final String sql = (targetValue == null ? JdbcCmsObjectStore.DELETE_TARGET_MAPPING_SQL
-				: JdbcCmsObjectStore.DELETE_SOURCE_MAPPING_SQL);
+			final String sql = (targetValue == null ? JdbcObjectStore.DELETE_TARGET_MAPPING_SQL
+				: JdbcObjectStore.DELETE_SOURCE_MAPPING_SQL);
 			final String refValue = (targetValue == null ? sourceValue : targetValue);
 			int count = qr.update(c, sql, type.name(), name, refValue);
 			if (count > 0) {
@@ -626,7 +626,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 
 		// This delete will clear out any potential conflicts in one fell swoop, while also allowing
 		// us to potentially avoid re-creating mappings that are already there.
-		int deleteCount = qr.update(c, JdbcCmsObjectStore.DELETE_BOTH_MAPPINGS_SQL, type.name(), name, sourceValue,
+		int deleteCount = qr.update(c, JdbcObjectStore.DELETE_BOTH_MAPPINGS_SQL, type.name(), name, sourceValue,
 			targetValue, sourceValue, targetValue);
 
 		// First, check to see if the exact mapping we're looking to create already exists...
@@ -635,14 +635,14 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		// we're already good to go on the insert. Otherwise, we have to check for an
 		// existing, identical mapping
 		if ((deleteCount > 0)
-			|| !qr.query(c, JdbcCmsObjectStore.FIND_EXACT_MAPPING_SQL, JdbcCmsObjectStore.HANDLER_EXISTS, type.name(),
+			|| !qr.query(c, JdbcObjectStore.FIND_EXACT_MAPPING_SQL, JdbcObjectStore.HANDLER_EXISTS, type.name(),
 				name, sourceValue, targetValue)) {
 			// New mapping...so...we need to delete anything that points to this source, and
 			// anything that points to this target, since we don't accept duplicates on either
 			// column
 
 			// Now, add the new mapping...
-			qr.insert(c, JdbcCmsObjectStore.INSERT_MAPPING_SQL, JdbcCmsObjectStore.HANDLER_NULL, type.name(), name,
+			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
 				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
@@ -653,7 +653,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	@Override
-	protected void doCreateMappedValue(CmsObjectType type, String name, String sourceValue, String targetValue) {
+	protected void doCreateMappedValue(StoredObjectType type, String name, String sourceValue, String targetValue) {
 		boolean ok = false;
 		Connection c = null;
 		try {
@@ -674,8 +674,8 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	@Override
-	protected String doGetMappedValue(boolean source, CmsObjectType type, String name, String value)
-		throws CmsStorageException {
+	protected String doGetMappedValue(boolean source, StoredObjectType type, String name, String value)
+		throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to search against"); }
@@ -687,44 +687,44 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 				return rs.getString(1);
 			}
 		};
-		final String sql = (source ? JdbcCmsObjectStore.FIND_TARGET_MAPPING_SQL
-			: JdbcCmsObjectStore.FIND_SOURCE_MAPPING_SQL);
+		final String sql = (source ? JdbcObjectStore.FIND_TARGET_MAPPING_SQL
+			: JdbcObjectStore.FIND_SOURCE_MAPPING_SQL);
 		try {
 			return qr.query(sql, h, type.name(), name, value);
 		} catch (SQLException e) {
-			throw new CmsStorageException(String.format("Failed to retrieve the %s mapping for [%s::%s(%s)]",
+			throw new StorageException(String.format("Failed to retrieve the %s mapping for [%s::%s(%s)]",
 				source ? "source" : "target", type, name, value), e);
 		}
 	}
 
-	private boolean doIsStored(Connection c, CmsObjectType type, String objectId) throws SQLException {
-		return JdbcCmsObjectStore.getQueryRunner().query(c, JdbcCmsObjectStore.CHECK_IF_OBJECT_EXISTS_SQL,
-			JdbcCmsObjectStore.HANDLER_EXISTS, objectId, type.name());
+	private boolean doIsStored(Connection c, StoredObjectType type, String objectId) throws SQLException {
+		return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.CHECK_IF_OBJECT_EXISTS_SQL,
+			JdbcObjectStore.HANDLER_EXISTS, objectId, type.name());
 	}
 
 	@Override
-	protected boolean doIsStored(CmsObjectType type, String objectId) throws CmsStorageException {
+	protected boolean doIsStored(StoredObjectType type, String objectId) throws StorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to connect to the object store's database", e);
+			throw new StorageException("Failed to connect to the object store's database", e);
 		}
 		try {
 			c.setAutoCommit(false);
 			return doIsStored(c, type, objectId);
 		} catch (SQLException e) {
-			throw new CmsStorageException(String.format("Failed to check whether object [%s] was already serialized",
+			throw new StorageException(String.format("Failed to check whether object [%s] was already serialized",
 				objectId), e);
 		} finally {
 			DbUtils.rollbackAndCloseQuietly(c);
 		}
 	}
 
-	private boolean markDependency(Connection c, CmsObjectType type, String id) throws CmsStorageException {
-		QueryRunner qr = JdbcCmsObjectStore.getQueryRunner();
+	private boolean markDependency(Connection c, StoredObjectType type, String id) throws StorageException {
+		QueryRunner qr = JdbcObjectStore.getQueryRunner();
 		try {
-			if (qr.query(c, JdbcCmsObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, JdbcCmsObjectStore.HANDLER_EXISTS, id)) {
+			if (qr.query(c, JdbcObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, JdbcObjectStore.HANDLER_EXISTS, id)) {
 				// Duplicate dependency...we skip it
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
@@ -734,25 +734,25 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("PERSISTING DEPENDENCY [%s::%s]", type.name(), id));
 			}
-			qr.insert(c, JdbcCmsObjectStore.INSERT_EXPORT_PLAN_SQL, JdbcCmsObjectStore.HANDLER_NULL, type.name(), id);
+			qr.insert(c, JdbcObjectStore.INSERT_EXPORT_PLAN_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), id);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
 			}
 			return true;
 		} catch (SQLException e) {
-			throw new CmsStorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id),
+			throw new StorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id),
 				e);
 		}
 	}
 
-	protected boolean markDependency(CmsObjectType type, String id) throws CmsStorageException {
+	protected boolean markDependency(StoredObjectType type, String id) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to persist a dependency"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide an ID for the dependency to be persisted"); }
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to connect to the object store's database", e);
+			throw new StorageException("Failed to connect to the object store's database", e);
 		}
 		boolean ok = false;
 		try {
@@ -761,7 +761,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			ok = true;
 			return ret;
 		} catch (SQLException e) {
-			throw new CmsStorageException(String.format("Failed to register the dependency [%s::%s]", type, id), e);
+			throw new StorageException(String.format("Failed to register the dependency [%s::%s]", type, id), e);
 		} finally {
 			if (ok) {
 				DbUtils.commitAndCloseQuietly(c);
@@ -771,22 +771,22 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		}
 	}
 
-	private boolean markTraversed(Connection c, String objectId) throws CmsStorageException {
-		QueryRunner qr = JdbcCmsObjectStore.getQueryRunner();
+	private boolean markTraversed(Connection c, String objectId) throws StorageException {
+		QueryRunner qr = JdbcObjectStore.getQueryRunner();
 		try {
-			return (qr.update(c, JdbcCmsObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
+			return (qr.update(c, JdbcObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
 		} catch (SQLException e) {
-			throw new CmsStorageException(
+			throw new StorageException(
 				String.format("Failed to mark the dependency for [%s] as traversed", objectId), e);
 		}
 	}
 
-	public boolean markTraversed(String objectId) throws CmsStorageException {
+	public boolean markTraversed(String objectId) throws StorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to connect to the object store's database", e);
+			throw new StorageException("Failed to connect to the object store's database", e);
 		}
 		boolean ok = false;
 		try {
@@ -802,24 +802,24 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		}
 	}
 
-	private Map<CmsObjectType, Integer> getStoredObjectTypes(Connection c) throws CmsStorageException {
+	private Map<StoredObjectType, Integer> getStoredObjectTypes(Connection c) throws StorageException {
 		QueryRunner qr = new QueryRunner();
 		try {
-			return qr.query(c, JdbcCmsObjectStore.LOAD_OBJECT_TYPES_SQL,
-				new ResultSetHandler<Map<CmsObjectType, Integer>>() {
+			return qr.query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
+				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
 					@Override
-					public Map<CmsObjectType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<CmsObjectType, Integer> ret = new EnumMap<CmsObjectType, Integer>(CmsObjectType.class);
+					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(StoredObjectType.class);
 						while (rs.next()) {
 							String t = rs.getString("object_type");
 							if ((t == null) || rs.wasNull()) {
-								JdbcCmsObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
 								continue;
 							}
 							try {
-								ret.put(CmsObjectType.valueOf(t), rs.getInt("total"));
+								ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
 							} catch (IllegalArgumentException e) {
-								JdbcCmsObjectStore.this.log.warn(String.format(
+								JdbcObjectStore.this.log.warn(String.format(
 									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
 								continue;
 							}
@@ -828,17 +828,17 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 					}
 				});
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to retrieve the stored object types", e);
+			throw new StorageException("Failed to retrieve the stored object types", e);
 		}
 	}
 
 	@Override
-	protected Map<CmsObjectType, Integer> doGetStoredObjectTypes() throws CmsStorageException {
+	protected Map<StoredObjectType, Integer> doGetStoredObjectTypes() throws StorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to connect to the object store's database", e);
+			throw new StorageException("Failed to connect to the object store's database", e);
 		}
 		try {
 			return getStoredObjectTypes(c);
@@ -847,22 +847,22 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 		}
 	}
 
-	private int clearAttributeMappings(Connection c) throws CmsStorageException {
+	private int clearAttributeMappings(Connection c) throws StorageException {
 		QueryRunner qr = new QueryRunner();
 		try {
-			return qr.update(c, JdbcCmsObjectStore.CLEAR_ALL_MAPPINGS_SQL);
+			return qr.update(c, JdbcObjectStore.CLEAR_ALL_MAPPINGS_SQL);
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to clear all the stored mappings", e);
+			throw new StorageException("Failed to clear all the stored mappings", e);
 		}
 	}
 
 	@Override
-	protected int doClearAttributeMappings() throws CmsStorageException {
+	protected int doClearAttributeMappings() throws StorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to connect to the object store's database", e);
+			throw new StorageException("Failed to connect to the object store's database", e);
 		}
 		try {
 			return clearAttributeMappings(c);
@@ -872,16 +872,16 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	@Override
-	protected Map<CmsObjectType, Set<String>> doGetAvailableMappings() {
+	protected Map<StoredObjectType, Set<String>> doGetAvailableMappings() {
 		final QueryRunner qr = new QueryRunner(this.dataSource);
-		final Map<CmsObjectType, Set<String>> ret = new EnumMap<CmsObjectType, Set<String>>(CmsObjectType.class);
+		final Map<StoredObjectType, Set<String>> ret = new EnumMap<StoredObjectType, Set<String>>(StoredObjectType.class);
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {
-				CmsObjectType currentType = null;
+				StoredObjectType currentType = null;
 				Set<String> names = null;
 				while (rs.next()) {
-					final CmsObjectType newType = CmsObjectType.valueOf(rs.getString("object_type"));
+					final StoredObjectType newType = StoredObjectType.valueOf(rs.getString("object_type"));
 					if (newType != currentType) {
 						names = new TreeSet<String>();
 						ret.put(newType, names);
@@ -893,7 +893,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			}
 		};
 		try {
-			qr.query(JdbcCmsObjectStore.LOAD_ALL_MAPPINGS_SQL, h);
+			qr.query(JdbcObjectStore.LOAD_ALL_MAPPINGS_SQL, h);
 		} catch (SQLException e) {
 			throw new RuntimeException("Failed to retrieve the declared mapping types and names", e);
 		}
@@ -901,7 +901,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	@Override
-	protected Set<String> doGetAvailableMappings(CmsObjectType type) {
+	protected Set<String> doGetAvailableMappings(StoredObjectType type) {
 		final QueryRunner qr = new QueryRunner(this.dataSource);
 		final Set<String> ret = new TreeSet<String>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
@@ -914,7 +914,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			}
 		};
 		try {
-			qr.query(JdbcCmsObjectStore.LOAD_TYPE_MAPPINGS_SQL, h, type.name());
+			qr.query(JdbcObjectStore.LOAD_TYPE_MAPPINGS_SQL, h, type.name());
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to retrieve the declared mapping names for type [%s]",
 				type), e);
@@ -923,7 +923,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	@Override
-	protected Map<String, String> doGetMappings(CmsObjectType type, String name) {
+	protected Map<String, String> doGetMappings(StoredObjectType type, String name) {
 		final QueryRunner qr = new QueryRunner(this.dataSource);
 		final Map<String, String> ret = new HashMap<String, String>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
@@ -936,7 +936,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 			}
 		};
 		try {
-			qr.query(JdbcCmsObjectStore.LOAD_TYPE_NAME_MAPPINGS_SQL, h, type.name(), name);
+			qr.query(JdbcObjectStore.LOAD_TYPE_NAME_MAPPINGS_SQL, h, type.name(), name);
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to retrieve the declared mappings for [%s::%s]", type,
 				name), e);
@@ -945,12 +945,12 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 	}
 
 	@Override
-	protected void doClearAllObjects() throws CmsStorageException {
+	protected void doClearAllObjects() throws StorageException {
 		Connection c = null;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new CmsStorageException("Failed to get a SQL Connection to validate the schema", e);
+			throw new StorageException("Failed to get a SQL Connection to validate the schema", e);
 		}
 		boolean ok = false;
 		try {
@@ -976,7 +976,7 @@ public class JdbcCmsObjectStore extends CmsObjectStore {
 				DbUtils.closeQuietly(rs);
 			}
 		} catch (SQLException e) {
-			throw new CmsStorageException("SQLException caught while removing all objects", e);
+			throw new StorageException("SQLException caught while removing all objects", e);
 		} finally {
 			if (ok) {
 				DbUtils.commitAndCloseQuietly(c);
