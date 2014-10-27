@@ -19,13 +19,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.storage.CmsStoredAttributeMapper.Mapping;
+import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class CmsObjectStore {
+public abstract class ObjectStore {
 
 	public static interface StoredObjectHandler {
 
@@ -33,16 +33,16 @@ public abstract class CmsObjectStore {
 		 * <p>
 		 * Signal the beginning of a new batch, with the given ID. Returns {@code true} if the batch
 		 * should be processed, {@code false} if it should be skipped. If the batch is skipped,
-		 * Neither {@link #closeBatch(boolean)} nor {@link #handleObject(CmsStoredObject)} will be
+		 * Neither {@link #closeBatch(boolean)} nor {@link #handleObject(StoredObject)} will be
 		 * invoked.
 		 * </p>
 		 *
 		 * @param batchId
 		 * @return {@code true} if the batch should be processed, {@code false} if it should be
 		 *         skipped
-		 * @throws CmsStorageException
+		 * @throws StorageException
 		 */
-		public boolean newBatch(String batchId) throws CmsStorageException;
+		public boolean newBatch(String batchId) throws StorageException;
 
 		/**
 		 * <p>
@@ -52,11 +52,11 @@ public abstract class CmsObjectStore {
 		 * </p>
 		 *
 		 * @param dataObject
-		 * @throws CmsStorageException
+		 * @throws StorageException
 		 * @return {@code true} if more objects should be loaded, or {@code false} if this should be
 		 *         the last object load attempted.
 		 */
-		public boolean handleObject(CmsStoredObject dataObject) throws CmsStorageException;
+		public boolean handleObject(StoredObject dataObject) throws StorageException;
 
 		/**
 		 * <p>
@@ -83,22 +83,22 @@ public abstract class CmsObjectStore {
 		 *            {@code false} otherwise
 		 * @return {@code true} if processing should continue with the next batch, or {@code false}
 		 *         otherwise
-		 * @throws CmsStorageException
+		 * @throws StorageException
 		 */
-		public boolean closeBatch(boolean ok) throws CmsStorageException;
+		public boolean closeBatch(boolean ok) throws StorageException;
 	}
 
-	private class Mapper extends CmsStoredAttributeMapper {
+	private class Mapper extends StoredAttributeMapper {
 
-		private Mapping constructMapping(CmsStoredObjectType type, String name, String source, String target) {
+		private Mapping constructMapping(StoredObjectType type, String name, String source, String target) {
 			return super.newMapping(type, name, source, target);
 		}
 
 		@Override
-		protected Mapping createMapping(CmsStoredObjectType type, String name, String source, String target) {
+		protected Mapping createMapping(StoredObjectType type, String name, String source, String target) {
 			try {
-				CmsObjectStore.this.createMapping(type, name, source, target);
-			} catch (CmsStorageException e) {
+				ObjectStore.this.createMapping(type, name, source, target);
+			} catch (StorageException e) {
 				throw new RuntimeException(String.format("Failed to create the mapping for [%s::%s(%s->%s)]", type,
 					name, source, target), e);
 			}
@@ -106,49 +106,49 @@ public abstract class CmsObjectStore {
 		}
 
 		@Override
-		public Mapping getTargetMapping(CmsStoredObjectType type, String name, String source) {
+		public Mapping getTargetMapping(StoredObjectType type, String name, String source) {
 			try {
-				return CmsObjectStore.this.getTargetMapping(type, name, source);
-			} catch (CmsStorageException e) {
+				return ObjectStore.this.getTargetMapping(type, name, source);
+			} catch (StorageException e) {
 				throw new RuntimeException(String.format("Failed to retrieve the target mapping for [%s::%s(%s->?)]",
 					type, name, source), e);
 			}
 		}
 
 		@Override
-		public Mapping getSourceMapping(CmsStoredObjectType type, String name, String target) {
+		public Mapping getSourceMapping(StoredObjectType type, String name, String target) {
 			try {
-				return CmsObjectStore.this.getSourceMapping(type, name, target);
-			} catch (CmsStorageException e) {
+				return ObjectStore.this.getSourceMapping(type, name, target);
+			} catch (StorageException e) {
 				throw new RuntimeException(String.format("Failed to create the source mapping for [%s::%s(?->%s)]",
 					type, name, target), e);
 			}
 		}
 
 		@Override
-		public Map<CmsStoredObjectType, Set<String>> getAvailableMappings() {
+		public Map<StoredObjectType, Set<String>> getAvailableMappings() {
 			try {
-				return CmsObjectStore.this.getAvailableMappings();
-			} catch (CmsStorageException e) {
+				return ObjectStore.this.getAvailableMappings();
+			} catch (StorageException e) {
 				throw new RuntimeException("Failed to retrieve the mapping names in the system", e);
 			}
 		}
 
 		@Override
-		public Set<String> getAvailableMappings(CmsStoredObjectType type) {
+		public Set<String> getAvailableMappings(StoredObjectType type) {
 			try {
-				return CmsObjectStore.this.getAvailableMappings(type);
-			} catch (CmsStorageException e) {
+				return ObjectStore.this.getAvailableMappings(type);
+			} catch (StorageException e) {
 				throw new RuntimeException(String.format("Failed to retrieve the mapping names in the system for [%s]",
 					type), e);
 			}
 		}
 
 		@Override
-		public Map<String, String> getMappings(CmsStoredObjectType type, String name) {
+		public Map<String, String> getMappings(StoredObjectType type, String name) {
 			try {
-				return CmsObjectStore.this.getMappings(type, name);
-			} catch (CmsStorageException e) {
+				return ObjectStore.this.getMappings(type, name);
+			} catch (StorageException e) {
 				throw new RuntimeException(String.format("Failed to retrieves the mappings in the system for [%s::%s]",
 					type, name), e);
 			}
@@ -160,11 +160,11 @@ public abstract class CmsObjectStore {
 	private final ReadWriteLock openLock = new ReentrantReadWriteLock();
 	private boolean open = false;
 
-	protected CmsObjectStore() throws CmsStorageException {
+	protected ObjectStore() throws StorageException {
 		this(false);
 	}
 
-	protected CmsObjectStore(boolean openState) throws CmsStorageException {
+	protected ObjectStore(boolean openState) throws StorageException {
 		this.open = openState;
 	}
 
@@ -185,11 +185,11 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected final void assertOpen() throws CmsStorageException {
-		if (!isOpen()) { throw new CmsStorageException("This objectstore is not open"); }
+	protected final void assertOpen() throws StorageException {
+		if (!isOpen()) { throw new StorageException("This objectstore is not open"); }
 	}
 
-	public final boolean init(Map<String, String> settings) throws CmsStorageException {
+	public final boolean init(Map<String, String> settings) throws StorageException {
 		getWriteLock().lock();
 		try {
 			// Do nothing - this is for subclasses to override
@@ -202,10 +202,10 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected void doInit(Map<String, String> settings) throws CmsStorageException {
+	protected void doInit(Map<String, String> settings) throws StorageException {
 	}
 
-	public final Long storeObject(CmsStoredObject object) throws CmsStorageException {
+	public final Long storeObject(StoredObject object) throws StorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -215,9 +215,9 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract Long doStoreObject(CmsStoredObject object) throws CmsStorageException;
+	protected abstract Long doStoreObject(StoredObject object) throws StorageException;
 
-	public final Collection<CmsStoredObject> loadObjects(final CmsStoredObjectType type, String... ids) throws CmsStorageException {
+	public final Collection<StoredObject> loadObjects(final StoredObjectType type, String... ids) throws StorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -227,12 +227,12 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	public final Collection<CmsStoredObject> loadObjects(final CmsStoredObjectType type, Collection<String> ids)
-		throws CmsStorageException {
+	public final Collection<StoredObject> loadObjects(final StoredObjectType type, Collection<String> ids)
+		throws StorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
-			final List<CmsStoredObject> ret = new ArrayList<CmsStoredObject>(ids.size());
+			final List<StoredObject> ret = new ArrayList<StoredObject>(ids.size());
 			Set<String> actualIds = null;
 			if (ids != null) {
 				if (ids.isEmpty()) { return ret; }
@@ -246,12 +246,12 @@ public abstract class CmsObjectStore {
 			}
 			loadObjects(type, actualIds, new StoredObjectHandler() {
 				@Override
-				public boolean newBatch(String batchId) throws CmsStorageException {
+				public boolean newBatch(String batchId) throws StorageException {
 					return true;
 				}
 
 				@Override
-				public boolean handleObject(CmsStoredObject dataObject) throws CmsStorageException {
+				public boolean handleObject(StoredObject dataObject) throws StorageException {
 					ret.add(dataObject);
 					return true;
 				}
@@ -262,7 +262,7 @@ public abstract class CmsObjectStore {
 				}
 
 				@Override
-				public boolean closeBatch(boolean ok) throws CmsStorageException {
+				public boolean closeBatch(boolean ok) throws StorageException {
 					return true;
 				}
 			});
@@ -272,12 +272,12 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	public final int loadObjects(final CmsStoredObjectType type, StoredObjectHandler handler) throws CmsStorageException {
+	public final int loadObjects(final StoredObjectType type, StoredObjectHandler handler) throws StorageException {
 		return loadObjects(type, null, handler);
 	}
 
-	public final int loadObjects(final CmsStoredObjectType type, Collection<String> ids, StoredObjectHandler handler)
-		throws CmsStorageException {
+	public final int loadObjects(final StoredObjectType type, Collection<String> ids, StoredObjectHandler handler)
+		throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
@@ -290,10 +290,10 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract int doLoadObjects(final CmsStoredObjectType type, Collection<String> ids, StoredObjectHandler handler)
-		throws CmsStorageException;
+	protected abstract int doLoadObjects(final StoredObjectType type, Collection<String> ids, StoredObjectHandler handler)
+		throws StorageException;
 
-	public final boolean isStored(CmsStoredObjectType type, String objectId) throws CmsStorageException {
+	public final boolean isStored(StoredObjectType type, String objectId) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		getReadLock().lock();
@@ -305,10 +305,10 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract boolean doIsStored(CmsStoredObjectType type, String objectId) throws CmsStorageException;
+	protected abstract boolean doIsStored(StoredObjectType type, String objectId) throws StorageException;
 
-	private void createMapping(CmsStoredObjectType type, String name, String source, String target)
-		throws CmsStorageException {
+	private void createMapping(StoredObjectType type, String name, String source, String target)
+		throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
 		if (source == null) { throw new IllegalArgumentException(
@@ -324,11 +324,11 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract void doCreateMappedValue(CmsStoredObjectType type, String name, String source, String target)
-		throws CmsStorageException;
+	protected abstract void doCreateMappedValue(StoredObjectType type, String name, String source, String target)
+		throws StorageException;
 
-	protected final String getMappedValue(boolean source, CmsStoredObjectType type, String name, String value)
-		throws CmsStorageException {
+	protected final String getMappedValue(boolean source, StoredObjectType type, String name, String value)
+		throws StorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -338,10 +338,10 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract String doGetMappedValue(boolean source, CmsStoredObjectType type, String name, String value)
-		throws CmsStorageException;
+	protected abstract String doGetMappedValue(boolean source, StoredObjectType type, String name, String value)
+		throws StorageException;
 
-	private final Mapping getTargetMapping(CmsStoredObjectType type, String name, String source) throws CmsStorageException {
+	private final Mapping getTargetMapping(StoredObjectType type, String name, String source) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (source == null) { throw new IllegalArgumentException(
@@ -357,7 +357,7 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	private final Mapping getSourceMapping(CmsStoredObjectType type, String name, String target) throws CmsStorageException {
+	private final Mapping getSourceMapping(StoredObjectType type, String name, String target) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (target == null) { throw new IllegalArgumentException(
@@ -373,7 +373,7 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	public final Map<CmsStoredObjectType, Integer> getStoredObjectTypes() throws CmsStorageException {
+	public final Map<StoredObjectType, Integer> getStoredObjectTypes() throws StorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -383,13 +383,13 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract Map<CmsStoredObjectType, Integer> doGetStoredObjectTypes() throws CmsStorageException;
+	protected abstract Map<StoredObjectType, Integer> doGetStoredObjectTypes() throws StorageException;
 
-	public final CmsStoredAttributeMapper getAttributeMapper() {
+	public final StoredAttributeMapper getAttributeMapper() {
 		return this.mapper;
 	}
 
-	public final int clearAttributeMappings() throws CmsStorageException {
+	public final int clearAttributeMappings() throws StorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -399,9 +399,9 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract int doClearAttributeMappings() throws CmsStorageException;
+	protected abstract int doClearAttributeMappings() throws StorageException;
 
-	public final Map<CmsStoredObjectType, Set<String>> getAvailableMappings() throws CmsStorageException {
+	public final Map<StoredObjectType, Set<String>> getAvailableMappings() throws StorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -411,9 +411,9 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract Map<CmsStoredObjectType, Set<String>> doGetAvailableMappings() throws CmsStorageException;
+	protected abstract Map<StoredObjectType, Set<String>> doGetAvailableMappings() throws StorageException;
 
-	public final Set<String> getAvailableMappings(CmsStoredObjectType type) throws CmsStorageException {
+	public final Set<String> getAvailableMappings(StoredObjectType type) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		getReadLock().lock();
 		try {
@@ -424,9 +424,9 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract Set<String> doGetAvailableMappings(CmsStoredObjectType type) throws CmsStorageException;
+	protected abstract Set<String> doGetAvailableMappings(StoredObjectType type) throws StorageException;
 
-	public final Map<String, String> getMappings(CmsStoredObjectType type, String name) throws CmsStorageException {
+	public final Map<String, String> getMappings(StoredObjectType type, String name) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		getReadLock().lock();
@@ -438,9 +438,9 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract Map<String, String> doGetMappings(CmsStoredObjectType type, String name) throws CmsStorageException;
+	protected abstract Map<String, String> doGetMappings(StoredObjectType type, String name) throws StorageException;
 
-	public final void clearAllObjects() throws CmsStorageException {
+	public final void clearAllObjects() throws StorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -450,9 +450,9 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected abstract void doClearAllObjects() throws CmsStorageException;
+	protected abstract void doClearAllObjects() throws StorageException;
 
-	public final boolean close() throws CmsStorageException {
+	public final boolean close() throws StorageException {
 		getWriteLock().lock();
 		try {
 			if (!this.open) { return false; }
@@ -463,7 +463,7 @@ public abstract class CmsObjectStore {
 		}
 	}
 
-	protected boolean doClose() throws CmsStorageException {
+	protected boolean doClose() throws StorageException {
 		return this.open;
 	}
 }

@@ -1,6 +1,6 @@
 package com.armedia.cmf.storage;
 
-public enum CmsStoredObjectType {
+public enum StoredObjectType {
 	//
 	USER,
 	GROUP,

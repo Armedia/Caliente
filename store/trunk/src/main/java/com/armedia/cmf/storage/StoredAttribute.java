@@ -5,18 +5,18 @@ import java.util.Collection;
 
 import com.armedia.commons.utilities.Tools;
 
-public class CmsStoredAttribute extends CmsStoredProperty {
+public class StoredAttribute extends StoredProperty {
 
 	private final String id;
 	private final boolean qualifiable;
 	private final int length;
 
-	public CmsStoredAttribute(String name, String type, String id, int length, boolean repeating, boolean qualifiable,
+	public StoredAttribute(String name, String type, String id, int length, boolean repeating, boolean qualifiable,
 		String... values) {
 		this(name, type, id, length, repeating, qualifiable, Arrays.asList(values));
 	}
 
-	public CmsStoredAttribute(String name, String type, String id, int length, boolean repeating, boolean qualifiable,
+	public StoredAttribute(String name, String type, String id, int length, boolean repeating, boolean qualifiable,
 		Collection<String> values) {
 		super(name, type, repeating, values);
 		if (id == null) { throw new IllegalArgumentException("Must provide a non-null attribute id"); }
@@ -38,10 +38,10 @@ public class CmsStoredAttribute extends CmsStoredProperty {
 	}
 
 	@Override
-	public final boolean isSame(CmsStoredProperty other) {
+	public final boolean isSame(StoredProperty other) {
 		if (!super.isSame(other)) { return false; }
-		if (!(other instanceof CmsStoredAttribute)) { return false; }
-		CmsStoredAttribute o = CmsStoredAttribute.class.cast(other);
+		if (!(other instanceof StoredAttribute)) { return false; }
+		StoredAttribute o = StoredAttribute.class.cast(other);
 		if (!Tools.equals(this.id, o.id)) { return false; }
 		if (this.qualifiable != o.qualifiable) { return false; }
 		if (this.length != o.length) { return false; }

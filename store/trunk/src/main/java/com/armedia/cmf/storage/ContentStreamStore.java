@@ -3,7 +3,7 @@ package com.armedia.cmf.storage;
 import java.io.File;
 import java.io.IOException;
 
-public interface CmsFileSystem {
+public interface ContentStreamStore {
 
 	/**
 	 * <p>

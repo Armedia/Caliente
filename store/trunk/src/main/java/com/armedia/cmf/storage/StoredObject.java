@@ -14,20 +14,20 @@ import java.util.Set;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsStoredObject {
+public class StoredObject {
 
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
-	private final CmsStoredObjectType type;
+	private final StoredObjectType type;
 
 	private final String id;
 	private final String batchId;
 	private final String label;
 	private final String subtype;
-	private final Map<String, CmsStoredAttribute> attributes = new HashMap<String, CmsStoredAttribute>();
-	private final Map<String, CmsStoredProperty> properties = new HashMap<String, CmsStoredProperty>();
+	private final Map<String, StoredAttribute> attributes = new HashMap<String, StoredAttribute>();
+	private final Map<String, StoredProperty> properties = new HashMap<String, StoredProperty>();
 
-	public CmsStoredObject(CmsStoredObjectType type, String id, String batchId, String label, String subtype) {
+	public StoredObject(StoredObjectType type, String id, String batchId, String label, String subtype) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }
@@ -39,7 +39,7 @@ public class CmsStoredObject {
 		this.subtype = subtype;
 	}
 
-	public final CmsStoredObjectType getType() {
+	public final StoredObjectType getType() {
 		return this.type;
 	}
 
@@ -67,28 +67,28 @@ public class CmsStoredObject {
 		return Collections.unmodifiableSet(this.attributes.keySet());
 	}
 
-	public final CmsStoredAttribute getAttribute(String name) {
+	public final StoredAttribute getAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
 		return this.attributes.get(name);
 	}
 
-	public final CmsStoredAttribute setAttribute(CmsStoredAttribute attribute) {
+	public final StoredAttribute setAttribute(StoredAttribute attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set"); }
 		return this.attributes.put(attribute.getName(), attribute);
 	}
 
-	public final CmsStoredAttribute removeAttribute(String name) {
+	public final StoredAttribute removeAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to remove"); }
 		return this.attributes.remove(name);
 	}
 
-	public final Collection<CmsStoredAttribute> getAttributes() {
+	public final Collection<StoredAttribute> getAttributes() {
 		return Collections.unmodifiableCollection(this.attributes.values());
 	}
 
-	public final void setAttributes(Collection<CmsStoredAttribute> attributes) {
+	public final void setAttributes(Collection<StoredAttribute> attributes) {
 		this.attributes.clear();
-		for (CmsStoredAttribute att : attributes) {
+		for (StoredAttribute att : attributes) {
 			setAttribute(att);
 		}
 	}
@@ -101,28 +101,28 @@ public class CmsStoredObject {
 		return Collections.unmodifiableSet(this.properties.keySet());
 	}
 
-	public final CmsStoredProperty getProperty(String name) {
+	public final StoredProperty getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return this.properties.get(name);
 	}
 
-	public final CmsStoredProperty setProperty(CmsStoredProperty property) {
+	public final StoredProperty setProperty(StoredProperty property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
 		return this.properties.put(property.getName(), property);
 	}
 
-	public final CmsStoredProperty removeProperty(String name) {
+	public final StoredProperty removeProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to remove"); }
 		return this.properties.remove(name);
 	}
 
-	public final Collection<CmsStoredProperty> getProperties() {
+	public final Collection<StoredProperty> getProperties() {
 		return Collections.unmodifiableCollection(this.properties.values());
 	}
 
-	public final void setProperties(Collection<CmsStoredProperty> properties) {
+	public final void setProperties(Collection<StoredProperty> properties) {
 		this.attributes.clear();
-		for (CmsStoredProperty prop : properties) {
+		for (StoredProperty prop : properties) {
 			setProperty(prop);
 		}
 	}
