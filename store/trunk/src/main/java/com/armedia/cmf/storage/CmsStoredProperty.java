@@ -10,7 +10,7 @@ import java.util.NoSuchElementException;
 
 import com.armedia.commons.utilities.Tools;
 
-public class CmsProperty implements Iterable<String> {
+public class CmsStoredProperty implements Iterable<String> {
 
 	protected static final String[] NO_VALUES = new String[0];
 
@@ -21,19 +21,19 @@ public class CmsProperty implements Iterable<String> {
 	private String singleValue = null;
 	private final List<String> values;
 
-	public CmsProperty(String name, String type, String... values) {
+	public CmsStoredProperty(String name, String type, String... values) {
 		this(name, type, true, Arrays.asList(values));
 	}
 
-	public CmsProperty(String name, String type, boolean repeating, String... values) {
+	public CmsStoredProperty(String name, String type, boolean repeating, String... values) {
 		this(name, type, repeating, Arrays.asList(values));
 	}
 
-	public CmsProperty(String name, String type, Collection<String> values) {
+	public CmsStoredProperty(String name, String type, Collection<String> values) {
 		this(name, type, true, values);
 	}
 
-	public CmsProperty(String name, String type, boolean repeating, Collection<String> values) {
+	public CmsStoredProperty(String name, String type, boolean repeating, Collection<String> values) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
 		if (values == null) {
@@ -315,7 +315,7 @@ public class CmsProperty implements Iterable<String> {
 	 * @param other
 	 * @return {@code true} if the basic typing structure matches, {@code false} otherwise
 	 */
-	public boolean isSame(CmsProperty other) {
+	public boolean isSame(CmsStoredProperty other) {
 		if (other == null) { return false; }
 		if (other == this) { return true; }
 		if (!this.name.equals(other.name)) { return false; }
@@ -324,7 +324,7 @@ public class CmsProperty implements Iterable<String> {
 		return true;
 	}
 
-	public boolean isSameValues(CmsProperty other) {
+	public boolean isSameValues(CmsStoredProperty other) {
 		if (!isSame(other)) { return false; }
 		if (!this.repeating) { return Tools.equals(this.singleValue, other.singleValue); }
 		final int valueCount = this.values.size();
@@ -359,14 +359,14 @@ public class CmsProperty implements Iterable<String> {
 			public String next() {
 				if (this.retrieved) { throw new NoSuchElementException(); }
 				this.retrieved = true;
-				return CmsProperty.this.singleValue;
+				return CmsStoredProperty.this.singleValue;
 			}
 
 			@Override
 			public void remove() {
 				if (!this.retrieved) { throw new IllegalStateException("No element to remove()"); }
 				if (this.removed) { throw new IllegalStateException("Element already removed"); }
-				CmsProperty.this.singleValue = null;
+				CmsStoredProperty.this.singleValue = null;
 				this.removed = true;
 			}
 		};

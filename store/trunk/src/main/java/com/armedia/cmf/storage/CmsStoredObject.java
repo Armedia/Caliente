@@ -18,16 +18,16 @@ public class CmsStoredObject {
 
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
-	private final CmsObjectType type;
+	private final CmsStoredObjectType type;
 
 	private final String id;
 	private final String batchId;
 	private final String label;
 	private final String subtype;
-	private final Map<String, CmsAttribute> attributes = new HashMap<String, CmsAttribute>();
-	private final Map<String, CmsProperty> properties = new HashMap<String, CmsProperty>();
+	private final Map<String, CmsStoredAttribute> attributes = new HashMap<String, CmsStoredAttribute>();
+	private final Map<String, CmsStoredProperty> properties = new HashMap<String, CmsStoredProperty>();
 
-	public CmsStoredObject(CmsObjectType type, String id, String batchId, String label, String subtype) {
+	public CmsStoredObject(CmsStoredObjectType type, String id, String batchId, String label, String subtype) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }
@@ -39,7 +39,7 @@ public class CmsStoredObject {
 		this.subtype = subtype;
 	}
 
-	public final CmsObjectType getType() {
+	public final CmsStoredObjectType getType() {
 		return this.type;
 	}
 
@@ -67,28 +67,28 @@ public class CmsStoredObject {
 		return Collections.unmodifiableSet(this.attributes.keySet());
 	}
 
-	public final CmsAttribute getAttribute(String name) {
+	public final CmsStoredAttribute getAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
 		return this.attributes.get(name);
 	}
 
-	public final CmsAttribute setAttribute(CmsAttribute attribute) {
+	public final CmsStoredAttribute setAttribute(CmsStoredAttribute attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set"); }
 		return this.attributes.put(attribute.getName(), attribute);
 	}
 
-	public final CmsAttribute removeAttribute(String name) {
+	public final CmsStoredAttribute removeAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to remove"); }
 		return this.attributes.remove(name);
 	}
 
-	public final Collection<CmsAttribute> getAttributes() {
+	public final Collection<CmsStoredAttribute> getAttributes() {
 		return Collections.unmodifiableCollection(this.attributes.values());
 	}
 
-	public final void setAttributes(Collection<CmsAttribute> attributes) {
+	public final void setAttributes(Collection<CmsStoredAttribute> attributes) {
 		this.attributes.clear();
-		for (CmsAttribute att : attributes) {
+		for (CmsStoredAttribute att : attributes) {
 			setAttribute(att);
 		}
 	}
@@ -101,28 +101,28 @@ public class CmsStoredObject {
 		return Collections.unmodifiableSet(this.properties.keySet());
 	}
 
-	public final CmsProperty getProperty(String name) {
+	public final CmsStoredProperty getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return this.properties.get(name);
 	}
 
-	public final CmsProperty setProperty(CmsProperty property) {
+	public final CmsStoredProperty setProperty(CmsStoredProperty property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
 		return this.properties.put(property.getName(), property);
 	}
 
-	public final CmsProperty removeProperty(String name) {
+	public final CmsStoredProperty removeProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to remove"); }
 		return this.properties.remove(name);
 	}
 
-	public final Collection<CmsProperty> getProperties() {
+	public final Collection<CmsStoredProperty> getProperties() {
 		return Collections.unmodifiableCollection(this.properties.values());
 	}
 
-	public final void setProperties(Collection<CmsProperty> properties) {
+	public final void setProperties(Collection<CmsStoredProperty> properties) {
 		this.attributes.clear();
-		for (CmsProperty prop : properties) {
+		for (CmsStoredProperty prop : properties) {
 			setProperty(prop);
 		}
 	}

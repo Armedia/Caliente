@@ -16,7 +16,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class CmsAttributeMapper {
+public abstract class CmsStoredAttributeMapper {
 
 	/**
 	 * <p>
@@ -28,12 +28,12 @@ public abstract class CmsAttributeMapper {
 	 *
 	 */
 	public static final class Mapping {
-		private final CmsObjectType objectType;
+		private final CmsStoredObjectType objectType;
 		private final String mappingName;
 		private final String sourceValue;
 		private final String targetValue;
 
-		private Mapping(CmsObjectType objectType, String mappingName, String sourceValue, String targetValue) {
+		private Mapping(CmsStoredObjectType objectType, String mappingName, String sourceValue, String targetValue) {
 			if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 			if (mappingName == null) { throw new IllegalArgumentException("Must provide a mapping name"); }
 			if (sourceValue == null) { throw new IllegalArgumentException("Must provide a source value to map from"); }
@@ -44,7 +44,7 @@ public abstract class CmsAttributeMapper {
 			this.targetValue = targetValue;
 		}
 
-		public CmsObjectType getObjectType() {
+		public CmsStoredObjectType getObjectType() {
 			return this.objectType;
 		}
 
@@ -113,7 +113,7 @@ public abstract class CmsAttributeMapper {
 	 * @param targetValue
 	 * @return a new instance of {@link Mapping}
 	 */
-	protected final Mapping newMapping(CmsObjectType objectType, String mappingName, String sourceValue,
+	protected final Mapping newMapping(CmsStoredObjectType objectType, String mappingName, String sourceValue,
 		String targetValue) {
 		return new Mapping(objectType, mappingName, sourceValue, targetValue);
 	}
@@ -122,11 +122,11 @@ public abstract class CmsAttributeMapper {
 		setMapping(oldMapping, null);
 	}
 
-	public final void clearTargetMapping(CmsObjectType objectType, String mappingName, String sourceValue) {
+	public final void clearTargetMapping(CmsStoredObjectType objectType, String mappingName, String sourceValue) {
 		setMapping(objectType, mappingName, sourceValue, null);
 	}
 
-	public final void clearSourceMapping(CmsObjectType objectType, String mappingName, String targetValue) {
+	public final void clearSourceMapping(CmsStoredObjectType objectType, String mappingName, String targetValue) {
 		setMapping(objectType, mappingName, null, targetValue);
 	}
 
@@ -136,7 +136,7 @@ public abstract class CmsAttributeMapper {
 		setMapping(oldMapping.getObjectType(), oldMapping.getMappingName(), oldMapping.getSourceValue(), targetValue);
 	}
 
-	public final Mapping setMapping(CmsObjectType objectType, String mappingName, String sourceValue, String targetValue) {
+	public final Mapping setMapping(CmsStoredObjectType objectType, String mappingName, String sourceValue, String targetValue) {
 		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (mappingName == null) { throw new IllegalArgumentException("Must provide a mapping name"); }
 		return createMapping(objectType, mappingName, sourceValue, targetValue);
@@ -161,14 +161,14 @@ public abstract class CmsAttributeMapper {
 	 * @throws IllegalArgumentException
 	 *             if both {@code sourceValue} and {@code targetValue} were {@code null}
 	 */
-	protected abstract Mapping createMapping(CmsObjectType objectType, String mappingName, String sourceValue,
+	protected abstract Mapping createMapping(CmsStoredObjectType objectType, String mappingName, String sourceValue,
 		String targetValue);
 
 	/**
 	 * <p>
 	 * Retrieves the value mapping for the given object type, name and source value, or {@code null}
 	 * if no such mapping can be found. This operation is the reverse of
-	 * {@link #getSourceMapping(CmsObjectType, String, String)}.
+	 * {@link #getSourceMapping(CmsStoredObjectType, String, String)}.
 	 * </p>
 	 *
 	 * @param objectType
@@ -177,13 +177,13 @@ public abstract class CmsAttributeMapper {
 	 * @return the value mapping for the given object type, name and source value, or {@code null}
 	 *         if no such mapping can be found.
 	 */
-	public abstract Mapping getTargetMapping(CmsObjectType objectType, String mappingName, String sourceValue);
+	public abstract Mapping getTargetMapping(CmsStoredObjectType objectType, String mappingName, String sourceValue);
 
 	/**
 	 * <p>
 	 * Retrieves the value mapping for the given object type, name and target value, or {@code null}
 	 * if no such mapping can be found. This operation is the reverse of
-	 * {@link #getTargetMapping(CmsObjectType, String, String)}
+	 * {@link #getTargetMapping(CmsStoredObjectType, String, String)}
 	 * </p>
 	 *
 	 * @param objectType
@@ -192,7 +192,7 @@ public abstract class CmsAttributeMapper {
 	 * @return the value mapping for the given object type, name and source value, or {@code null}
 	 *         if no such mapping can be found.
 	 */
-	public abstract Mapping getSourceMapping(CmsObjectType objectType, String mappingName, String targetValue);
+	public abstract Mapping getSourceMapping(CmsStoredObjectType objectType, String mappingName, String targetValue);
 
 	/**
 	 * <p>
@@ -202,7 +202,7 @@ public abstract class CmsAttributeMapper {
 	 *
 	 * @return the mappings available in the system
 	 */
-	public abstract Map<CmsObjectType, Set<String>> getAvailableMappings();
+	public abstract Map<CmsStoredObjectType, Set<String>> getAvailableMappings();
 
 	/**
 	 * <p>
@@ -212,7 +212,7 @@ public abstract class CmsAttributeMapper {
 	 * @param objectType
 	 * @return the set of mapping names defined for a given object type in the system.
 	 */
-	public abstract Set<String> getAvailableMappings(CmsObjectType objectType);
+	public abstract Set<String> getAvailableMappings(CmsStoredObjectType objectType);
 
 	/**
 	 * <p>
@@ -224,5 +224,5 @@ public abstract class CmsAttributeMapper {
 	 * @param mappingName
 	 * @return the actual mappings for a given object type and mapping name as defined in the system
 	 */
-	public abstract Map<String, String> getMappings(CmsObjectType objectType, String mappingName);
+	public abstract Map<String, String> getMappings(CmsStoredObjectType objectType, String mappingName);
 }
