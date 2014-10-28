@@ -22,7 +22,7 @@ public interface ExportListener {
 	 *
 	 * @param object
 	 */
-	public void objectExportCompleted(StoredObject<?> object);
+	public void objectExportCompleted(StoredObject<?> object, Long objectNumber);
 
 	/**
 	 * <p>

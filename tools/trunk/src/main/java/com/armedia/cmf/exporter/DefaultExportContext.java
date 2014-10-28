@@ -57,9 +57,9 @@ public class DefaultExportContext<S, V> extends DefaultTransferContext<S, V> imp
 	}
 
 	@Override
-	public void objectExportCompleted(StoredObject<?> object) {
+	public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
 		if (this.listener != null) {
-			this.listener.objectExportCompleted(object);
+			this.listener.objectExportCompleted(object, objectNumber);
 		}
 	}
 

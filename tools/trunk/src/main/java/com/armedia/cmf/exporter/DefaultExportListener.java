@@ -10,7 +10,7 @@ public class DefaultExportListener implements ExportListener {
 	}
 
 	@Override
-	public void objectExportCompleted(StoredObject<?> object) {
+	public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
 	}
 
 	@Override
