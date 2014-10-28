@@ -53,7 +53,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
-			<artifactId>cmf-storage-api</artifactId>
+			<artifactId>cmf-engine</artifactId>
 			<version>0.0.1</version>
 			<scope>compile</scope>
 		</dependency>
