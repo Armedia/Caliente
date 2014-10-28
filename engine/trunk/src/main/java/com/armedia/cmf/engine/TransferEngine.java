@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.ObjectStore;
 
-public class TransferEngine<T> {
+public abstract class TransferEngine<L> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -19,7 +19,7 @@ public class TransferEngine<T> {
 	public static final int DEFAULT_THREAD_COUNT = 4;
 	public static final int MAX_THREAD_COUNT = 32;
 
-	private final List<T> listeners = new ArrayList<T>();
+	private final List<L> listeners = new ArrayList<L>();
 
 	private final int backlogSize;
 	private final int threadCount;
@@ -27,27 +27,27 @@ public class TransferEngine<T> {
 	private final ContentStreamStore contentStreamStore;
 	private final Logger output;
 
-	public TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem) {
+	protected TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem) {
 		this(objectStore, fileSystem, null);
 	}
 
-	public TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem, int threadCount) {
+	protected TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem, int threadCount) {
 		this(objectStore, fileSystem, null, threadCount);
 	}
 
-	public TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem, int threadCount, int backlogSize) {
+	protected TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem, int threadCount, int backlogSize) {
 		this(objectStore, fileSystem, null, threadCount, backlogSize);
 	}
 
-	public TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem, Logger output) {
+	protected TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem, Logger output) {
 		this(objectStore, fileSystem, output, TransferEngine.DEFAULT_THREAD_COUNT);
 	}
 
-	public TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem, Logger output, int threadCount) {
+	protected TransferEngine(ObjectStore objectStore, ContentStreamStore fileSystem, Logger output, int threadCount) {
 		this(objectStore, fileSystem, output, threadCount, TransferEngine.DEFAULT_BACKLOG_SIZE);
 	}
 
-	public TransferEngine(ObjectStore objectStore, ContentStreamStore contentStreamStore, Logger output,
+	protected TransferEngine(ObjectStore objectStore, ContentStreamStore contentStreamStore, Logger output,
 		int threadCount, int backlogSize) {
 		if (threadCount <= 0) {
 			threadCount = 1;
@@ -80,18 +80,18 @@ public class TransferEngine<T> {
 		return this.output;
 	}
 
-	public final synchronized boolean addListener(T listener) {
+	public final synchronized boolean addListener(L listener) {
 		if (listener != null) { return this.listeners.add(listener); }
 		return false;
 	}
 
-	public final synchronized boolean removeListener(T listener) {
+	public final synchronized boolean removeListener(L listener) {
 		if (listener != null) { return this.listeners.remove(listener); }
 		return false;
 	}
 
-	protected final synchronized Collection<T> getListeners() {
-		return new ArrayList<T>(this.listeners);
+	protected final synchronized Collection<L> getListeners() {
+		return new ArrayList<L>(this.listeners);
 	}
 
 	public final int getBacklogSize() {
