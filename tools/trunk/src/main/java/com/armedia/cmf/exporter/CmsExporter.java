@@ -4,8 +4,8 @@
 
 package com.armedia.cmf.exporter;
 
-import com.armedia.cmf.storage.CmsObjectStore;
-import com.armedia.cmf.storage.CmsStorageException;
+import com.armedia.cmf.storage.ObjectStore;
+import com.armedia.cmf.storage.StorageException;
 
 /**
  * @author diego
@@ -13,6 +13,6 @@ import com.armedia.cmf.storage.CmsStorageException;
  */
 public interface CmsExporter {
 
-	public void runExport(CmsObjectStore objectStore, Object nu) throws CmsExportException, CmsStorageException;
+	public void runExport(ObjectStore objectStore, Object nu) throws ExportException, StorageException;
 
 }
