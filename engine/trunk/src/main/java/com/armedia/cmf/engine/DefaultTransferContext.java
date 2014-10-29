@@ -23,9 +23,9 @@ import com.armedia.cmf.storage.StoredValueDecoderException;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class DefaultTransferContext<S, V> implements TransferContext<S, V> {
+public abstract class DefaultTransferContext<T, S, V> implements TransferContext<S, V> {
 
-	private final ObjectStorageTranslator<V> translator;
+	private final ObjectStorageTranslator<T, V> translator;
 	private final String rootId;
 	private final S session;
 	private final ObjectStore objectStore;
@@ -34,12 +34,12 @@ public abstract class DefaultTransferContext<S, V> implements TransferContext<S,
 	private final ContentStreamStore fileSystem;
 	private final Logger output;
 
-	protected DefaultTransferContext(ObjectStorageTranslator<V> translator, String rootId, S session,
+	protected DefaultTransferContext(ObjectStorageTranslator<T, V> translator, String rootId, S session,
 		ObjectStore objectStore, ContentStreamStore fileSystem, Logger output) {
 		this(translator, rootId, session, objectStore, fileSystem, null, output);
 	}
 
-	protected DefaultTransferContext(ObjectStorageTranslator<V> translator, String rootId, S session,
+	protected DefaultTransferContext(ObjectStorageTranslator<T, V> translator, String rootId, S session,
 		ObjectStore objectStore, ContentStreamStore fileSystem, StoredAttributeMapper mapper, Logger output) {
 		this.translator = translator;
 		this.rootId = rootId;
