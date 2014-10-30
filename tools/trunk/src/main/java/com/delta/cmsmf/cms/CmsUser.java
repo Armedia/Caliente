@@ -157,6 +157,13 @@ public class CmsUser extends CmsObject<IDfUser> {
 		IDfValue userNameValue = getAttribute(CmsAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
 		if (CmsUser.isSpecialUser(userName)) { return true; }
+		if (CmsMappingUtils.isMappableUser(ctx.getSession(), userName)) {
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format(
+					"User [%s] collides with a special repository configuration user, skipping the import", userName));
+			}
+			return true;
+		}
 		return super.skipImport(ctx);
 	}
 

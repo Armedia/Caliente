@@ -204,10 +204,16 @@ public class CmsMappingUtils {
 		return user;
 	}
 
-	public static boolean isMappableUser(IDfSession session, String user) throws DfException {
+	public static boolean isSubstitutedUser(IDfSession session, String user) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to analyze with"); }
 		if (user == null) { throw new IllegalArgumentException("Must provide a username to analyze"); }
 		return CmsMappingUtils.getResolutionMappings(session).containsKey(user);
+	}
+
+	public static boolean isMappableUser(IDfSession session, String user) throws DfException {
+		if (session == null) { throw new IllegalArgumentException("Must provide a session to analyze with"); }
+		if (user == null) { throw new IllegalArgumentException("Must provide a username to analyze"); }
+		return CmsMappingUtils.getSubstitutionMappings(session).containsKey(user);
 	}
 
 	public static boolean isSubstitutionForMappableUser(String user) throws DfException {

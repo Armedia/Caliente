@@ -125,7 +125,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		throws DfException, CMSMFException {
 		final IDfSession session = group.getSession();
 		String groupOwner = group.getOwnerName();
-		if (!CmsMappingUtils.isMappableUser(session, groupOwner) && !CmsUser.isSpecialUser(groupOwner)) {
+		if (!CmsMappingUtils.isSubstitutedUser(session, groupOwner) && !CmsUser.isSpecialUser(groupOwner)) {
 			IDfUser owner = session.getUser(groupOwner);
 			if (owner != null) {
 				dependencyManager.persistRelatedObject(owner);
@@ -140,7 +140,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 		}
 
 		String groupAdmin = group.getGroupAdmin();
-		if (!CmsMappingUtils.isMappableUser(session, groupAdmin) && !CmsUser.isSpecialUser(groupAdmin)) {
+		if (!CmsMappingUtils.isSubstitutedUser(session, groupAdmin) && !CmsUser.isSpecialUser(groupAdmin)) {
 			IDfUser admin = session.getUser(groupAdmin);
 			if (admin != null) {
 				dependencyManager.persistRelatedObject(admin);
@@ -162,7 +162,7 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			it = getUsersWithDefaultGroup(group);
 		}
 		for (IDfValue v : it) {
-			if (CmsMappingUtils.isMappableUser(session, v.asString())) {
+			if (CmsMappingUtils.isSubstitutedUser(session, v.asString())) {
 				// This is a special user, we don't add it as a dependency
 				continue;
 			}

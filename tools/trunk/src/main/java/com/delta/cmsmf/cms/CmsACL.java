@@ -252,7 +252,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 			final boolean group = acl.isGroup(i);
 
 			if (!group) {
-				if (CmsMappingUtils.isMappableUser(session, name)) {
+				if (CmsMappingUtils.isSubstitutedUser(session, name)) {
 					// User is mapped to a special user, so we shouldn't include it as a dependency
 					// because it will be mapped on the target
 					continue;
@@ -276,7 +276,7 @@ public class CmsACL extends CmsObject<IDfACL> {
 
 		// Do the owner
 		final String owner = acl.getDomain();
-		if (CmsMappingUtils.isMappableUser(session, owner)) {
+		if (CmsMappingUtils.isSubstitutedUser(session, owner)) {
 			this.log.warn(String.format("Skipping export of special user [%s]", owner));
 		} else {
 			IDfUser user = session.getUser(acl.getDomain());
