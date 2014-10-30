@@ -25,7 +25,7 @@ import com.delta.cmsmf.cms.CmsBaseObject;
 import com.delta.cmsmf.cms.CmsBaseObjectType;
 import com.delta.cmsmf.cms.CmsProperty;
 import com.delta.cmsmf.cms.DctmTransferContext;
-import com.delta.cmsmf.cms.DefaultContentStreamStore;
+import com.delta.cmsmf.cms.DctmContentStreamStore;
 import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.DfValueFactory;
 import com.delta.cmsmf.cms.UnsupportedObjectTypeException;
@@ -292,7 +292,7 @@ public class CmsBaseObjectStoreTest extends AbstractTest {
 
 	@Test
 	public void testSerializeObject() throws Throwable {
-		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
+		final CmsFileSystem fs = new DctmContentStreamStore(getFsDir());
 		CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
 		DctmTransferContext ctx = new DefaultTransferContext(null, null, store, fs, null);
@@ -513,7 +513,7 @@ public class CmsBaseObjectStoreTest extends AbstractTest {
 
 	@Test
 	public void testDeserializeObjects() throws Throwable {
-		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
+		final CmsFileSystem fs = new DctmContentStreamStore(getFsDir());
 		CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
 		try {
 			store.deserializeObjects(null, null);
@@ -654,7 +654,7 @@ public class CmsBaseObjectStoreTest extends AbstractTest {
 
 	@Test
 	public void testRegisterDependency() throws Throwable {
-		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
+		final CmsFileSystem fs = new DctmContentStreamStore(getFsDir());
 		final IDfSession session = acquireSourceSession();
 		CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
 		Map<String, CmsBaseObjectType> dependencies = new HashMap<String, CmsBaseObjectType>();

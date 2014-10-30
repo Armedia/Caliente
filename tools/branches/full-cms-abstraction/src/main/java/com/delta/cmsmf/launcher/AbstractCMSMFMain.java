@@ -12,9 +12,9 @@ import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cfg.SettingManager;
-import com.delta.cmsmf.cms.DefaultContentStreamStore;
+import com.delta.cmsmf.cms.DctmContentStreamStore;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
-import com.delta.cmsmf.cms.storage.DefaultObjectStore;
+import com.delta.cmsmf.cms.storage.CMSMFObjectStore;
 
 /**
  * The main method of this class is an entry point for the cmsmf application.
@@ -60,8 +60,8 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 		File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
 
 		this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
-		this.objectStore = DefaultObjectStore.init(requiresCleanData());
-		this.fileSystem = new DefaultContentStreamStore(contentFilesDirectoryLocation);
+		this.objectStore = CMSMFObjectStore.init(requiresCleanData());
+		this.fileSystem = new DctmContentStreamStore(contentFilesDirectoryLocation);
 		if (requiresCleanData()) {
 			this.console.info(String.format("Cleaning out the content export directory at [%s]",
 				contentFilesDirectoryLocation));

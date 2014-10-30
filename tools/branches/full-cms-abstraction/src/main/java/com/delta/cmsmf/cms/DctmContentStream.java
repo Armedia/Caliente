@@ -13,6 +13,9 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
+import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.storage.StoredProperty;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;

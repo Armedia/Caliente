@@ -10,10 +10,16 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
+import com.armedia.cmf.documentum.engine.DctmMappingUtils;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredProperty;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
@@ -126,8 +132,8 @@ public class DctmFolder extends DctmSysObject<IDfFolder> {
 				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				// TODO: This probably should not be done for special users
-				usersWithDefaultFolder
-					.addValue(DctmMappingUtils.substituteMappableUsers(folder, resultCol.getValueAt(0)));
+				usersWithDefaultFolder.addValue(DctmMappingUtils.substituteMappableUsers(folder,
+					resultCol.getValueAt(0)));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -156,8 +162,8 @@ public class DctmFolder extends DctmSysObject<IDfFolder> {
 	}
 
 	@Override
-	protected void doPersistDependents(IDfFolder folder, DctmTransferContext ctx, DctmDependencyManager dependencyManager)
-		throws DfException, CMSMFException {
+	protected void doPersistDependents(IDfFolder folder, DctmTransferContext ctx,
+		DctmDependencyManager dependencyManager) throws DfException, CMSMFException {
 
 		final IDfSession session = folder.getSession();
 		String owner = DctmMappingUtils.resolveMappableUser(session, folder.getOwnerName());
@@ -216,7 +222,7 @@ public class DctmFolder extends DctmSysObject<IDfFolder> {
 
 		final String folderName;
 		if (newObject) {
-			StoredAttribute<IDfValue> objectName = getAttribute(DctmAttributes.OBJECT_NAME);
+			StoredAttribute<IDfValue> objectName = this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME);
 			IDfValue newValue = objectName.getValue();
 			folderName = newValue.toString().trim();
 			setAttributeOnObject(DctmAttributes.OBJECT_NAME, DfValueFactory.newStringValue(folderName), folder);
@@ -241,8 +247,10 @@ public class DctmFolder extends DctmSysObject<IDfFolder> {
 
 		final IDfSession session = folder.getSession();
 
-		StoredProperty<IDfValue> usersWithDefaultFolder = getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
-		StoredProperty<IDfValue> usersDefaultFolderPaths = getProperty(DctmFolder.USERS_DEFAULT_FOLDER_PATHS);
+		StoredProperty<IDfValue> usersWithDefaultFolder = this.storedObject
+			.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
+		StoredProperty<IDfValue> usersDefaultFolderPaths = this.storedObject
+			.getProperty(DctmFolder.USERS_DEFAULT_FOLDER_PATHS);
 		if ((usersWithDefaultFolder != null) && (usersDefaultFolderPaths != null)) {
 			final int total = usersWithDefaultFolder.getValueCount();
 			for (int i = 0; i < total; i++) {
@@ -265,7 +273,7 @@ public class DctmFolder extends DctmSysObject<IDfFolder> {
 						.warn(String
 							.format(
 								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								getLabel(), folder.getObjectId().getId(), actualUser));
+								this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
 					continue;
 				}
 
@@ -288,7 +296,7 @@ public class DctmFolder extends DctmSysObject<IDfFolder> {
 							String
 								.format(
 									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-									actualUser, getLabel()), e);
+									actualUser, this.storedObject.getLabel()), e);
 				}
 			}
 		}
@@ -310,9 +318,9 @@ public class DctmFolder extends DctmSysObject<IDfFolder> {
 	protected IDfFolder locateInCms(DctmTransferContext ctx) throws CMSMFException, DfException {
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
-		IDfType t = session.getType(getSubtype());
-		if (t.isTypeOf("dm_cabinet")) { return session.getFolderByPath(String.format("/%s",
-			getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString())); }
+		IDfType t = session.getType(this.storedObject.getSubtype());
+		if (t.isTypeOf("dm_cabinet")) { return session.getFolderByPath(String.format("/%s", this.storedObject
+			.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString())); }
 		return super.locateInCms(ctx);
 	}
 }

@@ -96,7 +96,7 @@ public class CmsBaseObjectTest extends AbstractTest {
 	public void testCmsBaseObjectPersistence() throws Throwable {
 		final CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
 		final QueryRunner qr = new QueryRunner(getDataSource());
-		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
+		final CmsFileSystem fs = new DctmContentStreamStore(getFsDir());
 		IDfSession session = acquireSourceSession();
 		try {
 			final int max = 3;

@@ -13,14 +13,14 @@ import com.armedia.cmf.storage.ContentStreamStore;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class DefaultContentStreamStore implements ContentStreamStore {
+public class DctmContentStreamStore implements ContentStreamStore {
 
 	private final File baseDir;
 
 	/**
 	 *
 	 */
-	public DefaultContentStreamStore(File baseDir) {
+	public DctmContentStreamStore(File baseDir) {
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
 		this.baseDir = baseDir;
 	}

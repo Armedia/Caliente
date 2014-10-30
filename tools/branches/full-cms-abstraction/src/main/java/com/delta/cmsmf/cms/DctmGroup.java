@@ -12,12 +12,17 @@ import java.util.Set;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
+import com.armedia.cmf.documentum.engine.DctmMappingUtils;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredProperty;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.cms.DctmAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -50,19 +55,19 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 			DctmAttributes.GROUPS_NAMES, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+				@Override
+				public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
 					throws DfException {
-				return false;
-			}
+					return false;
+				}
 
-			@Override
-			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-				throws DfException {
-				return DctmMappingUtils.substituteMappableUsers(object, attr);
-			}
+				@Override
+				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+					throws DfException {
+					return DctmMappingUtils.substituteMappableUsers(object, attr);
+				}
 
-		});
+			});
 		DctmGroup.HANDLERS_READY = true;
 	}
 
@@ -160,7 +165,7 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 		}
 
 		// Avoid calling DQL twice
-		StoredProperty<IDfValue> property = getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
+		StoredProperty<IDfValue> property = this.storedObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
 		Iterable<IDfValue> it = property;
 		if (property == null) {
 			// IF the property hasn't been set, we do the DQL...
@@ -182,7 +187,7 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 			dependencyManager.persistRelatedObject(user);
 		}
 
-		StoredAttribute<IDfValue> usersNames = getAttribute(DctmAttributes.USERS_NAMES);
+		StoredAttribute<IDfValue> usersNames = this.storedObject.getAttribute(DctmAttributes.USERS_NAMES);
 		if (usersNames != null) {
 			for (IDfValue v : usersNames) {
 				String userName = v.asString();
@@ -213,7 +218,7 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 			}
 		}
 
-		StoredAttribute<IDfValue> groupsNames = getAttribute(DctmAttributes.GROUPS_NAMES);
+		StoredAttribute<IDfValue> groupsNames = this.storedObject.getAttribute(DctmAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
 			for (IDfValue v : groupsNames) {
 				String groupName = v.asString();
@@ -240,12 +245,12 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 	@Override
 	protected void finalizeConstruction(IDfGroup group, boolean newObject, DctmTransferContext context)
 		throws DfException {
-		final IDfValue groupName = getAttribute(DctmAttributes.GROUP_NAME).getValue();
+		final IDfValue groupName = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
 		if (newObject) {
 			copyAttributeToObject(DctmAttributes.GROUP_NAME, group);
 		}
 		final IDfSession session = group.getSession();
-		StoredAttribute<IDfValue> usersNames = getAttribute(DctmAttributes.USERS_NAMES);
+		StoredAttribute<IDfValue> usersNames = this.storedObject.getAttribute(DctmAttributes.USERS_NAMES);
 		// Keep track of missing users so we don't look for them again.
 		Set<String> missingUsers = new HashSet<String>();
 		if (usersNames != null) {
@@ -256,17 +261,17 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(actualUser);
 					this.log
-					.warn(String
-						.format(
-							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-							actualUser, groupName.asString()));
+						.warn(String
+							.format(
+								"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+								actualUser, groupName.asString()));
 					continue;
 				}
 				group.addUser(actualUser);
 			}
 		}
 
-		StoredAttribute<IDfValue> groupsNames = getAttribute(DctmAttributes.GROUPS_NAMES);
+		StoredAttribute<IDfValue> groupsNames = this.storedObject.getAttribute(DctmAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
 			group.removeAllGroups();
 			for (IDfValue v : groupsNames) {
@@ -274,10 +279,10 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-							actualGroup, groupName.asString()));
+						.warn(String
+							.format(
+								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
+								actualGroup, groupName.asString()));
 					continue;
 				}
 				group.addGroup(actualGroup);
@@ -285,7 +290,7 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 		}
 
 		// Set this group as users' default group
-		StoredProperty<IDfValue> property = getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
+		StoredProperty<IDfValue> property = this.storedObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
 		if (property != null) {
 			for (IDfValue v : property) {
 				final String actualUser = DctmMappingUtils.resolveMappableUser(session, v.asString());
@@ -295,10 +300,10 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-							groupName.asString(), actualUser));
+						.warn(String
+							.format(
+								"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+								groupName.asString(), actualUser));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
@@ -308,11 +313,11 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 					updateSystemAttributes(user, context);
 				} catch (CMSMFException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-							actualUser, group.getGroupName()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+									actualUser, group.getGroupName()), e);
 				}
 			}
 		}
@@ -326,7 +331,7 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 
 	@Override
 	protected boolean skipImport(DctmTransferContext ctx) throws DfException {
-		IDfValue groupNameValue = getAttribute(DctmAttributes.GROUP_NAME).getValue();
+		IDfValue groupNameValue = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
 		final String groupName = groupNameValue.asString();
 		if (DctmGroup.isSpecialGroup(groupName)) { return true; }
 		return super.skipImport(ctx);
@@ -334,6 +339,7 @@ public class DctmGroup extends DctmPersistentObject<IDfGroup> {
 
 	@Override
 	protected IDfGroup locateInCms(DctmTransferContext ctx) throws DfException {
-		return ctx.getSession().getGroup(getAttribute(DctmAttributes.GROUP_NAME).getValue().asString());
+		return ctx.getSession().getGroup(
+			this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue().asString());
 	}
 }

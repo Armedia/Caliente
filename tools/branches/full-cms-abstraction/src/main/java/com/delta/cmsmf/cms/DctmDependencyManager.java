@@ -2,6 +2,8 @@ package com.delta.cmsmf.cms;
 
 import org.apache.log4j.Logger;
 
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfPersistentObject;

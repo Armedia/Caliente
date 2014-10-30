@@ -12,11 +12,15 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -37,22 +41,22 @@ public class DctmType extends DctmPersistentObject<IDfType> {
 	private static synchronized void initHandlers() {
 		if (DctmType.HANDLERS_READY) { return; }
 		// These are the attributes that require special handling on import
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.ATTR_COUNT,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.ATTR_COUNT,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
+			DctmAttributes.ATTR_COUNT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
+			DctmAttributes.ATTR_COUNT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.START_POS,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.NAME,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.SUPER_NAME,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
+			DctmAttributes.SUPER_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.ATTR_NAME,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.ATTR_TYPE,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.ATTR_LENGTH,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
+			DctmAttributes.ATTR_LENGTH, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
 			DctmAttributes.ATTR_REPEATING, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
@@ -145,8 +149,8 @@ public class DctmType extends DctmPersistentObject<IDfType> {
 
 	@Override
 	protected IDfType newObject(DctmTransferContext ctx) throws DfException {
-		String typeName = getAttribute(DctmAttributes.NAME).getValue().asString();
-		String superTypeName = getAttribute(DctmAttributes.SUPER_NAME).getValue().asString();
+		String typeName = this.storedObject.getAttribute(DctmAttributes.NAME).getValue().asString();
+		String superTypeName = this.storedObject.getAttribute(DctmAttributes.SUPER_NAME).getValue().asString();
 		final IDfSession session = ctx.getSession();
 		// TODO: Ensure the supertype is there
 		IDfType superType = null;
@@ -159,12 +163,12 @@ public class DctmType extends DctmPersistentObject<IDfType> {
 			}
 		}
 
-		final int attrCount = getAttribute(DctmAttributes.ATTR_COUNT).getValue().asInteger();
-		final int startPosition = getAttribute(DctmAttributes.START_POS).getValue().asInteger();
-		final StoredAttribute<IDfValue> attrNames = getAttribute(DctmAttributes.ATTR_NAME);
-		final StoredAttribute<IDfValue> attrTypes = getAttribute(DctmAttributes.ATTR_TYPE);
-		final StoredAttribute<IDfValue> attrLengths = getAttribute(DctmAttributes.ATTR_LENGTH);
-		final StoredAttribute<IDfValue> attrRepeating = getAttribute(DctmAttributes.ATTR_REPEATING);
+		final int attrCount = this.storedObject.getAttribute(DctmAttributes.ATTR_COUNT).getValue().asInteger();
+		final int startPosition = this.storedObject.getAttribute(DctmAttributes.START_POS).getValue().asInteger();
+		final StoredAttribute<IDfValue> attrNames = this.storedObject.getAttribute(DctmAttributes.ATTR_NAME);
+		final StoredAttribute<IDfValue> attrTypes = this.storedObject.getAttribute(DctmAttributes.ATTR_TYPE);
+		final StoredAttribute<IDfValue> attrLengths = this.storedObject.getAttribute(DctmAttributes.ATTR_LENGTH);
+		final StoredAttribute<IDfValue> attrRepeating = this.storedObject.getAttribute(DctmAttributes.ATTR_REPEATING);
 
 		// Start the DQL
 		final StringBuilder dql = new StringBuilder();
@@ -244,7 +248,8 @@ public class DctmType extends DctmPersistentObject<IDfType> {
 	protected boolean isSameObject(IDfType object) throws DfException {
 		// It's "impossible" to compare types...rather - it's far too complicated to do
 		// anything if the type is already there...so we just check names...
-		return Tools.equals(object.getName(), getAttribute(DctmAttributes.NAME).getValue().asString());
+		return Tools
+			.equals(object.getName(), this.storedObject.getAttribute(DctmAttributes.NAME).getValue().asString());
 	}
 
 	@Override
@@ -262,19 +267,19 @@ public class DctmType extends DctmPersistentObject<IDfType> {
 
 	@Override
 	protected boolean skipImport(DctmTransferContext ctx) throws DfException {
-		IDfValue typeNameValue = getAttribute(DctmAttributes.NAME).getValue();
+		IDfValue typeNameValue = this.storedObject.getAttribute(DctmAttributes.NAME).getValue();
 		final String typeName = typeNameValue.asString();
 		if (DctmType.isSpecialType(typeName)) {
 			this.log.warn(String.format("Will not import special type [%s]", typeName));
 			return true;
 		}
 		// If the type name is the same as dmi_${objectId}, we skip it
-		if (Tools.equals(typeName, String.format("dmi_%s", getId()))) { return false; }
+		if (Tools.equals(typeName, String.format("dmi_%s", this.storedObject.getId()))) { return false; }
 		return super.skipImport(ctx);
 	}
 
 	@Override
 	protected IDfType locateInCms(DctmTransferContext ctx) throws DfException {
-		return ctx.getSession().getType(getAttribute(DctmAttributes.NAME).getValue().asString());
+		return ctx.getSession().getType(this.storedObject.getAttribute(DctmAttributes.NAME).getValue().asString());
 	}
 }

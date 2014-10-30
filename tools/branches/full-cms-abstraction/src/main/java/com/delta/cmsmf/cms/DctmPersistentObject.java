@@ -15,18 +15,23 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.log4j.Logger;
 
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.DctmTranslator;
+import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
+import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cms.DctmAttributeHandlers.AttributeHandler;
-import com.delta.cmsmf.engine.ImportResult;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -95,23 +100,23 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 
 	private final DctmObjectType type;
 	private final Class<T> dfClass;
-	private StoredObject<IDfValue> storedObject = null;
+	protected StoredObject<IDfValue> storedObject = null;
 
 	protected DctmPersistentObject(Class<T> dfClass) {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
-		this.type = DctmObjectType.decodeFromClass(getClass());
+		this.type = DctmObjectFactory.decodeClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
 	protected DctmPersistentObject(Class<T> dfClass, StoredObject<IDfValue> dataObject) {
 		if (dfClass == null) { throw new IllegalArgumentException("Must provde a DF class"); }
-		this.type = DctmObjectType.decodeFromClass(getClass());
+		this.type = DctmObjectFactory.decodeClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -119,84 +124,8 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 		return this.dfClass;
 	}
 
-	public final StoredObjectType getType() {
-		return this.storedObject.getType();
-	}
-
 	public final DctmObjectType getDctmType() {
 		return this.type;
-	}
-
-	public final String getSubtype() {
-		return this.storedObject.getSubtype();
-	}
-
-	public final String getId() {
-		return this.storedObject.getId();
-	}
-
-	public final String getBatchId() {
-		return this.storedObject.getBatchId();
-	}
-
-	public final String getLabel() {
-		return this.storedObject.getLabel();
-	}
-
-	public final int getAttributeCount() {
-		return this.storedObject.getAttributeCount();
-	}
-
-	public final Set<String> getAttributeNames() {
-		return this.storedObject.getAttributeNames();
-	}
-
-	public final StoredAttribute<IDfValue> getAttribute(String name) {
-		return this.storedObject.getAttribute(name);
-	}
-
-	public final StoredAttribute<IDfValue> setAttribute(StoredAttribute<IDfValue> attribute) {
-		return this.storedObject.setAttribute(attribute);
-	}
-
-	public final StoredAttribute<IDfValue> removeAttribute(String name) {
-		return this.storedObject.removeAttribute(name);
-	}
-
-	public final Collection<StoredAttribute<IDfValue>> getAttributes() {
-		return this.storedObject.getAttributes();
-	}
-
-	public final void setAttributes(Collection<StoredAttribute<IDfValue>> attributes) {
-		this.storedObject.setAttributes(attributes);
-	}
-
-	public final int getPropertyCount() {
-		return this.storedObject.getPropertyCount();
-	}
-
-	public final Set<String> getPropertyNames() {
-		return this.storedObject.getPropertyNames();
-	}
-
-	public final StoredProperty<IDfValue> getProperty(String name) {
-		return this.storedObject.getProperty(name);
-	}
-
-	public final StoredProperty<IDfValue> setProperty(StoredProperty<IDfValue> property) {
-		return this.storedObject.setProperty(property);
-	}
-
-	public final StoredProperty<IDfValue> removeProperty(String name) {
-		return this.storedObject.removeProperty(name);
-	}
-
-	public final Collection<StoredProperty<IDfValue>> getProperties() {
-		return this.storedObject.getProperties();
-	}
-
-	public final void setProperties(Collection<StoredProperty<IDfValue>> properties) {
-		this.storedObject.setProperties(properties);
 	}
 
 	/**
@@ -222,18 +151,8 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 		throw new AbstractMethodError("calculateBatchId() must be overridden by subclasses that support batching");
 	}
 
-	/**
-	 * <p>
-	 * Loads the object's attributes and properties from the given CMS object, and returns
-	 * {@code true} if the load was successful or {@code false} if the object should not be
-	 * processed at all.
-	 * </p>
-	 *
-	 * @param object
-	 * @return {@code true} if the load was successful or {@code false} if the object should not be
-	 *         processed at all
-	 * @throws DfException
-	 * @throws CMSMFException
+	/* (non-Javadoc)
+	 * @see com.delta.cmsmf.cms.DctmInterface#loadFromCMS(com.documentum.fc.client.IDfPersistentObject)
 	 */
 	public final boolean loadFromCMS(IDfPersistentObject object) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to populate from"); }
@@ -252,7 +171,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 			return false;
 		}
 
-		this.storedObject = new StoredObject<IDfValue>(type.getCmsType(), object.getObjectId().getId(),
+		this.storedObject = new StoredObject<IDfValue>(type.getStoredObjectType(), object.getObjectId().getId(),
 			(type.isBatchingSupported() ? calculateBatchId(typedObject) : DctmPersistentObject.NULL_BATCH_ID),
 			calculateLabel(typedObject), object.getType().getName());
 
@@ -296,6 +215,9 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 			attr.getId(), attr.getLength(), attr.isRepeating(), attr.isQualifiable(), values);
 	}
 
+	/* (non-Javadoc)
+	 * @see com.delta.cmsmf.cms.DctmInterface#persistRequirements(com.documentum.fc.client.IDfPersistentObject, com.delta.cmsmf.cms.DctmTransferContext, com.delta.cmsmf.cms.DctmDependencyManager)
+	 */
 	public final void persistRequirements(IDfPersistentObject object, DctmTransferContext ctx,
 		DctmDependencyManager dependencyManager) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
@@ -309,6 +231,9 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 		throws DfException, CMSMFException {
 	}
 
+	/* (non-Javadoc)
+	 * @see com.delta.cmsmf.cms.DctmInterface#persistDependents(com.documentum.fc.client.IDfPersistentObject, com.delta.cmsmf.cms.DctmTransferContext, com.delta.cmsmf.cms.DctmDependencyManager)
+	 */
 	public final void persistDependents(IDfPersistentObject object, DctmTransferContext ctx,
 		DctmDependencyManager dependencyManager) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException(
@@ -342,6 +267,9 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 		return false;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.delta.cmsmf.cms.DctmInterface#saveToCMS(com.delta.cmsmf.cms.DctmTransferContext)
+	 */
 	public final SaveResult saveToCMS(DctmTransferContext context) throws DfException, CMSMFException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 
@@ -369,25 +297,28 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 			if (isNew) {
 				// Create a new object
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Creating a new object for [%s](%s)", getLabel(), getId()));
+					this.log.debug(String.format("Creating a new object for [%s](%s)", this.storedObject.getLabel(),
+						this.storedObject.getId()));
 				}
 				object = newObject(context);
 				cmsImportResult = ImportResult.CREATED;
 				if (!isTransitoryObject(object)) {
 					// DO NOT override mappings...we don't know the new object's ID until checkin is
 					// completed
-					context.getAttributeMapper().setMapping(this.type.getCmsType(), DctmAttributes.R_OBJECT_ID,
-						getId(), object.getObjectId().getId());
+					context.getAttributeMapper().setMapping(this.type.getStoredObjectType(),
+						DctmAttributes.R_OBJECT_ID, this.storedObject.getId(), object.getObjectId().getId());
 				}
 			} else {
 				// Is this correct?
 				newLabel = calculateLabel(object);
-				this.log.info(String.format("Acquiring lock on %s [%s](%s)", this.type.name(), getLabel(), getId()));
+				this.log.info(String.format("Acquiring lock on %s [%s](%s)", this.type.name(),
+					this.storedObject.getLabel(), this.storedObject.getId()));
 				object.lock();
 				object.fetch(null);
-				this.log.info(String.format("Acquired lock on %s [%s](%s)", this.type.name(), getLabel(), getId()));
-				context.getAttributeMapper().setMapping(this.type.getCmsType(), DctmAttributes.R_OBJECT_ID, getId(),
-					object.getObjectId().getId());
+				this.log.info(String.format("Acquired lock on %s [%s](%s)", this.type.name(),
+					this.storedObject.getLabel(), this.storedObject.getId()));
+				context.getAttributeMapper().setMapping(this.type.getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
+					this.storedObject.getId(), object.getObjectId().getId());
 
 				if (isSameObject(object)) {
 					ok = true;
@@ -408,7 +339,8 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 				}
 				ok = true;
 				this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
-					this.type, cmsImportResult, getLabel(), getId(), newLabel, object.getObjectId().getId()));
+					this.type, cmsImportResult, this.storedObject.getLabel(), this.storedObject.getId(), newLabel,
+					object.getObjectId().getId()));
 
 				return new SaveResult(cmsImportResult, newLabel, object.getObjectId().getId());
 			}
@@ -420,7 +352,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 				// If an existing object is being updated, clear out all of its attributes that are
 				// not part of our attribute set
 				// NOTE Only clear non internal and non system attributes
-				Set<String> attributesBeingUpdated = getAttributeNames();
+				Set<String> attributesBeingUpdated = this.storedObject.getAttributeNames();
 				final int attributeCount = object.getAttrCount();
 				for (int i = 0; i < attributeCount; i++) {
 					final IDfAttr attr = object.getAttr(i);
@@ -437,7 +369,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 			}
 
 			// Set "default" attributes
-			for (StoredAttribute<IDfValue> attribute : getAttributes()) {
+			for (StoredAttribute<IDfValue> attribute : this.storedObject.getAttributes()) {
 				// TODO check to see if we need to set any internal or system attributes of various
 				// types
 				final String name = attribute.getName();
@@ -477,7 +409,8 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 			}
 			ok = true;
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
-				this.type, cmsImportResult, getLabel(), getId(), newLabel, object.getObjectId().getId()));
+				this.type, cmsImportResult, this.storedObject.getLabel(), this.storedObject.getId(), newLabel, object
+				.getObjectId().getId()));
 
 			return new SaveResult(cmsImportResult, newLabel, object.getObjectId().getId());
 		} finally {
@@ -487,11 +420,11 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 				} catch (DfException e) {
 					ok = false;
 					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							getLabel(), getId()), e);
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -500,25 +433,27 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 					// take. There is no need to save() the object for this, as this is a direct
 					// modification
 					if (this.log.isTraceEnabled()) {
-						this.log.trace(String
-							.format("Updating the system attributes for [%s](%s)", getLabel(), getId()));
+						this.log.trace(String.format("Updating the system attributes for [%s](%s)",
+							this.storedObject.getLabel(), this.storedObject.getId()));
 					}
 
 					if (!updateSystemAttributes(this.storedObject, object)) {
-						this.log.warn(String.format("Failed to update the system attributes for [%s](%s)", getLabel(),
-							getId()));
+						this.log.warn(String.format("Failed to update the system attributes for [%s](%s)",
+							this.storedObject.getLabel(), this.storedObject.getId()));
 					}
-					this.log.info(String.format("Committing the transaction for [%s](%s)", getLabel(), getId()));
+					this.log.info(String.format("Committing the transaction for [%s](%s)",
+						this.storedObject.getLabel(), this.storedObject.getId()));
 					if (localTx != null) {
 						session.commitTransEx(localTx);
 					} else {
 						session.commitTrans();
 					}
 				} else {
-					this.log.warn(String.format("Aborting the transaction for [%s](%s)", getLabel(), getId()));
+					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
+						this.storedObject.getId()));
 					// Clear the mapping
-					context.getAttributeMapper().clearSourceMapping(this.type.getCmsType(), DctmAttributes.R_OBJECT_ID,
-						getId());
+					context.getAttributeMapper().clearSourceMapping(this.type.getStoredObjectType(),
+						DctmAttributes.R_OBJECT_ID, this.storedObject.getId());
 					if (localTx != null) {
 						session.abortTransEx(localTx);
 					} else {
@@ -550,7 +485,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 	}
 
 	protected boolean isSameObject(T object) throws DfException {
-		StoredAttribute<IDfValue> thisDate = getAttribute(DctmAttributes.R_MODIFY_DATE);
+		StoredAttribute<IDfValue> thisDate = this.storedObject.getAttribute(DctmAttributes.R_MODIFY_DATE);
 		if (thisDate == null) { return false; }
 		IDfValue objectDate = object.getValue(DctmAttributes.R_MODIFY_DATE);
 		if (objectDate == null) { return false; }
@@ -562,18 +497,18 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
 	protected T newObject(DctmTransferContext ctx) throws DfException, CMSMFException {
-		return castObject(ctx.getSession().newObject(getSubtype()));
+		return castObject(ctx.getSession().newObject(this.storedObject.getSubtype()));
 	}
 
 	protected abstract T locateInCms(DctmTransferContext context) throws CMSMFException, DfException;
 
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	/**
@@ -589,7 +524,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	/**
@@ -603,21 +538,21 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
 	protected final boolean copyAttributeToObject(String attrName, T object) throws DfException {
-		return copyAttributeToObject(getAttribute(attrName), object);
+		return copyAttributeToObject(this.storedObject.getAttribute(attrName), object);
 	}
 
 	protected final boolean copyAttributeToObject(StoredAttribute<IDfValue> attribute, T object) throws DfException {
@@ -636,7 +571,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attrName == null) { throw new IllegalArgumentException(
 			"Must provide an attribute name to set on the object"); }
-		StoredAttribute<IDfValue> dataAttr = getAttribute(attrName);
+		StoredAttribute<IDfValue> dataAttr = this.storedObject.getAttribute(attrName);
 		if (dataAttr != null) { return setAttributeOnObject(dataAttr, values, object); }
 
 		int idx = object.findAttrIndex(attrName);
@@ -685,7 +620,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 
 	protected final void clearAttributeFromObject(String attr, T object) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to clear the attribute from"); }
-		StoredAttribute<IDfValue> dataAttr = getAttribute(attr);
+		StoredAttribute<IDfValue> dataAttr = this.storedObject.getAttribute(attr);
 		if (dataAttr != null) {
 			clearAttributeFromObject(dataAttr, object);
 		} else {
@@ -735,13 +670,13 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 			throw new CMSMFException(String.format("Failed to decode the object type for [%s]", targetObject.getType()
 				.getName()), e);
 		}
-		Mapping m = context.getAttributeMapper().getSourceMapping(targetType.getCmsType(), DctmAttributes.R_OBJECT_ID,
-			objectId);
+		Mapping m = context.getAttributeMapper().getSourceMapping(targetType.getStoredObjectType(),
+			DctmAttributes.R_OBJECT_ID, objectId);
 		if (m == null) { return false; }
 
 		Set<String> s = Collections.singleton(m.getSourceValue());
 		final AtomicReference<StoredObject<IDfValue>> loaded = new AtomicReference<StoredObject<IDfValue>>(null);
-		context.deserializeObjects(targetType.getCmsObjectClass(), s, new StoredObjectHandler<IDfValue>() {
+		final StoredObjectHandler<IDfValue> handler = new StoredObjectHandler<IDfValue>() {
 
 			@Override
 			public boolean newBatch(String batchId) throws StorageException {
@@ -763,13 +698,19 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 			public boolean handleException(SQLException e) {
 				return true;
 			}
-		});
+		};
+		try {
+			context.loadObjects(targetType.getStoredObjectType(), s, handler);
+		} catch (Exception e) {
+			throw new CMSMFException(String.format("Exception caught attempting to load %s [%s](%s)",
+				targetType.getStoredObjectType(), this.storedObject.getLabel(), this.storedObject.getId()), e);
+		}
 		if (loaded.get() == null) { return false; }
 		try {
 			return updateSystemAttributes(loaded.get(), targetObject);
 		} catch (DfException e) {
 			throw new CMSMFException(String.format("Failed to update the system attributes for %s object [%s](%s)",
-				getType().name(), getLabel(), objectId), e);
+				this.storedObject.getType().name(), this.storedObject.getLabel(), objectId), e);
 		}
 	}
 
@@ -875,7 +816,8 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 
 	@Override
 	public String toString() {
-		return String.format("CmsObject [type=%s, subtype=%s, dfClass=%s, id=%s, label=%s]", this.type, getSubtype(),
-			this.dfClass.getSimpleName(), getId(), getLabel());
+		return String.format("CmsObject [type=%s, subtype=%s, dfClass=%s, id=%s, label=%s]", this.type,
+			this.storedObject.getSubtype(), this.dfClass.getSimpleName(), this.storedObject.getId(),
+			this.storedObject.getLabel());
 	}
 }

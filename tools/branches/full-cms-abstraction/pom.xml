@@ -16,7 +16,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.6</project.build.target>
 		<maven.min-version>3.0</maven.min-version>
-		<dfc.version>6.7-SP1</dfc.version>
 	</properties>
 
 	<organization>
@@ -52,11 +51,10 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.documentum.dfc</groupId>
-			<artifactId>dfc-jars</artifactId>
-			<version>${dfc.version}</version>
-			<type>pom</type>
-			<scope>provided</scope>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-engine-documentum</artifactId>
+			<version>0.0.1</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<dependency>

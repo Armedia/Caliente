@@ -4,6 +4,10 @@
 
 package com.delta.cmsmf.cms;
 
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -44,7 +48,7 @@ public class DctmFormat extends DctmPersistentObject<IDfFormat> {
 	@Override
 	protected IDfFormat locateInCms(DctmTransferContext ctx) throws DfException {
 		IDfSession session = ctx.getSession();
-		IDfValue formatName = getAttribute(DctmAttributes.NAME).getValue();
+		IDfValue formatName = this.storedObject.getAttribute(DctmAttributes.NAME).getValue();
 		return session.getFormat(formatName.asString());
 	}
 }

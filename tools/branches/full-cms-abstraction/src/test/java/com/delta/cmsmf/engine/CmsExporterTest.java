@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.delta.cmsmf.cms.AbstractTest;
 import com.delta.cmsmf.cms.CmsFileSystem;
-import com.delta.cmsmf.cms.DefaultContentStreamStore;
+import com.delta.cmsmf.cms.DctmContentStreamStore;
 import com.delta.cmsmf.cms.storage.CmsBaseObjectStore;
 
 public class CmsExporterTest extends AbstractTest {
@@ -27,7 +27,7 @@ public class CmsExporterTest extends AbstractTest {
 	@Test
 	public void testDoExport() throws Throwable {
 		final CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
-		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
+		final CmsFileSystem fs = new DctmContentStreamStore(getFsDir());
 		final Exporter exporter = new Exporter(store, fs, 10, 10);
 		// big crap - includes "everything":
 		// "from dm_user union select r_object_id from dm_type union select r_object_id from dm_format union select r_object_id from dm_group union select r_object_id from dm_acl union select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)"

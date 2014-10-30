@@ -11,11 +11,17 @@ import java.util.Set;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
+import com.armedia.cmf.documentum.engine.DctmMappingUtils;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.DfValueFactory;
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.cms.DctmAttributeHandlers.AttributeHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -39,8 +45,8 @@ public class DctmUser extends DctmPersistentObject<IDfUser> {
 		}
 
 		@Override
-		public Collection<IDfValue> getImportableValues(IDfPersistentObject object,
-			StoredAttribute<IDfValue> attribute) throws DfException {
+		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+			throws DfException {
 			return DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER.getImportableValues(object, attribute);
 		}
 
@@ -71,8 +77,8 @@ public class DctmUser extends DctmPersistentObject<IDfUser> {
 		// ahead of ourselves in the object creation phase.
 
 		// The default ACL will be linked back when the ACL's are imported.
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING, DctmAttributes.ACL_DOMAIN,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
+			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING, DctmAttributes.ACL_NAME,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
@@ -86,8 +92,8 @@ public class DctmUser extends DctmPersistentObject<IDfUser> {
 
 		// This will help intercept user names that need to be mapped to "dynamic" names on the
 		// target DB, taken from the session config
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING, DctmAttributes.USER_NAME,
-			DctmUser.USER_NAME_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
+			DctmAttributes.USER_NAME, DctmUser.USER_NAME_HANDLER);
 
 		DctmUser.HANDLERS_READY = true;
 	}
@@ -142,7 +148,7 @@ public class DctmUser extends DctmPersistentObject<IDfUser> {
 	protected IDfUser locateInCms(DctmTransferContext ctx) throws DfException {
 		// If that search failed, go by username
 		final IDfSession session = ctx.getSession();
-		String userName = getAttribute(DctmAttributes.USER_NAME).getValue().asString();
+		String userName = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
 		userName = DctmMappingUtils.resolveMappableUser(session, userName);
 		IDfUser ret = session.getUser(userName);
 		return ret;
@@ -156,7 +162,7 @@ public class DctmUser extends DctmPersistentObject<IDfUser> {
 
 	@Override
 	protected boolean skipImport(DctmTransferContext ctx) throws DfException {
-		IDfValue userNameValue = getAttribute(DctmAttributes.USER_NAME).getValue();
+		IDfValue userNameValue = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
 		if (DctmUser.isSpecialUser(userName)) { return true; }
 		return super.skipImport(ctx);
@@ -166,10 +172,10 @@ public class DctmUser extends DctmPersistentObject<IDfUser> {
 	protected void prepareForConstruction(IDfUser user, boolean newObject, DctmTransferContext context)
 		throws DfException {
 
-		StoredAttribute<IDfValue> loginDomain = getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
+		StoredAttribute<IDfValue> loginDomain = this.storedObject.getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
 		IDfTypedObject serverConfig = user.getSession().getServerConfig();
 		String serverVersion = serverConfig.getString(DctmAttributes.R_SERVER_VERSION);
-		StoredAttribute<IDfValue> userSourceAtt = getAttribute(DctmAttributes.USER_SOURCE);
+		StoredAttribute<IDfValue> userSourceAtt = this.storedObject.getAttribute(DctmAttributes.USER_SOURCE);
 		String userSource = (userSourceAtt != null ? userSourceAtt.getValue().asString() : null);
 
 		// NOTE for some reason, 6.5 sp2 with ldap requires that user_login_domain be set
@@ -178,23 +184,24 @@ public class DctmUser extends DctmPersistentObject<IDfUser> {
 		if ((loginDomain == null) && serverVersion.startsWith("6.5") && "LDAP".equalsIgnoreCase(userSource)) {
 			IDfAttr attr = user.getAttr(user.findAttrIndex(DctmAttributes.USER_LOGIN_DOMAIN));
 			loginDomain = newStoredAttribute(attr, DfValueFactory.newStringValue(""));
-			setAttribute(loginDomain);
+			this.storedObject.setAttribute(loginDomain);
 		}
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfUser user, boolean newObject, DctmTransferContext context) throws DfException {
+	protected void finalizeConstruction(IDfUser user, boolean newObject, DctmTransferContext context)
+		throws DfException {
 		// First, set the username - only do this for new objects!!
 		if (newObject) {
 			copyAttributeToObject(DctmAttributes.USER_NAME, user);
-			final String userName = getAttribute(DctmAttributes.USER_NAME).getValue().asString();
+			final String userName = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
 
 			// Login name + domain
 			copyAttributeToObject(DctmAttributes.USER_LOGIN_DOMAIN, user);
 			copyAttributeToObject(DctmAttributes.USER_LOGIN_NAME, user);
 
 			// Next, set the password
-			StoredAttribute<IDfValue> att = getAttribute(DctmAttributes.USER_SOURCE);
+			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.USER_SOURCE);
 			final IDfValue userSource = att.getValue();
 			if (Tools.equals(Constant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been

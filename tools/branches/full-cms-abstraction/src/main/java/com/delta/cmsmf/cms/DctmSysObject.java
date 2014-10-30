@@ -20,6 +20,12 @@ import java.util.TreeSet;
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
+import com.armedia.cmf.documentum.engine.DctmMappingUtils;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
@@ -27,7 +33,6 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
@@ -325,7 +330,7 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 
 	protected final void detectIncomingMutability() {
 		if (!this.mustFreeze) {
-			StoredAttribute<IDfValue> frozen = getAttribute(DctmAttributes.R_FROZEN_FLAG);
+			StoredAttribute<IDfValue> frozen = this.storedObject.getAttribute(DctmAttributes.R_FROZEN_FLAG);
 			if (frozen != null) {
 				// We only copy over the "true" values - we don't override local frozen status
 				// if it's set to true, and the incoming value is false
@@ -333,7 +338,7 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 			}
 		}
 		if (!this.mustFreeze) {
-			StoredAttribute<IDfValue> immutable = getAttribute(DctmAttributes.R_IMMUTABLE_FLAG);
+			StoredAttribute<IDfValue> immutable = this.storedObject.getAttribute(DctmAttributes.R_IMMUTABLE_FLAG);
 			if (immutable != null) {
 				// We only copy over the "true" values - we don't override local immutable
 				// status if it's set to true, and the incoming value is false
@@ -350,7 +355,8 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 			// An object being frozen implies immutability
 			this.mustFreeze = true;
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Clearing frozen status from [%s](%s){%s}", getLabel(), getId(), newId));
+				this.log.debug(String.format("Clearing frozen status from [%s](%s){%s}", this.storedObject.getLabel(),
+					this.storedObject.getId(), newId));
 			}
 			// TODO: How to determine if we use false or true here? Stick to false, for now...
 			sysObject.unfreeze(false);
@@ -363,8 +369,8 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 			// An object may be immutable, yet not frozen
 			this.mustImmute = true;
 			if (this.log.isDebugEnabled()) {
-				this.log
-					.debug(String.format("Clearing immutable status from [%s](%s){%s}", getLabel(), getId(), newId));
+				this.log.debug(String.format("Clearing immutable status from [%s](%s){%s}",
+					this.storedObject.getLabel(), this.storedObject.getId(), newId));
 			}
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, false);
 			if (!sysObject.isCheckedOut()) {
@@ -379,7 +385,8 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 		final String newId = sysObject.getObjectId().getId();
 		if (this.mustFreeze) {
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", getLabel(), getId(), newId));
+				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", this.storedObject.getLabel(),
+					this.storedObject.getId(), newId));
 			}
 			// TODO: assembly support?
 			// TODO: How to determine if we use false or true here? Stick to false, for now...
@@ -387,8 +394,8 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 			ret |= true;
 		} else if (this.mustImmute) {
 			if (this.log.isDebugEnabled()) {
-				this.log
-					.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
+				this.log.debug(String.format("Setting immutability status to [%s](%s){%s}",
+					this.storedObject.getLabel(), this.storedObject.getId(), newId));
 			}
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
@@ -406,13 +413,13 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PARENTS,
 			DctmDataType.DF_ID.getStoredType(), true);
 		properties.add(parents);
-		for (IDfValue folderId : getAttribute(DctmAttributes.I_FOLDER_ID)) {
+		for (IDfValue folderId : this.storedObject.getAttribute(DctmAttributes.I_FOLDER_ID)) {
 			final IDfFolder parent;
 			try {
 				parent = session.getFolderBySpecification(folderId.asId().getId());
 			} catch (DfIdNotFoundException e) {
-				this.log.warn(String.format("%s [%s](%s) references non-existent folder [%s]", getType().name(),
-					getLabel(), getId(), folderId.asString()));
+				this.log.warn(String.format("%s [%s](%s) references non-existent folder [%s]", this.storedObject
+					.getType().name(), this.storedObject.getLabel(), this.storedObject.getId(), folderId.asString()));
 				continue;
 			}
 			parents.addValue(folderId);
@@ -445,7 +452,7 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 	protected IDfId persistChanges(T sysObject, DctmTransferContext context) throws DfException, CMSMFException {
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
 		StringBuilder buf = new StringBuilder();
-		for (IDfValue v : getAttribute(DctmAttributes.R_VERSION_LABEL)) {
+		for (IDfValue v : this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL)) {
 			if (buf.length() > 0) {
 				buf.append(",");
 			}
@@ -463,9 +470,10 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 			newId = sysObject.getObjectId();
 			sysObject.save();
 		}
-		this.log.info(String.format("%s %s [%s](%s) to CMS as version [%s] (newId=%s)", action, getType(), getLabel(),
-			getId(), vl, newId.getId()));
-		context.getAttributeMapper().setMapping(getType(), DctmAttributes.R_OBJECT_ID, getId(), newId.getId());
+		this.log.info(String.format("%s %s [%s](%s) to CMS as version [%s] (newId=%s)", action,
+			this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId(), vl, newId.getId()));
+		context.getAttributeMapper().setMapping(this.storedObject.getType(), DctmAttributes.R_OBJECT_ID,
+			this.storedObject.getId(), newId.getId());
 		return newId;
 	}
 
@@ -587,21 +595,21 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 	}
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, CMSMFException {
-		return getProperty(DctmSysObject.TARGET_PATHS).getValues();
+		return this.storedObject.getProperty(DctmSysObject.TARGET_PATHS).getValues();
 	}
 
 	protected T locateExistingByPath(DctmTransferContext ctx) throws CMSMFException, DfException {
 		final IDfSession session = ctx.getSession();
-		final String documentName = getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
+		final String documentName = this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 		final String quotedDocumentName = documentName.replace("'", "''");
 
-		final String dqlBase = String.format("%s (ALL) where object_name = '%s' and folder('%%s')", getSubtype(),
-			quotedDocumentName);
+		final String dqlBase = String.format("%s (ALL) where object_name = '%s' and folder('%%s')",
+			this.storedObject.getSubtype(), quotedDocumentName);
 
 		final boolean seeksReference = isReference();
 		String existingPath = null;
 		T existing = null;
-		final IDfType type = session.getType(getSubtype());
+		final IDfType type = session.getType(this.storedObject.getSubtype());
 		final Class<T> dfClass = getDfClass();
 		for (IDfValue p : getTargetPaths()) {
 			final String dql = String.format(dqlBase, p.asString());
@@ -617,8 +625,8 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 				// Not a document...we have a problem
 				throw new CMSMFException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
-					getSubtype(), getLabel(), getSubtype(), currentPath, current.getType().getName(), current
-						.getObjectId().getId()));
+					this.storedObject.getSubtype(), this.storedObject.getLabel(), this.storedObject.getSubtype(),
+					currentPath, current.getType().getName(), current.getObjectId().getId()));
 			}
 
 			T currentObj = dfClass.cast(current);
@@ -626,8 +634,8 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 				// The target document's reference flag is different from ours...problem!
 				throw new CMSMFException(String.format(
 					"Reference flag mismatch between objects. The [%s] %s collides with a %sreference at [%s] (%s:%s)",
-					getLabel(), getSubtype(), (seeksReference ? "non-" : ""), currentPath, current.getType().getName(),
-					current.getObjectId().getId()));
+					this.storedObject.getLabel(), this.storedObject.getSubtype(), (seeksReference ? "non-" : ""),
+					currentPath, current.getType().getName(), current.getObjectId().getId()));
 			}
 
 			if (existing == null) {
@@ -645,8 +653,9 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 
 			// Not the same, this is a problem
 			throw new CMSMFException(String.format(
-				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]", getLabel(),
-				existing.getObjectId().getId(), existingPath, current.getObjectId().getId(), currentPath));
+				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
+				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
+				.getId(), currentPath));
 		}
 
 		return existing;
@@ -750,15 +759,15 @@ abstract class DctmSysObject<T extends IDfSysObject> extends DctmPersistentObjec
 	}
 
 	protected List<String> getProspectiveParents(DctmTransferContext context) throws DfException {
-		StoredProperty<IDfValue> parents = getProperty(DctmSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
 		StoredAttributeMapper mapper = context.getAttributeMapper();
 		for (int i = 0; i < parents.getValueCount(); i++) {
 			IDfId parentId = parents.getValue(i).asId();
 			// We already know the parents are folders, b/c that's how we harvested them in the
 			// export, so we stick to that
-			Mapping m = mapper.getTargetMapping(DctmObjectType.FOLDER.getCmsType(), DctmAttributes.R_OBJECT_ID,
-				parentId.getId());
+			Mapping m = mapper.getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
+				DctmAttributes.R_OBJECT_ID, parentId.getId());
 			if (m == null) {
 				// TODO: HOW??! Must have been an import failure on the parent...
 				continue;

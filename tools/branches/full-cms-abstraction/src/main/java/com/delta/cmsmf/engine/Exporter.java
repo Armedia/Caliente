@@ -22,18 +22,22 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.DctmTranslator;
+import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.DfValueFactory;
+import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.exporter.ExportEngineListener;
+import com.armedia.cmf.engine.exporter.ExportListener;
 import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.delta.cmsmf.cms.DctmObjectType;
-import com.delta.cmsmf.cms.DfValueFactory;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.utils.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -68,8 +72,8 @@ public class Exporter extends TransferEngine<ExportEngineListener> {
 		}
 
 		@Override
-		public void objectExportCompleted(StoredObject<?> object) {
-			Exporter.this.objectExportCompleted(object);
+		public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
+			Exporter.this.objectExportCompleted(object, objectNumber);
 		}
 	};
 
@@ -189,13 +193,15 @@ public class Exporter extends TransferEngine<ExportEngineListener> {
 							type = DctmObjectType.decodeType(dfObj);
 							final String objectId = dfObj.getObjectId().getId();
 
-							objectExportStarted(type.getCmsType(), objectId);
-							StoredObject<?> object = objectStore.persistDfObject(dfObj, new DefaultExportContext(
-								objectId, session, objectStore, fileSystem, output, Exporter.this.exportListener));
-							if (object != null) {
-								objectExportCompleted(object);
+							objectExportStarted(type.getStoredObjectType(), objectId);
+							StoredObject<IDfValue> object = null; // convert from dfObj
+							DctmExportContext ctx = new DctmExportContext(objectId, session, objectStore, fileSystem,
+								output, Exporter.this.exportListener);
+							Long objectNumber = objectStore.storeObject(object, DctmTranslator.INSTANCE);
+							if (objectNumber != null) {
+								objectExportCompleted(object, objectNumber);
 							} else {
-								objectSkipped(type.getCmsType(), objectId);
+								objectSkipped(type.getStoredObjectType(), objectId);
 							}
 							if (Exporter.this.log.isDebugEnabled()) {
 								Exporter.this.log.debug(String.format("Persisted [%s] object with id [%s]", dfObj
@@ -203,7 +209,7 @@ public class Exporter extends TransferEngine<ExportEngineListener> {
 							}
 						} catch (Throwable t) {
 							// Log the error, move on
-							objectExportFailed(type.getCmsType(), id.getId(), thrown);
+							objectExportFailed(type.getStoredObjectType(), id.getId(), thrown);
 							thrown = t;
 							Exporter.this.log.error(
 								String.format("Exception caught processing object with ID [%s]", id.getId()), t);
@@ -301,7 +307,7 @@ public class Exporter extends TransferEngine<ExportEngineListener> {
 					if (v == exitValue) {
 						continue;
 					}
-					this.log.fatal(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v.asId().getId()));
+					this.log.error(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v.asId().getId()));
 				}
 				remaining.clear();
 			}
@@ -351,7 +357,7 @@ public class Exporter extends TransferEngine<ExportEngineListener> {
 	private void exportStarted(String dql) {
 		for (ExportEngineListener l : getListeners()) {
 			try {
-				l.exportStarted(dql);
+				l.exportStarted(null);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}
@@ -369,11 +375,11 @@ public class Exporter extends TransferEngine<ExportEngineListener> {
 		}
 	}
 
-	private void objectExportCompleted(StoredObject<?> object) {
+	private void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
 		isTracked(object);
 		for (ExportEngineListener l : getListeners()) {
 			try {
-				l.objectExportCompleted(object);
+				l.objectExportCompleted(object, objectNumber);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}

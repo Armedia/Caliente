@@ -21,8 +21,17 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 
+import com.armedia.cmf.documentum.engine.DctmDependencyType;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.DctmTranslator;
+import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.engine.DefaultTransferContext;
+import com.armedia.cmf.engine.TransferContext;
+import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.importer.ImportEngineListener;
+import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
@@ -30,16 +39,10 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectCounter;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.delta.cmsmf.cms.DctmDependencyType;
-import com.delta.cmsmf.cms.DctmTransferContext;
-import com.delta.cmsmf.cms.DctmObjectType;
 import com.delta.cmsmf.cms.DctmPersistentObject.SaveResult;
-import com.delta.cmsmf.cms.DctmTranslator;
-import com.delta.cmsmf.cms.DefaultTransferContext;
 import com.delta.cmsmf.cms.pool.DctmSessionManager;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
-import com.delta.cmsmf.utils.DfUtils;
 import com.delta.cmsmf.utils.SynchronizedCounter;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -84,7 +87,7 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 	}
 
 	public void doImport(final DctmSessionManager sessionManager, boolean postProcess) throws DfException,
-		CMSMFException {
+	CMSMFException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -145,7 +148,7 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 						session = sessionManager.acquireSession();
 						if (Importer.this.log.isDebugEnabled()) {
 							Importer.this.log
-								.debug(String.format("Got IDfSession [%s]", DfUtils.getSessionId(session)));
+							.debug(String.format("Got IDfSession [%s]", DfUtils.getSessionId(session)));
 						}
 
 						try {
@@ -161,8 +164,8 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 									continue;
 								}
 
-								DctmTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore,
-									fileSystem, output);
+								TransferContext<IDfSession, IDfValue> ctx = new DefaultTransferContext<IDfSession, IDfValue>(
+									DctmTranslator.INSTANCE, next.getId(), session, objectStore, fileSystem, output);
 								SaveResult result = null;
 								final StoredObjectType storedType = next.getType();
 								final DctmObjectType type = DctmTranslator.translateType(storedType);
@@ -183,10 +186,10 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 										// objects
 										failBatch = true;
 										Importer.this.log
-										.debug(String
-											.format(
-												"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-												type));
+											.debug(String
+												.format(
+													"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+													type));
 										continue;
 									}
 								} finally {
@@ -216,7 +219,12 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 		};
 
 		try {
-			final Map<StoredObjectType, Integer> containedTypes = objectStore.getStoredObjectTypes();
+			Map<StoredObjectType, Integer> containedTypes;
+			try {
+				containedTypes = objectStore.getStoredObjectTypes();
+			} catch (StorageException e) {
+				throw new CMSMFException("Exception raised getting the stored object counts", e);
+			}
 			final StoredObjectHandler<IDfValue> handler = new StoredObjectHandler<IDfValue>() {
 				private String batchId = null;
 				private List<StoredObject<?>> batch = null;
@@ -330,7 +338,7 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 					continue;
 				}
 
-				objectTypeImportStarted(type.getCmsType(), total);
+				objectTypeImportStarted(type.getStoredObjectType(), total);
 
 				// Start the workers
 				futures.clear();
@@ -342,7 +350,12 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 				}
 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
-				objectStore.loadObjects(DctmTranslator.INSTANCE, type.getCmsType(), handler);
+				try {
+					objectStore.loadObjects(DctmTranslator.INSTANCE, type.getStoredObjectType(), handler);
+				} catch (Exception e) {
+					throw new CMSMFException(String.format("Exception raised while loading objects of type [%s]",
+						type.getStoredObjectType()), e);
+				}
 
 				try {
 					// Ask the workers to exit civilly after the entire workload is submitted
@@ -377,13 +390,14 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 					this.log.info(String.format("All the %s workers are done, continuing with the next object type...",
 						type.name()));
 				} finally {
-					objectTypeImportFinished(type.getCmsType(), this.counter.getCounters(type.getCmsType()));
+					objectTypeImportFinished(type.getStoredObjectType(),
+						this.counter.getCounters(type.getStoredObjectType()));
 					workQueue.drainTo(remaining);
 					for (Collection<StoredObject<?>> v : remaining) {
 						if (v == exitValue) {
 							continue;
 						}
-						this.log.fatal(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
+						this.log.error(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
 					}
 					remaining.clear();
 				}
@@ -428,10 +442,10 @@ public class Importer extends TransferEngine<ImportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);

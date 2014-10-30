@@ -8,7 +8,7 @@ import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.utils.DfUtils;
+import com.armedia.cmf.documentum.engine.DfUtils;
 import com.documentum.fc.client.DfClient;
 import com.documentum.fc.client.DfServiceException;
 import com.documentum.fc.client.IDfClient;

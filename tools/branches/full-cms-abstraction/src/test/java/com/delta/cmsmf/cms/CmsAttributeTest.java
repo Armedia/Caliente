@@ -43,7 +43,7 @@ public class CmsAttributeTest extends AbstractTest {
 		final IDfSession session = acquireSourceSession();
 		final QueryRunner qr = new QueryRunner(getDataSource());
 		final CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
-		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
+		final CmsFileSystem fs = new DctmContentStreamStore(getFsDir());
 		try {
 			IDfCollection collection = DfUtils.executeQuery(session,
 				"select r_object_id from dm_document where folder('/CMSMFTests', DESCEND)", IDfQuery.DF_EXECREAD_QUERY);

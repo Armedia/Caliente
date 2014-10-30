@@ -29,14 +29,14 @@ import com.delta.cmsmf.exception.CMSMFException;
  * @author diego
  *
  */
-public class DefaultObjectStore extends JdbcObjectStore {
+public class CMSMFObjectStore extends JdbcObjectStore {
 
-	private static final Logger LOG = Logger.getLogger(DefaultObjectStore.class);
+	private static final Logger LOG = Logger.getLogger(CMSMFObjectStore.class);
 
-	private static DefaultObjectStore INSTANCE = null;
+	private static CMSMFObjectStore INSTANCE = null;
 
-	public static synchronized DefaultObjectStore init(boolean clearData) throws CMSMFException {
-		if (DefaultObjectStore.INSTANCE != null) { return DefaultObjectStore.INSTANCE; }
+	public static synchronized CMSMFObjectStore init(boolean clearData) throws CMSMFException {
+		if (CMSMFObjectStore.INSTANCE != null) { return CMSMFObjectStore.INSTANCE; }
 		String targetPath = Setting.DB_DIRECTORY.getString();
 		File targetDirectory = null;
 		try {
@@ -60,8 +60,8 @@ public class DefaultObjectStore extends JdbcObjectStore {
 			}
 		}
 
-		if (DefaultObjectStore.LOG.isInfoEnabled()) {
-			DefaultObjectStore.LOG.info(String.format("State database will be stored at [%s]", jdbcUrl));
+		if (CMSMFObjectStore.LOG.isInfoEnabled()) {
+			CMSMFObjectStore.LOG.info(String.format("State database will be stored at [%s]", jdbcUrl));
 		}
 
 		Map<String, String> conf = new HashMap<String, String>();
@@ -79,17 +79,17 @@ public class DefaultObjectStore extends JdbcObjectStore {
 		}
 
 		try {
-			DefaultObjectStore.INSTANCE = new DefaultObjectStore(dataSourceDescriptor, clearData);
+			CMSMFObjectStore.INSTANCE = new CMSMFObjectStore(dataSourceDescriptor, clearData);
 		} catch (StorageException e) {
 			throw new CMSMFException("Failed to initialize the object store", e);
 		}
-		return DefaultObjectStore.INSTANCE;
+		return CMSMFObjectStore.INSTANCE;
 	}
 
 	public static synchronized void terminate() {
-		if (DefaultObjectStore.INSTANCE == null) { return; }
-		DefaultObjectStore.terminate();
-		DefaultObjectStore.INSTANCE = null;
+		if (CMSMFObjectStore.INSTANCE == null) { return; }
+		CMSMFObjectStore.terminate();
+		CMSMFObjectStore.INSTANCE = null;
 	}
 
 	/**
@@ -97,7 +97,7 @@ public class DefaultObjectStore extends JdbcObjectStore {
 	 * @param clearData
 	 * @throws CMSMFException
 	 */
-	private DefaultObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean clearData)
+	private CMSMFObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean clearData)
 		throws StorageException {
 		super(dataSourceDescriptor, clearData);
 		if (clearData) {

@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.delta.cmsmf.cms.AbstractTest;
 import com.delta.cmsmf.cms.CmsFileSystem;
-import com.delta.cmsmf.cms.DefaultContentStreamStore;
+import com.delta.cmsmf.cms.DctmContentStreamStore;
 import com.delta.cmsmf.cms.storage.CmsBaseObjectStore;
 
 public class CmsImporterTest extends AbstractTest {
@@ -27,7 +27,7 @@ public class CmsImporterTest extends AbstractTest {
 	@Test
 	public void testDoImport() throws Throwable {
 		final CmsBaseObjectStore store = new CmsBaseObjectStore(getDataSource(), true);
-		final CmsFileSystem fs = new DefaultContentStreamStore(getFsDir());
+		final CmsFileSystem fs = new DctmContentStreamStore(getFsDir());
 		final Exporter exporter = new Exporter(store, fs, 10, 10);
 		final Importer importer = new Importer(store, fs, 10, 10);
 
