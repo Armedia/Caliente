@@ -22,6 +22,7 @@ public class StoredObject<V> {
 	private final String batchId;
 	private final String label;
 	private final String subtype;
+	private String relativeStreamLocation = null;
 	private final Map<String, StoredAttribute<V>> attributes = new HashMap<String, StoredAttribute<V>>();
 	private final Map<String, StoredProperty<V>> properties = new HashMap<String, StoredProperty<V>>();
 
@@ -35,6 +36,14 @@ public class StoredObject<V> {
 		this.batchId = batchId;
 		this.label = label;
 		this.subtype = subtype;
+	}
+
+	final String getRelativeStreamLocation() {
+		return this.relativeStreamLocation;
+	}
+
+	final void setRelativeStreamLocation(String relativeLocation) {
+		this.relativeStreamLocation = relativeLocation;
 	}
 
 	public final StoredObjectType getType() {

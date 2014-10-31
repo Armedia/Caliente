@@ -1,19 +1,22 @@
 package com.armedia.cmf.storage;
 
 import java.io.File;
-import java.io.IOException;
 
-public interface ContentStreamStore {
+public final class ContentStreamStore {
 
-	/**
-	 * <p>
-	 * Returns the actual, canonicalized path for a content file given a relative path for the file.
-	 * </p>
-	 *
-	 * @param relativeFile
-	 * @return the actual, canonicalized path for a content file given a relative path for the file.
-	 * @throws IOException
-	 */
-	public File getContentFile(File relativeFile) throws IOException;
+	private final File baseLocation;
 
+	protected ContentStreamStore(File baseLocation) {
+		this.baseLocation = baseLocation;
+	}
+
+	public final File getStreamLocation(StoredObject<?> object) {
+		String relative = object.getRelativeStreamLocation();
+		if (relative == null) { return null; }
+		return new File(this.baseLocation, relative);
+	}
+
+	protected String getRelativeStreamLocation(StoredObject<?> object, Long objectNumber) {
+		return null;
+	}
 }

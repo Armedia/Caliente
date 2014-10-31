@@ -24,30 +24,33 @@ import com.armedia.cmf.storage.xml.CmsObjectStoreConfiguration;
 import com.armedia.cmf.storage.xml.CmsObjectStoreDefinitions;
 import com.armedia.commons.utilities.XmlTools;
 
-public abstract class ObjectStoreFactory {
+public abstract class ObjectStoreFactory<C, O extends ObjectStoreOperation<C>, S extends ObjectStore<C, O>> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(ObjectStoreFactory.class);
 
-	private final Class<? extends ObjectStore> storeClass;
+	private final Class<S> storeClass;
 
-	protected ObjectStoreFactory(Class<? extends ObjectStore> storeClass) {
+	protected ObjectStoreFactory(Class<S> storeClass) {
 		this.storeClass = storeClass;
 	}
 
-	protected final Class<? extends ObjectStore> getObjectStoreClass() {
+	protected final Class<S> getObjectStoreClass() {
 		return this.storeClass;
 	}
 
-	private static final Map<String, ObjectStoreFactory> FACTORIES;
+	protected abstract S newInstance(CmsObjectStoreConfiguration cfg) throws StorageException;
+
+	private static final Map<String, ObjectStoreFactory<?, ?, ?>> FACTORIES;
 
 	private static final ReadWriteLock STORE_LOCK = new ReentrantReadWriteLock();
-	private static final Map<String, ObjectStore> STORES = new HashMap<String, ObjectStore>();
+	private static final Map<String, ObjectStore<?, ?>> STORES = new HashMap<String, ObjectStore<?, ?>>();
 
 	static {
+		@SuppressWarnings("rawtypes")
 		ServiceLoader<ObjectStoreFactory> loader = ServiceLoader.load(ObjectStoreFactory.class);
-		Map<String, ObjectStoreFactory> m = new HashMap<String, ObjectStoreFactory>();
-		for (ObjectStoreFactory f : loader) {
-			Class<? extends ObjectStore> c = f.getObjectStoreClass();
+		Map<String, ObjectStoreFactory<?, ?, ?>> m = new HashMap<String, ObjectStoreFactory<?, ?, ?>>();
+		for (ObjectStoreFactory<?, ?, ?> f : loader) {
+			Class<? extends ObjectStore<?, ?>> c = f.getObjectStoreClass();
 			if (c == null) {
 				ObjectStoreFactory.LOG.warn("CmsObjectStoreFactory [{}] returned null for an object store class", f
 					.getClass().getCanonicalName());
@@ -110,14 +113,14 @@ public abstract class ObjectStoreFactory {
 		}
 	}
 
-	protected static CmsObjectStoreDefinitions parseConfiguration(File settings) throws StorageException,
-	IOException, JAXBException {
+	protected static CmsObjectStoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
+	JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
 		return ObjectStoreFactory.parseConfiguration(settings.toURI().toURL());
 	}
 
-	protected static CmsObjectStoreDefinitions parseConfiguration(URL settings) throws StorageException,
-	IOException, JAXBException {
+	protected static CmsObjectStoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
+	JAXBException {
 		Reader xml = null;
 		try {
 			xml = new InputStreamReader(settings.openStream());
@@ -131,7 +134,7 @@ public abstract class ObjectStoreFactory {
 		return XmlTools.unmarshal(CmsObjectStoreDefinitions.class, "objectstore.xsd", xml);
 	}
 
-	public static ObjectStore createInstance(CmsObjectStoreConfiguration configuration) throws StorageException,
+	public static ObjectStore<?, ?> createInstance(CmsObjectStoreConfiguration configuration) throws StorageException,
 	DuplicateObjectStoreException {
 		if (configuration == null) { throw new IllegalArgumentException(
 			"Must provide a configuration to construct the instance from"); }
@@ -143,14 +146,14 @@ public abstract class ObjectStoreFactory {
 		Lock l = ObjectStoreFactory.STORE_LOCK.writeLock();
 		l.lock();
 		try {
-			ObjectStore dupe = ObjectStoreFactory.STORES.get(id);
+			ObjectStore<?, ?> dupe = ObjectStoreFactory.STORES.get(id);
 			if (dupe != null) { throw new DuplicateObjectStoreException(String.format(
 				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
 				.getCanonicalName())); }
-			ObjectStoreFactory factory = ObjectStoreFactory.FACTORIES.get(className);
+			ObjectStoreFactory<?, ?, ?> factory = ObjectStoreFactory.FACTORIES.get(className);
 			if (factory == null) { throw new StorageException(String.format(
 				"No factory found for object store class [%s]", className)); }
-			ObjectStore instance = factory.newInstance(configuration);
+			ObjectStore<?, ?> instance = factory.newInstance(configuration);
 			ObjectStoreFactory.STORES.put(id, instance);
 			return instance;
 		} finally {
@@ -158,7 +161,7 @@ public abstract class ObjectStoreFactory {
 		}
 	}
 
-	public static ObjectStore getInstance(String name) {
+	public static ObjectStore<?, ?> getInstance(String name) {
 		Lock l = ObjectStoreFactory.STORE_LOCK.readLock();
 		l.lock();
 		try {
@@ -167,6 +170,4 @@ public abstract class ObjectStoreFactory {
 			l.unlock();
 		}
 	}
-
-	protected abstract ObjectStore newInstance(CmsObjectStoreConfiguration cfg) throws StorageException;
 }
