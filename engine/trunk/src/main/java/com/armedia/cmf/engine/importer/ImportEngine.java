@@ -14,9 +14,9 @@ import com.armedia.cmf.storage.StoredValueDecoderException;
  * @author diego
  *
  */
-public interface Importer<S, V> {
+public interface ImportEngine<S, T, V> {
 
-	public void importObject(StoredObject<?> object, ObjectStore objectStore, ObjectStorageTranslator<V> translator)
-		throws ImportException, StorageException, StoredValueDecoderException;
+	public void importObject(StoredObject<?> object, ObjectStore<?, ?> objectStore,
+		ObjectStorageTranslator<T, V> translator) throws ImportException, StorageException, StoredValueDecoderException;
 
 }

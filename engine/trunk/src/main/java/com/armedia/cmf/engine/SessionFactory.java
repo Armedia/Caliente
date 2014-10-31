@@ -1,13 +1,16 @@
 package com.armedia.cmf.engine;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SessionFactory<S, W extends SessionWrapper<S>> implements PoolableObjectFactory<S> {
+import com.armedia.commons.utilities.CfgTools;
+
+public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -15,9 +18,11 @@ public abstract class SessionFactory<S, W extends SessionWrapper<S>> implements 
 
 	private final Thread cleanup;
 
-	private AtomicBoolean open = new AtomicBoolean(true);
+	private boolean open = false;
 
-	protected static GenericObjectPool.Config getDefaultPoolConfig() {
+	private final ReadWriteLock lock = new ReentrantReadWriteLock();
+
+	protected static GenericObjectPool.Config getDefaultPoolConfig(CfgTools settings) {
 		GenericObjectPool.Config config = new GenericObjectPool.Config();
 		config.lifo = true;
 		config.maxActive = -1;
@@ -45,41 +50,67 @@ public abstract class SessionFactory<S, W extends SessionWrapper<S>> implements 
 		Runtime.getRuntime().addShutdownHook(this.cleanup);
 	}
 
-	public final void configure() {
-		this.pool.setConfig(getPoolConfig());
+	public final void init(CfgTools settings) throws Exception {
+		if (settings == null) { throw new IllegalArgumentException("Must provide the settings to configure with"); }
+		this.lock.writeLock().lock();
+		boolean ok = false;
+		try {
+			if (this.open) {
+				ok = true;
+				throw new Exception("This pool is already open");
+			}
+			doInit(settings);
+			this.pool.setConfig(getPoolConfig(settings));
+			ok = true;
+		} finally {
+			this.open = ok;
+			this.lock.writeLock().unlock();
+		}
 	}
 
-	public final W acquireSession() throws Exception {
-		return newWrapper(this.pool.borrowObject());
+	protected void doInit(CfgTools settings) throws Exception {
+	}
+
+	public final SessionWrapper<S> acquireSession() throws Exception {
+		this.lock.readLock().lock();
+		if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
+		try {
+			return newWrapper(this.pool.borrowObject());
+		} finally {
+			this.lock.readLock().unlock();
+		}
 	}
 
 	final void releaseSession(S session) {
+		// We specifically don't check for openness b/c we don't care...
 		try {
 			this.pool.returnObject(session);
 		} catch (Exception e) {
-			// TODO: log it
+			// TODO: log it...
 		}
 	}
 
 	public final void close() {
-		if (this.open.compareAndSet(true, false)) {
-			try {
-				this.pool.close();
-			} catch (Exception e) {
-				if (this.log.isDebugEnabled()) {
-					this.log.error("Exception caught closing this a factory", e);
-				} else {
-					this.log.error(String.format("Exception caught closing this a factory: %s", e.getMessage()));
-				}
-			} finally {
-				Runtime.getRuntime().removeShutdownHook(this.cleanup);
+		this.lock.writeLock().lock();
+		try {
+			if (!this.open) { return; }
+			this.pool.close();
+		} catch (Exception e) {
+			if (this.log.isDebugEnabled()) {
+				this.log.error("Exception caught closing this a factory", e);
+			} else {
+				this.log.error(String.format("Exception caught closing this a factory: %s", e.getMessage()));
 			}
+		} finally {
+			this.open = false;
+			this.lock.writeLock().unlock();
+			Runtime.getRuntime().removeShutdownHook(this.cleanup);
 		}
 	}
 
-	protected GenericObjectPool.Config getPoolConfig() {
-		return SessionFactory.getDefaultPoolConfig();
+	protected GenericObjectPool.Config getPoolConfig(CfgTools settings) {
+		return SessionFactory.getDefaultPoolConfig(settings);
 	}
 
-	protected abstract W newWrapper(S session);
+	protected abstract SessionWrapper<S> newWrapper(S session) throws Exception;
 }
