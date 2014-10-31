@@ -1,10 +1,10 @@
-package com.armedia.cmf.documentum;
+package com.armedia.cmf.documentum.engine;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.armedia.cmf.documentum.DctmDataType;
+import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;

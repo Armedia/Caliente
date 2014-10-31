@@ -2,7 +2,7 @@
  *
  */
 
-package com.armedia.cmf.documentum;
+package com.armedia.cmf.documentum.engine;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;

@@ -1,4 +1,4 @@
-package com.armedia.cmf.documentum;
+package com.armedia.cmf.documentum.engine;
 
 /**
  * The Class CmsAttributes. This class contains various constant values for attribute names and

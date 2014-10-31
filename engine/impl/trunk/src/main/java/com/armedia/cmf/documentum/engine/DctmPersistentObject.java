@@ -2,7 +2,7 @@
  *
  */
 
-package com.armedia.cmf.documentum;
+package com.armedia.cmf.documentum.engine;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.log4j.Logger;
 
-import com.armedia.cmf.documentum.DctmAttributeHandlers.AttributeHandler;
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;

@@ -1,4 +1,4 @@
-package com.armedia.cmf.documentum;
+package com.armedia.cmf.documentum.engine;
 
 import java.util.Collections;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package com.armedia.cmf.documentum;
+package com.armedia.cmf.documentum.engine;
 
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;

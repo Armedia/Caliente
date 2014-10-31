@@ -1,4 +1,4 @@
-package com.armedia.cmf.documentum;
+package com.armedia.cmf.documentum.engine;
 
 import java.util.ArrayList;
 import java.util.Collection;
