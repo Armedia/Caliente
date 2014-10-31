@@ -1,16 +1,17 @@
 package com.armedia.cmf.storage.jdbc;
 
+import java.sql.Connection;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.ObjectStoreFactory;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.xml.CmsObjectStoreConfiguration;
 import com.armedia.commons.dslocator.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 
-public class JdbcObjectStoreFactory extends ObjectStoreFactory {
+public class JdbcObjectStoreFactory extends ObjectStoreFactory<Connection, JdbcOperation, JdbcObjectStore> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(JdbcObjectStoreFactory.class);
 
@@ -19,7 +20,7 @@ public class JdbcObjectStoreFactory extends ObjectStoreFactory {
 	}
 
 	@Override
-	protected ObjectStore newInstance(CmsObjectStoreConfiguration configuration) throws StorageException {
+	protected JdbcObjectStore newInstance(CmsObjectStoreConfiguration configuration) throws StorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		final String locationType = cfg.getString("location.type");
@@ -36,8 +37,7 @@ public class JdbcObjectStoreFactory extends ObjectStoreFactory {
 		}
 
 		// If we got here, then we have no locator for that datasource, so we simply explode
-		throw new StorageException(String.format(
-			"Failed to locate a DataSource for building the ObjectStore %s[%s]", configuration.getClassName(),
-			configuration.getId()));
+		throw new StorageException(String.format("Failed to locate a DataSource for building the ObjectStore %s[%s]",
+			configuration.getClassName(), configuration.getId()));
 	}
 }

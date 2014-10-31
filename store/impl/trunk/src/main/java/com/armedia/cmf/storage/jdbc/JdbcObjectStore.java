@@ -52,7 +52,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class JdbcObjectStore extends ObjectStore {
+public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	private static final Object[][] NO_PARAMS = new Object[0][0];
 
@@ -81,53 +81,53 @@ public class JdbcObjectStore extends ObjectStore {
 	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from dctm_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-	"   select object_type, count(*) as total " + //
+		"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-	"    select o.* " + //
+		"    select o.* " + //
 		"  from dctm_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -160,7 +160,7 @@ public class JdbcObjectStore extends ObjectStore {
 	private final DataSource dataSource;
 
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema) throws StorageException {
-		super(true);
+		super(JdbcOperation.class, true);
 		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
 			"Must provide a valid DataSource instance"); }
 		this.dataSourceDescriptor = dataSourceDescriptor;
@@ -201,6 +201,15 @@ public class JdbcObjectStore extends ObjectStore {
 		return this.dataSourceDescriptor;
 	}
 
+	@Override
+	public JdbcOperation beginOperation() throws StorageException {
+		try {
+			return new JdbcOperation(this.dataSource.getConnection(), this.dataSourceDescriptor.isManagedTransactions());
+		} catch (SQLException e) {
+			throw new StorageException("Failed to obtain a new JDBC connection", e);
+		}
+	}
+
 	private void finalizeTransaction(Connection c, boolean commit) {
 		if (this.managedTransactions) {
 			// We're not owning the transaction
@@ -223,7 +232,7 @@ public class JdbcObjectStore extends ObjectStore {
 		return q;
 	}
 
-	private <V> Long storeObject(Connection c, StoredObject<V> object, ObjectStorageTranslator<V> translator)
+	private <T, V> Long storeObject(Connection c, StoredObject<V> object, ObjectStorageTranslator<T, V> translator)
 		throws StorageException, StoredValueEncoderException {
 		final StoredObjectType objectType = object.getType();
 		final String objectId = object.getId();
@@ -378,39 +387,15 @@ public class JdbcObjectStore extends ObjectStore {
 	}
 
 	@Override
-	protected <V> Long doStoreObject(StoredObject<V> object, ObjectStorageTranslator<V> translator)
-		throws StorageException, StoredValueEncoderException {
-		if (object == null) { throw new IllegalArgumentException("Must provide an object to serialize"); }
-		boolean ok = false;
-		Connection c = null;
-		try {
-			c = this.dataSource.getConnection();
-			// First, make sure no "left behind" garbage gets committed
-			c.rollback();
-			c.setAutoCommit(false);
-			Long ret = storeObject(c, object, translator);
-			ok = true;
-			return ret;
-		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to serialize %s", object), e);
-		} finally {
-			if (ok) {
-				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Committing insert transaction for [%s](%s)", object.getLabel(),
-						object.getId()));
-				}
-				DbUtils.commitAndCloseQuietly(c);
-			} else {
-				this.log.warn(String.format("Rolling back insert transaction for [%s](%s)", object.getLabel(),
-					object.getId()));
-				DbUtils.rollbackAndCloseQuietly(c);
-			}
-		}
+	protected <T, V> Long doStoreObject(JdbcOperation operation, StoredObject<V> object,
+		ObjectStorageTranslator<T, V> translator) throws StorageException, StoredValueEncoderException {
+		return storeObject(operation.getConnection(), object, translator);
 	}
 
 	@Override
-	protected <V> int doLoadObjects(ObjectStorageTranslator<V> translator, final StoredObjectType type,
-		Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException, StoredValueDecoderException {
+	protected <T, V> int doLoadObjects(JdbcOperation operation, ObjectStorageTranslator<T, V> translator,
+		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException,
+		StoredValueDecoderException {
 		Connection objConn = null;
 		Connection attConn = null;
 
@@ -656,7 +641,7 @@ public class JdbcObjectStore extends ObjectStore {
 			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
-				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+			.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
 				targetValue));
@@ -664,29 +649,19 @@ public class JdbcObjectStore extends ObjectStore {
 	}
 
 	@Override
-	protected void doCreateMappedValue(StoredObjectType type, String name, String sourceValue, String targetValue) {
-		boolean ok = false;
-		Connection c = null;
+	protected void doCreateMappedValue(JdbcOperation operation, StoredObjectType type, String name, String sourceValue,
+		String targetValue) {
 		try {
-			c = this.dataSource.getConnection();
-			c.setAutoCommit(false);
-			doCreateMappedValue(c, type, name, sourceValue, targetValue);
-			ok = true;
+			doCreateMappedValue(operation.getConnection(), type, name, sourceValue, targetValue);
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to create the mapping for [%s/%s/%s->%s]", type, name,
 				sourceValue, targetValue), e);
-		} finally {
-			if (ok) {
-				DbUtils.commitAndCloseQuietly(c);
-			} else {
-				DbUtils.rollbackAndCloseQuietly(c);
-			}
 		}
 	}
 
 	@Override
-	protected String doGetMappedValue(boolean source, StoredObjectType type, String name, String value)
-		throws StorageException {
+	protected String doGetMappedValue(JdbcOperation operation, boolean source, StoredObjectType type, String name,
+		String value) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to search against"); }
@@ -713,7 +688,8 @@ public class JdbcObjectStore extends ObjectStore {
 	}
 
 	@Override
-	protected boolean doIsStored(StoredObjectType type, String objectId) throws StorageException {
+	protected boolean doIsStored(JdbcOperation operation, StoredObjectType type, String objectId)
+		throws StorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
@@ -812,78 +788,56 @@ public class JdbcObjectStore extends ObjectStore {
 	}
 
 	private Map<StoredObjectType, Integer> getStoredObjectTypes(Connection c) throws StorageException {
-		QueryRunner qr = new QueryRunner();
 		try {
-			return qr.query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
+			return new QueryRunner().query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
-					@Override
-					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
-						StoredObjectType.class);
-						while (rs.next()) {
-							String t = rs.getString("object_type");
-							if ((t == null) || rs.wasNull()) {
-								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
-							try {
-								ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
-							} catch (IllegalArgumentException e) {
-								JdbcObjectStore.this.log.warn(String.format(
-									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
+				@Override
+				public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
+					Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
+							StoredObjectType.class);
+					while (rs.next()) {
+						String t = rs.getString("object_type");
+						if ((t == null) || rs.wasNull()) {
+							JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+							continue;
 						}
-						return ret;
+						try {
+							ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
+						} catch (IllegalArgumentException e) {
+							JdbcObjectStore.this.log.warn(String.format(
+								"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+							continue;
+						}
 					}
-				});
+					return ret;
+				}
+			});
 		} catch (SQLException e) {
 			throw new StorageException("Failed to retrieve the stored object types", e);
 		}
 	}
 
 	@Override
-	protected Map<StoredObjectType, Integer> doGetStoredObjectTypes() throws StorageException {
-		final Connection c;
-		try {
-			c = this.dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new StorageException("Failed to connect to the object store's database", e);
-		}
-		try {
-			return getStoredObjectTypes(c);
-		} finally {
-			DbUtils.rollbackAndCloseQuietly(c);
-		}
+	protected Map<StoredObjectType, Integer> doGetStoredObjectTypes(JdbcOperation operation) throws StorageException {
+		return getStoredObjectTypes(operation.getConnection());
 	}
 
 	private int clearAttributeMappings(Connection c) throws StorageException {
-		QueryRunner qr = new QueryRunner();
 		try {
-			return qr.update(c, JdbcObjectStore.CLEAR_ALL_MAPPINGS_SQL);
+			return new QueryRunner().update(c, JdbcObjectStore.CLEAR_ALL_MAPPINGS_SQL);
 		} catch (SQLException e) {
 			throw new StorageException("Failed to clear all the stored mappings", e);
 		}
 	}
 
 	@Override
-	protected int doClearAttributeMappings() throws StorageException {
-		final Connection c;
-		try {
-			c = this.dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new StorageException("Failed to connect to the object store's database", e);
-		}
-		try {
-			return clearAttributeMappings(c);
-		} finally {
-			DbUtils.rollbackAndCloseQuietly(c);
-		}
+	protected int doClearAttributeMappings(JdbcOperation operation) throws StorageException {
+		return clearAttributeMappings(operation.getConnection());
 	}
 
 	@Override
-	protected Map<StoredObjectType, Set<String>> doGetAvailableMappings() {
-		final QueryRunner qr = new QueryRunner(this.dataSource);
+	protected Map<StoredObjectType, Set<String>> doGetAvailableMappings(JdbcOperation operation)
+		throws StorageException {
 		final Map<StoredObjectType, Set<String>> ret = new EnumMap<StoredObjectType, Set<String>>(
 			StoredObjectType.class);
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
@@ -904,16 +858,16 @@ public class JdbcObjectStore extends ObjectStore {
 			}
 		};
 		try {
-			qr.query(JdbcObjectStore.LOAD_ALL_MAPPINGS_SQL, h);
+			new QueryRunner().query(operation.getConnection(), JdbcObjectStore.LOAD_ALL_MAPPINGS_SQL, h);
 		} catch (SQLException e) {
-			throw new RuntimeException("Failed to retrieve the declared mapping types and names", e);
+			throw new StorageException("Failed to retrieve the declared mapping types and names", e);
 		}
 		return ret;
 	}
 
 	@Override
-	protected Set<String> doGetAvailableMappings(StoredObjectType type) {
-		final QueryRunner qr = new QueryRunner(this.dataSource);
+	protected Set<String> doGetAvailableMappings(JdbcOperation operation, StoredObjectType type)
+		throws StorageException {
 		final Set<String> ret = new TreeSet<String>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
@@ -925,7 +879,7 @@ public class JdbcObjectStore extends ObjectStore {
 			}
 		};
 		try {
-			qr.query(JdbcObjectStore.LOAD_TYPE_MAPPINGS_SQL, h, type.name());
+			new QueryRunner().query(operation.getConnection(), JdbcObjectStore.LOAD_TYPE_MAPPINGS_SQL, h, type.name());
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to retrieve the declared mapping names for type [%s]",
 				type), e);
@@ -934,8 +888,7 @@ public class JdbcObjectStore extends ObjectStore {
 	}
 
 	@Override
-	protected Map<String, String> doGetMappings(StoredObjectType type, String name) {
-		final QueryRunner qr = new QueryRunner(this.dataSource);
+	protected Map<String, String> doGetMappings(JdbcOperation operation, StoredObjectType type, String name) {
 		final Map<String, String> ret = new HashMap<String, String>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
@@ -947,7 +900,8 @@ public class JdbcObjectStore extends ObjectStore {
 			}
 		};
 		try {
-			qr.query(JdbcObjectStore.LOAD_TYPE_NAME_MAPPINGS_SQL, h, type.name(), name);
+			new QueryRunner().query(operation.getConnection(), JdbcObjectStore.LOAD_TYPE_NAME_MAPPINGS_SQL, h,
+				type.name(), name);
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to retrieve the declared mappings for [%s::%s]", type,
 				name), e);
@@ -956,16 +910,9 @@ public class JdbcObjectStore extends ObjectStore {
 	}
 
 	@Override
-	protected void doClearAllObjects() throws StorageException {
-		Connection c = null;
+	protected void doClearAllObjects(JdbcOperation operation) throws StorageException {
+		Connection c = operation.getConnection();
 		try {
-			c = this.dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new StorageException("Failed to get a SQL Connection to validate the schema", e);
-		}
-		boolean ok = false;
-		try {
-			c.setAutoCommit(false);
 			DatabaseMetaData dmd = c.getMetaData();
 			ResultSet rs = null;
 			try {
@@ -988,12 +935,6 @@ public class JdbcObjectStore extends ObjectStore {
 			}
 		} catch (SQLException e) {
 			throw new StorageException("SQLException caught while removing all objects", e);
-		} finally {
-			if (ok) {
-				DbUtils.commitAndCloseQuietly(c);
-			} else {
-				DbUtils.rollbackAndCloseQuietly(c);
-			}
 		}
 	}
 
@@ -1007,7 +948,7 @@ public class JdbcObjectStore extends ObjectStore {
 		return new StoredObject<V>(type, id, batchId, label, subtype);
 	}
 
-	private <V> StoredProperty<V> loadProperty(ObjectStorageTranslator<V> translator, ResultSet rs)
+	private <T, V> StoredProperty<V> loadProperty(ObjectStorageTranslator<T, V> translator, ResultSet rs)
 		throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
@@ -1016,7 +957,7 @@ public class JdbcObjectStore extends ObjectStore {
 		return new StoredProperty<V>(name, type, repeating);
 	}
 
-	private <V> StoredAttribute<V> loadAttribute(ObjectStorageTranslator<V> translator, ResultSet rs)
+	private <T, V> StoredAttribute<V> loadAttribute(ObjectStorageTranslator<T, V> translator, ResultSet rs)
 		throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
@@ -1042,7 +983,7 @@ public class JdbcObjectStore extends ObjectStore {
 		property.setValues(values);
 	}
 
-	private <V> void loadAttributes(ObjectStorageTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
+	private <T, V> void loadAttributes(ObjectStorageTranslator<T, V> translator, ResultSet rs, StoredObject<V> obj)
 		throws SQLException, StoredValueDecoderException {
 		List<StoredAttribute<V>> attributes = new LinkedList<StoredAttribute<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
@@ -1052,7 +993,7 @@ public class JdbcObjectStore extends ObjectStore {
 		obj.setAttributes(attributes);
 	}
 
-	private <V> void loadProperties(ObjectStorageTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
+	private <T, V> void loadProperties(ObjectStorageTranslator<T, V> translator, ResultSet rs, StoredObject<V> obj)
 		throws SQLException, StoredValueDecoderException {
 		List<StoredProperty<V>> properties = new LinkedList<StoredProperty<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
@@ -1060,5 +1001,21 @@ public class JdbcObjectStore extends ObjectStore {
 			properties.add(loadProperty(translator, rs));
 		}
 		obj.setProperties(properties);
+	}
+
+	@Override
+	protected JdbcOperation newOperation() throws StorageException {
+		try {
+			return new JdbcOperation(this.dataSource.getConnection(), this.managedTransactions);
+		} catch (SQLException e) {
+			throw new StorageException("Failed to obtain a new connection from the datasource", e);
+		}
+	}
+
+	@Override
+	protected boolean doLockForStorage(JdbcOperation operation, StoredObjectType type, String objectId)
+		throws StorageException {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
