@@ -5,7 +5,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.TransferContext;
-import com.armedia.cmf.engine.exporter.ExportListener;
 import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.ObjectStore;
@@ -22,7 +21,7 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	private final ContentStreamStore streamStore;
 
 	ImportContext(ObjectStorageTranslator<T, V> translator, String rootId, S session, ObjectStore<?, ?> objectStore,
-		ContentStreamStore streamStore, Logger output, ExportListener listener) {
+		ContentStreamStore streamStore, Logger output, ImportListener listener) {
 		super(rootId, session, output);
 		this.objectStore = objectStore;
 		this.translator = translator;
