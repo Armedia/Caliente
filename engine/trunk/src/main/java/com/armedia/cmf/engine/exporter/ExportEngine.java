@@ -41,7 +41,7 @@ import com.armedia.cmf.storage.UnsupportedObjectTypeException;
  *
  */
 public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends TransferEngine<ExportEngineListener>
-	implements ExportEngineListener {
+implements ExportEngineListener {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -135,7 +135,7 @@ public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends Tr
 			this.log.debug(String.format("Executing supplemental storage for %s", label));
 		}
 		try {
-			exporter.storeSupplemental(session, sourceObject, ctx);
+			exporter.storeContent(session, sourceObject, ctx.getContentStreamStore());
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to execute the supplemental storage for %s", label), e);
 		}
@@ -145,7 +145,7 @@ public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends Tr
 
 	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStreamStore fileSystem, final Exporter<S, T, V> exporter, Map<String, Object> settings)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 		final ObjectStorageTranslator<T, V> translator = exporter.getTranslator();
 		final SessionFactory<S> sessionFactory = exporter.getSessionFactory();
@@ -386,10 +386,10 @@ public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends Tr
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);

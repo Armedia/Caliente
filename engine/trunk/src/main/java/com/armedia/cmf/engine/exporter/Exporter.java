@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.armedia.cmf.engine.SessionFactory;
+import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -21,7 +22,7 @@ public interface Exporter<S, T, V> {
 
 	public StoredObject<V> marshal(S session, T object) throws ExportException;
 
-	public void storeSupplemental(S session, T object, ExportContext<S, T, V> ctx) throws Exception;
+	public void storeContent(S session, T object, ContentStreamStore streamStore) throws Exception;
 
 	public ObjectStorageTranslator<T, V> getTranslator();
 
