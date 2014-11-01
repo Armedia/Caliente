@@ -20,11 +20,11 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	private final ObjectStorageTranslator<T, V> translator;
 	private final ContentStreamStore streamStore;
 
-	ImportContext(ObjectStorageTranslator<T, V> translator, String rootId, S session, ObjectStore<?, ?> objectStore,
-		ContentStreamStore streamStore, Logger output, ImportListener listener) {
+	ImportContext(String rootId, S session, Logger output, ObjectStorageTranslator<T, V> translator,
+		ObjectStore<?, ?> objectStore, ContentStreamStore streamStore) {
 		super(rootId, session, output);
-		this.objectStore = objectStore;
 		this.translator = translator;
+		this.objectStore = objectStore;
 		this.streamStore = streamStore;
 	}
 
