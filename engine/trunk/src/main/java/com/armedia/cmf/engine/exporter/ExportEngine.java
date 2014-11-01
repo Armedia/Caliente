@@ -28,7 +28,6 @@ import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.storage.ContentStreamStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
@@ -41,19 +40,17 @@ import com.armedia.cmf.storage.UnsupportedObjectTypeException;
  *
  */
 public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends TransferEngine<ExportEngineListener>
-implements ExportEngineListener {
+	implements ExportEngineListener {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private Long exportObject(Exporter<S, T, V> exporter, S session, StoredObject<V> marshaled, T sourceObject,
-		ExportContext<S, T, V> ctx) throws ExportException, StorageException, StoredValueEncoderException,
-		UnsupportedObjectTypeException {
+	private Long exportObject(final ObjectStore<?, ?> objectStore, final ContentStreamStore streamStore,
+		Exporter<S, T, V> exporter, S session, StoredObject<V> marshaled, T sourceObject, ExportContext<S, T, V> ctx)
+			throws ExportException, StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to operate with"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to export"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
-
-		final ObjectStore<?, ?> objectStore = ctx.getObjectStore();
 
 		final String id = marshaled.getId();
 		final StoredObjectType type = marshaled.getType();
@@ -97,7 +94,7 @@ implements ExportEngineListener {
 				this.log.debug(String.format("%s requires %s [%s](%s)", label, req.getType(), req.getLabel(),
 					req.getId()));
 			}
-			exportObject(exporter, session, req, requirement, ctx);
+			exportObject(objectStore, streamStore, exporter, session, req, requirement, ctx);
 		}
 
 		final Long ret = objectStore.storeObject(marshaled, exporter.getTranslator());
@@ -128,14 +125,14 @@ implements ExportEngineListener {
 				this.log.debug(String.format("%s requires %s [%s](%s)", label, dep.getType(), dep.getLabel(),
 					dep.getId()));
 			}
-			exportObject(exporter, session, dep, dependent, ctx);
+			exportObject(objectStore, streamStore, exporter, session, dep, dependent, ctx);
 		}
 
 		if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("Executing supplemental storage for %s", label));
 		}
 		try {
-			exporter.storeContent(session, sourceObject, ctx.getContentStreamStore());
+			exporter.storeContent(session, sourceObject, streamStore);
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to execute the supplemental storage for %s", label), e);
 		}
@@ -144,10 +141,9 @@ implements ExportEngineListener {
 	}
 
 	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStreamStore fileSystem, final Exporter<S, T, V> exporter, Map<String, Object> settings)
-			throws ExportException, StorageException {
+		final ContentStreamStore streamStore, final Exporter<S, T, V> exporter, Map<String, Object> settings)
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
-		final ObjectStorageTranslator<T, V> translator = exporter.getTranslator();
 		final SessionFactory<S> sessionFactory = exporter.getSessionFactory();
 		final SessionWrapper<S> baseSession;
 		try {
@@ -230,11 +226,12 @@ implements ExportEngineListener {
 								ExportEngine.this.log.debug(String.format("Exporting the source %s object with ID[%s]",
 									next.getType(), next.getId()));
 							}
-							ExportContext<S, T, V> ctx = new ExportContext<S, T, V>(translator, next.getId(),
-								session.getWrapped(), objectStore, fileSystem, output);
+							ExportContext<S, T, V> ctx = new ExportContext<S, T, V>(next.getId(), session.getWrapped(),
+								output);
 							objectExportStarted(next.getType(), next.getId());
 							StoredObject<V> marshaled = exporter.marshal(s, sourceObject);
-							Long result = exportObject(exporter, s, marshaled, sourceObject, ctx);
+							Long result = exportObject(objectStore, streamStore, exporter, s, marshaled, sourceObject,
+								ctx);
 							if (marshaled != null) {
 								if (ExportEngine.this.log.isDebugEnabled()) {
 									ExportEngine.this.log.debug(String.format("Exported %s [%s](%s) in position %d",
@@ -386,10 +383,10 @@ implements ExportEngineListener {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);

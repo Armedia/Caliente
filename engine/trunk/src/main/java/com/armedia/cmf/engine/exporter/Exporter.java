@@ -4,13 +4,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.armedia.cmf.engine.SessionFactory;
+import com.armedia.cmf.engine.Engine;
 import com.armedia.cmf.storage.ContentStreamStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 
-public interface Exporter<S, T, V> {
+public interface Exporter<S, T, V> extends Engine<S, T, V> {
 
 	public Iterator<ExportTarget> findExportResults(S session, Map<String, Object> settings) throws Exception;
 
@@ -24,7 +23,4 @@ public interface Exporter<S, T, V> {
 
 	public void storeContent(S session, T object, ContentStreamStore streamStore) throws Exception;
 
-	public ObjectStorageTranslator<T, V> getTranslator();
-
-	public SessionFactory<S> getSessionFactory();
 }
