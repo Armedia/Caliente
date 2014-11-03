@@ -10,10 +10,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.armedia.cmf.engine.SessionFactory;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.exporter.Exporter;
+import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -60,8 +60,8 @@ public class DctmExporter implements Exporter<IDfSession, IDfPersistentObject, I
 	}
 
 	@Override
-	public void storeSupplemental(IDfSession session, IDfPersistentObject object,
-		ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+	public void storeContent(IDfSession session, IDfPersistentObject object, ContentStreamStore streamStore)
+		throws Exception {
 	}
 
 	@Override
