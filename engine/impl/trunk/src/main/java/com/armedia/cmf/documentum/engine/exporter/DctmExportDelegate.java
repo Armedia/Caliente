@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.documentum.engine.DctmDataType;
@@ -22,6 +24,8 @@ import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 public class DctmExportDelegate<T extends IDfPersistentObject> {
+	protected final Logger log = Logger.getLogger(getClass());
+
 	private final Class<T> dfClass;
 	private final DctmObjectType type;
 
@@ -32,6 +36,18 @@ public class DctmExportDelegate<T extends IDfPersistentObject> {
 		this.dfClass = c;
 	}
 
+	protected final DctmObjectType getDctmType() {
+		return this.type;
+	}
+
+	protected final T castObject(IDfPersistentObject object) throws DfException {
+		if (object == null) { return null; }
+		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
+			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
+			.getClass().getCanonicalName())); }
+		return this.dfClass.cast(object);
+	}
+
 	public Collection<IDfPersistentObject> identifyRequirements(IDfSession session, IDfPersistentObject object)
 		throws Exception {
 		return Collections.emptyList();
@@ -40,14 +56,6 @@ public class DctmExportDelegate<T extends IDfPersistentObject> {
 	public Collection<IDfPersistentObject> identifyDependents(IDfSession session, IDfPersistentObject object)
 		throws Exception {
 		return Collections.emptyList();
-	}
-
-	protected final T castObject(IDfPersistentObject object) throws DfException {
-		if (object == null) { return null; }
-		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
-			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
-		return this.dfClass.cast(object);
 	}
 
 	protected final StoredObject<IDfValue> marshal(IDfSession session, IDfPersistentObject object) throws DfException,
