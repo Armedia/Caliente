@@ -302,44 +302,46 @@ implements ExportEngineListener {
 					break;
 				}
 			}
+			this.log.info(String.format("Submitted the entire export workload (%d objects)", counter));
+
+			// Ask the workers to exit civilly
+			this.log.info("Signaling work completion for the workers");
+			boolean waitCleanly = true;
+			for (int i = 0; i < activeCounter.get(); i++) {
+				try {
+					workQueue.put(exitValue);
+				} catch (InterruptedException e) {
+					waitCleanly = false;
+					// Here we have a problem: we're timing out while adding the exit
+					// values...
+					this.log.warn("Interrupted while attempting to request executor thread termination", e);
+					Thread.currentThread().interrupt();
+					executor.shutdownNow();
+					break;
+				}
+			}
 
 			try {
-				// Ask the workers to exit civilly
-				this.log.info("Signaling work completion for the workers");
-				for (int i = 0; i < threadCount; i++) {
-					try {
-						workQueue.put(exitValue);
-					} catch (InterruptedException e) {
-						// Here we have a problem: we're timing out while adding the exit
-						// values...
-						this.log.warn("Interrupted while attempting to request executor thread termination", e);
-						Thread.currentThread().interrupt();
-						break;
-					}
-				}
-
 				// We're done, we must wait until all workers are waiting
-				// This "weird" condition allows us to wait until there are
-				// as many waiters as there are active threads. This covers
-				// the contingency of threads dying on us, which SHOULDN'T
-				// happen, but still, we defend against it.
-				this.log.info(String.format(
-					"Submitted the entire export workload (%d objects), waiting for it to complete", counter));
-				for (Future<?> future : futures) {
-					try {
-						future.get();
-					} catch (InterruptedException e) {
-						this.log.warn("Interrupted while wiating for an executor thread to exit", e);
-						Thread.currentThread().interrupt();
-						executor.shutdownNow();
-						break;
-					} catch (ExecutionException e) {
-						this.log.warn("An executor thread raised an exception", e);
-					} catch (CancellationException e) {
-						this.log.warn("An executor thread was canceled!", e);
+				if (waitCleanly) {
+					this.log.info(String.format("Waiting for %d workers to finish processing", threadCount));
+					for (Future<?> future : futures) {
+						try {
+							future.get();
+						} catch (InterruptedException e) {
+							this.log.warn(
+								"Interrupted while waiting for an executor thread to exit, forcing the shutdown", e);
+							Thread.currentThread().interrupt();
+							executor.shutdownNow();
+							break;
+						} catch (ExecutionException e) {
+							this.log.warn("An executor thread raised an exception", e);
+						} catch (CancellationException e) {
+							this.log.warn("An executor thread was canceled!", e);
+						}
 					}
+					this.log.info("All the export workers are done.");
 				}
-				this.log.info("All the export workers are done.");
 			} finally {
 				List<ExportTarget> remaining = new ArrayList<ExportTarget>();
 				workQueue.drainTo(remaining);
