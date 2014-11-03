@@ -7,6 +7,7 @@ package com.armedia.cmf.engine.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -45,7 +46,7 @@ implements ExportEngineListener {
 
 	private Long exportObject(final ObjectStore<?, ?> objectStore, final ContentStreamStore streamStore,
 		Exporter<S, T, V> exporter, S session, StoredObject<V> marshaled, T sourceObject, ExportContext<S, T, V> ctx)
-		throws ExportException, StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
+			throws ExportException, StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to operate with"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to export"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -273,7 +274,7 @@ implements ExportEngineListener {
 		}
 		executor.shutdown();
 
-		final Iterable<ExportTarget> results;
+		final Iterator<ExportTarget> results;
 		try {
 			results = exporter.findExportResults(baseSession.getWrapped(), settings);
 		} catch (Exception e) {
@@ -286,7 +287,8 @@ implements ExportEngineListener {
 			// 1: run the query for the given predicate
 			exportStarted(settings);
 			// 2: iterate over the results, gathering up the object IDs
-			for (final ExportTarget target : results) {
+			while (results.hasNext()) {
+				final ExportTarget target = results.next();
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("Processing item %s", target));
 				}
