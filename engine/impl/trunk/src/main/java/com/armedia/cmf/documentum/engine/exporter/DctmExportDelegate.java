@@ -2,6 +2,7 @@ package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
@@ -10,6 +11,7 @@ import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -19,16 +21,25 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
-public class DctmMarshaller<T extends IDfPersistentObject> {
-
+public class DctmExportDelegate<T extends IDfPersistentObject> {
 	private final Class<T> dfClass;
 	private final DctmObjectType type;
 
-	protected DctmMarshaller(DctmObjectType type) {
+	protected DctmExportDelegate(DctmObjectType type) {
 		this.type = type;
 		@SuppressWarnings("unchecked")
 		Class<T> c = (Class<T>) type.getDfClass();
 		this.dfClass = c;
+	}
+
+	public Collection<IDfPersistentObject> identifyRequirements(IDfSession session, IDfPersistentObject object)
+		throws Exception {
+		return Collections.emptyList();
+	}
+
+	public Collection<IDfPersistentObject> identifyDependents(IDfSession session, IDfPersistentObject object)
+		throws Exception {
+		return Collections.emptyList();
 	}
 
 	protected final T castObject(IDfPersistentObject object) throws DfException {
@@ -47,8 +58,8 @@ public class DctmMarshaller<T extends IDfPersistentObject> {
 
 		final String batchId = calculateBatchId(session, typedObject);
 		final String label = calculateLabel(session, typedObject);
-		StoredObject<IDfValue> storedObject = new StoredObject<IDfValue>(this.type.getStoredObjectType(), id, batchId,
-			label, subtype);
+		final StoredObject<IDfValue> storedObject = new StoredObject<IDfValue>(this.type.getStoredObjectType(), id,
+			batchId, label, subtype);
 
 		// First, the attributes
 		final int attCount = object.getAttrCount();
@@ -82,10 +93,16 @@ public class DctmMarshaller<T extends IDfPersistentObject> {
 	}
 
 	protected String calculateBatchId(IDfSession session, T object) throws DfException {
-		return object.getObjectId().getId();
+		return null;
 	}
 
 	protected String calculateLabel(IDfSession session, T object) throws DfException {
 		return String.format("%s[%s]", this.type.name(), object.getObjectId().getId());
 	}
+
+	public void storeContent(IDfSession session, IDfPersistentObject object, ContentStreamStore streamStore)
+		throws Exception {
+
+	}
+
 }
