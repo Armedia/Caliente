@@ -10,12 +10,11 @@ import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.armedia.cmf.documentum.engine.DctmEngine;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.documentum.engine.DctmSessionFactory;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
-import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.exporter.Exporter;
@@ -34,7 +33,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExporter implements Exporter<IDfSession, IDfPersistentObject, IDfValue> {
+public class DctmExporter extends DctmEngine implements Exporter<IDfSession, IDfPersistentObject, IDfValue> {
 
 	private static final Map<DctmObjectType, DctmExportDelegate<?>> DELEGATES;
 
@@ -55,7 +54,7 @@ public class DctmExporter implements Exporter<IDfSession, IDfPersistentObject, I
 	private static final String DCTM_DQL = "dql";
 
 	private DctmExportDelegate<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-	UnsupportedObjectTypeException {
+		UnsupportedObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportDelegate<?> delegate = DctmExporter.DELEGATES.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -146,10 +145,5 @@ public class DctmExporter implements Exporter<IDfSession, IDfPersistentObject, I
 	@Override
 	public ObjectStorageTranslator<IDfPersistentObject, IDfValue> getTranslator() {
 		return DctmTranslator.INSTANCE;
-	}
-
-	@Override
-	public SessionFactory<IDfSession> getSessionFactory() {
-		return new DctmSessionFactory();
 	}
 }
