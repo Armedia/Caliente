@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.xml.Setting;
+import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
@@ -108,6 +108,7 @@ public class DctmAttributeHandlers {
 
 	private static final Map<DctmObjectType, Map<DctmDataType, Map<String, AttributeHandler>>> PER_TYPE;
 	private static final Map<DctmDataType, Map<String, AttributeHandler>> GLOBAL;
+	private static boolean OPERATORS_INITIALIZED = false;
 
 	static {
 		Map<DctmObjectType, Map<DctmDataType, Map<String, AttributeHandler>>> perObjectType = new EnumMap<DctmObjectType, Map<DctmDataType, Map<String, AttributeHandler>>>(
@@ -132,23 +133,27 @@ public class DctmAttributeHandlers {
 		// Now, add the basic interceptors
 
 		//
-		// First, the operator names
-		//
-		String attrsToCheck = Setting.OWNER_ATTRIBUTES.getString();
-		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
-		List<String> l = strTokenizer.getTokenList();
-		for (String att : new HashSet<String>(l)) {
-			DctmAttributeHandlers.setAttributeHandler(null, DctmDataType.DF_STRING, att,
-				DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		}
-
-		//
 		// Next...
 		//
 		DctmAttributeHandlers.setAttributeHandler(null, DctmDataType.DF_BOOLEAN, DctmAttributes.R_IMMUTABLE_FLAG,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(null, DctmDataType.DF_BOOLEAN, DctmAttributes.R_FROZEN_FLAG,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
+	}
+
+	void initOperatorNames(CfgTools cfg) {
+		synchronized (DctmAttributeHandlers.class) {
+			if (DctmAttributeHandlers.OPERATORS_INITIALIZED) { return; }
+			String attrsToCheck = cfg.getString("owner.attributes", "");
+			StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
+			List<String> l = strTokenizer.getTokenList();
+			for (String att : new HashSet<String>(l)) {
+				DctmAttributeHandlers.setAttributeHandler(null, DctmDataType.DF_STRING, att,
+					DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			}
+			DctmAttributeHandlers.OPERATORS_INITIALIZED = true;
+			DctmAttributeHandlers.class.notify();
+		}
 	}
 
 	private DctmAttributeHandlers() {
