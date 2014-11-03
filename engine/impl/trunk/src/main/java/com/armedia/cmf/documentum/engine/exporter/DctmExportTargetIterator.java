@@ -2,13 +2,17 @@
  *
  */
 
-package com.armedia.cmf.documentum.engine;
+package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmCollectionIterator;
+import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
