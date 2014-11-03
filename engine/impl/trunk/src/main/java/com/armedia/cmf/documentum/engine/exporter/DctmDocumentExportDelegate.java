@@ -15,9 +15,9 @@ import com.documentum.fc.common.IDfId;
  * @author diego
  *
  */
-public class DctmDocumentMarshaller extends DctmExportDelegate<IDfDocument> {
+public class DctmDocumentExportDelegate extends DctmExportDelegate<IDfDocument> {
 
-	protected DctmDocumentMarshaller() {
+	protected DctmDocumentExportDelegate() {
 		super(DctmObjectType.DOCUMENT);
 	}
 

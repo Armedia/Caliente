@@ -6,6 +6,7 @@ package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -35,10 +36,31 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExporter implements Exporter<IDfSession, IDfPersistentObject, IDfValue> {
 
+	private static final Map<DctmObjectType, DctmExportDelegate<?>> DELEGATES;
+
+	static {
+		Map<DctmObjectType, DctmExportDelegate<?>> m = new EnumMap<DctmObjectType, DctmExportDelegate<?>>(
+			DctmObjectType.class);
+		m.put(DctmObjectType.ACL, new DctmACLExportDelegate());
+		m.put(DctmObjectType.CONTENT, new DctmContentExportDelegate());
+		m.put(DctmObjectType.DOCUMENT, new DctmDocumentExportDelegate());
+		m.put(DctmObjectType.FOLDER, new DctmFolderExportDelegate());
+		m.put(DctmObjectType.FORMAT, new DctmFormatExportDelegate());
+		m.put(DctmObjectType.GROUP, new DctmGroupExportDelegate());
+		m.put(DctmObjectType.TYPE, new DctmTypeExportDelegate());
+		m.put(DctmObjectType.USER, new DctmUserExportDelegate());
+		DELEGATES = Collections.unmodifiableMap(m);
+	}
+
 	private static final String DCTM_DQL = "dql";
 
-	private DctmExportDelegate<?> getExportDelegate(IDfPersistentObject object) {
-		return null;
+	private DctmExportDelegate<?> getExportDelegate(IDfPersistentObject object) throws DfException,
+	UnsupportedObjectTypeException {
+		DctmObjectType type = DctmObjectType.decodeType(object);
+		DctmExportDelegate<?> delegate = DctmExporter.DELEGATES.get(type);
+		if (delegate == null) { throw new IllegalStateException(String.format(
+			"Failed to find a delegate for type [%s]", type.name())); }
+		return delegate;
 	}
 
 	private final String getObjectId(IDfPersistentObject object) {

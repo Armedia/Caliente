@@ -13,9 +13,9 @@ import com.documentum.fc.common.DfException;
  * @author diego
  *
  */
-public class DctmTypeMarshaller extends DctmExportDelegate<IDfType> {
+public class DctmTypeExportDelegate extends DctmExportDelegate<IDfType> {
 
-	protected DctmTypeMarshaller() {
+	protected DctmTypeExportDelegate() {
 		super(DctmObjectType.TYPE);
 	}
 
