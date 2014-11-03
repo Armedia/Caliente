@@ -7,7 +7,6 @@ package com.armedia.cmf.engine.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -40,13 +39,13 @@ import com.armedia.cmf.storage.UnsupportedObjectTypeException;
  *
  */
 public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends TransferEngine<ExportEngineListener>
-	implements ExportEngineListener {
+implements ExportEngineListener {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private Long exportObject(final ObjectStore<?, ?> objectStore, final ContentStreamStore streamStore,
 		Exporter<S, T, V> exporter, S session, StoredObject<V> marshaled, T sourceObject, ExportContext<S, T, V> ctx)
-			throws ExportException, StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
+		throws ExportException, StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to operate with"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to export"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -142,7 +141,7 @@ public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends Tr
 
 	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStreamStore streamStore, final Exporter<S, T, V> exporter, Map<String, Object> settings)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 		final SessionFactory<S> sessionFactory = exporter.getSessionFactory();
 		final SessionWrapper<S> baseSession;
@@ -274,9 +273,9 @@ public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends Tr
 		}
 		executor.shutdown();
 
-		final Iterator<ExportTarget> it;
+		final Iterable<ExportTarget> results;
 		try {
-			it = exporter.findExportResults(baseSession.getWrapped(), settings);
+			results = exporter.findExportResults(baseSession.getWrapped(), settings);
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to obtain the export results with settings: %s", settings),
 				e);
@@ -287,13 +286,12 @@ public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends Tr
 			// 1: run the query for the given predicate
 			exportStarted(settings);
 			// 2: iterate over the results, gathering up the object IDs
-			while (it.hasNext()) {
+			for (final ExportTarget target : results) {
 				if (this.log.isTraceEnabled()) {
-					this.log.trace("Retrieving the next target from search");
+					this.log.trace(String.format("Processing item %s", target));
 				}
-				ExportTarget id = it.next();
 				try {
-					workQueue.put(id);
+					workQueue.put(target);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 					if (this.log.isDebugEnabled()) {
@@ -383,10 +381,10 @@ public final class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends Tr
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);

@@ -54,7 +54,9 @@ public final class ExportTarget implements Comparable<ExportTarget> {
 
 	@Override
 	public String toString() {
-		return String.format("Target [type=%s, id=%s, number=%s]", this.type, this.id, this.number);
+		if (this.number != null) { return String.format("ExportTarget [type=%s, id=%s, number=%s]", this.type, this.id,
+			this.number); }
+		return String.format("ExportTarget [type=%s, id=%s]", this.type, this.id);
 	}
 
 	@Override
