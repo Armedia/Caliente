@@ -26,7 +26,17 @@ public abstract class TransferEngine<L> {
 	private int backlogSize = TransferEngine.DEFAULT_BACKLOG_SIZE;
 	private int threadCount = TransferEngine.DEFAULT_THREAD_COUNT;
 
-	protected TransferEngine() {
+	public TransferEngine() {
+		this(TransferEngine.DEFAULT_THREAD_COUNT, TransferEngine.DEFAULT_BACKLOG_SIZE);
+	}
+
+	public TransferEngine(int threadCount) {
+		this(threadCount, TransferEngine.DEFAULT_BACKLOG_SIZE);
+	}
+
+	public TransferEngine(int threadCount, int backlogSize) {
+		this.backlogSize = backlogSize;
+		this.threadCount = threadCount;
 	}
 
 	public final synchronized boolean addListener(L listener) {

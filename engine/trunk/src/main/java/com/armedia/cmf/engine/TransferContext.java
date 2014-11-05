@@ -18,6 +18,7 @@ public abstract class TransferContext<S, T, V> {
 	private final String rootId;
 	private final S session;
 	private final Map<String, V> values = new HashMap<String, V>();
+	private final Map<String, Object> objects = new HashMap<String, Object>();
 	private final Logger output;
 
 	protected TransferContext(String rootId, S session, Logger output) {
@@ -57,6 +58,27 @@ public abstract class TransferContext<S, T, V> {
 	public final boolean hasValue(String name) {
 		assertValidName(name);
 		return this.values.containsKey(name);
+	}
+
+	public final Object getObject(String name) {
+		assertValidName(name);
+		return this.objects.get(name);
+	}
+
+	public final Object setObject(String name, Object value) {
+		assertValidName(name);
+		if (value == null) { return clearObject(name); }
+		return this.objects.put(name, value);
+	}
+
+	public final Object clearObject(String name) {
+		assertValidName(name);
+		return this.objects.remove(name);
+	}
+
+	public final boolean hasObject(String name) {
+		assertValidName(name);
+		return this.objects.containsKey(name);
 	}
 
 	public final void printf(String format, Object... args) {

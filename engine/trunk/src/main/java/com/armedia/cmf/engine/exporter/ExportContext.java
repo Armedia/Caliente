@@ -12,7 +12,7 @@ import com.armedia.cmf.engine.TransferContext;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public final class ExportContext<S, T, V> extends TransferContext<S, T, V> {
+public class ExportContext<S, T, V> extends TransferContext<S, T, V> {
 	/**
 	 * @param rootId
 	 * @param session
