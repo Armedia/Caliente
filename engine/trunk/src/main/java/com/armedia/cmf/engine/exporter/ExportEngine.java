@@ -28,7 +28,6 @@ import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.storage.ContentStreamStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
@@ -40,7 +39,8 @@ import com.armedia.cmf.storage.UnsupportedObjectTypeException;
  * @author diego
  *
  */
-public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends TransferEngine<ExportEngineListener> {
+public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
+TransferEngine<S, T, V, ExportEngineListener> {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -141,7 +141,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 
 	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStreamStore streamStore, String exportTarget, Map<String, Object> settings)
-			throws ExportException, StorageException {
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final SessionFactory<S> sessionFactory = getSessionFactory();
@@ -385,10 +385,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -471,12 +471,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 	}
 
 	protected void initContext(ExportContext<S, T, V> ctx) {
-		// By default, do nothing
 	}
-
-	protected abstract ObjectStorageTranslator<T, V> getTranslator();
-
-	protected abstract SessionFactory<S> getSessionFactory();
 
 	protected abstract Iterator<ExportTarget> findExportResults(S session, Map<String, Object> settings)
 		throws Exception;

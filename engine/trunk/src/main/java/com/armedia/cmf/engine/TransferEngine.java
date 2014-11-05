@@ -7,9 +7,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class TransferEngine<L> {
+public abstract class TransferEngine<S, T, V, L> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -74,4 +75,9 @@ public abstract class TransferEngine<L> {
 			TransferEngine.MAX_THREAD_COUNT);
 		return old;
 	}
+
+	protected abstract ObjectStorageTranslator<T, V> getTranslator();
+
+	protected abstract SessionFactory<S> getSessionFactory();
+
 }
