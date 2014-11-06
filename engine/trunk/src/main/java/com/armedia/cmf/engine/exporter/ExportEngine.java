@@ -40,7 +40,7 @@ import com.armedia.cmf.storage.UnsupportedObjectTypeException;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
-TransferEngine<S, T, V, ExportEngineListener> {
+	TransferEngine<S, T, V, ExportEngineListener> {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -141,7 +141,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStreamStore streamStore, String exportTarget, Map<String, Object> settings)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final SessionFactory<S> sessionFactory = getSessionFactory();
@@ -385,10 +385,10 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -487,4 +487,8 @@ TransferEngine<S, T, V, ExportEngineListener> {
 	protected abstract StoredObject<V> marshal(S session, T object) throws ExportException;
 
 	protected abstract void storeContent(S session, T object, ContentStreamStore streamStore) throws Exception;
+
+	public static ExportEngine<?, ?, ?, ?> getExportEngine(String targetName) {
+		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
+	}
 }
