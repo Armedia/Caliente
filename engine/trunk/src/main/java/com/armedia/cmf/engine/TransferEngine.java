@@ -17,8 +17,8 @@ import com.armedia.commons.utilities.Tools;
 
 public abstract class TransferEngine<S, T, V, L> {
 
-	private static Map<String, Map<String, Object>> REGISTRY = null;
-	private static Map<String, PluggableServiceLocator<?>> LOCATORS = null;
+	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
+	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<String, PluggableServiceLocator<?>>();
 
 	private static synchronized <E extends TransferEngine<?, ?, ?, ?>> void registerSubclass(Class<E> subclass) {
 
