@@ -14,9 +14,9 @@ import com.documentum.fc.client.IDfSession;
  * @author diego
  *
  */
-public class DctmContentExportDelegate extends DctmExportDelegate<IDfDocument> {
+public class DctmContentExporter extends DctmExporter<IDfDocument> {
 
-	protected DctmContentExportDelegate() {
+	protected DctmContentExporter() {
 		super(DctmObjectType.CONTENT);
 	}
 

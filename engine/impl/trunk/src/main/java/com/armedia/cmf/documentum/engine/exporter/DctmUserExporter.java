@@ -13,10 +13,10 @@ import com.documentum.fc.common.DfException;
  * @author diego
  *
  */
-public class DctmFolderExportDelegate extends DctmExportDelegate<IDfUser> {
+public class DctmUserExporter extends DctmExporter<IDfUser> {
 
-	protected DctmFolderExportDelegate() {
-		super(DctmObjectType.FOLDER);
+	protected DctmUserExporter() {
+		super(DctmObjectType.USER);
 	}
 
 	@Override

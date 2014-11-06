@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objectstores xmlns="http://www.armedia.com/ns/cmf/objectstore"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/objectstore objectstore.xsd ">
+	<objectstore id="dctmTest">
+		<className>com.armedia.cmf.storage.jdbc.JdbcObjectStore</className>
+		<settings>
+			<setting name="location.type">pooled</setting>
+			<setting name="jdbc.url">jdbc:h2:mem:cmsmf;MODE=PostgreSQL</setting>
+			<setting name="jdbc.driver">org.h2.Driver</setting>
+		</settings>
+	</objectstore>
+</objectstores>

@@ -87,8 +87,7 @@ public class DctmExportTargetIterator implements Iterator<ExportTarget> {
 		IDfTypedObject next = this.iterator.next();
 		this.current++;
 		try {
-			ExportTarget ret = newTarget(next);
-			return ret;
+			return newTarget(next);
 		} catch (DfException e) {
 			throw new RuntimeException(
 				String.format("DfException caught constructing export target # %d", this.current), e);
@@ -99,7 +98,7 @@ public class DctmExportTargetIterator implements Iterator<ExportTarget> {
 			} catch (DfException e2) {
 				if (this.log.isTraceEnabled()) {
 					this.log
-						.error(String.format("Failed to generate the debug dump for object # %d", this.current), e2);
+					.error(String.format("Failed to generate the debug dump for object # %d", this.current), e2);
 				}
 			}
 			throw new RuntimeException(String.format("Item # %d is not a supported export target", this.current, dump),

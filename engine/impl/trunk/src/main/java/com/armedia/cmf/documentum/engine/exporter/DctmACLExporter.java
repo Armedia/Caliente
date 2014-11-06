@@ -13,9 +13,9 @@ import com.documentum.fc.common.DfException;
  * @author diego
  *
  */
-public class DctmACLExportDelegate extends DctmExportDelegate<IDfACL> {
+public class DctmACLExporter extends DctmExporter<IDfACL> {
 
-	protected DctmACLExportDelegate() {
+	protected DctmACLExporter() {
 		super(DctmObjectType.ACL);
 	}
 

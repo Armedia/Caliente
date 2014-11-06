@@ -66,6 +66,34 @@
 			<type>pom</type>
 			<scope>compile</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-storage-jdbc</artifactId>
+			<version>0.0.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>datasource-locator-pooled</artifactId>
+			<version>0.0.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.4.181</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
