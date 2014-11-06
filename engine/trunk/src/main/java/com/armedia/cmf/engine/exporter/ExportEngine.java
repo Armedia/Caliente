@@ -34,18 +34,102 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueEncoderException;
 import com.armedia.cmf.storage.UnsupportedObjectTypeException;
+import com.armedia.commons.utilities.CfgTools;
 
 /**
  * @author diego
  *
  */
-public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
+public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
 	TransferEngine<S, T, V, ExportEngineListener> {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
+	private class ListenerDelegator implements ExportEngineListener {
+
+		private final Collection<ExportEngineListener> listeners = getListeners();
+
+		@Override
+		public void exportStarted(Map<String, Object> exportSettings) {
+			for (ExportEngineListener l : this.listeners) {
+				try {
+					l.exportStarted(exportSettings);
+				} catch (Exception e) {
+					if (ExportEngine.this.log.isDebugEnabled()) {
+						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void objectExportStarted(StoredObjectType objectType, String objectId) {
+			for (ExportEngineListener l : this.listeners) {
+				try {
+					l.objectExportStarted(objectType, objectId);
+				} catch (Exception e) {
+					if (ExportEngine.this.log.isDebugEnabled()) {
+						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
+			for (ExportEngineListener l : this.listeners) {
+				try {
+					l.objectExportCompleted(object, objectNumber);
+				} catch (Exception e) {
+					if (ExportEngine.this.log.isDebugEnabled()) {
+						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void objectSkipped(StoredObjectType objectType, String objectId) {
+			for (ExportEngineListener l : this.listeners) {
+				try {
+					l.objectSkipped(objectType, objectId);
+				} catch (Exception e) {
+					if (ExportEngine.this.log.isDebugEnabled()) {
+						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
+			for (ExportEngineListener l : this.listeners) {
+				try {
+					l.objectExportFailed(objectType, objectId, thrown);
+				} catch (Exception e) {
+					if (ExportEngine.this.log.isDebugEnabled()) {
+						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void exportFinished(Map<StoredObjectType, Integer> summary) {
+			for (ExportEngineListener l : this.listeners) {
+				try {
+					l.exportFinished(summary);
+				} catch (Exception e) {
+					if (ExportEngine.this.log.isDebugEnabled()) {
+						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+	}
+
 	private Long exportObject(final ObjectStore<?, ?> objectStore, final ContentStreamStore streamStore, S session,
-		StoredObject<V> marshaled, T sourceObject, ExportContext<S, T, V> ctx) throws ExportException,
+		StoredObject<V> marshaled, T sourceObject, C ctx, ListenerDelegator listenerDelegator) throws ExportException,
 		StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to operate with"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to export"); }
@@ -93,7 +177,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 				this.log.debug(String.format("%s requires %s [%s](%s)", label, req.getType(), req.getLabel(),
 					req.getId()));
 			}
-			exportObject(objectStore, streamStore, session, req, requirement, ctx);
+			exportObject(objectStore, streamStore, session, req, requirement, ctx, listenerDelegator);
 		}
 
 		final Long ret = objectStore.storeObject(marshaled, getTranslator());
@@ -124,7 +208,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 				this.log.debug(String.format("%s requires %s [%s](%s)", label, dep.getType(), dep.getLabel(),
 					dep.getId()));
 			}
-			exportObject(objectStore, streamStore, session, dep, dependent, ctx);
+			exportObject(objectStore, streamStore, session, dep, dependent, ctx, listenerDelegator);
 		}
 
 		if (this.log.isDebugEnabled()) {
@@ -141,10 +225,16 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 
 	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStreamStore streamStore, String exportTarget, Map<String, Object> settings)
-			throws ExportException, StorageException {
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
-		final SessionFactory<S> sessionFactory = getSessionFactory();
+		final SessionFactory<S> sessionFactory = newSessionFactory();
+		try {
+			sessionFactory.init(new CfgTools(settings));
+		} catch (Exception e) {
+			throw new ExportException("Failed to configure the session factory to carry out the export", e);
+		}
+
 		final SessionWrapper<S> baseSession;
 		try {
 			baseSession = sessionFactory.acquireSession();
@@ -165,6 +255,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 		final BlockingQueue<ExportTarget> workQueue = new ArrayBlockingQueue<ExportTarget>(backlogSize);
 		final ExecutorService executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
 			new LinkedBlockingQueue<Runnable>());
+		final ListenerDelegator listenerDelegator = new ListenerDelegator();
 
 		Runnable worker = new Runnable() {
 			@Override
@@ -226,31 +317,32 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 								ExportEngine.this.log.debug(String.format("Exporting the source %s object with ID[%s]",
 									next.getType(), next.getId()));
 							}
-							ExportContext<S, T, V> ctx = new ExportContext<S, T, V>(next.getId(), session.getWrapped(),
-								output);
+
+							C ctx = newContext(next.getId(), session.getWrapped(), output);
 							initContext(ctx);
-							objectExportStarted(next.getType(), next.getId());
+							listenerDelegator.objectExportStarted(next.getType(), next.getId());
 							StoredObject<V> marshaled = marshal(s, sourceObject);
-							Long result = exportObject(objectStore, streamStore, s, marshaled, sourceObject, ctx);
+							Long result = exportObject(objectStore, streamStore, s, marshaled, sourceObject, ctx,
+								listenerDelegator);
 							if (marshaled != null) {
 								if (ExportEngine.this.log.isDebugEnabled()) {
 									ExportEngine.this.log.debug(String.format("Exported %s [%s](%s) in position %d",
 										marshaled.getType(), marshaled.getLabel(), marshaled.getId(), result));
 								}
-								objectExportCompleted(marshaled, result);
+								listenerDelegator.objectExportCompleted(marshaled, result);
 							} else {
 								if (ExportEngine.this.log.isDebugEnabled()) {
 									ExportEngine.this.log.debug(String.format(
 										"%s object with ID[%s] was already exported", next.getType(), next.getId()));
 								}
-								objectSkipped(next.getType(), next.getId());
+								listenerDelegator.objectSkipped(next.getType(), next.getId());
 							}
 							ok = true;
 						} catch (Exception e) {
 							ExportEngine.this.log.error(
 								String.format("Failed to export %s object with ID[%s]", next.getType(), next.getId()),
 								e);
-							objectExportFailed(next.getType(), next.getId(), e);
+							listenerDelegator.objectExportFailed(next.getType(), next.getId(), e);
 							if (tx) {
 								if (ok) {
 									session.commit();
@@ -285,7 +377,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 		try {
 			int counter = 0;
 			// 1: run the query for the given predicate
-			exportStarted(settings);
+			listenerDelegator.exportStarted(settings);
 			// 2: iterate over the results, gathering up the object IDs
 			while (results.hasNext()) {
 				final ExportTarget target = results.next();
@@ -378,17 +470,17 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 			} catch (StorageException e) {
 				this.log.warn("Exception caught attempting to get the work summary", e);
 			}
-			exportFinished(summary);
+			listenerDelegator.exportFinished(summary);
 
 			executor.shutdownNow();
 			int pending = activeCounter.get();
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -398,79 +490,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 		}
 	}
 
-	private void exportStarted(Map<String, Object> exportSettings) {
-		for (ExportEngineListener l : getListeners()) {
-			try {
-				l.exportStarted(exportSettings);
-			} catch (Exception e) {
-				if (this.log.isDebugEnabled()) {
-					this.log.error("Exception caught during listener propagation", e);
-				}
-			}
-		}
-	}
+	protected abstract C newContext(String rootId, S session, Logger output);
 
-	private void objectExportStarted(StoredObjectType objectType, String objectId) {
-		for (ExportEngineListener l : getListeners()) {
-			try {
-				l.objectExportStarted(objectType, objectId);
-			} catch (Exception e) {
-				if (this.log.isDebugEnabled()) {
-					this.log.error("Exception caught during listener propagation", e);
-				}
-			}
-		}
-	}
-
-	private void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
-		for (ExportEngineListener l : getListeners()) {
-			try {
-				l.objectExportCompleted(object, objectNumber);
-			} catch (Exception e) {
-				if (this.log.isDebugEnabled()) {
-					this.log.error("Exception caught during listener propagation", e);
-				}
-			}
-		}
-	}
-
-	private void objectSkipped(StoredObjectType objectType, String objectId) {
-		for (ExportEngineListener l : getListeners()) {
-			try {
-				l.objectSkipped(objectType, objectId);
-			} catch (Exception e) {
-				if (this.log.isDebugEnabled()) {
-					this.log.error("Exception caught during listener propagation", e);
-				}
-			}
-		}
-	}
-
-	private void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
-		for (ExportEngineListener l : getListeners()) {
-			try {
-				l.objectExportFailed(objectType, objectId, thrown);
-			} catch (Exception e) {
-				if (this.log.isDebugEnabled()) {
-					this.log.error("Exception caught during listener propagation", e);
-				}
-			}
-		}
-	}
-
-	private void exportFinished(Map<StoredObjectType, Integer> summary) {
-		for (ExportEngineListener l : getListeners()) {
-			try {
-				l.exportFinished(summary);
-			} catch (Exception e) {
-				if (this.log.isDebugEnabled()) {
-					this.log.error("Exception caught during listener propagation", e);
-				}
-			}
-		}
-	}
-
-	protected void initContext(ExportContext<S, T, V> ctx) {
+	protected void initContext(C ctx) {
 	}
 
 	protected abstract Iterator<ExportTarget> findExportResults(S session, Map<String, Object> settings)
@@ -478,17 +500,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V> extends
 
 	protected abstract T getObject(S session, StoredObjectType type, String id) throws Exception;
 
-	protected abstract Collection<T> identifyRequirements(S session, T object, ExportContext<S, T, V> ctx)
-		throws Exception;
+	protected abstract Collection<T> identifyRequirements(S session, T object, C ctx) throws Exception;
 
-	protected abstract Collection<T> identifyDependents(S session, T object, ExportContext<S, T, V> ctx)
-		throws Exception;
+	protected abstract Collection<T> identifyDependents(S session, T object, C ctx) throws Exception;
 
 	protected abstract StoredObject<V> marshal(S session, T object) throws ExportException;
 
 	protected abstract void storeContent(S session, T object, ContentStreamStore streamStore) throws Exception;
 
-	public static ExportEngine<?, ?, ?, ?> getExportEngine(String targetName) {
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
 	}
 }

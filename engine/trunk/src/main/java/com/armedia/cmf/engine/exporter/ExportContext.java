@@ -16,11 +16,9 @@ public class ExportContext<S, T, V> extends TransferContext<S, T, V> {
 	/**
 	 * @param rootId
 	 * @param session
-	 * @param objectStore
-	 * @param fileSystem
 	 * @param output
 	 */
-	ExportContext(String rootId, S session, Logger output) {
+	public ExportContext(String rootId, S session, Logger output) {
 		super(rootId, session, output);
 	}
 }

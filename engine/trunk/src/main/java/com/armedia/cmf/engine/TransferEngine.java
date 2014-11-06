@@ -126,7 +126,7 @@ public abstract class TransferEngine<S, T, V, L> {
 
 	protected abstract ObjectStorageTranslator<T, V> getTranslator();
 
-	protected abstract SessionFactory<S> getSessionFactory();
+	protected abstract SessionFactory<S> newSessionFactory();
 
 	protected abstract Set<String> getTargetNames();
 
