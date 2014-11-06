@@ -102,22 +102,22 @@ public abstract class TransferEngine<S, T, V, L> {
 		return new ArrayList<L>(this.listeners);
 	}
 
-	public final int getBacklogSize() {
+	protected final int getBacklogSize() {
 		return this.backlogSize;
 	}
 
-	public final synchronized int setBacklogSize(int backlogSize) {
+	protected final synchronized int setBacklogSize(int backlogSize) {
 		int old = this.backlogSize;
 		this.backlogSize = Tools.ensureBetween(TransferEngine.MIN_BACKLOG_SIZE, backlogSize,
 			TransferEngine.MAX_BACKLOG_SIZE);
 		return old;
 	}
 
-	public final int getThreadCount() {
+	protected final int getThreadCount() {
 		return this.threadCount;
 	}
 
-	public final synchronized int setThreadCount(int threadCount) {
+	protected final synchronized int setThreadCount(int threadCount) {
 		int old = this.threadCount;
 		this.threadCount = Tools.ensureBetween(TransferEngine.MIN_THREAD_COUNT, threadCount,
 			TransferEngine.MAX_THREAD_COUNT);
