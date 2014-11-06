@@ -102,7 +102,7 @@ public abstract class TransferEngine<S, T, V, L> {
 		return new ArrayList<L>(this.listeners);
 	}
 
-	protected final int getBacklogSize() {
+	protected final synchronized int getBacklogSize() {
 		return this.backlogSize;
 	}
 
@@ -113,7 +113,7 @@ public abstract class TransferEngine<S, T, V, L> {
 		return old;
 	}
 
-	protected final int getThreadCount() {
+	protected final synchronized int getThreadCount() {
 		return this.threadCount;
 	}
 
