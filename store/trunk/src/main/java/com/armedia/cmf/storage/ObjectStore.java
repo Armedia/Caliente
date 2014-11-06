@@ -244,8 +244,6 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 	protected void doInit(Map<String, String> settings) throws StorageException {
 	}
 
-	public abstract O beginOperation() throws StorageException;
-
 	protected final O castOperation(ObjectStoreOperation<?> operation) {
 		if (operation == null) { throw new IllegalArgumentException("Must provide a valid operation"); }
 		return this.operationClass.cast(operation);
@@ -380,7 +378,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 
 	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
 		ObjectStorageTranslator<T, V> translator, final StoredObjectType type, Collection<String> ids)
-			throws StorageException, StoredValueDecoderException {
+		throws StorageException, StoredValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must proved an operation to work under"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (translator == null) { throw new IllegalArgumentException(

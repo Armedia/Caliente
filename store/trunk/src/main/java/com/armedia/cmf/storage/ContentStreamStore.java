@@ -6,7 +6,7 @@ public final class ContentStreamStore {
 
 	private final File baseLocation;
 
-	protected ContentStreamStore(File baseLocation) {
+	public ContentStreamStore(File baseLocation) {
 		this.baseLocation = baseLocation;
 	}
 
