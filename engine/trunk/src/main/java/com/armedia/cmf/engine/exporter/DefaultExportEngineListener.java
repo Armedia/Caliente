@@ -7,7 +7,7 @@ import com.armedia.cmf.storage.StoredObjectType;
 public class DefaultExportEngineListener extends DefaultExportListener implements ExportEngineListener {
 
 	@Override
-	public void exportStarted(Map<String, Object> settings) {
+	public void exportStarted(Map<String, ?> settings) {
 	}
 
 	@Override

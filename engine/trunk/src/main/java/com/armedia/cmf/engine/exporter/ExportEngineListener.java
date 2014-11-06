@@ -12,7 +12,7 @@ public interface ExportEngineListener extends ExportListener {
 	 * </p>
 	 *
 	 */
-	public void exportStarted(Map<String, Object> exportSettings);
+	public void exportStarted(Map<String, ?> exportSettings);
 
 	/**
 	 * <p>

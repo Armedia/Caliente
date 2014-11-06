@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, ExportEngineListener> {
+	TransferEngine<S, T, V, ExportEngineListener> {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -50,7 +50,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		private final Collection<ExportEngineListener> listeners = getListeners();
 
 		@Override
-		public void exportStarted(Map<String, Object> exportSettings) {
+		public void exportStarted(Map<String, ?> exportSettings) {
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.exportStarted(exportSettings);
@@ -224,7 +224,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 	}
 
 	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStreamStore streamStore, Map<String, Object> settings) throws ExportException, StorageException {
+		final ContentStreamStore streamStore, Map<String, ?> settings) throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final SessionFactory<S> sessionFactory = newSessionFactory();
@@ -476,10 +476,10 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -494,8 +494,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 	protected void initContext(C ctx) {
 	}
 
-	protected abstract Iterator<ExportTarget> findExportResults(S session, Map<String, Object> settings)
-		throws Exception;
+	protected abstract Iterator<ExportTarget> findExportResults(S session, Map<String, ?> settings) throws Exception;
 
 	protected abstract T getObject(S session, StoredObjectType type, String id) throws Exception;
 
