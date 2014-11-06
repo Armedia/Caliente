@@ -24,13 +24,13 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
-public class DctmExporter<T extends IDfPersistentObject> {
+public class DctmExportAbstract<T extends IDfPersistentObject> {
 	protected final Logger log = Logger.getLogger(getClass());
 
 	private final Class<T> dfClass;
 	private final DctmObjectType type;
 
-	protected DctmExporter(DctmObjectType type) {
+	protected DctmExportAbstract(DctmObjectType type) {
 		this.type = type;
 		@SuppressWarnings("unchecked")
 		Class<T> c = (Class<T>) type.getDfClass();

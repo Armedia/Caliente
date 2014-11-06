@@ -13,7 +13,7 @@ import com.documentum.fc.common.DfException;
  * @author diego
  *
  */
-public class DctmUserExporter extends DctmExporter<IDfUser> {
+public class DctmUserExporter extends DctmExportAbstract<IDfUser> {
 
 	protected DctmUserExporter() {
 		super(DctmObjectType.USER);

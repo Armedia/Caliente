@@ -39,31 +39,31 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
-	private static final Map<DctmObjectType, DctmExporter<?>> DELEGATES;
+	private static final Map<DctmObjectType, DctmExportAbstract<?>> DELEGATES;
 
 	static {
-		Map<DctmObjectType, DctmExporter<?>> m = new EnumMap<DctmObjectType, DctmExporter<?>>(
+		Map<DctmObjectType, DctmExportAbstract<?>> m = new EnumMap<DctmObjectType, DctmExportAbstract<?>>(
 			DctmObjectType.class);
 		m.put(DctmObjectType.ACL, new DctmACLExporter());
-		m.put(DctmObjectType.CONTENT, new DctmContentExporter());
-		m.put(DctmObjectType.DOCUMENT, new DctmDocumentExporter());
-		m.put(DctmObjectType.FOLDER, new DctmFolderExporter());
-		m.put(DctmObjectType.FORMAT, new DctmFormatExporter());
-		m.put(DctmObjectType.GROUP, new DctmGroupExporter());
-		m.put(DctmObjectType.TYPE, new DctmTypeExporter());
+		m.put(DctmObjectType.CONTENT, new DctmExportContent());
+		m.put(DctmObjectType.DOCUMENT, new DctmExportDocument());
+		m.put(DctmObjectType.FOLDER, new DctmExportFolder());
+		m.put(DctmObjectType.FORMAT, new DctmExportFormat());
+		m.put(DctmObjectType.GROUP, new DctmExportGroup());
+		m.put(DctmObjectType.TYPE, new DctmExportType());
 		m.put(DctmObjectType.USER, new DctmUserExporter());
 		DELEGATES = Collections.unmodifiableMap(m);
 	}
 
 	private static final String DCTM_DQL = "dql";
 
-	private DctmExporter<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-		UnsupportedObjectTypeException {
+	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
+	UnsupportedObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
-		DctmExporter<?> delegate = DctmExportEngine.DELEGATES.get(type);
+		DctmExportAbstract<?> delegate = DctmExportEngine.DELEGATES.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
 			"Failed to find a delegate for type [%s]", type.name())); }
 		return delegate;
@@ -79,8 +79,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(IDfSession session, Map<String, Object> settings)
-		throws Exception {
+	protected Iterator<ExportTarget> findExportResults(IDfSession session, Map<String, ?> settings) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
 		if (settings == null) {

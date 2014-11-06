@@ -13,7 +13,7 @@ import com.documentum.fc.common.DfException;
  * @author diego
  *
  */
-public class DctmACLExporter extends DctmExporter<IDfACL> {
+public class DctmACLExporter extends DctmExportAbstract<IDfACL> {
 
 	protected DctmACLExporter() {
 		super(DctmObjectType.ACL);

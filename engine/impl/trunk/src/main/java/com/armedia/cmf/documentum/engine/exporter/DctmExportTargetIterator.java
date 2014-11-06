@@ -74,8 +74,7 @@ public class DctmExportTargetIterator implements Iterator<ExportTarget> {
 			if (persistent != null) {
 				typeStr = persistent.getType().getName();
 			} else {
-				throw new UnsupportedOperationException(
-					"If the results aren't persistent objects, you must specify the name of the attribute that contains the object type value");
+				typeStr = source.getString(DctmAttributes.R_OBJECT_TYPE);
 			}
 		}
 
@@ -98,7 +97,7 @@ public class DctmExportTargetIterator implements Iterator<ExportTarget> {
 			} catch (DfException e2) {
 				if (this.log.isTraceEnabled()) {
 					this.log
-					.error(String.format("Failed to generate the debug dump for object # %d", this.current), e2);
+						.error(String.format("Failed to generate the debug dump for object # %d", this.current), e2);
 				}
 			}
 			throw new RuntimeException(String.format("Item # %d is not a supported export target", this.current, dump),

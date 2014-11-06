@@ -13,9 +13,9 @@ import com.documentum.fc.common.DfException;
  * @author diego
  *
  */
-public class DctmGroupExporter extends DctmExporter<IDfGroup> {
+public class DctmExportGroup extends DctmExportAbstract<IDfGroup> {
 
-	protected DctmGroupExporter() {
+	protected DctmExportGroup() {
 		super(DctmObjectType.GROUP);
 	}
 
