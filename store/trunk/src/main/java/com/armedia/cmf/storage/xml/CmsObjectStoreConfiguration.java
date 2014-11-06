@@ -1,5 +1,7 @@
 package com.armedia.cmf.storage.xml;
 
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -17,6 +19,16 @@ public class CmsObjectStoreConfiguration extends SettingContainer {
 
 	@XmlAttribute(name = "id", required = true)
 	protected String id;
+
+	@Override
+	protected void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
+		super.afterUnmarshal(unmarshaller, parent);
+	}
+
+	@Override
+	protected void beforeMarshal(Marshaller marshaller) {
+		super.beforeMarshal(marshaller);
+	}
 
 	/**
 	 * Gets the value of the className property.
