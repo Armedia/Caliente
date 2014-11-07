@@ -163,7 +163,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 		Collection<T> referenced;
 		try {
-			referenced = identifyRequirements(session, sourceObject, ctx);
+			referenced = identifyRequirements(session, marshaled, sourceObject, ctx);
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to identify the requirements for %s", label), e);
 		}
@@ -194,7 +194,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		}
 
 		try {
-			referenced = identifyDependents(session, sourceObject, ctx);
+			referenced = identifyDependents(session, marshaled, sourceObject, ctx);
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to identify the dependents for %s", label), e);
 		}
@@ -215,7 +215,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			this.log.debug(String.format("Executing supplemental storage for %s", label));
 		}
 		try {
-			storeContent(session, sourceObject, streamStore);
+			storeContent(session, marshaled, sourceObject, streamStore);
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to execute the supplemental storage for %s", label), e);
 		}
@@ -498,13 +498,16 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	protected abstract T getObject(S session, StoredObjectType type, String id) throws Exception;
 
-	protected abstract Collection<T> identifyRequirements(S session, T object, C ctx) throws Exception;
+	protected abstract Collection<T> identifyRequirements(S session, StoredObject<V> marshalled, T object, C ctx)
+		throws Exception;
 
-	protected abstract Collection<T> identifyDependents(S session, T object, C ctx) throws Exception;
+	protected abstract Collection<T> identifyDependents(S session, StoredObject<V> marshalled, T object, C ctx)
+		throws Exception;
 
 	protected abstract StoredObject<V> marshal(S session, T object) throws ExportException;
 
-	protected abstract void storeContent(S session, T object, ContentStreamStore streamStore) throws Exception;
+	protected abstract void storeContent(S session, StoredObject<V> marshalled, T object, ContentStreamStore streamStore)
+		throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);

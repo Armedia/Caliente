@@ -60,7 +60,7 @@ public abstract class TransferEngine<S, T, V, L> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private static final int DEFAULT_THREAD_COUNT = 16;
+	private static final int DEFAULT_THREAD_COUNT = 1;
 	private static final int MIN_THREAD_COUNT = 1;
 	private static final int MAX_THREAD_COUNT = 32;
 
