@@ -39,7 +39,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
 	private static final Map<DctmObjectType, DctmExportAbstract<?>> DELEGATES;
@@ -61,7 +61,7 @@ public class DctmExportEngine extends
 	private static final String DCTM_DQL = "dql";
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-	UnsupportedObjectTypeException {
+		UnsupportedObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = DctmExportEngine.DELEGATES.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -107,22 +107,22 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> identifyRequirements(IDfSession session, IDfPersistentObject object,
-		DctmExportContext ctx) throws Exception {
+	protected Collection<IDfPersistentObject> identifyRequirements(IDfSession session,
+		StoredObject<IDfValue> marshaled, IDfPersistentObject object, DctmExportContext ctx) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the requirements"); }
 		if (object == null) { throw new IllegalArgumentException(
 			"Must provide an object whose requirements to identify"); }
-		return getExportDelegate(object).identifyRequirements(session, object, ctx);
+		return getExportDelegate(object).identifyRequirements(session, marshaled, object, ctx);
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> identifyDependents(IDfSession session, IDfPersistentObject object,
-		DctmExportContext ctx) throws Exception {
+	protected Collection<IDfPersistentObject> identifyDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+		IDfPersistentObject object, DctmExportContext ctx) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the dependents"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose dependents to identify"); }
-		return getExportDelegate(object).identifyDependents(session, object, ctx);
+		return getExportDelegate(object).identifyDependents(session, marshaled, object, ctx);
 	}
 
 	@Override
@@ -139,14 +139,14 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected void storeContent(IDfSession session, IDfPersistentObject object, ContentStreamStore streamStore)
-		throws Exception {
+	protected void storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,
+		ContentStreamStore streamStore) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to store the contents"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
 		if (streamStore == null) { throw new IllegalArgumentException(
 			"Must provide a ContentStreamStore in which to store the contents"); }
-		getExportDelegate(object).storeContent(session, object, streamStore);
+		getExportDelegate(object).storeContent(session, marshaled, object, streamStore);
 	}
 
 	@Override

@@ -6,24 +6,24 @@ package com.armedia.cmf.documentum.engine.exporter;
 
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.storage.ContentStreamStore;
-import com.documentum.fc.client.IDfDocument;
-import com.documentum.fc.client.IDfPersistentObject;
+import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.content.IDfContent;
+import com.documentum.fc.common.IDfValue;
 
 /**
  * @author diego
  *
  */
-public class DctmExportContent extends DctmExportAbstract<IDfDocument> {
+public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 
 	protected DctmExportContent() {
 		super(DctmObjectType.CONTENT);
 	}
 
 	@Override
-	public void storeContent(IDfSession session, IDfPersistentObject object, ContentStreamStore streamStore)
-		throws Exception {
-		// TODO: Store the content
+	protected void doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfContent object,
+		ContentStreamStore streamStore) throws Exception {
 	}
 
 }

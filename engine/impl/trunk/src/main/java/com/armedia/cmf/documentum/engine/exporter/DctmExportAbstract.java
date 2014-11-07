@@ -2,7 +2,6 @@ package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -49,18 +48,30 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 		return this.dfClass.cast(object);
 	}
 
-	public Collection<IDfPersistentObject> identifyRequirements(IDfSession session, IDfPersistentObject object,
+	public final Collection<IDfPersistentObject> identifyRequirements(IDfSession session,
+		StoredObject<IDfValue> marshaled, IDfPersistentObject object,
 		ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
-		return Collections.emptyList();
+		return findRequirements(session, marshaled, castObject(object), ctx);
 	}
 
-	public Collection<IDfPersistentObject> identifyDependents(IDfSession session, IDfPersistentObject object,
+	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+		T object, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		return new ArrayList<IDfPersistentObject>();
+	}
+
+	public final Collection<IDfPersistentObject> identifyDependents(IDfSession session,
+		StoredObject<IDfValue> marshaled, IDfPersistentObject object,
 		ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
-		return Collections.emptyList();
+		return findDependents(session, marshaled, castObject(object), ctx);
+	}
+
+	protected Collection<IDfPersistentObject> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+		T object, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		return new ArrayList<IDfPersistentObject>();
 	}
 
 	protected final StoredObject<IDfValue> marshal(IDfSession session, IDfPersistentObject object) throws DfException,
-		ExportException, UnsupportedObjectTypeException {
+	ExportException, UnsupportedObjectTypeException {
 		final String id = object.getObjectId().getId();
 		final String subtype = object.getType().getName();
 		final T typedObject = castObject(object);
@@ -109,9 +120,13 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 		return String.format("%s[%s]", this.type.name(), object.getObjectId().getId());
 	}
 
-	public void storeContent(IDfSession session, IDfPersistentObject object, ContentStreamStore streamStore)
-		throws Exception {
-
+	public final void storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,
+		ContentStreamStore streamStore) throws Exception {
+		doStoreContent(session, marshaled, castObject(object), streamStore);
 	}
 
+	protected void doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled, T object,
+		ContentStreamStore streamStore) throws Exception {
+
+	}
 }
