@@ -140,7 +140,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		final String label = String.format("%s [%s](%s)", type, marshaled.getLabel(), id);
 
 		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Exporting Object %s", label));
+			this.log.debug(String.format("Attempting export of %s", label));
 		}
 
 		// First, make sure other threads don't work on this same object
@@ -161,7 +161,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 		if (!locked) {
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("%s is already locked for storage", label));
+				this.log.trace(String.format("%s is already locked for storage, skipping it", label));
 			}
 			return null;
 		}
