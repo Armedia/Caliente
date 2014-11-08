@@ -33,7 +33,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmACLExporter extends DctmExportAbstract<IDfACL> {
+public class DctmExportACL extends DctmExportAbstract<IDfACL> {
 
 	private static final String USERS_WITH_DEFAULT_ACL = "usersWithDefaultACL";
 	private static final String ACCESSORS = "accessors";
@@ -43,7 +43,7 @@ public class DctmACLExporter extends DctmExportAbstract<IDfACL> {
 	private static boolean HANDLERS_READY = false;
 
 	private static synchronized void initHandlers() {
-		if (DctmACLExporter.HANDLERS_READY) { return; }
+		if (DctmExportACL.HANDLERS_READY) { return; }
 		// These are the attributes that require special handling on import
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
 			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
@@ -59,7 +59,7 @@ public class DctmACLExporter extends DctmExportAbstract<IDfACL> {
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
 			DctmAttributes.R_ACCESSOR_XPERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
-		DctmACLExporter.HANDLERS_READY = true;
+		DctmExportACL.HANDLERS_READY = true;
 	}
 
 	/**
@@ -68,9 +68,9 @@ public class DctmACLExporter extends DctmExportAbstract<IDfACL> {
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
-	protected DctmACLExporter() {
+	protected DctmExportACL() {
 		super(DctmObjectType.ACL);
-		DctmACLExporter.initHandlers();
+		DctmExportACL.initHandlers();
 	}
 
 	@Override
@@ -82,10 +82,10 @@ public class DctmACLExporter extends DctmExportAbstract<IDfACL> {
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfACL acl) throws DfException {
 		final String aclId = acl.getObjectId().getId();
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
-			String.format(DctmACLExporter.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
+			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		StoredProperty<IDfValue> property = null;
 		try {
-			property = new StoredProperty<IDfValue>(DctmACLExporter.USERS_WITH_DEFAULT_ACL,
+			property = new StoredProperty<IDfValue>(DctmExportACL.USERS_WITH_DEFAULT_ACL,
 				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				property.addValue(resultCol.getValueAt(0));
@@ -95,11 +95,11 @@ public class DctmACLExporter extends DctmExportAbstract<IDfACL> {
 			DfUtils.closeQuietly(resultCol);
 		}
 
-		StoredProperty<IDfValue> accessors = new StoredProperty<IDfValue>(DctmACLExporter.ACCESSORS,
+		StoredProperty<IDfValue> accessors = new StoredProperty<IDfValue>(DctmExportACL.ACCESSORS,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		StoredProperty<IDfValue> permitTypes = new StoredProperty<IDfValue>(DctmACLExporter.PERMIT_TYPE,
+		StoredProperty<IDfValue> permitTypes = new StoredProperty<IDfValue>(DctmExportACL.PERMIT_TYPE,
 			DctmDataType.DF_INTEGER.getStoredType(), true);
-		StoredProperty<IDfValue> permitValues = new StoredProperty<IDfValue>(DctmACLExporter.PERMIT_VALUE,
+		StoredProperty<IDfValue> permitValues = new StoredProperty<IDfValue>(DctmExportACL.PERMIT_VALUE,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		IDfList permits = acl.getPermissions();
 		final int permitCount = permits.getCount();

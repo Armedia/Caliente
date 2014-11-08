@@ -47,7 +47,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	static {
 		Map<DctmObjectType, DctmExportAbstract<?>> m = new EnumMap<DctmObjectType, DctmExportAbstract<?>>(
 			DctmObjectType.class);
-		m.put(DctmObjectType.ACL, new DctmACLExporter());
+		m.put(DctmObjectType.ACL, new DctmExportACL());
 		m.put(DctmObjectType.CONTENT, new DctmExportContent());
 		m.put(DctmObjectType.DOCUMENT, new DctmExportDocument());
 		m.put(DctmObjectType.FOLDER, new DctmExportFolder());
