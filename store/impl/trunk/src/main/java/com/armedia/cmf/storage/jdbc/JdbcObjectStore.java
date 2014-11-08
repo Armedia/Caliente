@@ -56,78 +56,78 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	private static final Object[][] NO_PARAMS = new Object[0][0];
 
-	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from dctm_object where object_id = ? and object_type = ?";
+	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from cmf_object where object_id = ? and object_type = ?";
 
-	private static final String INSERT_OBJECT_SQL = "insert into dctm_object (object_id, object_type, object_subtype, object_label, batch_id) values (?, ?, ?, ?, ?)";
-	private static final String INSERT_ATTRIBUTE_SQL = "insert into dctm_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
-	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into dctm_attribute_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
-	private static final String INSERT_PROPERTY_SQL = "insert into dctm_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
-	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into dctm_property_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
+	private static final String INSERT_OBJECT_SQL = "insert into cmf_object (object_id, object_type, object_subtype, object_label, batch_id) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_ATTRIBUTE_SQL = "insert into cmf_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into cmf_attribute_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_SQL = "insert into cmf_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into cmf_property_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
 
-	private static final String QUERY_EXPORT_PLAN_DUPE_SQL = "select * from dctm_export_plan where object_id = ?";
-	private static final String INSERT_EXPORT_PLAN_SQL = "insert into dctm_export_plan (object_type, object_id) values (?, ?)";
+	private static final String QUERY_EXPORT_PLAN_DUPE_SQL = "select * from cmf_export_plan where object_id = ?";
+	private static final String INSERT_EXPORT_PLAN_SQL = "insert into cmf_export_plan (object_type, object_id) values (?, ?)";
 
-	private static final String CLEAR_ALL_MAPPINGS_SQL = "truncate table dctm_mapper";
-	private static final String LOAD_ALL_MAPPINGS_SQL = "select distinct object_type, name from dctm_mapper order by object_type, name";
-	private static final String LOAD_TYPE_MAPPINGS_SQL = "select distinct name from dctm_mapper where object_type = ? order by name";
-	private static final String LOAD_TYPE_NAME_MAPPINGS_SQL = "select source_value, target_value from dctm_mapper where object_type = ? and name = ? order by source_value";
-	private static final String FIND_EXACT_MAPPING_SQL = "select target_value from dctm_mapper where object_type = ? and name = ? and source_value = ? and target_value = ?";
-	private static final String FIND_TARGET_MAPPING_SQL = "select target_value from dctm_mapper where object_type = ? and name = ? and source_value = ?";
-	private static final String FIND_SOURCE_MAPPING_SQL = "select source_value from dctm_mapper where object_type = ? and name = ? and target_value = ?";
-	private static final String INSERT_MAPPING_SQL = "insert into dctm_mapper (object_type, name, source_value, target_value) values (?, ?, ?, ?)";
-	private static final String DELETE_TARGET_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and source_value = ?";
-	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from dctm_mapper where object_type = ? and name = ? and target_value = ?";
-	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from dctm_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
+	private static final String CLEAR_ALL_MAPPINGS_SQL = "truncate table cmf_mapper";
+	private static final String LOAD_ALL_MAPPINGS_SQL = "select distinct object_type, name from cmf_mapper order by object_type, name";
+	private static final String LOAD_TYPE_MAPPINGS_SQL = "select distinct name from cmf_mapper where object_type = ? order by name";
+	private static final String LOAD_TYPE_NAME_MAPPINGS_SQL = "select source_value, target_value from cmf_mapper where object_type = ? and name = ? order by source_value";
+	private static final String FIND_EXACT_MAPPING_SQL = "select target_value from cmf_mapper where object_type = ? and name = ? and source_value = ? and target_value = ?";
+	private static final String FIND_TARGET_MAPPING_SQL = "select target_value from cmf_mapper where object_type = ? and name = ? and source_value = ?";
+	private static final String FIND_SOURCE_MAPPING_SQL = "select source_value from cmf_mapper where object_type = ? and name = ? and target_value = ?";
+	private static final String INSERT_MAPPING_SQL = "insert into cmf_mapper (object_type, name, source_value, target_value) values (?, ?, ?, ?)";
+	private static final String DELETE_TARGET_MAPPING_SQL = "delete from cmf_mapper where object_type = ? and name = ? and source_value = ?";
+	private static final String DELETE_SOURCE_MAPPING_SQL = "delete from cmf_mapper where object_type = ? and name = ? and target_value = ?";
+	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from cmf_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
 	"   select object_type, count(*) as total " + //
-		" from dctm_object " + //
+		" from cmf_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
 	"    select * " + //
-		"  from dctm_object " + //
+		"  from cmf_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
 	"    select * " + //
-		"  from dctm_object " + //
+		"  from cmf_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
 	"    select o.* " + //
-		"  from dctm_object o, table(x varchar=?) t " + //
+		"  from cmf_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
 	"    select * " + //
-		"  from dctm_attribute " + //
+		"  from cmf_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
 	"    select * " + //
-		"  from dctm_attribute_value " + //
+		"  from cmf_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
 	"    select * " + //
-		"  from dctm_property " + //
+		"  from cmf_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
 	"    select * " + //
-		"  from dctm_property_value " + //
+		"  from cmf_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
@@ -661,7 +661,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					@Override
 					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
 						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
-						StoredObjectType.class);
+							StoredObjectType.class);
 						while (rs.next()) {
 							String t = rs.getString("object_type");
 							if ((t == null) || rs.wasNull()) {
