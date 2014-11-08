@@ -179,9 +179,11 @@ public class DctmACLExporter extends DctmExportAbstract<IDfACL> {
 		if (DctmMappingUtils.isMappableUser(session, owner)) {
 			this.log.warn(String.format("Skipping export of special user [%s]", owner));
 		} else {
-			IDfUser user = session.getUser(acl.getDomain());
+			IDfUser user = session.getUser(owner);
 			if (user == null) { throw new Exception(String.format(
-				"Missing dependency for ACL [%s] - user [%s] not found (as ACL domain)", acl.getObjectName(), owner)); }
+				"Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner, acl.getObjectName(),
+				owner)); }
+			ret.add(user);
 		}
 		return ret;
 	}
