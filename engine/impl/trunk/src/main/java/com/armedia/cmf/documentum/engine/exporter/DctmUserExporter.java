@@ -123,7 +123,7 @@ public class DctmUserExporter extends DctmExportAbstract<IDfUser> {
 	@Override
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfUser user, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
-		Collection<IDfPersistentObject> ret = super.identifyRequirements(session, marshaled, user, ctx);
+		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, user, ctx);
 		final IDfPersistentObject[] deps = {
 			session.getGroup(user.getUserGroupName()), session.getFolderByPath(user.getDefaultFolder()),
 			session.getACL(user.getACLDomain(), user.getACLName())

@@ -21,7 +21,8 @@ public class DctmExportEngineTest {
 		ExportEngine<?, ?, ?, ?, ?> engine = ExportEngine.getExportEngine("dctm");
 		ObjectStore<?, ?> objectStore = ObjectStoreFactory.getInstance("dctmTest");
 		ContentStreamStore streamStore = new ContentStreamStore(new File(currentDir, "tmp"));
-		Logger output = LoggerFactory.getLogger("output");
+		Logger output = LoggerFactory.getLogger("console");
+		output.info("Console initialized");
 		Map<String, String> settings = new HashMap<String, String>();
 		// settings.put("dql",
 		// "select r_object_id, r_object_type from dm_sysobject where folder('/CMSMFTests')");
