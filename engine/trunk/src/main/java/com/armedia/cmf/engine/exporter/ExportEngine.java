@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, ExportEngineListener> {
+	TransferEngine<S, T, V, ExportEngineListener> {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -138,6 +138,10 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		final String id = marshaled.getId();
 		final StoredObjectType type = marshaled.getType();
 		final String label = String.format("%s [%s](%s)", type, marshaled.getLabel(), id);
+
+		if (this.log.isDebugEnabled()) {
+			this.log.debug(String.format("Exporting Object %s", label));
+		}
 
 		// First, make sure other threads don't work on this same object
 		boolean locked = false;
@@ -352,11 +356,11 @@ TransferEngine<S, T, V, ExportEngineListener> {
 								listenerDelegator.objectSkipped(next.getType(), next.getId());
 							}
 							ok = true;
-						} catch (Exception e) {
+						} catch (Throwable t) {
 							ExportEngine.this.log.error(
 								String.format("Failed to export %s object with ID[%s]", next.getType(), next.getId()),
-								e);
-							listenerDelegator.objectExportFailed(next.getType(), next.getId(), e);
+								t);
+							listenerDelegator.objectExportFailed(next.getType(), next.getId(), t);
 							if (tx) {
 								if (ok) {
 									session.commit();
@@ -491,10 +495,10 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
