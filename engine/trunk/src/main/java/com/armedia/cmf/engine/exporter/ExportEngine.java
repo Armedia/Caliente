@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, ExportEngineListener> {
+TransferEngine<S, T, V, ExportEngineListener> {
 
 	private class Result {
 		private final Long objectNumber;
@@ -144,7 +144,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStreamStore streamStore, S session,
 		T referencingObject, final ExportTarget target, T sourceObject, C ctx, ListenerDelegator listenerDelegator)
-		throws ExportException, StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
+			throws ExportException, StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to operate with"); }
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -359,7 +359,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								if (ExportEngine.this.log.isDebugEnabled()) {
 									ExportEngine.this.log.debug(String.format("Exported %s [%s](%s) in position %d",
 										result.marshaled.getType(), result.marshaled.getLabel(),
-										result.marshaled.getId(), result));
+										result.marshaled.getId(), result.objectNumber));
 								}
 								listenerDelegator.objectExportCompleted(result.marshaled, result.objectNumber);
 							} else {
@@ -509,10 +509,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
