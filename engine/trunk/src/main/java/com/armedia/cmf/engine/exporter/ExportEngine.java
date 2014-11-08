@@ -44,10 +44,11 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, ExportEngineListener> {
+TransferEngine<S, T, V, ExportEngineListener> {
 
-	private static final String REFERRENT_TYPE = "$$__REFERRENT_TYPE__$$";
-	private static final String REFERRENT_ID = "$$__REFERRENT_ID__$$";
+	private static final String REFERRENT_ID = "${CONTENT_PATH}$";
+	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
+	private static final String CONTENT_PATH = "${REFERRENT_ID}$";
 
 	private class Result {
 		private final Long objectNumber;
@@ -224,6 +225,22 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				listenerDelegator);
 		}
 
+		if (this.log.isDebugEnabled()) {
+			this.log.debug(String.format("Executing supplemental storage for %s", label));
+		}
+		final String contentPath;
+		try {
+			contentPath = storeContent(session, marshaled, sourceObject, streamStore);
+		} catch (Exception e) {
+			throw new ExportException(String.format("Failed to execute the supplemental storage for %s", label), e);
+		}
+
+		if (contentPath != null) {
+			StoredProperty<V> p = new StoredProperty<>(ExportEngine.CONTENT_PATH, StoredDataType.STRING, true);
+			p.setValue(getValue(StoredDataType.STRING, contentPath));
+			marshaled.setProperty(p);
+		}
+
 		final Long ret = objectStore.storeObject(marshaled, getTranslator());
 		if (ret == null) {
 			// Should be impossible, but still guard against it
@@ -249,15 +266,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		for (T dependent : referenced) {
 			exportObject(objectStore, streamStore, session, target, getExportTarget(dependent), dependent, ctx,
 				listenerDelegator);
-		}
-
-		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Executing supplemental storage for %s", label));
-		}
-		try {
-			storeContent(session, marshaled, sourceObject, streamStore);
-		} catch (Exception e) {
-			throw new ExportException(String.format("Failed to execute the supplemental storage for %s", label), e);
 		}
 
 		return new Result(ret, marshaled);
@@ -516,10 +524,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -562,7 +570,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		return marshaled;
 	}
 
-	protected final ExportTarget getReferrent(StoredObject<V> marshaled) {
+	public final ExportTarget getReferrent(StoredObject<V> marshaled) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
 		StoredProperty<V> referrentType = marshaled.getProperty(ExportEngine.REFERRENT_TYPE);
 		StoredProperty<V> referrentId = marshaled.getProperty(ExportEngine.REFERRENT_ID);
@@ -573,12 +581,19 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		return new ExportTarget(StoredObjectType.valueOf(type), id);
 	}
 
+	public final String getContentPath(StoredObject<V> marshaled) {
+		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
+		StoredProperty<V> contentPath = marshaled.getProperty(ExportEngine.CONTENT_PATH);
+		if (contentPath == null) { return null; }
+		return Tools.toString(contentPath.getValue(), true);
+	}
+
 	protected abstract V getValue(StoredDataType type, Object value);
 
 	protected abstract StoredObject<V> marshal(S session, T object) throws ExportException;
 
-	protected abstract void storeContent(S session, StoredObject<V> marshalled, T object, ContentStreamStore streamStore)
-		throws Exception;
+	protected abstract String storeContent(S session, StoredObject<V> marshalled, T object,
+		ContentStreamStore streamStore) throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
