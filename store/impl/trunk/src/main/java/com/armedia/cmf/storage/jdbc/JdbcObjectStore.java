@@ -81,53 +81,53 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from dctm_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-	"   select object_type, count(*) as total " + //
+		"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-	"    select o.* " + //
+		"    select o.* " + //
 		"  from dctm_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -223,32 +223,12 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return q;
 	}
 
-	private <T, V> Long storeObject(Connection c, StoredObject<V> object, ObjectStorageTranslator<T, V> translator)
-		throws StorageException, StoredValueEncoderException {
+	@Override
+	protected <T, V> Long doStoreObject(JdbcOperation operation, StoredObject<V> object,
+		ObjectStorageTranslator<T, V> translator) throws StorageException, StoredValueEncoderException {
+		final Connection c = operation.getConnection();
 		final StoredObjectType objectType = object.getType();
 		final String objectId = object.getId();
-
-		// If it's already serialized, we skip it
-		boolean marked = false;
-		try {
-			marked = markDependency(c, objectType, objectId);
-		} catch (StorageException e) {
-			// Check again...maybe it was a PK violation...
-			marked = markDependency(c, objectType, objectId);
-			// It wasn't... raise an error
-			if (!marked) { throw new StorageException(String.format(
-				"Exception caught while trying to create the mutex lock for [%s::%s]", objectType.name(), objectId), e); }
-		}
-
-		if (marked) {
-			this.log.debug(String.format("Skipped storage of object (already marked): %s", object));
-			return null;
-		}
-
-		if (isStored(objectType, objectId)) {
-			this.log.debug(String.format("Skipped storage of object: %s", object));
-			return null;
-		}
 
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
 		Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
@@ -258,23 +238,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		Object[] attValue = new Object[4];
 		Object[] propData = new Object[4];
 
-		PreparedStatement lockPS = null;
-		ResultSet lockRS = null;
 		try {
 			QueryRunner qr = JdbcObjectStore.getQueryRunner();
-			if (doIsStored(c, objectType, objectId)) {
-				// Object is already there, so do nothing
-				return null;
-			}
-			markDependency(c, object.getType(), object.getId());
-			final String sql = "select * from dctm_export_plan where traversed = false and object_id = ? and not exists ( select o.object_id from dctm_object o where o.object_id = dctm_export_plan.object_id ) for update";
-			lockPS = c.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
-			lockPS.setString(1, objectId);
-			lockRS = lockPS.executeQuery();
-			if (!lockRS.next()) {
-				// Already serialized...
-				return null;
-			}
 
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
@@ -359,8 +324,6 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to serialize %s", object), e);
 		} finally {
-			DbUtils.closeQuietly(lockRS);
-			DbUtils.closeQuietly(lockPS);
 			// Help the GC along...not strictly necessary, but should help manage the memory
 			// footprint long-term
 			attributeParameters.clear();
@@ -375,12 +338,6 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			attValue = null;
 			propData = null;
 		}
-	}
-
-	@Override
-	protected <T, V> Long doStoreObject(JdbcOperation operation, StoredObject<V> object,
-		ObjectStorageTranslator<T, V> translator) throws StorageException, StoredValueEncoderException {
-		return storeObject(operation.getConnection(), object, translator);
 	}
 
 	@Override
@@ -632,7 +589,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
-				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+			.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
 				targetValue));
@@ -782,27 +739,27 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			return new QueryRunner().query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
-					@Override
-					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
-						StoredObjectType.class);
-						while (rs.next()) {
-							String t = rs.getString("object_type");
-							if ((t == null) || rs.wasNull()) {
-								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
-							try {
-								ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
-							} catch (IllegalArgumentException e) {
-								JdbcObjectStore.this.log.warn(String.format(
-									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
+				@Override
+				public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
+					Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
+							StoredObjectType.class);
+					while (rs.next()) {
+						String t = rs.getString("object_type");
+						if ((t == null) || rs.wasNull()) {
+							JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+							continue;
 						}
-						return ret;
+						try {
+							ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
+						} catch (IllegalArgumentException e) {
+							JdbcObjectStore.this.log.warn(String.format(
+								"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+							continue;
+						}
 					}
-				});
+					return ret;
+				}
+			});
 		} catch (SQLException e) {
 			throw new StorageException("Failed to retrieve the stored object types", e);
 		}
@@ -1004,9 +961,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected boolean doLockForStorage(JdbcOperation operation, StoredObjectType type, String objectId)
+	protected boolean doLockForStorage(JdbcOperation operation, StoredObjectType type, String id)
 		throws StorageException {
-		// TODO Auto-generated method stub
-		return false;
+		return markDependency(operation.getConnection(), type, id);
 	}
 }
