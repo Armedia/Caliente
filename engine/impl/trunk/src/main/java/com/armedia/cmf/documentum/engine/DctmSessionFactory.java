@@ -103,18 +103,18 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 
 	private void flushCaches(IDfSession session) throws DfException {
 		final String sessionId = DfUtils.getSessionId(session);
-		if (DctmSessionFactory.LOG.isDebugEnabled()) {
-			DctmSessionFactory.LOG.debug(String.format("Flushing all the session caches for session [%s]", sessionId));
+		if (DctmSessionFactory.LOG.isTraceEnabled()) {
+			DctmSessionFactory.LOG.trace(String.format("Flushing all the session caches for session [%s]", sessionId));
 		}
 		for (DfCache cache : DfCache.values()) {
-			if (DctmSessionFactory.LOG.isDebugEnabled()) {
-				DctmSessionFactory.LOG.debug(String.format("Flushing the [%s] cache for session [%s]", cache.name(),
+			if (DctmSessionFactory.LOG.isTraceEnabled()) {
+				DctmSessionFactory.LOG.trace(String.format("Flushing the [%s] cache for session [%s]", cache.name(),
 					sessionId));
 			}
 			try {
 				cache.flush(session, null);
 			} catch (DfException e) {
-				if (DctmSessionFactory.LOG.isDebugEnabled()) {
+				if (DctmSessionFactory.LOG.isTraceEnabled()) {
 					DctmSessionFactory.LOG.error(String.format(
 						"Exception caught flushing the [%s] cache for session [%s]", cache.name(), sessionId), e);
 				}
