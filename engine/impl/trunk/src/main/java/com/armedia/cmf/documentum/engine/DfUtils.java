@@ -246,8 +246,8 @@ public class DfUtils {
 		UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
-		final String typeStr = source.getType().getName();
-		return new ExportTarget(DctmObjectType.decodeType(typeStr).getStoredObjectType(), id.getId());
+		final DctmObjectType type = DctmObjectType.decodeType(source);
+		return new ExportTarget(type.getStoredObjectType(), id.getId());
 	}
 
 	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute, String typeAttribute)
