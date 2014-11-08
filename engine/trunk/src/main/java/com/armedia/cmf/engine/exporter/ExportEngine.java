@@ -30,18 +30,24 @@ import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
+import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValueEncoderException;
 import com.armedia.cmf.storage.UnsupportedObjectTypeException;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, ExportEngineListener> {
+	TransferEngine<S, T, V, ExportEngineListener> {
+
+	private static final String REFERRENT_TYPE = "$$__REFERRENT_TYPE__$$";
+	private static final String REFERRENT_ID = "$$__REFERRENT_ID__$$";
 
 	private class Result {
 		private final Long objectNumber;
@@ -143,8 +149,9 @@ TransferEngine<S, T, V, ExportEngineListener> {
 	protected abstract String calculateLabel(T sourceObject) throws Exception;
 
 	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStreamStore streamStore, S session,
-		T referencingObject, final ExportTarget target, T sourceObject, C ctx, ListenerDelegator listenerDelegator)
-			throws ExportException, StorageException, StoredValueEncoderException, UnsupportedObjectTypeException {
+		final ExportTarget referrent, final ExportTarget target, T sourceObject, C ctx,
+		ListenerDelegator listenerDelegator) throws ExportException, StorageException, StoredValueEncoderException,
+		UnsupportedObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to operate with"); }
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -201,7 +208,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			return null;
 		}
 
-		final StoredObject<V> marshaled = marshal(session, sourceObject);
+		final StoredObject<V> marshaled = marshal(session, referrent, sourceObject);
 		Collection<T> referenced;
 		try {
 			referenced = identifyRequirements(session, marshaled, sourceObject, ctx);
@@ -213,8 +220,8 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			this.log.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 		}
 		for (T requirement : referenced) {
-			exportObject(objectStore, streamStore, session, sourceObject, getExportTarget(requirement), requirement,
-				ctx, listenerDelegator);
+			exportObject(objectStore, streamStore, session, target, getExportTarget(requirement), requirement, ctx,
+				listenerDelegator);
 		}
 
 		final Long ret = objectStore.storeObject(marshaled, getTranslator());
@@ -240,7 +247,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			this.log.debug(String.format("%s has %d dependent objects to store", label, referenced.size()));
 		}
 		for (T dependent : referenced) {
-			exportObject(objectStore, streamStore, session, sourceObject, getExportTarget(dependent), dependent, ctx,
+			exportObject(objectStore, streamStore, session, target, getExportTarget(dependent), dependent, ctx,
 				listenerDelegator);
 		}
 
@@ -509,10 +516,10 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -538,6 +545,35 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		throws Exception;
 
 	protected abstract ExportTarget getExportTarget(T object) throws ExportException;
+
+	private final StoredObject<V> marshal(S session, ExportTarget referrent, T object) throws ExportException {
+		StoredObject<V> marshaled = marshal(session, object);
+		// Now, add the properties to reference the referrent object
+		if (referrent != null) {
+			StoredProperty<V> referrentType = new StoredProperty<V>(ExportEngine.REFERRENT_TYPE, StoredDataType.STRING,
+				false);
+			referrentType.addValue(getValue(StoredDataType.STRING, referrent.getType().name()));
+			marshaled.setProperty(referrentType);
+			StoredProperty<V> referrentId = new StoredProperty<V>(ExportEngine.REFERRENT_ID, StoredDataType.STRING,
+				false);
+			referrentId.addValue(getValue(StoredDataType.STRING, referrent.getId()));
+			marshaled.setProperty(referrentId);
+		}
+		return marshaled;
+	}
+
+	protected final ExportTarget getReferrent(StoredObject<V> marshaled) {
+		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
+		StoredProperty<V> referrentType = marshaled.getProperty(ExportEngine.REFERRENT_TYPE);
+		StoredProperty<V> referrentId = marshaled.getProperty(ExportEngine.REFERRENT_ID);
+		if ((referrentType == null) || (referrentId == null)) { return null; }
+		String type = Tools.toString(referrentType.getValue(), true);
+		String id = Tools.toString(referrentId.getValue(), true);
+		if ((type == null) || (id == null)) { return null; }
+		return new ExportTarget(StoredObjectType.valueOf(type), id);
+	}
+
+	protected abstract V getValue(StoredDataType type, Object value);
 
 	protected abstract StoredObject<V> marshal(S session, T object) throws ExportException;
 
