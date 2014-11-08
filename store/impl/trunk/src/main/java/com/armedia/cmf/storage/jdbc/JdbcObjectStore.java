@@ -66,7 +66,6 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	private static final String QUERY_EXPORT_PLAN_DUPE_SQL = "select * from dctm_export_plan where object_id = ?";
 	private static final String INSERT_EXPORT_PLAN_SQL = "insert into dctm_export_plan (object_type, object_id) values (?, ?)";
-	private static final String MARK_EXPORT_PLAN_TRAVERSED_SQL = "update dctm_export_plan set traversed = true where object_id = ? and traversed = false";
 
 	private static final String CLEAR_ALL_MAPPINGS_SQL = "truncate table dctm_mapper";
 	private static final String LOAD_ALL_MAPPINGS_SQL = "select distinct object_type, name from dctm_mapper order by object_type, name";
@@ -81,53 +80,53 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from dctm_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-		"   select object_type, count(*) as total " + //
+	"   select object_type, count(*) as total " + //
 		" from dctm_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-		"    select o.* " + //
+	"    select o.* " + //
 		"  from dctm_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from dctm_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -589,7 +588,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
-			.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
 				targetValue));
@@ -655,111 +654,31 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	private boolean markDependency(Connection c, StoredObjectType type, String id) throws StorageException {
-		QueryRunner qr = JdbcObjectStore.getQueryRunner();
-		try {
-			if (qr.query(c, JdbcObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, JdbcObjectStore.HANDLER_EXISTS, id)) {
-				// Duplicate dependency...we skip it
-				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
-				}
-				return false;
-			}
-			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("PERSISTING DEPENDENCY [%s::%s]", type.name(), id));
-			}
-			qr.insert(c, JdbcObjectStore.INSERT_EXPORT_PLAN_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), id);
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
-			}
-			return true;
-		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
-		}
-	}
-
-	protected boolean markDependency(StoredObjectType type, String id) throws StorageException {
-		if (type == null) { throw new IllegalArgumentException("Must provide a type to persist a dependency"); }
-		if (id == null) { throw new IllegalArgumentException("Must provide an ID for the dependency to be persisted"); }
-		final Connection c;
-		try {
-			c = this.dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new StorageException("Failed to connect to the object store's database", e);
-		}
-		boolean ok = false;
-		try {
-			c.setAutoCommit(false);
-			boolean ret = markDependency(c, type, id);
-			ok = true;
-			return ret;
-		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to register the dependency [%s::%s]", type, id), e);
-		} finally {
-			if (ok) {
-				DbUtils.commitAndCloseQuietly(c);
-			} else {
-				DbUtils.rollbackAndCloseQuietly(c);
-			}
-		}
-	}
-
-	private boolean markTraversed(Connection c, String objectId) throws StorageException {
-		QueryRunner qr = JdbcObjectStore.getQueryRunner();
-		try {
-			return (qr.update(c, JdbcObjectStore.MARK_EXPORT_PLAN_TRAVERSED_SQL, objectId) == 1);
-		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to mark the dependency for [%s] as traversed", objectId),
-				e);
-		}
-	}
-
-	public boolean markTraversed(String objectId) throws StorageException {
-		final Connection c;
-		try {
-			c = this.dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new StorageException("Failed to connect to the object store's database", e);
-		}
-		boolean ok = false;
-		try {
-			boolean ret = markTraversed(c, objectId);
-			ok = true;
-			return ret;
-		} finally {
-			if (ok) {
-				DbUtils.commitAndCloseQuietly(c);
-			} else {
-				DbUtils.rollbackAndCloseQuietly(c);
-			}
-		}
-	}
-
 	private Map<StoredObjectType, Integer> getStoredObjectTypes(Connection c) throws StorageException {
 		try {
 			return new QueryRunner().query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
-				@Override
-				public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
-					Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
-							StoredObjectType.class);
-					while (rs.next()) {
-						String t = rs.getString("object_type");
-						if ((t == null) || rs.wasNull()) {
-							JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-							continue;
+					@Override
+					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
+						StoredObjectType.class);
+						while (rs.next()) {
+							String t = rs.getString("object_type");
+							if ((t == null) || rs.wasNull()) {
+								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
+							try {
+								ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
+							} catch (IllegalArgumentException e) {
+								JdbcObjectStore.this.log.warn(String.format(
+									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
 						}
-						try {
-							ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
-						} catch (IllegalArgumentException e) {
-							JdbcObjectStore.this.log.warn(String.format(
-								"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-							continue;
-						}
+						return ret;
 					}
-					return ret;
-				}
-			});
+				});
 		} catch (SQLException e) {
 			throw new StorageException("Failed to retrieve the stored object types", e);
 		}
@@ -963,6 +882,26 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected boolean doLockForStorage(JdbcOperation operation, StoredObjectType type, String id)
 		throws StorageException {
-		return markDependency(operation.getConnection(), type, id);
+		final Connection c = operation.getConnection();
+		QueryRunner qr = JdbcObjectStore.getQueryRunner();
+		try {
+			if (qr.query(c, JdbcObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, JdbcObjectStore.HANDLER_EXISTS, id)) {
+				// Duplicate dependency...we skip it
+				if (this.log.isTraceEnabled()) {
+					this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
+				}
+				return false;
+			}
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("PERSISTING DEPENDENCY [%s::%s]", type.name(), id));
+			}
+			qr.insert(c, JdbcObjectStore.INSERT_EXPORT_PLAN_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), id);
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
+			}
+			return true;
+		} catch (SQLException e) {
+			throw new StorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
+		}
 	}
 }
