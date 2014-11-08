@@ -10,7 +10,7 @@ import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
+import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.ContentStreamStore;
@@ -44,7 +44,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -71,7 +71,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 	}
 
 	protected final StoredObject<IDfValue> marshal(IDfSession session, IDfPersistentObject object) throws DfException,
-	ExportException, UnsupportedObjectTypeException {
+		ExportException, UnsupportedDctmObjectTypeException {
 		final String id = object.getObjectId().getId();
 		final String subtype = object.getType().getName();
 		final T typedObject = castObject(object);
@@ -109,7 +109,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 	}
 
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-		ExportException {
+	ExportException {
 	}
 
 	protected String calculateBatchId(IDfSession session, T object) throws DfException {
@@ -118,6 +118,10 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 
 	protected String calculateLabel(IDfSession session, T object) throws DfException {
 		return String.format("%s[%s]", this.type.name(), object.getObjectId().getId());
+	}
+
+	protected final String calculateLabel(IDfPersistentObject object) throws DfException {
+		return calculateLabel(object.getSession(), castObject(object));
 	}
 
 	public final void storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,

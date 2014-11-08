@@ -9,13 +9,18 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 
+import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPermit;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 
 public class DfUtils {
 
@@ -235,5 +240,23 @@ public class DfUtils {
 		Integer ret = DfUtils.PERMIT_TYPES_MAP.get(permitType);
 		if (ret == null) { throw new DfException(String.format("Unknown permit type value [%s] detected", permitType)); }
 		return ret;
+	}
+
+	public static ExportTarget getExportTarget(IDfPersistentObject source) throws DfException,
+		UnsupportedDctmObjectTypeException {
+		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
+		final IDfId id = source.getObjectId();
+		final String typeStr = source.getType().getName();
+		return new ExportTarget(DctmObjectType.decodeType(typeStr).getStoredObjectType(), id.getId());
+	}
+
+	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute, String typeAttribute)
+		throws DfException, UnsupportedDctmObjectTypeException {
+		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
+		if (source instanceof IDfPersistentObject) { return DfUtils.getExportTarget(IDfPersistentObject.class
+			.cast(source)); }
+		final IDfId id = source.getId(Tools.coalesce(idAttribute, DctmAttributes.R_OBJECT_ID));
+		final String typeStr = source.getString(Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE));
+		return new ExportTarget(DctmObjectType.decodeType(typeStr).getStoredObjectType(), id.getId());
 	}
 }

@@ -119,23 +119,23 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		IDfType type = object.getType();
 		while (type != null) {
 			try {
 				return DctmObjectType.decodeType(type.getName());
-			} catch (UnsupportedObjectTypeException e) {
+			} catch (UnsupportedDctmObjectTypeException e) {
 				// This type isn't supported...try its parent
 				type = type.getSuperType();
 				continue;
 			}
 		}
 		// The only way we get here is if we can't decode into a supported type
-		throw new UnsupportedObjectTypeException(object.getType().getName());
+		throw new UnsupportedDctmObjectTypeException(object.getType().getName());
 	}
 
-	public static DctmObjectType decodeType(String type) throws UnsupportedObjectTypeException {
+	public static DctmObjectType decodeType(String type) throws UnsupportedDctmObjectTypeException {
 		synchronized (DctmObjectType.class) {
 			if (DctmObjectType.DM_TYPE_DECODER == null) {
 				Map<String, DctmObjectType> m = new HashMap<String, DctmObjectType>();
@@ -147,7 +147,7 @@ public enum DctmObjectType {
 		}
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
 		DctmObjectType ret = DctmObjectType.DM_TYPE_DECODER.get(type);
-		if (ret == null) { throw new UnsupportedObjectTypeException(type); }
+		if (ret == null) { throw new UnsupportedDctmObjectTypeException(type); }
 		return ret;
 	}
 }

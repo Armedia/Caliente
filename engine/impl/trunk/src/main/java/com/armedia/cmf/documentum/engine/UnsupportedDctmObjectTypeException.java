@@ -8,10 +8,10 @@ package com.armedia.cmf.documentum.engine;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class UnsupportedObjectTypeException extends Exception {
+public class UnsupportedDctmObjectTypeException extends Exception {
 	private static final long serialVersionUID = 1L;
 
-	UnsupportedObjectTypeException(String type) {
+	UnsupportedDctmObjectTypeException(String type) {
 		super(String.format("The object type [%s] is not supported", type));
 	}
 }

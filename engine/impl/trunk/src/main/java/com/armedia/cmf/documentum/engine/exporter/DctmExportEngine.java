@@ -18,7 +18,7 @@ import com.armedia.cmf.documentum.engine.DctmSessionFactory;
 import com.armedia.cmf.documentum.engine.DctmSessionWrapper;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfUtils;
-import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
+import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -61,7 +61,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	private static final String DCTM_DQL = "dql";
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-		UnsupportedObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = DctmExportEngine.DELEGATES.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -69,7 +69,8 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		return delegate;
 	}
 
-	private final String getObjectId(IDfPersistentObject object) {
+	@Override
+	protected final String getObjectId(IDfPersistentObject object) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose ID to retrieve"); }
 		try {
 			return object.getObjectId().getId();
@@ -132,7 +133,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to marshal"); }
 		try {
 			return getExportDelegate(object).marshal(session, object);
-		} catch (DfException | UnsupportedObjectTypeException e) {
+		} catch (DfException | UnsupportedDctmObjectTypeException e) {
 			throw new ExportException(String.format("Exception raised while marshaling object [%s]",
 				getObjectId(object)), e);
 		}
@@ -167,5 +168,20 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	@Override
 	protected Set<String> getTargetNames() {
 		return DctmExportEngine.TARGETS;
+	}
+
+	@Override
+	protected String calculateLabel(IDfPersistentObject object) throws Exception {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
+		return getExportDelegate(object).calculateLabel(object);
+	}
+
+	@Override
+	protected ExportTarget getExportTarget(IDfPersistentObject object) throws ExportException {
+		try {
+			return DfUtils.getExportTarget(object);
+		} catch (DfException | UnsupportedDctmObjectTypeException e) {
+			throw new ExportException("Failed to generate the export target", e);
+		}
 	}
 }
