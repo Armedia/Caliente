@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, ExportEngineListener> {
+TransferEngine<S, T, V, ExportEngineListener> {
 
 	private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -140,7 +140,22 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		final String label = String.format("%s [%s](%s)", type, marshaled.getLabel(), id);
 
 		// First, make sure other threads don't work on this same object
-		if (!objectStore.lockForStorage(type, id)) {
+		boolean locked = false;
+		try {
+			locked = objectStore.lockForStorage(type, id);
+		} catch (StorageException e) {
+			if (this.log.isTraceEnabled()) {
+				this.log.warn(String.format("Exception caught attempting to lock an object for storage: %s", label), e);
+			}
+			try {
+				locked = objectStore.lockForStorage(type, id);
+			} catch (StorageException e2) {
+				// There may be some circumstances where this is necessary
+				throw new ExportException(String.format("Failed to obtain or check the lock on %s", label), e2);
+			}
+		}
+
+		if (!locked) {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("%s is already locked for storage", label));
 			}
@@ -476,10 +491,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
