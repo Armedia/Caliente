@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.armedia.commons.utilities.Tools;
+
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
@@ -33,7 +35,7 @@ public class StoredObject<V> {
 		if (subtype == null) { throw new IllegalArgumentException("Must provide a valid object subtype"); }
 		this.type = type;
 		this.id = id;
-		this.batchId = batchId;
+		this.batchId = Tools.coalesce(batchId, id);
 		this.label = label;
 		this.subtype = subtype;
 	}
