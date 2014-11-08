@@ -119,9 +119,14 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
-		IDfType type = object.getType();
+		return DctmObjectType.decodeType(object.getType());
+	}
+
+	public static DctmObjectType decodeType(IDfType type) throws DfException, UnsupportedDctmObjectTypeException {
+		if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
+		final String typeName = type.getName();
 		while (type != null) {
 			try {
 				return DctmObjectType.decodeType(type.getName());
@@ -132,10 +137,10 @@ public enum DctmObjectType {
 			}
 		}
 		// The only way we get here is if we can't decode into a supported type
-		throw new UnsupportedDctmObjectTypeException(object.getType().getName());
+		throw new UnsupportedDctmObjectTypeException(typeName);
 	}
 
-	public static DctmObjectType decodeType(String type) throws UnsupportedDctmObjectTypeException {
+	private static DctmObjectType decodeType(String type) throws UnsupportedDctmObjectTypeException {
 		synchronized (DctmObjectType.class) {
 			if (DctmObjectType.DM_TYPE_DECODER == null) {
 				Map<String, DctmObjectType> m = new HashMap<String, DctmObjectType>();

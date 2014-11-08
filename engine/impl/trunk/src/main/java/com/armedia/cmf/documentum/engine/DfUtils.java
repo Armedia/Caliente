@@ -243,7 +243,7 @@ public class DfUtils {
 	}
 
 	public static ExportTarget getExportTarget(IDfPersistentObject source) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
 		final DctmObjectType type = DctmObjectType.decodeType(source);
@@ -257,6 +257,7 @@ public class DfUtils {
 			.cast(source)); }
 		final IDfId id = source.getId(Tools.coalesce(idAttribute, DctmAttributes.R_OBJECT_ID));
 		final String typeStr = source.getString(Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE));
-		return new ExportTarget(DctmObjectType.decodeType(typeStr).getStoredObjectType(), id.getId());
+		return new ExportTarget(DctmObjectType.decodeType(source.getSession().getType(typeStr)).getStoredObjectType(),
+			id.getId());
 	}
 }
