@@ -1,5 +1,6 @@
 package com.armedia.cmf.documentum.engine;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -243,7 +244,7 @@ public class DfUtils {
 	}
 
 	public static ExportTarget getExportTarget(IDfPersistentObject source) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
 		final DctmObjectType type = DctmObjectType.decodeType(source);
@@ -259,5 +260,17 @@ public class DfUtils {
 		final String typeStr = source.getString(Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE));
 		return new ExportTarget(DctmObjectType.decodeType(source.getSession().getType(typeStr)).getStoredObjectType(),
 			id.getId());
+	}
+
+	public static File getContentDirectory(String contentId) {
+		if (contentId.length() != 16) { return null; }
+		// 16 character object id in dctm consists of first 2 chars of obj type, next 6 chars of
+		// docbase id in hex and last 8 chars server generated. We will use first 6 characters
+		// of this last 8 characters and generate the unique path.
+		// For ex: if the id is 0600a92b80054db8 than the path would be 80/05/4d
+		String pathComponents = contentId.substring(8, 16);
+		File tier1 = new File(pathComponents.substring(0, 2));
+		File tier2 = new File(tier1, pathComponents.substring(2, 4));
+		return new File(tier2, pathComponents.substring(4, 6));
 	}
 }

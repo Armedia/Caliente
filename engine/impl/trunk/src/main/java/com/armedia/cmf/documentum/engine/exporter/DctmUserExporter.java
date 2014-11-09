@@ -109,8 +109,8 @@ public class DctmUserExporter extends DctmExportAbstract<IDfUser> {
 		return DctmUserExporter.SPECIAL_USERS.contains(user);
 	}
 
-	protected DctmUserExporter() {
-		super(DctmObjectType.USER);
+	protected DctmUserExporter(DctmExportEngine engine) {
+		super(engine, DctmObjectType.USER);
 		DctmUserExporter.initHandlers();
 		DctmUserExporter.initSpecialUsers();
 	}

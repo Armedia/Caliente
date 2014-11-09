@@ -68,8 +68,8 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> {
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
-	protected DctmExportACL() {
-		super(DctmObjectType.ACL);
+	protected DctmExportACL(DctmExportEngine engine) {
+		super(engine, DctmObjectType.ACL);
 		DctmExportACL.initHandlers();
 	}
 

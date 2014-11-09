@@ -78,8 +78,8 @@ public class DctmExportType extends DctmExportAbstract<IDfType> {
 		return DctmExportType.SPECIAL_TYPES.contains(type);
 	}
 
-	protected DctmExportType() {
-		super(DctmObjectType.TYPE);
+	protected DctmExportType(DctmExportEngine engine) {
+		super(engine, DctmObjectType.TYPE);
 		DctmExportType.initHandlers();
 		DctmExportType.initSpecialTypes();
 	}

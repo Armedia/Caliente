@@ -55,19 +55,19 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> {
 			DctmAttributes.GROUPS_NAMES, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-				throws DfException {
-				return false;
-			}
+				@Override
+				public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+					throws DfException {
+					return false;
+				}
 
-			@Override
-			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-				throws DfException {
-				return DctmMappingUtils.substituteMappableUsers(object, attr);
-			}
+				@Override
+				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+					throws DfException {
+					return DctmMappingUtils.substituteMappableUsers(object, attr);
+				}
 
-		});
+			});
 		DctmExportGroup.HANDLERS_READY = true;
 	}
 
@@ -94,8 +94,8 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> {
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_GROUP = "SELECT u.user_name FROM dm_user u, dm_group g WHERE u.user_group_name = g.group_name AND g.r_object_id = '%s'";
 
-	protected DctmExportGroup() {
-		super(DctmObjectType.GROUP);
+	protected DctmExportGroup(DctmExportEngine engine) {
+		super(engine, DctmObjectType.GROUP);
 		DctmExportGroup.initHandlers();
 		DctmExportGroup.initSpecialGroups();
 	}

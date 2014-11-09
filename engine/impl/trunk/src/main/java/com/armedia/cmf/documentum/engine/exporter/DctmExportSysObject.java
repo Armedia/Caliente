@@ -17,8 +17,8 @@ import com.documentum.fc.common.IDfId;
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstract<T> {
 
-	protected DctmExportSysObject(DctmObjectType type) {
-		super(type);
+	protected DctmExportSysObject(DctmExportEngine engine, DctmObjectType type) {
+		super(engine, type);
 	}
 
 	private String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {

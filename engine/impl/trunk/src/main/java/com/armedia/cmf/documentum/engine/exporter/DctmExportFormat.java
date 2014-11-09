@@ -26,8 +26,8 @@ public class DctmExportFormat extends DctmExportAbstract<IDfFormat> {
 		DctmExportFormat.HANDLERS_READY = true;
 	}
 
-	protected DctmExportFormat() {
-		super(DctmObjectType.FORMAT);
+	protected DctmExportFormat(DctmExportEngine engine) {
+		super(engine, DctmObjectType.FORMAT);
 		DctmExportFormat.initHandlers();
 	}
 

@@ -13,8 +13,8 @@ import com.documentum.fc.client.IDfDocument;
  */
 public class DctmExportDocument extends DctmExportSysObject<IDfDocument> {
 
-	protected DctmExportDocument() {
-		super(DctmObjectType.DOCUMENT);
+	protected DctmExportDocument(DctmExportEngine engine) {
+		super(engine, DctmObjectType.DOCUMENT);
 	}
 
 }

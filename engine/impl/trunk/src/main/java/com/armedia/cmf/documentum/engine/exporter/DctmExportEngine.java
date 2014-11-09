@@ -18,6 +18,7 @@ import com.armedia.cmf.documentum.engine.DctmSessionFactory;
 import com.armedia.cmf.documentum.engine.DctmSessionWrapper;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.exporter.ExportEngine;
@@ -25,6 +26,7 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -42,28 +44,35 @@ public class DctmExportEngine extends
 ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
-	private static final Map<DctmObjectType, DctmExportAbstract<?>> DELEGATES;
-
-	static {
-		Map<DctmObjectType, DctmExportAbstract<?>> m = new EnumMap<DctmObjectType, DctmExportAbstract<?>>(
-			DctmObjectType.class);
-		m.put(DctmObjectType.ACL, new DctmExportACL());
-		m.put(DctmObjectType.CONTENT, new DctmExportContent());
-		m.put(DctmObjectType.DOCUMENT, new DctmExportDocument());
-		m.put(DctmObjectType.FOLDER, new DctmExportFolder());
-		m.put(DctmObjectType.FORMAT, new DctmExportFormat());
-		m.put(DctmObjectType.GROUP, new DctmExportGroup());
-		m.put(DctmObjectType.TYPE, new DctmExportType());
-		m.put(DctmObjectType.USER, new DctmUserExporter());
-		DELEGATES = Collections.unmodifiableMap(m);
-	}
+	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
 
 	private static final String DCTM_DQL = "dql";
+
+	private static final ContentStreamStore CONTENT_STREAM_STORE = new ContentStreamStore(null) {
+		@Override
+		protected String getRelativeStreamLocation(StoredObject<?> object, Long objectNumber) {
+			return null;
+		}
+	};
+
+	public DctmExportEngine() {
+		Map<DctmObjectType, DctmExportAbstract<?>> m = new EnumMap<DctmObjectType, DctmExportAbstract<?>>(
+			DctmObjectType.class);
+		m.put(DctmObjectType.ACL, new DctmExportACL(this));
+		m.put(DctmObjectType.CONTENT, new DctmExportContent(this));
+		m.put(DctmObjectType.DOCUMENT, new DctmExportDocument(this));
+		m.put(DctmObjectType.FOLDER, new DctmExportFolder(this));
+		m.put(DctmObjectType.FORMAT, new DctmExportFormat(this));
+		m.put(DctmObjectType.GROUP, new DctmExportGroup(this));
+		m.put(DctmObjectType.TYPE, new DctmExportType(this));
+		m.put(DctmObjectType.USER, new DctmUserExporter(this));
+		this.delegates = Collections.unmodifiableMap(m);
+	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
 		UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
-		DctmExportAbstract<?> delegate = DctmExportEngine.DELEGATES.get(type);
+		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
 			"Failed to find a delegate for type [%s]", type.name())); }
 		return delegate;
@@ -140,14 +149,13 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected void storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,
+	protected String storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,
 		ContentStreamStore streamStore) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to store the contents"); }
+		if (marshaled == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
-		if (streamStore == null) { throw new IllegalArgumentException(
-			"Must provide a ContentStreamStore in which to store the contents"); }
-		getExportDelegate(object).storeContent(session, marshaled, object, streamStore);
+		return getExportDelegate(object).storeContent(session, getReferrent(marshaled), object, streamStore);
 	}
 
 	@Override
@@ -183,5 +191,15 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		} catch (DfException | UnsupportedDctmObjectTypeException e) {
 			throw new ExportException("Failed to generate the export target", e);
 		}
+	}
+
+	@Override
+	protected IDfValue getValue(StoredDataType type, Object value) {
+		return DfValueFactory.newValue(type, value);
+	}
+
+	@Override
+	public ContentStreamStore getContentStreamStore() {
+		return DctmExportEngine.CONTENT_STREAM_STORE;
 	}
 }

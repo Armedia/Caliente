@@ -15,8 +15,8 @@ import com.documentum.fc.common.DfException;
  */
 public class DctmExportFolder extends DctmExportSysObject<IDfFolder> {
 
-	protected DctmExportFolder() {
-		super(DctmObjectType.FOLDER);
+	protected DctmExportFolder(DctmExportEngine engine) {
+		super(engine, DctmObjectType.FOLDER);
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStreamStore;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -28,12 +29,18 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 
 	private final Class<T> dfClass;
 	private final DctmObjectType type;
+	private final DctmExportEngine engine;
 
-	protected DctmExportAbstract(DctmObjectType type) {
+	protected DctmExportAbstract(DctmExportEngine engine, DctmObjectType type) {
+		this.engine = engine;
 		this.type = type;
 		@SuppressWarnings("unchecked")
 		Class<T> c = (Class<T>) type.getDfClass();
 		this.dfClass = c;
+	}
+
+	protected final DctmExportEngine getEngine() {
+		return this.engine;
 	}
 
 	protected final DctmObjectType getDctmType() {
@@ -109,7 +116,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 	}
 
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-	ExportException {
+		ExportException {
 	}
 
 	protected String calculateBatchId(IDfSession session, T object) throws DfException {
@@ -124,13 +131,13 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 		return calculateLabel(object.getSession(), castObject(object));
 	}
 
-	public final void storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,
+	public final String storeContent(IDfSession session, ExportTarget referrent, IDfPersistentObject object,
 		ContentStreamStore streamStore) throws Exception {
-		doStoreContent(session, marshaled, castObject(object), streamStore);
+		return doStoreContent(session, referrent, castObject(object), streamStore);
 	}
 
-	protected void doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled, T object,
-		ContentStreamStore streamStore) throws Exception {
-
+	protected String doStoreContent(IDfSession session, ExportTarget referrent, T object, ContentStreamStore streamStore)
+		throws Exception {
+		return null;
 	}
 }
