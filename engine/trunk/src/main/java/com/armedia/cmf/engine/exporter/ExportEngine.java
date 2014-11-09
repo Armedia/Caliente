@@ -570,7 +570,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		return marshaled;
 	}
 
-	public final ExportTarget getReferrent(StoredObject<V> marshaled) {
+	protected final ExportTarget getReferrent(StoredObject<V> marshaled) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
 		StoredProperty<V> referrentType = marshaled.getProperty(ExportEngine.REFERRENT_TYPE);
 		StoredProperty<V> referrentId = marshaled.getProperty(ExportEngine.REFERRENT_ID);
@@ -581,7 +581,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		return new ExportTarget(StoredObjectType.valueOf(type), id);
 	}
 
-	public final String getContentPath(StoredObject<V> marshaled) {
+	protected final String getContentPath(StoredObject<V> marshaled) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
 		StoredProperty<V> contentPath = marshaled.getProperty(ExportEngine.CONTENT_PATH);
 		if (contentPath == null) { return null; }
