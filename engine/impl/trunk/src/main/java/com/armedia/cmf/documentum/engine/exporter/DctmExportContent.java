@@ -5,11 +5,14 @@
 package com.armedia.cmf.documentum.engine.exporter;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
@@ -19,6 +22,8 @@ import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStreamStore.Handle;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -95,12 +100,25 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 		String pageModifier = content.getString(DctmAttributes.PAGE_MODIFIER);
 
 		// Store the content in the filesystem
-		File targetFile = streamStore.getStreamLocation(marshaled);
-		File parent = targetFile.getParentFile();
-		FileUtils.forceMkdir(parent);
-
-		IDfSysObject.class.cast(sourceObject).getFileEx2(targetFile.getCanonicalPath(), format, pageNumber,
-			pageModifier, false);
-		return null;
+		Handle contentHandle = streamStore.newHandle(StoredObjectType.CONTENT_STREAM, contentId);
+		File targetFile = contentHandle.getFile();
+		if (targetFile != null) {
+			FileUtils.forceMkdir(targetFile.getParentFile());
+			IDfSysObject.class.cast(sourceObject).getFileEx2(targetFile.getPath(), format, pageNumber, pageModifier,
+				false);
+		} else {
+			// Doesn't support file-level, so we (sadly) use stream-level transfers
+			InputStream in = null;
+			OutputStream out = contentHandle.openOutput();
+			try {
+				// Don't pull the content until we're sure we can put it somewhere...
+				in = IDfSysObject.class.cast(sourceObject).getContentEx3(format, pageNumber, pageModifier, false);
+				IOUtils.copy(in, out);
+			} finally {
+				IOUtils.closeQuietly(in);
+				IOUtils.closeQuietly(out);
+			}
+		}
+		return contentHandle.getURI().toString();
 	}
 }

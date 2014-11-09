@@ -48,13 +48,6 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 
 	private static final String DCTM_DQL = "dql";
 
-	private static final ContentStreamStore CONTENT_STREAM_STORE = new ContentStreamStore(null) {
-		@Override
-		protected String getRelativeStreamLocation(StoredObject<?> object, Long objectNumber) {
-			return null;
-		}
-	};
-
 	public DctmExportEngine() {
 		Map<DctmObjectType, DctmExportAbstract<?>> m = new EnumMap<DctmObjectType, DctmExportAbstract<?>>(
 			DctmObjectType.class);
@@ -196,10 +189,5 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	@Override
 	protected IDfValue getValue(StoredDataType type, Object value) {
 		return DfValueFactory.newValue(type, value);
-	}
-
-	@Override
-	public ContentStreamStore getContentStreamStore() {
-		return DctmExportEngine.CONTENT_STREAM_STORE;
 	}
 }
