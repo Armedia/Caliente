@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
-import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
@@ -149,7 +149,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 	protected abstract String calculateLabel(T sourceObject) throws Exception;
 
-	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStreamStore streamStore, S session,
+	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore, S session,
 		final ExportTarget referrent, final ExportTarget target, T sourceObject, C ctx,
 		ListenerDelegator listenerDelegator) throws ExportException, StorageException, StoredValueEncoderException,
 		UnsupportedObjectTypeException {
@@ -272,7 +272,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 	}
 
 	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStreamStore streamStore, Map<String, ?> settings) throws ExportException, StorageException {
+		final ContentStore streamStore, Map<String, ?> settings) throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final SessionFactory<S> sessionFactory = newSessionFactory();
@@ -593,7 +593,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 	protected abstract StoredObject<V> marshal(S session, T object) throws ExportException;
 
 	protected abstract String storeContent(S session, StoredObject<V> marshalled, T object,
-		ContentStreamStore streamStore) throws Exception;
+		ContentStore streamStore) throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
