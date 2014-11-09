@@ -8,9 +8,9 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-	public static final String NAMESPACE = "http://www.armedia.com/ns/cmf/objectstore";
+	public static final String NAMESPACE = "http://www.armedia.com/ns/cmf/stores";
 
-	private final static QName _Objectstores_QNAME = new QName(ObjectFactory.NAMESPACE, "objecstores");
+	private final static QName _Stores_QNAME = new QName(ObjectFactory.NAMESPACE, "stores");
 
 	/**
 	 * Create a new ObjectFactory that can be used to create new instances of schema derived classes
@@ -44,10 +44,9 @@ public class ObjectFactory {
 		return new Setting();
 	}
 
-	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "objectstores")
-	public JAXBElement<CmsStoreDefinitions> createObjectstores(CmsStoreDefinitions value) {
-		return new JAXBElement<CmsStoreDefinitions>(ObjectFactory._Objectstores_QNAME,
-			CmsStoreDefinitions.class, null, value);
+	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "stores")
+	public JAXBElement<CmsStoreDefinitions> createStores(CmsStoreDefinitions value) {
+		return new JAXBElement<CmsStoreDefinitions>(ObjectFactory._Stores_QNAME, CmsStoreDefinitions.class, null, value);
 	}
 
 }
