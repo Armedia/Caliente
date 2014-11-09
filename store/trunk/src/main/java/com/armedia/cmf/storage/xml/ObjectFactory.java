@@ -21,19 +21,19 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link CmsObjectStoreDefinitions }
+	 * Create an instance of {@link CmsStoreDefinitions }
 	 *
 	 */
-	public CmsObjectStoreDefinitions createObjectstoresT() {
-		return new CmsObjectStoreDefinitions();
+	public CmsStoreDefinitions createObjectstoresT() {
+		return new CmsStoreDefinitions();
 	}
 
 	/**
-	 * Create an instance of {@link CmsObjectStoreConfiguration }
+	 * Create an instance of {@link CmsStoreConfiguration }
 	 *
 	 */
-	public CmsObjectStoreConfiguration createObjectstoreT() {
-		return new CmsObjectStoreConfiguration();
+	public CmsStoreConfiguration createObjectstoreT() {
+		return new CmsStoreConfiguration();
 	}
 
 	/**
@@ -45,9 +45,9 @@ public class ObjectFactory {
 	}
 
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "objectstores")
-	public JAXBElement<CmsObjectStoreDefinitions> createObjectstores(CmsObjectStoreDefinitions value) {
-		return new JAXBElement<CmsObjectStoreDefinitions>(ObjectFactory._Objectstores_QNAME,
-			CmsObjectStoreDefinitions.class, null, value);
+	public JAXBElement<CmsStoreDefinitions> createObjectstores(CmsStoreDefinitions value) {
+		return new JAXBElement<CmsStoreDefinitions>(ObjectFactory._Objectstores_QNAME,
+			CmsStoreDefinitions.class, null, value);
 	}
 
 }

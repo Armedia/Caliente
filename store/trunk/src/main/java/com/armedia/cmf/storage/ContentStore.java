@@ -10,15 +10,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ContentStreamStore {
+public abstract class ContentStore {
 
 	public static final class Handle {
-		private final ContentStreamStore sourceStore;
+		private final ContentStore sourceStore;
 		private final StoredObjectType objectType;
 		private final String objectId;
 		private final URI uri;
 
-		private Handle(ContentStreamStore sourceStore, StoredObjectType objectType, String objectId, URI uri) {
+		private Handle(ContentStore sourceStore, StoredObjectType objectType, String objectId, URI uri) {
 			this.sourceStore = sourceStore;
 			this.objectType = objectType;
 			this.objectId = objectId;
@@ -49,12 +49,12 @@ public abstract class ContentStreamStore {
 
 		/**
 		 * <p>
-		 * Returns the {@link ContentStreamStore} from which this handle was obtained.
+		 * Returns the {@link ContentStore} from which this handle was obtained.
 		 * </p>
 		 *
-		 * @return the {@link ContentStreamStore} from which this handle was obtained.
+		 * @return the {@link ContentStore} from which this handle was obtained.
 		 */
-		public ContentStreamStore getSourceStore() {
+		public ContentStore getSourceStore() {
 			return this.sourceStore;
 		}
 
@@ -75,7 +75,7 @@ public abstract class ContentStreamStore {
 		 * <p>
 		 * Returns a {@link File} object that leads to the actual content file (existent or not),
 		 * and can be used to read from and write to it. If the underlying
-		 * {@link ContentStreamStore} doesn't support this functionality, {@code null} is returned.
+		 * {@link ContentStore} doesn't support this functionality, {@code null} is returned.
 		 * </p>
 		 * <p>
 		 * Whatever file is returned will already be canonical (via {@link File#getCanonicalFile()}
@@ -96,7 +96,7 @@ public abstract class ContentStreamStore {
 		 * {@code null} if this handle refers to an as-yet non-existent content stream.
 		 * </p>
 		 * <p>
-		 * All {@link ContentStreamStore} implementations <b>must</b> support this functionality.
+		 * All {@link ContentStore} implementations <b>must</b> support this functionality.
 		 * </p>
 		 *
 		 * @return an {@link InputStream} that can be used to read from the actual content file, or
@@ -113,7 +113,7 @@ public abstract class ContentStreamStore {
 		 * creating a new stream if it doesn't exist.
 		 * </p>
 		 * <p>
-		 * All {@link ContentStreamStore} implementations <b>must</b> support this functionality.
+		 * All {@link ContentStore} implementations <b>must</b> support this functionality.
 		 * </p>
 		 *
 		 * @return an {@link OutputStream} that can be used to write to the actual content file

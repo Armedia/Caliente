@@ -9,10 +9,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "objectstore.t", propOrder = {
+@XmlType(name = "store.t", propOrder = {
 	"className", "setting"
 })
-public class CmsObjectStoreConfiguration extends SettingContainer {
+public class CmsStoreConfiguration extends SettingContainer {
 
 	@XmlElement(required = true)
 	protected String className;

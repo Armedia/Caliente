@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objectstores xmlns="http://www.armedia.com/ns/cmf/objectstore"
+<stores xmlns="http://www.armedia.com/ns/cmf/stores"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/cmf/objectstore ../../main/resources/objectstore.xsd ">
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/stores ../../main/resources/stores.xsd ">
 	<settings>
 		<setting name="name1">value1</setting>
 	</settings>
@@ -9,4 +9,8 @@
 		<className>tns:className</className>
 		<settings />
 	</objectstore>
-</objectstores>
+	<contentstore id="dummy">
+		<className>tns:className</className>
+		<settings />
+	</contentstore>
+</stores>

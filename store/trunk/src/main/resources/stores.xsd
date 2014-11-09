@@ -3,8 +3,8 @@
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd"
-	targetNamespace="http://www.armedia.com/ns/cmf/objectstore"
-	xmlns:tns="http://www.armedia.com/ns/cmf/objectstore" elementFormDefault="qualified" attributeFormDefault="unqualified"
+	targetNamespace="http://www.armedia.com/ns/cmf/stores"
+	xmlns:tns="http://www.armedia.com/ns/cmf/stores" elementFormDefault="qualified" attributeFormDefault="unqualified"
 	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
 
 	<xsd:simpleType name="trimmed_string.t">
@@ -59,7 +59,7 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:complexType name="objectstore.t">
+	<xsd:complexType name="store.t">
 		<xsd:sequence>
 			<xsd:element name="className" type="tns:class_name.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="settings" type="tns:settings.t" minOccurs="0" maxOccurs="1"/>
@@ -76,12 +76,13 @@
 		<xsd:attribute name="id" type="tns:id_string.t" use="required"/>
 	</xsd:complexType>
 
-	<xsd:complexType name="objectstores.t">
+	<xsd:complexType name="stores.t">
 		<xsd:sequence>
 			<xsd:element name="settings" type="tns:settings.t" minOccurs="0" maxOccurs="1" />
-			<xsd:element name="objectstore" type="tns:objectstore.t" minOccurs="1" maxOccurs="unbounded" />
+			<xsd:element name="objectstore" type="tns:store.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="contentstore" type="tns:store.t" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:element name="objectstores" type="tns:objectstores.t"/>
+	<xsd:element name="stores" type="tns:stores.t"/>
 </xsd:schema>

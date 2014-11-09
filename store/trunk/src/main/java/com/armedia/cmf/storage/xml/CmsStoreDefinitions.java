@@ -12,14 +12,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "objectstores.t", propOrder = {
-	"setting", "objectstore"
+@XmlType(name = "stores.t", propOrder = {
+	"setting", "objectstore", "contentstore"
 })
-@XmlRootElement(name = "objectstores")
-public class CmsObjectStoreDefinitions extends SettingContainer {
+@XmlRootElement(name = "stores")
+public class CmsStoreDefinitions extends SettingContainer {
 
 	@XmlElement(required = true)
-	protected List<CmsObjectStoreConfiguration> objectstore;
+	protected List<CmsStoreConfiguration> objectstore;
+
+	@XmlElement(required = true)
+	protected List<CmsStoreConfiguration> contentstore;
 
 	@Override
 	protected void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
@@ -31,10 +34,17 @@ public class CmsObjectStoreDefinitions extends SettingContainer {
 		super.beforeMarshal(marshaller);
 	}
 
-	public List<CmsObjectStoreConfiguration> getObjectStores() {
+	public List<CmsStoreConfiguration> getObjectStores() {
 		if (this.objectstore == null) {
-			this.objectstore = new ArrayList<CmsObjectStoreConfiguration>();
+			this.objectstore = new ArrayList<CmsStoreConfiguration>();
 		}
 		return this.objectstore;
+	}
+
+	public List<CmsStoreConfiguration> getContentStores() {
+		if (this.contentstore == null) {
+			this.contentstore = new ArrayList<CmsStoreConfiguration>();
+		}
+		return this.contentstore;
 	}
 }
