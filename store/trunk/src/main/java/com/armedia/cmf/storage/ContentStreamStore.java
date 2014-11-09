@@ -77,6 +77,11 @@ public abstract class ContentStreamStore {
 		 * and can be used to read from and write to it. If the underlying
 		 * {@link ContentStreamStore} doesn't support this functionality, {@code null} is returned.
 		 * </p>
+		 * <p>
+		 * Whatever file is returned will already be canonical (via {@link File#getCanonicalFile()}
+		 * ), except if the invocation raises an exception. In that event, the non-canonical
+		 * {@link File} will be returned.
+		 * </p>
 		 *
 		 * @return a {@link File} object that leads to the actual content file (existent or not), or
 		 *         {@code null} if this functionality is not supported.
@@ -202,7 +207,13 @@ public abstract class ContentStreamStore {
 		this.lock.readLock().lock();
 		try {
 			assertOpen();
-			return doGetFile(handleId);
+			File ret = doGetFile(handleId);
+			try {
+				return ret.getCanonicalFile();
+			} catch (IOException e) {
+				// Can't canonicalize
+			}
+			return ret;
 		} finally {
 			this.lock.readLock().unlock();
 		}
