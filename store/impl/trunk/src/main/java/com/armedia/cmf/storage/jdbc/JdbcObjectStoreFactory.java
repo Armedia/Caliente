@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.ObjectStoreFactory;
 import com.armedia.cmf.storage.StorageException;
-import com.armedia.cmf.storage.xml.CmsObjectStoreConfiguration;
+import com.armedia.cmf.storage.xml.CmsStoreConfiguration;
 import com.armedia.commons.dslocator.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -20,7 +20,7 @@ public class JdbcObjectStoreFactory extends ObjectStoreFactory<Connection, JdbcO
 	}
 
 	@Override
-	protected JdbcObjectStore newInstance(CmsObjectStoreConfiguration configuration) throws StorageException {
+	protected JdbcObjectStore newInstance(CmsStoreConfiguration configuration) throws StorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		final String locationType = cfg.getString("location.type");
