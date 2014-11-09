@@ -16,13 +16,13 @@ import javax.xml.bind.annotation.XmlType;
 	"setting", "objectstore", "contentstore"
 })
 @XmlRootElement(name = "stores")
-public class CmsStoreDefinitions extends SettingContainer {
+public class StoreDefinitions extends SettingContainer {
 
 	@XmlElement(required = true)
-	protected List<CmsStoreConfiguration> objectstore;
+	protected List<StoreConfiguration> objectstore;
 
 	@XmlElement(required = true)
-	protected List<CmsStoreConfiguration> contentstore;
+	protected List<StoreConfiguration> contentstore;
 
 	@Override
 	protected void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
@@ -34,16 +34,16 @@ public class CmsStoreDefinitions extends SettingContainer {
 		super.beforeMarshal(marshaller);
 	}
 
-	public List<CmsStoreConfiguration> getObjectStores() {
+	public List<StoreConfiguration> getObjectStores() {
 		if (this.objectstore == null) {
-			this.objectstore = new ArrayList<CmsStoreConfiguration>();
+			this.objectstore = new ArrayList<StoreConfiguration>();
 		}
 		return this.objectstore;
 	}
 
-	public List<CmsStoreConfiguration> getContentStores() {
+	public List<StoreConfiguration> getContentStores() {
 		if (this.contentstore == null) {
-			this.contentstore = new ArrayList<CmsStoreConfiguration>();
+			this.contentstore = new ArrayList<StoreConfiguration>();
 		}
 		return this.contentstore;
 	}

@@ -19,8 +19,8 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.storage.xml.CmsStoreConfiguration;
-import com.armedia.cmf.storage.xml.CmsStoreDefinitions;
+import com.armedia.cmf.storage.xml.StoreConfiguration;
+import com.armedia.cmf.storage.xml.StoreDefinitions;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.XmlTools;
 
@@ -97,11 +97,11 @@ public abstract class CmfStores {
 				Reader r = null;
 				try {
 					r = new InputStreamReader(config.openStream());
-					CmsStoreDefinitions cfg = CmfStores.parseConfiguration(r);
+					StoreDefinitions cfg = CmfStores.parseConfiguration(r);
 					int i = 0;
 					CmfStores.OBJECT_LOCK.writeLock().lock();
 					try {
-						for (CmsStoreConfiguration storeCfg : cfg.getObjectStores()) {
+						for (StoreConfiguration storeCfg : cfg.getObjectStores()) {
 							i++;
 							try {
 								CmfStores.createObjectStore(storeCfg);
@@ -122,7 +122,7 @@ public abstract class CmfStores {
 					}
 					CmfStores.CONTENT_LOCK.writeLock().lock();
 					try {
-						for (CmsStoreConfiguration storeCfg : cfg.getObjectStores()) {
+						for (StoreConfiguration storeCfg : cfg.getObjectStores()) {
 							i++;
 							try {
 								CmfStores.createContentStore(storeCfg);
@@ -158,13 +158,13 @@ public abstract class CmfStores {
 		}
 	}
 
-	protected static CmsStoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
+	protected static StoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
 	JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
 		return CmfStores.parseConfiguration(settings.toURI().toURL());
 	}
 
-	protected static CmsStoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
+	protected static StoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
 	JAXBException {
 		Reader xml = null;
 		try {
@@ -175,11 +175,11 @@ public abstract class CmfStores {
 		}
 	}
 
-	protected static CmsStoreDefinitions parseConfiguration(Reader xml) throws StorageException, JAXBException {
-		return XmlTools.unmarshal(CmsStoreDefinitions.class, "stores.xsd", xml);
+	protected static StoreDefinitions parseConfiguration(Reader xml) throws StorageException, JAXBException {
+		return XmlTools.unmarshal(StoreDefinitions.class, "stores.xsd", xml);
 	}
 
-	private static <T> T createStore(Class<T> storeClass, CmsStoreConfiguration configuration) throws StorageException,
+	private static <T> T createStore(Class<T> storeClass, StoreConfiguration configuration) throws StorageException,
 	DuplicateStoreException {
 		if (storeClass == null) { throw new IllegalArgumentException("Must provide the class of store to create"); }
 		if (configuration == null) { throw new IllegalArgumentException(
@@ -219,12 +219,12 @@ public abstract class CmfStores {
 		}
 	}
 
-	public static ObjectStore<?, ?> createObjectStore(CmsStoreConfiguration configuration) throws StorageException,
+	public static ObjectStore<?, ?> createObjectStore(StoreConfiguration configuration) throws StorageException,
 	DuplicateStoreException {
 		return CmfStores.createStore(ObjectStore.class, configuration);
 	}
 
-	public static ContentStore createContentStore(CmsStoreConfiguration configuration) throws StorageException,
+	public static ContentStore createContentStore(StoreConfiguration configuration) throws StorageException,
 	DuplicateStoreException {
 		return CmfStores.createStore(ContentStore.class, configuration);
 	}

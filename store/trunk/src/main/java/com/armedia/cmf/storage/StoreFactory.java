@@ -3,7 +3,7 @@ package com.armedia.cmf.storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.storage.xml.CmsStoreConfiguration;
+import com.armedia.cmf.storage.xml.StoreConfiguration;
 
 public abstract class StoreFactory<S> {
 
@@ -19,5 +19,5 @@ public abstract class StoreFactory<S> {
 		return this.storeClass;
 	}
 
-	protected abstract S newInstance(CmsStoreConfiguration cfg) throws StorageException;
+	protected abstract S newInstance(StoreConfiguration cfg) throws StorageException;
 }

@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "store.t", propOrder = {
 	"className", "setting"
 })
-public class CmsStoreConfiguration extends SettingContainer {
+public class StoreConfiguration extends SettingContainer {
 
 	@XmlElement(required = true)
 	protected String className;
