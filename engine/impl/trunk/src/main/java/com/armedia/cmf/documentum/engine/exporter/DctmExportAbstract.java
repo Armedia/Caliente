@@ -14,7 +14,7 @@ import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -132,11 +132,11 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 	}
 
 	public final String storeContent(IDfSession session, ExportTarget referrent, IDfPersistentObject object,
-		ContentStreamStore streamStore) throws Exception {
+		ContentStore streamStore) throws Exception {
 		return doStoreContent(session, referrent, castObject(object), streamStore);
 	}
 
-	protected String doStoreContent(IDfSession session, ExportTarget referrent, T object, ContentStreamStore streamStore)
+	protected String doStoreContent(IDfSession session, ExportTarget referrent, T object, ContentStore streamStore)
 		throws Exception {
 		return null;
 	}

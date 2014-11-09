@@ -24,7 +24,7 @@ import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -143,7 +143,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 
 	@Override
 	protected String storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,
-		ContentStreamStore streamStore) throws Exception {
+		ContentStore streamStore) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to store the contents"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }

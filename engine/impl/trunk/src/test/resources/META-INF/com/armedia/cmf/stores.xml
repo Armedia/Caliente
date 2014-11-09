@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objectstores xmlns="http://www.armedia.com/ns/cmf/objectstore"
+<stores xmlns="http://www.armedia.com/ns/cmf/stores"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/cmf/objectstore http://www.armedia.com/ns/cmf/objectstore">
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/stores http://www.armedia.com/ns/cmf/stores">
 	<objectstore id="dctmTest">
 		<className>com.armedia.cmf.storage.jdbc.JdbcObjectStore</className>
 		<settings>
@@ -10,4 +10,10 @@
 			<setting name="jdbc.driver">org.h2.Driver</setting>
 		</settings>
 	</objectstore>
-</objectstores>
+	<contentstore id="dctmTest">
+		<className>com.armedia.cmf.storage.jdbc.JdbcObjectStore</className>
+		<settings>
+			<setting name="content.path">${user.dir}/cmf</setting>
+		</settings>
+	</contentstore>
+</stores>

@@ -21,8 +21,8 @@ import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ContentStreamStore;
-import com.armedia.cmf.storage.ContentStreamStore.Handle;
+import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.DfIdNotFoundException;
@@ -77,7 +77,7 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 
 	@Override
 	protected String doStoreContent(IDfSession session, ExportTarget referrent, IDfContent content,
-		ContentStreamStore streamStore) throws Exception {
+		ContentStore streamStore) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (referrent == null) { throw new Exception(String.format(
 			"Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
