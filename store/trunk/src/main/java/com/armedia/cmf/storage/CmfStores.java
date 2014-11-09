@@ -159,13 +159,13 @@ public abstract class CmfStores {
 	}
 
 	protected static CmsStoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
-		JAXBException {
+	JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
 		return CmfStores.parseConfiguration(settings.toURI().toURL());
 	}
 
 	protected static CmsStoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
-		JAXBException {
+	JAXBException {
 		Reader xml = null;
 		try {
 			xml = new InputStreamReader(settings.openStream());
@@ -176,11 +176,11 @@ public abstract class CmfStores {
 	}
 
 	protected static CmsStoreDefinitions parseConfiguration(Reader xml) throws StorageException, JAXBException {
-		return XmlTools.unmarshal(CmsStoreDefinitions.class, "objectstore.xsd", xml);
+		return XmlTools.unmarshal(CmsStoreDefinitions.class, "stores.xsd", xml);
 	}
 
 	private static <T> T createStore(Class<T> storeClass, CmsStoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
+	DuplicateStoreException {
 		if (storeClass == null) { throw new IllegalArgumentException("Must provide the class of store to create"); }
 		if (configuration == null) { throw new IllegalArgumentException(
 			"Must provide a configuration to construct the instance from"); }
@@ -207,7 +207,7 @@ public abstract class CmfStores {
 			T dupe = storeClass.cast(stores.get(id));
 			if (dupe != null) { throw new DuplicateStoreException(String.format(
 				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
-					.getCanonicalName())); }
+				.getCanonicalName())); }
 			StoreFactory<?> factory = factories.get(className);
 			if (factory == null) { throw new StorageException(String.format(
 				"No factory found for object store class [%s]", className)); }
@@ -220,12 +220,12 @@ public abstract class CmfStores {
 	}
 
 	public static ObjectStore<?, ?> createObjectStore(CmsStoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
+	DuplicateStoreException {
 		return CmfStores.createStore(ObjectStore.class, configuration);
 	}
 
 	public static ContentStore createContentStore(CmsStoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
+	DuplicateStoreException {
 		return CmfStores.createStore(ContentStore.class, configuration);
 	}
 
