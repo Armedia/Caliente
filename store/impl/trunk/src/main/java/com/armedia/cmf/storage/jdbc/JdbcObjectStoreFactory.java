@@ -16,7 +16,7 @@ public class JdbcObjectStoreFactory extends ObjectStoreFactory<Connection, JdbcO
 	private static final Logger LOG = LoggerFactory.getLogger(JdbcObjectStoreFactory.class);
 
 	public JdbcObjectStoreFactory() {
-		super(JdbcObjectStore.class);
+		super("jdbc");
 	}
 
 	@Override
@@ -29,15 +29,14 @@ public class JdbcObjectStoreFactory extends ObjectStoreFactory<Connection, JdbcO
 				return new JdbcObjectStore(locator.locateDataSource(cfg), cfg.getBoolean(Setting.UPDATE_SCHEMA));
 			} catch (Throwable e) {
 				// This one failed...log it, and try the next one
-				JdbcObjectStoreFactory.LOG.error(
-					String.format("Failed to initialize the CmsObjectStore with ID=[%s], Class=[%s]",
-						configuration.getId(), configuration.getClassName()), e);
+				JdbcObjectStoreFactory.LOG.error(String.format("Failed to initialize the CmsObjectStore %s[%s]",
+					configuration.getName(), configuration.getId()), e);
 				continue;
 			}
 		}
 
 		// If we got here, then we have no locator for that datasource, so we simply explode
 		throw new StorageException(String.format("Failed to locate a DataSource for building the ObjectStore %s[%s]",
-			configuration.getClassName(), configuration.getId()));
+			configuration.getName(), configuration.getId()));
 	}
 }
