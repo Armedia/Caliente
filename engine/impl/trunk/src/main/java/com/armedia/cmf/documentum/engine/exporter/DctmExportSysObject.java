@@ -4,6 +4,7 @@
 
 package com.armedia.cmf.documentum.engine.exporter;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -13,15 +14,19 @@ import java.util.Set;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
+import com.documentum.fc.common.IDfValue;
 
 /**
  * @author diego
@@ -133,7 +138,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 				// that means we have a broken version tree...which is unsupported
 				throw new ExportException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-						.getId(), deferred));
+					.getId(), deferred));
 			}
 		}
 		return history;
@@ -161,5 +166,19 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 		// the reference support
 		// return object.isReference();
 		return false;
+	}
+
+	@Override
+	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+		T sysObject, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		Collection<IDfPersistentObject> req = super.findRequirements(session, marshaled, sysObject, ctx);
+		// The parent folders
+		final int pathCount = sysObject.getFolderIdCount();
+		for (int i = 0; i < pathCount; i++) {
+			IDfId folderId = sysObject.getFolderId(i);
+			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
+			req.add(parent);
+		}
+		return req;
 	}
 }

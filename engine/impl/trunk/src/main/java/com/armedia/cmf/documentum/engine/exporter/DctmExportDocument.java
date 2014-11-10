@@ -23,7 +23,6 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
-import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -182,14 +181,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfDocument document, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
 		Collection<IDfPersistentObject> req = super.findRequirements(session, marshaled, document, ctx);
-
-		// The parent folders
-		final int pathCount = document.getFolderIdCount();
-		for (int i = 0; i < pathCount; i++) {
-			IDfId folderId = document.getFolderId(i);
-			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
-			req.add(parent);
-		}
 
 		// Export the ACL
 		req.add(document.getACL());

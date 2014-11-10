@@ -8,8 +8,6 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
@@ -137,25 +135,6 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
-	}
-
-	@Override
-	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
-		IDfFolder folder, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
-		Collection<IDfPersistentObject> req = super.findRequirements(session, marshaled, folder, ctx);
-		// The parent folders
-		final int pathCount = folder.getFolderPathCount();
-		for (int i = 0; i < pathCount; i++) {
-			String path = folder.getFolderPath(i);
-			String parentPath = path.substring(0, path.lastIndexOf("/"));
-			if (StringUtils.isNotBlank(parentPath)) {
-				IDfFolder parent = session.getFolderByPath(parentPath);
-				if (parent != null) {
-					req.add(parent);
-				}
-			}
-		}
-		return req;
 	}
 
 	@Override
