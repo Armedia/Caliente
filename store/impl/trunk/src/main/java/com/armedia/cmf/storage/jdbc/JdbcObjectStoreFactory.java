@@ -23,7 +23,7 @@ public class JdbcObjectStoreFactory extends ObjectStoreFactory<Connection, JdbcO
 	protected JdbcObjectStore newInstance(StoreConfiguration configuration) throws StorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
-		final String locationType = cfg.getString("location.type");
+		final String locationType = cfg.getString(Setting.LOCATION_TYPE);
 		for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor(locationType)) {
 			try {
 				return new JdbcObjectStore(locator.locateDataSource(cfg), cfg.getBoolean(Setting.UPDATE_SCHEMA));
