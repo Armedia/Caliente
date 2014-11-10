@@ -1,9 +1,16 @@
 package com.armedia.cmf.storage;
 
-public abstract class ObjectStoreFactory<C, O extends ObjectStoreOperation<C>, S extends ObjectStore<C, O>> extends
-	StoreFactory<S> {
+import java.util.Collection;
 
-	protected ObjectStoreFactory(Class<S> storeClass) {
-		super(storeClass);
+public abstract class ObjectStoreFactory<C, O extends ObjectStoreOperation<C>, S extends ObjectStore<C, O>> extends
+StoreFactory<S> {
+
+	protected ObjectStoreFactory(String... aliases) {
+		super(aliases);
 	}
+
+	protected ObjectStoreFactory(Collection<String> aliases) {
+		super(aliases);
+	}
+
 }

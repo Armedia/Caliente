@@ -6,11 +6,11 @@
 		<setting name="name1">value1</setting>
 	</settings>
 	<objectstore id="dummy">
-		<className>tns:className</className>
+		<name>className</name>
 		<settings />
 	</objectstore>
 	<contentstore id="dummy">
-		<className>tns:className</className>
+		<name>className</name>
 		<settings />
 	</contentstore>
 </stores>

@@ -18,7 +18,7 @@
 		<xsd:restriction base="xsd:string">
 			<xsd:minLength value="1" />
 			<xsd:whiteSpace value="collapse" />
-			<xsd:pattern value="[^\s]+"/>
+			<xsd:pattern value="([a-zA-Z_$][a-zA-Z\d_$]*\.)*[a-zA-Z_$][a-zA-Z\d_$]*"/>
 		</xsd:restriction>
 	</xsd:simpleType>
 
@@ -61,7 +61,7 @@
 
 	<xsd:complexType name="store.t">
 		<xsd:sequence>
-			<xsd:element name="className" type="tns:class_name.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="name" type="tns:class_name.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="settings" type="tns:settings.t" minOccurs="0" maxOccurs="1"/>
 			<!--
 			<xsd:element name="configuration" minOccurs="0" maxOccurs="1">

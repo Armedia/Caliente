@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -45,19 +47,27 @@ public abstract class CmfStores {
 			ContentStoreFactory.class);
 
 		Map<String, StoreFactory<?>> m = new HashMap<String, StoreFactory<?>>();
+		Set<String> registration = new TreeSet<String>();
 		for (ObjectStoreFactory<?, ?, ?> f : objectFactories) {
-			Class<? extends ObjectStore<?, ?>> c = f.getStoreClass();
-			if (c == null) {
-				CmfStores.LOG.warn("ObjectStoreFactory [{}] returned null for a store class", f.getClass()
-					.getCanonicalName());
-				continue;
+			for (String alias : f.getAliases()) {
+				Object existing = m.get(alias);
+				if (existing != null) {
+					CmfStores.LOG.warn(
+						"Duplicate: alias [{}] from ObjectStoreFactory [{}] is already registered for factory [{}]",
+						alias, f.getClass().getCanonicalName(), existing.getClass().getCanonicalName());
+				} else {
+					m.put(alias, f);
+					registration.add(alias);
+				}
 			}
-			String key = c.getCanonicalName();
-			if (m.containsKey(key)) {
-				CmfStores.LOG.warn("Duplicate factories found with target class name [{}]", key);
-				continue;
+			if (registration.isEmpty()) {
+				CmfStores.LOG.warn(
+					"ObjectStoreFactory [{}] didn't provide a class name or any aliases, so it will not be registered",
+					f.getClass().getCanonicalName());
+			} else {
+				CmfStores.LOG.debug("ObjectStoreFactory [{}] registered with the following names: {}", f.getClass()
+					.getCanonicalName(), registration);
 			}
-			m.put(key, f);
 		}
 
 		if (m.isEmpty()) {
@@ -68,18 +78,28 @@ public abstract class CmfStores {
 
 		m = new HashMap<String, StoreFactory<?>>();
 		for (ContentStoreFactory<?> f : contentFactories) {
-			Class<? extends ContentStore> c = f.getStoreClass();
-			if (c == null) {
-				CmfStores.LOG.warn("ContentStoreFactory [{}] returned null for a store class", f.getClass()
-					.getCanonicalName());
-				continue;
+			registration.clear();
+			for (String alias : f.getAliases()) {
+				Object existing = m.get(alias);
+				if (existing != null) {
+					CmfStores.LOG.warn(
+						"Duplicate: alias [{}] from ContentStoreFactory [{}] is already registered for factory [{}]",
+						alias, f.getClass().getCanonicalName(), existing.getClass().getCanonicalName());
+				} else {
+					m.put(alias, f);
+					registration.add(alias);
+				}
 			}
-			String key = c.getCanonicalName();
-			if (m.containsKey(key)) {
-				CmfStores.LOG.warn("Duplicate factories found with target class name [{}]", key);
-				continue;
+
+			if (registration.isEmpty()) {
+				CmfStores.LOG
+					.warn(
+						"ContentStoreFactory [{}] didn't provide a class name or any aliases, so it will not be registered",
+						f.getClass().getCanonicalName());
+			} else {
+				CmfStores.LOG.debug("ContentStoreFactory [{}] registered with the following names: {}", f.getClass()
+					.getCanonicalName(), registration);
 			}
-			m.put(key, f);
 		}
 
 		if (m.isEmpty()) {
@@ -122,7 +142,7 @@ public abstract class CmfStores {
 					}
 					CmfStores.CONTENT_LOCK.writeLock().lock();
 					try {
-						for (StoreConfiguration storeCfg : cfg.getObjectStores()) {
+						for (StoreConfiguration storeCfg : cfg.getContentStores()) {
 							i++;
 							try {
 								CmfStores.createContentStore(storeCfg);
@@ -186,9 +206,8 @@ public abstract class CmfStores {
 			"Must provide a configuration to construct the instance from"); }
 		final String id = configuration.getId();
 		if (id == null) { throw new IllegalArgumentException("The configuration does not specify the store id"); }
-		final String className = configuration.getClassName();
-		if (className == null) { throw new IllegalArgumentException(
-			"The configuration does not specify the store class"); }
+		final String name = configuration.getName();
+		if (name == null) { throw new IllegalArgumentException("The configuration does not specify the store class"); }
 		Map<String, Object> stores = null;
 		Map<String, StoreFactory<?>> factories = null;
 		ReadWriteLock rwLock = null;
@@ -208,9 +227,9 @@ public abstract class CmfStores {
 			if (dupe != null) { throw new DuplicateStoreException(String.format(
 				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
 				.getCanonicalName())); }
-			StoreFactory<?> factory = factories.get(className);
+			StoreFactory<?> factory = factories.get(name);
 			if (factory == null) { throw new StorageException(String.format(
-				"No factory found for object store class [%s]", className)); }
+				"No factory found for object store class [%s]", name)); }
 			T instance = storeClass.cast(factory.newInstance(configuration));
 			stores.put(id, instance);
 			return instance;

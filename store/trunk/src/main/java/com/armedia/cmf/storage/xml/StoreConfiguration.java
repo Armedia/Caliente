@@ -10,12 +10,12 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "store.t", propOrder = {
-	"className", "setting"
+	"name", "setting"
 })
 public class StoreConfiguration extends SettingContainer {
 
 	@XmlElement(required = true)
-	protected String className;
+	protected String name;
 
 	@XmlAttribute(name = "id", required = true)
 	protected String id;
@@ -36,8 +36,8 @@ public class StoreConfiguration extends SettingContainer {
 	 * @return possible object is {@link String }
 	 *
 	 */
-	public String getClassName() {
-		return this.className;
+	public String getName() {
+		return this.name;
 	}
 
 	/**
@@ -47,8 +47,8 @@ public class StoreConfiguration extends SettingContainer {
 	 *            allowed object is {@link String }
 	 *
 	 */
-	public void setClassName(String value) {
-		this.className = value;
+	public void setName(String value) {
+		this.name = value;
 	}
 
 	/**
