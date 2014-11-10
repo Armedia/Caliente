@@ -2,6 +2,7 @@ package com.armedia.cmf.storage.xml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,10 +13,36 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang3.text.StrLookup;
+import org.apache.commons.lang3.text.StrSubstitutor;
+
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
 public class SettingContainer {
+
+	@XmlTransient
+	private static class Lookup extends StrLookup<String> {
+
+		private final Map<String, String> settings;
+		private final String envPrefix = "ENV.";
+		private final int envPrefixLength = this.envPrefix.length();
+
+		Lookup(Map<String, String> settings) {
+			this.settings = settings;
+		}
+
+		@Override
+		public String lookup(String key) {
+			if (this.settings.containsKey(key)) { return this.settings.get(key); }
+			if (key.startsWith(this.envPrefix)) {
+				return System.getenv(key.substring(this.envPrefixLength));
+			} else {
+				return System.getProperty(key);
+			}
+		}
+
+	};
 
 	@XmlElementWrapper(name = "settings", required = false)
 	@XmlElement(name = "setting", required = false)
@@ -59,8 +86,13 @@ public class SettingContainer {
 
 	@SuppressWarnings("unchecked")
 	public final Map<String, String> getEffectiveSettings() {
-		Map<String, String> m = new HashMap<String, String>();
+		final Map<String, String> m = new HashMap<String, String>();
 		Tools.overlayMaps(m, (this.parent != null ? this.parent.getSettings() : null), getSettings());
+		StrSubstitutor sub = new StrSubstitutor(new Lookup(m));
+		// We make a copy of the keys to avoid concurrent modification errors
+		for (String k : new HashSet<String>(m.keySet())) {
+			m.put(k, sub.replace(m.get(k)));
+		}
 		return m;
 	}
 }
