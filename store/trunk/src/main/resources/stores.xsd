@@ -64,7 +64,7 @@
 			<xsd:element name="className" type="tns:class_name.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="settings" type="tns:settings.t" minOccurs="0" maxOccurs="1"/>
 			<!--
-			<xsd:element name="configuration">
+			<xsd:element name="configuration" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
 					<xsd:sequence>
 						<xsd:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
