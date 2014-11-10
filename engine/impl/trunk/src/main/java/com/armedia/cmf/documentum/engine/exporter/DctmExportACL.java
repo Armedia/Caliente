@@ -15,6 +15,7 @@ import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
+import com.armedia.cmf.documentum.engine.common.DctmACL;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -33,12 +34,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportACL extends DctmExportAbstract<IDfACL> {
-
-	private static final String USERS_WITH_DEFAULT_ACL = "usersWithDefaultACL";
-	private static final String ACCESSORS = "accessors";
-	private static final String PERMIT_TYPE = "permitType";
-	private static final String PERMIT_VALUE = "permitValue";
+public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL {
 
 	private static boolean HANDLERS_READY = false;
 
@@ -85,7 +81,7 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> {
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		StoredProperty<IDfValue> property = null;
 		try {
-			property = new StoredProperty<IDfValue>(DctmExportACL.USERS_WITH_DEFAULT_ACL,
+			property = new StoredProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL,
 				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				property.addValue(resultCol.getValueAt(0));
@@ -95,11 +91,11 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> {
 			DfUtils.closeQuietly(resultCol);
 		}
 
-		StoredProperty<IDfValue> accessors = new StoredProperty<IDfValue>(DctmExportACL.ACCESSORS,
+		StoredProperty<IDfValue> accessors = new StoredProperty<IDfValue>(DctmACL.ACCESSORS,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		StoredProperty<IDfValue> permitTypes = new StoredProperty<IDfValue>(DctmExportACL.PERMIT_TYPE,
+		StoredProperty<IDfValue> permitTypes = new StoredProperty<IDfValue>(DctmACL.PERMIT_TYPE,
 			DctmDataType.DF_INTEGER.getStoredType(), true);
-		StoredProperty<IDfValue> permitValues = new StoredProperty<IDfValue>(DctmExportACL.PERMIT_VALUE,
+		StoredProperty<IDfValue> permitValues = new StoredProperty<IDfValue>(DctmACL.PERMIT_VALUE,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		IDfList permits = acl.getPermissions();
 		final int permitCount = permits.getCount();

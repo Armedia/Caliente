@@ -19,6 +19,7 @@ import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.common.DctmGroup;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -37,9 +38,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportGroup extends DctmExportAbstract<IDfGroup> {
-
-	private static final String USERS_WITH_DEFAULT_GROUP = "usersWithDefaultGroup";
+public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements DctmGroup {
 
 	private static boolean HANDLERS_READY = false;
 
@@ -124,7 +123,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> {
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfGroup group)
 		throws DfException {
 		// Store all the users that have this group as their default group
-		StoredProperty<IDfValue> property = new StoredProperty<IDfValue>(DctmExportGroup.USERS_WITH_DEFAULT_GROUP,
+		StoredProperty<IDfValue> property = new StoredProperty<IDfValue>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
 		for (IDfValue v : getUsersWithDefaultGroup(group)) {
 			property.addValue(v);
@@ -228,7 +227,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> {
 		Collection<IDfPersistentObject> ret = super.findDependents(session, marshaled, group, ctx);
 
 		// Avoid calling DQL twice
-		StoredProperty<IDfValue> property = marshaled.getProperty(DctmExportGroup.USERS_WITH_DEFAULT_GROUP);
+		StoredProperty<IDfValue> property = marshaled.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
 		Iterable<IDfValue> it = property;
 		if (property == null) {
 			// IF the property hasn't been set, we do the DQL...
