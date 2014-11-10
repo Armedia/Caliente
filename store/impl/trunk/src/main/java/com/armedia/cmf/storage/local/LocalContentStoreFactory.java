@@ -12,21 +12,28 @@ import com.armedia.commons.utilities.CfgTools;
 
 public class LocalContentStoreFactory extends ContentStoreFactory<LocalContentStore> {
 
+	private static final StrLookup<String> VARIABLE_RESOLVER = new StrLookup<String>() {
+
+		private final String envPrefix = "ENV.";
+		private final int envPrefixLength = this.envPrefix.length();
+
+		@Override
+		public String lookup(String key) {
+			if (key.startsWith(this.envPrefix)) {
+				return System.getenv(key.substring(this.envPrefixLength));
+			} else {
+				return System.getProperty(key);
+			}
+		}
+
+	};
+
 	private final StrSubstitutor substitutor;
-	private final String ENV_PREFIX = "ENV.";
 
 	public LocalContentStoreFactory() {
 		super("local", "filesystem");
-		this.substitutor = new StrSubstitutor(new StrLookup<String>() {
-			@Override
-			public String lookup(String key) {
-				if (key.startsWith(LocalContentStoreFactory.this.ENV_PREFIX)) {
-					return System.getenv(key.substring(LocalContentStoreFactory.this.ENV_PREFIX.length()));
-				} else {
-					return System.getProperty(key);
-				}
-			}
-		});
+		this.substitutor = new StrSubstitutor(LocalContentStoreFactory.VARIABLE_RESOLVER);
+		this.substitutor.setEnableSubstitutionInVariables(true);
 	}
 
 	@Override
