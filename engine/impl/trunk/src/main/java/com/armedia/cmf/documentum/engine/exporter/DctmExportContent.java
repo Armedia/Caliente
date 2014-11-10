@@ -94,6 +94,7 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 		if (!(sourceObject instanceof IDfSysObject)) { throw new Exception(String.format(
 			"Document with id [%s] for content [%s] is not a dm_sysobject: %s (%s)", documentId, contentId,
 			sourceObject.getType().getName(), sourceObject.getClass().getCanonicalName())); }
+		final IDfSysObject sysObject = IDfSysObject.class.cast(sourceObject);
 
 		String format = content.getString(DctmAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(DctmAttributes.PAGE);
@@ -104,15 +105,14 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 		File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
 			FileUtils.forceMkdir(targetFile.getParentFile());
-			IDfSysObject.class.cast(sourceObject).getFileEx2(targetFile.getPath(), format, pageNumber, pageModifier,
-				false);
+			sysObject.getFileEx2(targetFile.getPath(), format, pageNumber, pageModifier, false);
 		} else {
 			// Doesn't support file-level, so we (sadly) use stream-level transfers
 			InputStream in = null;
 			OutputStream out = contentHandle.openOutput();
 			try {
 				// Don't pull the content until we're sure we can put it somewhere...
-				in = IDfSysObject.class.cast(sourceObject).getContentEx3(format, pageNumber, pageModifier, false);
+				in = sysObject.getContentEx3(format, pageNumber, pageModifier, false);
 				IOUtils.copy(in, out);
 			} finally {
 				IOUtils.closeQuietly(in);
