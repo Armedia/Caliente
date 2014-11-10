@@ -82,6 +82,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-storage-local</artifactId>
+			<version>0.0.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.armedia.commons</groupId>
 			<artifactId>datasource-locator-pooled</artifactId>
 			<version>0.0.1</version>

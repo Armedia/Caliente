@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/cmf/stores http://www.armedia.com/ns/cmf/stores">
 	<objectstore id="dctmTest">
-		<className>com.armedia.cmf.storage.jdbc.JdbcObjectStore</className>
+		<name>jdbc</name>
 		<settings>
 			<setting name="location.type">pooled</setting>
 			<setting name="jdbc.url">jdbc:h2:mem:cmsmf;MODE=PostgreSQL</setting>
@@ -11,9 +11,9 @@
 		</settings>
 	</objectstore>
 	<contentstore id="dctmTest">
-		<className>com.armedia.cmf.storage.jdbc.JdbcObjectStore</className>
+		<name>local</name>
 		<settings>
-			<setting name="content.path">${user.dir}/cmf</setting>
+			<setting name="base.dir">${user.dir}/cmf</setting>
 		</settings>
 	</contentstore>
 </stores>
