@@ -84,25 +84,23 @@ public abstract class ObjectStoreOperation<C> {
 		try {
 			closeConnection();
 		} catch (Exception e) {
-			throw new StorageException("Exception raised while closing an operation's connection", e);
+			if (this.log.isTraceEnabled()) {
+				this.log.error("Exception raised while closing an operation's connection", e);
+			}
 		} finally {
 			this.valid = false;
 		}
 	}
 
-	final void closeQuietly(boolean commit) {
+	protected final void closeConnectionQuietly() {
 		try {
-			close(commit);
+			closeConnection();
 		} catch (Exception e) {
 			// Ignore it...
 			if (this.log.isTraceEnabled()) {
 				this.log.error("Exception caught while closing a connection", e);
 			}
 		}
-	}
-
-	final void closeQuietly() {
-		closeQuietly(false);
 	}
 
 	protected abstract void closeConnection() throws Exception;

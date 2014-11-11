@@ -63,7 +63,11 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 					name, source, target), e);
 			} finally {
 				if (newOperation) {
-					o.closeQuietly();
+					try {
+						o.close();
+					} catch (StorageException e) {
+						throw new RuntimeException("Failed to complete the operation", e);
+					}
 				}
 			}
 			return constructMapping(type, name, source, target);
@@ -88,7 +92,11 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 					type, name, source), e);
 			} finally {
 				if (newOperation) {
-					o.closeQuietly();
+					try {
+						o.close();
+					} catch (StorageException e) {
+						throw new RuntimeException("Failed to complete the operation", e);
+					}
 				}
 			}
 		}
@@ -112,7 +120,11 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 					type, name, target), e);
 			} finally {
 				if (newOperation) {
-					o.closeQuietly();
+					try {
+						o.close();
+					} catch (StorageException e) {
+						throw new RuntimeException("Failed to complete the operation", e);
+					}
 				}
 			}
 		}
@@ -135,7 +147,11 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 				throw new RuntimeException("Failed to retrieve the mapping names in the system", e);
 			} finally {
 				if (newOperation) {
-					o.closeQuietly();
+					try {
+						o.close();
+					} catch (StorageException e) {
+						throw new RuntimeException("Failed to complete the operation", e);
+					}
 				}
 			}
 		}
@@ -159,7 +175,11 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 					type), e);
 			} finally {
 				if (newOperation) {
-					o.closeQuietly();
+					try {
+						o.close();
+					} catch (StorageException e) {
+						throw new RuntimeException("Failed to complete the operation", e);
+					}
 				}
 			}
 		}
@@ -183,7 +203,11 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 					type, name), e);
 			} finally {
 				if (newOperation) {
-					o.closeQuietly();
+					try {
+						o.close();
+					} catch (StorageException e) {
+						throw new RuntimeException("Failed to complete the operation", e);
+					}
 				}
 			}
 		}
@@ -258,7 +282,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 			ok = true;
 			return ret;
 		} finally {
-			operation.closeQuietly(ok);
+			operation.close(ok);
 		}
 	}
 
@@ -286,7 +310,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 		try {
 			return isStored(operation, type, objectId);
 		} finally {
-			operation.closeQuietly();
+			operation.close();
 		}
 	}
 
@@ -315,7 +339,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 			ok = true;
 			return ret;
 		} finally {
-			operation.closeQuietly(ok);
+			operation.close(ok);
 		}
 	}
 
@@ -346,7 +370,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 			ok = true;
 			return ret;
 		} finally {
-			operation.closeQuietly(ok);
+			operation.close(ok);
 		}
 	}
 
@@ -372,13 +396,13 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 			ok = true;
 			return ret;
 		} finally {
-			operation.closeQuietly(ok);
+			operation.close(ok);
 		}
 	}
 
 	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
 		ObjectStorageTranslator<T, V> translator, final StoredObjectType type, Collection<String> ids)
-		throws StorageException, StoredValueDecoderException {
+			throws StorageException, StoredValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must proved an operation to work under"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (translator == null) { throw new IllegalArgumentException(
@@ -437,7 +461,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 			ok = true;
 			return ret;
 		} finally {
-			operation.closeQuietly(ok);
+			operation.close(ok);
 		}
 	}
 
@@ -457,7 +481,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 			ok = true;
 			return ret;
 		} finally {
-			operation.closeQuietly(ok);
+			operation.close(ok);
 		}
 	}
 
@@ -523,7 +547,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 		try {
 			return getTargetMapping(operation, type, name, target);
 		} finally {
-			operation.closeQuietly();
+			operation.close();
 		}
 	}
 
@@ -551,7 +575,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 		try {
 			return getSourceMapping(operation, type, name, target);
 		} finally {
-			operation.closeQuietly();
+			operation.close();
 		}
 	}
 
@@ -579,7 +603,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 		try {
 			return getStoredObjectTypes(operation);
 		} finally {
-			operation.closeQuietly();
+			operation.close();
 		}
 	}
 
@@ -611,7 +635,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 		try {
 			return clearAttributeMappings(operation);
 		} finally {
-			operation.closeQuietly();
+			operation.close();
 		}
 	}
 
@@ -634,7 +658,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 		try {
 			return getAvailableMappings(operation);
 		} finally {
-			operation.closeQuietly();
+			operation.close();
 		}
 	}
 
@@ -658,7 +682,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 		try {
 			return getAvailableMappings(operation, type);
 		} finally {
-			operation.closeQuietly();
+			operation.close();
 		}
 	}
 
@@ -683,7 +707,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 		try {
 			return getMappings(operation, type, name);
 		} finally {
-			operation.closeQuietly();
+			operation.close();
 		}
 	}
 
