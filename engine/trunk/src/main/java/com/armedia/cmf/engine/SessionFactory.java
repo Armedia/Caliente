@@ -44,7 +44,7 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 		this.cleanup = new Thread() {
 			@Override
 			public void run() {
-				close();
+				doClose();
 			}
 		};
 		Runtime.getRuntime().addShutdownHook(this.cleanup);
@@ -90,10 +90,10 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 		}
 	}
 
-	public final void close() {
+	private boolean doClose() {
 		this.lock.writeLock().lock();
 		try {
-			if (!this.open) { return; }
+			if (!this.open) { return false; }
 			this.pool.close();
 		} catch (Exception e) {
 			if (this.log.isDebugEnabled()) {
@@ -104,6 +104,12 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 		} finally {
 			this.open = false;
 			this.lock.writeLock().unlock();
+		}
+		return true;
+	}
+
+	public final void close() {
+		if (doClose()) {
 			Runtime.getRuntime().removeShutdownHook(this.cleanup);
 		}
 	}
