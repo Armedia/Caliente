@@ -12,9 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +22,7 @@ import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
+public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends Store {
 
 	private class Mapper extends StoredAttributeMapper {
 
@@ -214,7 +211,6 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 	}
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
-	private final ReadWriteLock openLock = new ReentrantReadWriteLock();
 	private final Mapper mapper = new Mapper();
 	private final Class<O> operationClass;
 	private boolean open = false;
@@ -230,27 +226,6 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 	}
 
 	protected abstract O newOperation() throws StorageException;
-
-	protected final Lock getReadLock() {
-		return this.openLock.readLock();
-	}
-
-	protected final Lock getWriteLock() {
-		return this.openLock.writeLock();
-	}
-
-	public final boolean isOpen() {
-		getReadLock().lock();
-		try {
-			return this.open;
-		} finally {
-			getReadLock().unlock();
-		}
-	}
-
-	protected final void assertOpen() throws StorageException {
-		if (!isOpen()) { throw new StorageException("This objectstore is not open"); }
-	}
 
 	public final boolean init(Map<String, String> settings) throws StorageException {
 		getWriteLock().lock();
@@ -402,7 +377,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 
 	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
 		ObjectStorageTranslator<T, V> translator, final StoredObjectType type, Collection<String> ids)
-			throws StorageException, StoredValueDecoderException {
+		throws StorageException, StoredValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must proved an operation to work under"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (translator == null) { throw new IllegalArgumentException(
@@ -750,19 +725,4 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> {
 	}
 
 	protected abstract void doClearAllObjects(O operation) throws StorageException;
-
-	public final boolean close() throws StorageException {
-		getWriteLock().lock();
-		try {
-			if (!this.open) { return false; }
-			return doClose();
-		} finally {
-			this.open = false;
-			getWriteLock().unlock();
-		}
-	}
-
-	protected boolean doClose() throws StorageException {
-		return this.open;
-	}
 }

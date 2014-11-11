@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.xml.StoreConfiguration;
 
-public abstract class StoreFactory<S> {
+public abstract class StoreFactory<S extends Store> {
 
 	private static final Pattern VALIDATOR = Pattern.compile("^[a-zA-Z_$][a-zA-Z\\d_$]*$");
 
@@ -53,4 +53,7 @@ public abstract class StoreFactory<S> {
 	}
 
 	protected abstract S newInstance(StoreConfiguration cfg) throws StorageException;
+
+	protected void close() {
+	}
 }

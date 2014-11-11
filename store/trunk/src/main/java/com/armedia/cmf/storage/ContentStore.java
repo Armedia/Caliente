@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public abstract class ContentStore {
+public abstract class ContentStore extends Store {
 
 	public static final class Handle {
 		private final ContentStore sourceStore;
@@ -147,33 +145,6 @@ public abstract class ContentStore {
 		}
 	}
 
-	private final ReadWriteLock lock = new ReentrantReadWriteLock();
-	private boolean open = true;
-
-	protected final void assertOpen() {
-		this.lock.readLock().lock();
-		try {
-			if (!this.open) { throw new IllegalStateException("This stream store is not open, call init() first"); }
-		} finally {
-			this.lock.readLock().unlock();
-		}
-	}
-
-	public final void close() {
-		this.lock.writeLock().lock();
-		try {
-			if (!this.open) { return; }
-			doClose();
-		} finally {
-			this.open = false;
-			this.lock.writeLock().unlock();
-		}
-	}
-
-	protected void doClose() {
-
-	}
-
 	protected final Handle constructHandle(StoredObjectType objectType, String objectId, URI handleId) {
 		return new Handle(this, objectType, objectId, handleId);
 	}
@@ -184,7 +155,7 @@ public abstract class ContentStore {
 
 	protected final File getFile(URI handleId) {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		this.lock.readLock().lock();
+		getReadLock().lock();
 		try {
 			assertOpen();
 			File ret = doGetFile(handleId);
@@ -195,63 +166,63 @@ public abstract class ContentStore {
 			}
 			return ret;
 		} finally {
-			this.lock.readLock().unlock();
+			getReadLock().unlock();
 		}
 	}
 
 	protected final InputStream openInput(URI handleId) throws IOException {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		this.lock.readLock().lock();
+		getReadLock().lock();
 		try {
 			assertOpen();
 			return doOpenInput(handleId);
 		} finally {
-			this.lock.readLock().unlock();
+			getReadLock().unlock();
 		}
 	}
 
 	protected final OutputStream openOutput(URI handleId) throws IOException {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		this.lock.readLock().lock();
+		getReadLock().lock();
 		try {
 			assertOpen();
 			return doOpenOutput(handleId);
 		} finally {
-			this.lock.readLock().unlock();
+			getReadLock().unlock();
 		}
 	}
 
 	protected final boolean isExists(URI handleId) {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		this.lock.readLock().lock();
+		getReadLock().lock();
 		try {
 			assertOpen();
 			return doIsExists(handleId);
 		} finally {
-			this.lock.readLock().unlock();
+			getReadLock().unlock();
 		}
 	}
 
 	protected final long getStreamSize(URI handleId) {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		this.lock.readLock().lock();
+		getReadLock().lock();
 		try {
 			assertOpen();
 			return doGetStreamSize(handleId);
 		} finally {
-			this.lock.readLock().unlock();
+			getReadLock().unlock();
 		}
 	}
 
 	protected final URI allocateHandleId(StoredObjectType objectType, String objectId) {
 		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
-		this.lock.readLock().lock();
+		getReadLock().lock();
 		try {
 			assertOpen();
 			return doAllocateHandleId(objectType, objectId);
 		} finally {
-			this.lock.readLock().unlock();
+			getReadLock().unlock();
 		}
 	}
 
