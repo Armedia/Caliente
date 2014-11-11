@@ -10,6 +10,7 @@ import java.io.OutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
@@ -58,9 +59,11 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 		String format = content.getString(DctmAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(DctmAttributes.PAGE);
 		String pageModifier = content.getString(DctmAttributes.PAGE_MODIFIER);
+		String qualifier = (!StringUtils.isBlank(pageModifier) ? String.format("%s_%s.%s", pageNumber, pageModifier,
+			format) : String.format("%s.%s", pageNumber, format));
 
 		// Store the content in the filesystem
-		Handle contentHandle = streamStore.newHandle(StoredObjectType.CONTENT_STREAM, contentId);
+		Handle contentHandle = streamStore.newHandle(StoredObjectType.CONTENT_STREAM, contentId, qualifier);
 		File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
 			FileUtils.forceMkdir(targetFile.getParentFile());
