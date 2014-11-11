@@ -19,6 +19,7 @@
 		<name>local</name>
 		<settings>
 			<setting name="base.dir">${tmpdir}/content</setting>
+			<setting name="uri.strategy">documentum</setting>
 		</settings>
 	</contentstore>
 </stores>
