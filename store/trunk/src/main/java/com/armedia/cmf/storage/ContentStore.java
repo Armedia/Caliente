@@ -74,8 +74,8 @@ public abstract class ContentStore {
 		/**
 		 * <p>
 		 * Returns a {@link File} object that leads to the actual content file (existent or not),
-		 * and can be used to read from and write to it. If the underlying
-		 * {@link ContentStore} doesn't support this functionality, {@code null} is returned.
+		 * and can be used to read from and write to it. If the underlying {@link ContentStore}
+		 * doesn't support this functionality, {@code null} is returned.
 		 * </p>
 		 * <p>
 		 * Whatever file is returned will already be canonical (via {@link File#getCanonicalFile()}
@@ -194,12 +194,12 @@ public abstract class ContentStore {
 
 	}
 
-	protected final Handle newHandle(StoredObjectType objectType, String objectId, URI handleId) {
+	protected final Handle constructHandle(StoredObjectType objectType, String objectId, URI handleId) {
 		return new Handle(this, objectType, objectId, handleId);
 	}
 
 	public final Handle newHandle(StoredObjectType objectType, String objectId) {
-		return null;
+		return constructHandle(objectType, objectId, allocateHandleId(objectType, objectId));
 	}
 
 	protected final File getFile(URI handleId) {
