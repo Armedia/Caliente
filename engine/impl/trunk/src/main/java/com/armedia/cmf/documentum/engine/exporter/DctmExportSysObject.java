@@ -14,6 +14,7 @@ import java.util.Set;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
@@ -32,7 +33,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstract<T> {
+public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstract<T> implements DctmSysObject {
 
 	protected DctmExportSysObject(DctmExportEngine engine, DctmObjectType type) {
 		super(engine, type);
@@ -84,14 +85,24 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 	 * @throws DfException
 	 * @throws ExportException
 	 */
-	protected final List<IDfId> getVersionHistory(T object) throws DfException, ExportException {
+	protected final List<IDfId> getVersionHistory(ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx, T object)
+		throws DfException, ExportException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
+
+		// Using the chronicle ID here guarantees that the same version history will be retrieved
+		// regardless of which branch of the tree we make the query on
+		String cachedName = String.format("%s[%s]", DctmSysObject.VERSION_HISTORY, object.getChronicleId().getId());
+
+		// Retrieve the version history for the object from the context, if it exists
+		@SuppressWarnings("unchecked")
+		List<IDfId> history = (List<IDfId>) ctx.getObject(cachedName);
+		if (history != null) { return history; }
 
 		IDfCollection versions = object
 			.getVersions("r_object_id, r_modify_date, r_version_label, i_chronicle_id, i_antecedent_id, i_latest_flag, i_direct_dsc");
 		Set<String> finished = new HashSet<String>();
 		finished.add(DfId.DF_NULLID_STR); // This helps, below
-		LinkedList<IDfId> history = new LinkedList<IDfId>();
+		history = new LinkedList<IDfId>();
 		LinkedList<IDfTypedObject> deferred = new LinkedList<IDfTypedObject>();
 		try {
 			while (versions.next()) {
@@ -138,9 +149,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 				// that means we have a broken version tree...which is unsupported
 				throw new ExportException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-					.getId(), deferred));
+						.getId(), deferred));
 			}
 		}
+		ctx.setObject(cachedName, history);
 		return history;
 	}
 

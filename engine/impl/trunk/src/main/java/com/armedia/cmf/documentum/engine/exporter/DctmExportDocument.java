@@ -40,8 +40,6 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportDocument extends DctmExportSysObject<IDfDocument> implements DctmDocument {
 
-	private static final String VERSION_HISTORY = "version_history";
-
 	private static boolean HANDLERS_READY = false;
 
 	private static synchronized void initHandlers() {
@@ -214,12 +212,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
 		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
-			@SuppressWarnings("unchecked")
-			List<IDfId> history = (List<IDfId>) ctx.getObject("version_history");
-			if (history == null) {
-				history = getVersionHistory(document);
-				ctx.setObject(DctmExportDocument.VERSION_HISTORY, history);
-			}
+			List<IDfId> history = getVersionHistory(ctx, document);
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
 			for (IDfId versionId : getVersions(history, true, document)) {
 				IDfPersistentObject obj = session.getObject(versionId);
@@ -261,12 +254,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
 		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
-			@SuppressWarnings("unchecked")
-			List<IDfId> history = (List<IDfId>) ctx.getObject("version_history");
-			if (history == null) {
-				history = getVersionHistory(document);
-				ctx.setObject(DctmExportDocument.VERSION_HISTORY, history);
-			}
+			List<IDfId> history = getVersionHistory(ctx, document);
 			// Now, also do the *SUBSEQUENT* versions...
 			for (IDfId versionId : getVersions(history, false, document)) {
 				IDfPersistentObject obj = session.getObject(versionId);
