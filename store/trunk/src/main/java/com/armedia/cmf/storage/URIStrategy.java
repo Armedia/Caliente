@@ -27,7 +27,7 @@ public abstract class URIStrategy {
 		return (name != null) && URIStrategy.VALIDATOR.matcher(name).matches();
 	}
 
-	private static Map<String, URIStrategy> STRATEGIES;
+	private static final Map<String, URIStrategy> STRATEGIES;
 
 	static {
 		Map<String, URIStrategy> strategies = new HashMap<String, URIStrategy>();
@@ -51,7 +51,7 @@ public abstract class URIStrategy {
 			URIStrategy.LOG.debug("Registering URIStrategy [{}] as [{}]", s.getClass().getCanonicalName(), name);
 			strategies.put(name, s);
 		}
-		URIStrategy.STRATEGIES = Tools.freezeMap(strategies);
+		STRATEGIES = Tools.freezeMap(strategies);
 	}
 
 	public static URIStrategy getStrategy(String name) {
