@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportEngine;
-import com.armedia.cmf.storage.CmfStores;
+import com.armedia.cmf.storage.Stores;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 
@@ -17,8 +17,8 @@ public class DctmExportEngineTest {
 	@Test
 	public void test() throws Exception {
 		ExportEngine<?, ?, ?, ?, ?> engine = ExportEngine.getExportEngine("dctm");
-		ObjectStore<?, ?> objectStore = CmfStores.getObjectStore("dctmTest");
-		ContentStore streamStore = CmfStores.getContentStore("dctmTest");
+		ObjectStore<?, ?> objectStore = Stores.getObjectStore("dctmTest");
+		ContentStore streamStore = Stores.getContentStore("dctmTest");
 
 		Logger output = LoggerFactory.getLogger("console");
 		output.info("Console initialized");
