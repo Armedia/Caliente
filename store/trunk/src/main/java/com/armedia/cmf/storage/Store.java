@@ -4,7 +4,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class Store {
+
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	private boolean open = true;
