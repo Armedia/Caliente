@@ -560,11 +560,11 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		if (referrent != null) {
 			StoredProperty<V> referrentType = new StoredProperty<V>(ExportEngine.REFERRENT_TYPE, StoredDataType.STRING,
 				false);
-			referrentType.addValue(getValue(StoredDataType.STRING, referrent.getType().name()));
+			referrentType.setValue(getValue(StoredDataType.STRING, referrent.getType().name()));
 			marshaled.setProperty(referrentType);
 			StoredProperty<V> referrentId = new StoredProperty<V>(ExportEngine.REFERRENT_ID, StoredDataType.STRING,
 				false);
-			referrentId.addValue(getValue(StoredDataType.STRING, referrent.getId()));
+			referrentId.setValue(getValue(StoredDataType.STRING, referrent.getId()));
 			marshaled.setProperty(referrentId);
 		}
 		return marshaled;
@@ -592,8 +592,8 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 	protected abstract StoredObject<V> marshal(S session, T object) throws ExportException;
 
-	protected abstract String storeContent(S session, StoredObject<V> marshalled, T object,
-		ContentStore streamStore) throws Exception;
+	protected abstract String storeContent(S session, StoredObject<V> marshalled, T object, ContentStore streamStore)
+		throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
