@@ -25,14 +25,15 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.storage.xml.StoreConfiguration;
 import com.armedia.cmf.storage.xml.StoreDefinitions;
 import com.armedia.commons.utilities.PluggableServiceLocator;
+import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
 public final class Stores {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	private final AtomicBoolean open = new AtomicBoolean(false);
+	private final AtomicBoolean open = new AtomicBoolean(true);
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
-	private final Map<String, StoreFactory<?>> factories = new HashMap<String, StoreFactory<?>>();
+	private final Map<String, StoreFactory<?>> factories;
 	private final Map<String, Store> stores = new HashMap<String, Store>();
 
 	private final String type;
@@ -64,6 +65,7 @@ public final class Stores {
 					.getCanonicalName(), registration);
 			}
 		}
+		this.factories = Tools.freezeMap(m);
 	}
 
 	private void assertOpen() {
@@ -109,7 +111,7 @@ public final class Stores {
 			Store dupe = this.stores.get(id);
 			if (dupe != null) { throw new DuplicateStoreException(String.format(
 				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
-					.getCanonicalName())); }
+				.getCanonicalName())); }
 			StoreFactory<?> factory = this.factories.get(name);
 			if (factory == null) { throw new StorageException(String.format(
 				"No factory found for object store class [%s]", name)); }
@@ -179,13 +181,13 @@ public final class Stores {
 	}
 
 	protected static StoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
-		JAXBException {
+	JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
 		return Stores.parseConfiguration(settings.toURI().toURL());
 	}
 
 	protected static StoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
-		JAXBException {
+	JAXBException {
 		Reader xml = null;
 		try {
 			xml = new InputStreamReader(settings.openStream());
@@ -281,7 +283,7 @@ public final class Stores {
 	}
 
 	public static ObjectStore<?, ?> createObjectStore(StoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
+	DuplicateStoreException {
 		Stores.LOCK.readLock().lock();
 		try {
 			return ObjectStore.class.cast(Stores.assertValid(Stores.OBJECT_STORES).createStore(configuration));
@@ -291,7 +293,7 @@ public final class Stores {
 	}
 
 	public static ContentStore createContentStore(StoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
+	DuplicateStoreException {
 		Stores.LOCK.readLock().lock();
 		try {
 			return ContentStore.class.cast(Stores.assertValid(Stores.CONTENT_STORES).createStore(configuration));
