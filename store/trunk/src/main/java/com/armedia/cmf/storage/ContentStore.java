@@ -145,6 +145,14 @@ public abstract class ContentStore extends Store {
 		}
 	}
 
+	protected abstract boolean isSupportedURI(URI uri);
+
+	protected final void validateURI(URI uri) {
+		if (uri == null) { throw new IllegalArgumentException("Must provide a URI to validate"); }
+		if (!isSupportedURI(uri)) { throw new IllegalArgumentException(String.format(
+			"The URI [%s] is not supported by ContentStore class [%s]", uri, getClass().getCanonicalName())); }
+	}
+
 	protected final Handle constructHandle(StoredObjectType objectType, String objectId, URI handleId) {
 		return new Handle(this, objectType, objectId, handleId);
 	}
@@ -153,8 +161,21 @@ public abstract class ContentStore extends Store {
 		return constructHandle(objectType, objectId, allocateHandleId(objectType, objectId));
 	}
 
+	protected final URI allocateHandleId(StoredObjectType objectType, String objectId) {
+		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
+		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
+		getReadLock().lock();
+		try {
+			assertOpen();
+			return doAllocateHandleId(objectType, objectId);
+		} finally {
+			getReadLock().unlock();
+		}
+	}
+
 	protected final File getFile(URI handleId) {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(handleId);
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -172,6 +193,7 @@ public abstract class ContentStore extends Store {
 
 	protected final InputStream openInput(URI handleId) throws IOException {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(handleId);
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -183,6 +205,7 @@ public abstract class ContentStore extends Store {
 
 	protected final OutputStream openOutput(URI handleId) throws IOException {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(handleId);
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -194,6 +217,7 @@ public abstract class ContentStore extends Store {
 
 	protected final boolean isExists(URI handleId) {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(handleId);
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -205,22 +229,11 @@ public abstract class ContentStore extends Store {
 
 	protected final long getStreamSize(URI handleId) {
 		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(handleId);
 		getReadLock().lock();
 		try {
 			assertOpen();
 			return doGetStreamSize(handleId);
-		} finally {
-			getReadLock().unlock();
-		}
-	}
-
-	protected final URI allocateHandleId(StoredObjectType objectType, String objectId) {
-		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
-		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
-		getReadLock().lock();
-		try {
-			assertOpen();
-			return doAllocateHandleId(objectType, objectId);
 		} finally {
 			getReadLock().unlock();
 		}
