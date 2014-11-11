@@ -16,6 +16,7 @@ import java.net.URISyntaxException;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.URIStrategy;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -24,9 +25,11 @@ import com.armedia.cmf.storage.StoredObjectType;
 public class LocalContentStore extends ContentStore {
 
 	private final File baseDir;
+	private final URIStrategy strategy;
 
-	public LocalContentStore(File baseDir) throws StorageException {
+	public LocalContentStore(File baseDir, URIStrategy strategy) throws StorageException {
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
+		if (strategy == null) { throw new IllegalArgumentException("Must provide a path strategy"); }
 		if (baseDir.exists() && !baseDir.isDirectory()) { throw new IllegalArgumentException(String.format(
 			"The file at [%s] is not a directory", baseDir.getAbsolutePath())); }
 		if (!baseDir.exists() && !baseDir.mkdirs()) { throw new IllegalArgumentException(String.format(
@@ -38,20 +41,23 @@ public class LocalContentStore extends ContentStore {
 			f = baseDir;
 		}
 		this.baseDir = f;
+		this.strategy = strategy;
 	}
 
 	@Override
 	protected URI doAllocateHandleId(StoredObjectType objectType, String objectId) {
 		try {
-			return new URI("local", objectType.name(), objectId);
+			return new URI("local", this.strategy.calculateSSP(objectType, objectId), this.strategy.calculateFragment(
+				objectType, objectId));
 		} catch (URISyntaxException e) {
-			throw new RuntimeException("Now what?!?!", e);
+			throw new RuntimeException(
+				String.format("Failed to allocate a handle ID for %s[%s]", objectType, objectId), e);
 		}
 	}
 
 	@Override
-	protected File doGetFile(URI handleId) {
-		return new File(this.baseDir, String.format("%s/%s", handleId.getSchemeSpecificPart(), handleId.getFragment()));
+	protected final File doGetFile(URI handleId) {
+		return new File(this.baseDir, handleId.getSchemeSpecificPart());
 	}
 
 	@Override

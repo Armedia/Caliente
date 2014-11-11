@@ -4,7 +4,8 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum Setting implements ConfigurationSetting {
 	//
-	BASE_DIR;
+	BASE_DIR,
+	URI_STRATEGY;
 
 	private final String label;
 	private final Object defaultValue;
