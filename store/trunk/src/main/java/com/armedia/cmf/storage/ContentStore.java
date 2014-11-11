@@ -158,16 +158,20 @@ public abstract class ContentStore extends Store {
 	}
 
 	public final Handle newHandle(StoredObjectType objectType, String objectId) {
-		return constructHandle(objectType, objectId, allocateHandleId(objectType, objectId));
+		return newHandle(objectType, objectId, null);
 	}
 
-	protected final URI allocateHandleId(StoredObjectType objectType, String objectId) {
+	public final Handle newHandle(StoredObjectType objectType, String objectId, String qualifier) {
+		return constructHandle(objectType, objectId, allocateHandleId(objectType, objectId, qualifier));
+	}
+
+	protected final URI allocateHandleId(StoredObjectType objectType, String objectId, String qualifier) {
 		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doAllocateHandleId(objectType, objectId);
+			return doAllocateHandleId(objectType, objectId, qualifier);
 		} finally {
 			getReadLock().unlock();
 		}
@@ -239,7 +243,7 @@ public abstract class ContentStore extends Store {
 		}
 	}
 
-	protected abstract URI doAllocateHandleId(StoredObjectType objectType, String objectId);
+	protected abstract URI doAllocateHandleId(StoredObjectType objectType, String objectId, String qualifier);
 
 	protected abstract File doGetFile(URI handleId);
 

@@ -75,8 +75,8 @@ public abstract class URIStrategy {
 		return this.name;
 	}
 
-	public String calculateFragment(StoredObjectType objectType, String objectId) {
-		return null;
+	public String calculateFragment(StoredObjectType objectType, String objectId, String qualifier) {
+		return qualifier;
 	}
 
 	public abstract String calculateSSP(StoredObjectType objectType, String objectId);
