@@ -52,10 +52,10 @@ public class LocalContentStore extends ContentStore {
 	}
 
 	@Override
-	protected URI doAllocateHandleId(StoredObjectType objectType, String objectId) {
+	protected URI doAllocateHandleId(StoredObjectType objectType, String objectId, String qualifier) {
 		try {
 			return new URI(LocalContentStore.SCHEME, this.strategy.calculateSSP(objectType, objectId),
-				this.strategy.calculateFragment(objectType, objectId));
+				this.strategy.calculateFragment(objectType, objectId, qualifier));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(
 				String.format("Failed to allocate a handle ID for %s[%s]", objectType, objectId), e);
@@ -64,7 +64,10 @@ public class LocalContentStore extends ContentStore {
 
 	@Override
 	protected final File doGetFile(URI handleId) {
-		return new File(this.baseDir, handleId.getSchemeSpecificPart());
+		String ssp = handleId.getSchemeSpecificPart();
+		String frag = handleId.getFragment();
+		String path = (frag != null ? String.format("%s.%s", ssp, frag) : ssp);
+		return new File(this.baseDir, path);
 	}
 
 	@Override
