@@ -44,11 +44,11 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, ExportEngineListener> {
+	TransferEngine<S, T, V, ExportEngineListener> {
 
-	private static final String REFERRENT_ID = "${CONTENT_PATH}$";
+	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
-	private static final String CONTENT_PATH = "${REFERRENT_ID}$";
+	private static final String CONTENT_PATH = "${CONTENT_PATH}$";
 
 	private class Result {
 		private final Long objectNumber;
@@ -524,10 +524,10 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
