@@ -8,8 +8,6 @@ import java.net.URI;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.armedia.commons.utilities.CfgTools;
-
 public abstract class ContentStore {
 
 	public static final class Handle {
@@ -150,7 +148,7 @@ public abstract class ContentStore {
 	}
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
-	private boolean open = false;
+	private boolean open = true;
 
 	protected final void assertOpen() {
 		this.lock.readLock().lock();
@@ -159,24 +157,6 @@ public abstract class ContentStore {
 		} finally {
 			this.lock.readLock().unlock();
 		}
-	}
-
-	public final void init(CfgTools settings) throws Exception {
-		if (settings == null) {
-			settings = CfgTools.EMPTY;
-		}
-		this.lock.writeLock().lock();
-		try {
-			if (this.open) { return; }
-			doInit(settings);
-			this.open = true;
-		} finally {
-			this.lock.writeLock().unlock();
-		}
-	}
-
-	protected void doInit(CfgTools settings) throws Exception {
-
 	}
 
 	public final void close() {
