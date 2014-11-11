@@ -261,7 +261,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				IDfDocument versionDoc = IDfDocument.class.cast(obj);
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Adding subsequent version [%s]",
-						calculateVersionString(document, false)));
+						calculateVersionString(versionDoc, false)));
 				}
 				ret.add(versionDoc);
 			}
