@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StorageException;
@@ -41,12 +42,16 @@ public class LocalContentStore extends ContentStore {
 
 	@Override
 	protected URI doAllocateHandleId(StoredObjectType objectType, String objectId) {
-		return new File(String.format("%s/%s", objectType, objectId)).toURI();
+		try {
+			return new URI("local", objectType.name(), objectId);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException("Now what?!?!", e);
+		}
 	}
 
 	@Override
 	protected File doGetFile(URI handleId) {
-		return new File(this.baseDir, handleId.getPath());
+		return new File(this.baseDir, String.format("%s/%s", handleId.getSchemeSpecificPart(), handleId.getFragment()));
 	}
 
 	@Override
