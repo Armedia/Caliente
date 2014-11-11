@@ -34,7 +34,7 @@ public class DctmExportEngineTest {
 		engine.runExport(output, objectStore, streamStore, settings);
 
 		// settings.put("dql", "select r_object_id, 'dm_acl' as r_object_type from dm_acl");
-		settings.put("dql", "select r_object_id, r_object_type from dm_sysobject where folder('/CMSMFTests')");
+		settings.put("dql", "select r_object_id, r_object_type from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 		engine.runExport(output, objectStore, streamStore, settings);
 	}
 }
