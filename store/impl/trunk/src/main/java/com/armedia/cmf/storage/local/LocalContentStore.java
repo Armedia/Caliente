@@ -24,6 +24,8 @@ import com.armedia.cmf.storage.URIStrategy;
  */
 public class LocalContentStore extends ContentStore {
 
+	private static final String SCHEME = "local";
+
 	private final File baseDir;
 	private final URIStrategy strategy;
 
@@ -45,10 +47,15 @@ public class LocalContentStore extends ContentStore {
 	}
 
 	@Override
+	protected boolean isSupportedURI(URI uri) {
+		return LocalContentStore.SCHEME.equals(uri.getScheme());
+	}
+
+	@Override
 	protected URI doAllocateHandleId(StoredObjectType objectType, String objectId) {
 		try {
-			return new URI("local", this.strategy.calculateSSP(objectType, objectId), this.strategy.calculateFragment(
-				objectType, objectId));
+			return new URI(LocalContentStore.SCHEME, this.strategy.calculateSSP(objectType, objectId),
+				this.strategy.calculateFragment(objectType, objectId));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(
 				String.format("Failed to allocate a handle ID for %s[%s]", objectType, objectId), e);
