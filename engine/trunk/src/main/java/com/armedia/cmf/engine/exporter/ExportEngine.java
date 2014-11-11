@@ -448,7 +448,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			// Ask the workers to exit civilly
 			this.log.info("Signaling work completion for the workers");
 			boolean waitCleanly = true;
-			for (int i = 0; i < activeCounter.get(); i++) {
+			for (int i = 0; i < threadCount; i++) {
 				try {
 					workQueue.put(exitValue);
 				} catch (InterruptedException e) {
