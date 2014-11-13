@@ -50,7 +50,7 @@ public abstract class TransferEngine<S, T, V, L> {
 		}
 	}
 
-	private static final String CONTENT_URI = "${CONTENT_URI}$";
+	private static final String CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
 
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
 	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<String, PluggableServiceLocator<?>>();
@@ -159,16 +159,16 @@ public abstract class TransferEngine<S, T, V, L> {
 		return old;
 	}
 
-	protected final String getContentURI(StoredObject<V> marshaled) {
+	protected final String getContentQualifier(StoredObject<V> marshaled) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		StoredProperty<V> contentPath = marshaled.getProperty(TransferEngine.CONTENT_URI);
+		StoredProperty<V> contentPath = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIER);
 		if (contentPath == null) { return null; }
 		return Tools.toString(contentPath.getValue(), true);
 	}
 
-	protected final void setContentURI(StoredObject<V> marshaled, String contentUri) {
-		StoredProperty<V> p = new StoredProperty<>(TransferEngine.CONTENT_URI, StoredDataType.STRING, true);
-		p.setValue(getValue(StoredDataType.STRING, contentUri));
+	protected final void setContentQualifier(StoredObject<V> marshaled, String qualifier) {
+		StoredProperty<V> p = new StoredProperty<>(TransferEngine.CONTENT_QUALIFIER, StoredDataType.STRING, true);
+		p.setValue(getValue(StoredDataType.STRING, qualifier));
 		marshaled.setProperty(p);
 	}
 

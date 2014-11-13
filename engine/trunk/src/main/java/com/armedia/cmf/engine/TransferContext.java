@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 
 /**
@@ -17,6 +18,7 @@ import com.armedia.cmf.storage.StoredObjectType;
  */
 public abstract class TransferContext<S, T, V> {
 
+	private final TransferEngine<S, T, V, ?> engine;
 	private final String rootId;
 	private final StoredObjectType rootType;
 	private final S session;
@@ -24,11 +26,13 @@ public abstract class TransferContext<S, T, V> {
 	private final Map<String, Object> objects = new HashMap<String, Object>();
 	private final Logger output;
 
-	protected TransferContext(String rootId, StoredObjectType rootType, S session, Logger output) {
+	protected TransferContext(TransferEngine<S, T, V, ?> engine, String rootId, StoredObjectType rootType, S session,
+		Logger output) {
 		this.rootId = rootId;
 		this.rootType = rootType;
 		this.session = session;
 		this.output = output;
+		this.engine = engine;
 	}
 
 	public final String getRootObjectId() {
@@ -93,5 +97,9 @@ public abstract class TransferContext<S, T, V> {
 		if (this.output != null) {
 			this.output.info(String.format(format, args));
 		}
+	}
+
+	protected final String getContentQualifier(StoredObject<V> marshaled) {
+		return this.engine.getContentQualifier(marshaled);
 	}
 }

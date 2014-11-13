@@ -20,7 +20,8 @@ public class ExportContext<S, T, V> extends TransferContext<S, T, V> {
 	 * @param session
 	 * @param output
 	 */
-	public ExportContext(String rootId, StoredObjectType rootType, S session, Logger output) {
-		super(rootId, rootType, session, output);
+	public ExportContext(ExportEngine<S, ?, T, V, ?> engine, String rootId, StoredObjectType rootType, S session,
+		Logger output) {
+		super(engine, rootId, rootType, session, output);
 	}
 }

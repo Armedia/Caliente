@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, ExportEngineListener> {
+TransferEngine<S, T, V, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -230,15 +230,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("Executing supplemental storage for %s", label));
 		}
-		final String contentUri;
+		final String qualifier;
 		try {
-			contentUri = storeContent(session, marshaled, sourceObject, streamStore);
+			qualifier = storeContent(session, marshaled, sourceObject, streamStore);
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to execute the supplemental storage for %s", label), e);
 		}
 
-		if (contentUri != null) {
-			setContentURI(marshaled, contentUri);
+		if (qualifier != null) {
+			setContentQualifier(marshaled, qualifier);
 		}
 
 		final Long ret = objectStore.storeObject(marshaled, getTranslator());
@@ -273,7 +273,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	public final Map<StoredObjectType, Map<ExportResult, Integer>> runExport(final Logger output,
 		final ObjectStore<?, ?> objectStore, final ContentStore streamStore, Map<String, ?> settings)
-			throws ExportException, StorageException {
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final SessionFactory<S> sessionFactory = newSessionFactory();
@@ -527,10 +527,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);

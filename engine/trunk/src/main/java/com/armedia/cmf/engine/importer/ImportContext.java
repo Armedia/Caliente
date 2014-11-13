@@ -6,10 +6,12 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.TransferContext;
 import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttributeMapper;
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
@@ -20,9 +22,9 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	private final ObjectStorageTranslator<T, V> translator;
 	private final ContentStore streamStore;
 
-	ImportContext(String rootId, StoredObjectType rootType, S session, Logger output,
-		ObjectStorageTranslator<T, V> translator, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
-		super(rootId, rootType, session, output);
+	ImportContext(ImportEngine<S, ?, T, V, ?> engine, String rootId, StoredObjectType rootType, S session,
+		Logger output, ObjectStorageTranslator<T, V> translator, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		super(engine, rootId, rootType, session, output);
 		this.translator = translator;
 		this.objectStore = objectStore;
 		this.streamStore = streamStore;
@@ -41,8 +43,9 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 		}
 	}
 
-	public final ContentStore getContentStreamStore() {
-		return this.streamStore;
+	public final Handle getContentHandle(StoredObject<V> object) {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to inspect for a content URI"); }
+		return this.streamStore.getHandle(object.getType(), object.getId(), getContentQualifier(object));
 	}
 
 	protected boolean isSurrogateType(StoredObjectType rootType, StoredObjectType target) {
