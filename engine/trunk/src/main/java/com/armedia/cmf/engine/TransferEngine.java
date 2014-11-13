@@ -12,10 +12,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class TransferEngine<S, T, V, L> {
+
+	private static final String CONTENT_URI = "${CONTENT_URI}$";
 
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
 	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<String, PluggableServiceLocator<?>>();
@@ -123,6 +128,21 @@ public abstract class TransferEngine<S, T, V, L> {
 			TransferEngine.MAX_THREAD_COUNT);
 		return old;
 	}
+
+	protected final String getContentURI(StoredObject<V> marshaled) {
+		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
+		StoredProperty<V> contentPath = marshaled.getProperty(TransferEngine.CONTENT_URI);
+		if (contentPath == null) { return null; }
+		return Tools.toString(contentPath.getValue(), true);
+	}
+
+	protected final void setContentURI(StoredObject<V> marshaled, String contentUri) {
+		StoredProperty<V> p = new StoredProperty<>(TransferEngine.CONTENT_URI, StoredDataType.STRING, true);
+		p.setValue(getValue(StoredDataType.STRING, contentUri));
+		marshaled.setProperty(p);
+	}
+
+	protected abstract V getValue(StoredDataType type, Object value);
 
 	protected abstract ObjectStorageTranslator<T, V> getTranslator();
 
