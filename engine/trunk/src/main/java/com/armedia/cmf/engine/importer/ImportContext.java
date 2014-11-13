@@ -45,7 +45,9 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 
 	public final Handle getContentHandle(StoredObject<V> object) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to inspect for a content URI"); }
-		return this.streamStore.getHandle(object.getType(), object.getId(), getContentQualifier(object));
+		String qualifier = getContentQualifier(object);
+		if (qualifier == null) { return null; }
+		return this.streamStore.getHandle(object.getType(), object.getId(), qualifier);
 	}
 
 	protected boolean isSurrogateType(StoredObjectType rootType, StoredObjectType target) {
