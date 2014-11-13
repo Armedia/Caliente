@@ -162,8 +162,8 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected DctmExportContext newContext(String rootId, IDfSession session, Logger output) {
-		return new DctmExportContext(rootId, session, output);
+	protected DctmExportContext newContext(String rootId, StoredObjectType rootType, IDfSession session, Logger output) {
+		return new DctmExportContext(rootId, rootType, session, output);
 	}
 
 	@Override
