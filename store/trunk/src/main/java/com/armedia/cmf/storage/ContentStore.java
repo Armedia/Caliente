@@ -167,6 +167,7 @@ public abstract class ContentStore extends Store {
 	public final Handle getHandle(StoredObjectType objectType, String objectId, String qualifier) {
 		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
+		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		return constructHandle(objectType, objectId, qualifier, allocateHandleId(objectType, objectId, qualifier));
 	}
 
