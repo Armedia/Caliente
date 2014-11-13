@@ -51,7 +51,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -78,7 +78,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 	}
 
 	protected final StoredObject<IDfValue> marshal(IDfSession session, IDfPersistentObject object) throws DfException,
-		ExportException, UnsupportedDctmObjectTypeException {
+	ExportException, UnsupportedDctmObjectTypeException {
 		final String id = object.getObjectId().getId();
 		final String subtype = object.getType().getName();
 		final T typedObject = castObject(object);
@@ -116,7 +116,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> {
 	}
 
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-		ExportException {
+	ExportException {
 	}
 
 	protected String calculateBatchId(IDfSession session, T object) throws DfException {

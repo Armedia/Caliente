@@ -18,8 +18,9 @@ import com.documentum.fc.common.IDfValue;
  */
 class DctmExportContext extends ExportContext<IDfSession, IDfPersistentObject, IDfValue> {
 
-	DctmExportContext(String rootId, StoredObjectType rootType, IDfSession session, Logger output) {
-		super(rootId, rootType, session, output);
+	DctmExportContext(DctmExportEngine engine, String rootId, StoredObjectType rootType, IDfSession session,
+		Logger output) {
+		super(engine, rootId, rootType, session, output);
 	}
 
 }

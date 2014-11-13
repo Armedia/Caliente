@@ -63,7 +63,7 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 			format) : String.format("%s.%s", pageNumber, format));
 
 		// Store the content in the filesystem
-		Handle contentHandle = streamStore.newHandle(StoredObjectType.CONTENT_STREAM, contentId, qualifier);
+		Handle contentHandle = streamStore.getHandle(StoredObjectType.CONTENT_STREAM, contentId, qualifier);
 		File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
 			FileUtils.forceMkdir(targetFile.getParentFile());
@@ -81,6 +81,6 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 				IOUtils.closeQuietly(out);
 			}
 		}
-		return contentHandle.getURI().toString();
+		return qualifier;
 	}
 }

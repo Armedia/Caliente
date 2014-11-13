@@ -41,7 +41,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
@@ -63,7 +63,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -163,7 +163,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 
 	@Override
 	protected DctmExportContext newContext(String rootId, StoredObjectType rootType, IDfSession session, Logger output) {
-		return new DctmExportContext(rootId, rootType, session, output);
+		return new DctmExportContext(this, rootId, rootType, session, output);
 	}
 
 	@Override
