@@ -25,6 +25,7 @@ import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -41,7 +42,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
@@ -63,7 +64,7 @@ public class DctmExportEngine extends
 	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -142,7 +143,7 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected String storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,
+	protected Handle storeContent(IDfSession session, StoredObject<IDfValue> marshaled, IDfPersistentObject object,
 		ContentStore streamStore) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to store the contents"); }

@@ -36,7 +36,7 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 	}
 
 	@Override
-	protected String doStoreContent(IDfSession session, ExportTarget referrent, IDfContent content,
+	protected Handle doStoreContent(IDfSession session, ExportTarget referrent, IDfContent content,
 		ContentStore streamStore) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (referrent == null) { throw new Exception(String.format(
@@ -81,6 +81,6 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 				IOUtils.closeQuietly(out);
 			}
 		}
-		return qualifier;
+		return contentHandle;
 	}
 }
