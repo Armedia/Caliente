@@ -163,7 +163,7 @@ public abstract class TransferEngine<S, T, V, L> {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
 		StoredProperty<V> contentPath = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIER);
 		if (contentPath == null) { return null; }
-		return Tools.toString(contentPath.getValue(), true);
+		return Tools.toString(contentPath.getValue());
 	}
 
 	protected final void setContentQualifier(StoredObject<V> marshaled, String qualifier) {
