@@ -16,13 +16,10 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
@@ -59,20 +56,23 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		}
 	}
 
-	private Logger log = LoggerFactory.getLogger(getClass());
-
-	private class ListenerDelegator implements ExportEngineListener {
+	private class ExportListenerDelegator extends ListenerDelegator<ExportResult> implements ExportEngineListener {
 
 		private final Collection<ExportEngineListener> listeners = getListeners();
 
+		private ExportListenerDelegator() {
+			super(ExportResult.class);
+		}
+
 		@Override
 		public void exportStarted(Map<String, ?> exportSettings) {
+			getCounter().reset();
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.exportStarted(exportSettings);
 				} catch (Exception e) {
-					if (ExportEngine.this.log.isDebugEnabled()) {
-						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
 					}
 				}
 			}
@@ -84,8 +84,8 @@ TransferEngine<S, T, V, ExportEngineListener> {
 				try {
 					l.objectExportStarted(objectType, objectId);
 				} catch (Exception e) {
-					if (ExportEngine.this.log.isDebugEnabled()) {
-						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
 					}
 				}
 			}
@@ -93,12 +93,13 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 		@Override
 		public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
+			getCounter().increment(object.getType(), ExportResult.EXPORTED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.objectExportCompleted(object, objectNumber);
 				} catch (Exception e) {
-					if (ExportEngine.this.log.isDebugEnabled()) {
-						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
 					}
 				}
 			}
@@ -106,12 +107,13 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 		@Override
 		public void objectSkipped(StoredObjectType objectType, String objectId) {
+			getCounter().increment(objectType, ExportResult.SKIPPED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.objectSkipped(objectType, objectId);
 				} catch (Exception e) {
-					if (ExportEngine.this.log.isDebugEnabled()) {
-						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
 					}
 				}
 			}
@@ -119,12 +121,13 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 		@Override
 		public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
+			getCounter().increment(objectType, ExportResult.FAILED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.objectExportFailed(objectType, objectId, thrown);
 				} catch (Exception e) {
-					if (ExportEngine.this.log.isDebugEnabled()) {
-						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
 					}
 				}
 			}
@@ -136,8 +139,8 @@ TransferEngine<S, T, V, ExportEngineListener> {
 				try {
 					l.exportFinished(summary);
 				} catch (Exception e) {
-					if (ExportEngine.this.log.isDebugEnabled()) {
-						ExportEngine.this.log.error("Exception caught during listener propagation", e);
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
 					}
 				}
 			}
@@ -150,8 +153,8 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore, S session,
 		final ExportTarget referrent, final ExportTarget target, T sourceObject, C ctx,
-		ListenerDelegator listenerDelegator) throws ExportException, StorageException, StoredValueEncoderException,
-		UnsupportedObjectTypeException {
+		ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
+		StoredValueEncoderException, UnsupportedObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to operate with"); }
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -268,8 +271,9 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		return new Result(ret, marshaled);
 	}
 
-	public final void runExport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore streamStore, Map<String, ?> settings) throws ExportException, StorageException {
+	public final Map<StoredObjectType, Map<ExportResult, Integer>> runExport(final Logger output,
+		final ObjectStore<?, ?> objectStore, final ContentStore streamStore, Map<String, ?> settings)
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final SessionFactory<S> sessionFactory = newSessionFactory();
@@ -297,29 +301,30 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		final AtomicInteger activeCounter = new AtomicInteger(0);
 		final ExportTarget exitValue = new ExportTarget();
 		final BlockingQueue<ExportTarget> workQueue = new ArrayBlockingQueue<ExportTarget>(backlogSize);
-		final ExecutorService executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
-			new LinkedBlockingQueue<Runnable>());
-		final ListenerDelegator listenerDelegator = new ListenerDelegator();
+		final ExecutorService executor = newExecutor(threadCount);
+		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator();
 
 		Runnable worker = new Runnable() {
+			private final Logger log = ExportEngine.this.log;
+
 			@Override
 			public void run() {
 				final SessionWrapper<S> session;
 				try {
 					session = sessionFactory.acquireSession();
 				} catch (Exception e) {
-					ExportEngine.this.log.error("Failed to obtain a worker session", e);
+					this.log.error("Failed to obtain a worker session", e);
 					return;
 				}
-				if (ExportEngine.this.log.isDebugEnabled()) {
-					ExportEngine.this.log.debug(String.format("Got session [%s]", session.getId()));
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Got session [%s]", session.getId()));
 				}
 				final S s = session.getWrapped();
 				activeCounter.incrementAndGet();
 				try {
 					while (!Thread.interrupted()) {
-						if (ExportEngine.this.log.isDebugEnabled()) {
-							ExportEngine.this.log.debug("Polling the queue...");
+						if (this.log.isDebugEnabled()) {
+							this.log.debug("Polling the queue...");
 						}
 						final ExportTarget next;
 						try {
@@ -336,12 +341,12 @@ TransferEngine<S, T, V, ExportEngineListener> {
 						// collision.
 						if (next == exitValue) {
 							// Work complete
-							ExportEngine.this.log.info("Exiting the export polling loop");
+							this.log.info("Exiting the export polling loop");
 							return;
 						}
 
-						if (ExportEngine.this.log.isDebugEnabled()) {
-							ExportEngine.this.log.debug(String.format("Polled %s", next));
+						if (this.log.isDebugEnabled()) {
+							this.log.debug(String.format("Polled %s", next));
 						}
 
 						boolean tx = false;
@@ -352,13 +357,13 @@ TransferEngine<S, T, V, ExportEngineListener> {
 							final T sourceObject = getObject(s, next.getType(), next.getId());
 							if (sourceObject == null) {
 								// No object found with that ID...
-								ExportEngine.this.log.warn(String.format("No %s object found with ID[%s]",
-									next.getType(), next.getId()));
+								this.log.warn(String.format("No %s object found with ID[%s]", next.getType(),
+									next.getId()));
 								continue;
 							}
 
-							if (ExportEngine.this.log.isDebugEnabled()) {
-								ExportEngine.this.log.debug(String.format("Exporting the source %s object with ID[%s]",
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format("Exporting the source %s object with ID[%s]",
 									next.getType(), next.getId()));
 							}
 
@@ -368,22 +373,22 @@ TransferEngine<S, T, V, ExportEngineListener> {
 							Result result = exportObject(objectStore, streamStore, s, null, next, sourceObject, ctx,
 								listenerDelegator);
 							if (result != null) {
-								if (ExportEngine.this.log.isDebugEnabled()) {
-									ExportEngine.this.log.debug(String.format("Exported %s [%s](%s) in position %d",
+								if (this.log.isDebugEnabled()) {
+									this.log.debug(String.format("Exported %s [%s](%s) in position %d",
 										result.marshaled.getType(), result.marshaled.getLabel(),
 										result.marshaled.getId(), result.objectNumber));
 								}
 								listenerDelegator.objectExportCompleted(result.marshaled, result.objectNumber);
 							} else {
-								if (ExportEngine.this.log.isDebugEnabled()) {
-									ExportEngine.this.log.debug(String.format(
-										"%s object with ID[%s] was already exported", next.getType(), next.getId()));
+								if (this.log.isDebugEnabled()) {
+									this.log.debug(String.format("%s object with ID[%s] was already exported",
+										next.getType(), next.getId()));
 								}
 								listenerDelegator.objectSkipped(next.getType(), next.getId());
 							}
 							ok = true;
 						} catch (Throwable t) {
-							ExportEngine.this.log.error(
+							this.log.error(
 								String.format("Failed to export %s object with ID[%s]", next.getType(), next.getId()),
 								t);
 							listenerDelegator.objectExportFailed(next.getType(), next.getId(), t);
@@ -419,7 +424,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		}
 
 		try {
-			int counter = 0;
+			int c = 0;
 			// 1: run the query for the given predicate
 			listenerDelegator.exportStarted(settings);
 			// 2: iterate over the results, gathering up the object IDs
@@ -433,14 +438,14 @@ TransferEngine<S, T, V, ExportEngineListener> {
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 					if (this.log.isDebugEnabled()) {
-						this.log.warn(String.format("Thread interrupted after reading %d object targets", counter), e);
+						this.log.warn(String.format("Thread interrupted after reading %d object targets", c), e);
 					} else {
-						this.log.warn(String.format("Thread interrupted after reading %d objects targets", counter));
+						this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
 					}
 					break;
 				}
 			}
-			this.log.info(String.format("Submitted the entire export workload (%d objects)", counter));
+			this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
 
 			// Ask the workers to exit civilly
 			this.log.info("Signaling work completion for the workers");
@@ -505,6 +510,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 					Thread.currentThread().interrupt();
 				}
 			}
+			return listenerDelegator.getResults();
 		} finally {
 			baseSession.close(false);
 

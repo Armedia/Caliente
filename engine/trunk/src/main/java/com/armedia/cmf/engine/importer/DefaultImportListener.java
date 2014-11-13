@@ -9,8 +9,7 @@ public class DefaultImportListener implements ImportListener {
 	}
 
 	@Override
-	public void objectImportCompleted(StoredObject<?> object, ImportResult cmsImportResult, String newLabel,
-		String newId) {
+	public void objectImportCompleted(StoredObject<?> object, ImportOutcome outcome) {
 	}
 
 	@Override

@@ -15,15 +15,14 @@ public interface ImportListener {
 
 	/**
 	 * <p>
-	 * Invoked when the given object has been imported, and indicating the result of the import
+	 * Invoked when the given object has been imported, and indicating the outcome of the import
 	 * operation.
 	 * </p>
 	 *
 	 * @param object
-	 * @param cmsImportResult
+	 * @param outcome
 	 */
-	public void objectImportCompleted(StoredObject<?> object, ImportResult cmsImportResult, String newLabel,
-		String newId);
+	public void objectImportCompleted(StoredObject<?> object, ImportOutcome outcome);
 
 	/**
 	 * <p>

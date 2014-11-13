@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -14,11 +18,37 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectCounter;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class TransferEngine<S, T, V, L> {
+
+	protected class ListenerDelegator<R extends Enum<R>> {
+		protected final Logger log = TransferEngine.this.log;
+
+		private final StoredObjectCounter<R> counter;
+
+		protected ListenerDelegator(Class<R> resultClass) {
+			if (resultClass == null) { throw new IllegalArgumentException(
+				"Must provide the type of result to categorize by"); }
+			this.counter = new StoredObjectCounter<R>(resultClass);
+		}
+
+		protected final StoredObjectCounter<R> getCounter() {
+			return this.counter;
+		}
+
+		public final Map<StoredObjectType, Map<R, Integer>> getResults() {
+			return this.counter.getCounters();
+		}
+
+		public final Map<R, Integer> getResultsSummary() {
+			return this.counter.getCummulative();
+		}
+	}
 
 	private static final String CONTENT_URI = "${CONTENT_URI}$";
 
@@ -140,6 +170,11 @@ public abstract class TransferEngine<S, T, V, L> {
 		StoredProperty<V> p = new StoredProperty<>(TransferEngine.CONTENT_URI, StoredDataType.STRING, true);
 		p.setValue(getValue(StoredDataType.STRING, contentUri));
 		marshaled.setProperty(p);
+	}
+
+	protected final ExecutorService newExecutor(int threadCount) {
+		return new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
+			new LinkedBlockingQueue<Runnable>());
 	}
 
 	protected abstract V getValue(StoredDataType type, Object value);
