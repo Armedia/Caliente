@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 
+import com.armedia.cmf.storage.StoredObjectType;
+
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
@@ -16,19 +18,25 @@ import org.slf4j.Logger;
 public abstract class TransferContext<S, T, V> {
 
 	private final String rootId;
+	private final StoredObjectType rootType;
 	private final S session;
 	private final Map<String, V> values = new HashMap<String, V>();
 	private final Map<String, Object> objects = new HashMap<String, Object>();
 	private final Logger output;
 
-	protected TransferContext(String rootId, S session, Logger output) {
+	protected TransferContext(String rootId, StoredObjectType rootType, S session, Logger output) {
 		this.rootId = rootId;
+		this.rootType = rootType;
 		this.session = session;
 		this.output = output;
 	}
 
 	public final String getRootObjectId() {
 		return this.rootId;
+	}
+
+	public final StoredObjectType getRootObjectType() {
+		return this.rootType;
 	}
 
 	public final S getSession() {

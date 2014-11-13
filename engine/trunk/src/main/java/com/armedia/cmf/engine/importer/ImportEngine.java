@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchingStrategy;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
@@ -41,8 +40,8 @@ import com.armedia.commons.utilities.SynchronizedCounter;
  * @author diego
  *
  */
-public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, ImportEngineListener> {
+public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
+TransferEngine<S, T, V, ImportEngineListener> {
 
 	private class Batch {
 		private final String id;
@@ -156,10 +155,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			}
 		}
 
-		private void objectTypeImportFinished(StoredObjectType objectType) {
-			objectTypeImportFinished(objectType, getCounter().getCounters(objectType));
-		}
-
 		@Override
 		public void importFinished(Map<ImportResult, Integer> counters) {
 			for (ImportEngineListener l : this.listeners) {
@@ -173,6 +168,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			}
 		}
 
+		private void objectTypeImportFinished(StoredObjectType objectType) {
+			objectTypeImportFinished(objectType, getCounter().getCounters(objectType));
+		}
+
 		private void importFinished() {
 			importFinished(getCounter().getCummulative());
 		}
@@ -181,14 +180,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	protected abstract ImportStrategy getImportStrategy(StoredObjectType type);
 
-	public ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<T, V> translator,
-		ImportContext<S, T, V> ctx) throws ImportException, StorageException, StoredValueDecoderException {
-		return null;
-	}
+	protected abstract ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<T, V> translator,
+		C ctx) throws ImportException, StorageException, StoredValueDecoderException;
 
 	public final Map<StoredObjectType, Map<ImportResult, Integer>> runImport(final Logger output,
 		final ObjectStore<?, ?> objectStore, final ContentStore streamStore, Map<String, ?> settings)
-		throws ImportException, StorageException {
+			throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -277,26 +274,34 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 									continue;
 								}
 
-								ImportContext<S, T, V> ctx = null;
-								/*
-								TransferContext<IDfSession, IDfValue> ctx = new TransferContext<IDfSession, IDfValue>(
-									DctmTranslator.INSTANCE, next.getId(), session, objectStore, streamStore, output);
-								 */
-								ImportOutcome outcome = null;
+								C ctx = newContext(next.getId(), session.getWrapped(), output, objectStore, streamStore);
+								initContext(ctx);
 								final StoredObjectType storedType = next.getType();
 								session.begin();
 								try {
 									listenerDelegator.objectImportStarted(next);
-									outcome = importObject(next, getTranslator(), ctx);
+									final ImportOutcome outcome = importObject(next, getTranslator(), ctx);
 									listenerDelegator.objectImportCompleted(next, outcome);
 									if (this.log.isDebugEnabled()) {
-										this.log.debug(String.format("Persisted (%s) %s", outcome.getResult(), next));
+										String msg = null;
+										switch (outcome.getResult()) {
+											case CREATED:
+											case UPDATED:
+											case DUPLICATE:
+												msg = String.format("Persisted (%s) %s as [%s](%s)",
+													outcome.getResult(), next, outcome.getNewId(),
+													outcome.getNewLabel());
+												break;
+											default:
+												msg = String.format("Persisted (%s) %s", outcome.getResult(), next);
+												break;
+										}
+										this.log.debug(msg);
 									}
 									session.commit();
 								} catch (Throwable t) {
 									session.rollback();
 									listenerDelegator.objectImportFailed(next, t);
-									outcome = null;
 									// Log the error, move on
 									this.log.error(String.format("Exception caught processing %s", next), t);
 									if (batch.strategy.isBatchFailRemainder()) {
@@ -304,10 +309,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 										// objects
 										failBatch = true;
 										this.log
-											.debug(String
-												.format(
-													"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-													storedType));
+										.debug(String
+											.format(
+												"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+												storedType));
 										continue;
 									}
 								} finally {
@@ -554,10 +559,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -566,5 +571,15 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			}
 			listenerDelegator.importFinished();
 		}
+	}
+
+	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine(String targetName) {
+		return TransferEngine.getTransferEngine(ImportEngine.class, targetName);
+	}
+
+	protected abstract C newContext(String rootId, S session, Logger output, ObjectStore<?, ?> objectStore,
+		ContentStore streamStore);
+
+	protected void initContext(C ctx) {
 	}
 }

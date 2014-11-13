@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, ExportEngineListener> {
+	TransferEngine<S, T, V, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -273,7 +273,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 	public final Map<StoredObjectType, Map<ExportResult, Integer>> runExport(final Logger output,
 		final ObjectStore<?, ?> objectStore, final ContentStore streamStore, Map<String, ?> settings)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final SessionFactory<S> sessionFactory = newSessionFactory();
@@ -367,7 +367,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 									next.getType(), next.getId()));
 							}
 
-							C ctx = newContext(next.getId(), session.getWrapped(), output);
+							C ctx = newContext(next.getId(), next.getType(), session.getWrapped(), output);
 							initContext(ctx);
 							listenerDelegator.objectExportStarted(next.getType(), next.getId());
 							Result result = exportObject(objectStore, streamStore, s, null, next, sourceObject, ctx,
@@ -527,10 +527,10 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -540,7 +540,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		}
 	}
 
-	protected abstract C newContext(String rootId, S session, Logger output);
+	protected abstract C newContext(String rootId, StoredObjectType rootType, S session, Logger output);
 
 	protected void initContext(C ctx) {
 	}

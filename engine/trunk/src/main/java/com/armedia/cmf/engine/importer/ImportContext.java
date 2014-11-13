@@ -20,9 +20,9 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	private final ObjectStorageTranslator<T, V> translator;
 	private final ContentStore streamStore;
 
-	ImportContext(String rootId, S session, Logger output, ObjectStorageTranslator<T, V> translator,
-		ObjectStore<?, ?> objectStore, ContentStore streamStore) {
-		super(rootId, session, output);
+	ImportContext(String rootId, StoredObjectType rootType, S session, Logger output,
+		ObjectStorageTranslator<T, V> translator, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		super(rootId, rootType, session, output);
 		this.translator = translator;
 		this.objectStore = objectStore;
 		this.streamStore = streamStore;
@@ -34,10 +34,18 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 
 	public final int loadObjects(StoredObjectType type, Set<String> ids, StoredObjectHandler<V> handler)
 		throws StorageException, StoredValueDecoderException {
-		return this.objectStore.loadObjects(this.translator, type, ids, handler);
+		if (isSurrogateType(getRootObjectType(), type)) {
+			return this.objectStore.loadObjects(this.translator, type, ids, handler);
+		} else {
+			return 0;
+		}
 	}
 
 	public final ContentStore getContentStreamStore() {
 		return this.streamStore;
+	}
+
+	protected boolean isSurrogateType(StoredObjectType rootType, StoredObjectType target) {
+		return false;
 	}
 }
