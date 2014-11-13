@@ -25,6 +25,7 @@ import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
@@ -41,7 +42,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, ExportEngineListener> {
+	TransferEngine<S, T, V, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -230,15 +231,15 @@ TransferEngine<S, T, V, ExportEngineListener> {
 		if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("Executing supplemental storage for %s", label));
 		}
-		final String qualifier;
+		final Handle contentHandle;
 		try {
-			qualifier = storeContent(session, marshaled, sourceObject, streamStore);
+			contentHandle = storeContent(session, marshaled, sourceObject, streamStore);
 		} catch (Exception e) {
-			throw new ExportException(String.format("Failed to execute the supplemental storage for %s", label), e);
+			throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
 		}
 
-		if (qualifier != null) {
-			setContentQualifier(marshaled, qualifier);
+		if (contentHandle != null) {
+			setContentQualifier(marshaled, contentHandle.getQualifier());
 		}
 
 		final Long ret = objectStore.storeObject(marshaled, getTranslator());
@@ -527,10 +528,10 @@ TransferEngine<S, T, V, ExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -586,7 +587,7 @@ TransferEngine<S, T, V, ExportEngineListener> {
 
 	protected abstract StoredObject<V> marshal(S session, T object) throws ExportException;
 
-	protected abstract String storeContent(S session, StoredObject<V> marshalled, T object, ContentStore streamStore)
+	protected abstract Handle storeContent(S session, StoredObject<V> marshalled, T object, ContentStore streamStore)
 		throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
