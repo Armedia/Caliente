@@ -12,12 +12,14 @@ public abstract class ContentStore extends Store {
 		private final ContentStore sourceStore;
 		private final StoredObjectType objectType;
 		private final String objectId;
+		private final String qualifier;
 		private final URI uri;
 
-		private Handle(ContentStore sourceStore, StoredObjectType objectType, String objectId, URI uri) {
+		private Handle(ContentStore sourceStore, StoredObjectType objectType, String objectId, String qualifier, URI uri) {
 			this.sourceStore = sourceStore;
 			this.objectType = objectType;
 			this.objectId = objectId;
+			this.qualifier = qualifier;
 			this.uri = uri;
 		}
 
@@ -45,6 +47,17 @@ public abstract class ContentStore extends Store {
 
 		/**
 		 * <p>
+		 * Returns the qualifier for this content stream. Can be {@code null}.
+		 * </p>
+		 *
+		 * @return the qualifier for this content stream
+		 */
+		public String getQualifier() {
+			return this.qualifier;
+		}
+
+		/**
+		 * <p>
 		 * Returns the {@link ContentStore} from which this handle was obtained.
 		 * </p>
 		 *
@@ -52,19 +65,6 @@ public abstract class ContentStore extends Store {
 		 */
 		public ContentStore getSourceStore() {
 			return this.sourceStore;
-		}
-
-		/**
-		 * <p>
-		 * Returns an implementation-specific identifier that can be used by the content store
-		 * implementation to identify and retrieve the content stream for which this handle was
-		 * created.
-		 * </p>
-		 *
-		 * @return an implementation-specific identifier
-		 */
-		public URI getURI() {
-			return this.uri;
 		}
 
 		/**
@@ -106,7 +106,9 @@ public abstract class ContentStore extends Store {
 		/**
 		 * <p>
 		 * Returns an {@link OutputStream} that can be used to write to the actual content file,
-		 * creating a new stream if it doesn't exist.
+		 * creating a new stream if it doesn't exist. If the underlying content store doesn't
+		 * support the modification or creation of new content streams, {@code null} will be
+		 * returned.
 		 * </p>
 		 * <p>
 		 * All {@link ContentStore} implementations <b>must</b> support this functionality.
@@ -153,16 +155,19 @@ public abstract class ContentStore extends Store {
 			"The URI [%s] is not supported by ContentStore class [%s]", uri, getClass().getCanonicalName())); }
 	}
 
-	protected final Handle constructHandle(StoredObjectType objectType, String objectId, URI handleId) {
-		return new Handle(this, objectType, objectId, handleId);
+	protected final Handle constructHandle(StoredObjectType objectType, String objectId, String qualifier, URI handleId) {
+		return new Handle(this, objectType, objectId, qualifier, handleId);
 	}
 
-	public final Handle newHandle(StoredObjectType objectType, String objectId) {
-		return newHandle(objectType, objectId, null);
+	public final Handle getHandle(StoredObject<?> object, String qualifier) {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
+		return getHandle(object.getType(), object.getId(), qualifier);
 	}
 
-	public final Handle newHandle(StoredObjectType objectType, String objectId, String qualifier) {
-		return constructHandle(objectType, objectId, allocateHandleId(objectType, objectId, qualifier));
+	public final Handle getHandle(StoredObjectType objectType, String objectId, String qualifier) {
+		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
+		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
+		return constructHandle(objectType, objectId, qualifier, allocateHandleId(objectType, objectId, qualifier));
 	}
 
 	protected final URI allocateHandleId(StoredObjectType objectType, String objectId, String qualifier) {
