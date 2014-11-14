@@ -5,7 +5,6 @@
 package com.armedia.cmf.documentum.engine.importer;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -20,10 +19,8 @@ import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
-import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
@@ -363,7 +360,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> {
 
 		final String documentId = document.getObjectId().getId();
 		final String contentType = storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE).getValue().toString();
-		final ContentStore fs = context.getContentStreamStore();
 		final int contentCount = contentIds.size();
 		final StoredObjectHandler<IDfValue> handler = new StoredObjectHandler<IDfValue>() {
 
@@ -380,28 +376,20 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> {
 			}
 
 			@Override
-			public boolean handleObject(StoredObject<IDfValue> obj) throws StorageException {
+			public boolean handleObject(StoredObject<IDfValue> storedObject) throws StorageException {
 				// Step one: what's the content's path in the filesystem?
-				if (obj.getType() != StoredObjectType.CONTENT_STREAM) { return true; }
-				final DctmContentStream content = DctmContentStream.class.cast(obj);
-				final File path = content.getFsPath();
-				final File fullPath;
-				try {
-					fullPath = fs.getContentFile(path);
-				} catch (IOException e) {
-					throw new StorageException(String.format("Failed to locate the actual content path for [%s]",
-						path.getPath()), e);
-				}
-				final String absolutePath = fullPath.getAbsolutePath();
+				if (storedObject.getType() != StoredObjectType.CONTENT_STREAM) { return true; }
+				final Handle contentHandle = context.getContentHandle(storedObject);
+				final File path = contentHandle.getFile();
+				final String absolutePath = path.getAbsolutePath();
 
-				final int pageNumber = content.storedObject.getAttribute(DctmAttributes.PAGE).getValue().asInteger();
-				final StoredAttribute<IDfValue> renditionNumber = content.storedObject
-					.getAttribute(DctmAttributes.RENDITION);
-				final StoredAttribute<IDfValue> pageModifierAtt = content.storedObject
+				final int pageNumber = storedObject.getAttribute(DctmAttributes.PAGE).getValue().asInteger();
+				final StoredAttribute<IDfValue> renditionNumber = storedObject.getAttribute(DctmAttributes.RENDITION);
+				final StoredAttribute<IDfValue> pageModifierAtt = storedObject
 					.getAttribute(DctmAttributes.PAGE_MODIFIER);
 				final String pageModifier = (pageModifierAtt.hasValues() ? pageModifierAtt.getValue().asString()
 					: DctmDataType.DF_STRING.getNullEncoding());
-				String fullFormat = content.storedObject.getAttribute(DctmAttributes.FULL_FORMAT).getValue().asString();
+				String fullFormat = storedObject.getAttribute(DctmAttributes.FULL_FORMAT).getValue().asString();
 
 				if ((renditionNumber == null) || (renditionNumber.getValue().asInteger() == 0)) {
 					if ((fullFormat != null) && !Tools.equals(fullFormat, contentType)) {
@@ -442,7 +430,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> {
 					}
 				}
 
-				String setFile = content.storedObject.getAttribute(DctmAttributes.SET_FILE).getValue().asString();
+				String setFile = storedObject.getAttribute(DctmAttributes.SET_FILE).getValue().asString();
 				if (StringUtils.isBlank(setFile)) {
 					setFile = " ";
 				}
@@ -450,12 +438,12 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> {
 				// with 4 single quotes.
 				setFile = setFile.replaceAll("'", "''''");
 
-				String setClient = content.storedObject.getAttribute(DctmAttributes.SET_CLIENT).getValue().asString();
+				String setClient = storedObject.getAttribute(DctmAttributes.SET_CLIENT).getValue().asString();
 				if (StringUtils.isBlank(setClient)) {
 					setClient = " ";
 				}
 
-				IDfTime setTime = content.storedObject.getAttribute(DctmAttributes.SET_TIME).getValue().asTime();
+				IDfTime setTime = storedObject.getAttribute(DctmAttributes.SET_TIME).getValue().asTime();
 
 				String pageModifierClause = "";
 				if (!StringUtils.isBlank(pageModifier)) {
