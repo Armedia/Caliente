@@ -59,7 +59,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		m.put(DctmObjectType.FORMAT, new DctmExportFormat(this));
 		m.put(DctmObjectType.GROUP, new DctmExportGroup(this));
 		m.put(DctmObjectType.TYPE, new DctmExportType(this));
-		m.put(DctmObjectType.USER, new DctmUserExporter(this));
+		m.put(DctmObjectType.USER, new DctmExportUser(this));
 		this.delegates = Collections.unmodifiableMap(m);
 	}
 

@@ -136,7 +136,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, group, ctx);
 
 		String groupOwner = group.getOwnerName();
-		if (!DctmMappingUtils.isMappableUser(session, groupOwner) && !DctmUserExporter.isSpecialUser(groupOwner)) {
+		if (!DctmMappingUtils.isMappableUser(session, groupOwner) && !DctmExportUser.isSpecialUser(groupOwner)) {
 			IDfUser owner = session.getUser(groupOwner);
 			if (owner != null) {
 				ret.add(owner);
@@ -151,7 +151,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 		}
 
 		String groupAdmin = group.getGroupAdmin();
-		if (!DctmMappingUtils.isMappableUser(session, groupAdmin) && !DctmUserExporter.isSpecialUser(groupAdmin)) {
+		if (!DctmMappingUtils.isMappableUser(session, groupAdmin) && !DctmExportUser.isSpecialUser(groupAdmin)) {
 			IDfUser admin = session.getUser(groupAdmin);
 			if (admin != null) {
 				ret.add(admin);
@@ -169,7 +169,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 		if (usersNames != null) {
 			for (IDfValue v : usersNames) {
 				String userName = v.asString();
-				if (DctmUserExporter.isSpecialUser(userName)) {
+				if (DctmExportUser.isSpecialUser(userName)) {
 					this.log.warn(String.format("Will not persist special member user dependency [%s] for group [%s]",
 						userName, group.getGroupName()));
 					continue;

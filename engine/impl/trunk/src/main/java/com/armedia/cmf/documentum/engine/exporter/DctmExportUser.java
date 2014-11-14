@@ -30,7 +30,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmUserExporter extends DctmExportAbstract<IDfUser> {
+public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 
 	static final AttributeHandler USER_NAME_HANDLER = new AttributeHandler() {
 		@Override
@@ -54,7 +54,7 @@ public class DctmUserExporter extends DctmExportAbstract<IDfUser> {
 	private static boolean HANDLERS_READY = false;
 
 	private static synchronized void initHandlers() {
-		if (DctmUserExporter.HANDLERS_READY) { return; }
+		if (DctmExportUser.HANDLERS_READY) { return; }
 		// These are the attributes that require special handling on import
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
 			DctmAttributes.USER_PASSWORD, DctmAttributeHandlers.NO_IMPORT_HANDLER);
@@ -87,32 +87,32 @@ public class DctmUserExporter extends DctmExportAbstract<IDfUser> {
 		// This will help intercept user names that need to be mapped to "dynamic" names on the
 		// target DB, taken from the session config
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.USER_NAME, DctmUserExporter.USER_NAME_HANDLER);
+			DctmAttributes.USER_NAME, DctmExportUser.USER_NAME_HANDLER);
 
-		DctmUserExporter.HANDLERS_READY = true;
+		DctmExportUser.HANDLERS_READY = true;
 	}
 
 	private static boolean SPECIAL_USERS_READY = false;
 	private static Set<String> SPECIAL_USERS = Collections.emptySet();
 
 	private static synchronized void initSpecialUsers() {
-		if (DctmUserExporter.SPECIAL_USERS_READY) { return; }
+		if (DctmExportUser.SPECIAL_USERS_READY) { return; }
 		String specialUsers = "";
 		// TODO: Setting.SPECIAL_USERS.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialUsers);
-		DctmUserExporter.SPECIAL_USERS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
-		DctmUserExporter.SPECIAL_USERS_READY = true;
+		DctmExportUser.SPECIAL_USERS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
+		DctmExportUser.SPECIAL_USERS_READY = true;
 	}
 
 	public static boolean isSpecialUser(String user) {
-		DctmUserExporter.initSpecialUsers();
-		return DctmUserExporter.SPECIAL_USERS.contains(user);
+		DctmExportUser.initSpecialUsers();
+		return DctmExportUser.SPECIAL_USERS.contains(user);
 	}
 
-	protected DctmUserExporter(DctmExportEngine engine) {
+	protected DctmExportUser(DctmExportEngine engine) {
 		super(engine, DctmObjectType.USER);
-		DctmUserExporter.initHandlers();
-		DctmUserExporter.initSpecialUsers();
+		DctmExportUser.initHandlers();
+		DctmExportUser.initSpecialUsers();
 	}
 
 	@Override
