@@ -6,8 +6,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.armedia.cmf.engine.importer.ImportStrategy;
+import com.armedia.cmf.engine.importer.ImportStrategy.BatchingStrategy;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
@@ -25,21 +26,45 @@ public enum DctmObjectType {
 	// otherwise that operation will fail.
 
 	USER(StoredObjectType.USER, IDfUser.class),
-	GROUP(StoredObjectType.GROUP, IDfGroup.class, DctmDependencyType.PEER),
+	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchingStrategy.SERIALIZED),
 	ACL(StoredObjectType.ACL, IDfACL.class),
-	TYPE(StoredObjectType.TYPE, IDfType.class, DctmDependencyType.HIERARCHY, null, true, false),
+	TYPE(StoredObjectType.TYPE, IDfType.class, BatchingStrategy.PARALLEL, null, true, false),
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
-	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, DctmDependencyType.HIERARCHY, null, true, false),
-	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, DctmDependencyType.PEER, null, true, true),
+	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchingStrategy.PARALLEL, null, true, false),
+	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchingStrategy.SERIALIZED, null, true, true),
 	CONTENT(StoredObjectType.CONTENT_STREAM, IDfContent.class, "dmr_content", DOCUMENT);
 
 	private final StoredObjectType cmsType;
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
-	private final DctmDependencyType peerDependencyType;
+	private final BatchingStrategy batchingStrategy;
 	private final boolean supportsBatching;
 	private final boolean failureInterruptsBatch;
 	private final Set<Object> surrogateOf;
+	public final ImportStrategy importStrategy = new ImportStrategy() {
+
+		@Override
+		public boolean isIgnored() {
+			return !DctmObjectType.this.surrogateOf.isEmpty();
+		}
+
+		@Override
+		public BatchingStrategy getBatchingStrategy() {
+			if (!DctmObjectType.this.supportsBatching) { return null; }
+			return DctmObjectType.this.batchingStrategy;
+		}
+
+		@Override
+		public boolean isParallelCapable() {
+			// All are parallel capable one way or another
+			return true;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return DctmObjectType.this.failureInterruptsBatch;
+		}
+	};
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
 		DctmObjectType... surrogateOf) {
@@ -52,17 +77,17 @@ public enum DctmObjectType {
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		DctmDependencyType peerDependencyType, DctmObjectType... surrogateOf) {
-		this(cmsType, dfClass, peerDependencyType, null, surrogateOf);
+		BatchingStrategy batchingStrategy, DctmObjectType... surrogateOf) {
+		this(cmsType, dfClass, batchingStrategy, null, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		DctmDependencyType peerDependencyType, String dmType, DctmObjectType... surrogateOf) {
-		this(cmsType, dfClass, peerDependencyType, dmType, false, false, surrogateOf);
+		BatchingStrategy batchingStrategy, String dmType, DctmObjectType... surrogateOf) {
+		this(cmsType, dfClass, batchingStrategy, dmType, false, false, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		DctmDependencyType peerDependencyType, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
+		BatchingStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
 		DctmObjectType... surrogateOf) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
@@ -71,7 +96,7 @@ public enum DctmObjectType {
 			this.dmType = dmType;
 		}
 		this.dfClass = dfClass;
-		this.peerDependencyType = Tools.coalesce(peerDependencyType, DctmDependencyType.NONE);
+		this.batchingStrategy = batchingStrategy;
 		this.supportsBatching = supportsBatching;
 		this.failureInterruptsBatch = failureInterruptsBatch;
 		Set<Object> s = new TreeSet<Object>();
@@ -102,18 +127,6 @@ public enum DctmObjectType {
 
 	public final Class<? extends IDfPersistentObject> getDfClass() {
 		return this.dfClass;
-	}
-
-	public final DctmDependencyType getPeerDependencyType() {
-		return this.peerDependencyType;
-	}
-
-	public final boolean isBatchingSupported() {
-		return this.supportsBatching;
-	}
-
-	public final boolean isFailureInterruptsBatch() {
-		return this.failureInterruptsBatch;
 	}
 
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
