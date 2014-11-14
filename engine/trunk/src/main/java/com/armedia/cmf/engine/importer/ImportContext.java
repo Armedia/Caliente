@@ -15,6 +15,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
+import com.armedia.commons.utilities.CfgTools;
 
 public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 
@@ -22,9 +23,10 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	private final ObjectStorageTranslator<T, V> translator;
 	private final ContentStore streamStore;
 
-	public ImportContext(ImportEngine<S, ?, T, V, ?> engine, String rootId, StoredObjectType rootType, S session,
-		Logger output, ObjectStorageTranslator<T, V> translator, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
-		super(engine, rootId, rootType, session, output);
+	public ImportContext(ImportEngine<S, ?, T, V, ?> engine, CfgTools settings, String rootId,
+		StoredObjectType rootType, S session, Logger output, ObjectStorageTranslator<T, V> translator,
+		ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		super(engine, settings, rootId, rootType, session, output);
 		this.translator = translator;
 		this.objectStore = objectStore;
 		this.streamStore = streamStore;

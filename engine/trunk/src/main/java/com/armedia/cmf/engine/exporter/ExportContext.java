@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.TransferContext;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.CfgTools;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -20,8 +21,8 @@ public class ExportContext<S, T, V> extends TransferContext<S, T, V> {
 	 * @param session
 	 * @param output
 	 */
-	public ExportContext(ExportEngine<S, ?, T, V, ?> engine, String rootId, StoredObjectType rootType, S session,
-		Logger output) {
-		super(engine, rootId, rootType, session, output);
+	public ExportContext(ExportEngine<S, ?, T, V, ?> engine, CfgTools settings, String rootId,
+		StoredObjectType rootType, S session, Logger output) {
+		super(engine, settings, rootId, rootType, session, output);
 	}
 }

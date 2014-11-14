@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.CfgTools;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -24,15 +25,21 @@ public abstract class TransferContext<S, T, V> {
 	private final S session;
 	private final Map<String, V> values = new HashMap<String, V>();
 	private final Map<String, Object> objects = new HashMap<String, Object>();
+	private final CfgTools settings;
 	private final Logger output;
 
-	protected TransferContext(TransferEngine<S, T, V, ?, ?> engine, String rootId, StoredObjectType rootType,
-		S session, Logger output) {
+	protected TransferContext(TransferEngine<S, T, V, ?, ?> engine, CfgTools settings, String rootId,
+		StoredObjectType rootType, S session, Logger output) {
+		this.engine = engine;
+		this.settings = settings;
 		this.rootId = rootId;
 		this.rootType = rootType;
 		this.session = session;
 		this.output = output;
-		this.engine = engine;
+	}
+
+	public final CfgTools getSettings() {
+		return this.settings;
 	}
 
 	public final String getRootObjectId() {

@@ -19,6 +19,8 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+	private CfgTools settings = CfgTools.EMPTY;
+
 	protected ContextFactory() {
 	}
 
@@ -31,12 +33,17 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 				ok = true;
 				throw new Exception("This pool is already open");
 			}
+			this.settings = settings;
 			doInit(settings);
 			ok = true;
 		} finally {
 			this.open = ok;
 			this.lock.writeLock().unlock();
 		}
+	}
+
+	protected final CfgTools getSettings() {
+		return this.settings;
 	}
 
 	protected void doInit(CfgTools settings) throws Exception {
@@ -63,16 +70,16 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 	}
 
 	public final C newContext(String rootId, StoredObjectType rootType, S session, Logger output,
-		ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		ObjectStore<?, ?> objectStore, ContentStore contentStore) {
 		this.lock.readLock().lock();
 		try {
-			return constructContext(rootId, rootType, session, output, objectStore, streamStore);
+			return constructContext(rootId, rootType, session, output, objectStore, contentStore);
 		} finally {
 			this.lock.readLock().unlock();
 		}
 	}
 
 	protected abstract C constructContext(String rootId, StoredObjectType rootType, S session, Logger output,
-		ObjectStore<?, ?> objectStore, ContentStore streamStore);
+		ObjectStore<?, ?> objectStore, ContentStore contentStore);
 
 }
