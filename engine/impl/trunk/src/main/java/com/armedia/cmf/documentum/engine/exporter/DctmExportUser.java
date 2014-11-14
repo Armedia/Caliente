@@ -97,8 +97,7 @@ public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 
 	private static synchronized void initSpecialUsers() {
 		if (DctmExportUser.SPECIAL_USERS_READY) { return; }
-		String specialUsers = "";
-		// TODO: Setting.SPECIAL_USERS.getString();
+		String specialUsers = Setting.SPECIAL_USERS.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialUsers);
 		DctmExportUser.SPECIAL_USERS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
 		DctmExportUser.SPECIAL_USERS_READY = true;

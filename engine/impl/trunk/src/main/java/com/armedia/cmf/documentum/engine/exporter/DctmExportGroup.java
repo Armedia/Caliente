@@ -54,19 +54,19 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 			DctmAttributes.GROUPS_NAMES, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-				@Override
-				public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-					throws DfException {
-					return false;
-				}
+			@Override
+			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+				throws DfException {
+				return false;
+			}
 
-				@Override
-				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-					throws DfException {
-					return DctmMappingUtils.substituteMappableUsers(object, attr);
-				}
+			@Override
+			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+				throws DfException {
+				return DctmMappingUtils.substituteMappableUsers(object, attr);
+			}
 
-			});
+		});
 		DctmExportGroup.HANDLERS_READY = true;
 	}
 
@@ -75,8 +75,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 
 	private static synchronized void initSpecialGroups() {
 		if (DctmExportGroup.SPECIAL_GROUPS_READY) { return; }
-		String specialGroups = "";
-		// TODO: Setting.SPECIAL_GROUPS.getString();
+		String specialGroups = Setting.SPECIAL_GROUPS.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialGroups);
 		DctmExportGroup.SPECIAL_GROUPS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
 		DctmExportGroup.SPECIAL_GROUPS_READY = true;

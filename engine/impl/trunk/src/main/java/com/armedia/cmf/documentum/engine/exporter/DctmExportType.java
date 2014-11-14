@@ -61,8 +61,7 @@ public class DctmExportType extends DctmExportAbstract<IDfType> {
 
 	private static synchronized void initSpecialTypes() {
 		if (DctmExportType.SPECIAL_TYPES_READY) { return; }
-		String specialTypes = "";
-		// TODO: Setting.SPECIAL_TYPES.getString();
+		String specialTypes = Setting.SPECIAL_TYPES.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialTypes);
 		DctmExportType.SPECIAL_TYPES = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
 		DctmExportType.SPECIAL_TYPES_READY = true;
