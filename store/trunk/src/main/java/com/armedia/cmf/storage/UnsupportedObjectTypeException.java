@@ -14,4 +14,8 @@ public class UnsupportedObjectTypeException extends Exception {
 	UnsupportedObjectTypeException(String type) {
 		super(String.format("The object type [%s] is not supported", type));
 	}
+
+	public UnsupportedObjectTypeException(StoredObjectType type) {
+		this(type != null ? type.name() : "(null-value)");
+	}
 }
