@@ -6,7 +6,7 @@ public class ImportOutcome {
 	private final String newId;
 	private final String newLabel;
 
-	protected ImportOutcome(ImportResult result) {
+	public ImportOutcome(ImportResult result) {
 		this(result, null, null);
 	}
 
@@ -15,7 +15,7 @@ public class ImportOutcome {
 	 * @param newId
 	 * @param newLabel
 	 */
-	protected ImportOutcome(ImportResult result, String newId, String newLabel) {
+	public ImportOutcome(ImportResult result, String newId, String newLabel) {
 		this.result = result;
 		this.newId = newId;
 		this.newLabel = newLabel;
