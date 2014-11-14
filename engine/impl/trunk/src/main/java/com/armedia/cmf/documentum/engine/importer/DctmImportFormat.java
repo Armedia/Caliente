@@ -1,27 +1,57 @@
+/**
+ *
+ */
+
 package com.armedia.cmf.documentum.engine.importer;
 
+import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
+import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
-import com.armedia.cmf.storage.StorageException;
+import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
+import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.documentum.fc.client.IDfFormat;
-import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
-public class DctmImportFormat extends DctmImportAbstract<IDfFormat> {
+/**
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+ *
+ */
+public class DctmImportFormat extends DctmImportDelegate<IDfFormat> {
+	private static boolean HANDLERS_READY = false;
 
-	protected DctmImportFormat(DctmImportEngine engine) {
-		super(engine, DctmObjectType.FORMAT);
+	private static synchronized void initHandlers() {
+		if (DctmImportFormat.HANDLERS_READY) { return; }
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FORMAT, DctmDataType.DF_STRING, DctmAttributes.NAME,
+			DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmImportFormat.HANDLERS_READY = true;
+	}
+
+	public DctmImportFormat(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
+		super(engine, DctmObjectType.FORMAT, storedObject);
+		DctmImportFormat.initHandlers();
 	}
 
 	@Override
-	protected ImportOutcome importObject(StoredObject<?> marshaled,
-		ObjectStorageTranslator<IDfPersistentObject, IDfValue> translator, DctmImportContext ctx)
-			throws ImportException, StorageException, StoredValueDecoderException, DfException {
-		return null;
+	protected String calculateLabel(IDfFormat format) throws DfException {
+		return format.getName();
+	}
+
+	@Override
+	protected void finalizeConstruction(IDfFormat object, boolean newObject, DctmImportContext context)
+		throws DfException {
+		if (newObject) {
+			copyAttributeToObject(DctmAttributes.NAME, object);
+		}
+	}
+
+	@Override
+	protected IDfFormat locateInCms(DctmImportContext ctx) throws DfException {
+		IDfSession session = ctx.getSession();
+		IDfValue formatName = this.storedObject.getAttribute(DctmAttributes.NAME).getValue();
+		return session.getFormat(formatName.asString());
 	}
 }

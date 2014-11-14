@@ -19,7 +19,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-class DctmImportContext extends ImportContext<IDfSession, IDfPersistentObject, IDfValue> {
+public class DctmImportContext extends ImportContext<IDfSession, IDfPersistentObject, IDfValue> {
 
 	DctmImportContext(DctmImportEngine engine, String rootId, StoredObjectType rootType, IDfSession session,
 		Logger output, ObjectStore<?, ?> objectStore, ContentStore streamStore) {

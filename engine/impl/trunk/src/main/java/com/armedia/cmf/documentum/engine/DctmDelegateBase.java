@@ -3,6 +3,7 @@ package com.armedia.cmf.documentum.engine;
 import org.apache.log4j.Logger;
 
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -15,12 +16,24 @@ public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferE
 	private final DctmObjectType type;
 	private final E engine;
 
+	protected DctmDelegateBase(E engine, StoredObjectType type) {
+		this(engine, DctmTranslator.translateType(type));
+	}
+
 	protected DctmDelegateBase(E engine, DctmObjectType type) {
+		if (engine == null) { throw new IllegalArgumentException(
+			"Must provide the engine that will interact with this delegate"); }
+		if (type == null) { throw new IllegalArgumentException(
+			"Must provide the object type for which this delegate will operate"); }
 		this.engine = engine;
 		this.type = type;
 		@SuppressWarnings("unchecked")
 		Class<T> c = (Class<T>) type.getDfClass();
 		this.dfClass = c;
+	}
+
+	protected final Class<T> getDfClass() {
+		return this.dfClass;
 	}
 
 	protected final E getEngine() {
@@ -35,7 +48,7 @@ public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferE
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 }
