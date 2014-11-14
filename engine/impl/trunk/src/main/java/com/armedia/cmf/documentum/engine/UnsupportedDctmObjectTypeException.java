@@ -11,7 +11,7 @@ package com.armedia.cmf.documentum.engine;
 public class UnsupportedDctmObjectTypeException extends Exception {
 	private static final long serialVersionUID = 1L;
 
-	UnsupportedDctmObjectTypeException(String type) {
+	public UnsupportedDctmObjectTypeException(String type) {
 		super(String.format("The object type [%s] is not supported", type));
 	}
 }

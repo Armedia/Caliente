@@ -14,12 +14,11 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmConstant;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
-import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.commons.utilities.Tools;
@@ -182,7 +181,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			// Next, set the password
 			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.USER_SOURCE);
 			final IDfValue userSource = att.getValue();
-			if (Tools.equals(Constant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
+			if (Tools.equals(DctmConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
 				final String inlinePasswordValue = Setting.DEFAULT_USER_PASSWORD.getString(userName);
