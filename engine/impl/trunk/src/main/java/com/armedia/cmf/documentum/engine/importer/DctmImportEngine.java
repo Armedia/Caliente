@@ -7,21 +7,18 @@ package com.armedia.cmf.documentum.engine.importer;
 import java.util.Collections;
 import java.util.Set;
 
-import org.slf4j.Logger;
-
 import com.armedia.cmf.documentum.engine.DctmSessionFactory;
 import com.armedia.cmf.documentum.engine.DctmSessionWrapper;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
+import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportStrategy;
-import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
-import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -70,9 +67,8 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected DctmImportContext newContext(String rootId, StoredObjectType rootType, IDfSession session, Logger output,
-		ObjectStore<?, ?> objectStore, ContentStore streamStore) {
-		return new DctmImportContext(this, rootId, rootType, session, output, objectStore, streamStore);
+	protected ContextFactory<IDfSession, IDfPersistentObject, IDfValue, DctmImportContext> newContextFactory() {
+		return new DctmImportContextFactory(this);
 	}
 
 	@Override

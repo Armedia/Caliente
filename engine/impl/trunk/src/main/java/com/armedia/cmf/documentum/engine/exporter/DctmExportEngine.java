@@ -11,8 +11,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DctmSessionFactory;
 import com.armedia.cmf.documentum.engine.DctmSessionWrapper;
@@ -20,6 +18,7 @@ import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
+import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -163,8 +162,8 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected DctmExportContext newContext(String rootId, StoredObjectType rootType, IDfSession session, Logger output) {
-		return new DctmExportContext(this, rootId, rootType, session, output);
+	protected ContextFactory<IDfSession, IDfPersistentObject, IDfValue, DctmExportContext> newContextFactory() {
+		return new DctmExportContextFactory(this);
 	}
 
 	@Override
