@@ -16,7 +16,6 @@ import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.common.DctmACL;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.IDfACL;
@@ -140,7 +139,7 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 
 	@Override
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
-		IDfACL acl, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		IDfACL acl, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, acl, ctx);
 		final int count = acl.getAccessorCount();
 		for (int i = 0; i < count; i++) {

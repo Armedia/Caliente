@@ -5,17 +5,11 @@
 package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -56,26 +50,9 @@ public class DctmExportType extends DctmExportAbstract<IDfType> {
 		DctmExportType.HANDLERS_READY = true;
 	}
 
-	private static boolean SPECIAL_TYPES_READY = false;
-	private static Set<String> SPECIAL_TYPES = Collections.emptySet();
-
-	private static synchronized void initSpecialTypes() {
-		if (DctmExportType.SPECIAL_TYPES_READY) { return; }
-		String specialTypes = Setting.SPECIAL_TYPES.getString();
-		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialTypes);
-		DctmExportType.SPECIAL_TYPES = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
-		DctmExportType.SPECIAL_TYPES_READY = true;
-	}
-
-	public static boolean isSpecialType(String type) {
-		DctmExportType.initSpecialTypes();
-		return DctmExportType.SPECIAL_TYPES.contains(type);
-	}
-
 	protected DctmExportType(DctmExportEngine engine) {
 		super(engine, DctmObjectType.TYPE);
 		DctmExportType.initHandlers();
-		DctmExportType.initSpecialTypes();
 	}
 
 	@Override
@@ -105,11 +82,11 @@ public class DctmExportType extends DctmExportAbstract<IDfType> {
 
 	@Override
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
-		IDfType type, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		IDfType type, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, type, ctx);
 		IDfType superType = type.getSuperType();
 		if (superType != null) {
-			if (DctmExportType.isSpecialType(superType.getName())) {
+			if (ctx.isSpecialType(superType.getName())) {
 				this.log.warn(String.format("Will not export special type [%s] (supertype of [%s])",
 					superType.getName(), type.getName()));
 			} else {

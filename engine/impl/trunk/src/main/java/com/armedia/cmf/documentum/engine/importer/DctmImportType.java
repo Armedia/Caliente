@@ -4,21 +4,16 @@
 
 package com.armedia.cmf.documentum.engine.importer;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
-import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -65,26 +60,9 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		DctmImportType.HANDLERS_READY = true;
 	}
 
-	private static boolean SPECIAL_TYPES_READY = false;
-	private static Set<String> SPECIAL_TYPES = Collections.emptySet();
-
-	private static synchronized void initSpecialTypes() {
-		if (DctmImportType.SPECIAL_TYPES_READY) { return; }
-		String specialTypes = Setting.SPECIAL_TYPES.getString();
-		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialTypes);
-		DctmImportType.SPECIAL_TYPES = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
-		DctmImportType.SPECIAL_TYPES_READY = true;
-	}
-
-	public static boolean isSpecialType(String type) {
-		DctmImportType.initSpecialTypes();
-		return DctmImportType.SPECIAL_TYPES.contains(type);
-	}
-
 	DctmImportType(DctmImportEngine engine, StoredObject<IDfValue> object) {
 		super(engine, DctmObjectType.TYPE, object);
 		DctmImportType.initHandlers();
-		DctmImportType.initSpecialTypes();
 	}
 
 	@Override
@@ -247,18 +225,18 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 	}
 
 	@Override
-	protected boolean isValidForLoad(IDfType type) throws DfException {
-		if (DctmImportType.isSpecialType(type.getName())) { return false; }
+	protected boolean isValidForLoad(DctmImportContext ctx, IDfType type) throws DfException {
+		if (ctx.isSpecialType(type.getName())) { return false; }
 		// If the type name is the same as dmi_${objectId}, we skip it
 		if (Tools.equals(type.getName(), String.format("dmi_%s", type.getObjectId().getId()))) { return false; }
-		return super.isValidForLoad(type);
+		return super.isValidForLoad(ctx, type);
 	}
 
 	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException {
 		IDfValue typeNameValue = this.storedObject.getAttribute(DctmAttributes.NAME).getValue();
 		final String typeName = typeNameValue.asString();
-		if (DctmImportType.isSpecialType(typeName)) {
+		if (ctx.isSpecialType(typeName)) {
 			this.log.warn(String.format("Will not import special type [%s]", typeName));
 			return true;
 		}

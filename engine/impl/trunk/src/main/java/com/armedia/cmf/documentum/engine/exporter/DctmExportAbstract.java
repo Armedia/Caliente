@@ -31,13 +31,12 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 	}
 
 	public final Collection<IDfPersistentObject> identifyRequirements(IDfSession session,
-		StoredObject<IDfValue> marshaled, IDfPersistentObject object,
-		ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		StoredObject<IDfValue> marshaled, IDfPersistentObject object, DctmExportContext ctx) throws Exception {
 		return findRequirements(session, marshaled, castObject(object), ctx);
 	}
 
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
-		T object, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		T object, DctmExportContext ctx) throws Exception {
 		return new ArrayList<IDfPersistentObject>();
 	}
 

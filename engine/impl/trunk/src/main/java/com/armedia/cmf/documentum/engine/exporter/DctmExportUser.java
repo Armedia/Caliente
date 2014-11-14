@@ -5,18 +5,12 @@
 package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -92,26 +86,9 @@ public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 		DctmExportUser.HANDLERS_READY = true;
 	}
 
-	private static boolean SPECIAL_USERS_READY = false;
-	private static Set<String> SPECIAL_USERS = Collections.emptySet();
-
-	private static synchronized void initSpecialUsers() {
-		if (DctmExportUser.SPECIAL_USERS_READY) { return; }
-		String specialUsers = Setting.SPECIAL_USERS.getString();
-		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialUsers);
-		DctmExportUser.SPECIAL_USERS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
-		DctmExportUser.SPECIAL_USERS_READY = true;
-	}
-
-	public static boolean isSpecialUser(String user) {
-		DctmExportUser.initSpecialUsers();
-		return DctmExportUser.SPECIAL_USERS.contains(user);
-	}
-
 	protected DctmExportUser(DctmExportEngine engine) {
 		super(engine, DctmObjectType.USER);
 		DctmExportUser.initHandlers();
-		DctmExportUser.initSpecialUsers();
 	}
 
 	@Override
@@ -121,7 +98,7 @@ public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 
 	@Override
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
-		IDfUser user, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		IDfUser user, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, user, ctx);
 		final IDfPersistentObject[] deps = {
 			session.getGroup(user.getUserGroupName()), session.getFolderByPath(user.getDefaultFolder()),

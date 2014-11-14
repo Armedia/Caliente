@@ -6,9 +6,9 @@ package com.armedia.cmf.documentum.engine.exporter;
 
 import org.slf4j.Logger;
 
+import com.armedia.cmf.documentum.engine.common.DctmSpecialValues;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -19,9 +19,23 @@ import com.documentum.fc.common.IDfValue;
  */
 class DctmExportContext extends ExportContext<IDfSession, IDfPersistentObject, IDfValue> {
 
-	DctmExportContext(DctmExportEngine engine, CfgTools settings, String rootId, StoredObjectType rootType,
-		IDfSession session, Logger output) {
-		super(engine, settings, rootId, rootType, session, output);
+	private final DctmSpecialValues specialValues;
+
+	DctmExportContext(DctmExportContextFactory factory, String rootId, StoredObjectType rootType, IDfSession session,
+		Logger output) {
+		super(factory.getEngine(), factory.getSettings(), rootId, rootType, session, output);
+		this.specialValues = factory.getSpecialValues();
 	}
 
+	public final boolean isSpecialGroup(String group) {
+		return this.specialValues.isSpecialGroup(group);
+	}
+
+	public final boolean isSpecialUser(String user) {
+		return this.specialValues.isSpecialUser(user);
+	}
+
+	public final boolean isSpecialType(String type) {
+		return this.specialValues.isSpecialType(type);
+	}
 }

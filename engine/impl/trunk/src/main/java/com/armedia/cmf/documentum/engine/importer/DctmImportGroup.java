@@ -6,11 +6,8 @@ package com.armedia.cmf.documentum.engine.importer;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
@@ -19,8 +16,6 @@ import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
-import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -57,36 +52,20 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 			DctmAttributes.GROUPS_NAMES, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-				@Override
-				public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-					throws DfException {
-					return false;
-				}
+			@Override
+			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+				throws DfException {
+				return false;
+			}
 
-				@Override
-				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-					throws DfException {
-					return DctmMappingUtils.substituteMappableUsers(object, attr);
-				}
+			@Override
+			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+				throws DfException {
+				return DctmMappingUtils.substituteMappableUsers(object, attr);
+			}
 
-			});
+		});
 		DctmImportGroup.HANDLERS_READY = true;
-	}
-
-	private static boolean SPECIAL_GROUPS_READY = false;
-	private static Set<String> SPECIAL_GROUPS = Collections.emptySet();
-
-	private static synchronized void initSpecialGroups() {
-		if (DctmImportGroup.SPECIAL_GROUPS_READY) { return; }
-		String specialGroups = Setting.SPECIAL_GROUPS.getString();
-		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialGroups);
-		DctmImportGroup.SPECIAL_GROUPS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
-		DctmImportGroup.SPECIAL_GROUPS_READY = true;
-	}
-
-	public static boolean isSpecialGroup(String group) {
-		DctmImportGroup.initSpecialGroups();
-		return DctmImportGroup.SPECIAL_GROUPS.contains(group);
 	}
 
 	/**
@@ -98,7 +77,6 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 	public DctmImportGroup(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.GROUP, storedObject);
 		DctmImportGroup.initHandlers();
-		DctmImportGroup.initSpecialGroups();
 	}
 
 	@Override
@@ -151,10 +129,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(actualUser);
 					this.log
-						.warn(String
-							.format(
-								"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-								actualUser, groupName.asString()));
+					.warn(String
+						.format(
+							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+							actualUser, groupName.asString()));
 					continue;
 				}
 				group.addUser(actualUser);
@@ -169,10 +147,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-								actualGroup, groupName.asString()));
+					.warn(String
+						.format(
+							"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
+							actualGroup, groupName.asString()));
 					continue;
 				}
 				group.addGroup(actualGroup);
@@ -190,10 +168,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-								groupName.asString(), actualUser));
+					.warn(String
+						.format(
+							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+							groupName.asString(), actualUser));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
@@ -203,27 +181,27 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 					updateSystemAttributes(user, context);
 				} catch (ImportException e) {
 					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-									actualUser, group.getGroupName()), e);
+					.warn(
+						String
+						.format(
+							"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+							actualUser, group.getGroupName()), e);
 				}
 			}
 		}
 	}
 
 	@Override
-	protected boolean isValidForLoad(IDfGroup group) throws DfException {
-		if (DctmImportGroup.isSpecialGroup(group.getGroupName())) { return false; }
-		return super.isValidForLoad(group);
+	protected boolean isValidForLoad(DctmImportContext ctx, IDfGroup group) throws DfException {
+		if (ctx.isSpecialGroup(group.getGroupName())) { return false; }
+		return super.isValidForLoad(ctx, group);
 	}
 
 	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException {
 		IDfValue groupNameValue = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
 		final String groupName = groupNameValue.asString();
-		if (DctmImportGroup.isSpecialGroup(groupName)) { return true; }
+		if (ctx.isSpecialGroup(groupName)) { return true; }
 		return super.skipImport(ctx);
 	}
 

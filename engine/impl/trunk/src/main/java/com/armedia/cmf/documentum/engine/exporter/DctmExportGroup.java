@@ -6,11 +6,6 @@ package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
@@ -54,36 +49,20 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 			DctmAttributes.GROUPS_NAMES, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-				throws DfException {
-				return false;
-			}
+				@Override
+				public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+					throws DfException {
+					return false;
+				}
 
-			@Override
-			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-				throws DfException {
-				return DctmMappingUtils.substituteMappableUsers(object, attr);
-			}
+				@Override
+				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+					throws DfException {
+					return DctmMappingUtils.substituteMappableUsers(object, attr);
+				}
 
-		});
+			});
 		DctmExportGroup.HANDLERS_READY = true;
-	}
-
-	private static boolean SPECIAL_GROUPS_READY = false;
-	private static Set<String> SPECIAL_GROUPS = Collections.emptySet();
-
-	private static synchronized void initSpecialGroups() {
-		if (DctmExportGroup.SPECIAL_GROUPS_READY) { return; }
-		String specialGroups = Setting.SPECIAL_GROUPS.getString();
-		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialGroups);
-		DctmExportGroup.SPECIAL_GROUPS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
-		DctmExportGroup.SPECIAL_GROUPS_READY = true;
-	}
-
-	public static boolean isSpecialGroup(String group) {
-		DctmExportGroup.initSpecialGroups();
-		return DctmExportGroup.SPECIAL_GROUPS.contains(group);
 	}
 
 	/**
@@ -95,7 +74,6 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 	protected DctmExportGroup(DctmExportEngine engine) {
 		super(engine, DctmObjectType.GROUP);
 		DctmExportGroup.initHandlers();
-		DctmExportGroup.initSpecialGroups();
 	}
 
 	@Override
@@ -131,11 +109,11 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 
 	@Override
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
-		IDfGroup group, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		IDfGroup group, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, group, ctx);
 
 		String groupOwner = group.getOwnerName();
-		if (!DctmMappingUtils.isMappableUser(session, groupOwner) && !DctmExportUser.isSpecialUser(groupOwner)) {
+		if (!DctmMappingUtils.isMappableUser(session, groupOwner) && !ctx.isSpecialUser(groupOwner)) {
 			IDfUser owner = session.getUser(groupOwner);
 			if (owner != null) {
 				ret.add(owner);
@@ -150,7 +128,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 		}
 
 		String groupAdmin = group.getGroupAdmin();
-		if (!DctmMappingUtils.isMappableUser(session, groupAdmin) && !DctmExportUser.isSpecialUser(groupAdmin)) {
+		if (!DctmMappingUtils.isMappableUser(session, groupAdmin) && !ctx.isSpecialUser(groupAdmin)) {
 			IDfUser admin = session.getUser(groupAdmin);
 			if (admin != null) {
 				ret.add(admin);
@@ -168,7 +146,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 		if (usersNames != null) {
 			for (IDfValue v : usersNames) {
 				String userName = v.asString();
-				if (DctmExportUser.isSpecialUser(userName)) {
+				if (ctx.isSpecialUser(userName)) {
 					this.log.warn(String.format("Will not persist special member user dependency [%s] for group [%s]",
 						userName, group.getGroupName()));
 					continue;
@@ -199,7 +177,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 		if (groupsNames != null) {
 			for (IDfValue v : groupsNames) {
 				String groupName = v.asString();
-				if (DctmExportGroup.isSpecialGroup(groupName)) {
+				if (ctx.isSpecialGroup(groupName)) {
 					this.log.warn(String.format("Will not persist special member group dependency [%s] for group [%s]",
 						groupName, group.getGroupName()));
 					continue;

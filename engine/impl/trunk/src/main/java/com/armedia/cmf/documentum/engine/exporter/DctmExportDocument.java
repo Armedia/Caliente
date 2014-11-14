@@ -177,7 +177,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
-		IDfDocument document, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		IDfDocument document, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> req = super.findRequirements(session, marshaled, document, ctx);
 
 		// Export the ACL

@@ -6,10 +6,6 @@ package com.armedia.cmf.documentum.engine.importer;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
@@ -19,6 +15,7 @@ import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
+import com.armedia.cmf.documentum.engine.common.Setting;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.commons.utilities.Tools;
@@ -96,26 +93,9 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		DctmImportUser.HANDLERS_READY = true;
 	}
 
-	private static boolean SPECIAL_USERS_READY = false;
-	private static Set<String> SPECIAL_USERS = Collections.emptySet();
-
-	private static synchronized void initSpecialUsers() {
-		if (DctmImportUser.SPECIAL_USERS_READY) { return; }
-		String specialUsers = Setting.SPECIAL_USERS.getString();
-		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(specialUsers);
-		DctmImportUser.SPECIAL_USERS = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
-		DctmImportUser.SPECIAL_USERS_READY = true;
-	}
-
-	public static boolean isSpecialUser(String user) {
-		DctmImportUser.initSpecialUsers();
-		return DctmImportUser.SPECIAL_USERS.contains(user);
-	}
-
 	public DctmImportUser(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.USER, storedObject);
 		DctmImportUser.initHandlers();
-		DctmImportUser.initSpecialUsers();
 	}
 
 	@Override
@@ -134,16 +114,16 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected boolean isValidForLoad(IDfUser user) throws DfException {
-		if (DctmImportUser.isSpecialUser(user.getUserName())) { return false; }
-		return super.isValidForLoad(user);
+	protected boolean isValidForLoad(DctmImportContext ctx, IDfUser user) throws DfException {
+		if (ctx.isSpecialUser(user.getUserName())) { return false; }
+		return super.isValidForLoad(ctx, user);
 	}
 
 	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException {
 		IDfValue userNameValue = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
-		if (DctmImportUser.isSpecialUser(userName)) { return true; }
+		if (ctx.isSpecialUser(userName)) { return true; }
 		return super.skipImport(ctx);
 	}
 
@@ -168,7 +148,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfUser user, boolean newObject, DctmImportContext context) throws DfException {
+	protected void finalizeConstruction(IDfUser user, boolean newObject, DctmImportContext ctx) throws DfException {
 		// First, set the username - only do this for new objects!!
 		if (newObject) {
 			copyAttributeToObject(DctmAttributes.USER_NAME, user);
@@ -184,7 +164,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			if (Tools.equals(DctmConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
-				final String inlinePasswordValue = Setting.DEFAULT_USER_PASSWORD.getString(userName);
+				final String inlinePasswordValue = ctx.getSettings().getString(
+					Setting.DEFAULT_USER_PASSWORD.getLabel(), userName);
 				setAttributeOnObject(DctmAttributes.USER_PASSWORD,
 					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)), user);
 			}

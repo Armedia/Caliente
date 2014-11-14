@@ -12,7 +12,6 @@ import com.armedia.cmf.documentum.engine.DctmSessionWrapper;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
-import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
@@ -25,6 +24,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.cmf.storage.UnsupportedObjectTypeException;
+import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -35,7 +35,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine extends
-ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
+	ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
 
@@ -55,7 +55,7 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	@Override
 	protected ImportOutcome importObject(StoredObject<?> marshaled,
 		ObjectStorageTranslator<IDfPersistentObject, IDfValue> translator, DctmImportContext ctx)
-		throws ImportException, StorageException, StoredValueDecoderException {
+			throws ImportException, StorageException, StoredValueDecoderException {
 		@SuppressWarnings("unchecked")
 		StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		try {
@@ -67,8 +67,8 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected ContextFactory<IDfSession, IDfPersistentObject, IDfValue, DctmImportContext> newContextFactory() {
-		return new DctmImportContextFactory(this);
+	protected DctmImportContextFactory newContextFactory(CfgTools config) {
+		return new DctmImportContextFactory(this, config);
 	}
 
 	@Override

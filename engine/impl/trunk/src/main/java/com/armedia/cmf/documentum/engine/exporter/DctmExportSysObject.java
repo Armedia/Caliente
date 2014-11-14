@@ -149,7 +149,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 				// that means we have a broken version tree...which is unsupported
 				throw new ExportException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-						.getId(), deferred));
+					.getId(), deferred));
 			}
 		}
 		ctx.setObject(cachedName, history);
@@ -182,7 +182,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 
 	@Override
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
-		T sysObject, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		T sysObject, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> req = super.findRequirements(session, marshaled, sysObject, ctx);
 		// The parent folders
 		final int pathCount = sysObject.getFolderIdCount();
