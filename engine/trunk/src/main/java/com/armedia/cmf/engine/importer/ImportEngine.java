@@ -274,7 +274,8 @@ TransferEngine<S, T, V, ImportEngineListener> {
 									continue;
 								}
 
-								C ctx = newContext(next.getId(), session.getWrapped(), output, objectStore, streamStore);
+								C ctx = newContext(next.getId(), next.getType(), session.getWrapped(), output,
+									objectStore, streamStore);
 								initContext(ctx);
 								final StoredObjectType storedType = next.getType();
 								session.begin();
@@ -577,8 +578,8 @@ TransferEngine<S, T, V, ImportEngineListener> {
 		return TransferEngine.getTransferEngine(ImportEngine.class, targetName);
 	}
 
-	protected abstract C newContext(String rootId, S session, Logger output, ObjectStore<?, ?> objectStore,
-		ContentStore streamStore);
+	protected abstract C newContext(String rootId, StoredObjectType rootType, S session, Logger output,
+		ObjectStore<?, ?> objectStore, ContentStore streamStore);
 
 	protected void initContext(C ctx) {
 	}

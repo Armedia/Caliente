@@ -22,7 +22,7 @@ public class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	private final ObjectStorageTranslator<T, V> translator;
 	private final ContentStore streamStore;
 
-	ImportContext(ImportEngine<S, ?, T, V, ?> engine, String rootId, StoredObjectType rootType, S session,
+	public ImportContext(ImportEngine<S, ?, T, V, ?> engine, String rootId, StoredObjectType rootType, S session,
 		Logger output, ObjectStorageTranslator<T, V> translator, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
 		super(engine, rootId, rootType, session, output);
 		this.translator = translator;
