@@ -1,12 +1,24 @@
 package com.armedia.cmf.storage;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 
+import org.apache.commons.io.IOUtils;
+
+import com.armedia.commons.utilities.Tools;
+
 public abstract class ContentStore extends Store {
+
+	protected static final int MIN_BUFFER_SIZE = 4096;
+	public static final int DEFAULT_BUFFER_SIZE = 16384;
+	protected static final int MAX_BUFFER_SIZE = (Integer.MAX_VALUE & 0xFFFFF000);
+
+	public static final String DEFAULT_QUALIFIER = "content";
 
 	public static final class Handle {
 		private final ContentStore sourceStore;
@@ -16,6 +28,12 @@ public abstract class ContentStore extends Store {
 		private final URI uri;
 
 		private Handle(ContentStore sourceStore, StoredObjectType objectType, String objectId, String qualifier, URI uri) {
+			if (sourceStore == null) { throw new IllegalArgumentException("Must provide a source ContentStore"); }
+			if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
+			if (objectId == null) { throw new IllegalArgumentException("Must provide an object id"); }
+			if (qualifier == null) { throw new IllegalArgumentException("Must provide a content qualifier"); }
+			if (uri == null) { throw new IllegalArgumentException(
+				"Must provide a URI to identify the content within the store"); }
 			this.sourceStore = sourceStore;
 			this.objectType = objectType;
 			this.objectId = objectId;
@@ -105,6 +123,90 @@ public abstract class ContentStore extends Store {
 
 		/**
 		 * <p>
+		 * Read the contents of the given file into the underlying {@link ContentStore}, to be
+		 * stored as the content for this handle, using a default read buffer size (from
+		 * {@link ContentStore#DEFAULT_BUFFER_SIZE}). Supports files larger than 2GB.
+		 * </p>
+		 *
+		 * @param source
+		 *            the file to read from
+		 * @return the number of bytes copied
+		 * @throws IOException
+		 */
+		public final long readFile(File source) throws IOException {
+			return readFile(source, 0);
+		}
+
+		/**
+		 * <p>
+		 * Read the contents of the given file into the underlying {@link ContentStore}, to be
+		 * stored as the content for this handle, using a read buffer of {@code bufferSize} bytes.
+		 * Supports files larger than 2GB. If {@code bufferSize} is less than or equal to 0, a
+		 * default buffer of DEFAULT_BUFFER_SIZE is used.
+		 * </p>
+		 *
+		 * @param source
+		 *            the file to read from
+		 * @return the number of bytes copied
+		 * @throws IOException
+		 */
+		public final long readFile(File source, int bufferSize) throws IOException {
+			if (source == null) { throw new IllegalArgumentException("Must provide a file to read from"); }
+			return runTransfer(new FileInputStream(source), openOutput(), bufferSize);
+		}
+
+		/**
+		 * <p>
+		 * Write the content from the underlying {@link ContentStore} into the given file, using a
+		 * default read buffer size (from {@link ContentStore#DEFAULT_BUFFER_SIZE}). Supports files
+		 * larger than 2GB. used.
+		 * </p>
+		 *
+		 * @param target
+		 *            the file to write to
+		 * @return the number of bytes copied
+		 * @throws IOException
+		 */
+		public final long writeFile(File target) throws IOException {
+			return writeFile(target, 0);
+		}
+
+		/**
+		 * <p>
+		 * Write the content from the underlying {@link ContentStore} into the given file, using a
+		 * read buffer of {@code bufferSize} bytes. Supports files larger than 2GB. If
+		 * {@code bufferSize} is less than or equal to 0, a default buffer of DEFAULT_BUFFER_SIZE is
+		 * used.
+		 * </p>
+		 *
+		 * @param target
+		 *            the file to write to
+		 * @return the number of bytes copied
+		 * @throws IOException
+		 */
+		public final long writeFile(File target, int bufferSize) throws IOException {
+			if (target == null) { throw new IllegalArgumentException("Must provide a file to write to"); }
+			return runTransfer(openInput(), new FileOutputStream(target), bufferSize);
+		}
+
+		private long runTransfer(InputStream in, OutputStream out, int bufferSize) throws IOException {
+			if (bufferSize <= 0) {
+				bufferSize = ContentStore.DEFAULT_BUFFER_SIZE;
+			} else {
+				bufferSize = Tools
+					.ensureBetween(ContentStore.MIN_BUFFER_SIZE, bufferSize, ContentStore.MAX_BUFFER_SIZE);
+			}
+			try {
+				// We use copyLarge() to support files greater than 2GB
+				return IOUtils.copyLarge(in, out, new byte[bufferSize]);
+			} finally {
+				IOUtils.closeQuietly(in);
+				IOUtils.closeQuietly(out);
+			}
+		}
+
+		/**
+		 * <p>
 		 * Returns an {@link OutputStream} that can be used to write to the actual content file,
 		 * creating a new stream if it doesn't exist. If the underlying content store doesn't
 		 * support the modification or creation of new content streams, {@code null} will be
@@ -149,19 +251,26 @@ public abstract class ContentStore extends Store {
 
 	protected abstract boolean isSupportedURI(URI uri);
 
+	protected abstract boolean isSupportsFileAccess();
+
 	protected final void validateURI(URI uri) {
 		if (uri == null) { throw new IllegalArgumentException("Must provide a URI to validate"); }
 		if (!isSupportedURI(uri)) { throw new IllegalArgumentException(String.format(
 			"The URI [%s] is not supported by ContentStore class [%s]", uri, getClass().getCanonicalName())); }
 	}
 
-	protected final Handle constructHandle(StoredObjectType objectType, String objectId, String qualifier, URI handleId) {
-		return new Handle(this, objectType, objectId, qualifier, handleId);
+	protected final Handle constructHandle(StoredObjectType objectType, String objectId, String qualifier, URI uri) {
+		return new Handle(this, objectType, objectId, qualifier, uri);
+	}
+
+	protected final URI extractURI(Handle handle) {
+		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose URI to extract"); }
+		return handle.uri;
 	}
 
 	public final Handle getHandle(StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
-		return getHandle(object.getType(), object.getId(), qualifier);
+		return getHandle(object.getType(), object.getId(), ContentStore.DEFAULT_QUALIFIER);
 	}
 
 	public final Handle getHandle(StoredObjectType objectType, String objectId, String qualifier) {
@@ -174,6 +283,7 @@ public abstract class ContentStore extends Store {
 	protected final URI allocateHandleId(StoredObjectType objectType, String objectId, String qualifier) {
 		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
+		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -183,67 +293,73 @@ public abstract class ContentStore extends Store {
 		}
 	}
 
-	protected final File getFile(URI handleId) {
-		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(handleId);
+	protected final File getFile(URI uri) {
+		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		// Short-cut, no need to luck if we won't do anything
+		if (!isSupportsFileAccess()) { return null; }
+		validateURI(uri);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			File ret = doGetFile(handleId);
+			File ret = doGetFile(uri);
 			try {
 				return ret.getCanonicalFile();
 			} catch (IOException e) {
 				// Can't canonicalize
+				if (this.log.isTraceEnabled()) {
+					this.log.error(String.format("Error canonicalizing file [%s] obtained from URI [%s]",
+						ret.getAbsolutePath(), uri.toString()), e);
+				}
+				return ret;
 			}
-			return ret;
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected final InputStream openInput(URI handleId) throws IOException {
-		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(handleId);
+	protected final InputStream openInput(URI uri) throws IOException {
+		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(uri);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doOpenInput(handleId);
+			return doOpenInput(uri);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected final OutputStream openOutput(URI handleId) throws IOException {
-		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(handleId);
+	protected final OutputStream openOutput(URI uri) throws IOException {
+		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(uri);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doOpenOutput(handleId);
+			return doOpenOutput(uri);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected final boolean isExists(URI handleId) {
-		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(handleId);
+	protected final boolean isExists(URI uri) {
+		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(uri);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doIsExists(handleId);
+			return doIsExists(uri);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected final long getStreamSize(URI handleId) {
-		if (handleId == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(handleId);
+	protected final long getStreamSize(URI uri) {
+		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateURI(uri);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doGetStreamSize(handleId);
+			return doGetStreamSize(uri);
 		} finally {
 			getReadLock().unlock();
 		}
@@ -251,13 +367,13 @@ public abstract class ContentStore extends Store {
 
 	protected abstract URI doAllocateHandleId(StoredObjectType objectType, String objectId, String qualifier);
 
-	protected abstract File doGetFile(URI handleId);
+	protected abstract File doGetFile(URI uri);
 
-	protected abstract InputStream doOpenInput(URI handleId) throws IOException;
+	protected abstract InputStream doOpenInput(URI uri) throws IOException;
 
-	protected abstract OutputStream doOpenOutput(URI handleId) throws IOException;
+	protected abstract OutputStream doOpenOutput(URI uri) throws IOException;
 
-	protected abstract boolean doIsExists(URI handleId);
+	protected abstract boolean doIsExists(URI uri);
 
-	protected abstract long doGetStreamSize(URI handleId);
+	protected abstract long doGetStreamSize(URI uri);
 }
