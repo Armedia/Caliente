@@ -90,4 +90,9 @@ public class LocalContentStore extends ContentStore {
 		File f = getFile(handleId);
 		return (f.exists() ? f.length() : -1);
 	}
+
+	@Override
+	protected boolean isSupportsFileAccess() {
+		return true;
+	}
 }
