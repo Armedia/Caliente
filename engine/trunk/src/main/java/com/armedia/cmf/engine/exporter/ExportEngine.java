@@ -280,7 +280,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 		final CfgTools configuration = new CfgTools(settings);
 		final SessionFactory<S> sessionFactory = newSessionFactory();
-		final ContextFactory<S, T, V, C> contextFactory = newContextFactory();
+		final ContextFactory<S, T, V, C, ?> contextFactory = newContextFactory(configuration);
 		try {
 			sessionFactory.init(configuration);
 		} catch (Exception e) {
@@ -288,12 +288,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		}
 
 		try {
-			try {
-				contextFactory.init(configuration);
-			} catch (Exception e) {
-				throw new ExportException("Failed to configure the context factory to carry out the export", e);
-			}
-
 			final SessionWrapper<S> baseSession;
 			try {
 				baseSession = sessionFactory.acquireSession();

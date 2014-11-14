@@ -21,6 +21,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectCounter;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
@@ -183,7 +184,7 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 
 	protected abstract SessionFactory<S> newSessionFactory();
 
-	protected abstract ContextFactory<S, T, V, C> newContextFactory();
+	protected abstract ContextFactory<S, T, V, C, ?> newContextFactory(CfgTools cfg);
 
 	protected abstract Set<String> getTargetNames();
 

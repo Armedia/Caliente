@@ -10,8 +10,9 @@ import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
-public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>> {
+public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>, E extends TransferEngine<S, T, V, C, ?>> {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -20,33 +21,20 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 	private CfgTools settings = CfgTools.EMPTY;
+	private final E engine;
 
-	protected ContextFactory() {
+	protected ContextFactory(E engine, CfgTools settings) {
+		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to which this factory is tied"); }
+		this.engine = engine;
+		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
 	}
 
-	public final void init(CfgTools settings) throws Exception {
-		if (settings == null) { throw new IllegalArgumentException("Must provide the settings to configure with"); }
-		this.lock.writeLock().lock();
-		boolean ok = false;
-		try {
-			if (this.open) {
-				ok = true;
-				throw new Exception("This pool is already open");
-			}
-			this.settings = settings;
-			doInit(settings);
-			ok = true;
-		} finally {
-			this.open = ok;
-			this.lock.writeLock().unlock();
-		}
-	}
-
-	protected final CfgTools getSettings() {
+	public final CfgTools getSettings() {
 		return this.settings;
 	}
 
-	protected void doInit(CfgTools settings) throws Exception {
+	public final E getEngine() {
+		return this.engine;
 	}
 
 	private void doClose() {
@@ -73,6 +61,7 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 		ObjectStore<?, ?> objectStore, ContentStore contentStore) {
 		this.lock.readLock().lock();
 		try {
+			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
 			return constructContext(rootId, rootType, session, output, objectStore, contentStore);
 		} finally {
 			this.lock.readLock().unlock();
