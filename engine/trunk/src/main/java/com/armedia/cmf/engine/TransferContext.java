@@ -18,7 +18,7 @@ import com.armedia.cmf.storage.StoredObjectType;
  */
 public abstract class TransferContext<S, T, V> {
 
-	private final TransferEngine<S, T, V, ?> engine;
+	private final TransferEngine<S, T, V, ?, ?> engine;
 	private final String rootId;
 	private final StoredObjectType rootType;
 	private final S session;
@@ -26,8 +26,8 @@ public abstract class TransferContext<S, T, V> {
 	private final Map<String, Object> objects = new HashMap<String, Object>();
 	private final Logger output;
 
-	protected TransferContext(TransferEngine<S, T, V, ?> engine, String rootId, StoredObjectType rootType, S session,
-		Logger output) {
+	protected TransferContext(TransferEngine<S, T, V, ?, ?> engine, String rootId, StoredObjectType rootType,
+		S session, Logger output) {
 		this.rootId = rootId;
 		this.rootType = rootType;
 		this.session = session;
@@ -101,5 +101,9 @@ public abstract class TransferContext<S, T, V> {
 
 	protected final String getContentQualifier(StoredObject<V> marshaled) {
 		return this.engine.getContentQualifier(marshaled);
+	}
+
+	public void close() {
+
 	}
 }

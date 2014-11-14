@@ -16,8 +16,6 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 
 	private final GenericObjectPool<S> pool;
 
-	private final Thread cleanup;
-
 	private boolean open = false;
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -40,14 +38,6 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 
 	protected SessionFactory() {
 		this.pool = new GenericObjectPool<S>(this);
-
-		this.cleanup = new Thread() {
-			@Override
-			public void run() {
-				doClose();
-			}
-		};
-		Runtime.getRuntime().addShutdownHook(this.cleanup);
 	}
 
 	public final void init(CfgTools settings) throws Exception {
@@ -90,11 +80,15 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 		}
 	}
 
-	private boolean doClose() {
+	protected void doClose() {
+	}
+
+	public final void close() {
 		this.lock.writeLock().lock();
 		try {
-			if (!this.open) { return false; }
+			if (!this.open) { return; }
 			this.pool.close();
+			doClose();
 		} catch (Exception e) {
 			if (this.log.isDebugEnabled()) {
 				this.log.error("Exception caught closing this a factory", e);
@@ -104,13 +98,6 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 		} finally {
 			this.open = false;
 			this.lock.writeLock().unlock();
-		}
-		return true;
-	}
-
-	public final void close() {
-		if (doClose()) {
-			Runtime.getRuntime().removeShutdownHook(this.cleanup);
 		}
 	}
 
