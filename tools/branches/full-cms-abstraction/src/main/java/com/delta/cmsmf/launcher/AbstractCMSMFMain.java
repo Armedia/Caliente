@@ -5,7 +5,7 @@ import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
-import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
@@ -30,7 +30,7 @@ public abstract class AbstractCMSMFMain implements CMSMFMain {
 	private static AbstractCMSMFMain instance = null;
 
 	protected final ObjectStore objectStore;
-	protected final ContentStreamStore fileSystem;
+	protected final ContentStore fileSystem;
 	protected final DctmSessionManager sessionManager;
 
 	AbstractCMSMFMain() throws Throwable {

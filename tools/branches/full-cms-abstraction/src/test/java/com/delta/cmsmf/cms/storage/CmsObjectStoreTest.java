@@ -336,7 +336,7 @@ public class CmsBaseObjectStoreTest extends AbstractTest {
 										.getType().getName(), t));
 							}
 							continue;
-						} catch (UnsupportedObjectTypeException e) {
+						} catch (UnsupportedDctmObjectTypeException e) {
 							this.log.info(e.getMessage());
 							continue;
 						}
@@ -571,7 +571,7 @@ public class CmsBaseObjectStoreTest extends AbstractTest {
 										.getType().getName(), t));
 							}
 							continue;
-						} catch (UnsupportedObjectTypeException e) {
+						} catch (UnsupportedDctmObjectTypeException e) {
 							this.log.info(e.getMessage());
 							continue;
 						}

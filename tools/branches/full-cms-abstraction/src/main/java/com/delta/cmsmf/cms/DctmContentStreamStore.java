@@ -7,13 +7,13 @@ package com.delta.cmsmf.cms;
 import java.io.File;
 import java.io.IOException;
 
-import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStore;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class DctmContentStreamStore implements ContentStreamStore {
+public class DctmContentStreamStore implements ContentStore {
 
 	private final File baseDir;
 

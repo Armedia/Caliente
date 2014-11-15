@@ -21,7 +21,7 @@ import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfUtils;
-import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
+import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.StorageException;
@@ -160,7 +160,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 		final DctmObjectType type;
 		try {
 			type = DctmObjectType.decodeType(object);
-		} catch (UnsupportedObjectTypeException e) {
+		} catch (UnsupportedDctmObjectTypeException e) {
 			throw new CMSMFException("Unsupported object type", e);
 		}
 		if (type != this.type) { throw new IllegalArgumentException(String.format(
@@ -666,7 +666,7 @@ public abstract class DctmPersistentObject<T extends IDfPersistentObject> {
 		final DctmObjectType targetType;
 		try {
 			targetType = DctmObjectType.decodeType(targetObject);
-		} catch (UnsupportedObjectTypeException e) {
+		} catch (UnsupportedDctmObjectTypeException e) {
 			throw new CMSMFException(String.format("Failed to decode the object type for [%s]", targetObject.getType()
 				.getName()), e);
 		}

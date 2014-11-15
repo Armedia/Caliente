@@ -24,7 +24,7 @@ import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
-import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
@@ -521,7 +521,7 @@ public class DctmDocument extends DctmSysObject<IDfDocument> {
 
 		final String documentId = document.getObjectId().getId();
 		final String contentType = storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE).getValue().toString();
-		final ContentStreamStore fs = context.getContentStreamStore();
+		final ContentStore fs = context.getContentStreamStore();
 		final int contentCount = contentIds.size();
 		final StoredObjectHandler<IDfValue> handler = new StoredObjectHandler<IDfValue>() {
 

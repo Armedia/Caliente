@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
+import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
 import com.delta.cmsmf.exception.CMSMFException;
 
 public class DctmObjectFactory {
@@ -50,7 +50,7 @@ public class DctmObjectFactory {
 	}
 
 	public static DctmPersistentObject<?> newInstance(DctmObjectType t) throws CMSMFException,
-	UnsupportedObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (t == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
 		Class<? extends DctmPersistentObject<?>> klass = DctmObjectFactory.decodeType(t);
 		try {

@@ -3,7 +3,7 @@ package com.delta.cmsmf.cms;
 import org.apache.log4j.Logger;
 
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.documentum.engine.UnsupportedObjectTypeException;
+import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -18,7 +18,7 @@ public abstract class DctmDependencyManager {
 		private final DctmObjectType type;
 		private final String id;
 
-		public Dependency(IDfPersistentObject obj) throws DfException, UnsupportedObjectTypeException {
+		public Dependency(IDfPersistentObject obj) throws DfException, UnsupportedDctmObjectTypeException {
 			this(DctmObjectType.decodeType(obj), obj.getObjectId());
 		}
 
@@ -72,7 +72,7 @@ public abstract class DctmDependencyManager {
 			final DctmObjectType type;
 			try {
 				type = DctmObjectType.decodeType(object);
-			} catch (UnsupportedObjectTypeException e) {
+			} catch (UnsupportedDctmObjectTypeException e) {
 				// Log a warning?
 				this.log.warn(e.getMessage());
 				return false;

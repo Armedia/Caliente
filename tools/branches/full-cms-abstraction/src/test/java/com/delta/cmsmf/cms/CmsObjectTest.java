@@ -64,7 +64,7 @@ public class CmsBaseObjectTest extends AbstractTest {
 									.getType().getName(), t));
 							}
 							continue;
-						} catch (UnsupportedObjectTypeException e) {
+						} catch (UnsupportedDctmObjectTypeException e) {
 							// Object type is not supported
 							this.log.info(e.getMessage());
 							continue;
@@ -119,7 +119,7 @@ public class CmsBaseObjectTest extends AbstractTest {
 									.getType().getName(), t));
 							}
 							continue;
-						} catch (UnsupportedObjectTypeException e) {
+						} catch (UnsupportedDctmObjectTypeException e) {
 							this.log.info(e.getMessage());
 							continue;
 						}

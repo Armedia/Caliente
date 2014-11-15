@@ -31,7 +31,7 @@ import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportListener;
-import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
@@ -77,27 +77,27 @@ public class Exporter extends TransferEngine<ExportEngineListener> {
 		}
 	};
 
-	public Exporter(ObjectStore objectStore, ContentStreamStore fileSystem) {
+	public Exporter(ObjectStore objectStore, ContentStore fileSystem) {
 		super(objectStore, fileSystem);
 	}
 
-	public Exporter(ObjectStore objectStore, ContentStreamStore fileSystem, int threadCount) {
+	public Exporter(ObjectStore objectStore, ContentStore fileSystem, int threadCount) {
 		super(objectStore, fileSystem, threadCount);
 	}
 
-	public Exporter(ObjectStore objectStore, ContentStreamStore fileSystem, int threadCount, int backlogSize) {
+	public Exporter(ObjectStore objectStore, ContentStore fileSystem, int threadCount, int backlogSize) {
 		super(objectStore, fileSystem, threadCount, backlogSize);
 	}
 
-	public Exporter(ObjectStore objectStore, ContentStreamStore fileSystem, Logger output) {
+	public Exporter(ObjectStore objectStore, ContentStore fileSystem, Logger output) {
 		super(objectStore, fileSystem, output);
 	}
 
-	public Exporter(ObjectStore objectStore, ContentStreamStore fileSystem, Logger output, int threadCount) {
+	public Exporter(ObjectStore objectStore, ContentStore fileSystem, Logger output, int threadCount) {
 		super(objectStore, fileSystem, output, threadCount);
 	}
 
-	public Exporter(ObjectStore objectStore, ContentStreamStore fileSystem, Logger output, int threadCount,
+	public Exporter(ObjectStore objectStore, ContentStore fileSystem, Logger output, int threadCount,
 		int backlogSize) {
 		super(objectStore, fileSystem, output, threadCount, backlogSize);
 	}
@@ -129,7 +129,7 @@ public class Exporter extends TransferEngine<ExportEngineListener> {
 		CMSMFException {
 		final IDfSession session = sessionManager.acquireSession();
 		final ObjectStore objectStore = getObjectStore();
-		final ContentStreamStore fileSystem = getContentStreamStore();
+		final ContentStore fileSystem = getContentStreamStore();
 
 		final int threadCount = getThreadCount();
 		final int backlogSize = getBacklogSize();

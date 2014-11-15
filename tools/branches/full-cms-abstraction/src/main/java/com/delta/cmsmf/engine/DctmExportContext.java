@@ -7,9 +7,9 @@ package com.delta.cmsmf.engine;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.documentum.engine.DctmTranslator;
-import com.armedia.cmf.engine.exporter.DefaultExportContext;
+import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportListener;
-import com.armedia.cmf.storage.ContentStreamStore;
+import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredAttributeMapper;
 import com.documentum.fc.client.IDfSession;
@@ -28,7 +28,7 @@ public class DctmExportContext extends DefaultExportContext<IDfSession, IDfValue
 	 * @param fileSystem
 	 * @param output
 	 */
-	public DctmExportContext(String rootId, IDfSession session, ObjectStore objectStore, ContentStreamStore fileSystem,
+	public DctmExportContext(String rootId, IDfSession session, ObjectStore objectStore, ContentStore fileSystem,
 		Logger output, ExportListener listener) {
 		this(rootId, session, objectStore, fileSystem, null, output, listener);
 	}
@@ -41,7 +41,7 @@ public class DctmExportContext extends DefaultExportContext<IDfSession, IDfValue
 	 * @param mapper
 	 * @param output
 	 */
-	public DctmExportContext(String rootId, IDfSession session, ObjectStore objectStore, ContentStreamStore fileSystem,
+	public DctmExportContext(String rootId, IDfSession session, ObjectStore objectStore, ContentStore fileSystem,
 		StoredAttributeMapper mapper, Logger output, ExportListener listener) {
 		super(DctmTranslator.INSTANCE, rootId, session, objectStore, fileSystem, mapper, output, listener);
 	}
