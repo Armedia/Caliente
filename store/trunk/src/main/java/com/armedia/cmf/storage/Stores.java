@@ -111,7 +111,7 @@ public final class Stores {
 			Store dupe = this.stores.get(id);
 			if (dupe != null) { throw new DuplicateStoreException(String.format(
 				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
-				.getCanonicalName())); }
+					.getCanonicalName())); }
 			StoreFactory<?> factory = this.factories.get(name);
 			if (factory == null) { throw new StorageException(String.format(
 				"No factory found for object store class [%s]", name)); }
@@ -176,18 +176,14 @@ public final class Stores {
 		}
 	};
 
-	static {
-		Stores.initialize();
-	}
-
 	protected static StoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
-	JAXBException {
+		JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
 		return Stores.parseConfiguration(settings.toURI().toURL());
 	}
 
 	protected static StoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
-	JAXBException {
+		JAXBException {
 		Reader xml = null;
 		try {
 			xml = new InputStreamReader(settings.openStream());
@@ -283,7 +279,8 @@ public final class Stores {
 	}
 
 	public static ObjectStore<?, ?> createObjectStore(StoreConfiguration configuration) throws StorageException,
-	DuplicateStoreException {
+		DuplicateStoreException {
+		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {
 			return ObjectStore.class.cast(Stores.assertValid(Stores.OBJECT_STORES).createStore(configuration));
@@ -293,7 +290,8 @@ public final class Stores {
 	}
 
 	public static ContentStore createContentStore(StoreConfiguration configuration) throws StorageException,
-	DuplicateStoreException {
+		DuplicateStoreException {
+		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {
 			return ContentStore.class.cast(Stores.assertValid(Stores.CONTENT_STORES).createStore(configuration));
@@ -303,6 +301,7 @@ public final class Stores {
 	}
 
 	public static ObjectStore<?, ?> getObjectStore(String name) {
+		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {
 			return ObjectStore.class.cast(Stores.assertValid(Stores.OBJECT_STORES).getStore(name));
@@ -312,6 +311,7 @@ public final class Stores {
 	}
 
 	public static ContentStore getContentStore(String name) {
+		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {
 			return ContentStore.class.cast(Stores.assertValid(Stores.CONTENT_STORES).getStore(name));
