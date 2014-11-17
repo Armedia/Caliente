@@ -11,7 +11,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.IDfSession;
@@ -22,7 +23,7 @@ import com.documentum.fc.common.IDfValue;
 
 public class DctmMappingUtils {
 
-	private static final Logger LOG = Logger.getLogger(DctmMappingUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DctmMappingUtils.class);
 
 	public static final Set<String> SPECIAL_NAMES;
 	static {
@@ -82,8 +83,8 @@ public class DctmMappingUtils {
 					DctmMappingUtils.REV_MAPPINGS.put(docbase, Collections.unmodifiableMap(reverse));
 					DctmMappingUtils.LOG.info(String.format("User Mapping Substitutions configured for [%s]: %s",
 						docbase, reverse));
-					DctmMappingUtils.LOG.info(String.format("User Mapping Resolutions configured for [%s]: %s", docbase,
-						forward));
+					DctmMappingUtils.LOG.info(String.format("User Mapping Resolutions configured for [%s]: %s",
+						docbase, forward));
 				}
 			}
 		}

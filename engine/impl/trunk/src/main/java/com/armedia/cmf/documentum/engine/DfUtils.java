@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.commons.utilities.Tools;
@@ -24,6 +25,9 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
 public class DfUtils {
+
+	private static final int MIN_BATCH_SIZE = 100;
+	private static final int MAX_BATCH_SIZE = Integer.MAX_VALUE;
 
 	public static enum DbType {
 		//
@@ -48,7 +52,7 @@ public class DfUtils {
 		}
 	}
 
-	private static final Logger LOG = Logger.getLogger(DfUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DfUtils.class);
 
 	private static enum Permission {
 		//
@@ -119,17 +123,47 @@ public class DfUtils {
 	}
 
 	public static IDfCollection executeQuery(IDfSession session, String dql) throws DfException {
-		return DfUtils.executeQuery(session, dql, IDfQuery.DF_QUERY);
+		return DfUtils.executeQuery(session, dql, IDfQuery.DF_QUERY, 0);
 	}
 
 	public static IDfCollection executeQuery(IDfSession session, String dql, int queryType) throws DfException {
+		return DfUtils.executeQuery(session, dql, queryType, 0);
+	}
+
+	public static IDfCollection executeQuery(IDfSession session, String dql, int queryType, int queryBatchSize)
+		throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to execute the DQL on"); }
 		if (dql == null) { throw new IllegalArgumentException("Must provide a DQL statement to execute"); }
+		switch (queryType) {
+			case IDfQuery.DF_APPLY:
+			case IDfQuery.DF_CACHE_QUERY:
+			case IDfQuery.DF_EXEC_QUERY:
+			case IDfQuery.DF_EXECREAD_QUERY:
+			case IDfQuery.DF_GETCONTENT:
+			case IDfQuery.DF_GETEVENTS:
+			case IDfQuery.DF_GETLASTCOLL:
+			case IDfQuery.DF_INTERNAL_READ_QUERY:
+			case IDfQuery.DF_QUERY:
+			case IDfQuery.DF_READ_QUERY:
+				break;
+			default:
+				if (DfUtils.LOG.isDebugEnabled()) {
+					try {
+						throw new IllegalArgumentException();
+					} catch (Throwable t) {
+						DfUtils.LOG.warn(String.format("Unknown query type value [%d] given", queryType), t);
+					}
+				}
+				break;
+		}
 		IDfQuery query = DfUtils.newQuery();
 		if (DfUtils.LOG.isTraceEnabled()) {
 			DfUtils.LOG.trace(String.format("Executing DQL (type=%d):%n%s", queryType, dql));
 		}
 		query.setDQL(dql);
+		if (queryBatchSize > 0) {
+			query.setBatchSize(Tools.ensureBetween(DfUtils.MIN_BATCH_SIZE, queryBatchSize, DfUtils.MAX_BATCH_SIZE));
+		}
 		boolean ok = false;
 		try {
 			IDfCollection ret = query.execute(session, queryType);
@@ -137,7 +171,7 @@ public class DfUtils {
 			return ret;
 		} finally {
 			if (!ok) {
-				DfUtils.LOG.fatal(String.format("Exception raised while executing the query:%n%s", dql));
+				DfUtils.LOG.error(String.format("Exception raised while executing the query:%n%s", dql));
 			}
 		}
 	}
@@ -244,7 +278,7 @@ public class DfUtils {
 	}
 
 	public static ExportTarget getExportTarget(IDfPersistentObject source) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
 		final DctmObjectType type = DctmObjectType.decodeType(source);

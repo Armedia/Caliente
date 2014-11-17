@@ -4,7 +4,8 @@
 
 package com.armedia.cmf.documentum.engine;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -38,7 +39,7 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 		}
 	}
 
-	private static final Logger LOG = Logger.getLogger(DctmSessionFactory.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DctmSessionFactory.class);
 	private static final IDfClient CLIENT;
 
 	static {

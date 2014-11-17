@@ -18,7 +18,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.text.StrTokenizer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
@@ -26,8 +27,6 @@ import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
-import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper;
@@ -74,7 +73,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected static final class TemporaryPermission {
-		private final Logger log = Logger.getLogger(getClass());
+		private final Logger log = LoggerFactory.getLogger(getClass());
 
 		private final String objectId;
 		private final IDfPermit oldPermit;
@@ -83,7 +82,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		private final Set<String> autoRemove;
 
 		public TemporaryPermission(IDfSysObject object, int newPermission, String... newXPermits) throws DfException {
-			this(object, newPermission, (newXPermits == null ? DctmImportSysObject.NO_PERMITS : Arrays.asList(newXPermits)));
+			this(object, newPermission, (newXPermits == null ? DctmImportSysObject.NO_PERMITS : Arrays
+				.asList(newXPermits)));
 		}
 
 		public TemporaryPermission(IDfSysObject object, int newPermission, Collection<String> newXPermits)
@@ -224,7 +224,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected static final class ParentFolderAction implements Comparable<ParentFolderAction> {
-		private final Logger log = Logger.getLogger(getClass());
+		private final Logger log = LoggerFactory.getLogger(getClass());
 
 		private final IDfSysObject parent;
 		private final String parentId;
@@ -404,7 +404,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-	ImportException {
+		ImportException {
 		IDfSession session = object.getSession();
 		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(DctmImportSysObject.TARGET_PATHS,
 			DctmDataType.DF_STRING.getStoredType(), true);
@@ -441,7 +441,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -654,7 +654,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				.getId(), currentPath));
 		}
 
 		return existing;
@@ -751,7 +751,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// that means we have a broken version tree...which is unsupported
 				throw new ImportException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-					.getId(), deferred));
+						.getId(), deferred));
 			}
 		}
 		return history;
