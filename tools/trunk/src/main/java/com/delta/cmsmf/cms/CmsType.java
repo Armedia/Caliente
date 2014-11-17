@@ -36,23 +36,23 @@ public class CmsType extends CmsObject<IDfType> {
 	private static synchronized void initHandlers() {
 		if (CmsType.HANDLERS_READY) { return; }
 		// These are the attributes that require special handling on import
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_COUNT,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING, CmsAttributes.ATTR_COUNT,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_COUNT,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING, CmsAttributes.ATTR_COUNT,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.START_POS,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING, CmsAttributes.START_POS,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.NAME,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING, CmsAttributes.NAME,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.SUPER_NAME,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING, CmsAttributes.SUPER_NAME,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_NAME,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING, CmsAttributes.ATTR_NAME,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_TYPE,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING, CmsAttributes.ATTR_TYPE,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING, CmsAttributes.ATTR_LENGTH,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING, CmsAttributes.ATTR_LENGTH,
 			CmsAttributeHandlers.NO_IMPORT_HANDLER);
-		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.ACL, CmsDataType.DF_STRING,
+		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.TYPE, CmsDataType.DF_STRING,
 			CmsAttributes.ATTR_REPEATING, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 
 		CmsType.HANDLERS_READY = true;
