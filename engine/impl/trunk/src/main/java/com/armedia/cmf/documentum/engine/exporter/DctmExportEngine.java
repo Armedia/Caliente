@@ -18,6 +18,7 @@ import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
+import com.armedia.cmf.documentum.engine.common.Setting;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -45,8 +46,6 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
-
-	private static final String DCTM_DQL = "dql";
 
 	public DctmExportEngine() {
 		Map<DctmObjectType, DctmExportAbstract<?>> m = new EnumMap<DctmObjectType, DctmExportAbstract<?>>(
@@ -88,7 +87,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		if (settings == null) {
 			settings = Collections.emptyMap();
 		}
-		Object dql = settings.get(DctmExportEngine.DCTM_DQL);
+		Object dql = settings.get(Setting.DQL.getLabel());
 		if (dql == null) { throw new Exception(String.format("Must provide the DQL to query with", dql)); }
 		return new DctmExportTargetIterator(DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_EXECREAD_QUERY));
 	}
@@ -171,6 +170,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		return DctmExportEngine.TARGETS;
 	}
 
+	@Override
 	protected String calculateLabel(IDfPersistentObject object) throws Exception {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose contents to analyze"); }
 		return getExportDelegate(object).calculateLabel(object);
