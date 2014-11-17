@@ -182,9 +182,9 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 
 	protected abstract ObjectStorageTranslator<T, V> getTranslator();
 
-	protected abstract SessionFactory<S> newSessionFactory();
+	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg) throws Exception;
 
-	protected abstract ContextFactory<S, T, V, C, ?> newContextFactory(CfgTools cfg);
+	protected abstract ContextFactory<S, T, V, C, ?> newContextFactory(CfgTools cfg) throws Exception;
 
 	protected abstract Set<String> getTargetNames();
 

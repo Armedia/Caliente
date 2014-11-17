@@ -16,7 +16,7 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 
 	private final GenericObjectPool<S> pool;
 
-	private boolean open = false;
+	private boolean open = true;
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -36,29 +36,9 @@ public abstract class SessionFactory<S> implements PoolableObjectFactory<S> {
 		return config;
 	}
 
-	protected SessionFactory() {
+	protected SessionFactory(CfgTools settings) {
 		this.pool = new GenericObjectPool<S>(this);
-	}
-
-	public final void init(CfgTools settings) throws Exception {
-		if (settings == null) { throw new IllegalArgumentException("Must provide the settings to configure with"); }
-		this.lock.writeLock().lock();
-		boolean ok = false;
-		try {
-			if (this.open) {
-				ok = true;
-				throw new Exception("This pool is already open");
-			}
-			doInit(settings);
-			this.pool.setConfig(getPoolConfig(settings));
-			ok = true;
-		} finally {
-			this.open = ok;
-			this.lock.writeLock().unlock();
-		}
-	}
-
-	protected void doInit(CfgTools settings) throws Exception {
+		this.pool.setConfig(getPoolConfig(settings));
 	}
 
 	public final SessionWrapper<S> acquireSession() throws Exception {

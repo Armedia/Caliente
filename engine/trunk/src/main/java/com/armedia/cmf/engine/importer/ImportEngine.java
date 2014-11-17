@@ -42,7 +42,7 @@ import com.armedia.commons.utilities.SynchronizedCounter;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ImportEngineListener> {
+	TransferEngine<S, T, V, C, ImportEngineListener> {
 
 	private class Batch {
 		private final String id;
@@ -186,7 +186,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 
 	public final Map<StoredObjectType, Map<ImportResult, Integer>> runImport(final Logger output,
 		final ObjectStore<?, ?> objectStore, final ContentStore streamStore, Map<String, ?> settings)
-			throws ImportException, StorageException {
+		throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -195,15 +195,21 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 		// objectStore.clearAllMappings();
 
 		final CfgTools configuration = new CfgTools(settings);
-		final ContextFactory<S, T, V, C, ?> contextFactory = newContextFactory(configuration);
-		final SessionFactory<S> sessionFactory = newSessionFactory();
+		final SessionFactory<S> sessionFactory;
 		try {
-			sessionFactory.init(configuration);
+			sessionFactory = newSessionFactory(configuration);
 		} catch (Exception e) {
-			throw new ImportException("Failed to configure the session factory to carry out the export", e);
+			throw new ImportException("Failed to configure the session factory to carry out the import", e);
 		}
 
+		final ContextFactory<S, T, V, C, ?> contextFactory;
 		try {
+			try {
+				contextFactory = newContextFactory(configuration);
+			} catch (Exception e) {
+				throw new ImportException("Failed to configure the context factory to carry out the import", e);
+			}
+
 			final int threadCount;
 			final int backlogSize;
 			synchronized (this) {
@@ -316,10 +322,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 												// other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
 												continue;
 											}
 										} finally {
@@ -389,8 +395,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 						if (!strategy.isParallelCapable()
 							|| (strategy.getBatchingStrategy() == BatchingStrategy.SERIALIZED)) {
 							// If we're not parallelizing AT ALL, or if we're processing batch
-// contents
-							// serially, then we submit batches as a group
+							// contents serially, then we submit batches as a group
 							try {
 								workQueue.put(new Batch(this.batchId, this.contents, strategy));
 							} catch (InterruptedException e) {
@@ -487,17 +492,15 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 					futures.clear();
 					// If we don't support parallelization at any level, then we simply use a single
 					// worker to do everything. Otherwise, the rest of the strategy will dictate how
-// the
-					// parallelism will work (i.e. batches are parallel and their contents
-// serialized,
-					// or batches' contents are parallel and batches are serialized).
+					// the parallelism will work (i.e. batches are parallel and their contents
+					// serialized, or batches' contents are parallel and batches are serialized).
 					final int workerCount = (strategy.isParallelCapable() ? threadCount : 1);
 					for (int i = 0; i < workerCount; i++) {
 						futures.add(executor.submit(worker));
 					}
 
 					this.log
-					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(translator, type, handler);
 					} catch (Exception e) {
@@ -573,10 +576,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
