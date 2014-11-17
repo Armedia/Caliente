@@ -35,7 +35,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine extends
-	ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
+ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
 
@@ -55,7 +55,7 @@ public class DctmImportEngine extends
 	@Override
 	protected ImportOutcome importObject(StoredObject<?> marshaled,
 		ObjectStorageTranslator<IDfPersistentObject, IDfValue> translator, DctmImportContext ctx)
-			throws ImportException, StorageException, StoredValueDecoderException {
+		throws ImportException, StorageException, StoredValueDecoderException {
 		@SuppressWarnings("unchecked")
 		StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		try {
@@ -82,8 +82,8 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected SessionFactory<IDfSession> newSessionFactory() {
-		return new DctmSessionFactory();
+	protected SessionFactory<IDfSession> newSessionFactory(CfgTools config) throws Exception {
+		return new DctmSessionFactory(config);
 	}
 
 	@Override

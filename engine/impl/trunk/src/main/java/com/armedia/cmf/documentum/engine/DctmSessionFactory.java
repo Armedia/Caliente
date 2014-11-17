@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.DfClient;
+import com.documentum.fc.client.DfServiceException;
 import com.documentum.fc.client.IDfClient;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSessionManager;
@@ -67,12 +68,10 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 
 	private final IDfLoginInfo loginInfo = new DfLoginInfo();
 	private final IDfSessionManager sessionManager = DctmSessionFactory.CLIENT.newSessionManager();
-	private String docbase = null;
+	private final String docbase;
 
-	@Override
-	protected void doInit(CfgTools settings) throws Exception {
-		super.doInit(settings);
-
+	public DctmSessionFactory(CfgTools settings) throws DfServiceException {
+		super(settings);
 		final String docbase = settings.getString("docbase");
 		final String username = settings.getString("username");
 		final String password = settings.getString("password");

@@ -158,8 +158,8 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected SessionFactory<IDfSession> newSessionFactory() {
-		return new DctmSessionFactory();
+	protected SessionFactory<IDfSession> newSessionFactory(CfgTools config) throws Exception {
+		return new DctmSessionFactory(config);
 	}
 
 	@Override
