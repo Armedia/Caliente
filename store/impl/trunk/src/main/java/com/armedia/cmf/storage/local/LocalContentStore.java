@@ -54,7 +54,7 @@ public class LocalContentStore extends ContentStore {
 	@Override
 	protected URI doAllocateHandleId(StoredObjectType objectType, String objectId, String qualifier) {
 		try {
-			return new URI(LocalContentStore.SCHEME, this.strategy.calculateSSP(objectType, objectId),
+			return new URI(LocalContentStore.SCHEME, this.strategy.getSSP(objectType, objectId),
 				this.strategy.calculateFragment(objectType, objectId, qualifier));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(
