@@ -483,9 +483,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-								.warn(
-									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-									e);
+									.warn(
+										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+										e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
