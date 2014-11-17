@@ -8,15 +8,12 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
-import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -41,25 +38,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> {
 	private static final String USERS_WITH_DEFAULT_FOLDER = "usersWithDefaultFolder";
 	private static final String USERS_DEFAULT_FOLDER_PATHS = "usersDefaultFolderPaths";
 
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmImportFolder.HANDLERS_READY) { return; }
-		// These are the attributes that require special handling on import
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.R_FOLDER_PATH, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.OBJECT_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		// These attributes can be substituted for values
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-
-		DctmImportFolder.HANDLERS_READY = true;
-	}
-
 	/**
 	 * This DQL will find all users for which this folder is marked as the default folder, and thus
 	 * all users for whom it must be restored later on.
@@ -68,7 +46,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> {
 
 	public DctmImportFolder(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.FOLDER, storedObject);
-		DctmImportFolder.initHandlers();
 	}
 
 	@Override
@@ -215,10 +192,10 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
 					continue;
 				}
 
@@ -237,11 +214,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (ImportException e) {
 					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-									actualUser, this.storedObject.getLabel()), e);
+					.warn(
+						String
+						.format(
+							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+							actualUser, this.storedObject.getLabel()), e);
 				}
 			}
 		}

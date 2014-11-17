@@ -6,9 +6,6 @@ package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.Collection;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
-import com.armedia.cmf.documentum.engine.DctmAttributes;
-import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -23,36 +20,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportType extends DctmExportAbstract<IDfType> {
 
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmExportType.HANDLERS_READY) { return; }
-		// These are the attributes that require special handling on import
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.ATTR_COUNT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.ATTR_COUNT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.START_POS,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.NAME,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.SUPER_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.ATTR_NAME,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.ATTR_TYPE,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.ATTR_LENGTH, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.ATTR_REPEATING, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		DctmExportType.HANDLERS_READY = true;
-	}
-
 	protected DctmExportType(DctmExportEngine engine) {
 		super(engine, DctmObjectType.TYPE);
-		DctmExportType.initHandlers();
 	}
 
 	@Override

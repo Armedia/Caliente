@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
@@ -40,46 +39,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportDocument extends DctmExportSysObject<IDfDocument> implements DctmDocument {
 
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmExportDocument.HANDLERS_READY) { return; }
-		// These are the attributes that require special handling on import
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.I_FOLDER_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.I_ANTECEDENT_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.I_CHRONICLE_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.BINDING_CONDITION, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.BINDING_LABEL, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		// We don't use these, but we should keep them from being copied over
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.LOCAL_FOLDER_LINK, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.REFERENCE_DB_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.REFERENCE_BY_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.REFERENCE_BY_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
-			DctmAttributes.REFRESH_INTERVAL, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		DctmExportDocument.HANDLERS_READY = true;
-	}
-
 	protected DctmExportDocument(DctmExportEngine engine) {
 		super(engine, DctmObjectType.DOCUMENT);
-		DctmExportDocument.initHandlers();
 	}
 
 	@Override

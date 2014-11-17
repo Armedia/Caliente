@@ -4,12 +4,8 @@
 
 package com.armedia.cmf.documentum.engine.importer;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
-import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfSession;
@@ -21,18 +17,9 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportFormat extends DctmImportDelegate<IDfFormat> {
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmImportFormat.HANDLERS_READY) { return; }
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FORMAT, DctmDataType.DF_STRING, DctmAttributes.NAME,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmImportFormat.HANDLERS_READY = true;
-	}
 
 	public DctmImportFormat(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.FORMAT, storedObject);
-		DctmImportFormat.initHandlers();
 	}
 
 	@Override

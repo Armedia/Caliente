@@ -10,15 +10,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
-import com.armedia.cmf.documentum.engine.importer.DctmImportContext;
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -102,28 +99,6 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 	private static final String PERMIT_TYPE = "permitType";
 	private static final String PERMIT_VALUE = "permitValue";
 
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmImportACL.HANDLERS_READY) { return; }
-		// These are the attributes that require special handling on import
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.OBJECT_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_ACCESSOR_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_ACCESSOR_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_IS_GROUP, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_ACCESSOR_XPERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		DctmImportACL.HANDLERS_READY = true;
-	}
-
 	/**
 	 * This DQL will find all users for which this ACL is marked as the default ACL, and thus all
 	 * users for whom it must be restored later on.
@@ -132,7 +107,6 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 
 	protected DctmImportACL(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.ACL, storedObject);
-		DctmImportACL.initHandlers();
 	}
 
 	@Override
@@ -292,11 +266,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 					updateSystemAttributes(user, context);
 				} catch (ImportException e) {
 					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-									user.getUserName(), this.storedObject.getLabel()), e);
+					.warn(
+						String
+						.format(
+							"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+							user.getUserName(), this.storedObject.getLabel()), e);
 				}
 			}
 		}
@@ -385,10 +359,10 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 					if (!exists) {
 						// This shouldn't be necessary
 						this.log
-							.warn(String
-								.format(
-									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-									this.storedObject.getLabel(), name));
+						.warn(String
+							.format(
+								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+								this.storedObject.getLabel(), name));
 						exists = (acl.getSession().getGroup(name) != null);
 						accessorType = "accessor (user or group)";
 					}

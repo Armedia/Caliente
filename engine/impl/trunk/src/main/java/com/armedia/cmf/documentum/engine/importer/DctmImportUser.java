@@ -4,14 +4,10 @@
 
 package com.armedia.cmf.documentum.engine.importer;
 
-import java.util.Collection;
 import java.util.Collections;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmConstant;
-import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
@@ -19,7 +15,6 @@ import com.armedia.cmf.documentum.engine.common.Setting;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.IDfUser;
@@ -33,69 +28,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 
-	static final AttributeHandler USER_NAME_HANDLER = new AttributeHandler() {
-		@Override
-		public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
-			return DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER.getExportableValues(object, attr);
-		}
-
-		@Override
-		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-			throws DfException {
-			return DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER.getImportableValues(object, attribute);
-		}
-
-		@Override
-		public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-			throws DfException {
-			return false;
-		}
-	};
-
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmImportUser.HANDLERS_READY) { return; }
-		// These are the attributes that require special handling on import
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.USER_PASSWORD, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.USER_LOGIN_DOMAIN, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.USER_LOGIN_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.HOME_DOCBASE, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		// We avoid storing these because it'll be the job of other classes to link back
-		// to the users to which they're related. This is CRITICAL to allow us to do a one-pass
-		// import without having to circle back to resolve circular dependencies, or getting
-		// ahead of ourselves in the object creation phase.
-
-		// The default ACL will be linked back when the ACL's are imported.
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING, DctmAttributes.ACL_NAME,
-			DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		// The default group will be linked back when the groups are imported
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.USER_GROUP_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		// The default folder will be linked back when the folders are imported
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.DEFAULT_FOLDER, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		// This will help intercept user names that need to be mapped to "dynamic" names on the
-		// target DB, taken from the session config
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.USER_NAME, DctmImportUser.USER_NAME_HANDLER);
-
-		DctmImportUser.HANDLERS_READY = true;
-	}
-
 	public DctmImportUser(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.USER, storedObject);
-		DctmImportUser.initHandlers();
 	}
 
 	@Override

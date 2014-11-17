@@ -7,8 +7,6 @@ package com.armedia.cmf.documentum.engine.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
@@ -26,7 +24,6 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -34,36 +31,6 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements DctmGroup {
-
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmExportGroup.HANDLERS_READY) { return; }
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.GROUP_ADMIN, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.GROUP_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.GROUPS_NAMES, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-				@Override
-				public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-					throws DfException {
-					return false;
-				}
-
-				@Override
-				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-					throws DfException {
-					return DctmMappingUtils.substituteMappableUsers(object, attr);
-				}
-
-			});
-		DctmExportGroup.HANDLERS_READY = true;
-	}
 
 	/**
 	 * This DQL will find all users for which this group is marked as the default group, and thus
@@ -73,7 +40,6 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 
 	protected DctmExportGroup(DctmExportEngine engine) {
 		super(engine, DctmObjectType.GROUP);
-		DctmExportGroup.initHandlers();
 	}
 
 	@Override

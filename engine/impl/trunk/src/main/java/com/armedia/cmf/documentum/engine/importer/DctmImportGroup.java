@@ -9,8 +9,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
@@ -22,12 +20,10 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -38,36 +34,6 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 
 	private static final String USERS_WITH_DEFAULT_GROUP = "usersWithDefaultGroup";
 
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmImportGroup.HANDLERS_READY) { return; }
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.GROUP_ADMIN, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.GROUP_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.GROUPS_NAMES, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-				throws DfException {
-				return false;
-			}
-
-			@Override
-			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-				throws DfException {
-				return DctmMappingUtils.substituteMappableUsers(object, attr);
-			}
-
-		});
-		DctmImportGroup.HANDLERS_READY = true;
-	}
-
 	/**
 	 * This DQL will find all users for which this group is marked as the default group, and thus
 	 * all users for whom it must be restored later on.
@@ -76,7 +42,6 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 
 	public DctmImportGroup(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.GROUP, storedObject);
-		DctmImportGroup.initHandlers();
 	}
 
 	@Override
@@ -129,10 +94,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(actualUser);
 					this.log
-					.warn(String
-						.format(
-							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-							actualUser, groupName.asString()));
+						.warn(String
+							.format(
+								"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+								actualUser, groupName.asString()));
 					continue;
 				}
 				group.addUser(actualUser);
@@ -147,10 +112,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-							actualGroup, groupName.asString()));
+						.warn(String
+							.format(
+								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
+								actualGroup, groupName.asString()));
 					continue;
 				}
 				group.addGroup(actualGroup);
@@ -168,10 +133,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-							groupName.asString(), actualUser));
+						.warn(String
+							.format(
+								"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+								groupName.asString(), actualUser));
 					continue;
 				}
 				user.setUserGroupName(groupName.asString());
@@ -181,11 +146,11 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> {
 					updateSystemAttributes(user, context);
 				} catch (ImportException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-							actualUser, group.getGroupName()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+									actualUser, group.getGroupName()), e);
 				}
 			}
 		}

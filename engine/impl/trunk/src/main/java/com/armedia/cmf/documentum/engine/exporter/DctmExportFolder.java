@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.armedia.cmf.documentum.engine.DctmAttributeHandlers;
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
@@ -35,25 +34,6 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements DctmFolder {
 
-	private static boolean HANDLERS_READY = false;
-
-	private static synchronized void initHandlers() {
-		if (DctmExportFolder.HANDLERS_READY) { return; }
-		// These are the attributes that require special handling on import
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.R_FOLDER_PATH, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.OBJECT_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		// These attributes can be substituted for values
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
-
-		DctmExportFolder.HANDLERS_READY = true;
-	}
-
 	/**
 	 * This DQL will find all users for which this folder is marked as the default folder, and thus
 	 * all users for whom it must be restored later on.
@@ -62,7 +42,6 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 
 	protected DctmExportFolder(DctmExportEngine engine) {
 		super(engine, DctmObjectType.FOLDER);
-		DctmExportFolder.initHandlers();
 	}
 
 	@Override
