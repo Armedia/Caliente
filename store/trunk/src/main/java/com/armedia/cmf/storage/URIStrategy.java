@@ -16,8 +16,8 @@ public abstract class URIStrategy {
 
 	private static final URIStrategy DEFAULT_STRATEGY = new URIStrategy() {
 		@Override
-		public String calculateSSP(StoredObjectType objectType, String objectId) {
-			return String.format("%s/%s", objectType, objectId);
+		protected String calculateSSP(StoredObjectType objectType, String objectId) {
+			return null;
 		}
 	};
 
@@ -79,5 +79,17 @@ public abstract class URIStrategy {
 		return qualifier;
 	}
 
-	public abstract String calculateSSP(StoredObjectType objectType, String objectId);
+	protected final String getDefaultSSP(StoredObjectType objectType, String objectId) {
+		return String.format("%s/%s", objectType, objectId);
+	}
+
+	protected abstract String calculateSSP(StoredObjectType objectType, String objectId);
+
+	public final String getSSP(StoredObjectType objectType, String objectId) {
+		String ssp = calculateSSP(objectType, objectId);
+		if (ssp == null) {
+			ssp = getDefaultSSP(objectType, objectId);
+		}
+		return ssp;
+	}
 }
