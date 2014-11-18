@@ -130,7 +130,7 @@ public class StoredObject<V> {
 	}
 
 	public final void setProperties(Collection<StoredProperty<V>> properties) {
-		this.attributes.clear();
+		this.properties.clear();
 		for (StoredProperty<V> prop : properties) {
 			setProperty(prop);
 		}
