@@ -80,53 +80,53 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from cmf_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-	"   select object_type, count(*) as total " + //
+		"   select object_type, count(*) as total " + //
 		" from cmf_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-	"    select o.* " + //
+		"    select o.* " + //
 		"  from cmf_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -550,8 +550,6 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		String targetValue) throws SQLException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
-		if ((sourceValue == null) && (targetValue == null)) { throw new IllegalArgumentException(
-			"Must provide a source or target value to search against"); }
 		final QueryRunner qr = new QueryRunner();
 
 		if ((targetValue == null) || (sourceValue == null)) {
@@ -588,7 +586,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
-				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+			.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
 				targetValue));
@@ -658,27 +656,27 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			return new QueryRunner().query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
-					@Override
-					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
-							StoredObjectType.class);
-						while (rs.next()) {
-							String t = rs.getString("object_type");
-							if ((t == null) || rs.wasNull()) {
-								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
-							try {
-								ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
-							} catch (IllegalArgumentException e) {
-								JdbcObjectStore.this.log.warn(String.format(
-									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
+				@Override
+				public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
+					Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
+						StoredObjectType.class);
+					while (rs.next()) {
+						String t = rs.getString("object_type");
+						if ((t == null) || rs.wasNull()) {
+							JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+							continue;
 						}
-						return ret;
+						try {
+							ret.put(StoredObjectType.valueOf(t), rs.getInt("total"));
+						} catch (IllegalArgumentException e) {
+							JdbcObjectStore.this.log.warn(String.format(
+								"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+							continue;
+						}
 					}
-				});
+					return ret;
+				}
+			});
 		} catch (SQLException e) {
 			throw new StorageException("Failed to retrieve the stored object types", e);
 		}
