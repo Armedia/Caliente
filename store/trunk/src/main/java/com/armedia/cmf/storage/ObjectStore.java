@@ -42,6 +42,11 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 		@Override
 		protected Mapping createMapping(StoredObjectType type, String name, String source, String target) {
+			if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
+			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
+			if ((source == null) && (target == null)) { throw new IllegalArgumentException(
+				"Must provide either a source or a target value for the mapping"); }
+
 			O o = this.operation;
 			boolean newOperation = false;
 			if (o == null) {
@@ -53,15 +58,17 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 				}
 			}
 
+			boolean ok = false;
 			try {
 				ObjectStore.this.createMapping(o, type, name, source, target);
+				ok = true;
 			} catch (StorageException e) {
 				throw new RuntimeException(String.format("Failed to create the mapping for [%s::%s(%s->%s)]", type,
 					name, source, target), e);
 			} finally {
 				if (newOperation) {
 					try {
-						o.close();
+						o.close(ok);
 					} catch (StorageException e) {
 						throw new RuntimeException("Failed to complete the operation", e);
 					}
@@ -484,10 +491,8 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		String target) throws StorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
-		if (source == null) { throw new IllegalArgumentException(
-			"Must provide a source value to link to the target value"); }
-		if (target == null) { throw new IllegalArgumentException(
-			"Must provide a target value to link to the source value"); }
+		if ((source == null) && (target == null)) { throw new IllegalArgumentException(
+			"Must provide either a source or a target value for the mapping"); }
 		O o = castOperation(operation);
 		getReadLock().lock();
 		try {
