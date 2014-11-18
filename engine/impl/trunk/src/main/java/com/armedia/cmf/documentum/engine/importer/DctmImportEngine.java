@@ -7,6 +7,7 @@ package com.armedia.cmf.documentum.engine.importer;
 import java.util.Collections;
 import java.util.Set;
 
+import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DctmSessionFactory;
 import com.armedia.cmf.documentum.engine.DctmSessionWrapper;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
@@ -37,6 +38,28 @@ import com.documentum.fc.common.IDfValue;
 public class DctmImportEngine extends
 ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
 
+	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
+		@Override
+		public boolean isIgnored() {
+			return true;
+		}
+
+		@Override
+		public BatchingStrategy getBatchingStrategy() {
+			return null;
+		}
+
+		@Override
+		public boolean isParallelCapable() {
+			return true;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+	};
+
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
 
 	public DctmImportEngine() {
@@ -49,7 +72,9 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {
-		return DctmTranslator.translateType(type).importStrategy;
+		DctmObjectType dctmType = DctmTranslator.translateType(type);
+		if (dctmType == null) { return DctmImportEngine.NOT_SUPPORTED; }
+		return dctmType.importStrategy;
 	}
 
 	@Override
