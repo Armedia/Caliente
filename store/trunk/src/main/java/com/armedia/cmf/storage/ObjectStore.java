@@ -74,6 +74,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 					}
 				}
 			}
+			if ((source == null) || (target == null)) { return null; }
 			return constructMapping(type, name, source, target);
 		}
 
