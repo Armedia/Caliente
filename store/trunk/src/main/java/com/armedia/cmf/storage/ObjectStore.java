@@ -79,6 +79,9 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 		@Override
 		public Mapping getTargetMapping(StoredObjectType type, String name, String source) {
+			if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
+			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
+			if (source == null) { throw new IllegalArgumentException("Must provide a source value for the mapping"); }
 			O o = this.operation;
 			boolean newOperation = false;
 			if (o == null) {
@@ -107,6 +110,9 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 		@Override
 		public Mapping getSourceMapping(StoredObjectType type, String name, String target) {
+			if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
+			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
+			if (target == null) { throw new IllegalArgumentException("Must provide a target value for the mapping"); }
 			O o = this.operation;
 			boolean newOperation = false;
 			if (o == null) {
@@ -162,6 +168,8 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 		@Override
 		public Set<String> getAvailableMappings(StoredObjectType type) {
+			if (type == null) { throw new IllegalArgumentException(
+				"Must provide an object type to find the mappings for"); }
 			O o = this.operation;
 			boolean newOperation = false;
 			if (o == null) {
@@ -190,6 +198,10 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 		@Override
 		public Map<String, String> getMappings(StoredObjectType type, String name) {
+			if (type == null) { throw new IllegalArgumentException(
+				"Must provide an object type to find the mappings for"); }
+			if (name == null) { throw new IllegalArgumentException(
+				"Must provide a mapping name to find the mappings for"); }
 			O o = this.operation;
 			boolean newOperation = false;
 			if (o == null) {
@@ -384,7 +396,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
 		ObjectStorageTranslator<T, V> translator, final StoredObjectType type, Collection<String> ids)
-		throws StorageException, StoredValueDecoderException {
+			throws StorageException, StoredValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must proved an operation to work under"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (translator == null) { throw new IllegalArgumentException(
