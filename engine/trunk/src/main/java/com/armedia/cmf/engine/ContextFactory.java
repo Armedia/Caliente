@@ -16,7 +16,7 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private boolean open = false;
+	private boolean open = true;
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
