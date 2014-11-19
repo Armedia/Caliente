@@ -4,16 +4,15 @@
 
 package com.armedia.cmf.documentum.engine.importer;
 
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
-import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
+import com.armedia.cmf.documentum.engine.common.DctmFolder;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -33,16 +32,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class DctmImportFolder extends DctmImportSysObject<IDfFolder> {
-
-	private static final String USERS_WITH_DEFAULT_FOLDER = "usersWithDefaultFolder";
-	private static final String USERS_DEFAULT_FOLDER_PATHS = "usersDefaultFolderPaths";
-
-	/**
-	 * This DQL will find all users for which this folder is marked as the default folder, and thus
-	 * all users for whom it must be restored later on.
-	 */
-	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = '%s'";
+public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements DctmFolder {
 
 	public DctmImportFolder(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.FOLDER, storedObject);
@@ -90,34 +80,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> {
 		// We return it in zero-padded hex to allow for large numbers (up to 2^64
 		// depth), and also maintain consistent sorting
 		return String.format("%016x", depth);
-	}
-
-	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfFolder folder)
-		throws DfException, ImportException {
-		super.getDataProperties(properties, folder);
-		final String folderId = folder.getObjectId().getId();
-
-		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
-			String.format(DctmImportFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
-		StoredProperty<IDfValue> usersWithDefaultFolder = null;
-		StoredProperty<IDfValue> usersDefaultFolderPaths = null;
-		try {
-			usersWithDefaultFolder = new StoredProperty<IDfValue>(DctmImportFolder.USERS_WITH_DEFAULT_FOLDER,
-				DctmDataType.DF_STRING.getStoredType());
-			usersDefaultFolderPaths = new StoredProperty<IDfValue>(DctmImportFolder.USERS_DEFAULT_FOLDER_PATHS,
-				DctmDataType.DF_STRING.getStoredType());
-			while (resultCol.next()) {
-				// TODO: This probably should not be done for special users
-				usersWithDefaultFolder.addValue(DctmMappingUtils.substituteMappableUsers(folder,
-					resultCol.getValueAt(0)));
-				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
-			}
-			properties.add(usersWithDefaultFolder);
-			properties.add(usersDefaultFolderPaths);
-		} finally {
-			DfUtils.closeQuietly(resultCol);
-		}
 	}
 
 	private TemporaryPermission mainTemporaryPermission = null;
@@ -192,10 +154,10 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> {
 				final IDfUser user = session.getUser(actualUser);
 				if (user == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
+						.warn(String
+							.format(
+								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+								this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
 					continue;
 				}
 
@@ -214,11 +176,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> {
 					updateSystemAttributes(user, context);
 				} catch (ImportException e) {
 					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-							actualUser, this.storedObject.getLabel()), e);
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+									actualUser, this.storedObject.getLabel()), e);
 				}
 			}
 		}

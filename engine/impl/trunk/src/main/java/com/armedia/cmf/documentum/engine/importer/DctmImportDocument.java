@@ -6,7 +6,6 @@ package com.armedia.cmf.documentum.engine.importer;
 
 import java.io.File;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,6 +17,8 @@ import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
+import com.armedia.cmf.documentum.engine.common.DctmDocument;
+import com.armedia.cmf.documentum.engine.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StorageException;
@@ -26,7 +27,6 @@ import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
@@ -34,8 +34,6 @@ import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
-import com.documentum.fc.client.distributed.IDfReference;
-import com.documentum.fc.client.distributed.impl.ReferenceFinder;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -46,9 +44,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class DctmImportDocument extends DctmImportSysObject<IDfDocument> {
-
-	private static final String CONTENTS = "contents";
+public class DctmImportDocument extends DctmImportSysObject<IDfDocument> implements DctmDocument {
 
 	private TemporaryPermission antecedentTemporaryPermission = null;
 	private TemporaryPermission branchTemporaryPermission = null;
@@ -91,32 +87,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> {
 	@Override
 	protected String calculateBatchId(IDfDocument document) throws DfException {
 		return document.getChronicleId().getId();
-	}
-
-	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfDocument document)
-		throws DfException, ImportException {
-		super.getDataProperties(properties, document);
-
-		if (!isDfReference(document)) { return; }
-		final IDfSession session = document.getSession();
-
-		// TODO: this is untidy - using an undocumented API??
-		IDfReference ref = ReferenceFinder.getForMirrorId(document.getObjectId(), session);
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingCondition())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingLabel())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(),
-			false, DfValueFactory.newIdValue(ref.getReferenceById())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceByName())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL, DctmDataType.DF_INTEGER
-			.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
 	}
 
 	@Override
@@ -203,7 +173,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> {
 			referenceById.asString())); }
 
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
-		IDfValue mainFolderAtt = this.storedObject.getProperty(DctmImportSysObject.TARGET_PARENTS).getValue();
+		IDfValue mainFolderAtt = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS).getValue();
 		Mapping m = context.getAttributeMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
 			DctmAttributes.R_OBJECT_ID, mainFolderAtt.asString());
 		if (m == null) { throw new ImportException(String.format(
@@ -315,7 +285,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> {
 
 		// Now, create the content the contents
 		Set<String> contentIds = new HashSet<String>();
-		for (IDfValue contentId : storedObject.getProperty(DctmImportDocument.CONTENTS)) {
+		for (IDfValue contentId : storedObject.getProperty(DctmDocument.CONTENTS)) {
 			contentIds.add(contentId.asString());
 		}
 

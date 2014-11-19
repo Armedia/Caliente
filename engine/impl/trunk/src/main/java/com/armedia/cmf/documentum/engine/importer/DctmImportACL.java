@@ -5,17 +5,15 @@
 package com.armedia.cmf.documentum.engine.importer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
-import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
-import com.armedia.cmf.documentum.engine.DfValueFactory;
+import com.armedia.cmf.documentum.engine.common.DctmACL;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -24,11 +22,8 @@ import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfACLException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
-import com.documentum.fc.client.IDfPersistentObject;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
@@ -39,7 +34,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class DctmImportACL extends DctmImportDelegate<IDfACL> {
+public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL {
 
 	private static class Permit implements Comparable<Permit> {
 		private final String name;
@@ -57,11 +52,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 		private Permit(IDfSession session, DctmImportACL aclDelegate, int pos) throws DfException {
 			StoredObject<IDfValue> acl = aclDelegate.storedObject;
 			StoredProperty<IDfValue> prop = null;
-			prop = acl.getProperty(DctmImportACL.ACCESSORS);
+			prop = acl.getProperty(DctmACL.ACCESSORS);
 			this.name = DctmMappingUtils.resolveMappableUser(session, prop.getValue(pos).asString());
-			prop = acl.getProperty(DctmImportACL.PERMIT_TYPE);
+			prop = acl.getProperty(DctmACL.PERMIT_TYPE);
 			this.type = prop.getValue(pos).asInteger();
-			prop = acl.getProperty(DctmImportACL.PERMIT_VALUE);
+			prop = acl.getProperty(DctmACL.PERMIT_VALUE);
 			this.value = prop.getValue(pos).asString();
 			this.typeStr = DfUtils.decodePermitType(this.type);
 		}
@@ -93,17 +88,6 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 			return String.format("Permit [name=%s, type=%s, value=%s]", this.name, this.typeStr, this.value);
 		}
 	}
-
-	private static final String USERS_WITH_DEFAULT_ACL = "usersWithDefaultACL";
-	private static final String ACCESSORS = "accessors";
-	private static final String PERMIT_TYPE = "permitType";
-	private static final String PERMIT_VALUE = "permitValue";
-
-	/**
-	 * This DQL will find all users for which this ACL is marked as the default ACL, and thus all
-	 * users for whom it must be restored later on.
-	 */
-	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
 	protected DctmImportACL(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.ACL, storedObject);
@@ -149,7 +133,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 
 		// Now, count the permits
 		IDfList existingPermits = acl.getPermissions();
-		StoredProperty<IDfValue> prop = this.storedObject.getProperty(DctmImportACL.ACCESSORS);
+		StoredProperty<IDfValue> prop = this.storedObject.getProperty(DctmACL.ACCESSORS);
 		if (existingPermits.getCount() != prop.getValueCount()) {
 			// The permit counts have to be identical...
 			return false;
@@ -169,70 +153,6 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfACL acl) throws DfException {
-		final String aclId = acl.getObjectId().getId();
-		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
-			String.format(DctmImportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
-		StoredProperty<IDfValue> property = null;
-		try {
-			property = new StoredProperty<IDfValue>(DctmImportACL.USERS_WITH_DEFAULT_ACL,
-				DctmDataType.DF_STRING.getStoredType());
-			while (resultCol.next()) {
-				property.addValue(resultCol.getValueAt(0));
-			}
-			properties.add(property);
-		} finally {
-			DfUtils.closeQuietly(resultCol);
-		}
-
-		StoredProperty<IDfValue> accessors = new StoredProperty<IDfValue>(DctmImportACL.ACCESSORS,
-			DctmDataType.DF_STRING.getStoredType(), true);
-		StoredProperty<IDfValue> permitTypes = new StoredProperty<IDfValue>(DctmImportACL.PERMIT_TYPE,
-			DctmDataType.DF_INTEGER.getStoredType(), true);
-		StoredProperty<IDfValue> permitValues = new StoredProperty<IDfValue>(DctmImportACL.PERMIT_VALUE,
-			DctmDataType.DF_STRING.getStoredType(), true);
-		IDfList permits = acl.getPermissions();
-		final int permitCount = permits.getCount();
-		final IDfSession session = acl.getSession();
-		Set<String> missingAccessors = new HashSet<String>();
-		for (int i = 0; i < permitCount; i++) {
-			IDfPermit p = IDfPermit.class.cast(permits.get(i));
-			// First, validate the accessor
-			final String accessor = p.getAccessorName();
-			final boolean group;
-			switch (p.getPermitType()) {
-				case IDfPermit.DF_REQUIRED_GROUP:
-				case IDfPermit.DF_REQUIRED_GROUP_SET:
-					group = true;
-					break;
-
-				default:
-					group = false;
-					break;
-			}
-
-			IDfPersistentObject o = (group ? session.getGroup(accessor) : session.getUser(accessor));
-			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessor)) {
-				// Accessor not there, skip it...
-				if (!missingAccessors.contains(accessor)) {
-					this.log.warn(String.format(
-						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)",
-						this.storedObject.getLabel(), (group ? "group" : "user"), accessor));
-					missingAccessors.add(accessor);
-				}
-				continue;
-			}
-
-			accessors.addValue(DfValueFactory.newStringValue(DctmMappingUtils.substituteMappableUsers(acl, accessor)));
-			permitTypes.addValue(DfValueFactory.newIntValue(p.getPermitType()));
-			permitValues.addValue(DfValueFactory.newStringValue(p.getPermitValueString()));
-		}
-		properties.add(accessors);
-		properties.add(permitValues);
-		properties.add(permitTypes);
-	}
-
-	@Override
 	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context) throws DfException {
 		if (newObject) {
 			String user = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME).getValue().asString();
@@ -241,8 +161,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 			acl.setObjectName(this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
 			acl.save();
 		}
-		StoredProperty<IDfValue> usersWithDefaultACL = this.storedObject
-			.getProperty(DctmImportACL.USERS_WITH_DEFAULT_ACL);
+		StoredProperty<IDfValue> usersWithDefaultACL = this.storedObject.getProperty(DctmACL.USERS_WITH_DEFAULT_ACL);
 		if (usersWithDefaultACL != null) {
 			final IDfSession session = acl.getSession();
 			for (IDfValue value : DctmMappingUtils.resolveMappableUsers(acl, usersWithDefaultACL)) {
@@ -310,15 +229,15 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> {
 		}
 
 		// Now, apply the new permissions
-		StoredProperty<IDfValue> accessors = this.storedObject.getProperty(DctmImportACL.ACCESSORS);
+		StoredProperty<IDfValue> accessors = this.storedObject.getProperty(DctmACL.ACCESSORS);
 		if (this.log.isTraceEnabled()) {
 			this.log.trace(String.format("[%s]: %s", this.storedObject.getLabel(), accessors));
 		}
-		StoredProperty<IDfValue> permitTypes = this.storedObject.getProperty(DctmImportACL.PERMIT_TYPE);
+		StoredProperty<IDfValue> permitTypes = this.storedObject.getProperty(DctmACL.PERMIT_TYPE);
 		if (this.log.isTraceEnabled()) {
 			this.log.trace(String.format("[%s]: %s", this.storedObject.getLabel(), permitTypes));
 		}
-		StoredProperty<IDfValue> permitValues = this.storedObject.getProperty(DctmImportACL.PERMIT_VALUE);
+		StoredProperty<IDfValue> permitValues = this.storedObject.getProperty(DctmACL.PERMIT_VALUE);
 		if (this.log.isTraceEnabled()) {
 			this.log.trace(String.format("[%s]: %s", this.storedObject.getLabel(), permitValues));
 		}

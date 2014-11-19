@@ -28,7 +28,6 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
-import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -334,10 +333,6 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	}
 
 	protected abstract T locateInCms(DctmImportContext context) throws ImportException, DfException;
-
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-		ImportException {
-	}
 
 	/**
 	 * <p>

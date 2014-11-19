@@ -12,12 +12,16 @@ import java.util.List;
 import java.util.Set;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
+import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
+import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredProperty;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -35,8 +39,40 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstract<T> implements DctmSysObject {
 
+	private static final String VERSION_HISTORY = "version_history";
+
 	protected DctmExportSysObject(DctmExportEngine engine, DctmObjectType type) {
 		super(engine, type);
+	}
+
+	@Override
+	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
+	ExportException {
+		IDfSession session = object.getSession();
+		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PATHS,
+			DctmDataType.DF_STRING.getStoredType(), true);
+		properties.add(paths);
+		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PARENTS,
+			DctmDataType.DF_ID.getStoredType(), true);
+		properties.add(parents);
+
+		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
+		for (int i = 0; i < parentCount; i++) {
+			final IDfValue folderId = object.getRepeatingValue(DctmAttributes.I_FOLDER_ID, i);
+			final IDfFolder parent;
+			try {
+				parent = session.getFolderBySpecification(folderId.asId().getId());
+			} catch (DfIdNotFoundException e) {
+				this.log.warn(String.format("%s [%s](%s) references non-existent folder [%s]", object.getType()
+					.getName(), object.getObjectName(), object.getObjectId().getId(), folderId.asString()));
+				continue;
+			}
+			parents.addValue(folderId);
+			final int pathCount = parent.getFolderPathCount();
+			for (int p = 0; p < pathCount; p++) {
+				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(p)));
+			}
+		}
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
@@ -91,7 +127,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 
 		// Using the chronicle ID here guarantees that the same version history will be retrieved
 		// regardless of which branch of the tree we make the query on
-		String cachedName = String.format("%s[%s]", DctmSysObject.VERSION_HISTORY, object.getChronicleId().getId());
+		String cachedName = String.format("%s[%s]", DctmExportSysObject.VERSION_HISTORY, object.getChronicleId()
+			.getId());
 
 		// Retrieve the version history for the object from the context, if it exists
 		@SuppressWarnings("unchecked")
@@ -149,7 +186,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 				// that means we have a broken version tree...which is unsupported
 				throw new ExportException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-					.getId(), deferred));
+						.getId(), deferred));
 			}
 		}
 		ctx.setObject(cachedName, history);

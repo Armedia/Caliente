@@ -4,7 +4,6 @@
 
 package com.armedia.cmf.documentum.engine.exporter;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
@@ -47,29 +46,21 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 		return group.getGroupName();
 	}
 
-	private Collection<IDfValue> getUsersWithDefaultGroup(IDfGroup group) throws DfException {
-		IDfCollection resultCol = DfUtils.executeQuery(group.getSession(),
-			String.format(DctmExportGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()),
-			IDfQuery.DF_EXECREAD_QUERY);
-		try {
-			Collection<IDfValue> ret = new ArrayList<IDfValue>();
-			while (resultCol.next()) {
-				ret.add(resultCol.getValueAt(0));
-			}
-			return ret;
-		} finally {
-			DfUtils.closeQuietly(resultCol);
-		}
-	}
-
 	@Override
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfGroup group)
 		throws DfException {
 		// Store all the users that have this group as their default group
 		StoredProperty<IDfValue> property = new StoredProperty<IDfValue>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
-		for (IDfValue v : getUsersWithDefaultGroup(group)) {
-			property.addValue(v);
+		IDfCollection resultCol = DfUtils.executeQuery(group.getSession(),
+			String.format(DctmExportGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()),
+			IDfQuery.DF_EXECREAD_QUERY);
+		try {
+			while (resultCol.next()) {
+				property.addValue(resultCol.getValueAt(0));
+			}
+		} finally {
+			DfUtils.closeQuietly(resultCol);
 		}
 	}
 
@@ -172,10 +163,9 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 		// Avoid calling DQL twice
 		StoredProperty<IDfValue> property = marshaled.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
 		Iterable<IDfValue> it = property;
-		if (property == null) {
-			// IF the property hasn't been set, we do the DQL...
-			it = getUsersWithDefaultGroup(group);
-		}
+		if (property == null) { throw new Exception(String.format(
+			"The export for group [%s] does not contain the critical property [%s]", marshaled.getLabel(),
+			DctmGroup.USERS_WITH_DEFAULT_GROUP)); }
 
 		for (IDfValue v : it) {
 			if (DctmMappingUtils.isMappableUser(session, v.asString())) {

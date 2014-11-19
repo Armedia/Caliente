@@ -22,11 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
-import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DfUtils;
-import com.armedia.cmf.documentum.engine.DfValueFactory;
+import com.armedia.cmf.documentum.engine.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper;
@@ -34,11 +33,9 @@ import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -52,16 +49,14 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
-public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> {
+public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
+	DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
 	private static final Collection<String> NO_PERMITS = Collections.emptySet();
 
-	protected static final String BRANCH_MARKER = "contents";
-
-	protected static final String TARGET_PATHS = "targetPaths";
-	protected static final String TARGET_PARENTS = "targetParents";
+	protected static final String BRANCH_MARKER = "branchMarker";
 
 	private static final Set<String> AUTO_PERMITS;
 
@@ -403,33 +398,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-		ImportException {
-		IDfSession session = object.getSession();
-		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(DctmImportSysObject.TARGET_PATHS,
-			DctmDataType.DF_STRING.getStoredType(), true);
-		properties.add(paths);
-		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(DctmImportSysObject.TARGET_PARENTS,
-			DctmDataType.DF_ID.getStoredType(), true);
-		properties.add(parents);
-		for (IDfValue folderId : this.storedObject.getAttribute(DctmAttributes.I_FOLDER_ID)) {
-			final IDfFolder parent;
-			try {
-				parent = session.getFolderBySpecification(folderId.asId().getId());
-			} catch (DfIdNotFoundException e) {
-				this.log.warn(String.format("%s [%s](%s) references non-existent folder [%s]", this.storedObject
-					.getType().name(), this.storedObject.getLabel(), this.storedObject.getId(), folderId.asString()));
-				continue;
-			}
-			parents.addValue(folderId);
-			int pathCount = parent.getFolderPathCount();
-			for (int i = 0; i < pathCount; i++) {
-				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(i)));
-			}
-		}
-	}
-
-	@Override
 	protected void prepareOperation(T sysObject, boolean newObject) throws DfException, ImportException {
 		if (!isTransitoryObject(sysObject)) {
 			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
@@ -654,7 +622,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-				.getId(), currentPath));
+					.getId(), currentPath));
 		}
 
 		return existing;

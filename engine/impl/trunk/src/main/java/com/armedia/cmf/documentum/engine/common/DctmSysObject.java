@@ -10,6 +10,7 @@ package com.armedia.cmf.documentum.engine.common;
  */
 public interface DctmSysObject {
 
-	static final String VERSION_HISTORY = "version_history";
+	static final String TARGET_PATHS = "targetPaths";
+	static final String TARGET_PARENTS = "targetParents";
 
 }
