@@ -6,6 +6,7 @@ package com.armedia.cmf.documentum.engine.importer;
 
 import org.slf4j.Logger;
 
+import com.armedia.cmf.documentum.engine.DctmObjectType;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.common.DctmSpecialValues;
 import com.armedia.cmf.engine.importer.ImportContext;
@@ -41,5 +42,14 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfPersistentOb
 
 	public final boolean isSpecialType(String type) {
 		return this.specialValues.isSpecialType(type);
+	}
+
+	@Override
+	protected boolean isSurrogateType(StoredObjectType rootType, StoredObjectType target) {
+		DctmObjectType dctmRootType = DctmTranslator.translateType(rootType);
+		if (dctmRootType == null) { return false; }
+		DctmObjectType dctmTarget = DctmTranslator.translateType(target);
+		if (dctmTarget == null) { return false; }
+		return dctmTarget.getSurrogateOf().contains(dctmRootType) || super.isSurrogateType(rootType, target);
 	}
 }
