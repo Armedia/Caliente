@@ -54,6 +54,24 @@ public class SettingContainer {
 	@XmlTransient
 	private SettingContainer parent = null;
 
+	public SettingContainer() {
+	}
+
+	protected SettingContainer(SettingContainer pattern) {
+		if (pattern == null) { throw new IllegalArgumentException("Must provide an object to copy state from"); }
+		this.setting = new ArrayList<Setting>();
+		if (pattern.setting != null) {
+			this.setting.addAll(pattern.setting);
+		}
+		this.settings = new HashMap<String, String>(pattern.settings);
+		if (pattern.settings != null) {
+			this.settings.putAll(pattern.settings);
+		}
+		if (pattern.parent != null) {
+			this.parent = pattern.parent.clone();
+		}
+	}
+
 	protected void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
 		this.settings = new LinkedHashMap<String, String>();
 		if (this.setting != null) {
@@ -87,12 +105,17 @@ public class SettingContainer {
 	@SuppressWarnings("unchecked")
 	public final Map<String, String> getEffectiveSettings() {
 		final Map<String, String> m = new HashMap<String, String>();
-		Tools.overlayMaps(m, (this.parent != null ? this.parent.getSettings() : null), getSettings());
+		Tools.overlayMaps(m, (this.parent != null ? this.parent.getEffectiveSettings() : null), getSettings());
 		StrSubstitutor sub = new StrSubstitutor(new Lookup(m));
 		// We make a copy of the keys to avoid concurrent modification errors
 		for (String k : new HashSet<String>(m.keySet())) {
 			m.put(k, sub.replace(m.get(k)));
 		}
 		return m;
+	}
+
+	@Override
+	public SettingContainer clone() {
+		return new SettingContainer(this);
 	}
 }

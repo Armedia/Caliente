@@ -35,6 +35,7 @@ public final class Stores {
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	private final Map<String, StoreFactory<?>> factories;
 	private final Map<String, Store> stores = new HashMap<String, Store>();
+	private final Map<String, StoreConfiguration> configurations = new HashMap<String, StoreConfiguration>();
 
 	private final String type;
 
@@ -111,12 +112,13 @@ public final class Stores {
 			Store dupe = this.stores.get(id);
 			if (dupe != null) { throw new DuplicateStoreException(String.format(
 				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
-					.getCanonicalName())); }
+				.getCanonicalName())); }
 			StoreFactory<?> factory = this.factories.get(name);
 			if (factory == null) { throw new StorageException(String.format(
 				"No factory found for object store class [%s]", name)); }
 			Store instance = factory.newInstance(configuration);
 			this.stores.put(id, instance);
+			this.configurations.put(id, configuration);
 			return instance;
 		} finally {
 			l.unlock();
@@ -130,6 +132,20 @@ public final class Stores {
 		l.lock();
 		try {
 			return this.stores.get(name);
+		} finally {
+			l.unlock();
+		}
+	}
+
+	private StoreConfiguration getConfiguration(String name) {
+		assertOpen();
+		if (name == null) { throw new IllegalArgumentException(
+			"Must provide the name of the store configuration to retrieve"); }
+		Lock l = this.lock.readLock();
+		l.lock();
+		try {
+			StoreConfiguration cfg = this.configurations.get(name);
+			return (cfg != null ? cfg.clone() : null);
 		} finally {
 			l.unlock();
 		}
@@ -177,13 +193,13 @@ public final class Stores {
 	};
 
 	protected static StoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
-		JAXBException {
+	JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
 		return Stores.parseConfiguration(settings.toURI().toURL());
 	}
 
 	protected static StoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
-		JAXBException {
+	JAXBException {
 		Reader xml = null;
 		try {
 			xml = new InputStreamReader(settings.openStream());
@@ -279,7 +295,7 @@ public final class Stores {
 	}
 
 	public static ObjectStore<?, ?> createObjectStore(StoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
+	DuplicateStoreException {
 		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {
@@ -290,11 +306,21 @@ public final class Stores {
 	}
 
 	public static ContentStore createContentStore(StoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
+	DuplicateStoreException {
 		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {
 			return ContentStore.class.cast(Stores.assertValid(Stores.CONTENT_STORES).createStore(configuration));
+		} finally {
+			Stores.LOCK.readLock().unlock();
+		}
+	}
+
+	public static StoreConfiguration getObjectStoreConfiguration(String name) {
+		Stores.initialize();
+		Stores.LOCK.readLock().lock();
+		try {
+			return Stores.assertValid(Stores.OBJECT_STORES).getConfiguration(name);
 		} finally {
 			Stores.LOCK.readLock().unlock();
 		}
@@ -305,6 +331,16 @@ public final class Stores {
 		Stores.LOCK.readLock().lock();
 		try {
 			return ObjectStore.class.cast(Stores.assertValid(Stores.OBJECT_STORES).getStore(name));
+		} finally {
+			Stores.LOCK.readLock().unlock();
+		}
+	}
+
+	public static StoreConfiguration getContentStoreConfiguration(String name) {
+		Stores.initialize();
+		Stores.LOCK.readLock().lock();
+		try {
+			return Stores.assertValid(Stores.CONTENT_STORES).getConfiguration(name);
 		} finally {
 			Stores.LOCK.readLock().unlock();
 		}
