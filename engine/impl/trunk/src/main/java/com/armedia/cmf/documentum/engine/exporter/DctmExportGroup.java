@@ -59,6 +59,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 			while (resultCol.next()) {
 				property.addValue(resultCol.getValueAt(0));
 			}
+			properties.add(property);
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
