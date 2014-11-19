@@ -59,6 +59,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-transformer-api</artifactId>
+			<version>0.0.1</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>commons-pool</groupId>
 			<artifactId>commons-pool</artifactId>
 			<version>1.6</version>
