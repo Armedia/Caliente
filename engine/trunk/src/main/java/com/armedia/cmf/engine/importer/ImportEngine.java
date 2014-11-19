@@ -413,7 +413,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								this.contents = null;
 								this.batchId = null;
 							}
-						} else if (strategy.getBatchingStrategy() == BatchingStrategy.PARALLEL) {
+						} else if ((strategy.getBatchingStrategy() == null)
+							|| (strategy.getBatchingStrategy() == BatchingStrategy.PARALLEL)) {
 							// Batch items are to be run in parallel, waiting for all of them to
 							// complete before we return
 							batchCounter.setValue(0);
@@ -494,7 +495,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 					// worker to do everything. Otherwise, the rest of the strategy will dictate how
 					// the parallelism will work (i.e. batches are parallel and their contents
 					// serialized, or batches' contents are parallel and batches are serialized).
-					final int workerCount = (strategy.isParallelCapable() ? threadCount : 1);
+					final int workerCount = (strategy.isParallelCapable() ? Math.min(total, threadCount) : 1);
 					for (int i = 0; i < workerCount; i++) {
 						futures.add(executor.submit(worker));
 					}
