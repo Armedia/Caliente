@@ -775,29 +775,25 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void doClearAllObjects(JdbcOperation operation) throws StorageException {
+	protected final void doClearAllObjects(JdbcOperation operation) throws StorageException {
+		// Allow for subclasses to implement optimized clearing operations
+		if (doOptimizedClearAllObjects(operation)) { return; }
 		Connection c = operation.getConnection();
 		try {
 			DatabaseMetaData dmd = c.getMetaData();
 			ResultSet rs = null;
+			Set<String> tableNames = new TreeSet<String>();
 			try {
 				rs = dmd.getTables(null, null, "CMF_%", new String[] {
 					"TABLE"
 				});
-				QueryRunner qr = new QueryRunner();
 				while (rs.next()) {
-					String tableName = rs.getString("TABLE_NAME");
-					if (this.log.isTraceEnabled()) {
-						this.log.trace("Deleting all records from [%s]", tableName);
-					}
-					qr.update(c, String.format("delete from %s", tableName));
-					if (this.log.isTraceEnabled()) {
-						this.log.trace("Records in [%s] deleted", tableName);
-					}
+					tableNames.add(rs.getString("TABLE_NAME"));
 				}
 			} finally {
 				DbUtils.closeQuietly(rs);
 			}
+			doClearTables(operation, tableNames);
 		} catch (SQLException e) {
 			throw new StorageException("SQLException caught while removing all objects", e);
 		}
@@ -900,6 +896,27 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			return true;
 		} catch (SQLException e) {
 			throw new StorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
+		}
+	}
+
+	protected boolean doOptimizedClearAllObjects(JdbcOperation operation) throws StorageException {
+		// This method exists in case there is a faster way to clear out the database schema
+		return false;
+	}
+
+	protected void doClearTables(JdbcOperation operation, Set<String> tableNames) throws SQLException {
+		// TODO: We can probably find a way to do this using TRUNCATE TABLE, but there are many
+		// db-specific nuances to account for, so we'll defer that for later...
+		final Connection c = operation.getConnection();
+		QueryRunner qr = new QueryRunner();
+		for (String tableName : tableNames) {
+			if (this.log.isTraceEnabled()) {
+				this.log.trace("Deleting all records from [%s]", tableName);
+			}
+			qr.update(c, String.format("delete from %s", tableName));
+			if (this.log.isTraceEnabled()) {
+				this.log.trace("Records in [%s] deleted", tableName);
+			}
 		}
 	}
 }
