@@ -99,13 +99,20 @@ public enum DctmObjectType {
 		this.batchingStrategy = batchingStrategy;
 		this.supportsBatching = supportsBatching;
 		this.failureInterruptsBatch = failureInterruptsBatch;
-		Set<Object> s = new TreeSet<Object>();
+		Set<Object> s = null;
 		if (surrogateOf != null) {
+			s = new TreeSet<Object>();
 			for (DctmObjectType t : surrogateOf) {
-				s.add(t);
+				if (t != null) {
+					s.add(t);
+				}
 			}
 		}
-		this.surrogateOf = Collections.unmodifiableSet(s);
+		if ((s == null) || s.isEmpty()) {
+			this.surrogateOf = Collections.emptySet();
+		} else {
+			this.surrogateOf = Collections.unmodifiableSet(s);
+		}
 	}
 
 	public final StoredObjectType getStoredObjectType() {
@@ -116,7 +123,7 @@ public enum DctmObjectType {
 		return !this.surrogateOf.isEmpty();
 	}
 
-	public final Set<?> getSurrogateOf() {
+	public final Set<Object> getSurrogateOf() {
 		return this.surrogateOf;
 	}
 
@@ -132,7 +139,7 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}
