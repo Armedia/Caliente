@@ -13,6 +13,8 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.commons.io.FileUtils;
+
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -94,5 +96,16 @@ public class LocalContentStore extends ContentStore {
 	@Override
 	protected boolean isSupportsFileAccess() {
 		return true;
+	}
+
+	@Override
+	protected void doClearAllStreams() {
+		for (File f : this.baseDir.listFiles()) {
+			try {
+				FileUtils.deleteDirectory(f);
+			} catch (IOException e) {
+				// Ignore it, keep going
+			}
+		}
 	}
 }
