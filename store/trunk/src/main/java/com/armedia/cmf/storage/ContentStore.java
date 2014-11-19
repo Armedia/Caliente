@@ -365,6 +365,16 @@ public abstract class ContentStore extends Store {
 		}
 	}
 
+	public final void clearAllStreams() {
+		getWriteLock().lock();
+		try {
+			assertOpen();
+			doClearAllStreams();
+		} finally {
+			getWriteLock().unlock();
+		}
+	}
+
 	protected abstract URI doAllocateHandleId(StoredObjectType objectType, String objectId, String qualifier);
 
 	protected abstract File doGetFile(URI uri);
@@ -376,4 +386,6 @@ public abstract class ContentStore extends Store {
 	protected abstract boolean doIsExists(URI uri);
 
 	protected abstract long doGetStreamSize(URI uri);
+
+	protected abstract void doClearAllStreams();
 }
