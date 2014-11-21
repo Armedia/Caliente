@@ -4,6 +4,8 @@
 
 package com.armedia.cmf.engine.importer;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
@@ -36,19 +39,27 @@ import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.SynchronizedCounter;
 
 /**
  * @author diego
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ImportEngineListener> {
+	TransferEngine<S, T, V, C, ImportEngineListener> {
+
+	private static enum BatchStatus {
+		//
+		PENDING,
+		PROCESSED,
+		ABORTED;
+	}
 
 	private class Batch {
 		private final String id;
 		private final Collection<StoredObject<?>> contents;
 		private final ImportStrategy strategy;
+		private BatchStatus status = BatchStatus.PENDING;
+		private Throwable thrown = null;
 
 		private Batch() {
 			this(null, null, null);
@@ -60,12 +71,28 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 			this.strategy = strategy;
 		}
 
+		private synchronized void markCompleted() {
+			if (this.status == BatchStatus.PENDING) {
+				this.status = BatchStatus.PROCESSED;
+				notify();
+			}
+		}
+
+		private synchronized void markAborted(Throwable thrown) {
+			if (this.status == BatchStatus.PENDING) {
+				this.status = BatchStatus.ABORTED;
+				this.thrown = thrown;
+				notify();
+			}
+		}
+
 		@Override
 		public String toString() {
-			return String.format(
-				"Batch [id=%s, strategy.parallel=%s, strategy.batching=%s, strategy.failRemainder=%s, contents=%s]",
-				this.id, this.strategy.isParallelCapable(), this.strategy.getBatchingStrategy(),
-				this.strategy.isBatchFailRemainder(), this.contents);
+			return String
+				.format(
+					"Batch [id=%s, status=%s, strategy.parallel=%s, strategy.batching=%s, strategy.failRemainder=%s, contents=%s]",
+					this.id, this.status, this.strategy.isParallelCapable(), this.strategy.getBatchingStrategy(),
+					this.strategy.isBatchFailRemainder(), this.contents);
 		}
 	}
 
@@ -192,7 +219,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
-			throws ImportException, StorageException {
+		throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -224,6 +251,8 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 			}
 
 			final AtomicInteger activeCounter = new AtomicInteger(0);
+			final AtomicLong batchCounter = new AtomicLong(0);
+			final Object workerSynchronizer = new Object();
 			final Batch exitValue = new Batch();
 			final BlockingQueue<Batch> workQueue = new ArrayBlockingQueue<Batch>(backlogSize);
 			final ExecutorService executor = newExecutor(threadCount);
@@ -231,7 +260,6 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 				counter = new StoredObjectCounter<ImportResult>(ImportResult.class);
 			}
 			final ImportListenerDelegator listenerDelegator = new ImportListenerDelegator(counter);
-			final SynchronizedCounter batchCounter = new SynchronizedCounter(0);
 
 			// First things first, validate that valid strategies are returned for every object type
 			// that will be imported
@@ -241,14 +269,17 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 				@Override
 				public void run() {
 					activeCounter.incrementAndGet();
+					synchronized (workerSynchronizer) {
+						workerSynchronizer.notify();
+					}
 					SessionWrapper<S> session = null;
 					try {
 						while (!Thread.interrupted()) {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug("Polling the queue...");
 							}
-							final Batch batch;
 							// increase the waiter count
+							final Batch batch;
 							try {
 								batch = workQueue.take();
 							} catch (InterruptedException e) {
@@ -265,6 +296,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 								// Shouldn't happen, but still
 								this.log.warn(String.format("An invalid value made it into the work queue somehow: %s",
 									batch));
+								batch.markCompleted();
 								continue;
 							}
 
@@ -275,8 +307,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 								session = sessionFactory.acquireSession();
 							} catch (Exception e) {
 								this.log.error("Failed to obtain a worker session", e);
-								return;
+								batch.markAborted(e);
+								continue;
 							}
+
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format("Got session [%s]", session.getId()));
 							}
@@ -336,19 +370,24 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 												// other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
+												batch.markAborted(t);
 												continue;
 											}
 										} finally {
-											batchCounter.increment();
+											batchCounter.incrementAndGet();
+											synchronized (workerSynchronizer) {
+												workerSynchronizer.notify();
+											}
 										}
 									} finally {
 										ctx.close();
 									}
 								}
+								batch.markCompleted();
 							} finally {
 								// Paranoid...yes :)
 								session.close();
@@ -357,6 +396,9 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 					} finally {
 						this.log.debug("Worker exiting...");
 						activeCounter.decrementAndGet();
+						synchronized (workerSynchronizer) {
+							workerSynchronizer.notify();
+						}
 						// Just in case
 						if (session != null) {
 							session.close();
@@ -407,9 +449,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 						// We will have already validated that a valid strategy is provided for all
 						// stored types
 						if (!strategy.isParallelCapable()
-							|| (strategy.getBatchingStrategy() == BatchingStrategy.SERIALIZED)) {
+							|| (strategy.getBatchingStrategy() == BatchingStrategy.ITEMS_SERIALIZED)) {
 							// If we're not parallelizing AT ALL, or if we're processing batch
-							// contents serially, then we submit batches as a group
+							// contents serially (but whole batches in parallel), then we submit
+							// batches as a group, and don't wait
 							try {
 								workQueue.put(new Batch(this.batchId, this.contents, strategy));
 							} catch (InterruptedException e) {
@@ -428,15 +471,22 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 								this.batchId = null;
 							}
 						} else if ((strategy.getBatchingStrategy() == null)
-							|| (strategy.getBatchingStrategy() == BatchingStrategy.PARALLEL)) {
-							// Batch items are to be run in parallel, waiting for all of them to
-							// complete before we return
-							batchCounter.setValue(0);
+							|| (strategy.getBatchingStrategy() == BatchingStrategy.ITEMS_CONCURRENT)) {
+							// Batch items are to be run in parallel. If the strategy is null,
+							// then we don't wait and simply fire every item off in its own
+							// individual batch. Otherwise, batch items are to be run in parallel,
+							// but batches themselves are to be serialized, so we have to wait until
+							// each batch is concluded before we return
+							batchCounter.set(0);
+							final int contentSize = this.contents.size();
+							List<Batch> batches = new ArrayList<Batch>(this.contents.size());
 							for (StoredObject<?> o : this.contents) {
 								List<StoredObject<?>> l = new ArrayList<StoredObject<?>>(1);
 								l.add(o);
 								try {
-									workQueue.put(new Batch(this.batchId, l, strategy));
+									Batch batch = new Batch(this.batchId, l, strategy);
+									batches.add(batch);
+									workQueue.put(batch);
 								} catch (InterruptedException e) {
 									Thread.currentThread().interrupt();
 									String msg = String.format(
@@ -451,20 +501,53 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 									return false;
 								}
 							}
-							try {
-								batchCounter.waitForValue(this.contents.size());
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-								String msg = String.format(
-									"Thread interrupted while trying to submit the batch %s containing [%s]",
-									this.batchId, this.contents);
-								if (this.log.isDebugEnabled()) {
-									this.log.warn(msg, e);
-								} else {
-									this.log.warn(msg);
+
+							if (strategy.getBatchingStrategy() != null) {
+								// We need to wait until the batch has been processed in its
+								// entirety, or no more workers waiting...
+								try {
+									synchronized (workerSynchronizer) {
+										while ((activeCounter.get() > 0) && (batchCounter.get() < contentSize)) {
+											workerSynchronizer.wait();
+										}
+										workerSynchronizer.notify();
+									}
+									if (batchCounter.get() < contentSize) {
+										// We didn't process all contents...the workers exited
+										// early...so report the status
+										StringBuilder b = new StringBuilder();
+										for (Batch batch : batches) {
+											if (b.length() > 0) {
+												b.append(String.format("%n"));
+											}
+											b.append(String.format("Batch [%s] %s with contents: %s", batch.id,
+												batch.status, batch.contents));
+											if (batch.thrown != null) {
+												StringWriter sw = new StringWriter();
+												PrintWriter pw = new PrintWriter(sw);
+												batch.thrown.printStackTrace(pw);
+												b.append(String.format("%n%s", sw.toString()));
+											}
+										}
+										this.log.warn(String.format("Workers exited early%n%s", b.toString()));
+										// if the workers exited early, we should also probably
+										// abort the import
+										return false;
+									}
+								} catch (InterruptedException e) {
+									Thread.currentThread().interrupt();
+									String msg = String
+										.format(
+											"Thread interrupted while waiting for work to complete for batch %s containing [%s]",
+											this.batchId, this.contents);
+									if (this.log.isDebugEnabled()) {
+										this.log.warn(msg, e);
+									} else {
+										this.log.warn(msg);
+									}
+									// Thread is interrupted, take that as a sign to terminate
+									return false;
 								}
-								// Thread is interrupted, take that as a sign to terminate
-								return false;
 							}
 						}
 						// TODO: Perhaps check the error threshold
@@ -515,7 +598,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 					}
 
 					this.log
-					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(translator, type, handler);
 					} catch (Exception e) {
@@ -602,10 +685,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
