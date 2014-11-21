@@ -36,7 +36,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine extends
-ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
+	ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -80,7 +80,7 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	@Override
 	protected ImportOutcome importObject(StoredObject<?> marshaled,
 		ObjectStorageTranslator<IDfPersistentObject, IDfValue> translator, DctmImportContext ctx)
-		throws ImportException, StorageException, StoredValueDecoderException {
+			throws ImportException, StorageException, StoredValueDecoderException {
 		@SuppressWarnings("unchecked")
 		StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		try {
@@ -114,5 +114,14 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	@Override
 	protected Set<String> getTargetNames() {
 		return DctmImportEngine.TARGETS;
+	}
+
+	@Override
+	protected boolean abortImport(StoredObjectType type, int errors) {
+		if (type == StoredObjectType.DATASTORE) {
+			// We MUST have all datastores present
+			return (errors == 0);
+		}
+		return super.abortImport(type, errors);
 	}
 }

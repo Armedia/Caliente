@@ -18,6 +18,8 @@ public class DctmImportDelegateFactory {
 				return new DctmImportACL(engine, marshaled);
 			case DOCUMENT:
 				return new DctmImportDocument(engine, marshaled);
+			case STORE:
+				return new DctmImportStore(engine, marshaled);
 			case FOLDER:
 				return new DctmImportFolder(engine, marshaled);
 			case FORMAT:
