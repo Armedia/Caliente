@@ -171,7 +171,7 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 	}
 
 	protected final void setContentQualifier(StoredObject<V> marshaled, String qualifier) {
-		StoredProperty<V> p = new StoredProperty<>(TransferEngine.CONTENT_QUALIFIER, StoredDataType.STRING, true);
+		StoredProperty<V> p = new StoredProperty<V>(TransferEngine.CONTENT_QUALIFIER, StoredDataType.STRING, true);
 		p.setValue(getValue(StoredDataType.STRING, qualifier));
 		marshaled.setProperty(p);
 	}
