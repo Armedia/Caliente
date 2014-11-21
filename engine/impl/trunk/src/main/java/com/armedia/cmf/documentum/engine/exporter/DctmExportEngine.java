@@ -138,7 +138,10 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to marshal"); }
 		try {
 			return getExportDelegate(object).marshal(session, object);
-		} catch (DfException | UnsupportedDctmObjectTypeException e) {
+		} catch (DfException e) {
+			throw new ExportException(String.format("Exception raised while marshaling object [%s]",
+				getObjectId(object)), e);
+		} catch (UnsupportedDctmObjectTypeException e) {
 			throw new ExportException(String.format("Exception raised while marshaling object [%s]",
 				getObjectId(object)), e);
 		}
@@ -184,7 +187,9 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	protected ExportTarget getExportTarget(IDfPersistentObject object) throws ExportException {
 		try {
 			return DfUtils.getExportTarget(object);
-		} catch (DfException | UnsupportedDctmObjectTypeException e) {
+		} catch (DfException e) {
+			throw new ExportException("Failed to generate the export target", e);
+		} catch (UnsupportedDctmObjectTypeException e) {
 			throw new ExportException("Failed to generate the export target", e);
 		}
 	}
