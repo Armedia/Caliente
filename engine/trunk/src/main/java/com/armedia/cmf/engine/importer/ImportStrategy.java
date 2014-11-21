@@ -2,7 +2,7 @@ package com.armedia.cmf.engine.importer;
 
 public interface ImportStrategy {
 
-	public static enum BatchingStrategy {
+	public static enum BatchItemStrategy {
 		/**
 		 * Batches' contents must be processed serially, but multiple batches may be processed in
 		 * parallel
@@ -37,7 +37,20 @@ public interface ImportStrategy {
 	 * @return the mode of operation for processing batch contents, or {@code null} if batching
 	 *         should be ignored.
 	 */
-	public BatchingStrategy getBatchingStrategy();
+	public BatchItemStrategy getBatchItemStrategy();
+
+	/**
+	 * <p>
+	 * Returns {@code true} if batches are independent of each other, {@code false} otherwise. Note
+	 * that it only makes sense for this method to return {@code true} if
+	 * {@link #getBatchItemStrategy()} returns {@link BatchItemStrategy#ITEMS_CONCURRENT}, because
+	 * only under that strategy does it make sense that the failure of one batch lead to not
+	 * processing the next one(s).
+	 * </p>
+	 *
+	 * @return {@code true} if batches are independent of each other, {@code false} otherwise
+	 */
+	public boolean isBatchIndependent();
 
 	/**
 	 * <p>

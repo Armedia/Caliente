@@ -28,7 +28,7 @@ import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
-import com.armedia.cmf.engine.importer.ImportStrategy.BatchingStrategy;
+import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.ObjectStore;
@@ -91,7 +91,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			return String
 				.format(
 					"Batch [id=%s, status=%s, strategy.parallel=%s, strategy.batching=%s, strategy.failRemainder=%s, contents=%s]",
-					this.id, this.status, this.strategy.isParallelCapable(), this.strategy.getBatchingStrategy(),
+					this.id, this.status, this.strategy.isParallelCapable(), this.strategy.getBatchItemStrategy(),
 					this.strategy.isBatchFailRemainder(), this.contents);
 		}
 	}
@@ -292,30 +292,31 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								return;
 							}
 
-							if ((batch == null) || (batch.contents == null) || batch.contents.isEmpty()) {
-								// Shouldn't happen, but still
-								this.log.warn(String.format("An invalid value made it into the work queue somehow: %s",
-									batch));
-								batch.markCompleted();
-								continue;
-							}
-
-							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Polled a batch with %d items", batch.contents.size()));
-							}
 							try {
-								session = sessionFactory.acquireSession();
-							} catch (Exception e) {
-								this.log.error("Failed to obtain a worker session", e);
-								batch.markAborted(e);
-								continue;
-							}
+								if ((batch == null) || (batch.contents == null) || batch.contents.isEmpty()) {
+									// Shouldn't happen, but still
+									this.log.warn(String.format(
+										"An invalid value made it into the work queue somehow: %s", batch));
+									batch.markCompleted();
+									continue;
+								}
 
-							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Got session [%s]", session.getId()));
-							}
+								if (this.log.isDebugEnabled()) {
+									this.log
+										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+								}
+								try {
+									session = sessionFactory.acquireSession();
+								} catch (Exception e) {
+									this.log.error("Failed to obtain a worker session", e);
+									batch.markAborted(e);
+									return;
+								}
 
-							try {
+								if (this.log.isDebugEnabled()) {
+									this.log.debug(String.format("Got session [%s]", session.getId()));
+								}
+
 								boolean failBatch = false;
 								for (StoredObject<?> next : batch.contents) {
 									if (failBatch) {
@@ -366,8 +367,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 											// Log the error, move on
 											this.log.error(String.format("Exception caught processing %s", next), t);
 											if (batch.strategy.isBatchFailRemainder()) {
-												// If we're supposed to kill the batch, fail all the
-												// other objects
+												// If we're supposed to kill the batch, fail all
+												// the other objects
 												failBatch = true;
 												this.log
 													.debug(String
@@ -377,11 +378,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 												batch.markAborted(t);
 												continue;
 											}
-										} finally {
-											batchCounter.incrementAndGet();
-											synchronized (workerSynchronizer) {
-												workerSynchronizer.notify();
-											}
 										}
 									} finally {
 										ctx.close();
@@ -389,9 +385,15 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								}
 								batch.markCompleted();
 							} finally {
-								// Paranoid...yes :)
-								session.close();
+								if (session != null) {
+									session.close();
+								}
+								batchCounter.incrementAndGet();
+								synchronized (workerSynchronizer) {
+									workerSynchronizer.notify();
+								}
 							}
+
 						}
 					} finally {
 						this.log.debug("Worker exiting...");
@@ -449,7 +451,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 						// We will have already validated that a valid strategy is provided for all
 						// stored types
 						if (!strategy.isParallelCapable()
-							|| (strategy.getBatchingStrategy() == BatchingStrategy.ITEMS_SERIALIZED)) {
+							|| (strategy.getBatchItemStrategy() == BatchItemStrategy.ITEMS_SERIALIZED)) {
 							// If we're not parallelizing AT ALL, or if we're processing batch
 							// contents serially (but whole batches in parallel), then we submit
 							// batches as a group, and don't wait
@@ -470,8 +472,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								this.contents = null;
 								this.batchId = null;
 							}
-						} else if ((strategy.getBatchingStrategy() == null)
-							|| (strategy.getBatchingStrategy() == BatchingStrategy.ITEMS_CONCURRENT)) {
+						} else if ((strategy.getBatchItemStrategy() == null)
+							|| (strategy.getBatchItemStrategy() == BatchItemStrategy.ITEMS_CONCURRENT)) {
 							// Batch items are to be run in parallel. If the strategy is null,
 							// then we don't wait and simply fire every item off in its own
 							// individual batch. Otherwise, batch items are to be run in parallel,
@@ -502,7 +504,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								}
 							}
 
-							if (strategy.getBatchingStrategy() != null) {
+							if (strategy.getBatchItemStrategy() != null) {
 								// We need to wait until the batch has been processed in its
 								// entirety, or no more workers waiting...
 								try {
@@ -512,9 +514,15 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 										}
 										workerSynchronizer.notify();
 									}
-									if (batchCounter.get() < contentSize) {
-										// We didn't process all contents...the workers exited
-										// early...so report the status
+									// Check the result
+									boolean hasError = false;
+									for (Batch batch : batches) {
+										if ((batch.thrown != null) || (batch.status == BatchStatus.ABORTED)) {
+											hasError = true;
+											break;
+										}
+									}
+									if (hasError) {
 										StringBuilder b = new StringBuilder();
 										for (Batch batch : batches) {
 											if (b.length() > 0) {
@@ -523,6 +531,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 											b.append(String.format("Batch [%s] %s with contents: %s", batch.id,
 												batch.status, batch.contents));
 											if (batch.thrown != null) {
+												hasError = true;
 												StringWriter sw = new StringWriter();
 												PrintWriter pw = new PrintWriter(sw);
 												batch.thrown.printStackTrace(pw);
@@ -530,8 +539,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 											}
 										}
 										this.log.warn(String.format("Workers exited early%n%s", b.toString()));
-										// if the workers exited early, we should also probably
-										// abort the import
 										return false;
 									}
 								} catch (InterruptedException e) {
