@@ -488,7 +488,7 @@ DctmSysObject {
 		}
 		aclDomain = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, aclDomain));
 
-		String aclName = stored.getAttribute(DctmAttributes.ACL_NAME).getValue().asString();
+		String aclName = DfUtils.sqlQuoteString(stored.getAttribute(DctmAttributes.ACL_NAME).getValue().asString());
 
 		IDfTime modifyDate = modifyDateAtt.getValue().asTime();
 		IDfTime creationDate = creationDateAtt.getValue().asTime();
@@ -508,10 +508,10 @@ DctmSysObject {
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
-		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate.getDate(), session), modifierName, DfUtils
-			.generateSqlDateClause(creationDate.getDate(), session), creatorName, DfUtils.sqlQuoteString(aclName),
-			DfUtils.sqlQuoteString(aclDomain), (deletedAtt.getValue().asBoolean() ? 1 : 0), vstampFlag, DfUtils
-				.sqlQuoteString(sysObject.getObjectId().getId()));
+		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate.getDate(), session), modifierName,
+			DfUtils.generateSqlDateClause(creationDate.getDate(), session), creatorName, aclName, aclDomain,
+			(deletedAtt.getValue().asBoolean() ? 1 : 0), vstampFlag,
+			DfUtils.sqlQuoteString(sysObject.getObjectId().getId()));
 	}
 
 	/**
