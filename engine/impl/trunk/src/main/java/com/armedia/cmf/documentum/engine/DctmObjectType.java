@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.armedia.cmf.engine.importer.ImportStrategy;
-import com.armedia.cmf.engine.importer.ImportStrategy.BatchingStrategy;
+import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
@@ -28,18 +28,18 @@ public enum DctmObjectType {
 
 	STORE(StoredObjectType.DATASTORE, IDfStore.class),
 	USER(StoredObjectType.USER, IDfUser.class),
-	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchingStrategy.ITEMS_SERIALIZED),
+	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
 	ACL(StoredObjectType.ACL, IDfACL.class),
-	TYPE(StoredObjectType.TYPE, IDfType.class, BatchingStrategy.ITEMS_CONCURRENT, null, true, false),
+	TYPE(StoredObjectType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
-	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchingStrategy.ITEMS_CONCURRENT, null, true, false),
-	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchingStrategy.ITEMS_SERIALIZED, null, true, true),
+	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
+	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
 	CONTENT(StoredObjectType.CONTENT_STREAM, IDfContent.class, "dmr_content", DOCUMENT);
 
 	private final StoredObjectType cmsType;
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
-	private final BatchingStrategy batchingStrategy;
+	private final BatchItemStrategy batchingStrategy;
 	private final boolean supportsBatching;
 	private final boolean failureInterruptsBatch;
 	private final Set<Object> surrogateOf;
@@ -51,7 +51,7 @@ public enum DctmObjectType {
 		}
 
 		@Override
-		public BatchingStrategy getBatchingStrategy() {
+		public BatchItemStrategy getBatchItemStrategy() {
 			if (!DctmObjectType.this.supportsBatching) { return null; }
 			return DctmObjectType.this.batchingStrategy;
 		}
@@ -66,6 +66,12 @@ public enum DctmObjectType {
 		public boolean isBatchFailRemainder() {
 			return DctmObjectType.this.failureInterruptsBatch;
 		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			// For now, eventually we'll do something different
+			return true;
+		}
 	};
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
@@ -79,17 +85,17 @@ public enum DctmObjectType {
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		BatchingStrategy batchingStrategy, DctmObjectType... surrogateOf) {
+		BatchItemStrategy batchingStrategy, DctmObjectType... surrogateOf) {
 		this(cmsType, dfClass, batchingStrategy, null, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		BatchingStrategy batchingStrategy, String dmType, DctmObjectType... surrogateOf) {
+		BatchItemStrategy batchingStrategy, String dmType, DctmObjectType... surrogateOf) {
 		this(cmsType, dfClass, batchingStrategy, dmType, false, false, surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		BatchingStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
+		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
 		DctmObjectType... surrogateOf) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
@@ -141,7 +147,7 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}
