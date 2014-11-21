@@ -73,6 +73,17 @@ public final class Stores {
 		if (!this.open.get()) { throw new IllegalStateException("This Stores manager has already been closed"); }
 	}
 
+	private void initConfigurations(URL config, Collection<StoreConfiguration> storeConfigurations) {
+		this.lock.writeLock().lock();
+		try {
+			for (StoreConfiguration storeCfg : storeConfigurations) {
+				this.configurations.put(storeCfg.getId(), storeCfg);
+			}
+		} finally {
+			this.lock.writeLock().unlock();
+		}
+	}
+
 	private void initStores(URL config, Collection<StoreConfiguration> storeConfigurations) {
 		this.lock.writeLock().lock();
 		try {
@@ -213,7 +224,7 @@ public final class Stores {
 		return XmlTools.unmarshal(StoreDefinitions.class, "stores.xsd", xml);
 	}
 
-	public static void initialize() {
+	public static void initialize(boolean configOnly) {
 		Stores.LOCK.writeLock().lock();
 		try {
 			// If we're already initialized, dump out
@@ -254,12 +265,25 @@ public final class Stores {
 					IOUtils.closeQuietly(r);
 				}
 
-				Stores.OBJECT_STORES.initStores(config, cfg.getObjectStores());
-				Stores.CONTENT_STORES.initStores(config, cfg.getContentStores());
+				if (configOnly) {
+					Stores.OBJECT_STORES.initConfigurations(config, cfg.getObjectStores());
+					Stores.CONTENT_STORES.initConfigurations(config, cfg.getContentStores());
+				} else {
+					Stores.OBJECT_STORES.initStores(config, cfg.getObjectStores());
+					Stores.CONTENT_STORES.initStores(config, cfg.getContentStores());
+				}
 			}
 		} finally {
 			Stores.LOCK.writeLock().unlock();
 		}
+	}
+
+	public static void initializeConfigurations() {
+		Stores.initialize(true);
+	}
+
+	public static void initialize() {
+		Stores.initialize(false);
 	}
 
 	private static boolean doClose() {
