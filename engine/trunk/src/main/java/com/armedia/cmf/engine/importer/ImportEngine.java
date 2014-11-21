@@ -31,6 +31,7 @@ import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectCounter;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
@@ -42,7 +43,7 @@ import com.armedia.commons.utilities.SynchronizedCounter;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ImportEngineListener> {
+	TransferEngine<S, T, V, C, ImportEngineListener> {
 
 	private class Batch {
 		private final String id;
@@ -72,8 +73,8 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 
 		private final Collection<ImportEngineListener> listeners = getListeners();
 
-		private ImportListenerDelegator() {
-			super(ImportResult.class);
+		private ImportListenerDelegator(StoredObjectCounter<ImportResult> counter) {
+			super(counter);
 		}
 
 		@Override
@@ -117,7 +118,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 
 		@Override
 		public void objectImportCompleted(StoredObject<?> object, ImportOutcome outcome) {
-			getCounter().increment(object.getType(), outcome.getResult());
+			getStoredObjectCounter().increment(object.getType(), outcome.getResult());
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectImportCompleted(object, outcome);
@@ -131,7 +132,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 
 		@Override
 		public void objectImportFailed(StoredObject<?> object, Throwable thrown) {
-			getCounter().increment(object.getType(), ImportResult.FAILED);
+			getStoredObjectCounter().increment(object.getType(), ImportResult.FAILED);
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectImportFailed(object, thrown);
@@ -170,11 +171,11 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 		}
 
 		private void objectTypeImportFinished(StoredObjectType objectType) {
-			objectTypeImportFinished(objectType, getCounter().getCounters(objectType));
+			objectTypeImportFinished(objectType, getStoredObjectCounter().getCounters(objectType));
 		}
 
 		private void importFinished() {
-			importFinished(getCounter().getCummulative());
+			importFinished(getStoredObjectCounter().getCummulative());
 		}
 
 	}
@@ -184,9 +185,14 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 	protected abstract ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<T, V> translator,
 		C ctx) throws ImportException, StorageException, StoredValueDecoderException;
 
-	public final Map<StoredObjectType, Map<ImportResult, Integer>> runImport(final Logger output,
-		final ObjectStore<?, ?> objectStore, final ContentStore streamStore, Map<String, ?> settings)
-			throws ImportException, StorageException {
+	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
+		final ContentStore streamStore, Map<String, ?> settings) throws ImportException, StorageException {
+		return runImport(output, objectStore, streamStore, settings, null);
+	}
+
+	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
+		final ContentStore streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
+		throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -221,7 +227,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 			final Batch exitValue = new Batch();
 			final BlockingQueue<Batch> workQueue = new ArrayBlockingQueue<Batch>(backlogSize);
 			final ExecutorService executor = newExecutor(threadCount);
-			final ImportListenerDelegator listenerDelegator = new ImportListenerDelegator();
+			if (counter == null) {
+				counter = new StoredObjectCounter<ImportResult>(ImportResult.class);
+			}
+			final ImportListenerDelegator listenerDelegator = new ImportListenerDelegator(counter);
 			final SynchronizedCounter batchCounter = new SynchronizedCounter(0);
 
 			// First things first, validate that valid strategies are returned for every object type
@@ -327,10 +336,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 												// other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
 												continue;
 											}
 										} finally {
@@ -506,7 +515,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 					}
 
 					this.log
-					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(translator, type, handler);
 					} catch (Exception e) {
@@ -581,17 +590,17 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 						Thread.currentThread().interrupt();
 					}
 				}
-				return listenerDelegator.getCounters();
+				return listenerDelegator.getStoredObjectCounter();
 			} finally {
 				executor.shutdownNow();
 				int pending = activeCounter.get();
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);

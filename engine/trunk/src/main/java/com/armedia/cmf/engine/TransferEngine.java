@@ -32,13 +32,12 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 
 		private final StoredObjectCounter<R> counter;
 
-		protected ListenerDelegator(Class<R> resultClass) {
-			if (resultClass == null) { throw new IllegalArgumentException(
-				"Must provide the type of result to categorize by"); }
-			this.counter = new StoredObjectCounter<R>(resultClass);
+		protected ListenerDelegator(StoredObjectCounter<R> counter) {
+			if (counter == null) { throw new IllegalArgumentException("Must provide a counter"); }
+			this.counter = counter;
 		}
 
-		protected final StoredObjectCounter<R> getCounter() {
+		public final StoredObjectCounter<R> getStoredObjectCounter() {
 			return this.counter;
 		}
 

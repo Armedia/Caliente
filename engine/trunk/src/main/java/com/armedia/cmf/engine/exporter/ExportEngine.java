@@ -31,6 +31,7 @@ import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectCounter;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValueEncoderException;
@@ -43,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ExportEngineListener> {
+TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -62,13 +63,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 		private final Collection<ExportEngineListener> listeners = getListeners();
 
-		private ExportListenerDelegator() {
-			super(ExportResult.class);
+		private ExportListenerDelegator(StoredObjectCounter<ExportResult> counter) {
+			super(counter);
 		}
 
 		@Override
 		public void exportStarted(Map<String, ?> exportSettings) {
-			getCounter().reset();
+			getStoredObjectCounter().reset();
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.exportStarted(exportSettings);
@@ -95,7 +96,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 		@Override
 		public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
-			getCounter().increment(object.getType(), ExportResult.EXPORTED);
+			getStoredObjectCounter().increment(object.getType(), ExportResult.EXPORTED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.objectExportCompleted(object, objectNumber);
@@ -109,7 +110,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 		@Override
 		public void objectSkipped(StoredObjectType objectType, String objectId) {
-			getCounter().increment(objectType, ExportResult.SKIPPED);
+			getStoredObjectCounter().increment(objectType, ExportResult.SKIPPED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.objectSkipped(objectType, objectId);
@@ -123,7 +124,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 		@Override
 		public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
-			getCounter().increment(objectType, ExportResult.FAILED);
+			getStoredObjectCounter().increment(objectType, ExportResult.FAILED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.objectExportFailed(objectType, objectId, thrown);
@@ -273,9 +274,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		return new Result(ret, marshaled);
 	}
 
-	public final Map<StoredObjectType, Map<ExportResult, Integer>> runExport(final Logger output,
-		final ObjectStore<?, ?> objectStore, final ContentStore contentStore, Map<String, ?> settings)
-		throws ExportException, StorageException {
+	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
+		final ContentStore contentStore, Map<String, ?> settings) throws ExportException, StorageException {
+		return runExport(output, objectStore, contentStore, settings, null);
+	}
+
+	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
+		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -313,7 +319,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			final ExportTarget exitValue = new ExportTarget();
 			final BlockingQueue<ExportTarget> workQueue = new ArrayBlockingQueue<ExportTarget>(backlogSize);
 			final ExecutorService executor = newExecutor(threadCount);
-			final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator();
+			if (counter == null) {
+				counter = new StoredObjectCounter<ExportResult>(ExportResult.class);
+			}
+			final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
 
 			Runnable worker = new Runnable() {
 				private final Logger log = ExportEngine.this.log;
@@ -489,9 +498,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-									.warn(
-										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-										e);
+								.warn(
+									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+									e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -528,7 +537,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 						Thread.currentThread().interrupt();
 					}
 				}
-				return listenerDelegator.getCounters();
+				return listenerDelegator.getStoredObjectCounter();
 			} finally {
 				baseSession.close(false);
 
@@ -545,10 +554,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
