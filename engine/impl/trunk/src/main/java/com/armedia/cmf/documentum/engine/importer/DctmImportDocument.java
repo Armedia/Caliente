@@ -131,9 +131,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		// Using the chronicle ID and the implicit version ID, we will seek out
 		// the exact existing version.
-		IDfPersistentObject obj = session.getObjectByQualification(String
-			.format("dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = '%s'", chronicleId,
-				implicitLabel));
+		IDfPersistentObject obj = session.getObjectByQualification(String.format(
+			"dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = %s", chronicleId,
+			DfUtils.quoteString(implicitLabel)));
 
 		// Return whatever we found...if we found nothing, then this is a new version
 		// and must be handled as such

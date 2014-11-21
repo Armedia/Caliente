@@ -255,11 +255,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -347,7 +347,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -361,16 +361,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
@@ -549,14 +549,15 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 			+ "UPDATE %s_s SET " //
 			+ "       r_modify_date = %s " //
 			+ "       %s " //
-			+ " WHERE r_object_id = ''%s''";
+			+ " WHERE r_object_id = %s";
 		String vstampFlag = "";
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 		// dctmObj.getIntSingleAttrValue(DctmAttributes.I_VSTAMP)));
 
-		return String.format(sql, objType, DfUtils.generateSqlDateClause(modifyDate.asTime().getDate(),
-			object.getSession()), vstampFlag, object.getObjectId().getId());
+		return String.format(sql, objType,
+			DfUtils.generateSqlDateClause(modifyDate.asTime().getDate(), object.getSession()), vstampFlag,
+			DfUtils.sqlQuoteString(object.getObjectId().getId()));
 	}
 
 	/**

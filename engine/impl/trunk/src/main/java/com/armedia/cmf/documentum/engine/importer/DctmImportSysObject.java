@@ -50,7 +50,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -409,7 +409,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -474,22 +474,19 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (creatorName.length() == 0) {
 			creatorName = "${owner_name}";
 		}
-		creatorName = DctmMappingUtils.resolveMappableUser(session, creatorName);
-		creatorName = creatorName.replaceAll("'", "''''");
+		creatorName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, creatorName));
 
 		String modifierName = modifierNameAtt.getValue().asString();
 		if (modifierName.length() == 0) {
 			modifierName = "${owner_name}";
 		}
-		modifierName = DctmMappingUtils.resolveMappableUser(session, modifierName);
-		modifierName = modifierName.replaceAll("'", "''''");
+		modifierName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, modifierName));
 
 		String aclDomain = aclDomainAtt.getValue().asString();
 		if (aclDomain.length() == 0) {
 			aclDomain = "${owner_name}";
 		}
-		aclDomain = DctmMappingUtils.resolveMappableUser(session, aclDomain);
-		aclDomain = aclDomain.replaceAll("'", "''''");
+		aclDomain = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, aclDomain));
 
 		String aclName = stored.getAttribute(DctmAttributes.ACL_NAME).getValue().asString();
 
@@ -499,21 +496,22 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		String sql = "" //
 			+ "UPDATE dm_sysobject_s SET " //
 			+ "       r_modify_date = %s, " //
-			+ "       r_modifier = ''%s'', " //
+			+ "       r_modifier = %s, " //
 			+ "       r_creation_date = %s, " //
-			+ "       r_creator_name = ''%s'', " //
-			+ "       acl_name = ''%s'', " //
-			+ "       acl_domain = ''%s'', " //
+			+ "       r_creator_name = %s, " //
+			+ "       acl_name = %s, " //
+			+ "       acl_domain = %s, " //
 			+ "       i_is_deleted = %d " //
 			+ "       %s " //
-			+ " WHERE r_object_id = ''%s''";
+			+ " WHERE r_object_id = %s";
 		String vstampFlag = "";
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
-		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate.getDate(), session), modifierName,
-			DfUtils.generateSqlDateClause(creationDate.getDate(), session), creatorName, aclName, aclDomain,
-			(deletedAtt.getValue().asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
+		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate.getDate(), session), modifierName, DfUtils
+			.generateSqlDateClause(creationDate.getDate(), session), creatorName, DfUtils.sqlQuoteString(aclName),
+			DfUtils.sqlQuoteString(aclDomain), (deletedAtt.getValue().asBoolean() ? 1 : 0), vstampFlag, DfUtils
+				.sqlQuoteString(sysObject.getObjectId().getId()));
 	}
 
 	/**
@@ -562,16 +560,15 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
-		return this.storedObject.getProperty(DctmImportSysObject.TARGET_PATHS).getValues();
+		return this.storedObject.getProperty(DctmSysObject.TARGET_PATHS).getValues();
 	}
 
 	protected T locateExistingByPath(DctmImportContext ctx) throws ImportException, DfException {
 		final IDfSession session = ctx.getSession();
 		final String documentName = this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
-		final String quotedDocumentName = documentName.replace("'", "''");
 
-		final String dqlBase = String.format("%s (ALL) where object_name = '%s' and folder('%%s')",
-			this.storedObject.getSubtype(), quotedDocumentName);
+		final String dqlBase = String.format("%s (ALL) where object_name = %s and folder(%%s)",
+			this.storedObject.getSubtype(), DfUtils.quoteString(documentName));
 
 		final boolean seeksReference = isReference();
 		String existingPath = null;
@@ -579,7 +576,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final IDfType type = session.getType(this.storedObject.getSubtype());
 		final Class<T> dfClass = getDfClass();
 		for (IDfValue p : getTargetPaths()) {
-			final String dql = String.format(dqlBase, p.asString());
+			final String dql = String.format(dqlBase, DfUtils.quoteString(p.asString()));
 			final String currentPath = String.format("%s/%s", p.asString(), documentName);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
@@ -622,7 +619,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				.getId(), currentPath));
 		}
 
 		return existing;
@@ -719,14 +716,14 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// that means we have a broken version tree...which is unsupported
 				throw new ImportException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-						.getId(), deferred));
+					.getId(), deferred));
 			}
 		}
 		return history;
 	}
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException {
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmImportSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
 		StoredAttributeMapper mapper = context.getAttributeMapper();
 		for (int i = 0; i < parents.getValueCount(); i++) {
