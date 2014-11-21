@@ -28,12 +28,12 @@ public enum DctmObjectType {
 
 	STORE(StoredObjectType.DATASTORE, IDfStore.class),
 	USER(StoredObjectType.USER, IDfUser.class),
-	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchingStrategy.SERIALIZED),
+	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchingStrategy.ITEMS_SERIALIZED),
 	ACL(StoredObjectType.ACL, IDfACL.class),
-	TYPE(StoredObjectType.TYPE, IDfType.class, BatchingStrategy.PARALLEL, null, true, false),
+	TYPE(StoredObjectType.TYPE, IDfType.class, BatchingStrategy.ITEMS_CONCURRENT, null, true, false),
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
-	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchingStrategy.PARALLEL, null, true, false),
-	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchingStrategy.SERIALIZED, null, true, true),
+	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchingStrategy.ITEMS_CONCURRENT, null, true, false),
+	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchingStrategy.ITEMS_SERIALIZED, null, true, true),
 	CONTENT(StoredObjectType.CONTENT_STREAM, IDfContent.class, "dmr_content", DOCUMENT);
 
 	private final StoredObjectType cmsType;
@@ -141,7 +141,7 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}
