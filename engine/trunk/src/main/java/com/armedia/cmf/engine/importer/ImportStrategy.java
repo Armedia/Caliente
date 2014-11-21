@@ -3,11 +3,17 @@ package com.armedia.cmf.engine.importer;
 public interface ImportStrategy {
 
 	public static enum BatchingStrategy {
-		/** Batches' contents must be processed serially, but batches may be processed in parallel */
-		SERIALIZED,
+		/**
+		 * Batches' contents must be processed serially, but multiple batches may be processed in
+		 * parallel
+		 */
+		ITEMS_SERIALIZED,
 
-		/** Batches' contents can be parallelized, but batches should be processed serially */
-		PARALLEL,
+		/**
+		 * Batches' contents can be processed concurrently, but multiple batches should be processed
+		 * serially
+		 */
+		ITEMS_CONCURRENT,
 	}
 
 	/**
