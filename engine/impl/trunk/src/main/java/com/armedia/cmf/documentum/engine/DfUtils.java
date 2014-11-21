@@ -283,7 +283,7 @@ public class DfUtils {
 	}
 
 	public static ExportTarget getExportTarget(IDfPersistentObject source) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
 		final DctmObjectType type = DctmObjectType.decodeType(source);
@@ -322,6 +322,7 @@ public class DfUtils {
 		// Set run_now attribute of a job to true to run a job.
 		String qualification = String.format("dm_job where object_name = %s", DfUtils.quoteString(jobName));
 		IDfSysObject oJob = (IDfSysObject) dctmSession.getObjectByQualification(qualification);
+		oJob.lock();
 		oJob.setBoolean(DctmConstant.RUN_NOW, true);
 		oJob.save();
 	}
