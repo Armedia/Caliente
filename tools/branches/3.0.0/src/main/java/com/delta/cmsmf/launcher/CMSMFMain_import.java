@@ -14,15 +14,16 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
+import com.armedia.cmf.engine.importer.ImportEngine;
+import com.armedia.cmf.engine.importer.ImportEngineListener;
+import com.armedia.cmf.engine.importer.ImportOutcome;
+import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectCounter;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.delta.cmsmf.cfg.CLIParam;
-import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.cms.CmsCounter;
-import com.delta.cmsmf.cms.CmsImportResult;
-import com.delta.cmsmf.cms.CmsObject;
-import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.engine.CmsImportEngineListener;
-import com.delta.cmsmf.engine.CmsImporter;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
@@ -31,17 +32,18 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngineListener {
+public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements
+ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
 	private final AtomicInteger aggregateCurrent = new AtomicInteger(0);
 
-	private final Map<CmsObjectType, Integer> total = new HashMap<CmsObjectType, Integer>();
-	private final Map<CmsObjectType, AtomicInteger> current = new HashMap<CmsObjectType, AtomicInteger>();
+	private final Map<StoredObjectType, Integer> total = new HashMap<StoredObjectType, Integer>();
+	private final Map<StoredObjectType, AtomicInteger> current = new HashMap<StoredObjectType, AtomicInteger>();
 
 	CMSMFMain_import() throws Throwable {
-		super();
+		super(DctmImportEngine.getImportEngine());
 	}
 
 	/**
@@ -54,16 +56,28 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	@Override
 	public void run() throws CMSMFException {
 		// lock
-		final CmsImporter importer = new CmsImporter(this.objectStore, this.fileSystem, this.console,
-			Setting.THREADS.getInt());
-		importer.addListener(this);
+		Map<String, String> settings = new HashMap<String, String>();
+		if (this.docbase != null) {
+			settings.put("docbase", this.docbase);
+		}
+		if (this.user != null) {
+			settings.put("username", this.user);
+		}
+		if (this.password != null) {
+			settings.put("password", this.password);
+		}
+
+		this.engine.addListener(this);
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();
 		Date end = null;
 		String exceptionReport = null;
+		final StoredObjectCounter<ImportResult> results = new StoredObjectCounter<ImportResult>(ImportResult.class);
 		try {
 			this.log.info("##### Import Process Started #####");
-			importer.doImport(this.sessionManager, Setting.POST_PROCESS_IMPORT.getBoolean());
+			this.engine.runImport(this.console, this.objectStore, this.contentStore, settings, results);
+			// TODO: run the post-process if necessary
+			// importer.doImport(this.sessionManager, Setting.POST_PROCESS_IMPORT.getBoolean());
 			this.log.info("##### Import Process Completed #####");
 		} catch (Throwable t) {
 			StringWriter sw = new StringWriter();
@@ -83,9 +97,9 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 		duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
 		long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS);
 		report.append(String.format("Import process start    : %s%n",
-			DateFormatUtils.format(start, Constant.JAVA_SQL_DATETIME_PATTERN)));
+			DateFormatUtils.format(start, AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Import process end      : %s%n",
-			DateFormatUtils.format(end, Constant.JAVA_SQL_DATETIME_PATTERN)));
+			DateFormatUtils.format(end, AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Import process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
@@ -103,13 +117,12 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 		}
 
 		report.append(String.format("%n%nAction Summary:%n%s%n", StringUtils.repeat("=", 30)));
-		CmsCounter<CmsImportResult> counter = importer.getCounter();
-		for (CmsObjectType t : CmsObjectType.values()) {
+		for (StoredObjectType t : StoredObjectType.values()) {
 			report.append(String.format("%n%n%n"));
-			report.append(counter.generateReport(t, 1));
+			report.append(results.generateReport(t, 1));
 		}
 		report.append(String.format("%n%n%n"));
-		report.append(counter.generateCummulativeReport(1));
+		report.append(results.generateCummulativeReport(1));
 
 		if (exceptionReport != null) {
 			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
@@ -126,7 +139,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 		}
 	}
 
-	private void showProgress(CmsObjectType objectType) {
+	private void showProgress(StoredObjectType objectType) {
 		final Double aggregateTotal = this.aggregateTotal.doubleValue();
 		final Double aggregateCurrent = this.aggregateCurrent.doubleValue();
 		final Double aggregatePct = (aggregateCurrent / aggregateTotal) * 100.0;
@@ -156,14 +169,14 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void importStarted(Map<CmsObjectType, Integer> summary) {
+	public void importStarted(Map<StoredObjectType, Integer> summary) {
 		this.aggregateCurrent.set(0);
 		this.total.clear();
 		this.current.clear();
 		this.console.info("Import process started");
-		for (CmsObjectType t : CmsObjectType.values()) {
+		for (StoredObjectType t : StoredObjectType.values()) {
 			Integer v = summary.get(t);
-			if ((v == null) || (v.intValue() == 0) || t.isSurrogate()) {
+			if ((v == null) || (v.intValue() == 0)) {
 				continue;
 			}
 			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
@@ -174,41 +187,40 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void objectTypeImportStarted(CmsObjectType objectType, int totalObjects) {
+	public void objectTypeImportStarted(StoredObjectType objectType, int totalObjects) {
 		showProgress(objectType);
 		this.console.info(String.format("Object import started for %d %s objects", totalObjects, objectType.name()));
 	}
 
 	@Override
-	public void objectImportStarted(CmsObject<?> object) {
+	public void objectImportStarted(StoredObject<?> object) {
 		showProgress(object.getType());
 		this.console.info(String.format("Import started for %s [%s](%s)", object.getType().name(), object.getLabel(),
 			object.getId()));
 	}
 
 	@Override
-	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult, String newLabel,
-		String newId) {
+	public void objectImportCompleted(StoredObject<?> object, ImportOutcome outcome) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
 		String suffix = null;
-		switch (cmsImportResult) {
+		switch (outcome.getResult()) {
 			case CREATED:
 			case UPDATED:
 			case DUPLICATE:
-				suffix = String.format(" as [%s](%s)", newLabel, newId);
+				suffix = String.format(" as [%s](%s)", outcome.getNewLabel(), outcome.getNewId());
 				break;
 			default:
 				suffix = "";
 				break;
 		}
 		this.console.info(String.format("Import completed for %s [%s](%s): %s%s", object.getType().name(),
-			object.getLabel(), object.getId(), cmsImportResult.name(), suffix));
+			object.getLabel(), object.getId(), outcome.getResult().name(), suffix));
 		showProgress(object.getType());
 	}
 
 	@Override
-	public void objectImportFailed(CmsObject<?> object, Throwable thrown) {
+	public void objectImportFailed(StoredObject<?> object, Throwable thrown) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
 		this.console.info(
@@ -218,9 +230,9 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void objectTypeImportFinished(CmsObjectType objectType, Map<CmsImportResult, Integer> counters) {
+	public void objectTypeImportFinished(StoredObjectType objectType, Map<ImportResult, Integer> counters) {
 		this.console.info(String.format("Finished importing %s objects", objectType.name()));
-		for (CmsImportResult r : CmsImportResult.values()) {
+		for (ImportResult r : ImportResult.values()) {
 			Integer v = counters.get(r);
 			if ((v == null) || (v.intValue() == 0)) {
 				continue;
@@ -230,9 +242,9 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
-	public void importFinished(Map<CmsImportResult, Integer> counters) {
+	public void importFinished(Map<ImportResult, Integer> counters) {
 		this.console.info("Import process finished");
-		for (CmsImportResult r : CmsImportResult.values()) {
+		for (ImportResult r : ImportResult.values()) {
 			Integer v = counters.get(r);
 			if ((v == null) || (v.intValue() == 0)) {
 				continue;

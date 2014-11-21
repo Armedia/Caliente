@@ -24,10 +24,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.delta.cmsmf.cfg.CLIParam;
-import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
@@ -37,8 +37,11 @@ import com.documentum.fc.common.DfException;
 
 public class CMSMFUtils {
 
+	// CMSMF Last Export Related constants
+	private static final String LAST_EXPORT_OBJ_NAME = "cmsmf_last_export";
+
 	/** The log object used for logging. */
-	static Logger log = Logger.getLogger(CMSMFUtils.class);
+	static Logger log = LoggerFactory.getLogger(CMSMFUtils.class);
 
 	/**
 	 * Gets the content path from content id.
@@ -59,28 +62,10 @@ public class CMSMFUtils {
 		return new File(tier2, pathComponents.substring(4, 6));
 	}
 
-	/**
-	 * Runs a dctm job by given name.
-	 *
-	 * @param dctmSession
-	 *            the dctm session
-	 * @param jobName
-	 *            the job name
-	 * @throws DfException
-	 *             the df exception
-	 */
-	public static void runDctmJob(IDfSession dctmSession, String jobName) throws DfException {
-		// Set run_now attribute of a job to true to run a job.
-		String qualification = String.format("dm_job where object_name = '%s'", jobName);
-		IDfSysObject oJob = (IDfSysObject) dctmSession.getObjectByQualification(qualification);
-		oJob.setBoolean(Constant.RUN_NOW, true);
-		oJob.save();
-	}
-
 	private static IDfSysObject getCmsmfStateObject(IDfSession dctmSession, boolean createIfMissing) throws DfException {
 		final String targetDocbaseName = CLIParam.docbase.getString();
 		final String cabinetName = Setting.STATE_CABINET.getString();
-		final String objectName = Constant.LAST_EXPORT_OBJ_NAME;
+		final String objectName = CMSMFUtils.LAST_EXPORT_OBJ_NAME;
 		final String cabinetPath = String.format("/%s", cabinetName);
 		final String folderPath = String.format("%s/%s", cabinetPath, targetDocbaseName);
 		final String documentPath = String.format("%s/%s", folderPath, objectName);
@@ -141,8 +126,8 @@ public class CMSMFUtils {
 			}
 			return (lastExportDate != null ? DateUtils.parseDate(lastExportDate,
 				DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern()) : null);
-		} catch (Throwable t) {
-			CMSMFUtils.log.error("Error occured while retrieving last export run date", t);
+		} catch (Exception e) {
+			CMSMFUtils.log.error("Error occured while retrieving last export run date", e);
 		}
 		return null;
 	}

@@ -3,6 +3,7 @@ package com.delta.cmsmf.launcher;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -11,28 +12,38 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import com.armedia.cmf.documentum.engine.exporter.DctmExportEngine;
+import com.armedia.cmf.engine.exporter.ExportEngine;
+import com.armedia.cmf.engine.exporter.ExportEngineListener;
+import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.delta.cmsmf.cfg.CLIParam;
-import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cfg.Setting;
-import com.delta.cmsmf.cms.CmsObject;
-import com.delta.cmsmf.cms.CmsObjectType;
-import com.delta.cmsmf.engine.CmsExportEngineListener;
-import com.delta.cmsmf.engine.CmsExporter;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
 
-/**
- * The main method of this class is an entry point for the cmsmf application.
- *
- * @author Shridev Makim 6/15/2010
- */
-public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngineListener {
+public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
+ExportEngineListener {
+
+	/**
+	 * The from and where clause of the export query that runs periodically. The application will
+	 * combine the select clause listed above with this from and where clauses to build the complete
+	 * dql query. Please note that this clause will be ignored when the export is running in the
+	 * adhoc mode. In that case the from and where clauses are specified in the properties file.
+	 */
+	private static final String DEFAULT_PREDICATE = "from dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
+		+ "and not folder('/System', descend)"; // and r_modify_date >= DATE('XX_PLACE_HOLDER_XX')";
 
 	CMSMFMain_export() throws Throwable {
-		super();
+		super(DctmExportEngine.getExportEngine());
+	}
+
+	private IDfSession getSession() {
+		// TODO: Acquire the session
+		return null;
 	}
 
 	/**
@@ -44,22 +55,38 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 	@Override
 	public void run() throws CMSMFException {
 
-		CmsExporter exporter = new CmsExporter(this.objectStore, this.fileSystem, this.console,
-			Setting.THREADS.getInt());
-		exporter.addListener(this);
+		this.engine.addListener(this);
 
+		final IDfSession session = getSession();
+
+		Map<String, String> settings = new HashMap<String, String>();
+
+		if (this.docbase != null) {
+			settings.put("docbase", this.docbase);
+		}
+		if (this.user != null) {
+			settings.put("username", this.user);
+		}
+		if (this.password != null) {
+			settings.put("password", this.password);
+		}
+
+		settings.put("dql", buildExportQueryString(session));
 		final Date start = new Date();
 		Date end = null;
 		StringBuilder report = new StringBuilder();
-		Map<CmsObjectType, Integer> summary = null;
+		Map<StoredObjectType, Integer> summary = null;
 		String exceptionReport = null;
 		// lock
 		try {
 			this.log.info("##### Export Process Started #####");
-			exporter.doExport(this.sessionManager, buildExportQueryString());
+			this.engine.runExport(this.console, this.objectStore, this.contentStore, settings);
 			this.log.info("##### Export Process Finished #####");
 
-			final IDfSession session = this.sessionManager.acquireSession();
+			/**
+			 * Now, we try to set the last export date
+			 */
+
 			boolean ok = false;
 			try {
 				session.beginTrans();
@@ -76,11 +103,10 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 						session.abortTrans();
 					}
 				} catch (DfException e) {
-					this.log.fatal(String.format(
+					this.log.error(String.format(
 						"Exception caught while %s the transaction for saving the export metadata", ok ? "committing"
 							: "aborting"), e);
 				}
-				this.sessionManager.releaseSession(session);
 			}
 
 			summary = this.objectStore.getStoredObjectTypes();
@@ -95,6 +121,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 			end = new Date();
 		}
 
+		// TODO: Close the session
+
 		long duration = (end.getTime() - start.getTime());
 		long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);
 		duration -= hours * TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
@@ -102,9 +130,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 		duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
 		long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS);
 		report.append(String.format("Export process start    : %s%n",
-			DateFormatUtils.format(start, Constant.JAVA_SQL_DATETIME_PATTERN)));
+			DateFormatUtils.format(start, AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Export process end      : %s%n",
-			DateFormatUtils.format(end, Constant.JAVA_SQL_DATETIME_PATTERN)));
+			DateFormatUtils.format(end, AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Export process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
@@ -124,7 +152,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 		if (summary != null) {
 			report.append(String.format("%n%n%nExported Object Summary:%n")).append(StringUtils.repeat("=", 30));
 			int total = 0;
-			for (CmsObjectType t : summary.keySet()) {
+			for (StoredObjectType t : summary.keySet()) {
 				Integer count = summary.get(t);
 				if ((count == null) || (count == 0)) {
 					continue;
@@ -148,7 +176,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 		}
 	}
 
-	private String buildExportQueryString() {
+	private String buildExportQueryString(IDfSession session) {
 
 		// First check to see if ad-hoc query property has any value. If it does have some value in
 		// it, use it to build the query string. If this value is blank, look into the source
@@ -165,17 +193,11 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 			// named 'cmsmf_last_export' and
 
 			// first get the last export date from the source repository
-			Date lastExportRunDate = null;
-			final IDfSession session = this.sessionManager.acquireSession();
-			try {
-				lastExportRunDate = CMSMFUtils.getLastExportDate(session);
-			} finally {
-				this.sessionManager.releaseSession(session);
-			}
-			predicate = Constant.DEFAULT_PREDICATE;
+			Date lastExportRunDate = CMSMFUtils.getLastExportDate(session);
+			predicate = CMSMFMain_export.DEFAULT_PREDICATE;
 			if (lastExportRunDate != null) { return String.format("%s AND r_modify_date >= DATE('%s', '%s')",
-				predicate, new DfTime(lastExportRunDate).asString(Constant.LAST_EXPORT_DATETIME_PATTERN),
-				Constant.LAST_EXPORT_DATETIME_PATTERN); }
+				predicate, new DfTime(lastExportRunDate).asString(AbstractCMSMFMain.LAST_EXPORT_DATETIME_PATTERN),
+				AbstractCMSMFMain.LAST_EXPORT_DATETIME_PATTERN); }
 		}
 		return predicate;
 	}
@@ -186,35 +208,37 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 	}
 
 	@Override
-	public void exportStarted(String dql) {
-		this.console.info(String.format("Export process started with DQL:%n%n\t%s%n%n", dql));
+	public void exportStarted(Map<String, ?> exportSettings) {
+		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportSettings));
 	}
 
 	@Override
-	public void objectExportStarted(CmsObjectType objectType, String objectId) {
+	public void objectExportStarted(StoredObjectType objectType, String objectId) {
 		this.console.info(String.format("Object export started for %s[%s]", objectType.name(), objectId));
 	}
 
 	@Override
-	public void objectExportCompleted(CmsObject<?> object) {
-		this.console.info(String.format("%s export completed for [%s](%s)", object.getType().name(), object.getLabel(),
-			object.getId()));
+	public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
+		if (objectNumber != null) {
+			this.console.info(String.format("%s export completed for [%s](%s) as object #%d", object.getType().name(),
+				object.getLabel(), object.getId(), objectNumber));
+		}
 	}
 
 	@Override
-	public void objectSkipped(CmsObjectType objectType, String objectId) {
+	public void objectSkipped(StoredObjectType objectType, String objectId) {
 		this.console.info(String.format("%s object [%s] was skipped", objectType.name(), objectId));
 	}
 
 	@Override
-	public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
+	public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
 		this.console.warn(String.format("Object export failed for %s[%s]", objectType.name(), objectId), thrown);
 	}
 
 	@Override
-	public void exportFinished(Map<CmsObjectType, Integer> summary) {
+	public void exportFinished(Map<StoredObjectType, Integer> summary) {
 		this.console.info("Export process finished");
-		for (CmsObjectType t : CmsObjectType.values()) {
+		for (StoredObjectType t : StoredObjectType.values()) {
 			Integer v = summary.get(t);
 			if ((v == null) || (v.intValue() == 0)) {
 				continue;
