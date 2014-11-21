@@ -66,12 +66,14 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 		this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
 
+		Stores.initializeConfigurations();
+
 		StoreConfiguration cfg = Stores.getObjectStoreConfiguration("cmsmf");
-		// TODO: Modify the configuration
+		cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 		this.objectStore = Stores.createObjectStore(cfg);
 
 		cfg = Stores.getContentStoreConfiguration("cmsmf");
-		// TODO: Modify the configuration
+		cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 		this.contentStore = Stores.createContentStore(cfg);
 
 		if (requiresCleanData()) {
