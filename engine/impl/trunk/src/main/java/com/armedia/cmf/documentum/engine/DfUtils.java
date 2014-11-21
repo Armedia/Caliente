@@ -1,6 +1,5 @@
 package com.armedia.cmf.documentum.engine;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,12 +19,15 @@ import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
 public class DfUtils {
+
+	private static final String ORACLE_DATETIME_PATTERN = DfUtils.sqlQuoteString(DctmConstant.ORACLE_DATETIME_PATTERN);
 
 	private static final int MIN_BATCH_SIZE = 100;
 	private static final int MAX_BATCH_SIZE = Integer.MAX_VALUE;
@@ -205,10 +207,12 @@ public class DfUtils {
 		DbType dbType = DfUtils.getDbType(session);
 		switch (dbType) {
 			case ORACLE:
-				ret = String.format("TO_DATE(''%s'', ''%s'')", dateString, DctmConstant.ORACLE_DATETIME_PATTERN);
+				ret = String.format("TO_DATE(%s, %s)", DfUtils.sqlQuoteString(dateString),
+					DfUtils.ORACLE_DATETIME_PATTERN);
 				break;
 			case MSSQL:
-				ret = String.format("CONVERT(DATETIME, ''%s'', %d)", dateString, DctmConstant.MSSQL_DATETIME_PATTERN);
+				ret = String.format("CONVERT(DATETIME, %s, %d)", DfUtils.sqlQuoteString(dateString),
+					DctmConstant.MSSQL_DATETIME_PATTERN);
 				break;
 			default:
 				throw new UnsupportedOperationException(String.format("Unsupported database type [%s]", dbType));
@@ -300,19 +304,35 @@ public class DfUtils {
 	public static IDfStore getStore(IDfSession session, String name) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to seek the store with"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a store name to look for"); }
-		return IDfStore.class.cast(session.getObjectByQualification(String.format("dm_store where name = '%s'",
-			name.replace("'", "''"))));
+		return IDfStore.class.cast(session.getObjectByQualification(String.format("dm_store where name = %s",
+			DfUtils.quoteString(name))));
 	}
 
-	public static File getContentDirectory(String contentId) {
-		if (contentId.length() != 16) { return null; }
-		// 16 character object id in dctm consists of first 2 chars of obj type, next 6 chars of
-		// docbase id in hex and last 8 chars server generated. We will use first 6 characters
-		// of this last 8 characters and generate the unique path.
-		// For ex: if the id is 0600a92b80054db8 than the path would be 80/05/4d
-		String pathComponents = contentId.substring(8, 16);
-		File tier1 = new File(pathComponents.substring(0, 2));
-		File tier2 = new File(tier1, pathComponents.substring(2, 4));
-		return new File(tier2, pathComponents.substring(4, 6));
+	/**
+	 * Runs a dctm job by given name.
+	 *
+	 * @param dctmSession
+	 *            the dctm session
+	 * @param jobName
+	 *            the job name
+	 * @throws DfException
+	 *             the df exception
+	 */
+	public static void runDctmJob(IDfSession dctmSession, String jobName) throws DfException {
+		// Set run_now attribute of a job to true to run a job.
+		String qualification = String.format("dm_job where object_name = %s", DfUtils.quoteString(jobName));
+		IDfSysObject oJob = (IDfSysObject) dctmSession.getObjectByQualification(qualification);
+		oJob.setBoolean(DctmConstant.RUN_NOW, true);
+		oJob.save();
+	}
+
+	public static String quoteString(String str) {
+		if (str == null) { return null; }
+		return String.format("'%s'", str.replace("'", "''"));
+	}
+
+	public static String sqlQuoteString(String str) {
+		if (str == null) { return null; }
+		return String.format("''%s''", str.replace("'", "''''"));
 	}
 }
