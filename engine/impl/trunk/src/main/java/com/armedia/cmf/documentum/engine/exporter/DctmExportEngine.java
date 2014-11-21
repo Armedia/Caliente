@@ -18,6 +18,7 @@ import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
+import com.armedia.cmf.documentum.engine.common.DctmCommon;
 import com.armedia.cmf.documentum.engine.common.Setting;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.exporter.ExportEngine;
@@ -44,7 +45,7 @@ import com.documentum.fc.common.IDfValue;
 public class DctmExportEngine extends
 ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
-	private static final Set<String> TARGETS = Collections.singleton("dctm");
+	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
 
 	public DctmExportEngine() {
@@ -191,5 +192,9 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	@Override
 	protected IDfValue getValue(StoredDataType type, Object value) {
 		return DfValueFactory.newValue(type, value);
+	}
+
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
+		return ExportEngine.getExportEngine(DctmCommon.TARGET_NAME);
 	}
 }

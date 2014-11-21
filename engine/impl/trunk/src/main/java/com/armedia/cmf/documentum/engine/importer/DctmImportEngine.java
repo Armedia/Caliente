@@ -13,6 +13,7 @@ import com.armedia.cmf.documentum.engine.DctmSessionWrapper;
 import com.armedia.cmf.documentum.engine.DctmTranslator;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.UnsupportedDctmObjectTypeException;
+import com.armedia.cmf.documentum.engine.common.DctmCommon;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
@@ -36,7 +37,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine extends
-	ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
+ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -60,7 +61,7 @@ public class DctmImportEngine extends
 		}
 	};
 
-	private static final Set<String> TARGETS = Collections.singleton("dctm");
+	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
 	public DctmImportEngine() {
 	}
@@ -80,7 +81,7 @@ public class DctmImportEngine extends
 	@Override
 	protected ImportOutcome importObject(StoredObject<?> marshaled,
 		ObjectStorageTranslator<IDfPersistentObject, IDfValue> translator, DctmImportContext ctx)
-			throws ImportException, StorageException, StoredValueDecoderException {
+		throws ImportException, StorageException, StoredValueDecoderException {
 		@SuppressWarnings("unchecked")
 		StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		try {
@@ -123,5 +124,9 @@ public class DctmImportEngine extends
 			return (errors == 0);
 		}
 		return super.abortImport(type, errors);
+	}
+
+	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine() {
+		return ImportEngine.getImportEngine(DctmCommon.TARGET_NAME);
 	}
 }
