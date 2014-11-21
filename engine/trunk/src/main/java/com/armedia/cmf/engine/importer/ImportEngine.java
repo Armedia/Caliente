@@ -299,11 +299,16 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 												switch (outcome.getResult()) {
 													case CREATED:
 													case UPDATED:
-													case DUPLICATE:
 														msg = String.format("Persisted (%s) %s as [%s](%s)",
 															outcome.getResult(), next, outcome.getNewId(),
 															outcome.getNewLabel());
 														break;
+
+													case DUPLICATE:
+														msg = String.format("Found a duplicate of %s as [%s](%s)",
+															next, outcome.getNewId(), outcome.getNewLabel());
+														break;
+
 													default:
 														msg = String.format("Persisted (%s) %s", outcome.getResult(),
 															next);
