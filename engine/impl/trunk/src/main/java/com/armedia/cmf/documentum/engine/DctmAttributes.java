@@ -263,9 +263,6 @@ public class DctmAttributes {
 	/** The r_docbase_name attribute of connection config. */
 	public static final String R_DOCBASE_NAME = "r_docbase_name";
 
-	// dm_job attributes
-	public static final String RUN_NOW = "run_now";
-
 	// Various query collection column names
 	/** The groups_names column name of getGroupsNames collection. */
 	public static final String GROUPS_NAMES = "groups_names";
