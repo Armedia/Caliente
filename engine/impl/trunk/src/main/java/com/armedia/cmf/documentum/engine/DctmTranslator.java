@@ -35,26 +35,10 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 	}
 
 	public static DctmObjectType translateType(StoredObjectType type) {
-		switch (type) {
-			case ACL:
-				return DctmObjectType.ACL;
-			case USER:
-				return DctmObjectType.USER;
-			case GROUP:
-				return DctmObjectType.GROUP;
-			case TYPE:
-				return DctmObjectType.TYPE;
-			case FOLDER:
-				return DctmObjectType.FOLDER;
-			case FORMAT:
-				return DctmObjectType.FORMAT;
-			case CONTENT_STREAM:
-				return DctmObjectType.CONTENT;
-			case DOCUMENT:
-				return DctmObjectType.DOCUMENT;
-			default:
-				return null;
+		for (DctmObjectType t : DctmObjectType.values()) {
+			if (t.getStoredObjectType() == type) { return t; }
 		}
+		return null;
 	}
 
 	@Override

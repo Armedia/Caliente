@@ -18,6 +18,7 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.content.IDfContent;
+import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 
 public enum DctmObjectType {
@@ -25,6 +26,7 @@ public enum DctmObjectType {
 	// IMPORTANT: The object types must be declared in the proper import order
 	// otherwise that operation will fail.
 
+	STORE(StoredObjectType.DATASTORE, IDfStore.class),
 	USER(StoredObjectType.USER, IDfUser.class),
 	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchingStrategy.SERIALIZED),
 	ACL(StoredObjectType.ACL, IDfACL.class),
@@ -139,7 +141,7 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}

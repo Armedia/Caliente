@@ -204,12 +204,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		// References need only the ACL as a dependent
 		if (isDfReference(document)) { return ret; }
 
-		// Save filestore name
-		// String storageType = document.getStorageType();
-		// if (StringUtils.isNotBlank(storageType)) {
-		// RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
-		// }
-
 		// We only export versions if we're the root object of the context operation
 		// There is no actual harm done, since the export engine is smart enough to
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance

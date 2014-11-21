@@ -42,7 +42,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton("dctm");
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
@@ -53,6 +53,7 @@ public class DctmExportEngine extends
 		m.put(DctmObjectType.ACL, new DctmExportACL(this));
 		m.put(DctmObjectType.CONTENT, new DctmExportContent(this));
 		m.put(DctmObjectType.DOCUMENT, new DctmExportDocument(this));
+		m.put(DctmObjectType.STORE, new DctmExportStore(this));
 		m.put(DctmObjectType.FOLDER, new DctmExportFolder(this));
 		m.put(DctmObjectType.FORMAT, new DctmExportFormat(this));
 		m.put(DctmObjectType.GROUP, new DctmExportGroup(this));
@@ -62,7 +63,7 @@ public class DctmExportEngine extends
 	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(

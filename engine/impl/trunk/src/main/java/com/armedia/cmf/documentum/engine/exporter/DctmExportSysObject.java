@@ -11,6 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmDataType;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
@@ -28,6 +30,7 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfTypedObject;
+import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -47,7 +50,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 
 	@Override
 	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-	ExportException {
+		ExportException {
 		IDfSession session = object.getSession();
 		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PATHS,
 			DctmDataType.DF_STRING.getStoredType(), true);
@@ -186,7 +189,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 				// that means we have a broken version tree...which is unsupported
 				throw new ExportException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-						.getId(), deferred));
+					.getId(), deferred));
 			}
 		}
 		ctx.setObject(cachedName, history);
@@ -221,12 +224,24 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		T sysObject, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> req = super.findRequirements(session, marshaled, sysObject, ctx);
+
 		// The parent folders
 		final int pathCount = sysObject.getFolderIdCount();
 		for (int i = 0; i < pathCount; i++) {
 			IDfId folderId = sysObject.getFolderId(i);
 			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
 			req.add(parent);
+		}
+
+		// We export our filestore
+		String storeName = sysObject.getStorageType();
+		if (StringUtils.isNotBlank(storeName)) {
+			IDfStore store = DfUtils.getStore(session, storeName);
+			if (store != null) {
+				req.add(store);
+			} else {
+				this.log.warn("SysObject {} refers to missing store [{}]", marshaled.getLabel(), storeName);
+			}
 		}
 		return req;
 	}
