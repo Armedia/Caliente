@@ -42,12 +42,16 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 			return this.counter;
 		}
 
-		public final Map<StoredObjectType, Map<R, Integer>> getResults() {
+		public final Map<R, Integer> getCummulative() {
+			return this.counter.getCummulative();
+		}
+
+		public final Map<StoredObjectType, Map<R, Integer>> getCounters() {
 			return this.counter.getCounters();
 		}
 
-		public final Map<R, Integer> getResultsSummary() {
-			return this.counter.getCummulative();
+		public final Map<R, Integer> getCounters(StoredObjectType type) {
+			return this.counter.getCounters(type);
 		}
 	}
 

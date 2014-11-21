@@ -43,7 +43,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ExportEngineListener> {
+	TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -275,7 +275,7 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	public final Map<StoredObjectType, Map<ExportResult, Integer>> runExport(final Logger output,
 		final ObjectStore<?, ?> objectStore, final ContentStore contentStore, Map<String, ?> settings)
-			throws ExportException, StorageException {
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -489,9 +489,9 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-								.warn(
-									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-									e);
+									.warn(
+										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+										e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -528,7 +528,7 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 						Thread.currentThread().interrupt();
 					}
 				}
-				return listenerDelegator.getResults();
+				return listenerDelegator.getCounters();
 			} finally {
 				baseSession.close(false);
 
@@ -545,10 +545,10 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
