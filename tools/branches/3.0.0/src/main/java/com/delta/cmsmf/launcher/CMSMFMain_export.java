@@ -17,6 +17,8 @@ import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.dfc.pool.DfcSessionFactory;
+import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -41,11 +43,6 @@ ExportEngineListener {
 		super(DctmExportEngine.getExportEngine());
 	}
 
-	private IDfSession getSession() {
-		// TODO: Acquire the session
-		return null;
-	}
-
 	/**
 	 * Starts exporting objects from source directory. It reads up the query from properties file
 	 * and executes it against the source repository. It retrieves objects from the repository and
@@ -57,71 +54,94 @@ ExportEngineListener {
 
 		this.engine.addListener(this);
 
-		final IDfSession session = getSession();
-
-		Map<String, String> settings = new HashMap<String, String>();
-
+		Map<String, Object> settings = new HashMap<String, Object>();
 		if (this.docbase != null) {
-			settings.put("docbase", this.docbase);
+			settings.put(DfcSessionFactory.DOCBASE, this.docbase);
 		}
 		if (this.user != null) {
-			settings.put("username", this.user);
+			settings.put(DfcSessionFactory.USERNAME, this.user);
 		}
 		if (this.password != null) {
-			settings.put("password", this.password);
+			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
 
-		settings.put("dql", buildExportQueryString(session));
-		final Date start = new Date();
+		final DfcSessionPool pool;
+		try {
+			pool = new DfcSessionPool(settings);
+		} catch (Exception e) {
+			throw new CMSMFException("Failed to initialize the connection pool", e);
+		}
+
 		Date end = null;
-		StringBuilder report = new StringBuilder();
 		Map<StoredObjectType, Integer> summary = null;
 		String exceptionReport = null;
-		// lock
+		StringBuilder report = new StringBuilder();
+		Date start = null;
 		try {
-			this.log.info("##### Export Process Started #####");
-			this.engine.runExport(this.console, this.objectStore, this.contentStore, settings);
-			this.log.info("##### Export Process Finished #####");
-
-			/**
-			 * Now, we try to set the last export date
-			 */
-
-			boolean ok = false;
+			final IDfSession session;
 			try {
-				session.beginTrans();
-				// If this is auto run type of an export instead of an adhoc query export, store the
-				// value of the current export date in the repository. This value will be looked up
-				// in the next run. This is indeed an auto run type of export
-				CMSMFUtils.setLastExportDate(session, start);
-				ok = true;
-			} finally {
-				try {
-					if (ok) {
-						session.commitTrans();
-					} else {
-						session.abortTrans();
-					}
-				} catch (DfException e) {
-					this.log.error(String.format(
-						"Exception caught while %s the transaction for saving the export metadata", ok ? "committing"
-							: "aborting"), e);
-				}
+				session = pool.borrowObject();
+			} catch (Exception e) {
+				throw new CMSMFException("Failed to obtain the main session from the pool", e);
 			}
 
-			summary = this.objectStore.getStoredObjectTypes();
-		} catch (Throwable t) {
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			report.append(String.format("%n%nException caught while attempting an export%n%n"));
-			t.printStackTrace(pw);
-			exceptionReport = sw.toString();
-		} finally {
-			// unlock
-			end = new Date();
-		}
+			settings.put("dql", buildExportQueryString(session));
+			start = new Date();
+			try {
+				this.log.info("##### Export Process Started #####");
+				this.engine.runExport(this.console, this.objectStore, this.contentStore, settings);
+				this.log.info("##### Export Process Finished #####");
 
-		// TODO: Close the session
+				/**
+				 * Now, we try to set the last export date
+				 */
+
+				boolean ok = false;
+				try {
+					session.beginTrans();
+					// If this is auto run type of an export instead of an adhoc query export, store
+					// the value of the current export date in the repository. This value will be
+					// looked up in the next run. This is indeed an auto run type of export
+					CMSMFUtils.setLastExportDate(session, start);
+					ok = true;
+				} finally {
+					try {
+						if (ok) {
+							session.commitTrans();
+						} else {
+							session.abortTrans();
+						}
+					} catch (DfException e) {
+						this.log.error(String.format(
+							"Exception caught while %s the transaction for saving the export metadata",
+							ok ? "committing" : "aborting"), e);
+					}
+				}
+
+				summary = this.objectStore.getStoredObjectTypes();
+			} catch (Throwable t) {
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				report.append(String.format("%n%nException caught while attempting an export%n%n"));
+				t.printStackTrace(pw);
+				exceptionReport = sw.toString();
+			} finally {
+				// unlock
+				end = new Date();
+			}
+
+			try {
+				session.disconnect();
+			} catch (DfException e) {
+				if (this.log.isTraceEnabled()) {
+					this.log.warn("Exception caught when releasing the master session", e);
+				} else {
+					this.log.warn("Exception caught when releasing the master session: {}", e.getMessage());
+				}
+			}
+		} finally {
+			pool.close();
+		}
 
 		long duration = (end.getTime() - start.getTime());
 		long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);

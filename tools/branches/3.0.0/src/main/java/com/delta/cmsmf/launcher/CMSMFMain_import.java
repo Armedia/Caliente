@@ -22,6 +22,7 @@ import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectCounter;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -33,7 +34,7 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements
-ImportEngineListener {
+	ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
@@ -56,15 +57,15 @@ ImportEngineListener {
 	@Override
 	public void run() throws CMSMFException {
 		// lock
-		Map<String, String> settings = new HashMap<String, String>();
+		Map<String, Object> settings = new HashMap<String, Object>();
 		if (this.docbase != null) {
-			settings.put("docbase", this.docbase);
+			settings.put(DfcSessionFactory.DOCBASE, this.docbase);
 		}
 		if (this.user != null) {
-			settings.put("username", this.user);
+			settings.put(DfcSessionFactory.USERNAME, this.user);
 		}
 		if (this.password != null) {
-			settings.put("password", this.password);
+			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
 
 		this.engine.addListener(this);

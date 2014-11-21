@@ -51,6 +51,12 @@
 	</pluginRepositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>dfc-session-pool</artifactId>
+			<version>1.0.0</version>
+			<scope>compile</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
@@ -63,6 +69,13 @@
 					<artifactId>dfc-jars</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.7</version>
+			<scope>compile</scope>
 		</dependency>
 
 		<dependency>

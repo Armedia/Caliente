@@ -86,7 +86,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			this.log.info(msg);
 			this.objectStore.clearAllObjects();
 		}
-
 		this.docbase = CLIParam.docbase.getString();
 		this.user = CLIParam.user.getString();
 		this.password = CLIParam.password.getString();
