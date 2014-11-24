@@ -17,6 +17,7 @@ import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
@@ -85,41 +86,6 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			}
 		}
 
-		// Set this group as users' default group
-		StoredProperty<IDfValue> property = this.storedObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
-		if (property != null) {
-			for (IDfValue v : property) {
-				final String actualUser = DctmMappingUtils.resolveMappableUser(session, v.asString());
-				if (missingUsers.contains(actualUser)) {
-					continue;
-				}
-				final IDfUser user = session.getUser(actualUser);
-				if (user == null) {
-					this.log
-						.warn(String
-							.format(
-								"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-								groupName.asString(), actualUser));
-					continue;
-				}
-				user.lock();
-				user.fetch(null);
-				user.setUserGroupName(groupName.asString());
-				user.save();
-				// Update the system attributes, if we can
-				try {
-					updateSystemAttributes(user, context);
-				} catch (ImportException e) {
-					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-									actualUser, group.getGroupName()), e);
-				}
-			}
-		}
-
 		StoredAttribute<IDfValue> specialUser = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
 		if (specialUser != null) {
 			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
@@ -149,6 +115,50 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				}
 			}
 		}
+	}
+
+	@Override
+	protected boolean postConstruction(IDfGroup group, boolean newObject, DctmImportContext context)
+		throws DfException, ImportException {
+		final IDfSession session = context.getSession();
+		final String groupName = group.getGroupName();
+
+		// Set this group as users' default group
+		StoredProperty<IDfValue> property = this.storedObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
+		if ((property == null) || (property.getValueCount() == 0)) { return false; }
+		for (IDfValue v : property) {
+			final String actualUser = DctmMappingUtils.resolveMappableUser(session, v.asString());
+			final IDfUser user = session.getUser(actualUser);
+			if (user == null) {
+				this.log
+					.warn(String
+						.format(
+							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+							groupName, actualUser));
+				continue;
+			}
+			if (Tools.equals(groupName, user.getUserGroupName())) {
+				continue;
+			}
+			this.log.info(String.format("Setting group [%s] as the default group for user [%s]", groupName,
+				user.getUserName()));
+			user.lock();
+			user.fetch(null);
+			user.setUserGroupName(groupName);
+			user.save();
+			// Update the system attributes, if we can
+			try {
+				updateSystemAttributes(user, context);
+			} catch (ImportException e) {
+				this.log
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+								actualUser, group.getGroupName()), e);
+			}
+		}
+		return false;
 	}
 
 	@Override
