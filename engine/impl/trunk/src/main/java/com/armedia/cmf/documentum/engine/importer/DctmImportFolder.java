@@ -4,13 +4,9 @@
 
 package com.armedia.cmf.documentum.engine.importer;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
-import com.armedia.cmf.documentum.engine.DfUtils;
 import com.armedia.cmf.documentum.engine.DfValueFactory;
 import com.armedia.cmf.documentum.engine.common.DctmFolder;
 import com.armedia.cmf.engine.importer.ImportException;
@@ -18,14 +14,11 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
-import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -41,45 +34,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	@Override
 	protected String calculateLabel(IDfFolder folder) throws DfException {
 		return folder.getFolderPath(0);
-	}
-
-	private int calculateDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
-		// If the folder has already been visited, we have a loop...so let's explode loudly
-		if (visited.contains(folderId.getId())) { throw new DfException(String.format(
-			"Folder loop detected, element [%s] exists twice: %s", folderId.getId(), visited.toString())); }
-		visited.add(folderId.getId());
-		try {
-			int depth = 0;
-			String dql = String.format("select i_folder_id from dm_sysobject where r_object_id = '%s'",
-				folderId.getId());
-			IDfCollection results = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
-			try {
-				while (results.next()) {
-					// My depth is the maximum depth from any of my parents, plus one
-					IDfId parentId = results.getId(DctmAttributes.I_FOLDER_ID);
-					if (parentId.isNull() || !parentId.isObjectId()) {
-						continue;
-					}
-					depth = Math.max(depth, calculateDepth(session, parentId, visited) + 1);
-				}
-			} finally {
-				DfUtils.closeQuietly(results);
-			}
-			return depth;
-		} finally {
-			visited.remove(folderId.getId());
-		}
-	}
-
-	@Override
-	protected String calculateBatchId(IDfFolder folder) throws DfException {
-		// Calculate the maximum depth that this folder resides in, from its parents.
-		// Keep track of visited nodes, and explode on a loop.
-		Set<String> visited = new LinkedHashSet<String>();
-		int depth = calculateDepth(folder.getSession(), folder.getObjectId(), visited);
-		// We return it in zero-padded hex to allow for large numbers (up to 2^64
-		// depth), and also maintain consistent sorting
-		return String.format("%016x", depth);
 	}
 
 	private TemporaryPermission mainTemporaryPermission = null;
@@ -171,10 +125,10 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			final IDfUser user = session.getUser(actualUser);
 			if (user == null) {
 				this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
+				.warn(String
+					.format(
+						"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+						this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
 				continue;
 			}
 
@@ -193,11 +147,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-								actualUser, this.storedObject.getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+						actualUser, this.storedObject.getLabel()), e);
 			}
 		}
 	}
