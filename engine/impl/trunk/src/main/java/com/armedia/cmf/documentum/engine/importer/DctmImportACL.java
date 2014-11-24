@@ -161,38 +161,6 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			acl.setObjectName(this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
 			acl.save();
 		}
-		StoredProperty<IDfValue> usersWithDefaultACL = this.storedObject.getProperty(DctmACL.USERS_WITH_DEFAULT_ACL);
-		if (usersWithDefaultACL != null) {
-			final IDfSession session = acl.getSession();
-			for (IDfValue value : DctmMappingUtils.resolveMappableUsers(acl, usersWithDefaultACL)) {
-
-				// TODO: How do we decide if we should update the default ACL for this user? What if
-				// the user's default ACL has been modified on the target CMS and we don't want to
-				// clobber that?
-				final IDfUser user = session.getUser(value.asString());
-				if (user == null) {
-					this.log.warn(String.format(
-						"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
-						acl.getDomain(), acl.getObjectName(), value.asString()));
-					continue;
-				}
-
-				// Ok...so we relate this thing back to its owner as its internal ACL
-				user.setDefaultACLEx(acl.getDomain(), acl.getObjectName());
-				user.save();
-				// Update the system attributes, if we can
-				try {
-					updateSystemAttributes(user, context);
-				} catch (ImportException e) {
-					this.log
-					.warn(
-						String
-						.format(
-							"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-							user.getUserName(), this.storedObject.getLabel()), e);
-				}
-			}
-		}
 
 		// Clear any existing permissions
 		final IDfList existingPermissions = acl.getPermissions();
@@ -278,10 +246,10 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 					if (!exists) {
 						// This shouldn't be necessary
 						this.log
-						.warn(String
-							.format(
-								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-								this.storedObject.getLabel(), name));
+							.warn(String
+								.format(
+									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+									this.storedObject.getLabel(), name));
 						exists = (acl.getSession().getGroup(name) != null);
 						accessorType = "accessor (user or group)";
 					}
@@ -331,6 +299,45 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		// permissions on a separate loop. Thank you, EMC.
 		for (IDfPermit permit : extendedPerms) {
 			acl.grantPermit(permit);
+		}
+	}
+
+	@Override
+	protected void updateReferenced(IDfACL acl, DctmImportContext context) throws DfException, ImportException {
+		final StoredProperty<IDfValue> usersWithDefaultACL = this.storedObject
+			.getProperty(DctmACL.USERS_WITH_DEFAULT_ACL);
+		if ((usersWithDefaultACL == null) || (usersWithDefaultACL.getValueCount() == 0)) { return; }
+
+		final IDfSession session = context.getSession();
+		for (IDfValue value : DctmMappingUtils.resolveMappableUsers(acl, usersWithDefaultACL)) {
+
+			// TODO: How do we decide if we should update the default ACL for this user? What if
+			// the user's default ACL has been modified on the target CMS and we don't want to
+			// clobber that?
+			final IDfUser user = session.getUser(value.asString());
+			if (user == null) {
+				this.log.warn(String.format(
+					"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
+					acl.getDomain(), acl.getObjectName(), value.asString()));
+				continue;
+			}
+
+			// Ok...so we relate this thing back to its owner as its internal ACL
+			user.lock();
+			user.fetch(null);
+			user.setDefaultACLEx(acl.getDomain(), acl.getObjectName());
+			user.save();
+			// Update the system attributes, if we can
+			try {
+				updateSystemAttributes(user, context);
+			} catch (ImportException e) {
+				this.log
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+								user.getUserName(), this.storedObject.getLabel()), e);
+			}
 		}
 	}
 }

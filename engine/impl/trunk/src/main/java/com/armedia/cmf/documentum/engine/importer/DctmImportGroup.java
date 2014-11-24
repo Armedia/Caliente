@@ -118,14 +118,13 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected boolean postConstruction(IDfGroup group, boolean newObject, DctmImportContext context)
-		throws DfException, ImportException {
+	protected void updateReferenced(IDfGroup group, DctmImportContext context) throws DfException, ImportException {
 		final IDfSession session = context.getSession();
 		final String groupName = group.getGroupName();
 
 		// Set this group as users' default group
 		StoredProperty<IDfValue> property = this.storedObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
-		if ((property == null) || (property.getValueCount() == 0)) { return false; }
+		if ((property == null) || (property.getValueCount() == 0)) { return; }
 		for (IDfValue v : property) {
 			final String actualUser = DctmMappingUtils.resolveMappableUser(session, v.asString());
 			final IDfUser user = session.getUser(actualUser);
@@ -158,7 +157,6 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 								actualUser, group.getGroupName()), e);
 			}
 		}
-		return false;
 	}
 
 	@Override
