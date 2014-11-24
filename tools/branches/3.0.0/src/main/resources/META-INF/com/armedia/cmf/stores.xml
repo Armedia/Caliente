@@ -21,7 +21,7 @@
 		<name>local</name>
 		<settings>
 			<setting name="base.dir">${dir.content}</setting>
-			<setting name="uri.strategy">documentum</setting>
+			<setting name="uri.strategy">cmsmf</setting>
 		</settings>
 	</contentstore>
 </stores>
