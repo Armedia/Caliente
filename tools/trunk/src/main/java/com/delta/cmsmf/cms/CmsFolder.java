@@ -235,60 +235,6 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 			copyAttributeToObject(CmsAttributes.OBJECT_NAME, folder);
 		}
 
-		final IDfSession session = folder.getSession();
-
-		CmsProperty usersWithDefaultFolder = getProperty(CmsFolder.USERS_WITH_DEFAULT_FOLDER);
-		CmsProperty usersDefaultFolderPaths = getProperty(CmsFolder.USERS_DEFAULT_FOLDER_PATHS);
-		if ((usersWithDefaultFolder != null) && (usersDefaultFolderPaths != null)) {
-			final int total = usersWithDefaultFolder.getValueCount();
-			for (int i = 0; i < total; i++) {
-				IDfValue userValue = usersWithDefaultFolder.getValue(i);
-				IDfValue pathValue = usersDefaultFolderPaths.getValue(i);
-
-				if (CmsMappingUtils.isSubstitutionForMappableUser(userValue.asString())) {
-					this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
-						CmsMappingUtils.resolveMappableUser(session, userValue.asString())));
-					continue;
-				}
-
-				// TODO: How do we decide if we should update the default folder for this user? What
-				// if the user's default folder has been modified on the target CMS and we don't
-				// want to clobber that? That's a decision that needs to be made later...
-				final String actualUser = userValue.asString();
-				final IDfUser user = session.getUser(actualUser);
-				if (user == null) {
-					this.log
-						.warn(String
-							.format(
-								"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-								getLabel(), folder.getObjectId().getId(), actualUser));
-					continue;
-				}
-
-				// Ok...so...is the user's default path one of ours? Or is it perhaps a different
-				// object? This will determine if the user's default folder will be private or
-				// not...
-				IDfFolder actual = session.getFolderByPath(pathValue.asString());
-
-				// Ok...so...we set the path to "whatever"...
-				user.lock();
-				user.fetch(null);
-				user.setDefaultFolder(pathValue.asString(), (actual == null));
-				user.save();
-				// Update the system attributes, if we can
-				try {
-					updateSystemAttributes(user, context);
-				} catch (CMSMFException e) {
-					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-									actualUser, getLabel()), e);
-				}
-			}
-		}
-
 		if (this.mainTemporaryPermission != null) {
 			newObject |= this.mainTemporaryPermission.revoke(folder);
 		}
@@ -300,6 +246,63 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 		throws DfException, CMSMFException {
 		cleanUpParents(folder.getSession());
 		return super.cleanupAfterSave(folder, newObject, context);
+	}
+
+	@Override
+	protected void updateReferenced(IDfFolder folder, CmsTransferContext context) throws DfException {
+		final CmsProperty usersWithDefaultFolder = getProperty(CmsFolder.USERS_WITH_DEFAULT_FOLDER);
+		final CmsProperty usersDefaultFolderPaths = getProperty(CmsFolder.USERS_DEFAULT_FOLDER_PATHS);
+		if ((usersWithDefaultFolder == null) || (usersDefaultFolderPaths == null)
+			|| (usersWithDefaultFolder.getValueCount() == 0) || (usersDefaultFolderPaths.getValueCount() == 0)) { return; }
+
+		final IDfSession session = folder.getSession();
+		final int total = usersWithDefaultFolder.getValueCount();
+		for (int i = 0; i < total; i++) {
+			IDfValue userValue = usersWithDefaultFolder.getValue(i);
+			IDfValue pathValue = usersDefaultFolderPaths.getValue(i);
+
+			if (CmsMappingUtils.isSubstitutionForMappableUser(userValue.asString())) {
+				this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
+					CmsMappingUtils.resolveMappableUser(session, userValue.asString())));
+				continue;
+			}
+
+			// TODO: How do we decide if we should update the default folder for this user? What
+			// if the user's default folder has been modified on the target CMS and we don't
+			// want to clobber that? That's a decision that needs to be made later...
+			final String actualUser = userValue.asString();
+			final IDfUser user = session.getUser(actualUser);
+			if (user == null) {
+				this.log
+					.warn(String
+						.format(
+							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							getLabel(), folder.getObjectId().getId(), actualUser));
+				continue;
+			}
+
+			// Ok...so...is the user's default path one of ours? Or is it perhaps a different
+			// object? This will determine if the user's default folder will be private or
+			// not...
+			IDfFolder actual = session.getFolderByPath(pathValue.asString());
+
+			// Ok...so...we set the path to "whatever"...
+			user.lock();
+			user.fetch(null);
+			user.setDefaultFolder(pathValue.asString(), (actual == null));
+			user.save();
+			// Update the system attributes, if we can
+			try {
+				updateSystemAttributes(user, context);
+			} catch (CMSMFException e) {
+				this.log
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+								actualUser, getLabel()), e);
+			}
+		}
 	}
 
 	@Override

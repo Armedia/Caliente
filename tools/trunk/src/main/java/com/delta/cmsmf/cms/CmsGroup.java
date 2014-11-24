@@ -282,13 +282,13 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected boolean postConstruction(IDfGroup group, boolean newObject, CmsTransferContext context)
-		throws DfException, CMSMFException {
+	protected void updateReferenced(IDfGroup group, CmsTransferContext context) throws DfException, CMSMFException {
+		final CmsProperty property = getProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP);
+		if ((property == null) || (property.getValueCount() == 0)) { return; }
+
 		final IDfSession session = context.getSession();
 		final String groupName = group.getGroupName();
 		// Set this group as users' default group
-		CmsProperty property = getProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP);
-		if ((property == null) || (property.getValueCount() == 0)) { return false; }
 		for (IDfValue v : property) {
 			final String actualUser = CmsMappingUtils.resolveMappableUser(session, v.asString());
 			final IDfUser user = session.getUser(actualUser);
@@ -323,7 +323,6 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 								actualUser, group.getGroupName()), e);
 			}
 		}
-		return false;
 	}
 
 	@Override
