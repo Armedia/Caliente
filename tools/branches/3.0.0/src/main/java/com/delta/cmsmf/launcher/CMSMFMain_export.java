@@ -28,7 +28,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
-ExportEngineListener {
+	ExportEngineListener {
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
@@ -36,7 +36,7 @@ ExportEngineListener {
 	 * dql query. Please note that this clause will be ignored when the export is running in the
 	 * adhoc mode. In that case the from and where clauses are specified in the properties file.
 	 */
-	private static final String DEFAULT_PREDICATE = "from dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
+	private static final String DEFAULT_PREDICATE = "dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
 		+ "and not folder('/System', descend)"; // and r_modify_date >= DATE('XX_PLACE_HOLDER_XX')";
 
 	CMSMFMain_export() throws Throwable {
@@ -80,12 +80,13 @@ ExportEngineListener {
 		try {
 			final IDfSession session;
 			try {
-				session = pool.borrowObject();
+				session = pool.acquireSession();
 			} catch (Exception e) {
 				throw new CMSMFException("Failed to obtain the main session from the pool", e);
 			}
 
-			settings.put("dql", buildExportQueryString(session));
+			String dql = String.format("select r_object_id, r_object_type from %s", buildExportPredicate(session));
+			settings.put("dql", dql);
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");
@@ -196,7 +197,7 @@ ExportEngineListener {
 		}
 	}
 
-	private String buildExportQueryString(IDfSession session) {
+	private String buildExportPredicate(IDfSession session) {
 
 		// First check to see if ad-hoc query property has any value. If it does have some value in
 		// it, use it to build the query string. If this value is blank, look into the source
