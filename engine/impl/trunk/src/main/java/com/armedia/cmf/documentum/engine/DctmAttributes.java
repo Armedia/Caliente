@@ -142,6 +142,9 @@ public class DctmAttributes {
 	/** The users_names attribute of dm_group. */
 	public static final String USERS_NAMES = "users_names";
 
+	/** The group_global_unique_id attribute of dm_group. */
+	public static final String GROUP_GLOBAL_UNIQUE_ID = "group_global_unique_id";
+
 	// dm_acl Attributes
 	/** The acl_class attribute of dm_acl. */
 	public static final String ACL_CLASS = "acl_class";

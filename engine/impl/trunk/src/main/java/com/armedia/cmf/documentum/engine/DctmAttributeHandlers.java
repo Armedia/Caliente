@@ -233,28 +233,30 @@ public class DctmAttributeHandlers {
 		// Group
 		//
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.GROUP_ADMIN, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			DctmAttributes.GROUP_ADMIN, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.GROUP_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.GROUPS_NAMES, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
+			DctmAttributes.GROUP_GLOBAL_UNIQUE_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-				throws DfException {
-				return false;
-			}
+				@Override
+				public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+					throws DfException {
+					return false;
+				}
 
-			@Override
-			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-				throws DfException {
-				return DctmMappingUtils.substituteMappableUsers(object, attr);
-			}
+				@Override
+				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+					throws DfException {
+					return DctmMappingUtils.substituteMappableUsers(object, attr);
+				}
 
-		});
+			});
 
 		//
 		// Type

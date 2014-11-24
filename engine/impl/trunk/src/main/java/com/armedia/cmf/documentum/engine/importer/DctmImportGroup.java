@@ -7,6 +7,8 @@ package com.armedia.cmf.documentum.engine.importer;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmMappingUtils;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
@@ -114,6 +116,36 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 								.format(
 									"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
 									actualUser, group.getGroupName()), e);
+				}
+			}
+		}
+
+		StoredAttribute<IDfValue> specialUser = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
+		if (specialUser != null) {
+			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
+			if (!StringUtils.isBlank(actualUser)) {
+				IDfUser user = session.getUser(actualUser);
+				if (user != null) {
+					group.setOwnerName(actualUser);
+				} else {
+					this.log.warn(String.format(
+						"Failed to set user [%s] as the owner for group [%s] - the user wasn't found", actualUser,
+						groupName.asString()));
+				}
+			}
+		}
+
+		specialUser = this.storedObject.getAttribute(DctmAttributes.GROUP_ADMIN);
+		if (specialUser != null) {
+			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
+			if (!StringUtils.isBlank(actualUser)) {
+				IDfUser user = session.getUser(actualUser);
+				if (user != null) {
+					group.setGroupAdmin(actualUser);
+				} else {
+					this.log.warn(String.format(
+						"Failed to set user [%s] as the admin for group [%s] - the user wasn't found", actualUser,
+						groupName.asString()));
 				}
 			}
 		}
