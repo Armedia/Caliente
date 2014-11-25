@@ -2,7 +2,13 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-	<changeSet author="master" id="1">
+	<changeSet author="cmf" id="1001">
+    	<preConditions onFail="MARK_RAN">
+    		<not>
+	    		<changeSetExecuted id="1" author="master" changeLogFile="com/delta/cmsmf/datastore/changelog/db.changelog-1.0.xml"/>
+    		</not>
+	    </preConditions>
+
 		<!-- The CMSMF info table -->
 		<createTable tableName="cmf_info">
 			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
@@ -39,7 +45,7 @@
 			<column name="object_id" type="varchar(32)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="object_type" type="varchar2(32)" remarks="The type of documentum object">
+			<column name="object_type" type="varchar(32)" remarks="The type of documentum object">
 				<constraints nullable="false" />
 			</column>
 			<column name="object_subtype" type="varchar(32)" remarks="The exact type of documentum object">
@@ -167,7 +173,7 @@
 
 		<!-- The attribute mapping table -->
 		<createTable tableName="cmf_mapper">
-			<column name="object_type" type="varchar2(32)" remarks="The type of documentum object">
+			<column name="object_type" type="varchar(32)" remarks="The type of documentum object">
 				<constraints nullable="false" />
 			</column>
 			<column name="name" type="varchar(32)" remarks="The name of the attribute to map">
@@ -186,5 +192,108 @@
 			<column name="name" />
 			<column name="target_value" />
 		</createIndex>
+	</changeSet>
+
+	<!-- migrate metadata from CMSMF -->
+	<changeSet author="cmf" id="1002">
+    	<preConditions onFail="MARK_RAN">
+    		<changeSetExecuted id="1" author="master" changeLogFile="com/delta/cmsmf/datastore/changelog/db.changelog-1.0.xml"/>
+	    </preConditions>
+	    <renameTable oldTableName="cmsmf_info" newTableName="cmf_info"/>
+	    <renameTable oldTableName="dctm_export_plan" newTableName="cmf_export_plan"/>
+	    <renameTable oldTableName="dctm_object" newTableName="cmf_object"/>
+	    <renameTable oldTableName="dctm_attribute" newTableName="cmf_attribute"/>
+	    <renameTable oldTableName="dctm_attribute_value" newTableName="cmf_attribute_value"/>
+	    <renameTable oldTableName="dctm_property" newTableName="cmf_property"/>
+	    <renameTable oldTableName="dctm_property_value" newTableName="cmf_property_value"/>
+	    <renameTable oldTableName="dctm_mapper" newTableName="cmf_mapper"/>
+
+		<!-- Fix the data types in the cmf_attribute and cmf_property -->
+		<!--
+		<createIndex tableName="cmf_attribute" indexName="idx_cmf_attribute_tmp">
+			<column name="data_type" />
+		</createIndex>
+		<createIndex tableName="cmf_property" indexName="idx_cmf_property_tmp">
+			<column name="data_type" />
+		</createIndex>
+
+		<update tableName="cmf_attribute">
+			<column name="data_type" type="varchar(32)" value="BOOLEAN"/>
+			<where>data_type = 'DF_BOOLEAN'</where>
+		</update>
+
+		<update tableName="cmf_attribute">
+			<column name="data_type" type="varchar(32)" value="INTEGER"/>
+			<where>data_type = 'DF_INTEGER'</where>
+		</update>
+
+		<update tableName="cmf_attribute">
+			<column name="data_type" type="varchar(32)" value="DOUBLE"/>
+			<where>data_type = 'DF_DOUBLE'</where>
+		</update>
+
+		<update tableName="cmf_attribute">
+			<column name="data_type" type="varchar(32)" value="STRING"/>
+			<where>data_type = 'DF_STRING'</where>
+		</update>
+
+		<update tableName="cmf_attribute">
+			<column name="data_type" type="varchar(32)" value="ID"/>
+			<where>data_type = 'DF_ID'</where>
+		</update>
+
+		<update tableName="cmf_attribute">
+			<column name="data_type" type="varchar(32)" value="TIME"/>
+			<where>data_type = 'DF_TIME'</where>
+		</update>
+
+		<update tableName="cmf_property">
+			<column name="data_type" type="varchar(32)" value="BOOLEAN"/>
+			<where>data_type = 'DF_BOOLEAN'</where>
+		</update>
+
+		<update tableName="cmf_property">
+			<column name="data_type" type="varchar(32)" value="INTEGER"/>
+			<where>data_type = 'DF_INTEGER'</where>
+		</update>
+
+		<update tableName="cmf_property">
+			<column name="data_type" type="varchar(32)" value="DOUBLE"/>
+			<where>data_type = 'DF_DOUBLE'</where>
+		</update>
+
+		<update tableName="cmf_property">
+			<column name="data_type" type="varchar(32)" value="STRING"/>
+			<where>data_type = 'DF_STRING'</where>
+		</update>
+
+		<update tableName="cmf_property">
+			<column name="data_type" type="varchar(32)" value="ID"/>
+			<where>data_type = 'DF_ID'</where>
+		</update>
+
+		<update tableName="cmf_property">
+			<column name="data_type" type="varchar(32)" value="TIME"/>
+			<where>data_type = 'DF_TIME'</where>
+		</update>
+
+		<dropIndex tableName="cmf_attribute" indexName="idx_cmf_attribute_tmp"/>
+		<dropIndex tableName="cmf_property" indexName="idx_cmf_property_tmp"/>
+		-->
+
+		<insert tableName="cmf_info">
+			<column name="name" type="varchar(64)" value="strategy" />
+			<column name="value" type="text" value="cmsmf-upgrade" />
+		</insert>
+	</changeSet>
+
+	<!-- make sure one of the above was executed (they're negated, so either-or) -->
+	<changeSet author="cmf" id="1003">
+    	<preConditions>
+    		<or>
+	    		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
+	    		<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
+    		</or>
+	    </preConditions>
 	</changeSet>
 </databaseChangeLog>
