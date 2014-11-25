@@ -2,7 +2,7 @@ package com.armedia.cmf.storage;
 
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
-public interface TypeDecoder {
+public class TypeDecoder {
 
 	static final PluggableServiceLocator<TypeDecoder> DECODERS = new PluggableServiceLocator<TypeDecoder>(
 		TypeDecoder.class);
@@ -18,7 +18,9 @@ public interface TypeDecoder {
 	 *         translate it
 	 */
 
-	public StoredObjectType translateObjectType(String objectType);
+	public StoredObjectType translateObjectType(String objectType) {
+		return null;
+	}
 
 	/**
 	 * <p>
@@ -30,6 +32,8 @@ public interface TypeDecoder {
 	 * @return a valid, non-{@code null} {@link StoredDataType} value, or {@code null} if it can't
 	 *         translate it
 	 */
-	public StoredDataType translateDataType(String dataType);
+	public StoredDataType translateDataType(String dataType) {
+		return null;
+	}
 
 }
