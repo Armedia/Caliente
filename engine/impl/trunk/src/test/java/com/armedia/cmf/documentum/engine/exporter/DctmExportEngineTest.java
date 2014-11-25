@@ -1,4 +1,4 @@
-package com.armedia.mf.documentum.engine.exporter;
+package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,10 +6,10 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.armedia.cmf.documentum.engine.DctmEngineTest;
 import com.armedia.cmf.documentum.engine.DctmSessionFactory;
 import com.armedia.cmf.documentum.engine.common.Setting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
-import com.armedia.mf.documentum.engine.DctmEngineTest;
 
 public class DctmExportEngineTest extends DctmEngineTest {
 

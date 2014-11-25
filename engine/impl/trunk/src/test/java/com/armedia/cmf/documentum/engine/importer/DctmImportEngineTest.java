@@ -1,4 +1,4 @@
-package com.armedia.mf.documentum.engine.importer;
+package com.armedia.cmf.documentum.engine.importer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,9 +6,9 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.armedia.cmf.documentum.engine.DctmEngineTest;
 import com.armedia.cmf.documentum.engine.DctmSessionFactory;
 import com.armedia.cmf.engine.importer.ImportEngine;
-import com.armedia.mf.documentum.engine.DctmEngineTest;
 
 public class DctmImportEngineTest extends DctmEngineTest {
 
