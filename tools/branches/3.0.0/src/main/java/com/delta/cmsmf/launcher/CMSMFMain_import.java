@@ -14,7 +14,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
-import com.armedia.cmf.documentum.engine.importer.DctmImportEngine;
+import com.armedia.cmf.engine.documentum.importer.DctmImportEngine;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportOutcome;
