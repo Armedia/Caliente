@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ExportEngineListener> {
+	TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -155,6 +155,30 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 	protected abstract String calculateLabel(T sourceObject) throws Exception;
 
 	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore, S session,
+		final ExportTarget referrent, final ExportTarget target, T sourceObject, C ctx,
+		ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
+		StoredValueEncoderException, UnsupportedObjectTypeException {
+		try {
+			listenerDelegator.objectExportStarted(target.getType(), target.getId());
+			Result result = doExportObject(objectStore, streamStore, session, referrent, target, sourceObject, ctx,
+				listenerDelegator);
+			if (result != null) {
+				listenerDelegator.objectExportCompleted(result.marshaled, result.objectNumber);
+			} else {
+				listenerDelegator.objectSkipped(target.getType(), target.getId());
+			}
+			return result;
+		} catch (Exception e) {
+			listenerDelegator.objectExportFailed(target.getType(), target.getId(), e);
+			if (e instanceof ExportException) { throw ExportException.class.cast(e); }
+			if (e instanceof StorageException) { throw StorageException.class.cast(e); }
+			if (e instanceof StoredValueEncoderException) { throw StoredValueEncoderException.class.cast(e); }
+			if (e instanceof UnsupportedObjectTypeException) { throw UnsupportedObjectTypeException.class.cast(e); }
+			throw RuntimeException.class.cast(e);
+		}
+	}
+
+	private Result doExportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore, S session,
 		final ExportTarget referrent, final ExportTarget target, T sourceObject, C ctx,
 		ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
 		StoredValueEncoderException, UnsupportedObjectTypeException {
@@ -281,7 +305,7 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-			throws ExportException, StorageException {
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -371,7 +395,6 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 
 							boolean tx = false;
 							boolean ok = false;
-							StoredObjectType nextType = null;
 							try {
 								// Begin transaction
 								tx = session.begin();
@@ -383,7 +406,6 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 								}
 
 								final ExportTarget next = getExportTarget(sourceObject);
-								nextType = next.getType();
 
 								if (this.log.isDebugEnabled()) {
 									this.log.debug(String.format("Exporting the source %s object with ID[%s]",
@@ -394,7 +416,6 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 									session.getWrapped(), output, objectStore, contentStore);
 								try {
 									initContext(ctx);
-									listenerDelegator.objectExportStarted(next.getType(), next.getId());
 									Result result = exportObject(objectStore, contentStore, s, null, next,
 										sourceObject, ctx, listenerDelegator);
 									if (result != null) {
@@ -403,13 +424,6 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 												result.marshaled.getType(), result.marshaled.getLabel(),
 												result.marshaled.getId(), result.objectNumber));
 										}
-										listenerDelegator.objectExportCompleted(result.marshaled, result.objectNumber);
-									} else {
-										if (this.log.isDebugEnabled()) {
-											this.log.debug(String.format("%s object with ID[%s] was already exported",
-												next.getType(), next.getId()));
-										}
-										listenerDelegator.objectSkipped(next.getType(), next.getId());
 									}
 									ok = true;
 								} finally {
@@ -417,7 +431,6 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 								}
 							} catch (Throwable t) {
 								this.log.error(String.format("Failed to export object with ID[%s]", nextId), t);
-								listenerDelegator.objectExportFailed(nextType, nextId, t);
 								if (tx) {
 									if (ok) {
 										session.commit();
@@ -499,9 +512,9 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-								.warn(
-									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-									e);
+									.warn(
+										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+										e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -555,10 +568,10 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
