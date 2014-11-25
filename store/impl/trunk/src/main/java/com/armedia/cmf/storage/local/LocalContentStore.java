@@ -68,7 +68,7 @@ public class LocalContentStore extends ContentStore {
 	protected final File doGetFile(URI handleId) {
 		String ssp = handleId.getSchemeSpecificPart();
 		String frag = handleId.getFragment();
-		String path = (frag != null ? String.format("%s.%s", ssp, frag) : ssp);
+		String path = (frag != null ? String.format("%s%s", ssp, frag) : ssp);
 		return new File(this.baseDir, path);
 	}
 
