@@ -6,7 +6,9 @@ package com.armedia.cmf.documentum.engine.exporter;
 
 import java.util.Iterator;
 
+import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmCollectionIterator;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -27,7 +29,7 @@ public class DctmObjectIdIterator implements Iterator<String> {
 
 	public DctmObjectIdIterator(IDfCollection collection, String idAttribute) {
 		this.iterator = new DctmCollectionIterator(collection);
-		this.idAttribute = idAttribute;
+		this.idAttribute = Tools.coalesce(idAttribute, DctmAttributes.R_OBJECT_ID);
 	}
 
 	@Override
