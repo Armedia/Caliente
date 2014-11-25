@@ -8,10 +8,6 @@
 		</layout>
 	</appender>
 
-	<logger name="com.armedia.cmf.documentum">
-		<level value="DEBUG"/>
-	</logger>
-
 	<logger name="com.armedia.cmf.engine">
 		<level value="DEBUG"/>
 	</logger>
