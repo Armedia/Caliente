@@ -12,7 +12,7 @@ public enum StoredObjectType {
 	FOLDER,
 	DOCUMENT,
 	WORKFLOW,
-	CONTENT_STREAM;
+	CONTENT;
 
 	public static StoredObjectType decodeString(String str) {
 		if (str == null) { throw new NullPointerException("Must provide a valid string to decode"); }
