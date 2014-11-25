@@ -8,7 +8,8 @@
 		</encoder>
 	</appender>
 
-	<logger name="com.armedia.cmf" level="DEBUG"/>
+	<logger name="com.armedia.cmf.documentum" level="DEBUG"/>
+	<logger name="com.armedia.cmf.engine" level="DEBUG"/>
 	<logger name="console" level="INFO"/>
 
 	<root level="INFO">
