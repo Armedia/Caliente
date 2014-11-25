@@ -40,8 +40,8 @@ public class DctmExportTargetIterator implements Iterator<ExportTarget> {
 
 	public DctmExportTargetIterator(IDfCollection collection, String idAttribute, String typeAttribute) {
 		this.iterator = new DctmCollectionIterator(collection);
-		this.typeAttribute = idAttribute;
-		this.idAttribute = typeAttribute;
+		this.typeAttribute = typeAttribute;
+		this.idAttribute = idAttribute;
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class DctmExportTargetIterator implements Iterator<ExportTarget> {
 			} catch (DfException e2) {
 				if (this.log.isTraceEnabled()) {
 					this.log
-					.error(String.format("Failed to generate the debug dump for object # %d", this.current), e2);
+						.error(String.format("Failed to generate the debug dump for object # %d", this.current), e2);
 				}
 			}
 			throw new RuntimeException(String.format("Item # %d is not a supported export target", this.current, dump),
