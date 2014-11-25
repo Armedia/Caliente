@@ -5,6 +5,7 @@
 package com.armedia.cmf.documentum.engine.exporter;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.documentum.engine.DctmAttributes;
 import com.armedia.cmf.documentum.engine.DctmObjectType;
+import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
@@ -64,10 +66,39 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 
 		// Store the content in the filesystem
 		Handle contentHandle = streamStore.getHandle(StoredObjectType.CONTENT, contentId, qualifier);
-		File targetFile = contentHandle.getFile();
+		final File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
-			FileUtils.forceMkdir(targetFile.getParentFile());
-			sysObject.getFileEx2(targetFile.getPath(), format, pageNumber, pageModifier, false);
+			final File parent = targetFile.getParentFile();
+			// Deal with a race condition with multiple threads trying to export to the same folder
+			if (!parent.exists()) {
+				IOException caught = null;
+				for (int i = 0; (i < 3); i++) {
+					if (i > 0) {
+						// Only sleep if this is a retry
+						try {
+							Thread.sleep(333);
+						} catch (InterruptedException e2) {
+							// Ignore...
+						}
+					}
+
+					try {
+						caught = null;
+						FileUtils.forceMkdir(parent);
+						break;
+					} catch (IOException e) {
+						// Something went wrong...
+						caught = e;
+					}
+				}
+				if (caught != null) { throw new ExportException(String.format(
+					"Failed to create the parent content directory [%s]", parent.getAbsolutePath()), caught); }
+			}
+
+			if (!parent.isDirectory()) { throw new ExportException(String.format(
+				"The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
+
+			sysObject.getFileEx2(targetFile.getAbsolutePath(), format, pageNumber, pageModifier, false);
 		} else {
 			// Doesn't support file-level, so we (sadly) use stream-level transfers
 			InputStream in = null;
