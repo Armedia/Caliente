@@ -34,7 +34,7 @@ public enum DctmObjectType {
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
 	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
-	CONTENT(StoredObjectType.CONTENT_STREAM, IDfContent.class, "dmr_content", DOCUMENT);
+	CONTENT(StoredObjectType.CONTENT, IDfContent.class, "dmr_content", DOCUMENT);
 
 	private final StoredObjectType cmsType;
 	private final String dmType;

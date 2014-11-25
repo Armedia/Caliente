@@ -309,7 +309,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			@Override
 			public boolean handleObject(StoredObject<IDfValue> storedObject) throws StorageException {
 				// Step one: what's the content's path in the filesystem?
-				if (storedObject.getType() != StoredObjectType.CONTENT_STREAM) { return true; }
+				if (storedObject.getType() != StoredObjectType.CONTENT) { return true; }
 				final Handle contentHandle = context.getContentHandle(storedObject);
 				final File path = contentHandle.getFile();
 				final String absolutePath = path.getAbsolutePath();
