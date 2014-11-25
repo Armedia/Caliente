@@ -165,9 +165,9 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 
 	protected final String getContentQualifier(StoredObject<V> marshaled) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		StoredProperty<V> contentPath = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIER);
-		if (contentPath == null) { return null; }
-		return Tools.toString(contentPath.getValue());
+		StoredProperty<V> contentQualifier = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIER);
+		if (contentQualifier == null) { return null; }
+		return Tools.toString(contentQualifier.getValue());
 	}
 
 	protected final void setContentQualifier(StoredObject<V> marshaled, String qualifier) {
