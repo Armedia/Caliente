@@ -32,7 +32,7 @@ public abstract class ObjectStorageTranslator<T, V> implements StoredValueCodec<
 	@Override
 	public final StoredDataType decodeValue(String value) {
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to decode"); }
-		return StoredDataType.valueOf(value);
+		return StoredDataType.decodeString(value);
 	}
 
 	public abstract StoredValueCodec<V> getCodec(StoredDataType type);
