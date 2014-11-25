@@ -29,8 +29,8 @@ import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -43,7 +43,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
@@ -64,7 +64,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -83,7 +83,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(IDfSession session, Map<String, ?> settings) throws Exception {
+	protected Iterator<String> findExportResults(IDfSession session, Map<String, ?> settings) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
 		if (settings == null) {
@@ -92,24 +92,23 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		Object dql = settings.get(Setting.DQL.getLabel());
 		if (dql == null) { throw new Exception(String.format("Must provide the DQL to query with", dql)); }
 		final int batchSize = CfgTools.decodeInteger(Setting.EXPORT_BATCH_SIZE.getLabel(), settings, 0);
-		return new DctmExportTargetIterator(DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_EXECREAD_QUERY,
+		return new DctmObjectIdIterator(DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_EXECREAD_QUERY,
 			batchSize));
 	}
 
 	@Override
-	protected IDfPersistentObject getObject(IDfSession session, StoredObjectType type, String id) throws Exception {
+	protected IDfPersistentObject getObject(IDfSession session, String id) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the object"); }
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
 
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
-		IDfPersistentObject ret = session.getObject(new DfId(id));
-		DctmObjectType dctmType = DctmObjectType.decodeType(ret);
-		if (type != dctmType.getStoredObjectType()) { throw new Exception(String.format(
-			"Type mismatch - expected [%s] but got [%s] for object [%s]", type, dctmType.getStoredObjectType(), id)); }
-		return ret;
+		try {
+			return session.getObject(new DfId(id));
+		} catch (DfIdNotFoundException e) {
+			return null;
+		}
 	}
 
 	@Override
