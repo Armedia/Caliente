@@ -59,11 +59,11 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 		String format = content.getString(DctmAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(DctmAttributes.PAGE);
 		String pageModifier = content.getString(DctmAttributes.PAGE_MODIFIER);
-		String qualifier = (!StringUtils.isBlank(pageModifier) ? String.format("%s_%s.%s", pageNumber, pageModifier,
-			format) : String.format("%s.%s", pageNumber, format));
+		String qualifier = (!StringUtils.isBlank(pageModifier) ? String.format("[%04d]_%s.%s", pageNumber,
+			pageModifier, format) : String.format("[%04d].%s", pageNumber, format));
 
 		// Store the content in the filesystem
-		Handle contentHandle = streamStore.getHandle(StoredObjectType.CONTENT_STREAM, contentId, qualifier);
+		Handle contentHandle = streamStore.getHandle(StoredObjectType.CONTENT, contentId, qualifier);
 		File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
 			FileUtils.forceMkdir(targetFile.getParentFile());
