@@ -85,8 +85,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 				throw new CMSMFException("Failed to obtain the main session from the pool", e);
 			}
 
-			String dql = String.format("select r_object_id, r_object_type from %s", buildExportPredicate(session));
+			String dql = String.format("select r_object_id %s", buildExportPredicate(session));
 			settings.put("dql", dql);
+
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");
