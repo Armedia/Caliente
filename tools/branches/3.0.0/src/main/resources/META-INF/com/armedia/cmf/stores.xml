@@ -12,7 +12,7 @@
 		<name>jdbc</name>
 		<settings>
 			<setting name="location.type">pooled</setting>
-			<setting name="jdbc.url">jdbc:h2:${dir.metadata}/cmsmf-metadata;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
+			<setting name="jdbc.url">jdbc:h2:${dir.metadata}/cmsmf-data;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
 			<setting name="jdbc.driver">org.h2.Driver</setting>
 		</settings>
 	</objectstore>
