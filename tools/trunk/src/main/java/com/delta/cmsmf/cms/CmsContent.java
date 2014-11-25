@@ -104,7 +104,7 @@ public class CmsContent extends CmsObject<IDfContent> {
 
 		if (!(document instanceof IDfSysObject)) { throw new CMSMFException(String.format(
 			"Document with id [%s] for content [%s] is not a dm_sysobject: %s (%s)", documentId, contentId, document
-				.getType().getName(), document.getClass().getCanonicalName())); }
+			.getType().getName(), document.getClass().getCanonicalName())); }
 
 		String format = content.getString(CmsAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(CmsAttributes.PAGE);
@@ -114,7 +114,35 @@ public class CmsContent extends CmsObject<IDfContent> {
 		try {
 			File targetFile = ctx.getFileSystem().getContentFile(fsPath);
 			File parent = targetFile.getParentFile();
-			FileUtils.forceMkdir(parent);
+
+			// Deal with a race condition with multiple threads trying to export to the same folder
+			if (!parent.exists()) {
+				IOException caught = null;
+				for (int i = 0; (i < 3); i++) {
+					if (i > 0) {
+						// Only sleep if this is a retry
+						try {
+							Thread.sleep(333);
+						} catch (InterruptedException e2) {
+							// Ignore...
+						}
+					}
+
+					try {
+						caught = null;
+						FileUtils.forceMkdir(parent);
+						break;
+					} catch (IOException e) {
+						// Something went wrong...
+						caught = e;
+					}
+				}
+				if (caught != null) { throw new CMSMFException(String.format(
+					"Failed to create the parent content directory [%s]", parent.getAbsolutePath()), caught); }
+			}
+
+			if (!parent.isDirectory()) { throw new CMSMFException(String.format(
+				"The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
 			IDfSysObject.class.cast(document).getFileEx2(targetFile.getCanonicalPath(), format, pageNumber,
 				pageModifier, false);
 		} catch (IOException e) {
