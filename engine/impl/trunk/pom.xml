@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine-sharepoint</artifactId>
-	<version>0.0.1</version>
+	<version>1.0.0</version>
 	<name>CMF Sharepoint Common Classes</name>
 	<description>CMF Sharepoint Common Classes</description>
 	<packaging>bundle</packaging>
