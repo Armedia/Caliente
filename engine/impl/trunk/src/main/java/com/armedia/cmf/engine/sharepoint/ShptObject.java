@@ -6,7 +6,6 @@ package com.armedia.cmf.engine.sharepoint;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -20,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.Tools;
+import com.independentsoft.share.Service;
 
 /**
  * @author diego
@@ -88,12 +88,16 @@ public abstract class ShptObject<T> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	protected final StoredObjectType type;
 	protected final T wrapped;
+	protected final Service service;
 	private final Map<String, AttributeDescriptor> attributes;
 	private final Map<String, Object> values = new HashMap<String, Object>();
 
-	protected ShptObject(T wrapped, StoredObjectType type) {
+	protected ShptObject(Service service, T wrapped, StoredObjectType type) {
+		if (service == null) { throw new IllegalArgumentException(
+			"Must provide the service this item was retrieved with"); }
 		if (wrapped == null) { throw new IllegalArgumentException("Must provide an object to wrap around"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type"); }
+		this.service = service;
 		this.wrapped = wrapped;
 		this.type = type;
 		this.attributes = ShptObject.getDescriptors(wrapped.getClass());
@@ -165,12 +169,6 @@ public abstract class ShptObject<T> {
 	public abstract String getId();
 
 	public abstract String getName();
-
-	public abstract String getServerRelativeUrl();
-
-	public abstract Date getCreatedTime();
-
-	public abstract Date getLastModifiedTime();
 
 	public final StoredObjectType getStoredType() {
 		return this.type;

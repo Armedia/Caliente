@@ -7,11 +7,12 @@ import com.independentsoft.share.CheckOutType;
 import com.independentsoft.share.CustomizedPageStatus;
 import com.independentsoft.share.File;
 import com.independentsoft.share.FileLevel;
+import com.independentsoft.share.Service;
 
-public class ShptFile extends ShptObject<File> {
+public class ShptFile extends ShptContentObject<File> {
 
-	public ShptFile(File file) {
-		super(file, StoredObjectType.DOCUMENT);
+	public ShptFile(Service service, File file) {
+		super(service, file, StoredObjectType.DOCUMENT);
 	}
 
 	@Override

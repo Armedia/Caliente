@@ -5,11 +5,12 @@ import java.util.List;
 
 import com.armedia.cmf.storage.StoredObjectType;
 import com.independentsoft.share.Folder;
+import com.independentsoft.share.Service;
 
-public class ShptFolder extends ShptObject<Folder> {
+public class ShptFolder extends ShptContentObject<Folder> {
 
-	public ShptFolder(Folder folder) {
-		super(folder, StoredObjectType.FOLDER);
+	public ShptFolder(Service service, Folder folder) {
+		super(service, folder, StoredObjectType.FOLDER);
 	}
 
 	public List<String> getContentTypeOrders() {
