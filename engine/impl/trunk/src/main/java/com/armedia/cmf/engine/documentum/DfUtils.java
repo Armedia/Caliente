@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -295,10 +296,20 @@ public class DfUtils {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		if (source instanceof IDfPersistentObject) { return DfUtils.getExportTarget(IDfPersistentObject.class
 			.cast(source)); }
-		final IDfId id = source.getId(Tools.coalesce(idAttribute, DctmAttributes.R_OBJECT_ID));
-		final String typeStr = source.getString(Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE));
-		return new ExportTarget(DctmObjectType.decodeType(source.getSession().getType(typeStr)).getStoredObjectType(),
-			id.getId());
+		idAttribute = Tools.coalesce(idAttribute, DctmAttributes.R_OBJECT_ID);
+		if (!source.hasAttr(idAttribute)) { throw new IllegalArgumentException(String.format(
+			"The ID attribute [%s] was not found in the given object", idAttribute)); }
+		final IDfId id = source.getId(idAttribute);
+
+		typeAttribute = Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE);
+		final StoredObjectType objectType;
+		if (source.hasAttr(typeAttribute)) {
+			objectType = DctmObjectType.decodeType(source.getSession(), source.getString(typeAttribute))
+				.getStoredObjectType();
+		} else {
+			objectType = null;
+		}
+		return new ExportTarget(objectType, id.getId());
 	}
 
 	public static IDfStore getStore(IDfSession session, String name) throws DfException {
