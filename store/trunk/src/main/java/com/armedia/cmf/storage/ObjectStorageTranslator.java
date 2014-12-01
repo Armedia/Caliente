@@ -9,12 +9,13 @@ public abstract class ObjectStorageTranslator<T, V> implements StoredValueCodec<
 
 	protected abstract StoredObjectType doDecodeObjectType(T object) throws UnsupportedObjectTypeException;
 
-	public final Class<T> decodeObjectType(StoredObjectType type) throws UnsupportedObjectTypeException {
+	public final Class<? extends T> decodeObjectType(StoredObjectType type) throws UnsupportedObjectTypeException {
 		if (type == null) { throw new IllegalArgumentException("Must provide a type whose object class to decode"); }
 		return doDecodeObjectType(type);
 	}
 
-	protected abstract Class<T> doDecodeObjectType(StoredObjectType type) throws UnsupportedObjectTypeException;
+	protected abstract Class<? extends T> doDecodeObjectType(StoredObjectType type)
+		throws UnsupportedObjectTypeException;
 
 	public final String getObjectId(T object) throws Exception {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose ID to retrieve"); }
