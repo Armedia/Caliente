@@ -25,7 +25,7 @@
 			<column name="object_id" type="varchar(32)" remarks="The object which is to be exported">
 				<constraints nullable="false" />
 			</column>
-			<column name="object_type" type="varchar(32)" remarks="The type of documentum object">
+			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
 				<constraints nullable="false" />
 			</column>
 			<column name="traversed" type="boolean" remarks="A flag indicating whether the object has been exported or not">
@@ -41,14 +41,14 @@
 		</createIndex>
 
 		<!-- The main objects table -->
-		<createTable tableName="cmf_object" remarks="The documentum objects">
+		<createTable tableName="cmf_object" remarks="The CMS objects">
 			<column name="object_id" type="varchar(32)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="object_type" type="varchar(32)" remarks="The type of documentum object">
+			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
 				<constraints nullable="false" />
 			</column>
-			<column name="object_subtype" type="varchar(32)" remarks="The exact type of documentum object">
+			<column name="object_subtype" type="varchar(32)" remarks="The exact type of CMS object">
 				<constraints nullable="false" />
 			</column>
 			<column name="batch_id" type="varchar(32)" remarks="The batch identifier that links multiple related objects together to be imported in order">
@@ -173,7 +173,7 @@
 
 		<!-- The attribute mapping table -->
 		<createTable tableName="cmf_mapper">
-			<column name="object_type" type="varchar(32)" remarks="The type of documentum object">
+			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
 				<constraints nullable="false" />
 			</column>
 			<column name="name" type="varchar(32)" remarks="The name of the attribute to map">
