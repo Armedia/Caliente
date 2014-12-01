@@ -54,7 +54,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 	}
 
 	@Override
-	protected Class<IDfPersistentObject> doDecodeObjectType(StoredObjectType type)
+	protected Class<? extends IDfPersistentObject> doDecodeObjectType(StoredObjectType type)
 		throws UnsupportedObjectTypeException {
 		return null;
 	}
