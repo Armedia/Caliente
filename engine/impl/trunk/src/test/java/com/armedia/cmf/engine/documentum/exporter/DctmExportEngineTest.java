@@ -28,7 +28,7 @@ public class DctmExportEngineTest extends DctmEngineTest {
 		settings.put(DctmSessionFactory.USERNAME, "dmadmin2");
 		settings.put(DctmSessionFactory.PASSWORD, "XZ6ZkrcrHEg=");
 		settings.put(Setting.DQL.getLabel(),
-			"select r_object_id, r_object_type from dm_sysobject where folder('/CMSMFTests', DESCEND)");
+			"select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 
 		exporter.runExport(this.output, this.objectStore, this.streamStore, settings);
 	}
