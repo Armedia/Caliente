@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ExportEngineListener> {
+TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -197,8 +197,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		}
 		final String label = String.format("%s [%s](%s)", type, objectLabel, id);
 
-		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Attempting export of %s", label));
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(String.format("Attempting export of %s", label));
 		}
 
 		// First, make sure other threads don't work on this same object
@@ -224,8 +224,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			return null;
 		}
 
-		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Locked %s for storage", label));
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(String.format("Locked %s for storage", label));
 		}
 
 		// Make sure the object hasn't already been exported
@@ -236,6 +236,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 					label));
 			}
 			return null;
+		}
+
+		if (this.log.isDebugEnabled()) {
+			if (referrent != null) {
+				this.log.debug(String.format("Exporting %s (referenced by %s)", label, referrent));
+			} else {
+				this.log.debug(String.format("Exporting %s (from the main search)", label));
+			}
 		}
 
 		final StoredObject<V> marshaled = marshal(session, referrent, sourceObject);
@@ -305,7 +313,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -416,10 +424,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 									nextType = next.getType();
 									if (nextType == null) {
 										this.log
-											.error(String
-												.format(
-													"Failed to determine the object type for target with globally unique ID[%s]",
-													nextId));
+										.error(String
+											.format(
+												"Failed to determine the object type for target with globally unique ID[%s]",
+												nextId));
 										continue;
 									}
 								}
@@ -531,9 +539,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-									.warn(
-										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-										e);
+								.warn(
+									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+									e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -587,10 +595,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
