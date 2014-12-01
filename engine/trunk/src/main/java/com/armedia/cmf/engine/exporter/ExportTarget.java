@@ -19,7 +19,6 @@ public final class ExportTarget implements Comparable<ExportTarget> {
 	}
 
 	public ExportTarget(StoredObjectType type, String id, Long number) {
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide an object id"); }
 		this.type = type;
 		this.id = id;

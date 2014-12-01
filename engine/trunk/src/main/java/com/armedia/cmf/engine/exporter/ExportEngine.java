@@ -370,7 +370,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 							if (this.log.isDebugEnabled()) {
 								this.log.debug("Polling the queue...");
 							}
-							final ExportTarget next;
+							ExportTarget next = null;
 							try {
 								next = workQueue.take();
 							} catch (InterruptedException e) {
@@ -389,6 +389,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								return;
 							}
 
+							StoredObjectType nextType = next.getType();
+							final String nextId = next.getId();
+
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format("Polled %s", next));
 							}
@@ -398,21 +401,36 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 							try {
 								// Begin transaction
 								tx = session.begin();
-								final T sourceObject = getObject(s, next.getType(), next.getId());
+								final T sourceObject = getObject(s, nextType, nextId);
 								if (sourceObject == null) {
 									// No object found with that ID...
-									this.log.warn(String.format("No %s object found with ID[%s]", next.getType(),
-										next.getId()));
+									this.log.warn(String.format("No %s object found with ID[%s]",
+										(nextType != null ? nextType.name() : "globally unique"), nextId));
 									continue;
 								}
 
-								if (this.log.isDebugEnabled()) {
-									this.log.debug(String.format("Exporting the source %s object with ID[%s]",
-										next.getType(), next.getId()));
+								if (nextType == null) {
+									// We have a source object, but don't know its type, so we
+									// recalculate the export target (which means getting the type)
+									next = getExportTarget(sourceObject);
+									nextType = next.getType();
+									if (nextType == null) {
+										this.log
+											.error(String
+												.format(
+													"Failed to determine the object type for target with globally unique ID[%s]",
+													nextId));
+										continue;
+									}
 								}
 
-								final C ctx = contextFactory.newContext(next.getId(), next.getType(),
-									session.getWrapped(), output, objectStore, contentStore);
+								if (this.log.isDebugEnabled()) {
+									this.log.debug(String.format("Exporting the %s object with ID[%s]", nextType,
+										nextId));
+								}
+
+								final C ctx = contextFactory.newContext(nextId, nextType, session.getWrapped(), output,
+									objectStore, contentStore);
 								try {
 									initContext(ctx);
 									Result result = exportObject(objectStore, contentStore, s, null, next,
@@ -430,9 +448,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								}
 							} catch (Throwable t) {
 								this.log.error(
-									String.format("Failed to export %s object with ID[%s]", next.getType(),
-										next.getId()), t);
-								listenerDelegator.objectExportFailed(next.getType(), next.getId(), t);
+									String.format("Failed to export %s object with ID[%s]", nextType, nextId), t);
+								listenerDelegator.objectExportFailed(nextType, nextId, t);
 								if (tx) {
 									if (ok) {
 										session.commit();
