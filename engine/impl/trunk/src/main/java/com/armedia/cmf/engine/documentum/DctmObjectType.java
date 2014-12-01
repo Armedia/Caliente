@@ -138,7 +138,7 @@ public enum DctmObjectType {
 
 	public final boolean isProperClass(IDfPersistentObject o) {
 		if (o == null) { return true; }
-		return this.dfClass.isAssignableFrom(o.getClass());
+		return this.dfClass.isInstance(o);
 	}
 
 	public final Class<? extends IDfPersistentObject> getDfClass() {

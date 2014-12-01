@@ -47,7 +47,7 @@ public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferE
 
 	protected final T castObject(IDfPersistentObject object) throws DfException {
 		if (object == null) { return null; }
-		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
+		if (!this.dfClass.isInstance(object)) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
 				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
