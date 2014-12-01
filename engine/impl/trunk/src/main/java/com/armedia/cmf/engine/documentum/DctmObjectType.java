@@ -15,6 +15,7 @@ import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.content.IDfContent;
@@ -147,9 +148,18 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
+	}
+
+	public static DctmObjectType decodeType(IDfSession session, String typeName) throws DfException,
+		UnsupportedDctmObjectTypeException {
+		if (session == null) { throw new IllegalArgumentException("Must provide a session to find the type in"); }
+		if (typeName == null) { throw new IllegalArgumentException("Must provide a type to find"); }
+		IDfType type = session.getType(typeName);
+		if (type == null) { throw new UnsupportedDctmObjectTypeException(typeName); }
+		return DctmObjectType.decodeType(type);
 	}
 
 	public static DctmObjectType decodeType(IDfType type) throws DfException, UnsupportedDctmObjectTypeException {
