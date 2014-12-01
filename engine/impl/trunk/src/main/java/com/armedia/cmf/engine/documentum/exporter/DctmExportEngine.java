@@ -100,14 +100,13 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	protected IDfPersistentObject getObject(IDfSession session, StoredObjectType type, String id) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the object"); }
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
 
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
 		IDfPersistentObject ret = session.getObject(new DfId(id));
 		DctmObjectType dctmType = DctmObjectType.decodeType(ret);
-		if (type != dctmType.getStoredObjectType()) { throw new Exception(String.format(
+		if ((type != null) && (type != dctmType.getStoredObjectType())) { throw new Exception(String.format(
 			"Type mismatch - expected [%s] but got [%s] for object [%s]", type, dctmType.getStoredObjectType(), id)); }
 		return ret;
 	}
