@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<name>CMF Main Engine</name>
 	<description>CMF Main Engine</description>
 	<packaging>bundle</packaging>
@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-storage-api</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 			<scope>compile</scope>
 		</dependency>
 
