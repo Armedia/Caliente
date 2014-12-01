@@ -20,6 +20,7 @@ import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Service;
 
@@ -42,13 +43,13 @@ public class ShptExportEngine<V> extends
 	}
 
 	@Override
-	protected Iterator<String> findExportResults(Service session, Map<String, ?> settings) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(Service session, Map<String, ?> settings) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected ShptObject<?> getObject(Service session, String id) throws Exception {
+	protected ShptObject<?> getObject(Service session, StoredObjectType type, String id) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
