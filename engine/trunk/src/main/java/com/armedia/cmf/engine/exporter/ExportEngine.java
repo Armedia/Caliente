@@ -340,8 +340,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			}
 
 			final AtomicInteger activeCounter = new AtomicInteger(0);
-			final String exitValue = new String();
-			final BlockingQueue<String> workQueue = new ArrayBlockingQueue<String>(backlogSize);
+			final ExportTarget exitValue = new ExportTarget();
+			final BlockingQueue<ExportTarget> workQueue = new ArrayBlockingQueue<ExportTarget>(backlogSize);
 			final ExecutorService executor = newExecutor(threadCount);
 			if (counter == null) {
 				counter = new StoredObjectCounter<ExportResult>(ExportResult.class);
@@ -370,9 +370,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 							if (this.log.isDebugEnabled()) {
 								this.log.debug("Polling the queue...");
 							}
-							final String nextId;
+							final ExportTarget next;
 							try {
-								nextId = workQueue.take();
+								next = workQueue.take();
 							} catch (InterruptedException e) {
 								Thread.currentThread().interrupt();
 								return;
@@ -383,14 +383,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 							// the same out of some unfortunate coincidence. By checking instances,
 							// we ensure that we will not exit the loop prematurely due to a value
 							// collision.
-							if (nextId == exitValue) {
+							if (next == exitValue) {
 								// Work complete
 								this.log.info("Exiting the export polling loop");
 								return;
 							}
 
 							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Polled %s", nextId));
+								this.log.debug(String.format("Polled %s", next));
 							}
 
 							boolean tx = false;
@@ -398,14 +398,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 							try {
 								// Begin transaction
 								tx = session.begin();
-								final T sourceObject = getObject(s, nextId);
+								final T sourceObject = getObject(s, next.getType(), next.getId());
 								if (sourceObject == null) {
 									// No object found with that ID...
-									this.log.warn(String.format("No object found with ID[%s]", nextId));
+									this.log.warn(String.format("No %s object found with ID[%s]", next.getType(),
+										next.getId()));
 									continue;
 								}
-
-								final ExportTarget next = getExportTarget(sourceObject);
 
 								if (this.log.isDebugEnabled()) {
 									this.log.debug(String.format("Exporting the source %s object with ID[%s]",
@@ -430,7 +429,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 									ctx.close();
 								}
 							} catch (Throwable t) {
-								this.log.error(String.format("Failed to export object with ID[%s]", nextId), t);
+								this.log.error(
+									String.format("Failed to export %s object with ID[%s]", next.getType(),
+										next.getId()), t);
+								listenerDelegator.objectExportFailed(next.getType(), next.getId(), t);
 								if (tx) {
 									if (ok) {
 										session.commit();
@@ -454,7 +456,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			}
 			executor.shutdown();
 
-			final Iterator<String> results;
+			final Iterator<ExportTarget> results;
 			try {
 				results = findExportResults(baseSession.getWrapped(), settings);
 			} catch (Exception e) {
@@ -468,7 +470,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				listenerDelegator.exportStarted(settings);
 				// 2: iterate over the results, gathering up the object IDs
 				while (results.hasNext()) {
-					final String target = results.next();
+					final ExportTarget target = results.next();
 					if (this.log.isTraceEnabled()) {
 						this.log.trace(String.format("Processing item %s", target));
 					}
@@ -527,9 +529,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 						this.log.info("All the export workers are done.");
 					}
 				} finally {
-					List<String> remaining = new ArrayList<String>();
+					List<ExportTarget> remaining = new ArrayList<ExportTarget>();
 					workQueue.drainTo(remaining);
-					for (String v : remaining) {
+					for (ExportTarget v : remaining) {
 						if (v == exitValue) {
 							continue;
 						}
@@ -587,9 +589,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 	protected void initContext(C ctx) {
 	}
 
-	protected abstract Iterator<String> findExportResults(S session, Map<String, ?> settings) throws Exception;
+	protected abstract Iterator<ExportTarget> findExportResults(S session, Map<String, ?> settings) throws Exception;
 
-	protected abstract T getObject(S session, String id) throws Exception;
+	protected abstract T getObject(S session, StoredObjectType type, String id) throws Exception;
 
 	protected abstract Collection<T> identifyRequirements(S session, StoredObject<V> marshalled, T object, C ctx)
 		throws Exception;
