@@ -17,6 +17,10 @@ public class DefaultCmsImportEventListener implements CmsImportEngineListener {
 	}
 
 	@Override
+	public void objectBatchImportStarted(CmsObjectType objectType, String batchId, int count) {
+	}
+
+	@Override
 	public void objectImportStarted(CmsObject<?> object) {
 	}
 
@@ -27,6 +31,10 @@ public class DefaultCmsImportEventListener implements CmsImportEngineListener {
 
 	@Override
 	public void objectImportFailed(CmsObject<?> object, Throwable thrown) {
+	}
+
+	@Override
+	public void objectBatchImportCompleted(CmsObjectType objectType, String batchId, int successful, boolean failed) {
 	}
 
 	@Override

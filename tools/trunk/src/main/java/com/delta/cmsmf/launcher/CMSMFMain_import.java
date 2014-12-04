@@ -22,6 +22,7 @@ import com.delta.cmsmf.cms.CmsImportResult;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.engine.CmsImportEngineListener;
+import com.delta.cmsmf.engine.CmsImportManifest;
 import com.delta.cmsmf.engine.CmsImporter;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
@@ -56,7 +57,9 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 		// lock
 		final CmsImporter importer = new CmsImporter(this.objectStore, this.fileSystem, this.console,
 			Setting.THREADS.getInt());
+		CmsImportManifest manifest = new CmsImportManifest();
 		importer.addListener(this);
+		importer.addListener(manifest);
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();
 		Date end = null;
@@ -180,6 +183,15 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 	}
 
 	@Override
+	public void objectBatchImportStarted(CmsObjectType objectType, String batchId, int count) {
+		showProgress(objectType);
+		/*
+		this.console.info(String.format("Import started for %d %s objects in batch [%s]", count, objectType.name(),
+			batchId));
+		 */
+	}
+
+	@Override
 	public void objectImportStarted(CmsObject<?> object) {
 		showProgress(object.getType());
 		this.console.info(String.format("Import started for %s [%s](%s)", object.getType().name(), object.getLabel(),
@@ -215,6 +227,15 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 			String.format("Import failed for %s [%s](%s)", object.getType().name(), object.getLabel(), object.getId()),
 			thrown);
 		showProgress(object.getType());
+	}
+
+	@Override
+	public void objectBatchImportCompleted(CmsObjectType objectType, String batchId, int successful, boolean failed) {
+		showProgress(objectType);
+		/*
+		this.console.info(String.format("Import %s for %s batch [%s] with %d objects imported", (failed ? "aborted"
+			: "completed"), objectType.name(), batchId, successful));
+		 */
 	}
 
 	@Override

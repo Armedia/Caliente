@@ -32,6 +32,18 @@ public interface CmsImportEngineListener {
 
 	/**
 	 * <p>
+	 * Invoked when the import has begun on the given batch, and indicates how many objects the
+	 * batch contains.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @param batchId
+	 * @param count
+	 */
+	public void objectBatchImportStarted(CmsObjectType objectType, String batchId, int count);
+
+	/**
+	 * <p>
 	 * Invoked when the import has started for the given object.
 	 * </p>
 	 *
@@ -61,6 +73,19 @@ public interface CmsImportEngineListener {
 	 * @param thrown
 	 */
 	public void objectImportFailed(CmsObject<?> object, Throwable thrown);
+
+	/**
+	 * <p>
+	 * Invoked when the import has concluded on the given batch, and indicates how many objects were
+	 * imported successfully, and whether the batch was failed early.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @param batchId
+	 * @param successful
+	 * @param failed
+	 */
+	public void objectBatchImportCompleted(CmsObjectType objectType, String batchId, int successful, boolean failed);
 
 	/**
 	 * <p>

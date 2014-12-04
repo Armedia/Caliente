@@ -79,7 +79,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 	}
 
 	public void doImport(final DctmSessionManager sessionManager, boolean postProcess) throws DfException,
-	CMSMFException {
+		CMSMFException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -133,9 +133,15 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 							continue;
 						}
 
+						CmsObject<?> sample = batch.iterator().next();
+						final CmsObjectType type = sample.getType();
+						final String batchId = sample.getBatchId();
 						if (CmsImporter.this.log.isDebugEnabled()) {
-							CmsImporter.this.log.debug(String.format("Polled a batch with %d items", batch.size()));
+							CmsImporter.this.log.debug(String.format("Polled %s batch [%s] with %d items", type.name(),
+								batchId, batch.size()));
 						}
+
+						objectBatchImportStarted(type, batchId, batch.size());
 
 						session = sessionManager.acquireSession();
 						if (CmsImporter.this.log.isDebugEnabled()) {
@@ -143,8 +149,9 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 								DfUtils.getSessionId(session)));
 						}
 
+						boolean failBatch = false;
+						int okCount = 0;
 						try {
-							boolean failBatch = false;
 							for (CmsObject<?> next : batch) {
 								if (failBatch) {
 									final CmsImportResult result = CmsImportResult.SKIPPED;
@@ -159,7 +166,6 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 								CmsTransferContext ctx = new DefaultTransferContext(next.getId(), session, objectStore,
 									fileSystem, output);
 								SaveResult result = null;
-								final CmsObjectType type = next.getType();
 								try {
 									objectImportStarted(next);
 									result = next.saveToCMS(ctx);
@@ -167,6 +173,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 									if (CmsImporter.this.log.isDebugEnabled()) {
 										CmsImporter.this.log.debug(String.format("Persisted (%s) %s", result, next));
 									}
+									okCount++;
 								} catch (Throwable t) {
 									objectImportFailed(next, t);
 									result = null;
@@ -192,6 +199,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 							}
 						} finally {
 							// Paranoid...yes :)
+							objectBatchImportCompleted(type, batchId, okCount, failBatch);
 							try {
 								sessionManager.releaseSession(session);
 							} finally {
@@ -415,10 +423,10 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -431,7 +439,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 					continue;
 				}
 				this.log
-				.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
+					.info(String.format("Action report for %s:%n%s", type.name(), this.counter.generateReport(type)));
 			}
 			this.log.info(String.format("Summary Report:%n%s", this.counter.generateCummulativeReport()));
 		}
@@ -441,6 +449,16 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.importStarted(summary);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectBatchImportStarted(CmsObjectType objectType, String batchId, int count) {
+		for (CmsImportEngineListener l : getListeners()) {
+			try {
+				l.objectBatchImportStarted(objectType, batchId, count);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}
@@ -491,6 +509,16 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
 		for (CmsImportEngineListener l : getListeners()) {
 			try {
 				l.objectImportFailed(object, thrown);
+			} catch (Throwable t) {
+				this.log.warn("Exception caught in event propagation", t);
+			}
+		}
+	}
+
+	private void objectBatchImportCompleted(CmsObjectType objectType, String batchId, int successful, boolean failed) {
+		for (CmsImportEngineListener l : getListeners()) {
+			try {
+				l.objectBatchImportCompleted(objectType, batchId, successful, failed);
 			} catch (Throwable t) {
 				this.log.warn("Exception caught in event propagation", t);
 			}
