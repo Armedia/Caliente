@@ -68,7 +68,8 @@ public class CmsImportManifest extends DefaultCmsImportEventListener {
 
 		private String formatThrown(Throwable t) {
 			String msg = t.getMessage();
-			return String.format("%s%s%s", t.getClass().getCanonicalName(), StringUtils.isBlank(msg) ? "" : ": ", msg);
+			return String.format("%s%s%s", t.getClass().getCanonicalName(), StringUtils.isBlank(msg) ? "" : ": ",
+				Tools.coalesce(msg, ""));
 		}
 
 		private String getThrownMessage() {
