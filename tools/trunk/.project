@@ -29,7 +29,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1407779218821</id>
+			<id>1417787483852</id>
 			<name>target</name>
 			<type>9</type>
 			<matcher>
@@ -38,61 +38,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1407779218833</id>
-			<name>target</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-test-classes</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1407779218850</id>
-			<name>target</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-classes</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1407779218861</id>
-			<name>target</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-test-classes</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1407779218986</id>
-			<name>target</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-classes</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1407779218990</id>
-			<name>target</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-test-classes</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1407779219021</id>
-			<name>target</name>
-			<type>9</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-classes</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1407779219028</id>
+			<id>1417787483863</id>
 			<name>target</name>
 			<type>9</type>
 			<matcher>
