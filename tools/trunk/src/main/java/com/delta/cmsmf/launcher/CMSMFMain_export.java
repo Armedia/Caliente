@@ -17,6 +17,7 @@ import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.engine.CmsExportEngineListener;
+import com.delta.cmsmf.engine.CmsExportManifest;
 import com.delta.cmsmf.engine.CmsExporter;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
@@ -46,7 +47,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 
 		CmsExporter exporter = new CmsExporter(this.objectStore, this.fileSystem, this.console,
 			Setting.THREADS.getInt());
+		CmsExportManifest manifest = new CmsExportManifest();
 		exporter.addListener(this);
+		exporter.addListener(manifest);
 
 		final Date start = new Date();
 		Date end = null;
