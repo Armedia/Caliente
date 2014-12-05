@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import com.delta.cmsmf.cms.CmsExportListener;
 import com.delta.cmsmf.cms.CmsFileSystem;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
@@ -49,26 +48,76 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 
 	private final Set<String> noiseTracker = Collections.synchronizedSet(new HashSet<String>());
 
-	private final CmsExportListener exportListener = new CmsExportListener() {
+	private final CmsExportEngineListener exportListener = new CmsExportEngineListener() {
 
 		@Override
-		public void objectSkipped(CmsObjectType objectType, String objectId) {
-			CmsExporter.this.objectSkipped(objectType, objectId);
+		public void exportStarted(String dql) {
+			for (CmsExportEngineListener l : getListeners()) {
+				try {
+					l.exportStarted(dql);
+				} catch (Throwable t) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				}
+			}
 		}
 
 		@Override
 		public void objectExportStarted(CmsObjectType objectType, String objectId) {
-			CmsExporter.this.objectExportStarted(objectType, objectId);
+			if (isTracked(objectType, objectId)) { return; }
+			for (CmsExportEngineListener l : getListeners()) {
+				try {
+					l.objectExportStarted(objectType, objectId);
+				} catch (Throwable t) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				}
+			}
 		}
 
 		@Override
-		public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
-			CmsExporter.this.objectExportFailed(objectType, objectId, thrown);
+		public void objectSkipped(CmsObjectType objectType, String objectId) {
+			if (isTracked(objectType, objectId)) { return; }
+			for (CmsExportEngineListener l : getListeners()) {
+				try {
+					l.objectSkipped(objectType, objectId);
+				} catch (Throwable t) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				}
+			}
 		}
 
 		@Override
 		public void objectExportCompleted(CmsObject<?> object) {
-			CmsExporter.this.objectExportCompleted(object);
+			isTracked(object);
+			for (CmsExportEngineListener l : getListeners()) {
+				try {
+					l.objectExportCompleted(object);
+				} catch (Throwable t) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				}
+			}
+		}
+
+		@Override
+		public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
+			if (isTracked(objectType, objectId)) { return; }
+			for (CmsExportEngineListener l : getListeners()) {
+				try {
+					l.objectExportFailed(objectType, objectId, thrown);
+				} catch (Throwable t) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				}
+			}
+		}
+
+		@Override
+		public void exportFinished(Map<CmsObjectType, Integer> summary) {
+			for (CmsExportEngineListener l : getListeners()) {
+				try {
+					l.exportFinished(summary);
+				} catch (Throwable t) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				}
+			}
 		}
 	};
 
@@ -169,8 +218,6 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 						}
 
 						final IDfId id = next.asId();
-						CmsObjectType type = null;
-						Throwable thrown = null;
 						if (CmsExporter.this.log.isDebugEnabled()) {
 							CmsExporter.this.log.debug(String.format("Polled ID %s", id.getId()));
 						}
@@ -185,25 +232,16 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 								CmsExporter.this.log.debug(String.format("Retrieved [%s] object with id [%s]", dfObj
 									.getType().getName(), dfObj.getObjectId().getId()));
 							}
-							type = CmsObjectType.decodeType(dfObj);
 							final String objectId = dfObj.getObjectId().getId();
 
-							objectExportStarted(type, objectId);
-							CmsObject<?> object = objectStore.persistDfObject(dfObj, new DefaultExportContext(objectId,
-								session, objectStore, fileSystem, output, CmsExporter.this.exportListener));
-							if (object != null) {
-								objectExportCompleted(object);
-							} else {
-								objectSkipped(type, objectId);
-							}
+							objectStore.persistDfObject(dfObj, new DefaultExportContext(objectId, session, objectStore,
+								fileSystem, output, CmsExporter.this.exportListener));
 							if (CmsExporter.this.log.isDebugEnabled()) {
 								CmsExporter.this.log.debug(String.format("Persisted [%s] object with id [%s]", dfObj
 									.getType().getName(), objectId));
 							}
 						} catch (Throwable t) {
 							// Log the error, move on
-							objectExportFailed(type, id.getId(), thrown);
-							thrown = t;
 							CmsExporter.this.log.error(
 								String.format("Exception caught processing object with ID [%s]", id.getId()), t);
 						} finally {
@@ -234,7 +272,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 			// 1: run the query for the given predicate
 			final String dql = String.format("select distinct r_object_id %s", dqlPredicate);
 			results = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
-			exportStarted(dql);
+			this.exportListener.exportStarted(dql);
 			// 2: iterate over the results, gathering up the object IDs
 			int counter = 0;
 			while (results.next()) {
@@ -325,7 +363,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 			} catch (CMSMFException e) {
 				this.log.warn("Exception caught attempting to get the work summary", e);
 			}
-			exportFinished(summary);
+			this.exportListener.exportFinished(summary);
 
 			executor.shutdownNow();
 			int pending = activeCounter.get();
@@ -344,70 +382,6 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 			}
 			DfUtils.closeQuietly(results);
 			sessionManager.releaseSession(session);
-		}
-	}
-
-	private void exportStarted(String dql) {
-		for (CmsExportEngineListener l : getListeners()) {
-			try {
-				l.exportStarted(dql);
-			} catch (Throwable t) {
-				this.log.warn("Exception caught in event propagation", t);
-			}
-		}
-	}
-
-	private void objectExportStarted(CmsObjectType objectType, String objectId) {
-		if (isTracked(objectType, objectId)) { return; }
-		for (CmsExportEngineListener l : getListeners()) {
-			try {
-				l.objectExportStarted(objectType, objectId);
-			} catch (Throwable t) {
-				this.log.warn("Exception caught in event propagation", t);
-			}
-		}
-	}
-
-	private void objectExportCompleted(CmsObject<?> object) {
-		isTracked(object);
-		for (CmsExportEngineListener l : getListeners()) {
-			try {
-				l.objectExportCompleted(object);
-			} catch (Throwable t) {
-				this.log.warn("Exception caught in event propagation", t);
-			}
-		}
-	}
-
-	private void objectSkipped(CmsObjectType objectType, String objectId) {
-		if (isTracked(objectType, objectId)) { return; }
-		for (CmsExportEngineListener l : getListeners()) {
-			try {
-				l.objectSkipped(objectType, objectId);
-			} catch (Throwable t) {
-				this.log.warn("Exception caught in event propagation", t);
-			}
-		}
-	}
-
-	private void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
-		if (isTracked(objectType, objectId)) { return; }
-		for (CmsExportEngineListener l : getListeners()) {
-			try {
-				l.objectExportFailed(objectType, objectId, thrown);
-			} catch (Throwable t) {
-				this.log.warn("Exception caught in event propagation", t);
-			}
-		}
-	}
-
-	private void exportFinished(Map<CmsObjectType, Integer> summary) {
-		for (CmsExportEngineListener l : getListeners()) {
-			try {
-				l.exportFinished(summary);
-			} catch (Throwable t) {
-				this.log.warn("Exception caught in event propagation", t);
-			}
 		}
 	}
 }
