@@ -44,7 +44,9 @@ public enum Setting {
 	JDBC_DRIVER("jdbc.driver"),
 	JDBC_URL("jdbc.url"),
 	JDBC_USER("jdbc.user"),
-	JDBC_PASSWORD("jdbc.password");
+	JDBC_PASSWORD("jdbc.password"),
+	MANIFEST_OUTCOMES("manifest.outcomes"),
+	MANIFEST_TYPES("manifest.types");
 
 	public final String name;
 

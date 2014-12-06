@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -94,7 +95,15 @@ public class CmsImportManifest extends DefaultCmsImportEventListener {
 		}
 	}
 
-	private Map<String, List<Record>> openBatches = new ConcurrentHashMap<String, List<Record>>();
+	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<String, List<Record>>();
+	private final Set<CmsImportResult> results;
+	private final Set<CmsObjectType> types;
+
+	public CmsImportManifest(CmsImporter importer) {
+		this.results = importer.getManifestOutcomes();
+		this.types = importer.getManifestTypes();
+		importer.addListener(this);
+	}
 
 	@Override
 	public void importStarted(Map<CmsObjectType, Integer> summary) {
@@ -106,6 +115,7 @@ public class CmsImportManifest extends DefaultCmsImportEventListener {
 
 	@Override
 	public void objectBatchImportStarted(CmsObjectType objectType, String batchId, int count) {
+		if (!this.types.contains(objectType)) { return; }
 		if (count <= 1) {
 			// We don't track batches with a single item because it's not worth the trouble
 			// This also covers the case when batch's contents are parallelized, but batches
@@ -118,6 +128,8 @@ public class CmsImportManifest extends DefaultCmsImportEventListener {
 	@Override
 	public void objectImportCompleted(CmsObject<?> object, CmsImportResult cmsImportResult, String newLabel,
 		String newId) {
+		if (!this.types.contains(object.getType())) { return; }
+		if (!this.results.contains(cmsImportResult)) { return; }
 		Record record = new Record(object, newId, cmsImportResult);
 		List<Record> batch = this.openBatches.get(object.getBatchId());
 		if (batch != null) {
@@ -130,6 +142,8 @@ public class CmsImportManifest extends DefaultCmsImportEventListener {
 
 	@Override
 	public void objectImportFailed(CmsObject<?> object, Throwable thrown) {
+		if (!this.types.contains(object.getType())) { return; }
+		if (!this.results.contains(CmsImportResult.FAILED)) { return; }
 		Record record = new Record(object, thrown);
 		List<Record> batch = this.openBatches.get(object.getBatchId());
 		if (batch != null) {
@@ -142,6 +156,7 @@ public class CmsImportManifest extends DefaultCmsImportEventListener {
 
 	@Override
 	public void objectBatchImportCompleted(CmsObjectType objectType, String batchId, int successful, boolean failed) {
+		if (!this.types.contains(objectType)) { return; }
 		List<Record> batch = this.openBatches.get(batchId);
 		if (batch != null) {
 			// output each record in (roughly) the order they were imported

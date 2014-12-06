@@ -57,9 +57,8 @@ public class CMSMFMain_import extends AbstractCMSMFMain implements CmsImportEngi
 		// lock
 		final CmsImporter importer = new CmsImporter(this.objectStore, this.fileSystem, this.console,
 			Setting.THREADS.getInt());
-		CmsImportManifest manifest = new CmsImportManifest();
+		new CmsImportManifest(importer);
 		importer.addListener(this);
-		importer.addListener(manifest);
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();
 		Date end = null;

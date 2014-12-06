@@ -47,9 +47,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain implements CmsExportEngi
 
 		CmsExporter exporter = new CmsExporter(this.objectStore, this.fileSystem, this.console,
 			Setting.THREADS.getInt());
-		CmsExportManifest manifest = new CmsExportManifest();
+		new CmsExportManifest(exporter);
 		exporter.addListener(this);
-		exporter.addListener(manifest);
 
 		final Date start = new Date();
 		Date end = null;

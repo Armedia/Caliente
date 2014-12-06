@@ -2,14 +2,20 @@ package com.delta.cmsmf.engine;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
+import com.armedia.commons.utilities.Tools;
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cms.CmsFileSystem;
+import com.delta.cmsmf.cms.CmsObjectType;
 import com.delta.cmsmf.cms.storage.CmsObjectStore;
 
-public abstract class CmsTransferEngine<T> {
+public abstract class CmsTransferEngine<T, O extends Enum<O>> {
 
 	protected final Logger log = Logger.getLogger(getClass());
 
@@ -20,34 +26,40 @@ public abstract class CmsTransferEngine<T> {
 
 	private final List<T> listeners = new ArrayList<T>();
 
+	private final Set<CmsObjectType> manifestTypes;
+	private final Set<O> manifestOutcomes;
 	private final int backlogSize;
 	private final int threadCount;
 	private final CmsObjectStore objectStore;
 	private final CmsFileSystem fileSystem;
 	private final Logger output;
 
-	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem) {
-		this(objectStore, fileSystem, null);
+	public CmsTransferEngine(Class<O> outcomeClass, CmsObjectStore objectStore, CmsFileSystem fileSystem) {
+		this(outcomeClass, objectStore, fileSystem, null);
 	}
 
-	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount) {
-		this(objectStore, fileSystem, null, threadCount);
+	public CmsTransferEngine(Class<O> outcomeClass, CmsObjectStore objectStore, CmsFileSystem fileSystem,
+		int threadCount) {
+		this(outcomeClass, objectStore, fileSystem, null, threadCount);
 	}
 
-	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount, int backlogSize) {
-		this(objectStore, fileSystem, null, threadCount, backlogSize);
+	public CmsTransferEngine(Class<O> outcomeClass, CmsObjectStore objectStore, CmsFileSystem fileSystem,
+		int threadCount, int backlogSize) {
+		this(outcomeClass, objectStore, fileSystem, null, threadCount, backlogSize);
 	}
 
-	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output) {
-		this(objectStore, fileSystem, output, CmsTransferEngine.DEFAULT_THREAD_COUNT);
+	public CmsTransferEngine(Class<O> outcomeClass, CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output) {
+		this(outcomeClass, objectStore, fileSystem, output, CmsTransferEngine.DEFAULT_THREAD_COUNT);
 	}
 
-	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount) {
-		this(objectStore, fileSystem, output, threadCount, CmsTransferEngine.DEFAULT_BACKLOG_SIZE);
+	public CmsTransferEngine(Class<O> outcomeClass, CmsObjectStore objectStore, CmsFileSystem fileSystem,
+		Logger output, int threadCount) {
+		this(outcomeClass, objectStore, fileSystem, output, threadCount, CmsTransferEngine.DEFAULT_BACKLOG_SIZE);
 	}
 
-	public CmsTransferEngine(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount,
-		int backlogSize) {
+	public CmsTransferEngine(Class<O> outcomeClass, CmsObjectStore objectStore, CmsFileSystem fileSystem,
+		Logger output, int threadCount, int backlogSize) {
+		if (outcomeClass == null) { throw new IllegalArgumentException("Must provide an expected outcome class"); }
 		if (threadCount <= 0) {
 			threadCount = 1;
 		}
@@ -65,6 +77,27 @@ public abstract class CmsTransferEngine<T> {
 		this.objectStore = objectStore;
 		this.fileSystem = fileSystem;
 		this.output = output;
+		Set<O> outcomes = EnumSet.noneOf(outcomeClass);
+		StrTokenizer tok = StrTokenizer.getCSVInstance(Setting.MANIFEST_OUTCOMES.getString());
+		for (String str : tok.getTokenList()) {
+			try {
+				outcomes.add(Enum.valueOf(outcomeClass, str.toUpperCase()));
+			} catch (IllegalArgumentException e) {
+				// Illegal outcome, not applicable
+			}
+		}
+		this.manifestOutcomes = Tools.freezeSet(outcomes);
+
+		Set<CmsObjectType> types = EnumSet.noneOf(CmsObjectType.class);
+		tok = StrTokenizer.getCSVInstance(Setting.MANIFEST_TYPES.getString());
+		for (String str : tok.getTokenList()) {
+			try {
+				types.add(Enum.valueOf(CmsObjectType.class, str.toUpperCase()));
+			} catch (IllegalArgumentException e) {
+				// Illegal outcome, not applicable
+			}
+		}
+		this.manifestTypes = Tools.freezeSet(types);
 	}
 
 	protected final CmsObjectStore getObjectStore() {
@@ -77,6 +110,14 @@ public abstract class CmsTransferEngine<T> {
 
 	protected final Logger getOutput() {
 		return this.output;
+	}
+
+	public final Set<CmsObjectType> getManifestTypes() {
+		return this.manifestTypes;
+	}
+
+	public final Set<O> getManifestOutcomes() {
+		return this.manifestOutcomes;
 	}
 
 	public final synchronized boolean addListener(T listener) {

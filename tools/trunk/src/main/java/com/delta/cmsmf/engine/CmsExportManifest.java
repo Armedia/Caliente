@@ -7,6 +7,7 @@ package com.delta.cmsmf.engine;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -113,7 +114,15 @@ public class CmsExportManifest extends DefaultCmsExportEventListener {
 		}
 	}
 
-	private Map<String, List<Record>> openBatches = new ConcurrentHashMap<String, List<Record>>();
+	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<String, List<Record>>();
+	private final Set<CmsExportResult> results;
+	private final Set<CmsObjectType> types;
+
+	public CmsExportManifest(CmsExporter exporter) {
+		this.results = exporter.getManifestOutcomes();
+		this.types = exporter.getManifestTypes();
+		exporter.addListener(this);
+	}
 
 	@Override
 	public void exportStarted(String dql) {
@@ -124,16 +133,22 @@ public class CmsExportManifest extends DefaultCmsExportEventListener {
 
 	@Override
 	public void objectExportCompleted(CmsObject<?> object) {
+		if (!this.types.contains(object.getType())) { return; }
+		if (!this.results.contains(CmsExportResult.EXPORTED)) { return; }
 		new Record(object, CmsExportResult.EXPORTED).log(this.manifestLog);
 	}
 
 	@Override
 	public void objectSkipped(CmsObjectType objectType, String objectId) {
+		if (!this.types.contains(objectType)) { return; }
+		if (!this.results.contains(CmsExportResult.SKIPPED)) { return; }
 		new Record(objectType, objectId, CmsExportResult.SKIPPED).log(this.manifestLog);
 	}
 
 	@Override
 	public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
+		if (!this.types.contains(objectType)) { return; }
+		if (!this.results.contains(CmsExportResult.FAILED)) { return; }
 		new Record(objectType, objectId, thrown).log(this.manifestLog);
 	}
 

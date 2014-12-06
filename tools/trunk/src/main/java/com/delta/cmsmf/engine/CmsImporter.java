@@ -45,33 +45,33 @@ import com.documentum.fc.common.DfException;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener> {
+public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener, CmsImportResult> {
 
 	private final CmsCounter<CmsImportResult> counter = new CmsCounter<CmsImportResult>(CmsImportResult.class);
 
 	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem) {
-		super(objectStore, fileSystem);
+		super(CmsImportResult.class, objectStore, fileSystem);
 	}
 
 	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount) {
-		super(objectStore, fileSystem, threadCount);
+		super(CmsImportResult.class, objectStore, fileSystem, threadCount);
 	}
 
 	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount, int backlogSize) {
-		super(objectStore, fileSystem, threadCount, backlogSize);
+		super(CmsImportResult.class, objectStore, fileSystem, threadCount, backlogSize);
 	}
 
 	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output) {
-		super(objectStore, fileSystem, output);
+		super(CmsImportResult.class, objectStore, fileSystem, output);
 	}
 
 	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount) {
-		super(objectStore, fileSystem, output, threadCount);
+		super(CmsImportResult.class, objectStore, fileSystem, output, threadCount);
 	}
 
 	public CmsImporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount,
 		int backlogSize) {
-		super(objectStore, fileSystem, output, threadCount, backlogSize);
+		super(CmsImportResult.class, objectStore, fileSystem, output, threadCount, backlogSize);
 	}
 
 	public final CmsCounter<CmsImportResult> getCounter() {

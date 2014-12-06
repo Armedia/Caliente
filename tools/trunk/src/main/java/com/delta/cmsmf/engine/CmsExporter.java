@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
+import com.delta.cmsmf.cms.CmsExportResult;
 import com.delta.cmsmf.cms.CmsFileSystem;
 import com.delta.cmsmf.cms.CmsObject;
 import com.delta.cmsmf.cms.CmsObjectType;
@@ -44,7 +45,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
+public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener, CmsExportResult> {
 
 	private final Set<String> noiseTracker = Collections.synchronizedSet(new HashSet<String>());
 
@@ -122,28 +123,28 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 	};
 
 	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem) {
-		super(objectStore, fileSystem);
+		super(CmsExportResult.class, objectStore, fileSystem);
 	}
 
 	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount) {
-		super(objectStore, fileSystem, threadCount);
+		super(CmsExportResult.class, objectStore, fileSystem, threadCount);
 	}
 
 	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, int threadCount, int backlogSize) {
-		super(objectStore, fileSystem, threadCount, backlogSize);
+		super(CmsExportResult.class, objectStore, fileSystem, threadCount, backlogSize);
 	}
 
 	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output) {
-		super(objectStore, fileSystem, output);
+		super(CmsExportResult.class, objectStore, fileSystem, output);
 	}
 
 	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount) {
-		super(objectStore, fileSystem, output, threadCount);
+		super(CmsExportResult.class, objectStore, fileSystem, output, threadCount);
 	}
 
 	public CmsExporter(CmsObjectStore objectStore, CmsFileSystem fileSystem, Logger output, int threadCount,
 		int backlogSize) {
-		super(objectStore, fileSystem, output, threadCount, backlogSize);
+		super(CmsExportResult.class, objectStore, fileSystem, output, threadCount, backlogSize);
 	}
 
 	private boolean isTracked(CmsObjectType objectType, String objectId) {
@@ -170,7 +171,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 	}
 
 	public void doExport(final DctmSessionManager sessionManager, final String dqlPredicate) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		final IDfSession session = sessionManager.acquireSession();
 		final CmsObjectStore objectStore = getObjectStore();
 		final CmsFileSystem fileSystem = getFileSystem();
@@ -370,10 +371,10 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener> {
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
