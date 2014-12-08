@@ -2,11 +2,9 @@ package com.delta.cmsmf.engine;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
@@ -23,6 +21,8 @@ public abstract class CmsTransferEngine<T, O extends Enum<O>> {
 	public static final int MAX_BACKLOG_SIZE = 1000;
 	public static final int DEFAULT_THREAD_COUNT = 4;
 	public static final int MAX_THREAD_COUNT = 32;
+
+	private static final String ALL = "ALL";
 
 	private final List<T> listeners = new ArrayList<T>();
 
@@ -77,26 +77,13 @@ public abstract class CmsTransferEngine<T, O extends Enum<O>> {
 		this.objectStore = objectStore;
 		this.fileSystem = fileSystem;
 		this.output = output;
-		Set<O> outcomes = EnumSet.noneOf(outcomeClass);
-		StrTokenizer tok = StrTokenizer.getCSVInstance(Setting.MANIFEST_OUTCOMES.getString());
-		for (String str : tok.getTokenList()) {
-			try {
-				outcomes.add(Enum.valueOf(outcomeClass, str.toUpperCase()));
-			} catch (IllegalArgumentException e) {
-				// Illegal outcome, not applicable
-			}
-		}
+
+		Set<O> outcomes = Tools.parseEnumCSV(outcomeClass, Setting.MANIFEST_OUTCOMES.getString(),
+			CmsTransferEngine.ALL, false);
 		this.manifestOutcomes = Tools.freezeSet(outcomes);
 
-		Set<CmsObjectType> types = EnumSet.noneOf(CmsObjectType.class);
-		tok = StrTokenizer.getCSVInstance(Setting.MANIFEST_TYPES.getString());
-		for (String str : tok.getTokenList()) {
-			try {
-				types.add(Enum.valueOf(CmsObjectType.class, str.toUpperCase()));
-			} catch (IllegalArgumentException e) {
-				// Illegal outcome, not applicable
-			}
-		}
+		Set<CmsObjectType> types = Tools.parseEnumCSV(CmsObjectType.class, Setting.MANIFEST_TYPES.getString(),
+			CmsTransferEngine.ALL, false);
 		this.manifestTypes = Tools.freezeSet(types);
 	}
 
