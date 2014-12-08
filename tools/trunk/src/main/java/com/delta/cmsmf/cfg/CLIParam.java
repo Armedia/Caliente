@@ -51,8 +51,8 @@ public enum CLIParam {
 	skip_users(Setting.SKIP_USERS, false, "Skip exporting users"),
 	skip_groups(Setting.SKIP_GROUPS, false, "Skip exporting groups"),
 	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls"),
-	manifest_types(Setting.MANIFEST_TYPES, true, "The object types to include in the manifest"),
-	manifest_outcomes(Setting.MANIFEST_OUTCOMES, true, "The outcomes to include in the manifest");
+	manifest_types(Setting.MANIFEST_TYPES, true, "The object types to include in the manifest (ALL = all types)"),
+	manifest_outcomes(Setting.MANIFEST_OUTCOMES, true, "The outcomes to include in the manifest (ALL = all outcomes)");
 
 	public final Setting property;
 	public final Option option;
