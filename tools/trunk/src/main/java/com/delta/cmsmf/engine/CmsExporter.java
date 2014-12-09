@@ -76,7 +76,7 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener, CmsE
 
 		@Override
 		public void objectSkipped(CmsObjectType objectType, String objectId) {
-			if (isTracked(objectType, objectId)) { return; }
+			if ((objectType != null) && (objectId != null) && isTracked(objectType, objectId)) { return; }
 			for (CmsExportEngineListener l : getListeners()) {
 				try {
 					l.objectSkipped(objectType, objectId);
