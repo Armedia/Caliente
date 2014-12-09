@@ -1,16 +1,21 @@
 package com.delta.cmsmf.launcher;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 
 public class CMSMFLauncher extends AbstractLauncher {
@@ -18,6 +23,30 @@ public class CMSMFLauncher extends AbstractLauncher {
 	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.CMSMFMain_%s";
 
 	private static Properties PARAMETER_PROPERTIES = new Properties();
+
+	public static final String VERSION;
+
+	static {
+		String version = null;
+		URL url = Thread.currentThread().getContextClassLoader().getResource("version.properties");
+		if (url != null) {
+			Properties p = new Properties();
+			try {
+				InputStream in = url.openStream();
+				final String str;
+				try {
+					str = IOUtils.toString(in);
+				} finally {
+					IOUtils.closeQuietly(in);
+				}
+				p.load(new StringReader(str));
+				version = p.getProperty("version");
+			} catch (IOException e) {
+				version = "(failed to load)";
+			}
+		}
+		VERSION = Tools.coalesce(version, "(unknown)");
+	}
 
 	static Properties getParameterProperties() {
 		return CMSMFLauncher.PARAMETER_PROPERTIES;
