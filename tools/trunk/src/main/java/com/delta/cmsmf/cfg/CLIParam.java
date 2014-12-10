@@ -27,7 +27,7 @@ public enum CLIParam {
 	password(null, true, "The password to connect with"),
 	log_name(null, true, "The base name of the log file to use instead of the default (cmsmf-${action})"),
 	log4j(null, true, "The Log4j configuration (XML format) to use instead of the default (overrides --log_name)"),
-	threads(null, true, "The number of threads to use while importing or exporting"),
+	threads(Setting.THREADS, true, "The number of threads to use while importing or exporting"),
 	special_users(Setting.SPECIAL_USERS, true,
 		"The special users that should not be imported into the target instance (comma-separated)"),
 	special_groups(Setting.SPECIAL_GROUPS, true,
