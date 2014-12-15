@@ -373,7 +373,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	protected final boolean restoreMutability(T sysObject) throws DfException {
 		boolean ret = false;
 		final String newId = sysObject.getObjectId().getId();
-		if (this.mustFreeze) {
+		if (this.mustFreeze && !sysObject.isFrozen()) {
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", getLabel(), getId(), newId));
 			}
@@ -381,7 +381,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			// TODO: How to determine if we use false or true here? Stick to false, for now...
 			sysObject.freeze(false);
 			ret |= true;
-		} else if (this.mustImmute) {
+		} else if (this.mustImmute && !sysObject.isImmutable()) {
 			if (this.log.isDebugEnabled()) {
 				this.log
 				.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
