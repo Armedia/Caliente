@@ -50,7 +50,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-DctmSysObject {
+	DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -377,7 +377,7 @@ DctmSysObject {
 	protected final boolean restoreMutability(T sysObject) throws DfException {
 		boolean ret = false;
 		final String newId = sysObject.getObjectId().getId();
-		if (this.mustFreeze) {
+		if (this.mustFreeze && !sysObject.isFrozen()) {
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", this.storedObject.getLabel(),
 					this.storedObject.getId(), newId));
@@ -386,7 +386,7 @@ DctmSysObject {
 			// TODO: How to determine if we use false or true here? Stick to false, for now...
 			sysObject.freeze(false);
 			ret |= true;
-		} else if (this.mustImmute) {
+		} else if (this.mustImmute && !sysObject.isImmutable()) {
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Setting immutability status to [%s](%s){%s}",
 					this.storedObject.getLabel(), this.storedObject.getId(), newId));
@@ -409,7 +409,7 @@ DctmSysObject {
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -619,7 +619,7 @@ DctmSysObject {
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-				.getId(), currentPath));
+					.getId(), currentPath));
 		}
 
 		return existing;
@@ -716,7 +716,7 @@ DctmSysObject {
 				// that means we have a broken version tree...which is unsupported
 				throw new ImportException(String.format(
 					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-					.getId(), deferred));
+						.getId(), deferred));
 			}
 		}
 		return history;
