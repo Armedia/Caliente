@@ -22,7 +22,6 @@ import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfACLException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
@@ -168,31 +167,26 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		final IDfSession session = acl.getSession();
 		for (int i = 0; i < existingPermissionCount; i++) {
 			IDfPermit permit = IDfPermit.class.cast(existingPermissions.get(i));
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("PERMIT REVOKED on [%s]: [%s|%d|%d (%s)]", this.storedObject.getLabel(),
-					permit.getAccessorName(), permit.getPermitType(), permit.getPermitValueInt(),
-					permit.getPermitValueString()));
-			}
-			IDfGroup g = session.getGroup(permit.getAccessorName());
-			IDfUser u = session.getUser(permit.getAccessorName());
-			if ((u == null) && (g == null)) {
-				// Bad accessor...try to revoke but don't explode if it fails
-				try {
-					acl.revokePermit(permit);
-				} catch (DfACLException e) {
-					if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
-						// we can survive this...
-						this.log.warn(String.format(
-							"Could not revoke permit [%s/%s] from accessor [%s] - ACE not found",
-							DfUtils.decodePermitType(permit.getPermitType()), permit.getPermitValueString(),
-							permit.getAccessorName()));
-						continue;
-					}
-					// something else? don't snuff it...
-					throw new DfException(e);
-				}
-			} else {
+			try {
 				acl.revokePermit(permit);
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("PERMIT REVOKED on [%s]: [%s|%d|%d (%s)]",
+						this.storedObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
+						permit.getPermitValueInt(), permit.getPermitValueString()));
+				}
+			} catch (DfACLException e) {
+				if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
+					// we can survive this...
+					this.log
+						.warn(String
+							.format(
+								"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
+								this.storedObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
+								permit.getPermitValueInt(), permit.getPermitValueString()));
+					continue;
+				}
+				// something else? don't snuff it...
+				throw e;
 			}
 		}
 
