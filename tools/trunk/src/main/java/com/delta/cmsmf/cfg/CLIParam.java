@@ -21,7 +21,7 @@ public enum CLIParam {
 	cfg(null, true, "The configuration file to use"),
 	dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
 	dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
-	mode(null, true, true, "The mode of operation, either 'encrypt', 'decrypt', 'import' or 'export'"),
+	mode(null, true, true, "The mode of operation, either 'counter', 'encrypt', 'decrypt', 'import' or 'export'"),
 	docbase(null, true, "The docbase name to connect to"),
 	user(null, true, "The username to connect with"),
 	password(null, true, "The password to connect with"),
@@ -52,7 +52,9 @@ public enum CLIParam {
 	skip_groups(Setting.SKIP_GROUPS, false, "Skip exporting groups"),
 	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls"),
 	manifest_types(Setting.MANIFEST_TYPES, true, "The object types to include in the manifest (ALL = all types)"),
-	manifest_outcomes(Setting.MANIFEST_OUTCOMES, true, "The outcomes to include in the manifest (ALL = all outcomes)");
+	manifest_outcomes(Setting.MANIFEST_OUTCOMES, true, "The outcomes to include in the manifest (ALL = all outcomes)"),
+	count_path(null, true, "The path within which to count objects for"),
+	count_recursive(null, false, "Whether to count recursively or not");
 
 	public final Setting property;
 	public final Option option;
