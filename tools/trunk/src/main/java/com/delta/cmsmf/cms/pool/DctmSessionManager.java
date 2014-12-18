@@ -114,6 +114,15 @@ public class DctmSessionManager {
 					DctmSessionManager.this.docbase, DctmSessionManager.getId(obj)));
 			}
 			try {
+				cleanupObject(obj);
+			} catch (Exception e) {
+				if (DctmSessionManager.LOG.isDebugEnabled()) {
+					DctmSessionManager.LOG.warn(
+						String.format("Exception caught cleaning up session [%s] to [%s]",
+							DctmSessionManager.getId(obj), DctmSessionManager.this.docbase), e);
+				}
+			}
+			try {
 				obj.disconnect();
 			} catch (DfException e) {
 				// Safely ignore
@@ -126,16 +135,25 @@ public class DctmSessionManager {
 			return obj.isConnected();
 		}
 
-		@Override
-		public void activateObject(IDfSession obj) throws Exception {
+		private void cleanupObject(IDfSession obj) throws Exception {
 			if (obj == null) { return; }
+			if (obj.isTransactionActive()) {
+				DctmSessionManager.LOG.warn(String.format(
+					"Session [%s] to [%s] was left with an open transaction which will be aborted",
+					DctmSessionManager.getId(obj), DctmSessionManager.this.docbase));
+				obj.abortTrans();
+			}
 			flushCaches(obj);
 		}
 
 		@Override
+		public void activateObject(IDfSession obj) throws Exception {
+			cleanupObject(obj);
+		}
+
+		@Override
 		public void passivateObject(IDfSession obj) throws Exception {
-			if (obj == null) { return; }
-			flushCaches(obj);
+			cleanupObject(obj);
 		}
 	};
 
