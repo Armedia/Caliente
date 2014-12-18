@@ -80,8 +80,8 @@ public class DctmSessionManager {
 					sessionId));
 			}
 			for (DfCache cache : DfCache.values()) {
-				if (DctmSessionManager.LOG.isDebugEnabled()) {
-					DctmSessionManager.LOG.debug(String.format("Flushing the [%s] cache for session [%s]",
+				if (DctmSessionManager.LOG.isTraceEnabled()) {
+					DctmSessionManager.LOG.trace(String.format("Flushing the [%s] cache for session [%s]",
 						cache.name(), sessionId));
 				}
 				try {
