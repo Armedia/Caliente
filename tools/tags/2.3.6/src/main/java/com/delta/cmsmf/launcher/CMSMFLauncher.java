@@ -1,0 +1,131 @@
+package com.delta.cmsmf.launcher;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Properties;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.xml.DOMConfigurator;
+
+import com.armedia.commons.utilities.Tools;
+import com.delta.cmsmf.cfg.CLIParam;
+
+public class CMSMFLauncher extends AbstractLauncher {
+
+	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.CMSMFMain_%s";
+
+	private static Properties PARAMETER_PROPERTIES = new Properties();
+
+	public static final String VERSION;
+
+	static {
+		String version = null;
+		URL url = Thread.currentThread().getContextClassLoader().getResource("version.properties");
+		if (url != null) {
+			Properties p = new Properties();
+			try {
+				InputStream in = url.openStream();
+				final String str;
+				try {
+					str = IOUtils.toString(in);
+				} finally {
+					IOUtils.closeQuietly(in);
+				}
+				p.load(new StringReader(str));
+				version = p.getProperty("version");
+			} catch (IOException e) {
+				version = "(failed to load)";
+			}
+		}
+		VERSION = Tools.coalesce(version, "(unknown)");
+	}
+
+	static Properties getParameterProperties() {
+		return CMSMFLauncher.PARAMETER_PROPERTIES;
+	}
+
+	public static void main(String[] args) throws Throwable {
+		System.setProperty("logName", "cmsmf-startup");
+		if (!CLIParam.parse(args)) {
+			// If the parameters didn't parse, we fail.
+			return;
+		}
+
+		// Just make sure it's initialized
+		AbstractLauncher.patchClasspath();
+
+		// Configure Log4J
+		final String mode = CLIParam.mode.getString();
+		String log4j = CLIParam.log4j.getString();
+		boolean customLog4j = false;
+		if (log4j != null) {
+			final File cfg = new File(log4j);
+			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
+				LogManager.resetConfiguration();
+				DOMConfigurator.configureAndWatch(cfg.getCanonicalPath());
+				customLog4j = true;
+			}
+		}
+		if (!customLog4j) {
+			LogManager.resetConfiguration();
+			String logName = CLIParam.log_name.getString();
+			if (logName == null) {
+				String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+				logName = String.format("cmsmf-%s-%s", mode.toLowerCase(), runTime);
+			}
+			System.setProperty("logName", logName);
+			URL config = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
+			if (config != null) {
+				DOMConfigurator.configure(config);
+			} else {
+				config = Thread.currentThread().getContextClassLoader().getResource("log4j.properties");
+				if (config != null) {
+					PropertyConfigurator.configure(config);
+				}
+			}
+		}
+		// Make sure log4j is configured
+		Logger.getRootLogger().info("Logging active");
+
+		// Now, convert the command-line parameters into configuration properties
+		for (CLIParam p : CLIParam.values()) {
+			if (!p.isPresent()) {
+				continue;
+			}
+			String value = p.getString();
+			if ((value != null) && (p.property != null)) {
+				final String key = p.property.name;
+				if ((key != null) && (value != null)) {
+					CMSMFLauncher.PARAMETER_PROPERTIES.setProperty(key, value);
+				}
+			}
+		}
+
+		// Finally, launch the main class
+		// We launch like this because we have to patch the classpath before we link into the rest
+		// of the code. If we don't do it like this, the app will refuse to launch altogether
+		Class<?> klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode));
+		CMSMFMain main = null;
+		if (CMSMFMain.class.isAssignableFrom(klass)) {
+			main = CMSMFMain.class.cast(klass.newInstance());
+		} else {
+			throw new RuntimeException(String.format("Class [%s] is not a valid AbstractCMSMFMain class",
+				klass.getName()));
+		}
+
+		// Lock for single execution
+		try {
+			main.run();
+		} finally {
+			// Unlock from single execution
+		}
+	}
+}
