@@ -41,7 +41,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain {
 	}
 
 	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest) throws CMSMFException,
-	DfException {
+		DfException {
 		// If we're already traversed, we skip it
 		final String id = folder.getObjectId().getId();
 		if (!traversed.add(id)) { return; }
@@ -59,7 +59,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain {
 			manifest.info(msg);
 		}
 
-		if (!CLIParam.count_recursive.isPresent()) { return; }
+		if (CLIParam.non_recursive.isPresent()) { return; }
 
 		// Recurse into its children
 		result = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.RECURSOR, id),

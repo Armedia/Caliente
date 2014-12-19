@@ -54,7 +54,7 @@ public enum CLIParam {
 	manifest_types(Setting.MANIFEST_TYPES, true, "The object types to include in the manifest (ALL = all types)"),
 	manifest_outcomes(Setting.MANIFEST_OUTCOMES, true, "The outcomes to include in the manifest (ALL = all outcomes)"),
 	count_path(null, true, "The path within which to count objects for"),
-	count_recursive(null, false, "Whether to count recursively or not");
+	non_recursive(null, false, "Turn off recursion (i.e. to export a single folder without descending)");
 
 	public final Setting property;
 	public final Option option;
