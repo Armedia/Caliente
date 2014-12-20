@@ -68,8 +68,8 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener, CmsE
 			for (CmsExportEngineListener l : getListeners()) {
 				try {
 					l.objectExportStarted(objectType, objectId);
-				} catch (Throwable t) {
-					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				} catch (Exception e) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", e);
 				}
 			}
 		}
@@ -77,23 +77,26 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener, CmsE
 		@Override
 		public void objectSkipped(CmsObjectType objectType, String objectId) {
 			if ((objectType != null) && (objectId != null) && isTracked(objectType, objectId)) { return; }
+			setTracked(objectType, objectId);
 			for (CmsExportEngineListener l : getListeners()) {
 				try {
 					l.objectSkipped(objectType, objectId);
-				} catch (Throwable t) {
-					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				} catch (Exception e) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", e);
 				}
 			}
 		}
 
 		@Override
 		public void objectExportCompleted(CmsObject<?> object) {
-			isTracked(object);
+			if (!isTracked(object.getType(), object.getId())) {
+				setTracked(object.getType(), object.getId());
+			}
 			for (CmsExportEngineListener l : getListeners()) {
 				try {
 					l.objectExportCompleted(object);
-				} catch (Throwable t) {
-					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				} catch (Exception e) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", e);
 				}
 			}
 		}
@@ -101,11 +104,12 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener, CmsE
 		@Override
 		public void objectExportFailed(CmsObjectType objectType, String objectId, Throwable thrown) {
 			if (isTracked(objectType, objectId)) { return; }
+			setTracked(objectType, objectId);
 			for (CmsExportEngineListener l : getListeners()) {
 				try {
 					l.objectExportFailed(objectType, objectId, thrown);
-				} catch (Throwable t) {
-					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				} catch (Exception e) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", e);
 				}
 			}
 		}
@@ -115,8 +119,8 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener, CmsE
 			for (CmsExportEngineListener l : getListeners()) {
 				try {
 					l.exportFinished(summary);
-				} catch (Throwable t) {
-					CmsExporter.this.log.warn("Exception caught in event propagation", t);
+				} catch (Exception e) {
+					CmsExporter.this.log.warn("Exception caught in event propagation", e);
 				}
 			}
 		}
@@ -158,16 +162,18 @@ public class CmsExporter extends CmsTransferEngine<CmsExportEngineListener, CmsE
 			}
 			ret = false;
 		}
-		if (!ret) {
-			// Some objects aren't persisted, but should still be tracked...
-			String key = String.format("%s[%s]", objectType.name(), objectId);
-			ret = !this.noiseTracker.add(key);
+		final String key = String.format("%s[%s]", objectType.name(), objectId);
+		if (ret) {
+			// Help the GC along...
+			this.noiseTracker.remove(key);
+		} else {
+			ret = this.noiseTracker.contains(key);
 		}
 		return ret;
 	}
 
-	private boolean isTracked(CmsObject<?> object) {
-		return isTracked(object.getType(), object.getId());
+	private void setTracked(CmsObjectType objectType, String objectId) {
+		this.noiseTracker.add(String.format("%s[%s]", objectType.name(), objectId));
 	}
 
 	public void doExport(final DctmSessionManager sessionManager, final String dqlPredicate) throws DfException,
