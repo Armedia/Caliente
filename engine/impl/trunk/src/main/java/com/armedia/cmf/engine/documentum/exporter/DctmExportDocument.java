@@ -22,6 +22,7 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
+import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -151,7 +152,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		req.add(document.getType());
 
 		// Export the format
-		req.add(document.getFormat());
+		IDfFormat format = document.getFormat();
+		if (format != null) {
+			req.add(format);
+		}
 
 		// Export the owner
 		String owner = DctmMappingUtils.substituteMappableUsers(session, document.getOwnerName());
