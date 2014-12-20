@@ -140,9 +140,14 @@ public class CmsExportManifest extends DefaultCmsExportEventListener {
 
 	@Override
 	public void objectSkipped(CmsObjectType objectType, String objectId) {
+		// For the manifest, we're not really interested in Skipped objects, since
+		// they'll always be the result of duplicate serializations, so there's no
+		// problem to be reported or deduced from it
+		/*
 		if (!this.types.contains(objectType)) { return; }
 		if (!this.results.contains(CmsExportResult.SKIPPED)) { return; }
 		new Record(objectType, objectId, CmsExportResult.SKIPPED).log(this.manifestLog);
+		 */
 	}
 
 	@Override
