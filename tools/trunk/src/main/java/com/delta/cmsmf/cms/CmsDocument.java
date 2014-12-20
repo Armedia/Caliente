@@ -25,6 +25,7 @@ import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -255,7 +256,10 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		dependencyManager.persistRelatedObject(document.getType());
 
 		// Export the format
-		dependencyManager.persistRelatedObject(document.getFormat());
+		IDfFormat format = document.getFormat();
+		if (format != null) {
+			dependencyManager.persistRelatedObject(format);
+		}
 
 		// We only export versions if we're the root object of the context operation
 		// There is no actual harm done, since the export engine is smart enough to
