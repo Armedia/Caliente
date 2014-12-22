@@ -1,5 +1,7 @@
 package com.delta.cmsmf.utils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +10,6 @@ import java.util.regex.Pattern;
 import javax.activation.MimeType;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 
@@ -246,37 +247,67 @@ public class DfUtils {
 		return ret;
 	}
 
-	public static IDfFormat findBestFormat(IDfSession session, String fileName) throws DfException {
+	public static IDfFormat findBestFormat(IDfSession session, InputStream data, String fileName) throws IOException,
+		DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to search through"); }
-		if (fileName == null) { throw new IllegalArgumentException("Must provide a filename to analyze"); }
-		MimeType mimeType = MimeTools.determineMimeType(fileName);
-		if (mimeType == MimeTools.UNKNOWN) {
-			// Can't identify from the filename
-			return null;
+		if ((data == null) && (fileName == null)) { throw new IllegalArgumentException(
+			"Must provide either a data stream or a filename"); }
+
+		MimeType nameMimeType = null;
+		String extension = null;
+		if (fileName != null) {
+			nameMimeType = MimeTools.determineMimeType(fileName);
+			extension = FilenameUtils.getExtension(fileName);
 		}
-		String extension = FilenameUtils.getExtension(fileName);
-		// If we have no extension, we CANNOT determine the format...
-		if (StringUtils.isEmpty(extension)) { return null; }
+		MimeType dataMimeType = null;
+		if (data != null) {
+			dataMimeType = MimeTools.determineMimeType(data);
+		}
 
 		// Find by extension
-		String str = mimeType.getBaseType().replaceAll("'", "''");
-		IDfCollection collection = DfUtils.executeQuery(session,
-			String.format("select r_object_id from dm_format where mime_type = '%s'", str), IDfQuery.DF_EXECREAD_QUERY);
+		String nameStr = (nameMimeType != null ? nameMimeType.getBaseType().replaceAll("'", "''") : null);
+		String dataStr = (dataMimeType != null ? dataMimeType.getBaseType().replaceAll("'", "''") : null);
+
+		if (nameStr == null) {
+			nameStr = dataStr;
+		}
+		if (dataStr == null) {
+			dataStr = nameStr;
+		}
+
+		IDfCollection collection = DfUtils.executeQuery(session, String.format(
+			"select distinct r_object_id from dm_format where mime_type = '%s' or mime_type = '%s'", dataStr, nameStr),
+			IDfQuery.DF_EXECREAD_QUERY);
 		try {
 			// Match the format to the extension...
 			// TODO: which one?
 			while (collection.next()) {
 				IDfId id = collection.getId(CmsAttributes.R_OBJECT_ID);
 				IDfFormat format = IDfFormat.class.cast(session.getObject(id));
-				if (Tools.equals(extension, format.getDOSExtension())) {
+				if ((extension != null) && Tools.equals(extension, format.getDOSExtension())) {
 					// Candidate...return?
 					return format;
 				}
 			}
-			// No matches...ignore it
+			// No matches...
 			return null;
 		} finally {
 			DfUtils.closeQuietly(collection);
 		}
+	}
+
+	public static IDfFormat findBestFormat(IDfSession session, String fileName) throws DfException {
+		if (fileName == null) { throw new IllegalArgumentException("Must provide a filename to analyze"); }
+		try {
+			return DfUtils.findBestFormat(session, null, fileName);
+		} catch (IOException e) {
+			// this is not possible b/c we're not trying to read anything
+			throw new IllegalStateException("Unexpected exception caught", e);
+		}
+	}
+
+	public static IDfFormat findBestFormat(IDfSession session, InputStream in) throws IOException, DfException {
+		if (in == null) { throw new IllegalArgumentException("Must provide a data stream to analyze"); }
+		return DfUtils.findBestFormat(session, in, null);
 	}
 }
