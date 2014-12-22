@@ -11,6 +11,7 @@ import org.junit.BeforeClass;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.AbstractTest;
+import com.delta.cmsmf.cms.CmsAttributes;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -42,8 +43,8 @@ public class CmsBrancherTest extends AbstractTest {
 			IDfFolder parent = session.getFolderByPath("/Temp");
 			document.link(parent.getObjectId().getId());
 			document.save();
-			this.log
-				.info(String.format("Created version: %s", document.getAllRepeatingStrings("r_version_label", ",")));
+			this.log.info(String.format("Created version: %s",
+				document.getAllRepeatingStrings(CmsAttributes.R_VERSION_LABEL, ",")));
 			ok = true;
 			return document;
 		} finally {
@@ -84,7 +85,7 @@ public class CmsBrancherTest extends AbstractTest {
 			IDfId newId = base.checkin(false, newVersion);
 			base = IDfDocument.class.cast(session.getObject(newId));
 			this.log.info(String.format("Committed version: %s from %s",
-				base.getAllRepeatingStrings("r_version_label", ","), baseLabel));
+				base.getAllRepeatingStrings(CmsAttributes.R_VERSION_LABEL, ","), baseLabel));
 			if (!Tools.equals(baseId, base.getAntecedentId().getId())) {
 				this.log.warn(String.format("ANTECEDENT ID MISMATCH: Expected %s, but got %s", baseId, base
 					.getAntecedentId().getId()));
@@ -132,7 +133,7 @@ public class CmsBrancherTest extends AbstractTest {
 				IDfId newId = base.checkin(false, gap > 1 ? versionNumber : null);
 				IDfDocument child = IDfDocument.class.cast(session.getObject(newId));
 				this.log.info(String.format("Committed version: %s from %s",
-					child.getAllRepeatingStrings("r_version_label", ","), baseLabel));
+					child.getAllRepeatingStrings(CmsAttributes.R_VERSION_LABEL, ","), baseLabel));
 				baseLabel = child.getImplicitVersionLabel();
 				if (!Tools.equals(baseId, child.getAntecedentId().getId())) {
 					this.log.warn(String.format("ANTECEDENT ID MISMATCH: Expected %s, but got %s", baseId, child
@@ -167,7 +168,8 @@ public class CmsBrancherTest extends AbstractTest {
 			out.write(content.getBytes());
 			branch.setContent(out);
 			branch.save();
-			this.log.info(String.format("Branched version: %s", branch.getAllRepeatingStrings("r_version_label", ",")));
+			this.log.info(String.format("Branched version: %s",
+				branch.getAllRepeatingStrings(CmsAttributes.R_VERSION_LABEL, ",")));
 			if (!Tools.equals(baseId, branch.getAntecedentId().getId())) {
 				this.log.warn(String.format("ANTECEDENT ID MISMATCH: Expected %s, but got %s", baseId, branch
 					.getAntecedentId().getId()));
