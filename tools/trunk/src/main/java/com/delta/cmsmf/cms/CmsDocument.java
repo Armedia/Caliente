@@ -137,7 +137,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		super.getDataProperties(properties, document);
 
 		if (!isDfReference(document)) { return; }
@@ -552,6 +552,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				if ((renditionNumber == null) || (renditionNumber.getValue().asInteger() == 0)) {
 					if (targetFormat.get() == null) {
 						if (fullFormat == null) {
+							CmsDocument.this.log.info(String.format("Attempting to infer content type for [%s](%s)",
+								getLabel(), getId()));
 							// Identify the format from the file contents
 							InputStream in = null;
 							try {
@@ -564,14 +566,20 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 								if (CmsDocument.this.log.isDebugEnabled()) {
 									CmsDocument.this.log.warn(
 										String
-										.format(
-											"Exception caught while trying to identify the mime type for file [%s] - non-fatal, work will continue",
-											absolutePath), e);
+											.format(
+												"Exception caught while trying to identify the mime type for file [%s] - non-fatal, work will continue",
+												absolutePath), e);
 								}
 							} finally {
 								IOUtils.closeQuietly(in);
 							}
+						} else {
+							CmsDocument.this.log.info(String.format(
+								"Content type for [%s](%s) will match that of its first content object", getLabel(),
+								getId()));
 						}
+						CmsDocument.this.log.info(String.format("Content type set to [%s] for [%s](%s)", fullFormat,
+							getLabel(), getId()));
 						targetFormat.set(fullFormat);
 					} else if ((fullFormat != null) && !Tools.equals(fullFormat, contentType)) {
 						fullFormat = contentType;
