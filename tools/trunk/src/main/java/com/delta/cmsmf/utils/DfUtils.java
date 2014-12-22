@@ -5,17 +5,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.activation.MimeType;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.Constant;
+import com.delta.cmsmf.cms.CmsAttributes;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
 
 public class DfUtils {
@@ -236,5 +244,39 @@ public class DfUtils {
 		Integer ret = DfUtils.PERMIT_TYPES_MAP.get(permitType);
 		if (ret == null) { throw new DfException(String.format("Unknown permit type value [%s] detected", permitType)); }
 		return ret;
+	}
+
+	public static IDfFormat findBestFormat(IDfSession session, String fileName) throws DfException {
+		if (session == null) { throw new IllegalArgumentException("Must provide a session to search through"); }
+		if (fileName == null) { throw new IllegalArgumentException("Must provide a filename to analyze"); }
+		MimeType mimeType = MimeTools.determineMimeType(fileName);
+		if (mimeType == MimeTools.UNKNOWN) {
+			// Can't identify from the filename
+			return null;
+		}
+		String extension = FilenameUtils.getExtension(fileName);
+		// If we have no extension, we CANNOT determine the format...
+		if (StringUtils.isEmpty(extension)) { return null; }
+
+		// Find by extension
+		String str = mimeType.getBaseType().replaceAll("'", "''");
+		IDfCollection collection = DfUtils.executeQuery(session,
+			String.format("select r_object_id from dm_format where mime_type = '%s'", str), IDfQuery.DF_EXECREAD_QUERY);
+		try {
+			// Match the format to the extension...
+			// TODO: which one?
+			while (collection.next()) {
+				IDfId id = collection.getId(CmsAttributes.R_OBJECT_ID);
+				IDfFormat format = IDfFormat.class.cast(session.getObject(id));
+				if (Tools.equals(extension, format.getDOSExtension())) {
+					// Candidate...return?
+					return format;
+				}
+			}
+			// No matches...ignore it
+			return null;
+		} finally {
+			DfUtils.closeQuietly(collection);
+		}
 	}
 }
