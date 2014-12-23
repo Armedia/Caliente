@@ -5,9 +5,7 @@
 package com.delta.cmsmf.cms;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,9 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
@@ -507,17 +503,9 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 
 		final String documentId = document.getObjectId().getId();
-		final String contentType;
-		{
-			String ct = getAttribute(CmsAttributes.A_CONTENT_TYPE).getValue().toString();
-			contentType = StringUtils.isBlank(ct) ? null : ct;
-		}
+		final String contentType = getAttribute(CmsAttributes.A_CONTENT_TYPE).getValue().toString();
 		final CmsFileSystem fs = context.getFileSystem();
 		final int contentCount = contentIds.size();
-		final AtomicReference<String> targetFormat = new AtomicReference<String>(null);
-		if (!StringUtils.isBlank(contentType)) {
-			targetFormat.set(contentType);
-		}
 		context.deserializeObjects(CmsContent.class, contentIds, new ObjectHandler() {
 
 			private final AtomicInteger current = new AtomicInteger(0);
@@ -554,38 +542,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				String fullFormat = content.getAttribute(CmsAttributes.FULL_FORMAT).getValue().asString();
 
 				if ((renditionNumber == null) || (renditionNumber.getValue().asInteger() == 0)) {
-					if (targetFormat.get() == null) {
-						if (fullFormat == null) {
-							CmsDocument.this.log.info(String.format("Attempting to infer content type for [%s](%s)",
-								getLabel(), getId()));
-							// Identify the format from the file contents
-							InputStream in = null;
-							try {
-								in = new FileInputStream(new File(absolutePath));
-								IDfFormat format = DfUtils.findBestFormat(session, in, document.getObjectName());
-								if (format != null) {
-									fullFormat = format.getName();
-								}
-							} catch (Exception e) {
-								if (CmsDocument.this.log.isDebugEnabled()) {
-									CmsDocument.this.log.warn(
-										String
-										.format(
-											"Exception caught while trying to identify the mime type for file [%s] - non-fatal, work will continue",
-											absolutePath), e);
-								}
-							} finally {
-								IOUtils.closeQuietly(in);
-							}
-						} else {
-							CmsDocument.this.log.info(String.format(
-								"Content type for [%s](%s) will match that of its first content object", getLabel(),
-								getId()));
-						}
-						CmsDocument.this.log.info(String.format("Content type set to [%s] for [%s](%s)", fullFormat,
-							getLabel(), getId()));
-						targetFormat.set(fullFormat);
-					} else if ((fullFormat != null) && !Tools.equals(fullFormat, contentType)) {
+					if ((fullFormat != null) && !Tools.equals(fullFormat, contentType)) {
 						fullFormat = contentType;
 					}
 					try {
@@ -691,11 +648,6 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			}
 
 		});
-
-		// If we've changed formats, we need to update the attribute
-		if (!Tools.equals(contentType, targetFormat.get())) {
-			document.setString(CmsAttributes.A_CONTENT_TYPE, targetFormat.get());
-		}
 
 		// Now, link to the parent folders
 		linkToParents(document, context);
