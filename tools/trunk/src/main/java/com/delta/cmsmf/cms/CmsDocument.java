@@ -137,7 +137,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	@Override
 	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		super.getDataProperties(properties, document);
 
 		if (!isDfReference(document)) { return; }
@@ -507,7 +507,11 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 
 		final String documentId = document.getObjectId().getId();
-		final String contentType = getAttribute(CmsAttributes.A_CONTENT_TYPE).getValue().toString();
+		final String contentType;
+		{
+			String ct = getAttribute(CmsAttributes.A_CONTENT_TYPE).getValue().toString();
+			contentType = StringUtils.isBlank(ct) ? null : ct;
+		}
 		final CmsFileSystem fs = context.getFileSystem();
 		final int contentCount = contentIds.size();
 		final AtomicReference<String> targetFormat = new AtomicReference<String>(null);
@@ -566,9 +570,9 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 								if (CmsDocument.this.log.isDebugEnabled()) {
 									CmsDocument.this.log.warn(
 										String
-											.format(
-												"Exception caught while trying to identify the mime type for file [%s] - non-fatal, work will continue",
-												absolutePath), e);
+										.format(
+											"Exception caught while trying to identify the mime type for file [%s] - non-fatal, work will continue",
+											absolutePath), e);
 								}
 							} finally {
 								IOUtils.closeQuietly(in);
