@@ -4,21 +4,18 @@
 
 package com.delta.cmsmf.utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang3.text.StrTokenizer;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -26,230 +23,83 @@ import com.documentum.fc.common.DfException;
  */
 public class DfBranchFixer {
 
-	public static class VersionNumber implements Comparable<VersionNumber> {
-		private final String string;
-		private final int[] numbers;
-
-		private VersionNumber(String version) {
-			StrTokenizer tok = new StrTokenizer(version, '.');
-			List<String> l = tok.getTokenList();
-			this.numbers = new int[l.size()];
-			int i = 0;
-			for (String str : l) {
-				this.numbers[i++] = Integer.valueOf(str);
-			}
-			this.string = version;
-		}
-
-		@Override
-		public int hashCode() {
-			return Tools.hashTool(this, null, this.numbers);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (!Tools.baseEquals(this, obj)) { return false; }
-			VersionNumber other = VersionNumber.class.cast(obj);
-			return Arrays.equals(this.numbers, other.numbers);
-		}
-
-		@Override
-		public String toString() {
-			return String.format("VersionNumber %s [%s]", this.string, Arrays.toString(this.numbers));
-		}
-
-		@Override
-		public int compareTo(VersionNumber o) {
-			// Always sort after NULL
-			if (o == null) { return 1; }
-			final int n = Math.max(this.numbers.length, o.numbers.length);
-			for (int i = 0; i < n; i++) {
-				final int a;
-				if (i < this.numbers.length) {
-					a = this.numbers[i];
-				} else {
-					a = 0;
-				}
-				final int b;
-				if (i < o.numbers.length) {
-					b = o.numbers[i];
-				} else {
-					b = 0;
-				}
-				if (a < b) { return -1; }
-				if (a > b) { return 1; }
-			}
-			return 0;
-		}
-	}
-
-	public static class DocumentVersion implements Comparable<DocumentVersion> {
-		private final VersionNumber version;
-		private final DocumentVersion antecedent;
-		private final IDfDocument node;
-		private final Map<String, DocumentVersion> successors = new HashMap<String, DocumentVersion>();
-
-		private DocumentVersion(IDfDocument node) throws DfException {
-			this(node, null);
-		}
-
-		private DocumentVersion(IDfDocument node, DocumentVersion antecedent) throws DfException {
-			if (node == null) { throw new IllegalArgumentException("Must provide an IDfDocument instance"); }
-			this.version = new VersionNumber(node.getImplicitVersionLabel());
-			this.node = node;
-			if ((antecedent != null) && (antecedent != this)) {
-				this.antecedent = antecedent;
-				// Validate string order
-				if (antecedent.version.compareTo(this.version) >= 0) { throw new IllegalArgumentException(
-					String.format("Antecedent string [%s] is not prior to this string [%s]", antecedent.version,
-						this.version)); }
-				antecedent.successors.put(this.version.string, this);
-			} else {
-				this.antecedent = null;
-			}
-		}
-
-		public boolean isRoot() {
-			return (this.antecedent == null);
-		}
-
-		// Traverse the tree upward towards the root
-		public DocumentVersion getRootVersion() {
-			if (this.antecedent == null) { return this; }
-			return this.antecedent.getRootVersion();
-		}
-
-		@Override
-		public int compareTo(DocumentVersion o) {
-			if (o == null) { return 1; }
-			return this.version.compareTo(o.version);
-		}
-	}
-
-	private Map<String, DocumentVersion> constructContiguousIndex(Collection<IDfDocument> segment)
+	public void fixTree(IDfId chronicle, Collection<IDfDocument> allVersions, Collection<String> ignore)
 		throws CMSMFException, DfException {
-		Map<String, DocumentVersion> cIndex = new HashMap<String, DocumentVersion>(segment.size());
-		for (IDfDocument d : segment) {
-			final DocumentVersion antecedent = cIndex.get(d.getAntecedentId().getId());
-			if ((antecedent == null) && !d.getAntecedentId().isNull()) { throw new CMSMFException(String.format(
-				"Contiguous string segment contains a gap - antecedent ID [%s] is missing", d.getAntecedentId()
-					.getId())); }
-			final DocumentVersion current = new DocumentVersion(d, antecedent);
-			cIndex.put(d.getObjectId().getId(), current);
-		}
-		return cIndex;
-	}
-
-	public void fixTree(Collection<IDfDocument> contiguous, Collection<IDfDocument> severed) throws CMSMFException,
-		DfException {
 		// First, create an index by object ID...
-		Map<String, IDfDocument> index = new HashMap<String, IDfDocument>(contiguous.size() + severed.size());
-		for (IDfDocument d : contiguous) {
+		final String chronicleId = chronicle.getId();
+		Map<String, IDfDocument> indexById = new HashMap<String, IDfDocument>(allVersions.size());
+		Map<DfVersionNumber, IDfDocument> indexByVersionNumber = new TreeMap<DfVersionNumber, IDfDocument>();
+		Map<Integer, Set<DfVersionNumber>> indexByVersionComponents = new TreeMap<Integer, Set<DfVersionNumber>>();
+		// Make sure the trunk is always covered
+		indexByVersionComponents.put(2, new TreeSet<DfVersionNumber>());
+		for (IDfDocument d : allVersions) {
 			if (d == null) {
 				continue;
 			}
-			index.put(d.getObjectId().getId(), d);
-		}
-		for (IDfDocument d : severed) {
-			if (d == null) {
-				continue;
+			if (!Tools.equals(chronicleId, d.getChronicleId().getId())) { throw new CMSMFException(String.format(
+				"Bad chronicle ID for document [%s] - expected [%s] but got [%s]", d.getObjectId().getId(),
+				chronicleId, d.getChronicleId().getId())); }
+			indexById.put(d.getObjectId().getId(), d);
+			DfVersionNumber versionNumber = new DfVersionNumber(d.getImplicitVersionLabel());
+			indexByVersionNumber.put(versionNumber, d);
+			Set<DfVersionNumber> s = indexByVersionComponents.get(versionNumber.getComponentCount());
+			if (s == null) {
+				s = new TreeSet<DfVersionNumber>();
+				indexByVersionComponents.put(versionNumber.getComponentCount(), s);
 			}
-			index.put(d.getObjectId().getId(), d);
+			s.add(versionNumber);
 		}
 
-		// Ok...so...now we create the string tree for the contiguous versions. We expect
-		// the contiguous versions to be in correct dependency order (i.e. antecedents are always
-		// listed before any successors or branches)
-		Map<String, DocumentVersion> cVersions = new HashMap<String, DocumentVersion>(contiguous.size()
-			+ severed.size());
-		Map<String, DocumentVersion> cIndex = constructContiguousIndex(contiguous);
+		// So...at this point, if we were to walk by the indexByVersion, we would be able to
+		// construct the tree in correct version order, since we know for a fact that the versions
+		// are correctly ordered relative to each other, and thus antecedents will necessarily
+		// be listed before their successors or their branches. So now we have to find the gaps.
 
-		// Ok...so we have a string tree from the contiguous versions...now we need to find the
-		// places where the severed versions will go in.
-
-		// First, index it...
-		Map<String, IDfDocument> severedIndex = new HashMap<String, IDfDocument>(severed.size());
-		severed = new ArrayList<IDfDocument>(severed);
-		Iterator<IDfDocument> severedIterator = severed.iterator();
-		while (severedIterator.hasNext()) {
-			IDfDocument d = severedIterator.next();
-			if (d == null) {
-				// Clean out potential garbage
-				severedIterator.remove();
-				continue;
-			}
-			severedIndex.put(d.getObjectId().getId(), d);
-		}
-
-		// Next, make a "list" of the severed items that are successors to other severed
-		// items (i.e. whose antecedent "exists")
-		HashSet<String> severedWithAntecedent = new HashSet<String>();
-		for (IDfDocument d : severed) {
-			// If this item's antecedent exists, mark it as such
-			if (severedIndex.containsKey(d.getAntecedentId().getId())) {
-				severedWithAntecedent.add(d.getObjectId().getId());
-			}
-		}
-
-		// At this point, severedWithAntecedent contains the items that have an antecedent in the
-		// severedIndex, which means that anything left in severed for which there isn't
-		// an entry in severedWithAntecedent is a root node...so index those first
-
-		Map<String, DocumentVersion> sVersions = new HashMap<String, DocumentVersion>();
-		Map<String, DocumentVersion> sIndex = new HashMap<String, DocumentVersion>();
-		severedIterator = severed.iterator();
-		while (severedIterator.hasNext()) {
-			IDfDocument d = severedIterator.next();
-			String id = d.getObjectId().getId();
-			if (severedWithAntecedent.contains(id)) {
-				continue;
-			}
-			severedIterator.remove();
-			DocumentVersion dv = new DocumentVersion(d);
-			sIndex.put(id, dv);
-			sVersions.put(dv.node.getImplicitVersionLabel(), dv);
-		}
-
-		// Next step, start adding the children to their parents
-		while (!severed.isEmpty()) {
-			final int startCount = severed.size();
-			severedIterator = severed.iterator();
-			while (severedIterator.hasNext()) {
-				IDfDocument d = severedIterator.next();
-				// Find its antecedent
-				DocumentVersion antecedent = sIndex.get(d.getAntecedentId().getId());
-				if (antecedent == null) {
-					// not added yet...
+		// Start by identifying the versions for which no antecedent is present
+		Map<DfVersionNumber, IDfDocument> missingAntecedent = new TreeMap<DfVersionNumber, IDfDocument>();
+		Map<String, DfDocumentVersionNode> documentVersionIndex = new HashMap<String, DfDocumentVersionNode>();
+		DfDocumentVersionNode rootNode = null;
+		for (DfVersionNumber vn : indexByVersionNumber.keySet()) {
+			final IDfDocument d = indexByVersionNumber.get(vn);
+			final IDfId objectId = d.getObjectId();
+			final IDfId antecedentId = d.getAntecedentId();
+			if (!indexById.containsKey(antecedentId.getId())) {
+				if (!antecedentId.isNull()) {
+					// The antecedent will not be there, period - so mark this item for repair
+					missingAntecedent.put(vn, d);
 					continue;
 				}
-				DocumentVersion dv = new DocumentVersion(d, antecedent);
-				sIndex.put(d.getObjectId().getId(), dv);
-				sVersions.put(d.getImplicitVersionLabel(), dv);
-				severedIterator.remove();
-			}
-			final int endCount = severed.size();
-			if (startCount == endCount) {
-				// This should never happen at this point, but we code this safeguard
-				// to avoid the system hanging in the event we're incorrect about our
-				// assumption here
-				throw new CMSMFException(
-					String
+
+				if (rootNode != null) {
+					// If we already have a root node, then this is an error condition with invalid
+					// data, and we can't continue
+					throw new CMSMFException(String.format(
+						"Found a second object [%s] in chronicle [%s] that has a null antecedent id", objectId.getId(),
+						chronicleId));
+				}
+
+				// If there is no antecedent, and the antecedent ID is the null ID
+				// (0000000000000000), then this MUST be the chronicle root...verify it!
+				if (!Tools.equals(chronicleId, d.getObjectId().getId())) {
+					// If this is not the chronicle root, this is an error condition from invalid
+					// data, and we can't continue
+					throw new CMSMFException(
+						String
 						.format(
-							"Potential endless loop aborted - severed document reconstruction failed to fix any entries: [%s], [%s], [%s]",
-							sIndex.keySet(), sVersions.keySet(), severedWithAntecedent));
-			}
-		}
-
-		// At this point, everyone is linked to their respective parent(s)...at this point we need
-		// to traverse each segment, and graft it to the main string tree where appropriate
-		for (DocumentVersion dv : sIndex.values()) {
-			if (!dv.isRoot()) {
-				// We only operate on root items
-				continue;
+							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+							objectId.getId(), chronicleId));
+				}
 			}
 
-			// First, find the graft point
-			// Next, graft the item
+			// Ok...so...create the tree node
+			DfDocumentVersionNode node = new DfDocumentVersionNode(d, documentVersionIndex.get(antecedentId.getId()));
+			if (antecedentId.isNull()) {
+				rootNode = node;
+			}
+			documentVersionIndex.put(objectId.getId(), node);
 		}
+
+		// Ok...so now we have the root node which we can use to query the best graft point for each
+		// orphaned version we found.
 	}
 }
