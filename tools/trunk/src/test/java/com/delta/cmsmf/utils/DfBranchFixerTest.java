@@ -186,6 +186,26 @@ public class DfBranchFixerTest {
 
 		Assert.assertFalse(a.isDescendantOf(b));
 		Assert.assertFalse(b.isDescendantOf(a));
+
+		a = new DfVersionNumber("1.0.1.2.3.4.5.6.5.1");
+		for (i = 1; i < a.getComponentCount(); i++) {
+			b = a.getSubset(i);
+			Assert.assertNotEquals(b.asString(), a, b);
+			Assert.assertTrue(b.asString(), a.equals(b, i));
+			Assert.assertFalse(b.asString(), a.equals(b, 0));
+
+			Assert.assertFalse(b.asString(), a.isAntecedentOf(b));
+			Assert.assertFalse(b.asString(), b.isAntecedentOf(a));
+
+			Assert.assertFalse(b.asString(), a.isSuccessorOf(b));
+			Assert.assertFalse(b.asString(), b.isSuccessorOf(a));
+
+			Assert.assertFalse(b.asString(), a.isAncestorOf(b));
+			Assert.assertTrue(b.asString(), b.isAncestorOf(a));
+
+			Assert.assertTrue(b.asString(), a.isDescendantOf(b));
+			Assert.assertFalse(b.asString(), b.isDescendantOf(a));
+		}
 	}
 
 }
