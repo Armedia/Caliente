@@ -46,7 +46,7 @@ public final class DfDocumentVersionNode implements Comparable<DfDocumentVersion
 					"Antecedent string [%s] is deeper than this string [%s]", antecedent.version, this.version));
 			}
 
-			if (!this.version.equals(antecedent.version, len)) { throw new IllegalArgumentException(String.format(
+			if (!this.version.isAntecedentOf(antecedent.version)) { throw new IllegalArgumentException(String.format(
 				"Antecedent string [%s] is not an ancestor of child string [%s]", antecedent.version, this.version)); }
 
 			if (s) {
@@ -54,9 +54,9 @@ public final class DfDocumentVersionNode implements Comparable<DfDocumentVersion
 					// A successor is already in place...
 					throw new IllegalArgumentException(
 						String
-						.format(
-							"A successor version (%s) is already in place for antecedent [%s] when attempting to connect with [%s]",
-							antecedent.successor.version, antecedent.version, this.version));
+							.format(
+								"A successor version (%s) is already in place for antecedent [%s] when attempting to connect with [%s]",
+								antecedent.successor.version, antecedent.version, this.version));
 				}
 				antecedent.successor = this;
 			} else {
