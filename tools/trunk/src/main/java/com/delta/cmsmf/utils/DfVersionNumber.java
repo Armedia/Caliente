@@ -8,8 +8,27 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import com.armedia.commons.utilities.Tools;
 
 public final class DfVersionNumber implements Comparable<DfVersionNumber> {
+
+	private static String asString(int[] numbers, int length) {
+		StringBuilder b = new StringBuilder();
+		for (int i = 0; i < length; i++) {
+			if (i > 0) {
+				b.append('.');
+			}
+			b.append(String.valueOf(i < length ? numbers[i] : 0));
+		}
+		return b.toString();
+	}
+
 	private final String string;
 	private final int[] numbers;
+	private final int length;
+
+	private DfVersionNumber(int[] numbers, int length) {
+		this.numbers = numbers;
+		this.length = length;
+		this.string = DfVersionNumber.asString(numbers, length);
+	}
 
 	public DfVersionNumber(String version) {
 		StrTokenizer tok = new StrTokenizer(version, '.');
@@ -20,10 +39,11 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 			this.numbers[i++] = Integer.valueOf(str);
 		}
 		this.string = version;
+		this.length = this.numbers.length;
 	}
 
 	public int getComponentCount() {
-		return this.numbers.length;
+		return this.length;
 	}
 
 	public String asString() {
@@ -31,15 +51,7 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 	}
 
 	public String asString(int components) {
-		StringBuilder b = new StringBuilder();
-		components = Math.max(components, this.numbers.length);
-		for (int i = 0; i < components; i++) {
-			if (i > 0) {
-				b.append('.');
-			}
-			b.append(String.valueOf(i < this.numbers.length ? this.numbers[i] : 0));
-		}
-		return b.toString();
+		return DfVersionNumber.asString(this.numbers, components);
 	}
 
 	@Override
@@ -51,29 +63,27 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		DfVersionNumber other = DfVersionNumber.class.cast(obj);
-		return Arrays.equals(this.numbers, other.numbers);
+		if (getComponentCount() != other.getComponentCount()) { return false; }
+		return equals(other, 0);
 	}
 
-	public boolean equals(Object obj, int depth) {
+	public boolean equals(DfVersionNumber other, int depth) {
 		if (depth < 0) { throw new IllegalArgumentException("Must provide a positive depth"); }
-		if (!Tools.baseEquals(this, obj)) { return false; }
-		DfVersionNumber other = DfVersionNumber.class.cast(obj);
-		if (depth == 0) {
-			// Make sure that if the depth is 0, then the equals will
-			// compare ALL components up to the shortest of the two
-			// version number sets
-			depth = Integer.MAX_VALUE;
+		final int thisLength = getComponentCount();
+		final int otherLength = other.getComponentCount();
+		int limit = Math.max(thisLength, otherLength);
+		if (depth > 0) {
+			limit = Tools.min(depth, limit);
 		}
-		final int limit = Tools.min(depth, this.numbers.length, other.numbers.length);
 		for (int i = 0; i < limit; i++) {
 			final int a;
-			if (i < this.numbers.length) {
+			if (i < thisLength) {
 				a = this.numbers[i];
 			} else {
 				a = 0;
 			}
 			final int b;
-			if (i < other.numbers.length) {
+			if (i < otherLength) {
 				b = other.numbers[i];
 			} else {
 				b = 0;
@@ -81,6 +91,12 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 			if (a != b) { return false; }
 		}
 		return true;
+	}
+
+	public DfVersionNumber getSubset(int components) {
+		if (components < 1) { throw new IllegalArgumentException("Must contain at least one version component"); }
+		if (components >= getComponentCount()) { return this; }
+		return new DfVersionNumber(this.numbers, components);
 	}
 
 	@Override
@@ -127,21 +143,24 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 
 	public boolean isAncestorOf(DfVersionNumber other) {
 		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
-		if (getComponentCount() >= other.getComponentCount()) { return false; }
-		return equals(other, 0);
+		int len = getComponentCount();
+		if (len >= other.getComponentCount()) { return false; }
+		return equals(other, len);
 	}
 
 	public boolean isDescendantOf(DfVersionNumber other) {
 		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
-		if (getComponentCount() <= other.getComponentCount()) { return false; }
-		return equals(other, 0);
+		int len = other.getComponentCount();
+		if (getComponentCount() <= len) { return false; }
+		return equals(other, len);
 	}
 
 	public int getDepthInCommon(DfVersionNumber other) {
 		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
-		int length = getComponentCount();
+		final int length = getComponentCount();
+		final int otherLength = other.getComponentCount();
 		for (int i = 0; i < length; i++) {
-			if (i >= other.numbers.length) { return i; }
+			if (i >= otherLength) { return i; }
 			if (this.numbers[i] != other.numbers[i]) { return i; }
 		}
 		return length;
@@ -151,16 +170,18 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 	public int compareTo(DfVersionNumber o) {
 		// Always sort after NULL
 		if (o == null) { return 1; }
-		final int n = Math.max(this.numbers.length, o.numbers.length);
+		final int thisLength = getComponentCount();
+		final int otherLength = o.getComponentCount();
+		final int n = Math.max(thisLength, otherLength);
 		for (int i = 0; i < n; i++) {
 			final int a;
-			if (i < this.numbers.length) {
+			if (i < thisLength) {
 				a = this.numbers[i];
 			} else {
 				a = 0;
 			}
 			final int b;
-			if (i < o.numbers.length) {
+			if (i < otherLength) {
 				b = o.numbers[i];
 			} else {
 				b = 0;
