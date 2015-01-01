@@ -5,7 +5,7 @@ import java.util.TreeSet;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DfBranchFixerTest {
+public class DfVersionNumberTest {
 
 	@Test
 	public void testVersionNumber() {
