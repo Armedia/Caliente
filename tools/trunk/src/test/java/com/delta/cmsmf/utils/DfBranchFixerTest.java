@@ -190,22 +190,104 @@ public class DfBranchFixerTest {
 		a = new DfVersionNumber("1.0.1.2.3.4.5.6.5.1");
 		for (i = 1; i < a.getComponentCount(); i++) {
 			b = a.getSubset(i);
-			Assert.assertNotEquals(b.asString(), a, b);
-			Assert.assertTrue(b.asString(), a.equals(b, i));
-			Assert.assertFalse(b.asString(), a.equals(b, 0));
+			Assert.assertNotEquals(b.toString(), a, b);
+			Assert.assertNotEquals(b.toString(), a.hashCode(), b.hashCode());
+			Assert.assertTrue(b.toString(), a.equals(b, i));
+			Assert.assertFalse(b.toString(), a.equals(b, 0));
 
-			Assert.assertFalse(b.asString(), a.isAntecedentOf(b));
-			Assert.assertFalse(b.asString(), b.isAntecedentOf(a));
+			Assert.assertFalse(b.toString(), a.isAntecedentOf(b));
+			Assert.assertFalse(b.toString(), b.isAntecedentOf(a));
 
-			Assert.assertFalse(b.asString(), a.isSuccessorOf(b));
-			Assert.assertFalse(b.asString(), b.isSuccessorOf(a));
+			Assert.assertFalse(b.toString(), a.isSuccessorOf(b));
+			Assert.assertFalse(b.toString(), b.isSuccessorOf(a));
 
-			Assert.assertFalse(b.asString(), a.isAncestorOf(b));
-			Assert.assertTrue(b.asString(), b.isAncestorOf(a));
+			Assert.assertFalse(b.toString(), a.isAncestorOf(b));
+			Assert.assertTrue(b.toString(), b.isAncestorOf(a));
 
-			Assert.assertTrue(b.asString(), a.isDescendantOf(b));
-			Assert.assertFalse(b.asString(), b.isDescendantOf(a));
+			Assert.assertTrue(b.toString(), a.isDescendantOf(b));
+			Assert.assertFalse(b.toString(), b.isDescendantOf(a));
 		}
-	}
 
+		Assert.assertFalse(a.equals(null));
+		Assert.assertFalse(a.equals(this));
+
+		Assert.assertTrue(a.compareTo(null) > 0);
+
+		try {
+			a.isAncestorOf(null);
+			Assert.fail("Did not fail with a null parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
+		try {
+			a.isDescendantOf(null);
+			Assert.fail("Did not fail with a null parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
+		try {
+			a.isAntecedentOf(null);
+			Assert.fail("Did not fail with a null parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
+		try {
+			a.isSuccessorOf(null);
+			Assert.fail("Did not fail with a null parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
+		try {
+			a.getDepthInCommon(null);
+			Assert.fail("Did not fail with a null parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
+		try {
+			a.equals(a, -1);
+			Assert.fail("Did not fail with a negative length parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+		Assert.assertTrue(a.equals(a, 0));
+
+		b = a.getSubset(3);
+		Assert.assertNotSame(a, b);
+		Assert.assertTrue(b.equals(a, b.getComponentCount()));
+		Assert.assertFalse(b.equals(a, 0));
+		Assert.assertSame(a, a.getSubset(Integer.MAX_VALUE));
+		try {
+			a.getSubset(-1);
+			Assert.fail("Did not fail with a negative length parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
+		try {
+			a.toString(-1);
+			Assert.fail("Did not fail with a negative length parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
+		try {
+			a.getSubset(0);
+			Assert.fail("Did not fail with a 0 parameter");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
+		Assert.assertEquals(a.toString(), a.toString(a.getComponentCount()));
+		Assert.assertNotEquals(a.toString(), a.toString(a.getComponentCount() + 1));
+
+		b = new DfVersionNumber(a.toString());
+		Assert.assertEquals(a, b);
+		Assert.assertNotSame(a, b);
+		Assert.assertEquals(a.hashCode(), b.hashCode());
+	}
 }

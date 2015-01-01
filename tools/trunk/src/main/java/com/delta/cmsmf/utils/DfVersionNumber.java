@@ -1,6 +1,5 @@
 package com.delta.cmsmf.utils;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.text.StrTokenizer;
@@ -9,13 +8,14 @@ import com.armedia.commons.utilities.Tools;
 
 public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 
-	private static String asString(int[] numbers, int length) {
+	private static String toString(int[] numbers, int length) {
+		if (length < 0) { throw new IllegalArgumentException("Must provide a positive length"); }
 		StringBuilder b = new StringBuilder();
 		for (int i = 0; i < length; i++) {
 			if (i > 0) {
 				b.append('.');
 			}
-			b.append(String.valueOf(i < length ? numbers[i] : 0));
+			b.append(String.valueOf(i < numbers.length ? numbers[i] : 0));
 		}
 		return b.toString();
 	}
@@ -27,7 +27,7 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 	private DfVersionNumber(int[] numbers, int length) {
 		this.numbers = numbers;
 		this.length = length;
-		this.string = DfVersionNumber.asString(numbers, length);
+		this.string = DfVersionNumber.toString(numbers, length);
 	}
 
 	public DfVersionNumber(String version) {
@@ -46,17 +46,20 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 		return this.length;
 	}
 
-	public String asString() {
+	@Override
+	public String toString() {
 		return this.string;
 	}
 
-	public String asString(int components) {
-		return DfVersionNumber.asString(this.numbers, components);
+	public String toString(int components) {
+		return DfVersionNumber.toString(this.numbers, components);
 	}
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.numbers);
+		int[] arr = new int[this.length];
+		System.arraycopy(this.numbers, 0, arr, 0, arr.length);
+		return Tools.hashTool(this, null, this.length, arr);
 	}
 
 	@Override
@@ -69,6 +72,7 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 
 	public boolean equals(DfVersionNumber other, int depth) {
 		if (depth < 0) { throw new IllegalArgumentException("Must provide a positive depth"); }
+		if (other == this) { return true; }
 		final int thisLength = getComponentCount();
 		final int otherLength = other.getComponentCount();
 		int limit = Math.max(thisLength, otherLength);
@@ -99,13 +103,7 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 		return new DfVersionNumber(this.numbers, components);
 	}
 
-	@Override
-	public String toString() {
-		return String.format("DfVersionNumber %s [%s]", this.string, Arrays.toString(this.numbers));
-	}
-
 	private boolean isSameBranch(DfVersionNumber other) {
-		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
 		final int length = getComponentCount();
 		if (length != other.getComponentCount()) { return false; }
 		return this.equals(other, length - 1);
