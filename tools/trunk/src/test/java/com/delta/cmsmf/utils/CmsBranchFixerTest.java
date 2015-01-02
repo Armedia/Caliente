@@ -114,7 +114,7 @@ public class CmsBranchFixerTest extends AbstractTest {
 	}
 
 	private List<IDfDocument> createMinorRevisions(IDfDocument base, int count, int gap) throws IOException,
-	DfException {
+		DfException {
 		final IDfSession session = base.getSession();
 		session.beginTrans();
 		boolean ok = false;
@@ -218,9 +218,12 @@ public class CmsBranchFixerTest extends AbstractTest {
 		IDfDocument document = null;
 		List<IDfDocument> minors = null;
 		List<IDfDocument> allRevisions = new ArrayList<IDfDocument>();
+		final IDfId chronicle;
 		try {
 			document = createDocument(session);
+			chronicle = document.getChronicleId();
 			allRevisions.add(document);
+
 			minors = createMinorRevisions(document, 3);
 			document = minors.get(minors.size() - 1); // Get the last revision
 			allRevisions.addAll(minors);
@@ -312,6 +315,7 @@ public class CmsBranchFixerTest extends AbstractTest {
 					boolean ok = false;
 					session.beginTrans();
 					final String oid = doc.getObjectId().getId();
+					final String version = doc.getImplicitVersionLabel();
 					try {
 						doc.destroy();
 						index.remove(oid);
@@ -319,8 +323,10 @@ public class CmsBranchFixerTest extends AbstractTest {
 						ok = true;
 					} finally {
 						if (ok) {
+							this.log.info(String.format("DESTROYED VERSION %s", version));
 							session.commitTrans();
 						} else {
+							this.log.warn(String.format("FAILED TO DESTROY VERSION %s", version));
 							session.abortTrans();
 						}
 					}
@@ -348,6 +354,7 @@ public class CmsBranchFixerTest extends AbstractTest {
 			}
 
 			// Now, we try to repair the broken tree
+			DfBranchFixer.fixTree(chronicle, index.values());
 
 		} finally {
 			try {

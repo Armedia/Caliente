@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.log4j.Logger;
+
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.documentum.fc.client.IDfDocument;
@@ -23,8 +25,9 @@ import com.documentum.fc.common.IDfId;
  */
 public class DfBranchFixer {
 
-	public void fixTree(IDfId chronicle, Collection<IDfDocument> allVersions, Collection<String> ignore)
-		throws CMSMFException, DfException {
+	private static final Logger LOG = Logger.getLogger(DfBranchFixer.class);
+
+	public static void fixTree(IDfId chronicle, Collection<IDfDocument> allVersions) throws CMSMFException, DfException {
 		// First, create an index by object ID...
 		final String chronicleId = chronicle.getId();
 		Map<String, IDfDocument> indexById = new HashMap<String, IDfDocument>(allVersions.size());
@@ -41,7 +44,10 @@ public class DfBranchFixer {
 				chronicleId, d.getChronicleId().getId())); }
 			indexById.put(d.getObjectId().getId(), d);
 			DfVersionNumber versionNumber = new DfVersionNumber(d.getImplicitVersionLabel());
-			indexByVersionNumber.put(versionNumber, d);
+			IDfDocument dupe = indexByVersionNumber.put(versionNumber, d);
+			if (dupe != null) { throw new CMSMFException(String.format(
+				"Duplicate version number [%s] in document [%s] and [%s]", versionNumber.toString(), d.getObjectId()
+					.getId(), dupe.getObjectId().getId())); }
 			Set<DfVersionNumber> s = indexByVersionComponents.get(versionNumber.getComponentCount());
 			if (s == null) {
 				s = new TreeSet<DfVersionNumber>();
@@ -56,7 +62,7 @@ public class DfBranchFixer {
 		// be listed before their successors or their branches. So now we have to find the gaps.
 
 		// Start by identifying the versions for which no antecedent is present
-		Map<DfVersionNumber, IDfDocument> missingAntecedent = new TreeMap<DfVersionNumber, IDfDocument>();
+		Map<DfVersionNumber, Set<DfVersionNumber>> missingAntecedent = new TreeMap<DfVersionNumber, Set<DfVersionNumber>>();
 		Map<String, DfDocumentVersionNode> documentVersionIndex = new HashMap<String, DfDocumentVersionNode>();
 		DfDocumentVersionNode rootNode = null;
 		for (DfVersionNumber vn : indexByVersionNumber.keySet()) {
@@ -65,8 +71,11 @@ public class DfBranchFixer {
 			final IDfId antecedentId = d.getAntecedentId();
 			if (!indexById.containsKey(antecedentId.getId())) {
 				if (!antecedentId.isNull()) {
-					// The antecedent will not be there, period - so mark this item for repair
-					missingAntecedent.put(vn, d);
+					// The antecedent will not be there, period - so mark this item for repair, and
+					// list the version history it needs leading up to the trunk
+					Set<DfVersionNumber> s = new TreeSet<DfVersionNumber>(DfVersionNumber.REVERSE_ORDER);
+					s.addAll(vn.getAllAntecedents());
+					missingAntecedent.put(vn, s);
 					continue;
 				}
 
@@ -85,9 +94,9 @@ public class DfBranchFixer {
 					// data, and we can't continue
 					throw new CMSMFException(
 						String
-						.format(
-							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-							objectId.getId(), chronicleId));
+							.format(
+								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+								objectId.getId(), chronicleId));
 				}
 			}
 
@@ -99,7 +108,41 @@ public class DfBranchFixer {
 			documentVersionIndex.put(objectId.getId(), node);
 		}
 
-		// Ok...so now we have the root node which we can use to query the best graft point for each
-		// orphaned version we found.
+		if (DfBranchFixer.LOG.isDebugEnabled()) {
+			DfBranchFixer.LOG.debug(String.format("Locating missing antecedents for versions: %s",
+				missingAntecedent.keySet()));
+		}
+
+		// Ok...so now we walk through the items in missingAntecedent and determine where they need
+		// to be grafted onto the tree
+		for (DfVersionNumber vn : missingAntecedent.keySet()) {
+			if (DfBranchFixer.LOG.isDebugEnabled()) {
+				DfBranchFixer.LOG.debug(String.format("Repairing version [%s]", vn));
+			}
+			// First, see if we can find any of its required antecedents...
+			DfVersionNumber last = null;
+			Set<DfVersionNumber> antecedents = missingAntecedent.get(vn);
+			if (DfBranchFixer.LOG.isDebugEnabled()) {
+				DfBranchFixer.LOG.debug(String.format("Searching for the required antecedents: %s", antecedents));
+			}
+			for (DfVersionNumber antecedent : antecedents) {
+				if (indexByVersionNumber.containsKey(antecedent)) {
+					last = antecedent;
+					break;
+				}
+			}
+			if (last == null) {
+				if (vn.getComponentCount() > 2) {
+					last = vn.getSubset(2);
+					DfBranchFixer.LOG.debug("No antecedent found, will fall back to the root of the tree");
+				} else {
+					DfBranchFixer.LOG.debug("Item is at the root of the tree, no antecedent required");
+				}
+			} else {
+				if (DfBranchFixer.LOG.isDebugEnabled()) {
+					DfBranchFixer.LOG.debug(String.format("Found candidate version %s as potential antecedent", last));
+				}
+			}
+		}
 	}
 }
