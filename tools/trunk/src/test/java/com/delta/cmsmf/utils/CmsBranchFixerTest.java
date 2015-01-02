@@ -1,17 +1,25 @@
-package com.delta.cmsmf.engine;
+package com.delta.cmsmf.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.AbstractTest;
 import com.delta.cmsmf.cms.CmsAttributes;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -19,7 +27,7 @@ import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
-public class CmsBrancherTest extends AbstractTest {
+public class CmsBranchFixerTest extends AbstractTest {
 	private Logger log = Logger.getLogger(getClass());
 
 	@BeforeClass
@@ -101,14 +109,16 @@ public class CmsBrancherTest extends AbstractTest {
 		}
 	}
 
-	private IDfDocument createMinorRevisions(IDfDocument base, int count) throws IOException, DfException {
+	private List<IDfDocument> createMinorRevisions(IDfDocument base, int count) throws IOException, DfException {
 		return createMinorRevisions(base, count, 1);
 	}
 
-	private IDfDocument createMinorRevisions(IDfDocument base, int count, int gap) throws IOException, DfException {
+	private List<IDfDocument> createMinorRevisions(IDfDocument base, int count, int gap) throws IOException,
+	DfException {
 		final IDfSession session = base.getSession();
 		session.beginTrans();
 		boolean ok = false;
+		List<IDfDocument> ret = new ArrayList<IDfDocument>(count);
 		try {
 			String baseLabel = base.getImplicitVersionLabel();
 			// Get the next-to-last number
@@ -143,9 +153,10 @@ public class CmsBrancherTest extends AbstractTest {
 				tok = new StrTokenizer(baseLabel, '.');
 				l = tok.getTokenList();
 				minor = Integer.valueOf(l.get(l.size() - 1));
+				ret.add(child);
 			}
 			ok = true;
-			return base;
+			return ret;
 		} finally {
 			if (ok) {
 				session.commitTrans();
@@ -201,29 +212,143 @@ public class CmsBrancherTest extends AbstractTest {
 		}
 	}
 
-	// @Test
+	@Test
 	public void testBranching() throws Throwable {
 		IDfSession session = acquireTargetSession();
 		IDfDocument document = null;
+		List<IDfDocument> minors = null;
+		List<IDfDocument> allRevisions = new ArrayList<IDfDocument>();
 		try {
 			document = createDocument(session);
-			document = createMinorRevisions(document, 3);
+			allRevisions.add(document);
+			minors = createMinorRevisions(document, 3);
+			document = minors.get(minors.size() - 1); // Get the last revision
+			allRevisions.addAll(minors);
 
 			document = createMajorRevision(document);
-			document = createMinorRevisions(document, 3);
+			allRevisions.add(document);
+			minors = createMinorRevisions(document, 3);
+			document = minors.get(minors.size() - 1); // Get the last revision
+			allRevisions.addAll(minors);
 
 			document = createMajorRevision(document);
+			allRevisions.add(document);
 			IDfDocument branch1 = createBranch(document);
+			allRevisions.add(branch1);
 			IDfDocument branch2 = createBranch(document);
+			allRevisions.add(branch2);
 			IDfDocument branch3 = createBranch(document);
+			allRevisions.add(branch3);
 
-			document = createMinorRevisions(document, 3);
-			branch1 = createMinorRevisions(branch1, 3);
-			branch2 = createMinorRevisions(branch2, 3);
-			branch3 = createMinorRevisions(branch3, 3);
+			minors = createMinorRevisions(document, 3);
+			document = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+			minors = createMinorRevisions(branch1, 3);
+			branch1 = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+			minors = createMinorRevisions(branch2, 3);
+			branch2 = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+			minors = createMinorRevisions(branch3, 3);
+			branch3 = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
 
 			document = createMajorRevision(document, 3);
-			document = createMinorRevisions(document, 3, 3);
+			allRevisions.add(document);
+			minors = createMinorRevisions(document, 3, 3);
+			document = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+
+			branch1 = createBranch(branch1);
+			allRevisions.add(branch1);
+			branch2 = createBranch(branch2);
+			allRevisions.add(branch2);
+			branch3 = createBranch(branch3);
+			allRevisions.add(branch3);
+
+			minors = createMinorRevisions(document, 3);
+			document = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+			minors = createMinorRevisions(branch1, 3);
+			branch1 = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+			minors = createMinorRevisions(branch2, 3);
+			branch2 = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+			minors = createMinorRevisions(branch3, 3);
+			branch3 = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+
+			document = createMajorRevision(document, 3);
+			allRevisions.add(document);
+			minors = createMinorRevisions(document, 3, 3);
+			document = minors.get(minors.size() - 1);
+			allRevisions.addAll(minors);
+
+			// Ok...so now we have a "complex" version tree... now we start to trim out
+			// specific versions to clip it and start deducing where things go
+			Map<String, IDfDocument> index = new HashMap<String, IDfDocument>();
+			Set<String> removed = new HashSet<String>();
+			for (IDfDocument d : allRevisions) {
+				index.put(d.getObjectId().getId(), d);
+			}
+
+			// Verify continuity
+			for (IDfDocument d : allRevisions) {
+				IDfId a = d.getAntecedentId();
+				if (a.isNull()) {
+					Assert.assertEquals(d.getChronicleId().getId(), d.getObjectId().getId());
+					continue;
+				}
+				Assert.assertTrue(index.containsKey(a.getId()));
+			}
+
+			// Chop it up
+			for (int i = 1; i <= allRevisions.size(); i++) {
+				// Remove every 3rd revision
+				IDfDocument doc = allRevisions.get(i - 1);
+				if ((i % 3) == 0) {
+					// you're toast...
+					boolean ok = false;
+					session.beginTrans();
+					final String oid = doc.getObjectId().getId();
+					try {
+						doc.destroy();
+						index.remove(oid);
+						removed.add(oid);
+						ok = true;
+					} finally {
+						if (ok) {
+							session.commitTrans();
+						} else {
+							session.abortTrans();
+						}
+					}
+				}
+			}
+
+			// Verify continuity breaks
+			for (final String oid : index.keySet()) {
+				final IDfDocument d = index.get(oid);
+				final IDfId a = d.getAntecedentId();
+				final String aid = a.getId();
+				if (a.isNull()) {
+					Assert.assertEquals(d.getChronicleId().getId(), d.getObjectId().getId());
+					continue;
+				}
+				if (removed.contains(aid)) {
+					Assert.assertFalse(index.containsKey(aid));
+					try {
+						Assert.assertNotNull(session.getObject(a));
+						Assert.fail(String.format("Deleted antecedent [%s] is still available in the repository", aid));
+					} catch (DfIdNotFoundException e) {
+						// We're good...it was properly removed
+					}
+				}
+			}
+
+			// Now, we try to repair the broken tree
+
 		} finally {
 			try {
 				if (document != null) {
