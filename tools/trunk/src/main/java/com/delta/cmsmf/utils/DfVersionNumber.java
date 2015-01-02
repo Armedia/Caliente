@@ -1,5 +1,6 @@
 package com.delta.cmsmf.utils;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -9,6 +10,14 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import com.armedia.commons.utilities.Tools;
 
 public final class DfVersionNumber implements Comparable<DfVersionNumber> {
+
+	public static final Comparator<DfVersionNumber> REVERSE_ORDER = new Comparator<DfVersionNumber>() {
+		@Override
+		public int compare(DfVersionNumber a, DfVersionNumber b) {
+			// Compare in reverse order
+			return b.compareTo(a);
+		}
+	};
 
 	private static String toString(int[] numbers, int length) {
 		if (length < 0) { throw new IllegalArgumentException("Must provide a positive length"); }
