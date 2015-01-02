@@ -1,6 +1,8 @@
 package com.delta.cmsmf.utils;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 
@@ -179,7 +181,7 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 		return length;
 	}
 
-	public DfVersionNumber calculateAntecedent() {
+	public DfVersionNumber getAntecedent() {
 		// At the root?
 		final int len = getComponentCount();
 		if (len <= 2) { return null; }
@@ -197,6 +199,18 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 		System.arraycopy(this.numbers, 0, num, 0, len);
 		num[len - 1] = lastC - 1;
 		return new DfVersionNumber(num, len);
+	}
+
+	public Set<DfVersionNumber> getAllAntecedents() {
+		Set<DfVersionNumber> s = new TreeSet<DfVersionNumber>();
+		DfVersionNumber vn = this;
+		while (vn != null) {
+			vn = vn.getAntecedent();
+			if (vn != null) {
+				s.add(vn);
+			}
+		}
+		return s;
 	}
 
 	@Override

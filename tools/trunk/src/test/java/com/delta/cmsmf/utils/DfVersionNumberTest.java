@@ -1,6 +1,7 @@
 package com.delta.cmsmf.utils;
 
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeSet;
 
 import org.junit.Assert;
@@ -14,7 +15,7 @@ public class DfVersionNumberTest {
 			"1", "7", "7.1", "8.0", "8.1", "8.1.1.0", "9.0", "9.0.1.2", "9.1.3.4", "9.1.3.6", "9.1.3.9", "10", "10.1"
 		};
 
-		TreeSet<DfVersionNumber> s = new TreeSet<DfVersionNumber>();
+		Set<DfVersionNumber> s = new TreeSet<DfVersionNumber>();
 		for (String str : numbers) {
 			s.add(new DfVersionNumber(str));
 		}
@@ -326,10 +327,11 @@ public class DfVersionNumberTest {
 		Assert.assertEquals(a, b);
 		Assert.assertEquals(a.hashCode(), b.hashCode());
 
+		s = new TreeSet<DfVersionNumber>();
 		DfVersionNumber vn = a;
 		while (true) {
 			DfVersionNumber prev = vn;
-			vn = vn.calculateAntecedent();
+			vn = vn.getAntecedent();
 			if (vn == null) {
 				Assert.assertEquals(2, prev.getComponentCount());
 				break;
@@ -338,6 +340,8 @@ public class DfVersionNumberTest {
 			boolean antecedent = vn.isAntecedentOf(prev);
 			Assert.assertTrue(String.format("ancestor=%s / antecedent=%s | %s ~ %s", ancestor, antecedent, vn, prev),
 				ancestor || antecedent);
+			s.add(vn);
 		}
+		Assert.assertEquals(s, a.getAllAntecedents());
 	}
 }
