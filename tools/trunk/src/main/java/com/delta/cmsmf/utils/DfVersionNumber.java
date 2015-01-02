@@ -42,6 +42,16 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 		this.length = this.numbers.length;
 	}
 
+	public int getComponent(int pos) {
+		if (pos < 0) { throw new ArrayIndexOutOfBoundsException(pos); }
+		if (pos >= this.length) { throw new ArrayIndexOutOfBoundsException(pos); }
+		return this.numbers[pos];
+	}
+
+	public int getLastComponent() {
+		return getComponent(getComponentCount() - 1);
+	}
+
 	public int getComponentCount() {
 		return this.length;
 	}
@@ -103,6 +113,11 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 		return new DfVersionNumber(this.numbers, components);
 	}
 
+	@Override
+	public DfVersionNumber clone() {
+		return new DfVersionNumber(this.string);
+	}
+
 	private boolean isSameBranch(DfVersionNumber other) {
 		final int length = getComponentCount();
 		if (length != other.getComponentCount()) { return false; }
@@ -162,6 +177,26 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 			if (this.numbers[i] != other.numbers[i]) { return i; }
 		}
 		return length;
+	}
+
+	public DfVersionNumber calculateAntecedent() {
+		// At the root?
+		final int len = getComponentCount();
+		if (len <= 2) { return null; }
+
+		// This is a branch - is this the first branch point?
+		final int lastC = getLastComponent();
+		if (lastC == 0) {
+			// This is the branch point, so we need to go up one level
+			return getSubset(len - 2);
+		}
+
+		// This is a branch, and not the first branch point, so
+		// decrement the version counter and return the new version
+		int[] num = new int[len];
+		System.arraycopy(this.numbers, 0, num, 0, len);
+		num[len - 1] = lastC - 1;
+		return new DfVersionNumber(num, len);
 	}
 
 	@Override

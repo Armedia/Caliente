@@ -1,5 +1,6 @@
 package com.delta.cmsmf.utils;
 
+import java.util.Random;
 import java.util.TreeSet;
 
 import org.junit.Assert;
@@ -289,5 +290,54 @@ public class DfVersionNumberTest {
 		Assert.assertEquals(a, b);
 		Assert.assertNotSame(a, b);
 		Assert.assertEquals(a.hashCode(), b.hashCode());
+
+		Random r = new Random(System.currentTimeMillis());
+		int[] num = new int[32];
+		StringBuilder sb = new StringBuilder();
+		for (i = 0; i < num.length; i++) {
+			if (i == 0) {
+				num[i] = r.nextInt(9) + 1;
+			} else {
+				num[i] = r.nextInt(10);
+				sb.append('.');
+			}
+			sb.append(num[i]);
+		}
+		a = new DfVersionNumber(sb.toString());
+		Assert.assertEquals(num[num.length - 1], a.getLastComponent());
+		for (i = 0; i < num.length; i++) {
+			Assert.assertEquals(num[i], a.getComponent(i));
+		}
+		try {
+			a.getComponent(-1);
+			Assert.fail("Did not fail with -1 index");
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// All is well
+		}
+		try {
+			a.getComponent(num.length);
+			Assert.fail("Did not fail with out of bounds index");
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// All is well
+		}
+
+		b = a.clone();
+		Assert.assertNotSame(a, b);
+		Assert.assertEquals(a, b);
+		Assert.assertEquals(a.hashCode(), b.hashCode());
+
+		DfVersionNumber vn = a;
+		while (true) {
+			DfVersionNumber prev = vn;
+			vn = vn.calculateAntecedent();
+			if (vn == null) {
+				Assert.assertEquals(2, prev.getComponentCount());
+				break;
+			}
+			boolean ancestor = vn.isAncestorOf(prev);
+			boolean antecedent = vn.isAntecedentOf(prev);
+			Assert.assertTrue(String.format("ancestor=%s / antecedent=%s | %s ~ %s", ancestor, antecedent, vn, prev),
+				ancestor || antecedent);
+		}
 	}
 }
