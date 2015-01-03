@@ -296,10 +296,12 @@ public class DfVersionNumberTest {
 		int[] num = new int[32];
 		StringBuilder sb = new StringBuilder();
 		for (i = 0; i < num.length; i++) {
-			if (i == 0) {
+			if ((i % 2) == 0) { // Can't have "major" version numbers be 0
 				num[i] = r.nextInt(9) + 1;
 			} else {
 				num[i] = r.nextInt(10);
+			}
+			if (i > 0) {
 				sb.append('.');
 			}
 			sb.append(num[i]);
@@ -331,17 +333,19 @@ public class DfVersionNumberTest {
 		DfVersionNumber vn = a;
 		while (true) {
 			DfVersionNumber prev = vn;
-			vn = vn.getAntecedent();
+			final int len = prev.getComponentCount();
+			vn = prev.getAntecedent(true);
 			if (vn == null) {
-				Assert.assertEquals(2, prev.getComponentCount());
+				Assert.assertEquals(2, len);
 				break;
 			}
 			boolean ancestor = vn.isAncestorOf(prev);
 			boolean antecedent = vn.isAntecedentOf(prev);
-			Assert.assertTrue(String.format("ancestor=%s / antecedent=%s | %s ~ %s", ancestor, antecedent, vn, prev),
-				ancestor || antecedent);
+			boolean sibling = vn.isSibling(prev) && (vn.compareTo(prev) < 0);
+			Assert.assertTrue(String.format("ancestor=%s / antecedent=%s / sibling=%s | %s ~ %s", ancestor, antecedent,
+				sibling, vn, prev), ancestor || antecedent || sibling);
 			s.add(vn);
 		}
-		Assert.assertEquals(s, a.getAllAntecedents());
+		Assert.assertEquals(s, a.getAllAntecedents(true));
 	}
 }

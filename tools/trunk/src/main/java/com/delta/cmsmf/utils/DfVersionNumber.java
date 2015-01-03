@@ -135,6 +135,12 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 		return this.equals(other, length - 1);
 	}
 
+	public boolean isSibling(DfVersionNumber other) {
+		final int length = getComponentCount();
+		if (length != other.getComponentCount()) { return false; }
+		return this.equals(other, length - 2) && (getComponent(length - 2) != other.getComponent(length - 2));
+	}
+
 	public boolean isSuccessorOf(DfVersionNumber other) {
 		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
 		final int length = getComponentCount();
@@ -191,30 +197,44 @@ public final class DfVersionNumber implements Comparable<DfVersionNumber> {
 	}
 
 	public DfVersionNumber getAntecedent() {
+		return getAntecedent(false);
+	}
+
+	public DfVersionNumber getAntecedent(final boolean includeBranchSibling) {
 		// At the root?
 		final int len = getComponentCount();
 		if (len <= 2) { return null; }
 
 		// This is a branch - is this the first branch point?
-		final int lastC = getLastComponent();
+		int lastC = getLastComponent();
+		int off = 0;
 		if (lastC == 0) {
+			if (!includeBranchSibling) { return getSubset(len - 2); }
+
 			// This is the branch point, so we need to go up one level
-			return getSubset(len - 2);
+			int major = getComponent(len - 2);
+			if (major == 1) { return getSubset(len - 2); }
+			off = 1;
+			lastC = major;
 		}
 
 		// This is a branch, and not the first branch point, so
 		// decrement the version counter and return the new version
 		int[] num = new int[len];
 		System.arraycopy(this.numbers, 0, num, 0, len);
-		num[len - 1] = lastC - 1;
+		num[len - 1 - off] = lastC - 1;
 		return new DfVersionNumber(num, len);
 	}
 
 	public Set<DfVersionNumber> getAllAntecedents() {
+		return getAllAntecedents(false);
+	}
+
+	public Set<DfVersionNumber> getAllAntecedents(final boolean includeBranchSibling) {
 		Set<DfVersionNumber> s = new TreeSet<DfVersionNumber>();
 		DfVersionNumber vn = this;
 		while (vn != null) {
-			vn = vn.getAntecedent();
+			vn = vn.getAntecedent(includeBranchSibling);
 			if (vn != null) {
 				s.add(vn);
 			}
