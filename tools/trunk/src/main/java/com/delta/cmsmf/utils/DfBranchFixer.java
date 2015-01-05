@@ -47,7 +47,7 @@ public class DfBranchFixer {
 			IDfDocument dupe = indexByVersionNumber.put(versionNumber, d);
 			if (dupe != null) { throw new CMSMFException(String.format(
 				"Duplicate version number [%s] in document [%s] and [%s]", versionNumber.toString(), d.getObjectId()
-					.getId(), dupe.getObjectId().getId())); }
+				.getId(), dupe.getObjectId().getId())); }
 			Set<DfVersionNumber> s = indexByVersionComponents.get(versionNumber.getComponentCount());
 			if (s == null) {
 				s = new TreeSet<DfVersionNumber>();
@@ -63,18 +63,20 @@ public class DfBranchFixer {
 
 		// Start by identifying the versions for which no antecedent is present
 		Map<DfVersionNumber, Set<DfVersionNumber>> missingAntecedent = new TreeMap<DfVersionNumber, Set<DfVersionNumber>>();
-		Map<String, DfDocumentVersionNode> documentVersionIndex = new HashMap<String, DfDocumentVersionNode>();
+		Map<String, DfDocumentVersionNode> documentVersionIndexById = new HashMap<String, DfDocumentVersionNode>();
+		Map<DfVersionNumber, DfDocumentVersionNode> documentVersionIndexByNumber = new TreeMap<DfVersionNumber, DfDocumentVersionNode>();
 		DfDocumentVersionNode rootNode = null;
 		for (DfVersionNumber vn : indexByVersionNumber.keySet()) {
 			final IDfDocument d = indexByVersionNumber.get(vn);
 			final IDfId objectId = d.getObjectId();
 			final IDfId antecedentId = d.getAntecedentId();
-			if (!indexById.containsKey(antecedentId.getId())) {
+			DfDocumentVersionNode antecedent = documentVersionIndexById.get(antecedentId.getId());
+			if (antecedent == null) {
 				if (!antecedentId.isNull()) {
 					// The antecedent will not be there, period - so mark this item for repair, and
 					// list the version history it needs leading up to the trunk
 					Set<DfVersionNumber> s = new TreeSet<DfVersionNumber>(DfVersionNumber.REVERSE_ORDER);
-					s.addAll(vn.getAllAntecedents());
+					s.addAll(vn.getAllAntecedents(true));
 					missingAntecedent.put(vn, s);
 					continue;
 				}
@@ -94,18 +96,19 @@ public class DfBranchFixer {
 					// data, and we can't continue
 					throw new CMSMFException(
 						String
-							.format(
-								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-								objectId.getId(), chronicleId));
+						.format(
+							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+							objectId.getId(), chronicleId));
 				}
 			}
 
 			// Ok...so...create the tree node
-			DfDocumentVersionNode node = new DfDocumentVersionNode(d, documentVersionIndex.get(antecedentId.getId()));
+			DfDocumentVersionNode node = new DfDocumentVersionNode(d, antecedent);
 			if (antecedentId.isNull()) {
 				rootNode = node;
 			}
-			documentVersionIndex.put(objectId.getId(), node);
+			documentVersionIndexById.put(objectId.getId(), node);
+			documentVersionIndexByNumber.put(node.getVersion(), node);
 		}
 
 		if (DfBranchFixer.LOG.isDebugEnabled()) {
@@ -125,6 +128,8 @@ public class DfBranchFixer {
 			if (DfBranchFixer.LOG.isDebugEnabled()) {
 				DfBranchFixer.LOG.debug(String.format("Searching for the required antecedents: %s", antecedents));
 			}
+			// The antecedent list is organized in inverse order, so we have to do the least amount
+			// of work in order to finalize the graft
 			for (DfVersionNumber antecedent : antecedents) {
 				if (indexByVersionNumber.containsKey(antecedent)) {
 					last = antecedent;
@@ -134,13 +139,39 @@ public class DfBranchFixer {
 			if (last == null) {
 				if (vn.getComponentCount() > 2) {
 					last = vn.getSubset(2);
-					DfBranchFixer.LOG.debug("No antecedent found, will fall back to the root of the tree");
+					DfBranchFixer.LOG.debug("No antecedent found, will graft starting at the root of the tree");
+					// Find the closest, non-superior version in the trunk to graft into
+					// use that as the antecedent for the base branch, then add the rest
+					// now, add the one we need
+					DfDocumentVersionNode baseNode = null;
+					for (DfVersionNumber a : documentVersionIndexByNumber.keySet()) {
+						if (a.compareTo(last) <= 0) {
+							baseNode = documentVersionIndexByNumber.get(a);
+						} else {
+							break;
+						}
+					}
+
+					if (baseNode == null) {
+						// There are no trunk versions, so add 1.0...
+						baseNode = new DfDocumentVersionNode(new DfVersionNumber("1.0"), IDfDocument.class.cast(null));
+						documentVersionIndexByNumber.put(baseNode.getVersion(), baseNode);
+					}
+
+					// Ok...so now we start to graft based on baseNode
+
+					for (DfVersionNumber antecedent : antecedents) {
+						DfDocumentVersionNode node = new DfDocumentVersionNode(antecedent, baseNode);
+						documentVersionIndexByNumber.put(antecedent, node);
+						baseNode = node;
+					}
+
 				} else {
-					DfBranchFixer.LOG.debug("Item is at the root of the tree, no antecedent required");
+					DfBranchFixer.LOG.debug("Item is at the root of the tree, no grafting required");
 				}
 			} else {
 				if (DfBranchFixer.LOG.isDebugEnabled()) {
-					DfBranchFixer.LOG.debug(String.format("Found candidate version %s as potential antecedent", last));
+					DfBranchFixer.LOG.debug(String.format("Found candidate version %s as potential graft point", last));
 				}
 			}
 		}

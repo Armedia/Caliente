@@ -14,7 +14,14 @@ public final class DfDocumentVersionNode implements Comparable<DfDocumentVersion
 	private final Map<DfVersionNumber, DfDocumentVersionNode> branches = new TreeMap<DfVersionNumber, DfDocumentVersionNode>();
 
 	public DfDocumentVersionNode(DfVersionNumber vn, IDfDocument node) throws DfException {
-		this(node, null);
+		this.version = vn;
+		this.node = node;
+	}
+
+	public DfDocumentVersionNode(DfVersionNumber vn, DfDocumentVersionNode antecedent) throws DfException {
+		this.version = vn;
+		this.node = null;
+		this.antecedent = antecedent;
 	}
 
 	public DfDocumentVersionNode(IDfDocument node, DfDocumentVersionNode antecedent) throws DfException {
@@ -29,34 +36,21 @@ public final class DfDocumentVersionNode implements Comparable<DfDocumentVersion
 				throw new IllegalArgumentException(String.format(
 					"Antecedent string [%s] is not prior to this string [%s]", antecedent.version, this.version));
 			}
-			// Validate that it either has the same number of dots and matches up to the
-			// next-to-last item, or it has fewer components and matches completely until the
-			// shortest length of the two
-			int len = this.version.getComponentCount();
-			boolean s = false;
-			if (antecedent.version.getComponentCount() == len) {
-				len--;
-				s = true;
-			} else if (antecedent.version.getComponentCount() < len) {
-				len = antecedent.version.getComponentCount();
-				s = false;
-			} else {
-				// Error - can't have an antecedent with more dots
-				throw new IllegalArgumentException(String.format(
-					"Antecedent string [%s] is deeper than this string [%s]", antecedent.version, this.version));
-			}
 
-			if (!this.version.isAntecedentOf(antecedent.version)) { throw new IllegalArgumentException(String.format(
-				"Antecedent string [%s] is not an ancestor of child string [%s]", antecedent.version, this.version)); }
+			DfVersionNumber avn = antecedent.version;
+			if (!avn.isAncestorOf(this.version) && !avn.isAntecedentOf(this.version)) { throw new IllegalArgumentException(
+				String.format(
+					"Version [%s] cannot be obtained directly from version [%s] via either branch or checkout",
+					this.version, avn)); }
 
-			if (s) {
+			if (avn.isAntecedentOf(this.version)) {
 				if (antecedent.successor != null) {
 					// A successor is already in place...
 					throw new IllegalArgumentException(
 						String
-							.format(
-								"A successor version (%s) is already in place for antecedent [%s] when attempting to connect with [%s]",
-								antecedent.successor.version, antecedent.version, this.version));
+						.format(
+							"A successor version (%s) is already in place for antecedent [%s] when attempting to connect with [%s]",
+							antecedent.successor.version, antecedent.version, this.version));
 				}
 				antecedent.successor = this;
 			} else {
@@ -75,10 +69,35 @@ public final class DfDocumentVersionNode implements Comparable<DfDocumentVersion
 		return this.node;
 	}
 
+	public DfVersionNumber getVersion() {
+		return this.version;
+	}
+
 	// Traverse the tree upward towards the root
 	public DfDocumentVersionNode getRootVersion() {
 		if (this.antecedent == null) { return this; }
 		return this.antecedent.getRootVersion();
+	}
+
+	public void insertSuccessor(DfDocumentVersionNode node) {
+		if (node == null) { throw new IllegalArgumentException("Must provide a node to insert after"); }
+		boolean s = node.version.isSuccessorOf(this.version);
+		boolean d = node.version.isDescendantOf(this.version);
+
+		if (!s && !d) { throw new IllegalArgumentException(String.format(
+			"Version [%s] can't be directly related to [%s]", node.version, this.version)); }
+
+		node.antecedent = this;
+		if (s) {
+			// Direct successor
+			if (this.successor != null) {
+				this.successor.antecedent = node;
+			}
+			this.successor = node;
+		} else if (d) {
+			// Branch
+			this.branches.put(node.version, node);
+		}
 	}
 
 	public DfDocumentVersionNode setAntecedent(DfDocumentVersionNode antecedent) {
@@ -95,17 +114,5 @@ public final class DfDocumentVersionNode implements Comparable<DfDocumentVersion
 	public int compareTo(DfDocumentVersionNode o) {
 		if (o == null) { return 1; }
 		return this.version.compareTo(o.version);
-	}
-
-	public static DfDocumentVersionNode findBestGraftPoint(DfDocumentVersionNode rootNode, DfVersionNumber number) {
-
-		if (!rootNode.isRoot()) {
-			rootNode = rootNode.getRootVersion();
-		}
-
-		// Do the actual work...
-		while (true) {
-
-		}
 	}
 }
