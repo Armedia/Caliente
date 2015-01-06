@@ -331,10 +331,11 @@ public class DfVersionNumberTest {
 
 		s = new TreeSet<DfVersionNumber>();
 		DfVersionNumber vn = a;
+		boolean includeSiblings = true;
 		while (true) {
 			DfVersionNumber prev = vn;
 			final int len = prev.getComponentCount();
-			vn = prev.getAntecedent(true);
+			vn = prev.getAntecedent(includeSiblings);
 			if (vn == null) {
 				Assert.assertEquals(2, len);
 				break;
@@ -346,6 +347,6 @@ public class DfVersionNumberTest {
 				sibling, vn, prev), ancestor || antecedent || sibling);
 			s.add(vn);
 		}
-		Assert.assertEquals(s, a.getAllAntecedents(true));
+		Assert.assertEquals(s, a.getAllAntecedents(includeSiblings));
 	}
 }
