@@ -114,7 +114,7 @@ public class CmsBranchFixerTest extends AbstractTest {
 	}
 
 	private List<IDfDocument> createMinorRevisions(IDfDocument base, int count, int gap) throws IOException,
-	DfException {
+		DfException {
 		final IDfSession session = base.getSession();
 		session.beginTrans();
 		boolean ok = false;
@@ -345,8 +345,10 @@ public class CmsBranchFixerTest extends AbstractTest {
 				if (removed.contains(aid)) {
 					Assert.assertFalse(index.containsKey(aid));
 					try {
-						Assert.assertNotNull(session.getObject(a));
-						Assert.fail(String.format("Deleted antecedent [%s] is still available in the repository", aid));
+						IDfDocument antecedent = IDfDocument.class.cast(session.getObject(a));
+						Assert.fail(String.format(
+							"Deleted antecedent [%s] (v %s) is still available in the repository", aid,
+							antecedent.getImplicitVersionLabel()));
 					} catch (DfIdNotFoundException e) {
 						// We're good...it was properly removed
 					}
