@@ -26,26 +26,26 @@ import com.documentum.fc.common.IDfId;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class DfVersionTree {
+public class DctmVersionTree {
 
 	protected final Logger log = Logger.getLogger(getClass());
 
 	public final IDfId chronicle;
-	public final Map<String, DfVersionNumber> indexById;
-	public final Map<DfVersionNumber, String> indexByVersionNumber;
-	public final Set<DfVersionNumber> missingAntecedent;
-	public final Set<DfVersionNumber> patches;
+	public final Map<String, DctmVersionNumber> indexById;
+	public final Map<DctmVersionNumber, String> indexByVersionNumber;
+	public final Set<DctmVersionNumber> missingAntecedent;
+	public final Set<DctmVersionNumber> patches;
 
-	public DfVersionTree(IDfSession session, IDfId chronicle) throws Exception, DfException {
+	public DctmVersionTree(IDfSession session, IDfId chronicle) throws DctmException, DfException {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to analyze the chronicle"); }
 		if (chronicle == null) { throw new IllegalArgumentException("Must provide a chronicle to analyze"); }
 		if (chronicle.isNull()) { throw new IllegalArgumentException("Must provide a valid (non-NULLID) chronicle"); }
 		// First, create an index by object ID...
 		final String chronicleId = chronicle.getId();
-		Map<String, DfVersionNumber> indexById = new HashMap<String, DfVersionNumber>();
-		Map<DfVersionNumber, IDfSysObject> sysObjectsByVersionNumber = new TreeMap<DfVersionNumber, IDfSysObject>();
-		Map<DfVersionNumber, String> indexByVersionNumber = new TreeMap<DfVersionNumber, String>();
+		Map<String, DctmVersionNumber> indexById = new HashMap<String, DctmVersionNumber>();
+		Map<DctmVersionNumber, IDfSysObject> sysObjectsByVersionNumber = new TreeMap<DctmVersionNumber, IDfSysObject>();
+		Map<DctmVersionNumber, String> indexByVersionNumber = new TreeMap<DctmVersionNumber, String>();
 
 		IDfCollection results = null;
 		final List<IDfId> all;
@@ -65,9 +65,9 @@ public class DfVersionTree {
 		for (final IDfId sysObjectId : all) {
 			final String sysObjectIdStr = sysObjectId.getId();
 			final IDfSysObject sysObject = IDfSysObject.class.cast(session.getObject(sysObjectId));
-			final DfVersionNumber versionNumber = new DfVersionNumber(sysObject.getImplicitVersionLabel());
+			final DctmVersionNumber versionNumber = new DctmVersionNumber(sysObject.getImplicitVersionLabel());
 			final IDfSysObject duplicate = sysObjectsByVersionNumber.put(versionNumber, sysObject);
-			if (duplicate != null) { throw new Exception(String.format(
+			if (duplicate != null) { throw new DctmException(String.format(
 				"Duplicate version number [%s] between documents [%s] and [%s]", versionNumber, sysObjectIdStr,
 				duplicate.getObjectId().getId())); }
 			indexByVersionNumber.put(versionNumber, sysObjectIdStr);
@@ -88,13 +88,13 @@ public class DfVersionTree {
 
 		// Start by identifying the versions for which no antecedent is present
 
-		Set<DfVersionNumber> missingAntecedent = new TreeSet<DfVersionNumber>();
+		Set<DctmVersionNumber> missingAntecedent = new TreeSet<DctmVersionNumber>();
 		IDfSysObject rootNode = null;
-		for (DfVersionNumber versionNumber : sysObjectsByVersionNumber.keySet()) {
+		for (DctmVersionNumber versionNumber : sysObjectsByVersionNumber.keySet()) {
 			final IDfSysObject sysObject = sysObjectsByVersionNumber.get(versionNumber);
 			final IDfId sysObjectId = sysObject.getObjectId();
 			final IDfId antecedentId = sysObject.getAntecedentId();
-			final DfVersionNumber antecedentVersion = indexById.get(antecedentId);
+			final DctmVersionNumber antecedentVersion = indexById.get(antecedentId);
 			if (antecedentVersion != null) {
 				continue;
 			}
@@ -103,7 +103,7 @@ public class DfVersionTree {
 				if (rootNode != null) {
 					// If we already have a root node, then this is an error condition with invalid
 					// data, and we can't continue
-					throw new Exception(String.format(
+					throw new DctmException(String.format(
 						"Found a second object [%s] in chronicle [%s] that has a null antecedent id",
 						sysObjectId.getId(), chronicleId));
 				}
@@ -113,11 +113,11 @@ public class DfVersionTree {
 				if (!Tools.equals(chronicleId, sysObject.getObjectId().getId())) {
 					// If this is not the chronicle root, this is an error condition from invalid
 					// data, and we can't continue
-					throw new Exception(
+					throw new DctmException(
 						String
-						.format(
-							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-							sysObjectId.getId(), chronicleId));
+							.format(
+								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+								sysObjectId.getId(), chronicleId));
 				}
 				continue;
 			}
@@ -131,13 +131,13 @@ public class DfVersionTree {
 
 		// Ok...so now we walk through the items in missingAntecedent and determine where they need
 		// to be grafted onto the tree
-		Set<DfVersionNumber> patches = new TreeSet<DfVersionNumber>();
-		for (DfVersionNumber versionNumber : missingAntecedent) {
+		Set<DctmVersionNumber> patches = new TreeSet<DctmVersionNumber>();
+		for (DctmVersionNumber versionNumber : missingAntecedent) {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("Repairing version [%s]", versionNumber));
 			}
 			// First, see if we can find any of its required antecedents...
-			Set<DfVersionNumber> antecedents = new TreeSet<DfVersionNumber>(DfVersionNumber.REVERSE_ORDER);
+			Set<DctmVersionNumber> antecedents = new TreeSet<DctmVersionNumber>(DctmVersionNumber.REVERSE_ORDER);
 			antecedents.addAll(versionNumber.getAllAntecedents(true));
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("Searching for the required antecedents: %s", antecedents));
@@ -145,7 +145,7 @@ public class DfVersionTree {
 
 			// The antecedent list is organized in inverse order, so we have to do the least amount
 			// of work in order to finalize the tree structure
-			for (DfVersionNumber antecedent : antecedents) {
+			for (DctmVersionNumber antecedent : antecedents) {
 				if (indexByVersionNumber.containsKey(antecedent)) {
 					break;
 				}
