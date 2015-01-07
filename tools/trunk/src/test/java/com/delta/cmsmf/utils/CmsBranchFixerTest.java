@@ -114,7 +114,7 @@ public class CmsBranchFixerTest extends AbstractTest {
 	}
 
 	private List<IDfDocument> createMinorRevisions(IDfDocument base, int count, int gap) throws IOException,
-		DfException {
+	DfException {
 		final IDfSession session = base.getSession();
 		session.beginTrans();
 		boolean ok = false;
@@ -354,7 +354,7 @@ public class CmsBranchFixerTest extends AbstractTest {
 			}
 
 			// Now, we try to repair the broken tree
-			DfBranchFixer.fixTree(chronicle, index.values());
+			new DfVersionTree(session, chronicle);
 
 		} finally {
 			try {
