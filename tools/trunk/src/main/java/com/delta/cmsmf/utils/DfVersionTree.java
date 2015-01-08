@@ -22,6 +22,7 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 
 /**
@@ -166,5 +167,49 @@ public class DfVersionTree {
 		this.indexByVersionNumber = Tools.freezeMap(indexByVersionNumber);
 		this.missingAntecedent = Tools.freezeSet(missingAntecedent);
 		this.patches = Tools.freezeSet(patches);
+	}
+
+	/**
+	 *
+	 * @param current
+	 * @return the versions that precede the given object ID in the version tree (non inclusive), or
+	 *         {@code null} if the ID isn't part of this version tree
+	 */
+	public List<IDfId> getVersionsPre(IDfId current) {
+		if (current == null) { throw new IllegalArgumentException("Must provide an ID to split the tree"); }
+		if (this.indexById.containsKey(current.getId())) { return null; }
+		List<IDfId> l = new ArrayList<IDfId>();
+		for (DfVersionNumber vn : this.indexByVersionNumber.keySet()) {
+			final String id = this.indexByVersionNumber.get(vn);
+			if (id.equals(current.getId())) {
+				break;
+			}
+			l.add(new DfId(id));
+		}
+		return l;
+	}
+
+	/**
+	 *
+	 * @param current
+	 * @return the versions that follow the given object ID in the version tree (non inclusive), or
+	 *         {@code null} if the ID isn't part of this version tree
+	 */
+	public List<IDfId> getVersionsPost(IDfId current) {
+		if (current == null) { throw new IllegalArgumentException("Must provide an ID to split the tree"); }
+		if (this.indexById.containsKey(current.getId())) { return null; }
+		List<IDfId> l = new ArrayList<IDfId>();
+		boolean add = false;
+		for (DfVersionNumber vn : this.indexByVersionNumber.keySet()) {
+			final String id = this.indexByVersionNumber.get(vn);
+			if (id.equals(current.getId())) {
+				add = true;
+				continue;
+			}
+			if (add) {
+				l.add(new DfId(id));
+			}
+		}
+		return l;
 	}
 }
