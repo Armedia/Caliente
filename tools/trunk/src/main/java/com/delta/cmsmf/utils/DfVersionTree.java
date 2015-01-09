@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.CmsAttributes;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -33,12 +34,57 @@ public class DfVersionTree {
 
 	protected final Logger log = Logger.getLogger(getClass());
 
+	/**
+	 * The i_chronicle_id this tree represents
+	 */
 	public final IDfId chronicle;
+
+	/**
+	 * Maps the r_object_id to each version, without order
+	 */
 	public final Map<String, DfVersionNumber> indexById;
+
+	/**
+	 * Maps the version numbers to the r_object_id for each version, ordered by version.
+	 */
 	public final Map<DfVersionNumber, String> indexByVersionNumber;
+
+	/**
+	 * Includes all the versions for which the antecedent version is missing (i.e. i_antecedent_id
+	 * pointed to a non-existent object), in order. If this set is empty, it means the tree is
+	 * stable as-is and needs no repairs.
+	 */
 	public final Set<DfVersionNumber> missingAntecedent;
+
+	/**
+	 * Includes all the required versions that need to be added in order to create a consistent
+	 * version tree, in order. If this set is empty, it means the tree is stable as-is and needs no
+	 * repairs.
+	 */
 	public final Set<DfVersionNumber> patches;
 
+	/**
+	 * Includes all the version numbers required to obtain a stable, consistent tree, including
+	 * existing versions <b><i>and</i></b> required patches, in order.
+	 */
+	public final List<DfVersionNumber> allVersions;
+
+	/**
+	 *
+	 * @param session
+	 *            the session through which to perform the analysis
+	 * @param chronicle
+	 *            the chronicle for which to construct the version tree
+	 * @throws CMSMFException
+	 *             an unrecoverable processing error ocurred
+	 * @throws DfException
+	 *             raised by the underlying DFC
+	 * @throws DfIdNotFoundException
+	 *             if the given chronicle id refers to a missing chronicle and no objects were found
+	 * @throws IllegalArgumentException
+	 *             raised if the session is {@code null}, the chronicle is {@code null}, or
+	 *             {@code chronicle.isNull()} returns {@code true}.
+	 */
 	public DfVersionTree(IDfSession session, IDfId chronicle) throws CMSMFException, DfException {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to analyze the chronicle"); }
@@ -49,6 +95,7 @@ public class DfVersionTree {
 		Map<String, DfVersionNumber> indexById = new HashMap<String, DfVersionNumber>();
 		Map<DfVersionNumber, IDfSysObject> sysObjectsByVersionNumber = new TreeMap<DfVersionNumber, IDfSysObject>();
 		Map<DfVersionNumber, String> indexByVersionNumber = new TreeMap<DfVersionNumber, String>();
+		Set<DfVersionNumber> allVersions = new TreeSet<DfVersionNumber>();
 
 		IDfCollection results = null;
 		final List<IDfId> all;
@@ -64,6 +111,8 @@ public class DfVersionTree {
 		} finally {
 			DfUtils.closeQuietly(results);
 		}
+		// This can only happen if there is nothing in the chronicle
+		if (all.isEmpty()) { throw new DfIdNotFoundException(chronicle); }
 
 		for (final IDfId sysObjectId : all) {
 			final String sysObjectIdStr = sysObjectId.getId();
@@ -74,6 +123,7 @@ public class DfVersionTree {
 				"Duplicate version number [%s] between documents [%s] and [%s]", versionNumber, sysObjectIdStr,
 				duplicate.getObjectId().getId())); }
 			indexByVersionNumber.put(versionNumber, sysObjectIdStr);
+			allVersions.add(versionNumber);
 
 			indexById.put(sysObjectIdStr, versionNumber);
 		}
@@ -118,9 +168,9 @@ public class DfVersionTree {
 					// data, and we can't continue
 					throw new CMSMFException(
 						String
-							.format(
-								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-								sysObjectId.getId(), chronicleId));
+						.format(
+							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+							sysObjectId.getId(), chronicleId));
 				}
 				continue;
 			}
@@ -153,6 +203,7 @@ public class DfVersionTree {
 					break;
 				}
 				patches.add(antecedent);
+				allVersions.add(antecedent);
 			}
 		}
 
@@ -167,6 +218,9 @@ public class DfVersionTree {
 		this.indexByVersionNumber = Tools.freezeMap(indexByVersionNumber);
 		this.missingAntecedent = Tools.freezeSet(missingAntecedent);
 		this.patches = Tools.freezeSet(patches);
+		List<DfVersionNumber> l = new ArrayList<DfVersionNumber>(allVersions.size());
+		l.addAll(allVersions);
+		this.allVersions = Tools.freezeList(l);
 	}
 
 	/**
