@@ -43,7 +43,7 @@ public class CmsBranchFixerTest extends AbstractTest {
 		boolean ok = false;
 		try {
 			IDfDocument document = IDfDocument.class.cast(session.newObject("dm_document"));
-			document.setObjectName("testdocument.doc");
+			document.setObjectName("Broken History.txt");
 			document.setContentType("text");
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			out.write("ROOT VERSION (1.0)".getBytes());
@@ -114,7 +114,7 @@ public class CmsBranchFixerTest extends AbstractTest {
 	}
 
 	private List<IDfDocument> createMinorRevisions(IDfDocument base, int count, int gap) throws IOException,
-		DfException {
+	DfException {
 		final IDfSession session = base.getSession();
 		session.beginTrans();
 		boolean ok = false;
