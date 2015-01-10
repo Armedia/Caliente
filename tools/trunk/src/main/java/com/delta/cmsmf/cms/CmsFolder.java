@@ -108,9 +108,9 @@ public class CmsFolder extends CmsSysObject<IDfFolder> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfFolder folder) throws DfException,
-		CMSMFException {
-		super.getDataProperties(properties, folder);
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfFolder folder, CmsTransferContext ctx)
+		throws DfException, CMSMFException {
+		super.getDataProperties(properties, folder, ctx);
 		final String folderId = folder.getObjectId().getId();
 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),

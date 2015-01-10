@@ -75,4 +75,8 @@ public class Constant {
 	public static final String EXACT_ID = "EXACT_ID";
 
 	public static final String VERSION_LABEL = "VERSION_LABEL";
+
+	public static final String VERSION_HISTORY = "VERSION_HISTORY";
+
+	public static final String VERSION_PATCHES = "VERSION_PATCHES";
 }

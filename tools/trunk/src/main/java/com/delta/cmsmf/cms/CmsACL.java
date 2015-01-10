@@ -182,7 +182,8 @@ public class CmsACL extends CmsObject<IDfACL> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfACL acl) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfACL acl, CmsTransferContext ctx)
+		throws DfException {
 		final String aclId = acl.getObjectId().getId();
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(CmsACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
@@ -311,11 +312,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 				if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
 					// we can survive this...
 					this.log
-						.warn(String
-							.format(
-								"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
-								getLabel(), permit.getAccessorName(), permit.getPermitType(),
-								permit.getPermitValueInt(), permit.getPermitValueString()));
+					.warn(String
+						.format(
+							"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
+							getLabel(), permit.getAccessorName(), permit.getPermitType(),
+							permit.getPermitValueInt(), permit.getPermitValueString()));
 					continue;
 				}
 				// something else? don't snuff it...
@@ -373,10 +374,10 @@ public class CmsACL extends CmsObject<IDfACL> {
 					if (!exists) {
 						// This shouldn't be necessary
 						this.log
-							.warn(String
-								.format(
-									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-									getLabel(), name));
+						.warn(String
+							.format(
+								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+								getLabel(), name));
 						exists = (acl.getSession().getGroup(name) != null);
 						accessorType = "accessor (user or group)";
 					}
@@ -457,11 +458,11 @@ public class CmsACL extends CmsObject<IDfACL> {
 				updateSystemAttributes(user, context);
 			} catch (CMSMFException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-								user.getUserName(), getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+						user.getUserName(), getLabel()), e);
 			}
 		}
 	}

@@ -6,21 +6,24 @@ package com.delta.cmsmf.cms;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.utils.DfDocumentTreePatch;
 import com.delta.cmsmf.utils.DfUtils;
+import com.delta.cmsmf.utils.DfVersionNumber;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -87,8 +90,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 	private TemporaryPermission antecedentTemporaryPermission = null;
 	private TemporaryPermission branchTemporaryPermission = null;
-	private List<IDfId> priorVersions = null;
-	private List<IDfId> laterVersions = null;
+	private List<IDfDocument> priorVersions = null;
+	private List<IDfDocument> laterVersions = null;
 
 	public CmsDocument() {
 		super(IDfDocument.class);
@@ -132,11 +135,28 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document) throws DfException,
-	CMSMFException {
-		super.getDataProperties(properties, document);
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfDocument document, CmsTransferContext ctx)
+		throws DfException, CMSMFException {
+		super.getDataProperties(properties, document, ctx);
 
-		if (!isDfReference(document)) { return; }
+		if (!isDfReference(document)) {
+			// Populate the version history, because this will also trigger the population of any
+			// required version patches
+			Object vp = ctx.getObject(Constant.VERSION_PATCHES);
+			if (vp == null) {
+				getVersions(true, document, ctx);
+				vp = ctx.getObject(Constant.VERSION_PATCHES);
+			}
+			@SuppressWarnings("unchecked")
+			Map<String, List<IDfValue>> versionPatches = (Map<String, List<IDfValue>>) vp;
+			if (versionPatches != null) {
+				List<IDfValue> patches = versionPatches.get(document.getObjectId().getId());
+				if ((patches != null) && !patches.isEmpty()) {
+					properties.add(new CmsProperty(Constant.VERSION_PATCHES, CmsDataType.DF_STRING, true, patches));
+				}
+			}
+			return;
+		}
 		final IDfSession session = document.getSession();
 
 		// TODO: this is untidy - using an undocumented API??
@@ -206,28 +226,24 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		return castObject(obj);
 	}
 
-	private List<IDfId> getVersions(boolean prior, IDfDocument document) throws DfException, CMSMFException {
+	private List<IDfDocument> getVersions(boolean prior, IDfDocument document, CmsTransferContext ctx)
+		throws DfException, CMSMFException {
 		if (document == null) { throw new IllegalArgumentException("Must provide a document whose versions to analyze"); }
 
-		// Is this the root of the version hierarchy? If so, then there are no prior versions
-		if (prior && Tools.equals(document.getObjectId().getId(), document.getChronicleId().getId())) {
-			// Return an empty list - this is the root of the version hierarchy
-			return new ArrayList<IDfId>();
-		}
-
 		if ((this.priorVersions == null) || (this.laterVersions == null)) {
-			final List<IDfId> priorVersions = new LinkedList<IDfId>();
-			final List<IDfId> laterVersions = new LinkedList<IDfId>();
-			List<IDfId> target = priorVersions;
-			List<IDfId> history = getVersionHistory(document);
-			for (IDfId id : history) {
-				if (Tools.equals(id.getId(), document.getObjectId().getId())) {
+			final List<IDfDocument> priorVersions = new LinkedList<IDfDocument>();
+			final List<IDfDocument> laterVersions = new LinkedList<IDfDocument>();
+			List<IDfDocument> target = priorVersions;
+			List<IDfDocument> history = getVersionHistory(document, ctx);
+			final String limitId = document.getObjectId().getId();
+			for (IDfDocument d : history) {
+				if (Tools.equals(d.getObjectId().getId(), limitId)) {
 					// Once we've found the "reference" object in the history, we skip adding it
 					// since it will be added explicitly, and we start adding later versions
 					target = laterVersions;
 					continue;
 				}
-				target.add(id);
+				target.add(d);
 			}
 			this.priorVersions = priorVersions;
 			this.laterVersions = laterVersions;
@@ -267,9 +283,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		// which is BAAAD
 		if (Tools.equals(getId(), ctx.getRootObjectId())) {
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
-			for (IDfId versionId : getVersions(true, document)) {
-				IDfPersistentObject obj = session.getObject(versionId);
-				IDfDocument versionDoc = IDfDocument.class.cast(obj);
+			for (IDfDocument versionDoc : getVersions(true, document, ctx)) {
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Adding prior version [%s]", calculateVersionString(document, false)));
 				}
@@ -338,9 +352,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		// which is BAAAD
 		if (Tools.equals(getId(), ctx.getRootObjectId())) {
 			// Now, also do the *SUBSEQUENT* versions...
-			for (IDfId versionId : getVersions(false, document)) {
-				IDfPersistentObject obj = session.getObject(versionId);
-				IDfDocument versionDoc = IDfDocument.class.cast(obj);
+			for (IDfDocument versionDoc : getVersions(false, document, ctx)) {
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Adding subsequent version [%s]",
 						calculateVersionString(document, false)));
@@ -681,5 +693,10 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 
 		return super.cleanupAfterSave(document, newObject, context);
+	}
+
+	@Override
+	protected IDfDocument newVersionTreePatch(IDfDocument base, DfVersionNumber patchNumber) {
+		return new DfDocumentTreePatch(base, patchNumber);
 	}
 }

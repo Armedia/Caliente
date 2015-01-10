@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -21,13 +20,15 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
+import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
+import com.delta.cmsmf.utils.DfVersionNumber;
+import com.delta.cmsmf.utils.DfVersionTree;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
@@ -35,7 +36,6 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
-import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -393,7 +393,8 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, T object) throws DfException, CMSMFException {
+	protected void getDataProperties(Collection<CmsProperty> properties, T object, CmsTransferContext ctx)
+		throws DfException, CMSMFException {
 		IDfSession session = object.getSession();
 		CmsProperty paths = new CmsProperty(CmsSysObject.TARGET_PATHS, CmsDataType.DF_STRING, true);
 		properties.add(paths);
@@ -684,64 +685,48 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	 * @throws DfException
 	 * @throws CMSMFException
 	 */
-	protected final List<IDfId> getVersionHistory(T object) throws DfException, CMSMFException {
+	protected final List<T> getVersionHistory(T object, CmsTransferContext ctx) throws DfException, CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
+		final IDfSession session = object.getSession();
+		final IDfId chronicleId = object.getChronicleId();
 
-		IDfCollection versions = object
-			.getVersions("r_object_id, r_modify_date, r_version_label, i_chronicle_id, i_antecedent_id, i_latest_flag, i_direct_dsc");
-		Set<String> finished = new HashSet<String>();
-		finished.add(DfId.DF_NULLID_STR); // This helps, below
-		LinkedList<IDfId> history = new LinkedList<IDfId>();
-		LinkedList<IDfTypedObject> deferred = new LinkedList<IDfTypedObject>();
-		try {
-			while (versions.next()) {
-				IDfId objectId = versions.getId(CmsAttributes.R_OBJECT_ID);
-				if (objectId.isNull()) {
-					// Shouldn't happen, but better safe than sorry...
-					continue;
-				}
-				IDfId antecedentId = versions.getId(CmsAttributes.I_ANTECEDENT_ID);
-				if (finished.contains(antecedentId.getId())) {
-					// Antecedent is already in place, add this version
-					history.add(objectId);
-					finished.add(objectId.getId());
-				} else {
-					// Antecedent not in yet, defer it...add it at the front
-					// because this will help optimize the deferred processing,
-					// below, because MOST of the versions will be in the
-					// correct order - only a few won't...
-					deferred.addFirst(versions.getTypedObject());
-				}
-			}
-		} finally {
-			DfUtils.closeQuietly(versions);
+		@SuppressWarnings("unchecked")
+		List<T> history = (List<T>) ctx.getObject(Constant.VERSION_HISTORY);
+		if (history != null) {
+			//
+			return history;
 		}
 
-		while (!deferred.isEmpty()) {
-			Iterator<IDfTypedObject> it = deferred.iterator();
-			boolean modified = false;
-			while (it.hasNext()) {
-				IDfTypedObject v = it.next();
-				IDfId objectId = v.getId(CmsAttributes.R_OBJECT_ID);
-				IDfId antecedentId = v.getId(CmsAttributes.I_ANTECEDENT_ID);
-				if (finished.contains(antecedentId.getId())) {
-					// The antecedent is on the list...add this one
-					history.add(objectId);
-					finished.add(objectId.getId());
-					it.remove();
-					modified = true;
-				}
+		// No existing history, we must calculate it
+		history = new LinkedList<T>();
+		DfVersionTree tree = new DfVersionTree(session, chronicleId);
+		List<IDfValue> patches = new ArrayList<IDfValue>();
+		Map<String, List<IDfValue>> versionPatches = new HashMap<String, List<IDfValue>>();
+		for (DfVersionNumber versionNumber : tree.allVersions) {
+			if (tree.totalPatches.contains(versionNumber)) {
+				patches.add(DfValueFactory.newStringValue(versionNumber.toString()));
+				continue;
 			}
 
-			if (!modified) {
-				// We can't have done two passes without resolving at least one object because
-				// that means we have a broken version tree...which is unsupported
-				throw new CMSMFException(String.format(
-					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-						.getId(), deferred));
+			final IDfId id = new DfId(tree.indexByVersionNumber.get(versionNumber));
+			final T entry = castObject(session.getObject(id));
+			history.add(entry);
+			if (!patches.isEmpty()) {
+				patches = Tools.freezeList(patches);
+				versionPatches.put(id.getId(), patches);
+				patches = new ArrayList<IDfValue>();
 			}
 		}
+		// Only put this in the context when it's needed
+		versionPatches = Tools.freezeMap(versionPatches);
+		ctx.setObject(Constant.VERSION_PATCHES, versionPatches);
+		history = Tools.freezeList(history);
+		ctx.setObject(Constant.VERSION_HISTORY, history);
 		return history;
+	}
+
+	protected T newVersionTreePatch(T base, DfVersionNumber patchNumber) {
+		throw new AbstractMethodError("Must implement newPatch() to support version tree repair");
 	}
 
 	protected List<String> getProspectiveParents(CmsTransferContext context) throws DfException {

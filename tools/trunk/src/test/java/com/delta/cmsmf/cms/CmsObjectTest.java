@@ -69,7 +69,8 @@ public class CmsObjectTest extends AbstractTest {
 							this.log.info(e.getMessage());
 							continue;
 						}
-						if (!obj.loadFromCMS(cmsObj)) {
+						if (!obj.loadFromCMS(cmsObj, new DefaultTransferContext(cmsObj.getObjectId().getId(), session,
+							null, null, this.log))) {
 							// Unsupported object
 							continue;
 						}
@@ -123,7 +124,7 @@ public class CmsObjectTest extends AbstractTest {
 							this.log.info(e.getMessage());
 							continue;
 						}
-						if (!obj.loadFromCMS(cmsObj)) {
+						if (!obj.loadFromCMS(cmsObj, null)) {
 							// Unsupported object
 							continue;
 						}
@@ -541,8 +542,7 @@ public class CmsObjectTest extends AbstractTest {
 
 	/**
 	 * Test method for
-	 * {@link com.delta.cmsmf.cms.CmsObject#loadFromCMS(com.documentum.fc.client.IDfPersistentObject)}
-	 * .
+	 * {@link com.delta.cmsmf.cms.CmsObject#loadFromCMS(IDfPersistentObject, CmsTransferContext)} .
 	 */
 	@Test
 	public void testLoadFromCMS() {

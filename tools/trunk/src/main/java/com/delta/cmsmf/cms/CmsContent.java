@@ -47,7 +47,8 @@ public class CmsContent extends CmsObject<IDfContent> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfContent content) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfContent content, CmsTransferContext ctx)
+		throws DfException {
 		String contentId = content.getObjectId().getId();
 		String format = content.getString(CmsAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(CmsAttributes.PAGE);
@@ -104,7 +105,7 @@ public class CmsContent extends CmsObject<IDfContent> {
 
 		if (!(document instanceof IDfSysObject)) { throw new CMSMFException(String.format(
 			"Document with id [%s] for content [%s] is not a dm_sysobject: %s (%s)", documentId, contentId, document
-			.getType().getName(), document.getClass().getCanonicalName())); }
+				.getType().getName(), document.getClass().getCanonicalName())); }
 
 		String format = content.getString(CmsAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(CmsAttributes.PAGE);

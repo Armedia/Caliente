@@ -237,7 +237,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	/**
 	 * <p>
 	 * Validate that the object should continue to be loaded by
-	 * {@link #loadFromCMS(IDfPersistentObject)}, or not.
+	 * {@link #loadFromCMS(IDfPersistentObject, CmsTransferContext)}, or not.
 	 * </p>
 	 *
 	 * @param object
@@ -270,8 +270,10 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 * @throws CMSMFException
 	 */
-	public final boolean loadFromCMS(IDfPersistentObject object) throws DfException, CMSMFException {
+	public final boolean loadFromCMS(IDfPersistentObject object, CmsTransferContext ctx) throws DfException,
+	CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to populate from"); }
+		if (ctx == null) { throw new IllegalArgumentException("Must provide transfer context"); }
 		final T typedObject = castObject(object);
 		final CmsObjectType type;
 		try {
@@ -312,7 +314,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		// from DFC, and therefore specialized code is required to handle it
 		this.properties.clear();
 		List<CmsProperty> properties = new ArrayList<CmsProperty>();
-		getDataProperties(properties, typedObject);
+		getDataProperties(properties, typedObject, ctx);
 		for (CmsProperty property : properties) {
 			// This mechanism overwrites properties, and intentionally so
 			this.properties.put(property.getName(), property);
@@ -597,7 +599,8 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 
 	protected abstract T locateInCms(CmsTransferContext context) throws CMSMFException, DfException;
 
-	protected void getDataProperties(Collection<CmsProperty> properties, T object) throws DfException, CMSMFException {
+	protected void getDataProperties(Collection<CmsProperty> properties, T object, CmsTransferContext ctx)
+		throws DfException, CMSMFException {
 	}
 
 	/**

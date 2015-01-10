@@ -340,7 +340,7 @@ public class CmsObjectStoreTest extends AbstractTest {
 							this.log.info(e.getMessage());
 							continue;
 						}
-						if (!obj.loadFromCMS(cmsObj)) {
+						if (!obj.loadFromCMS(cmsObj, ctx)) {
 							// Unsupported object
 							continue;
 						}
@@ -576,11 +576,11 @@ public class CmsObjectStoreTest extends AbstractTest {
 							continue;
 						}
 						final CmsObject<? extends IDfPersistentObject> obj = t.newInstance();
-						if (!obj.loadFromCMS(cmsObj)) {
+						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store, fs, null);
+						if (!obj.loadFromCMS(cmsObj, ctx)) {
 							// Unsupported object
 							continue;
 						}
-						CmsTransferContext ctx = new DefaultTransferContext(obj.getId(), session, store, fs, null);
 						store.serializeObject(obj, ctx);
 						expected.put(obj.getId(), obj);
 						if (++count > max) {

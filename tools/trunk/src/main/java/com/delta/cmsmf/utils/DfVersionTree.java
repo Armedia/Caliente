@@ -61,7 +61,7 @@ public class DfVersionTree {
 	 * version tree, in order. If this set is empty, it means the tree is stable as-is and needs no
 	 * repairs.
 	 */
-	public final Set<DfVersionNumber> patches;
+	public final Set<DfVersionNumber> totalPatches;
 
 	/**
 	 * Includes all the version numbers required to obtain a stable, consistent tree, including
@@ -168,9 +168,9 @@ public class DfVersionTree {
 					// data, and we can't continue
 					throw new CMSMFException(
 						String
-						.format(
-							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-							sysObjectId.getId(), chronicleId));
+							.format(
+								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+								sysObjectId.getId(), chronicleId));
 				}
 				continue;
 			}
@@ -217,7 +217,7 @@ public class DfVersionTree {
 		this.indexById = Tools.freezeMap(indexById);
 		this.indexByVersionNumber = Tools.freezeMap(indexByVersionNumber);
 		this.missingAntecedent = Tools.freezeSet(missingAntecedent);
-		this.patches = Tools.freezeSet(patches);
+		this.totalPatches = Tools.freezeSet(patches);
 		List<DfVersionNumber> l = new ArrayList<DfVersionNumber>(allVersions.size());
 		l.addAll(allVersions);
 		this.allVersions = Tools.freezeList(l);

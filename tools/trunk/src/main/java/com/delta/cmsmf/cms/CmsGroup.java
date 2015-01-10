@@ -49,18 +49,18 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			CmsAttributes.GROUPS_NAMES, CmsAttributeHandlers.NO_IMPORT_HANDLER);
 		CmsAttributeHandlers.setAttributeHandler(CmsObjectType.GROUP, CmsDataType.DF_STRING, CmsAttributes.USERS_NAMES,
 			new AttributeHandler() {
-				@Override
-				public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
-					return false;
-				}
+			@Override
+			public boolean includeInImport(IDfPersistentObject object, CmsAttribute attribute) throws DfException {
+				return false;
+			}
 
-				@Override
-				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-					throws DfException {
-					return CmsMappingUtils.substituteMappableUsers(object, attr);
-				}
+			@Override
+			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+				throws DfException {
+				return CmsMappingUtils.substituteMappableUsers(object, attr);
+			}
 
-			});
+		});
 		CmsGroup.HANDLERS_READY = true;
 	}
 
@@ -113,7 +113,8 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 	}
 
 	@Override
-	protected void getDataProperties(Collection<CmsProperty> properties, IDfGroup group) throws DfException {
+	protected void getDataProperties(Collection<CmsProperty> properties, IDfGroup group, CmsTransferContext ctx)
+		throws DfException {
 		// Store all the users that have this group as their default group
 		CmsProperty property = new CmsProperty(CmsGroup.USERS_WITH_DEFAULT_GROUP, CmsDataType.DF_STRING);
 		for (IDfValue v : getUsersWithDefaultGroup(group)) {
@@ -252,10 +253,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				if (user == null) {
 					missingUsers.add(actualUser);
 					this.log
-						.warn(String
-							.format(
-								"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-								actualUser, groupName.asString()));
+					.warn(String
+						.format(
+							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+							actualUser, groupName.asString()));
 					continue;
 				}
 				group.addUser(actualUser);
@@ -270,10 +271,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-								actualGroup, groupName.asString()));
+					.warn(String
+						.format(
+							"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
+							actualGroup, groupName.asString()));
 					continue;
 				}
 				group.addGroup(actualGroup);
@@ -294,10 +295,10 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 			final IDfUser user = session.getUser(actualUser);
 			if (user == null) {
 				this.log
-					.warn(String
-						.format(
-							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-							groupName, actualUser));
+				.warn(String
+					.format(
+						"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+						groupName, actualUser));
 				continue;
 			}
 
@@ -316,11 +317,11 @@ public class CmsGroup extends CmsObject<IDfGroup> {
 				updateSystemAttributes(user, context);
 			} catch (CMSMFException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-								actualUser, group.getGroupName()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+						actualUser, group.getGroupName()), e);
 			}
 		}
 	}
