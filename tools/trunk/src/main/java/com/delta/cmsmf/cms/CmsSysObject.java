@@ -364,7 +364,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			this.mustImmute = true;
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("Clearing immutable status from [%s](%s){%s}", getLabel(), getId(), newId));
+				.debug(String.format("Clearing immutable status from [%s](%s){%s}", getLabel(), getId(), newId));
 			}
 			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, false);
 			if (!sysObject.isCheckedOut()) {
@@ -388,7 +388,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		} else if (this.mustImmute && !sysObject.isImmutable()) {
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
+				.debug(String.format("Setting immutability status to [%s](%s){%s}", getLabel(), getId(), newId));
 			}
 			sysObject.setBoolean(CmsAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
@@ -433,7 +433,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-		CMSMFException {
+	CMSMFException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -448,7 +448,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			final boolean sourceFreeze = att.getValue().asBoolean();
 			this.log.warn(String.format("%s [%s](%s) is unexpectedly %s (expected=[%s|%s] / source=[%s|%s])",
 				getType(), getLabel(), getId(), sysObject.isFrozen() ? "FROZEN" : "IMMUTABLE", this.mustFreeze,
-				this.mustImmute, sourceFreeze, sourceImmute));
+					this.mustImmute, sourceFreeze, sourceImmute));
 		}
 
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
@@ -538,7 +538,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate, session), modifierName, DfUtils
 			.generateSqlDateClause(creationDate, session), creatorName, aclName, aclDomain, (deletedAtt.getValue()
-			.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
+				.asBoolean() ? 1 : 0), vstampFlag, sysObject.getObjectId().getId());
 	}
 
 	/**
@@ -618,7 +618,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				throw new CMSMFException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
 					getSubtype(), getLabel(), getSubtype(), currentPath, current.getType().getName(), current
-						.getObjectId().getId()));
+					.getObjectId().getId()));
 			}
 
 			T currentObj = dfClass.cast(current);
@@ -732,10 +732,6 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		@SuppressWarnings("unchecked")
 		List<IDfValue> l = (List<IDfValue>) o;
 		return l;
-	}
-
-	protected T newVersionTreePatch(T base, DfVersionNumber patchNumber) {
-		throw new AbstractMethodError("Must implement newPatch() to support version tree repair");
 	}
 
 	protected List<String> getProspectiveParents(CmsTransferContext context) throws DfException {

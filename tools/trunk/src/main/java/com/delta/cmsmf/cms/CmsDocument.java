@@ -19,9 +19,7 @@ import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.utils.DfDocumentTreePatch;
 import com.delta.cmsmf.utils.DfUtils;
-import com.delta.cmsmf.utils.DfVersionNumber;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -684,10 +682,5 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		}
 
 		return super.cleanupAfterSave(document, newObject, context);
-	}
-
-	@Override
-	protected IDfDocument newVersionTreePatch(IDfDocument base, DfVersionNumber patchNumber) {
-		return new DfDocumentTreePatch(base, patchNumber);
 	}
 }
