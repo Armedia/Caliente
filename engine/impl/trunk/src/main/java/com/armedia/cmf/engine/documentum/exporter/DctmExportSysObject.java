@@ -4,18 +4,19 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
+import com.armedia.cmf.engine.documentum.DctmException;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DctmVersionNumber;
+import com.armedia.cmf.engine.documentum.DctmVersionTree;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
@@ -23,13 +24,12 @@ import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
-import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
@@ -42,15 +42,16 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstract<T> implements DctmSysObject {
 
-	private static final String VERSION_HISTORY = "version_history";
+	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
+	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
 
 	protected DctmExportSysObject(DctmExportEngine engine, DctmObjectType type) {
 		super(engine, type);
 	}
 
 	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-		ExportException {
+	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, T object)
+		throws DfException, ExportException {
 		IDfSession session = object.getSession();
 		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PATHS,
 			DctmDataType.DF_STRING.getStoredType(), true);
@@ -124,76 +125,62 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 	 * @throws DfException
 	 * @throws ExportException
 	 */
-	protected final List<IDfId> getVersionHistory(ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx, T object)
+	protected final List<T> getVersionHistory(ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx, T object)
 		throws DfException, ExportException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
 
 		// Using the chronicle ID here guarantees that the same version history will be retrieved
 		// regardless of which branch of the tree we make the query on
-		String cachedName = String.format("%s[%s]", DctmExportSysObject.VERSION_HISTORY, object.getChronicleId()
+		final IDfSession session = object.getSession();
+		final IDfId chronicleId = object.getChronicleId();
+		final String historyObject = String.format(DctmExportSysObject.CTX_VERSION_HISTORY, object.getChronicleId()
 			.getId());
 
-		// Retrieve the version history for the object from the context, if it exists
 		@SuppressWarnings("unchecked")
-		List<IDfId> history = (List<IDfId>) ctx.getObject(cachedName);
+		List<T> history = (List<T>) ctx.getObject(historyObject);
 		if (history != null) { return history; }
 
-		IDfCollection versions = object
-			.getVersions("r_object_id, r_modify_date, r_version_label, i_chronicle_id, i_antecedent_id, i_latest_flag, i_direct_dsc");
-		Set<String> finished = new HashSet<String>();
-		finished.add(DfId.DF_NULLID_STR); // This helps, below
-		history = new LinkedList<IDfId>();
-		LinkedList<IDfTypedObject> deferred = new LinkedList<IDfTypedObject>();
+		// No existing history, we must calculate it
+		history = new LinkedList<T>();
+		final DctmVersionTree tree;
 		try {
-			while (versions.next()) {
-				IDfId objectId = versions.getId(DctmAttributes.R_OBJECT_ID);
-				if (objectId.isNull()) {
-					// Shouldn't happen, but better safe than sorry...
-					continue;
-				}
-				IDfId antecedentId = versions.getId(DctmAttributes.I_ANTECEDENT_ID);
-				if (finished.contains(antecedentId.getId())) {
-					// Antecedent is already in place, add this version
-					history.add(objectId);
-					finished.add(objectId.getId());
-				} else {
-					// Antecedent not in yet, defer it...add it at the front
-					// because this will help optimize the deferred processing,
-					// below, because MOST of the versions will be in the
-					// correct order - only a few won't...
-					deferred.addFirst(versions.getTypedObject());
-				}
-			}
-		} finally {
-			DfUtils.closeQuietly(versions);
+			tree = new DctmVersionTree(session, chronicleId);
+		} catch (DctmException e) {
+			throw new ExportException(String.format("Failed to obtain the version tree for chronicle [%s]",
+				chronicleId.getId()), e);
 		}
-
-		while (!deferred.isEmpty()) {
-			Iterator<IDfTypedObject> it = deferred.iterator();
-			boolean modified = false;
-			while (it.hasNext()) {
-				IDfTypedObject v = it.next();
-				IDfId objectId = v.getId(DctmAttributes.R_OBJECT_ID);
-				IDfId antecedentId = v.getId(DctmAttributes.I_ANTECEDENT_ID);
-				if (finished.contains(antecedentId.getId())) {
-					// The antecedent is on the list...add this one
-					history.add(objectId);
-					finished.add(objectId.getId());
-					it.remove();
-					modified = true;
-				}
+		List<IDfValue> patches = new ArrayList<IDfValue>();
+		for (DctmVersionNumber versionNumber : tree.allVersions) {
+			if (tree.totalPatches.contains(versionNumber)) {
+				patches.add(DfValueFactory.newStringValue(versionNumber.toString()));
+				continue;
 			}
 
-			if (!modified) {
-				// We can't have done two passes without resolving at least one object because
-				// that means we have a broken version tree...which is unsupported
-				throw new ExportException(String.format(
-					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-					.getId(), deferred));
+			final IDfId id = new DfId(tree.indexByVersionNumber.get(versionNumber));
+			final T entry = castObject(session.getObject(id));
+			history.add(entry);
+			if (!patches.isEmpty()) {
+				patches = Tools.freezeList(patches);
+				final String patchesObject = String.format(DctmExportSysObject.CTX_VERSION_PATCHES, id.getId());
+				ctx.setObject(patchesObject, patches);
+				patches = new ArrayList<IDfValue>();
 			}
 		}
-		ctx.setObject(cachedName, history);
+		// Only put this in the context when it's needed
+		history = Tools.freezeList(history);
+		ctx.setObject(historyObject, history);
 		return history;
+	}
+
+	protected final List<IDfValue> getVersionPatches(T object,
+		ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws DfException {
+		final String patchesObject = String.format(DctmExportSysObject.CTX_VERSION_PATCHES, object.getObjectId()
+			.getId());
+		Object o = ctx.getObject(patchesObject);
+		if (o == null) { return null; }
+		@SuppressWarnings("unchecked")
+		List<IDfValue> l = (List<IDfValue>) o;
+		return l;
 	}
 
 	@Override

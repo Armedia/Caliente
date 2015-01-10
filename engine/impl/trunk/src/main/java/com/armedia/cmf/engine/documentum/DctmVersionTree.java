@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -31,12 +32,57 @@ public class DctmVersionTree {
 
 	protected final Logger log = Logger.getLogger(getClass());
 
+	/**
+	 * The i_chronicle_id this tree represents
+	 */
 	public final IDfId chronicle;
-	public final Map<String, DctmVersionNumber> indexById;
-	public final Map<DctmVersionNumber, String> indexByVersionNumber;
-	public final Set<DctmVersionNumber> missingAntecedent;
-	public final Set<DctmVersionNumber> patches;
 
+	/**
+	 * Maps the r_object_id to each version, without order
+	 */
+	public final Map<String, DctmVersionNumber> indexById;
+
+	/**
+	 * Maps the version numbers to the r_object_id for each version, ordered by version.
+	 */
+	public final Map<DctmVersionNumber, String> indexByVersionNumber;
+
+	/**
+	 * Includes all the versions for which the antecedent version is missing (i.e. i_antecedent_id
+	 * pointed to a non-existent object), in order. If this set is empty, it means the tree is
+	 * stable as-is and needs no repairs.
+	 */
+	public final Set<DctmVersionNumber> missingAntecedent;
+
+	/**
+	 * Includes all the required versions that need to be added in order to create a consistent
+	 * version tree, in order. If this set is empty, it means the tree is stable as-is and needs no
+	 * repairs.
+	 */
+	public final Set<DctmVersionNumber> totalPatches;
+
+	/**
+	 * Includes all the version numbers required to obtain a stable, consistent tree, including
+	 * existing versions <b><i>and</i></b> required patches, in order.
+	 */
+	public final List<DctmVersionNumber> allVersions;
+
+	/**
+	 *
+	 * @param session
+	 *            the session through which to perform the analysis
+	 * @param chronicle
+	 *            the chronicle for which to construct the version tree
+	 * @throws DctmException
+	 *             an unrecoverable processing error ocurred
+	 * @throws DfException
+	 *             raised by the underlying DFC
+	 * @throws DfIdNotFoundException
+	 *             if the given chronicle id refers to a missing chronicle and no objects were found
+	 * @throws IllegalArgumentException
+	 *             raised if the session is {@code null}, the chronicle is {@code null}, or
+	 *             {@code chronicle.isNull()} returns {@code true}.
+	 */
 	public DctmVersionTree(IDfSession session, IDfId chronicle) throws DctmException, DfException {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to analyze the chronicle"); }
@@ -47,6 +93,7 @@ public class DctmVersionTree {
 		Map<String, DctmVersionNumber> indexById = new HashMap<String, DctmVersionNumber>();
 		Map<DctmVersionNumber, IDfSysObject> sysObjectsByVersionNumber = new TreeMap<DctmVersionNumber, IDfSysObject>();
 		Map<DctmVersionNumber, String> indexByVersionNumber = new TreeMap<DctmVersionNumber, String>();
+		Set<DctmVersionNumber> allVersions = new TreeSet<DctmVersionNumber>();
 
 		IDfCollection results = null;
 		final List<IDfId> all;
@@ -62,6 +109,8 @@ public class DctmVersionTree {
 		} finally {
 			DfUtils.closeQuietly(results);
 		}
+		// This can only happen if there is nothing in the chronicle
+		if (all.isEmpty()) { throw new DfIdNotFoundException(chronicle); }
 
 		for (final IDfId sysObjectId : all) {
 			final String sysObjectIdStr = sysObjectId.getId();
@@ -72,6 +121,7 @@ public class DctmVersionTree {
 				"Duplicate version number [%s] between documents [%s] and [%s]", versionNumber, sysObjectIdStr,
 				duplicate.getObjectId().getId())); }
 			indexByVersionNumber.put(versionNumber, sysObjectIdStr);
+			allVersions.add(versionNumber);
 
 			indexById.put(sysObjectIdStr, versionNumber);
 		}
@@ -151,6 +201,7 @@ public class DctmVersionTree {
 					break;
 				}
 				patches.add(antecedent);
+				allVersions.add(antecedent);
 			}
 		}
 
@@ -164,7 +215,10 @@ public class DctmVersionTree {
 		this.indexById = Tools.freezeMap(indexById);
 		this.indexByVersionNumber = Tools.freezeMap(indexByVersionNumber);
 		this.missingAntecedent = Tools.freezeSet(missingAntecedent);
-		this.patches = Tools.freezeSet(patches);
+		this.totalPatches = Tools.freezeSet(patches);
+		List<DctmVersionNumber> l = new ArrayList<DctmVersionNumber>(allVersions.size());
+		l.addAll(allVersions);
+		this.allVersions = Tools.freezeList(l);
 	}
 
 	/**

@@ -89,9 +89,9 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfFolder folder)
-		throws DfException, ExportException {
-		super.getDataProperties(properties, folder);
+	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties,
+		IDfFolder folder) throws DfException, ExportException {
+		super.getDataProperties(ctx, properties, folder);
 		final String folderId = folder.getObjectId().getId();
 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),

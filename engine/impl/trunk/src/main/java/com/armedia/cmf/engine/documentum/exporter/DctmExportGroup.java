@@ -47,8 +47,8 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfGroup group)
-		throws DfException {
+	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties,
+		IDfGroup group) throws DfException {
 		// Store all the users that have this group as their default group
 		StoredProperty<IDfValue> property = new StoredProperty<IDfValue>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());

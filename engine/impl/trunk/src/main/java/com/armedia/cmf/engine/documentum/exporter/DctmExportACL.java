@@ -49,7 +49,8 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfACL acl) throws DfException {
+	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, IDfACL acl)
+		throws DfException {
 		final String aclId = acl.getObjectId().getId();
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);

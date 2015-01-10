@@ -15,6 +15,7 @@ import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
+import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
@@ -50,9 +51,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, IDfDocument document)
-		throws DfException, ExportException {
-		super.getDataProperties(properties, document);
+	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties,
+		IDfDocument document) throws DfException, ExportException {
+		super.getDataProperties(ctx, properties, document);
 
 		final IDfSession session = document.getSession();
 
@@ -81,6 +82,12 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					DfUtils.closeQuietly(results);
 				}
 			}
+			getVersionHistory(ctx, document);
+			List<IDfValue> patches = getVersionPatches(document, ctx);
+			if ((patches != null) && !patches.isEmpty()) {
+				properties.add(new StoredProperty<IDfValue>(DctmSysObject.VERSION_PATCHES, DctmDataType.DF_STRING
+					.getStoredType(), true));
+			}
 			return;
 		}
 
@@ -102,10 +109,11 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
 	}
 
-	private List<IDfId> getVersions(List<IDfId> history, boolean prior, IDfDocument document) throws DfException {
+	private List<IDfDocument> getVersions(ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx, boolean prior,
+		IDfDocument document) throws ExportException, DfException {
 		if (document == null) { throw new IllegalArgumentException("Must provide a document whose versions to analyze"); }
 
-		final List<IDfId> ret = new LinkedList<IDfId>();
+		final List<IDfDocument> ret = new LinkedList<IDfDocument>();
 
 		// Is this the root of the version hierarchy? If so, then there are no prior versions
 		if (prior && Tools.equals(document.getObjectId().getId(), document.getChronicleId().getId())) {
@@ -114,7 +122,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		}
 
 		boolean add = prior;
-		for (IDfId id : history) {
+		for (IDfDocument doc : getVersionHistory(ctx, document)) {
+			final IDfId id = doc.getObjectId();
 			if (Tools.equals(id.getId(), document.getObjectId().getId())) {
 				// Once we've found the "reference" object in the history, we skip adding it
 				// since it will be added explicitly
@@ -131,7 +140,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			}
 
 			if (add) {
-				ret.add(id);
+				ret.add(doc);
 			}
 		}
 		return ret;
@@ -177,11 +186,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
 		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
-			List<IDfId> history = getVersionHistory(ctx, document);
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
-			for (IDfId versionId : getVersions(history, true, document)) {
-				IDfPersistentObject obj = session.getObject(versionId);
-				IDfDocument versionDoc = IDfDocument.class.cast(obj);
+			for (IDfDocument versionDoc : getVersions(ctx, true, document)) {
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String
 						.format("Adding prior version [%s]", calculateVersionString(versionDoc, false)));
@@ -213,11 +219,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
 		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
-			List<IDfId> history = getVersionHistory(ctx, document);
 			// Now, also do the *SUBSEQUENT* versions...
-			for (IDfId versionId : getVersions(history, false, document)) {
-				IDfPersistentObject obj = session.getObject(versionId);
-				IDfDocument versionDoc = IDfDocument.class.cast(obj);
+			for (IDfDocument versionDoc : getVersions(ctx, false, document)) {
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Adding subsequent version [%s]",
 						calculateVersionString(versionDoc, false)));

@@ -43,7 +43,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
@@ -64,7 +64,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -131,12 +131,13 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected StoredObject<IDfValue> marshal(IDfSession session, IDfPersistentObject object) throws ExportException {
+	protected StoredObject<IDfValue> marshal(DctmExportContext ctx, IDfSession session, IDfPersistentObject object)
+		throws ExportException {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to marshal the object"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to marshal"); }
 		try {
-			return getExportDelegate(object).marshal(session, object);
+			return getExportDelegate(object).marshal(ctx, session, object);
 		} catch (DfException e) {
 			throw new ExportException(String.format("Exception raised while marshaling object [%s]",
 				getObjectId(object)), e);

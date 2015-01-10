@@ -5,11 +5,11 @@ import java.util.Collection;
 import java.util.List;
 
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
+import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmDelegateBase;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
-import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -51,8 +51,8 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 		return new ArrayList<IDfPersistentObject>();
 	}
 
-	protected final StoredObject<IDfValue> marshal(IDfSession session, IDfPersistentObject object) throws DfException,
-		ExportException, UnsupportedDctmObjectTypeException {
+	protected final StoredObject<IDfValue> marshal(DctmExportContext ctx, IDfSession session, IDfPersistentObject object)
+		throws DfException, ExportException, UnsupportedDctmObjectTypeException {
 		final String id = object.getObjectId().getId();
 		final String subtype = object.getType().getName();
 		final T typedObject = castObject(object);
@@ -81,7 +81,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 		// call, etc., because setting it directly as an attribute would cmsImportResult in an error
 		// from DFC, and therefore specialized code is required to handle it
 		List<StoredProperty<IDfValue>> properties = new ArrayList<StoredProperty<IDfValue>>();
-		getDataProperties(properties, typedObject);
+		getDataProperties(ctx, properties, typedObject);
 		for (StoredProperty<IDfValue> property : properties) {
 			// This mechanism overwrites properties, and intentionally so
 			storedObject.setProperty(property);
@@ -89,8 +89,8 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 		return storedObject;
 	}
 
-	protected void getDataProperties(Collection<StoredProperty<IDfValue>> properties, T object) throws DfException,
-		ExportException {
+	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, T object)
+		throws DfException, ExportException {
 	}
 
 	protected String calculateBatchId(IDfSession session, T object) throws DfException {
