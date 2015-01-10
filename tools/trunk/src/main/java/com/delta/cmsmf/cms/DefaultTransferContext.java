@@ -27,6 +27,7 @@ public class DefaultTransferContext implements CmsTransferContext {
 	private final CmsObjectStore objectStore;
 	private final CmsAttributeMapper mapper;
 	private final Map<String, IDfValue> values = new HashMap<String, IDfValue>();
+	private final Map<String, Object> objects = new HashMap<String, Object>();
 	private final CmsFileSystem fileSystem;
 	private final Logger output;
 
@@ -87,6 +88,31 @@ public class DefaultTransferContext implements CmsTransferContext {
 	public boolean hasValue(String name) {
 		assertValidName(name);
 		return this.values.containsKey(name);
+	}
+
+	@Override
+	public Object getObject(String name) {
+		assertValidName(name);
+		return this.objects.get(name);
+	}
+
+	@Override
+	public Object setObject(String name, Object value) {
+		assertValidName(name);
+		if (value == null) { return clearObject(name); }
+		return this.objects.put(name, value);
+	}
+
+	@Override
+	public Object clearObject(String name) {
+		assertValidName(name);
+		return this.objects.remove(name);
+	}
+
+	@Override
+	public boolean hasObject(String name) {
+		assertValidName(name);
+		return this.objects.containsKey(name);
 	}
 
 	@Override

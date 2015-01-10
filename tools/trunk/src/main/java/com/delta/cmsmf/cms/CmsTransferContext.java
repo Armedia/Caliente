@@ -23,6 +23,14 @@ public interface CmsTransferContext {
 
 	public boolean hasValue(String name);
 
+	public Object getObject(String name);
+
+	public Object setObject(String name, Object value);
+
+	public Object clearObject(String name);
+
+	public boolean hasObject(String name);
+
 	public void deserializeObjects(Class<? extends CmsObject<?>> klass, Set<String> ids, ObjectHandler handler)
 		throws CMSMFException;
 
