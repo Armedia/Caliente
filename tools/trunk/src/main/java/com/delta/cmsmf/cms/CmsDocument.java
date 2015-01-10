@@ -10,14 +10,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -142,21 +140,14 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		if (!isDfReference(document)) {
 			// Populate the version history, because this will also trigger the population of any
 			// required version patches
-			Object vp = ctx.getObject(Constant.VERSION_PATCHES);
-			if (vp == null) {
-				getVersions(true, document, ctx);
-				vp = ctx.getObject(Constant.VERSION_PATCHES);
-			}
-			@SuppressWarnings("unchecked")
-			Map<String, List<IDfValue>> versionPatches = (Map<String, List<IDfValue>>) vp;
-			if (versionPatches != null) {
-				List<IDfValue> patches = versionPatches.get(document.getObjectId().getId());
-				if ((patches != null) && !patches.isEmpty()) {
-					properties.add(new CmsProperty(Constant.VERSION_PATCHES, CmsDataType.DF_STRING, true, patches));
-				}
+			getVersionHistory(document, ctx);
+			List<IDfValue> patches = getVersionPatches(document, ctx);
+			if ((patches != null) && !patches.isEmpty()) {
+				properties.add(new CmsProperty(CmsSysObject.VERSION_PATCHES, CmsDataType.DF_STRING, true, patches));
 			}
 			return;
 		}
+
 		final IDfSession session = document.getSession();
 
 		// TODO: this is untidy - using an undocumented API??

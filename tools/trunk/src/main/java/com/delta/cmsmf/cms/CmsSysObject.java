@@ -20,7 +20,6 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
 import com.armedia.commons.utilities.Tools;
-import com.delta.cmsmf.cfg.Constant;
 import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
@@ -52,6 +51,11 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 	protected static final String TARGET_PATHS = "targetPaths";
 	protected static final String TARGET_PARENTS = "targetParents";
+	protected static final String VERSION_PATCHES = "versionPatches";
+
+	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
+
+	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
 
 	private static final Set<String> AUTO_PERMITS;
 
@@ -689,19 +693,16 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
 		final IDfSession session = object.getSession();
 		final IDfId chronicleId = object.getChronicleId();
+		final String historyObject = String.format(CmsSysObject.CTX_VERSION_HISTORY, chronicleId.toString());
 
 		@SuppressWarnings("unchecked")
-		List<T> history = (List<T>) ctx.getObject(Constant.VERSION_HISTORY);
-		if (history != null) {
-			//
-			return history;
-		}
+		List<T> history = (List<T>) ctx.getObject(historyObject);
+		if (history != null) { return history; }
 
 		// No existing history, we must calculate it
 		history = new LinkedList<T>();
 		DfVersionTree tree = new DfVersionTree(session, chronicleId);
 		List<IDfValue> patches = new ArrayList<IDfValue>();
-		Map<String, List<IDfValue>> versionPatches = new HashMap<String, List<IDfValue>>();
 		for (DfVersionNumber versionNumber : tree.allVersions) {
 			if (tree.totalPatches.contains(versionNumber)) {
 				patches.add(DfValueFactory.newStringValue(versionNumber.toString()));
@@ -713,16 +714,24 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			history.add(entry);
 			if (!patches.isEmpty()) {
 				patches = Tools.freezeList(patches);
-				versionPatches.put(id.getId(), patches);
+				final String patchesObject = String.format(CmsSysObject.CTX_VERSION_PATCHES, id.getId());
+				ctx.setObject(patchesObject, patches);
 				patches = new ArrayList<IDfValue>();
 			}
 		}
 		// Only put this in the context when it's needed
-		versionPatches = Tools.freezeMap(versionPatches);
-		ctx.setObject(Constant.VERSION_PATCHES, versionPatches);
 		history = Tools.freezeList(history);
-		ctx.setObject(Constant.VERSION_HISTORY, history);
+		ctx.setObject(historyObject, history);
 		return history;
+	}
+
+	protected final List<IDfValue> getVersionPatches(T object, CmsTransferContext ctx) throws DfException {
+		final String patchesObject = String.format(CmsSysObject.CTX_VERSION_PATCHES, object.getObjectId().getId());
+		Object o = ctx.getObject(patchesObject);
+		if (o == null) { return null; }
+		@SuppressWarnings("unchecked")
+		List<IDfValue> l = (List<IDfValue>) o;
+		return l;
 	}
 
 	protected T newVersionTreePatch(T base, DfVersionNumber patchNumber) {
