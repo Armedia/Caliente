@@ -52,10 +52,11 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	protected static final String TARGET_PATHS = "targetPaths";
 	protected static final String TARGET_PARENTS = "targetParents";
 	protected static final String VERSION_PATCHES = "versionPatches";
+	protected static final String PATCH_ANTECEDENT = "patchAntecedent";
 
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
-
 	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
+	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
 
 	private static final Set<String> AUTO_PERMITS;
 
@@ -717,6 +718,13 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 				final String patchesObject = String.format(CmsSysObject.CTX_VERSION_PATCHES, id.getId());
 				ctx.setObject(patchesObject, patches);
 				patches = new ArrayList<IDfValue>();
+
+				DfVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
+				if (alternateAntecedent != null) {
+					final String antecedentId = tree.indexByVersionNumber.get(alternateAntecedent);
+					ctx.setValue(String.format(CmsSysObject.CTX_PATCH_ANTECEDENT, id.getId()),
+						DfValueFactory.newStringValue(antecedentId));
+				}
 			}
 		}
 		// Only put this in the context when it's needed
@@ -726,12 +734,15 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 	}
 
 	protected final List<IDfValue> getVersionPatches(T object, CmsTransferContext ctx) throws DfException {
-		final String patchesObject = String.format(CmsSysObject.CTX_VERSION_PATCHES, object.getObjectId().getId());
-		Object o = ctx.getObject(patchesObject);
+		Object o = ctx.getObject(String.format(CmsSysObject.CTX_VERSION_PATCHES, object.getObjectId().getId()));
 		if (o == null) { return null; }
 		@SuppressWarnings("unchecked")
 		List<IDfValue> l = (List<IDfValue>) o;
 		return l;
+	}
+
+	protected final IDfValue getPatchAntecedent(T object, CmsTransferContext ctx) throws DfException {
+		return ctx.getValue(String.format(CmsSysObject.CTX_PATCH_ANTECEDENT, object.getObjectId().getId()));
 	}
 
 	protected List<String> getProspectiveParents(CmsTransferContext context) throws DfException {

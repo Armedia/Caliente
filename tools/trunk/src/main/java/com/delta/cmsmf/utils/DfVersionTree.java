@@ -70,6 +70,13 @@ public class DfVersionTree {
 	public final List<DfVersionNumber> allVersions;
 
 	/**
+	 * Includes all the versions for which the antecedent version is missing (i.e. i_antecedent_id
+	 * pointed to a non-existent object), in order. The value is the version number for the closest
+	 * antecedent from which this version can be obtained, applying the necessary patches.
+	 */
+	public final Map<DfVersionNumber, DfVersionNumber> alternateAntecedent;
+
+	/**
 	 *
 	 * @param session
 	 *            the session through which to perform the analysis
@@ -96,6 +103,8 @@ public class DfVersionTree {
 		Map<DfVersionNumber, IDfSysObject> sysObjectsByVersionNumber = new TreeMap<DfVersionNumber, IDfSysObject>();
 		Map<DfVersionNumber, String> indexByVersionNumber = new TreeMap<DfVersionNumber, String>();
 		Set<DfVersionNumber> allVersions = new TreeSet<DfVersionNumber>();
+		Map<DfVersionNumber, DfVersionNumber> alternateAntecedents = new TreeMap<DfVersionNumber, DfVersionNumber>();
+		Set<DfVersionNumber> trunkVersions = new TreeSet<DfVersionNumber>(DfVersionNumber.REVERSE_ORDER);
 
 		IDfCollection results = null;
 		final List<IDfId> all;
@@ -122,6 +131,9 @@ public class DfVersionTree {
 			if (duplicate != null) { throw new CMSMFException(String.format(
 				"Duplicate version number [%s] between documents [%s] and [%s]", versionNumber, sysObjectIdStr,
 				duplicate.getObjectId().getId())); }
+			if (versionNumber.getComponentCount() == 2) {
+				trunkVersions.add(versionNumber);
+			}
 			indexByVersionNumber.put(versionNumber, sysObjectIdStr);
 			allVersions.add(versionNumber);
 
@@ -147,10 +159,6 @@ public class DfVersionTree {
 			final IDfSysObject sysObject = sysObjectsByVersionNumber.get(versionNumber);
 			final IDfId sysObjectId = sysObject.getObjectId();
 			final IDfId antecedentId = sysObject.getAntecedentId();
-			final DfVersionNumber antecedentVersion = indexById.get(antecedentId);
-			if (antecedentVersion != null) {
-				continue;
-			}
 
 			if (antecedentId.isNull()) {
 				if (rootNode != null) {
@@ -168,10 +176,17 @@ public class DfVersionTree {
 					// data, and we can't continue
 					throw new CMSMFException(
 						String
-							.format(
-								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-								sysObjectId.getId(), chronicleId));
+						.format(
+							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+							sysObjectId.getId(), chronicleId));
 				}
+				continue;
+			}
+
+			final DfVersionNumber antecedentVersion = versionNumber.getAntecedent(false);
+			if ((versionNumber.getComponentCount() == 2) || indexByVersionNumber.containsKey(antecedentVersion)) {
+				// If this is a "root" version, or the antecedent version exists, then don't list it
+				// as a missing antecedent
 				continue;
 			}
 
@@ -198,12 +213,29 @@ public class DfVersionTree {
 
 			// The antecedent list is organized in inverse order, so we have to do the least amount
 			// of work in order to finalize the tree structure
-			for (DfVersionNumber antecedent : antecedents) {
+			boolean alternateFound = false;
+			DfVersionNumber trunkPatch = null;
+			alternateSearch: for (DfVersionNumber antecedent : antecedents) {
 				if (indexByVersionNumber.containsKey(antecedent)) {
-					break;
+					alternateAntecedents.put(versionNumber, antecedent);
+					alternateFound = true;
+					break alternateSearch;
 				}
 				patches.add(antecedent);
 				allVersions.add(antecedent);
+				if (antecedent.getComponentCount() == 2) {
+					trunkPatch = antecedent;
+				}
+			}
+
+			if (!alternateFound && (trunkPatch != null)) {
+				// The alternate must be the "latest trunk version"
+				trunkSearch: for (DfVersionNumber trunk : trunkVersions) {
+					if (trunkPatch.isSuccessorOf(trunk)) {
+						alternateAntecedents.put(versionNumber, trunk);
+						break trunkSearch;
+					}
+				}
 			}
 		}
 
@@ -221,6 +253,7 @@ public class DfVersionTree {
 		List<DfVersionNumber> l = new ArrayList<DfVersionNumber>(allVersions.size());
 		l.addAll(allVersions);
 		this.allVersions = Tools.freezeList(l);
+		this.alternateAntecedent = Tools.freezeMap(alternateAntecedents);
 	}
 
 	/**

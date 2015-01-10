@@ -142,6 +142,11 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			List<IDfValue> patches = getVersionPatches(document, ctx);
 			if ((patches != null) && !patches.isEmpty()) {
 				properties.add(new CmsProperty(CmsSysObject.VERSION_PATCHES, CmsDataType.DF_STRING, true, patches));
+				IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
+				if (patchAntecedent != null) {
+					properties.add(new CmsProperty(CmsSysObject.PATCH_ANTECEDENT, CmsDataType.DF_ID, false,
+						patchAntecedent));
+				}
 			}
 			return;
 		}
@@ -412,17 +417,50 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		final boolean root = (Tools.equals(getId(), sourceChronicleId));
 		if (root) { return super.newObject(context); }
 
-		IDfSession session = context.getSession();
+		final IDfSession session = context.getSession();
 
-		String antecedentId = getAttribute(CmsAttributes.I_ANTECEDENT_ID).getValue().asString();
-		Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
-			antecedentId);
-		if (mapping == null) { throw new CMSMFException(String.format(
-			"Can't create a new version of [%s](%s) - antecedent version not found [%s]", getLabel(), getId(),
-			antecedentId)); }
-		IDfId id = new DfId(mapping.getTargetValue());
-		session.flushObject(id);
-		IDfDocument antecedentVersion = castObject(session.getObject(id));
+		CmsProperty patches = getProperty(CmsSysObject.VERSION_PATCHES);
+		IDfDocument antecedentVersion = null;
+		if ((patches != null) && (patches.getValueCount() > 0)) {
+			// Patches are required...so let's carry them out!
+			// At the end of patching, antecedentVersion should point to the actual
+			// version that will be checked out/branched (i.e. the LAST patch version added)
+			// If there is no object, and a root must be created, then do so as well
+			CmsProperty antecedentId = getProperty(CmsSysObject.PATCH_ANTECEDENT);
+			if (antecedentId != null) {
+				Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
+					antecedentId.toString());
+				if (mapping == null) { throw new CMSMFException(String.format(
+					"Can't repair the version tree for [%s](%s) - antecedent version not found [%s]", getLabel(),
+					getId(), antecedentId)); }
+				IDfId id = new DfId(mapping.getTargetValue());
+				session.flushObject(id);
+				antecedentVersion = castObject(session.getObject(id));
+			} else {
+				// if there is no antecedent version, then we must create a new object
+				// this should only happen if the root (1.0) object can't be located AT ALL
+				// on the original data set...
+				throw new CMSMFException("Root object repair is not yet supported");
+			}
+
+			for (IDfValue p : patches) {
+				// Now we checkout and checkin and branch and whatnot as necessary until we can
+				// actually proceed with the rest of the algorithm...
+				p.hashCode();
+			}
+		} else {
+			// No patches needed, the antecedent needs to be there
+			String antecedentId = getAttribute(CmsAttributes.I_ANTECEDENT_ID).getValue().asString();
+			Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
+				antecedentId);
+			if (mapping == null) { throw new CMSMFException(String.format(
+				"Can't create a new version of [%s](%s) - antecedent version not found [%s]", getLabel(), getId(),
+				antecedentId)); }
+			IDfId id = new DfId(mapping.getTargetValue());
+			session.flushObject(id);
+			antecedentVersion = castObject(session.getObject(id));
+		}
+
 		antecedentVersion.fetch(null);
 		this.antecedentTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
 		if (this.antecedentTemporaryPermission.grant(antecedentVersion)) {
