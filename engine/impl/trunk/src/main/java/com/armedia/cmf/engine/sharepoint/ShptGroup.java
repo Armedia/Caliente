@@ -1,9 +1,13 @@
 package com.armedia.cmf.engine.sharepoint;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
@@ -48,5 +52,38 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	@Override
 	public String getName() {
 		return this.wrapped.getLoginName();
+	}
+
+	@Override
+	public StoredObject<Object> marshal() throws ExportException {
+		StoredObject<Object> ret = new StoredObject<Object>(StoredObjectType.GROUP, getId(), getId(),
+			this.wrapped.getLoginName(), null);
+		// TODO: Start adding attributes and properties
+		return ret;
+	}
+
+	@Override
+	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<Object> marshaled,
+		ShptExportContext ctx) throws Exception {
+		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
+		return ret;
+	}
+
+	@Override
+	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<Object> marshaled,
+		ShptExportContext ctx) throws Exception {
+		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
+		// Add the group's users
+		User owner = service.getGroupOwner(getNumericId());
+		if (owner != null) {
+			ret.add(new ShptUser(service, owner));
+		}
+		List<User> l = service.getGroupUsers(getNumericId());
+		if ((l != null) && !l.isEmpty()) {
+			for (User u : l) {
+				ret.add(new ShptUser(service, u));
+			}
+		}
+		return ret;
 	}
 }

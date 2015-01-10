@@ -18,15 +18,15 @@ import com.independentsoft.share.Service;
  * @author diego
  *
  */
-public class ShptExportContextFactory<V> extends
-	ContextFactory<Service, ShptObject<?>, V, ShptExportContext<V>, ShptExportEngine<V>> {
+public class ShptExportContextFactory extends
+	ContextFactory<Service, ShptObject<?>, Object, ShptExportContext, ShptExportEngine> {
 
-	ShptExportContextFactory(ShptExportEngine<V> engine, CfgTools settings) {
+	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings) {
 		super(engine, settings);
 	}
 
 	@Override
-	protected ShptExportContext<V> constructContext(String rootId, StoredObjectType rootType, Service session,
+	protected ShptExportContext constructContext(String rootId, StoredObjectType rootType, Service session,
 		Logger output, ObjectStore<?, ?> objectStore, ContentStore contentStore) {
 		return null;
 	}

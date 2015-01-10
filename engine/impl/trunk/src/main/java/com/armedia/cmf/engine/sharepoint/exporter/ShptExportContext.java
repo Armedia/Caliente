@@ -16,9 +16,9 @@ import com.independentsoft.share.Service;
  * @author diego
  *
  */
-public class ShptExportContext<V> extends ExportContext<Service, ShptObject<?>, V> {
+public class ShptExportContext extends ExportContext<Service, ShptObject<?>, Object> {
 
-	public ShptExportContext(ShptExportEngine<V> engine, CfgTools settings, String rootId, StoredObjectType rootType,
+	public ShptExportContext(ShptExportEngine engine, CfgTools settings, String rootId, StoredObjectType rootType,
 		Service session, Logger output) {
 		super(engine, settings, rootId, rootType, session, output);
 	}

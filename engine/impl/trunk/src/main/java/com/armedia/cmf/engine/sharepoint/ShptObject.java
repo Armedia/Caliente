@@ -5,6 +5,7 @@
 package com.armedia.cmf.engine.sharepoint;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,10 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Service;
@@ -87,6 +91,7 @@ public abstract class ShptObject<T> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	protected final StoredObjectType type;
+	private final Class<T> wrappedClass;
 	protected final T wrapped;
 	protected final Service service;
 	private final Map<String, AttributeDescriptor> attributes;
@@ -97,6 +102,9 @@ public abstract class ShptObject<T> {
 			"Must provide the service this item was retrieved with"); }
 		if (wrapped == null) { throw new IllegalArgumentException("Must provide an object to wrap around"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type"); }
+		@SuppressWarnings("unchecked")
+		Class<T> c = (Class<T>) wrapped.getClass();
+		this.wrappedClass = c;
 		this.service = service;
 		this.wrapped = wrapped;
 		this.type = type;
@@ -125,6 +133,10 @@ public abstract class ShptObject<T> {
 				}
 			}
 		}
+	}
+
+	public final Service getService() {
+		return this.service;
 	}
 
 	public Set<String> getAttributeNames() {
@@ -162,15 +174,56 @@ public abstract class ShptObject<T> {
 
 	}
 
+	protected final T castObject(Object object) throws Exception {
+		if (object == null) { return null; }
+		if (!this.wrappedClass.isInstance(object)) { throw new Exception(String.format(
+			"Expected an object of class %s, but got one of class %s", this.wrappedClass.getCanonicalName(), object
+			.getClass().getCanonicalName())); }
+		return this.wrappedClass.cast(object);
+	}
+
 	public final T getObject() {
 		return this.wrapped;
 	}
 
 	public abstract String getId();
 
+	public abstract String getBatchId();
+
+	public abstract String getLabel();
+
 	public abstract String getName();
 
 	public final StoredObjectType getStoredType() {
 		return this.type;
+	}
+
+	public final StoredObject<Object> marshal() throws ExportException {
+		StoredObject<Object> object = new StoredObject<Object>(this.type, getBatchId(), getId(), getLabel(),
+			this.type.name());
+		marshal(object);
+		return object;
+	}
+
+	protected abstract void marshal(StoredObject<Object> object) throws ExportException;
+
+	public final Collection<ShptObject<?>> identifyDependents(Service service, StoredObject<Object> marshaled,
+		ShptExportContext ctx) throws Exception {
+		return findDependents(service, marshaled, ctx);
+	}
+
+	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<Object> marshaled,
+		ShptExportContext ctx) throws Exception {
+		return new ArrayList<ShptObject<?>>();
+	}
+
+	public final Collection<ShptObject<?>> identifyRequirements(Service session, StoredObject<Object> marshaled,
+		ShptExportContext ctx) throws Exception {
+		return findRequirements(session, marshaled, ctx);
+	}
+
+	protected Collection<ShptObject<?>> findRequirements(Service session, StoredObject<Object> marshaled,
+		ShptExportContext ctx) throws Exception {
+		return new ArrayList<ShptObject<?>>();
 	}
 }

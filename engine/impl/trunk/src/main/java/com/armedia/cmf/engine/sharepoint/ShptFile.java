@@ -2,6 +2,8 @@ package com.armedia.cmf.engine.sharepoint;
 
 import java.util.Date;
 
+import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.independentsoft.share.CheckOutType;
 import com.independentsoft.share.CustomizedPageStatus;
@@ -94,5 +96,21 @@ public class ShptFile extends ShptContentObject<File> {
 
 	public String getUIVersionLabel() {
 		return this.wrapped.getUIVersionLabel();
+	}
+
+	@Override
+	public String getBatchId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getLabel() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void marshal(StoredObject<Object> object) throws ExportException {
 	}
 }
