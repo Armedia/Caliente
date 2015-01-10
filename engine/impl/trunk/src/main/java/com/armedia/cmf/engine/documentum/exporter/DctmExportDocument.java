@@ -86,7 +86,12 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			List<IDfValue> patches = getVersionPatches(document, ctx);
 			if ((patches != null) && !patches.isEmpty()) {
 				properties.add(new StoredProperty<IDfValue>(DctmSysObject.VERSION_PATCHES, DctmDataType.DF_STRING
-					.getStoredType(), true));
+					.getStoredType(), true, patches));
+				IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
+				if (patchAntecedent != null) {
+					properties.add(new StoredProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID
+						.getStoredType(), false, patchAntecedent));
+				}
 			}
 			return;
 		}

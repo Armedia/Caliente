@@ -68,6 +68,13 @@ public class DctmVersionTree {
 	public final List<DctmVersionNumber> allVersions;
 
 	/**
+	 * Includes all the versions for which the antecedent version is missing (i.e. i_antecedent_id
+	 * pointed to a non-existent object), in order. The value is the version number for the closest
+	 * antecedent from which this version can be obtained, applying the necessary patches.
+	 */
+	public final Map<DctmVersionNumber, DctmVersionNumber> alternateAntecedent;
+
+	/**
 	 *
 	 * @param session
 	 *            the session through which to perform the analysis
@@ -94,6 +101,8 @@ public class DctmVersionTree {
 		Map<DctmVersionNumber, IDfSysObject> sysObjectsByVersionNumber = new TreeMap<DctmVersionNumber, IDfSysObject>();
 		Map<DctmVersionNumber, String> indexByVersionNumber = new TreeMap<DctmVersionNumber, String>();
 		Set<DctmVersionNumber> allVersions = new TreeSet<DctmVersionNumber>();
+		Map<DctmVersionNumber, DctmVersionNumber> alternateAntecedents = new TreeMap<DctmVersionNumber, DctmVersionNumber>();
+		Set<DctmVersionNumber> trunkVersions = new TreeSet<DctmVersionNumber>(DctmVersionNumber.REVERSE_ORDER);
 
 		IDfCollection results = null;
 		final List<IDfId> all;
@@ -120,6 +129,9 @@ public class DctmVersionTree {
 			if (duplicate != null) { throw new DctmException(String.format(
 				"Duplicate version number [%s] between documents [%s] and [%s]", versionNumber, sysObjectIdStr,
 				duplicate.getObjectId().getId())); }
+			if (versionNumber.getComponentCount() == 2) {
+				trunkVersions.add(versionNumber);
+			}
 			indexByVersionNumber.put(versionNumber, sysObjectIdStr);
 			allVersions.add(versionNumber);
 
@@ -145,10 +157,6 @@ public class DctmVersionTree {
 			final IDfSysObject sysObject = sysObjectsByVersionNumber.get(versionNumber);
 			final IDfId sysObjectId = sysObject.getObjectId();
 			final IDfId antecedentId = sysObject.getAntecedentId();
-			final DctmVersionNumber antecedentVersion = indexById.get(antecedentId);
-			if (antecedentVersion != null) {
-				continue;
-			}
 
 			if (antecedentId.isNull()) {
 				if (rootNode != null) {
@@ -166,10 +174,17 @@ public class DctmVersionTree {
 					// data, and we can't continue
 					throw new DctmException(
 						String
-							.format(
-								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-								sysObjectId.getId(), chronicleId));
+						.format(
+							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+							sysObjectId.getId(), chronicleId));
 				}
+				continue;
+			}
+
+			final DctmVersionNumber antecedentVersion = versionNumber.getAntecedent(false);
+			if ((versionNumber.getComponentCount() == 2) || indexByVersionNumber.containsKey(antecedentVersion)) {
+				// If this is a "root" version, or the antecedent version exists, then don't list it
+				// as a missing antecedent
 				continue;
 			}
 
@@ -196,12 +211,29 @@ public class DctmVersionTree {
 
 			// The antecedent list is organized in inverse order, so we have to do the least amount
 			// of work in order to finalize the tree structure
-			for (DctmVersionNumber antecedent : antecedents) {
+			boolean alternateFound = false;
+			DctmVersionNumber trunkPatch = null;
+			alternateSearch: for (DctmVersionNumber antecedent : antecedents) {
 				if (indexByVersionNumber.containsKey(antecedent)) {
-					break;
+					alternateAntecedents.put(versionNumber, antecedent);
+					alternateFound = true;
+					break alternateSearch;
 				}
 				patches.add(antecedent);
 				allVersions.add(antecedent);
+				if (antecedent.getComponentCount() == 2) {
+					trunkPatch = antecedent;
+				}
+			}
+
+			if (!alternateFound && (trunkPatch != null)) {
+				// The alternate must be the "latest trunk version"
+				trunkSearch: for (DctmVersionNumber trunk : trunkVersions) {
+					if (trunkPatch.isSuccessorOf(trunk)) {
+						alternateAntecedents.put(versionNumber, trunk);
+						break trunkSearch;
+					}
+				}
 			}
 		}
 
@@ -219,6 +251,7 @@ public class DctmVersionTree {
 		List<DctmVersionNumber> l = new ArrayList<DctmVersionNumber>(allVersions.size());
 		l.addAll(allVersions);
 		this.allVersions = Tools.freezeList(l);
+		this.alternateAntecedent = Tools.freezeMap(alternateAntecedents);
 	}
 
 	/**

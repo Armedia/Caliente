@@ -44,6 +44,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
 	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
+	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
 
 	protected DctmExportSysObject(DctmExportEngine engine, DctmObjectType type) {
 		super(engine, type);
@@ -164,6 +165,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 				final String patchesObject = String.format(DctmExportSysObject.CTX_VERSION_PATCHES, id.getId());
 				ctx.setObject(patchesObject, patches);
 				patches = new ArrayList<IDfValue>();
+
+				DctmVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
+				if (alternateAntecedent != null) {
+					final String antecedentId = tree.indexByVersionNumber.get(alternateAntecedent);
+					ctx.setValue(String.format(DctmExportSysObject.CTX_PATCH_ANTECEDENT, id.getId()),
+						DfValueFactory.newStringValue(antecedentId));
+				}
 			}
 		}
 		// Only put this in the context when it's needed
@@ -172,15 +180,16 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 		return history;
 	}
 
-	protected final List<IDfValue> getVersionPatches(T object,
-		ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws DfException {
-		final String patchesObject = String.format(DctmExportSysObject.CTX_VERSION_PATCHES, object.getObjectId()
-			.getId());
-		Object o = ctx.getObject(patchesObject);
+	protected final List<IDfValue> getVersionPatches(T object, DctmExportContext ctx) throws DfException {
+		Object o = ctx.getObject(String.format(DctmExportSysObject.CTX_VERSION_PATCHES, object.getObjectId().getId()));
 		if (o == null) { return null; }
 		@SuppressWarnings("unchecked")
 		List<IDfValue> l = (List<IDfValue>) o;
 		return l;
+	}
+
+	protected final IDfValue getPatchAntecedent(T object, DctmExportContext ctx) throws DfException {
+		return ctx.getValue(String.format(DctmExportSysObject.CTX_PATCH_ANTECEDENT, object.getObjectId().getId()));
 	}
 
 	@Override
