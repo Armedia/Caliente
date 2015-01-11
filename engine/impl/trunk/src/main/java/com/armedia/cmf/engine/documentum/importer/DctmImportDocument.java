@@ -258,6 +258,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				IDfDocument patchDocument = createSuccessorVersion(antecedentVersion, prop, context);
 				IDfId checkinId = persistNewVersion(patchDocument, p.asString(), context);
 				cleanUpTemporaryPermissions(session);
+				resetMutabilityFlags();
 
 				// If we branched, we don't change antecedents
 				lastAntecedent = castObject(session.getObject(checkinId));

@@ -48,7 +48,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-DctmSysObject {
+	DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -306,6 +306,7 @@ DctmSysObject {
 		}
 	}
 
+	private boolean mutabilityModified = false;
 	private boolean mustFreeze = false;
 	private boolean mustImmute = false;
 	private TemporaryPermission existingTemporaryPermission = null;
@@ -340,8 +341,7 @@ DctmSysObject {
 	}
 
 	protected final void detectAndClearMutability(T sysObject) throws DfException {
-		this.mustFreeze = false;
-		this.mustImmute = false;
+		resetMutabilityFlags();
 		final String newId = sysObject.getObjectId().getId();
 		if (sysObject.isFrozen()) {
 			// An object being frozen implies immutability
@@ -355,6 +355,7 @@ DctmSysObject {
 			if (!sysObject.isCheckedOut()) {
 				sysObject.save();
 			}
+			this.mutabilityModified = true;
 		}
 		// Freezing implies immutability
 		if (!this.mustFreeze && sysObject.isImmutable()) {
@@ -368,11 +369,13 @@ DctmSysObject {
 			if (!sysObject.isCheckedOut()) {
 				sysObject.save();
 			}
+			this.mutabilityModified = true;
 		}
 		detectIncomingMutability();
 	}
 
 	protected final boolean restoreMutability(T sysObject) throws DfException {
+		if (!this.mutabilityModified) { return false; }
 		boolean ret = false;
 		final String newId = sysObject.getObjectId().getId();
 		if (this.mustFreeze && !sysObject.isFrozen()) {
@@ -392,7 +395,14 @@ DctmSysObject {
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
 		}
+		this.mutabilityModified = false;
 		return ret;
+	}
+
+	protected final void resetMutabilityFlags() {
+		this.mustFreeze = false;
+		this.mustImmute = false;
+		this.mutabilityModified = false;
 	}
 
 	@Override
@@ -407,7 +417,7 @@ DctmSysObject {
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -620,7 +630,7 @@ DctmSysObject {
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-				.getId(), currentPath));
+					.getId(), currentPath));
 		}
 
 		return existing;
