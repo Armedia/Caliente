@@ -214,7 +214,8 @@ public class DctmVersionTree {
 			boolean alternateFound = false;
 			DctmVersionNumber trunkPatch = null;
 			alternateSearch: for (DctmVersionNumber antecedent : antecedents) {
-				if (indexByVersionNumber.containsKey(antecedent)) {
+				if ((indexByVersionNumber.containsKey(antecedent) || patches.contains(antecedent))
+					&& !antecedent.isSibling(versionNumber)) {
 					alternateAntecedents.put(versionNumber, antecedent);
 					alternateFound = true;
 					break alternateSearch;
