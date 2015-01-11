@@ -450,7 +450,7 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 			final boolean sourceFreeze = att.getValue().asBoolean();
 			this.log.warn(String.format("%s [%s](%s) is unexpectedly %s (expected=[%s|%s] / source=[%s|%s])",
 				getType(), getLabel(), getId(), sysObject.isFrozen() ? "FROZEN" : "IMMUTABLE", this.mustFreeze,
-					this.mustImmute, sourceFreeze, sourceImmute));
+				this.mustImmute, sourceFreeze, sourceImmute));
 		}
 
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
@@ -732,7 +732,10 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 
 				DfVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
 				if (alternateAntecedent != null) {
-					final String antecedentId = tree.indexByVersionNumber.get(alternateAntecedent);
+					String antecedentId = tree.indexByVersionNumber.get(alternateAntecedent);
+					if (antecedentId == null) {
+						antecedentId = alternateAntecedent.toString();
+					}
 					ctx.setValue(String.format(CmsSysObject.CTX_PATCH_ANTECEDENT, id.getId()),
 						DfValueFactory.newStringValue(antecedentId));
 				}
