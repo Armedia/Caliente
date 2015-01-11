@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
+import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmDelegateBase;
@@ -19,7 +20,6 @@ import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
-import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
@@ -244,12 +244,13 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 			if (newLabel == null) {
 				newLabel = calculateLabel(object);
 			}
-			ok = true;
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
 				getDctmType(), cmsImportResult, this.storedObject.getLabel(), this.storedObject.getId(), newLabel,
 				object.getObjectId().getId()));
 
-			return new ImportOutcome(cmsImportResult, newLabel, object.getObjectId().getId());
+			ImportOutcome ret = new ImportOutcome(cmsImportResult, newLabel, object.getObjectId().getId());
+			ok = true;
+			return ret;
 		} finally {
 			if (ok) {
 				try {
@@ -257,11 +258,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -291,10 +292,19 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 					// Clear the mapping
 					context.getAttributeMapper().clearSourceMapping(getDctmType().getStoredObjectType(),
 						DctmAttributes.R_OBJECT_ID, this.storedObject.getId());
-					if (localTx != null) {
-						session.abortTransEx(localTx);
-					} else {
-						session.abortTrans();
+					try {
+						if (localTx != null) {
+							session.abortTransEx(localTx);
+						} else {
+							session.abortTrans();
+						}
+					} catch (DfException e) {
+						// We log this here and don't raise it because if we're aborting, it means
+						// that there's another exception already bubbling up, so we don't want
+						// to intercept that
+						this.log.error(
+							String.format("Failed to roll back the transaction for [%s](%s)",
+								this.storedObject.getLabel(), this.storedObject.getId()), e);
 					}
 				}
 			}
@@ -349,7 +359,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -363,16 +373,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
