@@ -240,6 +240,43 @@ public class DctmVersionTree {
 			}
 		}
 
+		for (DctmVersionNumber versionNumber : trunkVersions) {
+			// Find the highest trunk - existing or from a patch - that should be used
+			// as the antecedent
+			DctmVersionNumber highestPatch = null;
+			for (DctmVersionNumber p : patches) {
+				if (p.getComponentCount() > 2) {
+					continue;
+				}
+				if (p.compareTo(versionNumber) >= 0) {
+					break;
+				}
+				highestPatch = p;
+			}
+			DctmVersionNumber highestTrunk = null;
+			for (DctmVersionNumber p : trunkVersions) {
+				if (p.compareTo(versionNumber) < 0) {
+					highestTrunk = p;
+					break;
+				}
+			}
+
+			DctmVersionNumber bestAntecedent = Tools.max(highestPatch, highestTrunk);
+			if (bestAntecedent == null) {
+				continue;
+			}
+
+			if (trunkVersions.contains(bestAntecedent)) {
+				// If the best antecedent is already part of the versions that
+				// exist, then we need not store an alternative
+				continue;
+			}
+
+			// The best antecedent doesn't already exist, so we mark it for future
+			// refrence
+			alternateAntecedents.put(versionNumber, bestAntecedent);
+		}
+
 		if (this.log.isTraceEnabled()) {
 			this.log.trace(String.format("Total of %d items lack antecedents in chronicle [%s]: %s",
 				missingAntecedent.size(), chronicleId, missingAntecedent));
