@@ -216,7 +216,8 @@ public class DfVersionTree {
 			boolean alternateFound = false;
 			DfVersionNumber trunkPatch = null;
 			alternateSearch: for (DfVersionNumber antecedent : antecedents) {
-				if (indexByVersionNumber.containsKey(antecedent)) {
+				if ((indexByVersionNumber.containsKey(antecedent) || patches.contains(antecedent))
+					&& !antecedent.isSibling(versionNumber)) {
 					alternateAntecedents.put(versionNumber, antecedent);
 					alternateFound = true;
 					break alternateSearch;
