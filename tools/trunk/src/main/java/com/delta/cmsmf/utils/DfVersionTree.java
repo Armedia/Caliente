@@ -176,9 +176,9 @@ public class DfVersionTree {
 					// data, and we can't continue
 					throw new CMSMFException(
 						String
-						.format(
-							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-							sysObjectId.getId(), chronicleId));
+							.format(
+								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+								sysObjectId.getId(), chronicleId));
 				}
 				continue;
 			}
@@ -240,6 +240,43 @@ public class DfVersionTree {
 					}
 				}
 			}
+		}
+
+		for (DfVersionNumber versionNumber : trunkVersions) {
+			// Find the highest trunk - existing or from a patch - that should be used
+			// as the antecedent
+			DfVersionNumber highestPatch = null;
+			for (DfVersionNumber p : patches) {
+				if (p.getComponentCount() > 2) {
+					continue;
+				}
+				if (p.compareTo(versionNumber) >= 0) {
+					break;
+				}
+				highestPatch = p;
+			}
+			DfVersionNumber highestTrunk = null;
+			for (DfVersionNumber p : trunkVersions) {
+				if (p.compareTo(versionNumber) < 0) {
+					highestTrunk = p;
+					break;
+				}
+			}
+
+			DfVersionNumber bestAntecedent = Tools.max(highestPatch, highestTrunk);
+			if (bestAntecedent == null) {
+				continue;
+			}
+
+			if (trunkVersions.contains(bestAntecedent)) {
+				// If the best antecedent is already part of the versions that
+				// exist, then we need not store an alternative
+				continue;
+			}
+
+			// The best antecedent doesn't already exist, so we mark it for future
+			// refrence
+			alternateAntecedents.put(versionNumber, bestAntecedent);
 		}
 
 		if (this.log.isTraceEnabled()) {
