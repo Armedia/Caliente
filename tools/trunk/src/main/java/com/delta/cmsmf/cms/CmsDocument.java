@@ -20,6 +20,7 @@ import com.delta.cmsmf.cms.CmsAttributeMapper.Mapping;
 import com.delta.cmsmf.cms.storage.CmsObjectStore.ObjectHandler;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.DfUtils;
+import com.delta.cmsmf.utils.DfVersionNumber;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -466,6 +467,8 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			// At the end of patching, antecedentVersion should point to the actual
 			// version that will be checked out/branched (i.e. the LAST patch version added)
 			// If there is no object, and a root must be created, then do so as well
+			IDfDocument lastAntecedent = null;
+			IDfValue lastAntecedentVersion = null;
 			for (IDfValue p : patches) {
 				// Now we checkout and checkin and branch and whatnot as necessary until we can
 				// actually proceed with the rest of the algorithm...
@@ -476,9 +479,22 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				cleanUpTemporaryPermissions(session);
 
 				// If we branched, we don't change antecedents
+				lastAntecedent = castObject(session.getObject(checkinId));
+				lastAntecedentVersion = p;
 				if (!context.getValue(CmsSysObject.BRANCH_MARKER).asBoolean()) {
-					antecedentVersion = castObject(session.getObject(checkinId));
+					antecedentVersion = lastAntecedent;
 				}
+			}
+
+			// If this version is to be a successor of the last antecedent (all components are the
+			// same except the last number), then we go ahead and assign it to antecedentVersion. If
+			// it's a sibling (same-level branch), or a descendant (sub-branch), then we leave the
+			// antecedent where it is
+			DfVersionNumber newVersion = new DfVersionNumber(getAttribute(CmsAttributes.R_VERSION_LABEL).getValue()
+				.asString());
+			DfVersionNumber lastVersion = new DfVersionNumber(lastAntecedentVersion.asString());
+			if (newVersion.isSuccessorOf(lastVersion)) {
+				antecedentVersion = lastAntecedent;
 			}
 		}
 
