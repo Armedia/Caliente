@@ -10,13 +10,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +35,12 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
-import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -444,6 +442,29 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		return newId;
 	}
 
+	protected IDfId persistNewVersion(T sysObject, String versionLabel, DctmImportContext context) throws DfException {
+		String vl = (versionLabel != null ? versionLabel : DfUtils.concatenateStrings(
+			this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL), ','));
+		IDfValue branchMarker = context.getValue(DctmImportSysObject.BRANCH_MARKER);
+		final IDfId newId;
+		final String action;
+		if ((branchMarker == null) || !branchMarker.asBoolean()) {
+			action = "Checked in";
+			if (StringUtils.countMatches(vl, ".") > 1) {
+				// Don't specify version labels for branch commits?
+				vl = null;
+			}
+			newId = sysObject.checkin(false, vl);
+		} else {
+			action = "Branched";
+			newId = sysObject.getObjectId();
+			sysObject.save();
+		}
+		this.log.info(String.format("%s %s [%s](%s) to CMS as version [%s] (newId=%s)", action,
+			this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId(), vl, newId.getId()));
+		return newId;
+	}
+
 	@Override
 	protected void finalizeOperation(T sysObject) throws DfException, ImportException {
 	}
@@ -628,98 +649,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	@Override
 	protected T locateInCms(DctmImportContext ctx) throws ImportException, DfException {
 		return locateExistingByPath(ctx);
-	}
-
-	/**
-	 * <p>
-	 * Returns the list of all the object ID's for the given {@link IDfSysObject}'s version
-	 * chronicle, in the correct historical order for re-creation. This doesn't necessarily mean
-	 * that it'll be the exactly correct historical order, chronologically. This is simply a
-	 * flattened representation of the version tree such that it is guaranteed that while walking
-	 * the list in order, one will never traverse a descendent before traversing its antecedent
-	 * version.
-	 * </p>
-	 * <p>
-	 * In particular, branches are not guaranteed to be returned in any order relative to their
-	 * siblings; where there direct hierarchical relationships between branches, child branches will
-	 * <b>always</b> come after their parent branches. Furthermore, branch nodes may be mixed in
-	 * together such that one cannot expect branches to be followed through continually in segments.
-	 * <b><i>The only guarantee offered on the items being returned is that for any given item on
-	 * the list (except the first item for obvious reasons), its antecedent version will precede it
-	 * on the list. How far ahead that antecedent is, is undefined and no expectation should be held
-	 * on that. </i></b>
-	 * </p>
-	 * <p>
-	 * The first element on the list is always guaranteed to be the root of the chronicle (i.e.
-	 * {@code r_object_id == i_chronicle_id}). The last element is not guaranteed to be the
-	 * absolutely latest element in the entire version tree, while it is definitely guaranteed to be
-	 * the very latest element in its own version branch ({@code i_latest_flag == true}).
-	 * </p>
-	 *
-	 * @param object
-	 * @return the list of all the object ID's for the given {@link IDfSysObject}'s version
-	 *         chronicle, in the correct historical order for re-creation
-	 * @throws DfException
-	 * @throws ImportException
-	 */
-	protected final List<IDfId> getVersionHistory(T object) throws DfException, ImportException {
-		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
-
-		IDfCollection versions = object
-			.getVersions("r_object_id, r_modify_date, r_version_label, i_chronicle_id, i_antecedent_id, i_latest_flag, i_direct_dsc");
-		Set<String> finished = new HashSet<String>();
-		finished.add(DfId.DF_NULLID_STR); // This helps, below
-		LinkedList<IDfId> history = new LinkedList<IDfId>();
-		LinkedList<IDfTypedObject> deferred = new LinkedList<IDfTypedObject>();
-		try {
-			while (versions.next()) {
-				IDfId objectId = versions.getId(DctmAttributes.R_OBJECT_ID);
-				if (objectId.isNull()) {
-					// Shouldn't happen, but better safe than sorry...
-					continue;
-				}
-				IDfId antecedentId = versions.getId(DctmAttributes.I_ANTECEDENT_ID);
-				if (finished.contains(antecedentId.getId())) {
-					// Antecedent is already in place, add this version
-					history.add(objectId);
-					finished.add(objectId.getId());
-				} else {
-					// Antecedent not in yet, defer it...add it at the front
-					// because this will help optimize the deferred processing,
-					// below, because MOST of the versions will be in the
-					// correct order - only a few won't...
-					deferred.addFirst(versions.getTypedObject());
-				}
-			}
-		} finally {
-			DfUtils.closeQuietly(versions);
-		}
-
-		while (!deferred.isEmpty()) {
-			Iterator<IDfTypedObject> it = deferred.iterator();
-			boolean modified = false;
-			while (it.hasNext()) {
-				IDfTypedObject v = it.next();
-				IDfId objectId = v.getId(DctmAttributes.R_OBJECT_ID);
-				IDfId antecedentId = v.getId(DctmAttributes.I_ANTECEDENT_ID);
-				if (finished.contains(antecedentId.getId())) {
-					// The antecedent is on the list...add this one
-					history.add(objectId);
-					finished.add(objectId.getId());
-					it.remove();
-					modified = true;
-				}
-			}
-
-			if (!modified) {
-				// We can't have done two passes without resolving at least one object because
-				// that means we have a broken version tree...which is unsupported
-				throw new ImportException(String.format(
-					"Broken version tree found for chronicle [%s] - nodes remaining: %s", object.getChronicleId()
-						.getId(), deferred));
-			}
-		}
-		return history;
 	}
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException {

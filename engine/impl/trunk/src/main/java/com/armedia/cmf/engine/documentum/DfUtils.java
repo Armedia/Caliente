@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -25,6 +26,7 @@ import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
+import com.documentum.fc.common.IDfValue;
 
 public class DfUtils {
 
@@ -346,5 +348,19 @@ public class DfUtils {
 	public static String sqlQuoteString(String str) {
 		if (str == null) { return null; }
 		return String.format("''%s''", str.replace("'", "''''"));
+	}
+
+	public static String concatenateStrings(StoredProperty<IDfValue> p, char sep) {
+		if (p == null) { return null; }
+		if (p.getValueCount() < 1) { return ""; }
+		if (!p.isRepeating() || (p.getValueCount() == 1)) { return p.getValue().asString(); }
+		StringBuilder sb = new StringBuilder();
+		for (IDfValue v : p) {
+			if (sb.length() > 0) {
+				sb.append(',');
+			}
+			sb.append(v.asString());
+		}
+		return sb.toString();
 	}
 }

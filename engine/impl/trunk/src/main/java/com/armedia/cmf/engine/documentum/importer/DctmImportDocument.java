@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DctmVersionNumber;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
@@ -24,9 +25,11 @@ import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
+import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
@@ -196,17 +199,92 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final boolean root = (Tools.equals(this.storedObject.getId(), sourceChronicleId));
 		if (root) { return super.newObject(context); }
 
-		IDfSession session = context.getSession();
+		final IDfSession session = context.getSession();
 
-		String antecedentId = this.storedObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID).getValue().asString();
-		Mapping mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
-			DctmAttributes.R_OBJECT_ID, antecedentId);
-		if (mapping == null) { throw new ImportException(String.format(
-			"Can't create a new version of [%s](%s) - antecedent version not found [%s]", this.storedObject.getLabel(),
-			this.storedObject.getId(), antecedentId)); }
-		IDfId id = new DfId(mapping.getTargetValue());
-		session.flushObject(id);
-		IDfDocument antecedentVersion = castObject(session.getObject(id));
+		IDfDocument antecedentVersion = null;
+		StoredProperty<IDfValue> antecedentProperty = this.storedObject.getProperty(DctmSysObject.PATCH_ANTECEDENT);
+		if (antecedentProperty != null) {
+			IDfId aid = antecedentProperty.getValue().asId();
+			final IDfPersistentObject a;
+			if (aid.isObjectId()) {
+				Mapping mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
+					DctmAttributes.R_OBJECT_ID, antecedentProperty.getValue().asString());
+				if (mapping == null) { throw new ImportException(String.format(
+					"Can't repair the version tree for [%s](%s) - antecedent version not found [%s]",
+					this.storedObject.getLabel(), this.storedObject.getId(), antecedentProperty.getValue().asString())); }
+				IDfId id = new DfId(mapping.getTargetValue());
+				session.flushObject(id);
+				a = session.getObject(id);
+			} else {
+				// TODO: This breaks if 1.0 versions need patching
+				Mapping mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
+					DctmAttributes.R_OBJECT_ID, sourceChronicleId);
+				if (mapping == null) { throw new ImportException(String.format(
+					"Can't repair the version tree for [%s](%s) - chronicle mapping not found for [%s]",
+					this.storedObject.getLabel(), this.storedObject.getId(), sourceChronicleId)); }
+				// Find the antecedent using the expected antecedent version number, which
+				// by now *should* exist as part of the normal import...
+				String dql = String.format(
+					"dm_sysobject (ALL) where i_chronicle_id = '%s' and any r_version_label = '%s'",
+					mapping.getTargetValue(), antecedentProperty.getValue().asString());
+				a = session.getObjectByQualification(dql);
+			}
+			antecedentVersion = castObject(a);
+		} else {
+			String antecedentId = this.storedObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID).getValue().asString();
+			Mapping mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
+				DctmAttributes.R_OBJECT_ID, antecedentId);
+			if (mapping == null) { throw new ImportException(String.format(
+				"Can't create a new version of [%s](%s) - antecedent version not found [%s]",
+				this.storedObject.getLabel(), this.storedObject.getId(), antecedentId)); }
+			IDfId id = new DfId(mapping.getTargetValue());
+			session.flushObject(id);
+			antecedentVersion = castObject(session.getObject(id));
+		}
+
+		StoredProperty<IDfValue> patches = this.storedObject.getProperty(DctmSysObject.VERSION_PATCHES);
+		if ((patches != null) && (patches.getValueCount() > 0)) {
+			// Patches are required...so let's carry them out!
+			// At the end of patching, antecedentVersion should point to the actual
+			// version that will be checked out/branched (i.e. the LAST patch version added)
+			// If there is no object, and a root must be created, then do so as well
+			IDfDocument lastAntecedent = null;
+			IDfValue lastAntecedentVersion = null;
+			for (IDfValue p : patches) {
+				// Now we checkout and checkin and branch and whatnot as necessary until we can
+				// actually proceed with the rest of the algorithm...
+				final StoredProperty<IDfValue> prop = new StoredProperty<IDfValue>(DctmAttributes.R_VERSION_LABEL,
+					StoredDataType.STRING, false, DfValueFactory.newStringValue(p.toString()));
+				IDfDocument patchDocument = createSuccessorVersion(antecedentVersion, prop, context);
+				IDfId checkinId = persistNewVersion(patchDocument, p.asString(), context);
+				cleanUpTemporaryPermissions(session);
+
+				// If we branched, we don't change antecedents
+				lastAntecedent = castObject(session.getObject(checkinId));
+				lastAntecedentVersion = p;
+				if (!context.getValue(DctmImportSysObject.BRANCH_MARKER).asBoolean()) {
+					antecedentVersion = lastAntecedent;
+				}
+			}
+
+			// If this version is to be a successor of the last antecedent (all components are the
+			// same except the last number), then we go ahead and assign it to antecedentVersion. If
+			// it's a sibling (same-level branch), or a descendant (sub-branch), then we leave the
+			// antecedent where it is
+			DctmVersionNumber newVersion = new DctmVersionNumber(this.storedObject
+				.getAttribute(DctmAttributes.R_VERSION_LABEL).getValue().asString());
+			DctmVersionNumber lastVersion = new DctmVersionNumber(lastAntecedentVersion.asString());
+			if (newVersion.isSuccessorOf(lastVersion)) {
+				antecedentVersion = lastAntecedent;
+			}
+		}
+
+		return createSuccessorVersion(antecedentVersion, null, context);
+	}
+
+	private IDfDocument createSuccessorVersion(IDfDocument antecedentVersion, StoredProperty<IDfValue> rVersionLabel,
+		DctmImportContext context) throws DfException {
+		final IDfSession session = antecedentVersion.getSession();
 		antecedentVersion.fetch(null);
 		this.antecedentTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
 		if (this.antecedentTemporaryPermission.grant(antecedentVersion)) {
@@ -220,7 +298,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			detectIncomingMutability();
 		}
 
-		StoredAttribute<IDfValue> rVersionLabel = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
+		if (rVersionLabel == null) {
+			rVersionLabel = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
+		}
 		String antecedentVersionImplicitVersionLabel = antecedentVersion.getImplicitVersionLabel();
 		String documentImplicitVersionLabel = rVersionLabel.getValue().asString();
 
@@ -242,6 +322,30 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			antecedentVersion.fetch(null);
 		}
 		return antecedentVersion;
+	}
+
+	private void cleanUpTemporaryPermissions(IDfSession session) throws DfException {
+		if (this.antecedentTemporaryPermission != null) {
+			IDfId antecedentId = new DfId(this.antecedentTemporaryPermission.getObjectId());
+			IDfDocument antecedent = castObject(session.getObject(antecedentId));
+			session.flushObject(antecedentId);
+			antecedent.fetch(null);
+			if (this.antecedentTemporaryPermission.revoke(antecedent)) {
+				antecedent.save();
+			}
+			this.antecedentTemporaryPermission = null;
+		}
+
+		if (this.branchTemporaryPermission != null) {
+			IDfId branchId = new DfId(this.branchTemporaryPermission.getObjectId());
+			IDfDocument branch = castObject(session.getObject(branchId));
+			session.flushObject(branchId);
+			branch.fetch(null);
+			if (this.branchTemporaryPermission.revoke(branch)) {
+				branch.save();
+			}
+			this.branchTemporaryPermission = null;
+		}
 	}
 
 	@Override
@@ -461,26 +565,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final IDfSession session = document.getSession();
 
 		cleanUpParents(session);
-
-		if (this.antecedentTemporaryPermission != null) {
-			IDfId antecedentId = new DfId(this.antecedentTemporaryPermission.getObjectId());
-			IDfDocument antecedent = castObject(session.getObject(antecedentId));
-			session.flushObject(antecedentId);
-			antecedent.fetch(null);
-			if (this.antecedentTemporaryPermission.revoke(antecedent)) {
-				antecedent.save();
-			}
-		}
-
-		if (this.branchTemporaryPermission != null) {
-			IDfId branchId = new DfId(this.branchTemporaryPermission.getObjectId());
-			IDfDocument branch = castObject(session.getObject(branchId));
-			session.flushObject(branchId);
-			branch.fetch(null);
-			if (this.branchTemporaryPermission.revoke(branch)) {
-				branch.save();
-			}
-		}
+		cleanUpTemporaryPermissions(session);
 
 		return super.cleanupAfterSave(document, newObject, context);
 	}
