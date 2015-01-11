@@ -214,11 +214,13 @@ public class DctmVersionTree {
 			boolean alternateFound = false;
 			DctmVersionNumber trunkPatch = null;
 			alternateSearch: for (DctmVersionNumber antecedent : antecedents) {
-				if ((indexByVersionNumber.containsKey(antecedent) || patches.contains(antecedent))
-					&& !antecedent.isSibling(versionNumber)) {
-					alternateAntecedents.put(versionNumber, antecedent);
-					alternateFound = true;
-					break alternateSearch;
+				if (indexByVersionNumber.containsKey(antecedent) || patches.contains(antecedent)) {
+					if (!antecedent.isSibling(versionNumber)) {
+						alternateAntecedents.put(versionNumber, antecedent);
+						alternateFound = true;
+						break alternateSearch;
+					}
+					continue alternateSearch;
 				}
 				patches.add(antecedent);
 				allVersions.add(antecedent);
