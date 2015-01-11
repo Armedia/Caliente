@@ -48,7 +48,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -407,7 +407,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -416,27 +416,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	@Override
 	protected IDfId persistChanges(T sysObject, DctmImportContext context) throws DfException, ImportException {
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
-		StringBuilder buf = new StringBuilder();
-		for (IDfValue v : this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL)) {
-			if (buf.length() > 0) {
-				buf.append(",");
-			}
-			buf.append(v.asString());
-		}
-		final String vl = buf.toString();
-		IDfValue branchMarker = context.getValue(DctmImportSysObject.BRANCH_MARKER);
-		final IDfId newId;
-		final String action;
-		if ((branchMarker == null) || !branchMarker.asBoolean()) {
-			action = "Checked in";
-			newId = sysObject.checkin(false, vl);
-		} else {
-			action = "Branched";
-			newId = sysObject.getObjectId();
-			sysObject.save();
-		}
-		this.log.info(String.format("%s %s [%s](%s) to CMS as version [%s] (newId=%s)", action,
-			this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId(), vl, newId.getId()));
+		IDfId newId = persistNewVersion(sysObject, null, context);
 		context.getAttributeMapper().setMapping(this.storedObject.getType(), DctmAttributes.R_OBJECT_ID,
 			this.storedObject.getId(), newId.getId());
 		return newId;
@@ -640,7 +620,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				.getId(), currentPath));
 		}
 
 		return existing;
