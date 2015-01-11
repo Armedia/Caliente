@@ -108,7 +108,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		this.type = CmsObjectType.decodeFromClass(getClass());
 		if (this.type.getDfClass() != dfClass) { throw new IllegalArgumentException(String.format(
 			"Class mismatch: type is tied to class [%s], but was given class [%s]", this.type.getDfClass()
-			.getCanonicalName(), dfClass.getCanonicalName())); }
+				.getCanonicalName(), dfClass.getCanonicalName())); }
 		this.dfClass = dfClass;
 	}
 
@@ -271,7 +271,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws CMSMFException
 	 */
 	public final boolean loadFromCMS(IDfPersistentObject object, CmsTransferContext ctx) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to populate from"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide transfer context"); }
 		final T typedObject = castObject(object);
@@ -503,11 +503,12 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 			if (newLabel == null) {
 				newLabel = calculateLabel(object);
 			}
-			ok = true;
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
 				this.type, cmsImportResult, this.label, this.id, newLabel, object.getObjectId().getId()));
 
-			return new SaveResult(cmsImportResult, newLabel, object.getObjectId().getId());
+			SaveResult ret = new SaveResult(cmsImportResult, newLabel, object.getObjectId().getId());
+			ok = true;
+			return ret;
 		} finally {
 			if (ok) {
 				try {
@@ -515,11 +516,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 				} catch (DfException e) {
 					ok = false;
 					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							this.label, this.id), e);
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.label, this.id), e);
 				}
 			}
 			if (transOpen) {
@@ -546,10 +547,17 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.label, this.id));
 					// Clear the mapping
 					context.getAttributeMapper().clearSourceMapping(this.type, CmsAttributes.R_OBJECT_ID, this.id);
-					if (localTx != null) {
-						session.abortTransEx(localTx);
-					} else {
-						session.abortTrans();
+					try {
+						if (localTx != null) {
+							session.abortTransEx(localTx);
+						} else {
+							session.abortTrans();
+						}
+					} catch (DfException e) {
+						// We intercept and log here to avoid this blacking out other exceptions
+						// being raised
+						this.log.fatal(
+							String.format("Failed to rollback the transaction for [%s](%s)", this.label, this.id), e);
 					}
 				}
 			}
@@ -589,7 +597,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 		if (object == null) { return null; }
 		if (!this.dfClass.isAssignableFrom(object.getClass())) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 
@@ -616,7 +624,7 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	/**
@@ -630,16 +638,16 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, CmsTransferContext context) throws DfException,
-	CMSMFException {
+		CMSMFException {
 		return false;
 	}
 
