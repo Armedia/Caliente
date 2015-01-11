@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.log4j.Logger;
 
@@ -453,12 +454,23 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		}
 
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
-		final String vl = getAttribute(CmsAttributes.R_VERSION_LABEL).getConcatenatedString(",");
+		final IDfId newId = persistNewVersion(sysObject, null, context);
+		context.getAttributeMapper().setMapping(getType(), CmsAttributes.R_OBJECT_ID, getId(), newId.getId());
+		return newId;
+	}
+
+	protected IDfId persistNewVersion(T sysObject, String versionLabel, CmsTransferContext context) throws DfException {
+		String vl = (versionLabel != null ? versionLabel : getAttribute(CmsAttributes.R_VERSION_LABEL)
+			.getConcatenatedString(","));
 		IDfValue branchMarker = context.getValue(CmsSysObject.BRANCH_MARKER);
 		final IDfId newId;
 		final String action;
 		if ((branchMarker == null) || !branchMarker.asBoolean()) {
 			action = "Checked in";
+			if (StringUtils.countMatches(vl, ".") > 1) {
+				// Don't specify version labels for branch commits?
+				vl = null;
+			}
 			newId = sysObject.checkin(false, vl);
 		} else {
 			action = "Branched";
@@ -467,7 +479,6 @@ abstract class CmsSysObject<T extends IDfSysObject> extends CmsObject<T> {
 		}
 		this.log.info(String.format("%s %s [%s](%s) to CMS as version [%s] (newId=%s)", action, getType(), getLabel(),
 			getId(), vl, newId.getId()));
-		context.getAttributeMapper().setMapping(getType(), CmsAttributes.R_OBJECT_ID, getId(), newId.getId());
 		return newId;
 	}
 

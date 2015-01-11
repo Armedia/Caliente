@@ -429,10 +429,10 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			CmsProperty antecedentId = getProperty(CmsSysObject.PATCH_ANTECEDENT);
 			if (antecedentId != null) {
 				Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
-					antecedentId.toString());
+					antecedentId.getValue().asString());
 				if (mapping == null) { throw new CMSMFException(String.format(
 					"Can't repair the version tree for [%s](%s) - antecedent version not found [%s]", getLabel(),
-					getId(), antecedentId)); }
+					getId(), antecedentId.getValue().asString())); }
 				IDfId id = new DfId(mapping.getTargetValue());
 				session.flushObject(id);
 				antecedentVersion = castObject(session.getObject(id));
@@ -440,13 +440,18 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				// if there is no antecedent version, then we must create a new object
 				// this should only happen if the root (1.0) object can't be located AT ALL
 				// on the original data set...
-				throw new CMSMFException("Root object repair is not yet supported");
+				throw new CMSMFException("Root version (1.0) repair is not yet supported");
 			}
 
 			for (IDfValue p : patches) {
 				// Now we checkout and checkin and branch and whatnot as necessary until we can
 				// actually proceed with the rest of the algorithm...
-				p.hashCode();
+				final CmsProperty prop = new CmsProperty(CmsAttributes.R_VERSION_LABEL, CmsDataType.DF_STRING, false,
+					DfValueFactory.newStringValue(p.toString()));
+				antecedentVersion = createSuccessorVersion(antecedentVersion, prop, context);
+				IDfId checkinId = persistNewVersion(antecedentVersion, p.asString(), context);
+				antecedentVersion = castObject(session.getObject(checkinId));
+				cleanUpTemporaryPermissions(session);
 			}
 		} else {
 			// No patches needed, the antecedent needs to be there
@@ -461,6 +466,12 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			antecedentVersion = castObject(session.getObject(id));
 		}
 
+		return createSuccessorVersion(antecedentVersion, null, context);
+	}
+
+	private IDfDocument createSuccessorVersion(IDfDocument antecedentVersion, CmsProperty rVersionLabel,
+		CmsTransferContext context) throws DfException {
+		final IDfSession session = antecedentVersion.getSession();
 		antecedentVersion.fetch(null);
 		this.antecedentTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
 		if (this.antecedentTemporaryPermission.grant(antecedentVersion)) {
@@ -474,7 +485,9 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			detectIncomingMutability();
 		}
 
-		CmsAttribute rVersionLabel = getAttribute(CmsAttributes.R_VERSION_LABEL);
+		if (rVersionLabel == null) {
+			rVersionLabel = getAttribute(CmsAttributes.R_VERSION_LABEL);
+		}
 		String antecedentVersionImplicitVersionLabel = antecedentVersion.getImplicitVersionLabel();
 		String documentImplicitVersionLabel = rVersionLabel.getValue().asString();
 
@@ -692,13 +705,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 		linkToParents(document, context);
 	}
 
-	@Override
-	protected boolean cleanupAfterSave(IDfDocument document, boolean newObject, CmsTransferContext context)
-		throws DfException, CMSMFException {
-		final IDfSession session = document.getSession();
-
-		cleanUpParents(session);
-
+	private void cleanUpTemporaryPermissions(IDfSession session) throws DfException {
 		if (this.antecedentTemporaryPermission != null) {
 			IDfId antecedentId = new DfId(this.antecedentTemporaryPermission.getObjectId());
 			IDfDocument antecedent = castObject(session.getObject(antecedentId));
@@ -707,6 +714,7 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			if (this.antecedentTemporaryPermission.revoke(antecedent)) {
 				antecedent.save();
 			}
+			this.antecedentTemporaryPermission = null;
 		}
 
 		if (this.branchTemporaryPermission != null) {
@@ -717,7 +725,17 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 			if (this.branchTemporaryPermission.revoke(branch)) {
 				branch.save();
 			}
+			this.branchTemporaryPermission = null;
 		}
+	}
+
+	@Override
+	protected boolean cleanupAfterSave(IDfDocument document, boolean newObject, CmsTransferContext context)
+		throws DfException, CMSMFException {
+		final IDfSession session = document.getSession();
+
+		cleanUpParents(session);
+		cleanUpTemporaryPermissions(session);
 
 		return super.cleanupAfterSave(document, newObject, context);
 	}
