@@ -87,11 +87,11 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			if ((patches != null) && !patches.isEmpty()) {
 				properties.add(new StoredProperty<IDfValue>(DctmSysObject.VERSION_PATCHES, DctmDataType.DF_STRING
 					.getStoredType(), true, patches));
-				IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
-				if (patchAntecedent != null) {
-					properties.add(new StoredProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID
-						.getStoredType(), false, patchAntecedent));
-				}
+			}
+			IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
+			if (patchAntecedent != null) {
+				properties.add(new StoredProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID
+					.getStoredType(), false, patchAntecedent));
 			}
 			return;
 		}
@@ -119,12 +119,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		if (document == null) { throw new IllegalArgumentException("Must provide a document whose versions to analyze"); }
 
 		final List<IDfDocument> ret = new LinkedList<IDfDocument>();
-
-		// Is this the root of the version hierarchy? If so, then there are no prior versions
-		if (prior && Tools.equals(document.getObjectId().getId(), document.getChronicleId().getId())) {
-			// Return an empty list - this is the root of the version hierarchy
-			return ret;
-		}
 
 		boolean add = prior;
 		for (IDfDocument doc : getVersionHistory(ctx, document)) {

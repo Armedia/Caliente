@@ -129,13 +129,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 	protected final List<T> getVersionHistory(ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx, T object)
 		throws DfException, ExportException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
-
-		// Using the chronicle ID here guarantees that the same version history will be retrieved
-		// regardless of which branch of the tree we make the query on
 		final IDfSession session = object.getSession();
 		final IDfId chronicleId = object.getChronicleId();
-		final String historyObject = String.format(DctmExportSysObject.CTX_VERSION_HISTORY, object.getChronicleId()
-			.getId());
+		final String historyObject = String.format(DctmExportSysObject.CTX_VERSION_HISTORY, chronicleId.toString());
 
 		@SuppressWarnings("unchecked")
 		List<T> history = (List<T>) ctx.getObject(historyObject);
@@ -165,13 +161,16 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 				final String patchesObject = String.format(DctmExportSysObject.CTX_VERSION_PATCHES, id.getId());
 				ctx.setObject(patchesObject, patches);
 				patches = new ArrayList<IDfValue>();
+			}
 
-				DctmVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
-				if (alternateAntecedent != null) {
-					final String antecedentId = tree.indexByVersionNumber.get(alternateAntecedent);
-					ctx.setValue(String.format(DctmExportSysObject.CTX_PATCH_ANTECEDENT, id.getId()),
-						DfValueFactory.newStringValue(antecedentId));
+			DctmVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
+			if (alternateAntecedent != null) {
+				String antecedentId = tree.indexByVersionNumber.get(alternateAntecedent);
+				if (antecedentId == null) {
+					antecedentId = alternateAntecedent.toString();
 				}
+				ctx.setValue(String.format(DctmExportSysObject.CTX_PATCH_ANTECEDENT, id.getId()),
+					DfValueFactory.newStringValue(antecedentId));
 			}
 		}
 		// Only put this in the context when it's needed
