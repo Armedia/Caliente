@@ -554,10 +554,11 @@ public abstract class CmsObject<T extends IDfPersistentObject> {
 							session.abortTrans();
 						}
 					} catch (DfException e) {
-						// We intercept and log here to avoid this blacking out other exceptions
-						// being raised
+						// We log this here and don't raise it because if we're aborting, it means
+						// that there's another exception already bubbling up, so we don't want
+						// to intercept that
 						this.log.fatal(
-							String.format("Failed to rollback the transaction for [%s](%s)", this.label, this.id), e);
+							String.format("Failed to roll back the transaction for [%s](%s)", this.label, this.id), e);
 					}
 				}
 			}
