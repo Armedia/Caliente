@@ -414,27 +414,23 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 
 		if (isReference()) { return newReference(context); }
 
-		String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
+		final String sourceChronicleId = getAttribute(CmsAttributes.I_CHRONICLE_ID).getValue().asId().getId();
 		final boolean root = (Tools.equals(getId(), sourceChronicleId));
 		if (root) { return super.newObject(context); }
 
 		final IDfSession session = context.getSession();
 
+		final IDfId antecedentId;
 		IDfDocument antecedentVersion = null;
-		CmsProperty antecedentProperty = getProperty(CmsSysObject.PATCH_ANTECEDENT);
-		if (antecedentProperty != null) {
+		final CmsProperty antecedentProperty = getProperty(CmsSysObject.PATCH_ANTECEDENT);
+		if (antecedentProperty == null) {
+			antecedentId = getAttribute(CmsAttributes.I_ANTECEDENT_ID).getValue().asId();
+		} else {
 			IDfId aid = antecedentProperty.getValue().asId();
-			final IDfPersistentObject a;
 			if (aid.isObjectId()) {
-				Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
-					antecedentProperty.getValue().asString());
-				if (mapping == null) { throw new CMSMFException(String.format(
-					"Can't repair the version tree for [%s](%s) - antecedent version not found [%s]", getLabel(),
-					getId(), antecedentProperty.getValue().asString())); }
-				IDfId id = new DfId(mapping.getTargetValue());
-				session.flushObject(id);
-				a = session.getObject(id);
+				antecedentId = aid;
 			} else {
+				antecedentId = null;
 				// TODO: This breaks if 1.0 versions need patching
 				Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
 					sourceChronicleId);
@@ -446,13 +442,13 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				String dql = String.format(
 					"dm_sysobject (ALL) where i_chronicle_id = '%s' and any r_version_label = '%s'",
 					mapping.getTargetValue(), antecedentProperty.getValue().asString());
-				a = session.getObjectByQualification(dql);
+				antecedentVersion = castObject(session.getObjectByQualification(dql));
 			}
-			antecedentVersion = castObject(a);
-		} else {
-			String antecedentId = getAttribute(CmsAttributes.I_ANTECEDENT_ID).getValue().asString();
+		}
+
+		if (antecedentVersion == null) {
 			Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
-				antecedentId);
+				antecedentId.getId());
 			if (mapping == null) { throw new CMSMFException(String.format(
 				"Can't create a new version of [%s](%s) - antecedent version not found [%s]", getLabel(), getId(),
 				antecedentId)); }
