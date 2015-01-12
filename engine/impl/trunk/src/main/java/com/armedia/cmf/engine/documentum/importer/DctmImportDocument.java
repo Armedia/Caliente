@@ -194,28 +194,25 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (isReference()) { return newReference(context); }
 
-		String sourceChronicleId = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID).getValue().asId()
-			.getId();
+		final String sourceChronicleId = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID).getValue()
+			.asId().getId();
 		final boolean root = (Tools.equals(this.storedObject.getId(), sourceChronicleId));
 		if (root) { return super.newObject(context); }
 
 		final IDfSession session = context.getSession();
 
+		final IDfId antecedentId;
 		IDfDocument antecedentVersion = null;
-		StoredProperty<IDfValue> antecedentProperty = this.storedObject.getProperty(DctmSysObject.PATCH_ANTECEDENT);
-		if (antecedentProperty != null) {
+		final StoredProperty<IDfValue> antecedentProperty = this.storedObject
+			.getProperty(DctmSysObject.PATCH_ANTECEDENT);
+		if (antecedentProperty == null) {
+			antecedentId = this.storedObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID).getValue().asId();
+		} else {
 			IDfId aid = antecedentProperty.getValue().asId();
-			final IDfPersistentObject a;
 			if (aid.isObjectId()) {
-				Mapping mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
-					DctmAttributes.R_OBJECT_ID, antecedentProperty.getValue().asString());
-				if (mapping == null) { throw new ImportException(String.format(
-					"Can't repair the version tree for [%s](%s) - antecedent version not found [%s]",
-					this.storedObject.getLabel(), this.storedObject.getId(), antecedentProperty.getValue().asString())); }
-				IDfId id = new DfId(mapping.getTargetValue());
-				session.flushObject(id);
-				a = session.getObject(id);
+				antecedentId = aid;
 			} else {
+				antecedentId = null;
 				// TODO: This breaks if 1.0 versions need patching
 				Mapping mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
 					DctmAttributes.R_OBJECT_ID, sourceChronicleId);
@@ -227,13 +224,13 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				String dql = String.format(
 					"dm_sysobject (ALL) where i_chronicle_id = '%s' and any r_version_label = '%s'",
 					mapping.getTargetValue(), antecedentProperty.getValue().asString());
-				a = session.getObjectByQualification(dql);
+				antecedentVersion = castObject(session.getObjectByQualification(dql));
 			}
-			antecedentVersion = castObject(a);
-		} else {
-			String antecedentId = this.storedObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID).getValue().asString();
+		}
+
+		if (antecedentVersion == null) {
 			Mapping mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
-				DctmAttributes.R_OBJECT_ID, antecedentId);
+				DctmAttributes.R_OBJECT_ID, antecedentId.getId());
 			if (mapping == null) { throw new ImportException(String.format(
 				"Can't create a new version of [%s](%s) - antecedent version not found [%s]",
 				this.storedObject.getLabel(), this.storedObject.getId(), antecedentId)); }
