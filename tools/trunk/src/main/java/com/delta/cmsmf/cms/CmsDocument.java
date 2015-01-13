@@ -431,18 +431,44 @@ public class CmsDocument extends CmsSysObject<IDfDocument> {
 				antecedentId = aid;
 			} else {
 				antecedentId = null;
-				// TODO: This breaks if 1.0 versions need patching
 				Mapping mapping = context.getAttributeMapper().getTargetMapping(getType(), CmsAttributes.R_OBJECT_ID,
 					sourceChronicleId);
-				if (mapping == null) { throw new CMSMFException(String.format(
-					"Can't repair the version tree for [%s](%s) - chronicle mapping not found for [%s]", getLabel(),
-					getId(), sourceChronicleId)); }
-				// Find the antecedent using the expected antecedent version number, which
-				// by now *should* exist as part of the normal import...
-				String dql = String.format(
-					"dm_sysobject (ALL) where i_chronicle_id = '%s' and any r_version_label = '%s'",
-					mapping.getTargetValue(), antecedentProperty.getValue().asString());
-				antecedentVersion = castObject(session.getObjectByQualification(dql));
+				if (mapping == null) {
+					// The root of the trunk is missing...we'll need to create a new, contentless
+					// object
+					antecedentVersion = super.newObject(context);
+
+					// Set the name
+					antecedentVersion.setObjectName(getAttribute(CmsAttributes.OBJECT_NAME).getValue().asString());
+
+					// Set the owner and group
+					antecedentVersion.setOwnerName(getAttribute(CmsAttributes.OWNER_NAME).getValue().asString());
+					antecedentVersion.setGroupName(getAttribute(CmsAttributes.GROUP_NAME).getValue().asString());
+
+					// Set the ACL
+					antecedentVersion.setACLDomain(getAttribute(CmsAttributes.ACL_DOMAIN).getValue().asString());
+					antecedentVersion.setACLName(getAttribute(CmsAttributes.ACL_NAME).getValue().asString());
+
+					// Link to prospective parents
+					// TODO: Mess with parents' permissions?
+					linkToParents(antecedentVersion, context);
+
+					// Create the chronicle mapping
+					// TODO: How do we revert this if the transaction fails later on?
+					context.getAttributeMapper().setMapping(getType(), CmsAttributes.R_OBJECT_ID, sourceChronicleId,
+						antecedentVersion.getChronicleId().getId());
+
+					// And...finally...
+					// TODO: Need a "simple" way to modify the r_modify_date for the document
+					updateSystemAttributes(antecedentVersion, context);
+				} else {
+					// Find the antecedent using the expected antecedent version number, which
+					// by now *should* exist as part of the normal import...
+					String dql = String.format(
+						"dm_sysobject (ALL) where i_chronicle_id = '%s' and any r_version_label = '%s'",
+						mapping.getTargetValue(), antecedentProperty.getValue().asString());
+					antecedentVersion = castObject(session.getObjectByQualification(dql));
+				}
 			}
 		}
 
