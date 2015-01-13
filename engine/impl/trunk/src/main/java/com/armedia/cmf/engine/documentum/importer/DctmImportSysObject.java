@@ -739,6 +739,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			for (ParentFolderAction action : this.parentLinkActions) {
 				action.cleanUp();
 			}
+			this.parentLinkActions = null;
 		}
 	}
 }
