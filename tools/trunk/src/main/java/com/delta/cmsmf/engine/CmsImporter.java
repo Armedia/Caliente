@@ -305,6 +305,7 @@ public class CmsImporter extends CmsTransferEngine<CmsImportEngineListener, CmsI
 
 			List<Future<?>> futures = new ArrayList<Future<?>>();
 			List<Collection<CmsObject<?>>> remaining = new ArrayList<Collection<CmsObject<?>>>();
+			objectStore.clearAllMappings();
 			importStarted(containedTypes);
 			for (final CmsObjectType type : CmsObjectType.values()) {
 				if (type.isSurrogate()) {
