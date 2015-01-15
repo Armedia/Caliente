@@ -45,7 +45,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ImportEngineListener> {
+	TransferEngine<S, T, V, C, ImportEngineListener> {
 
 	private static enum BatchStatus {
 		//
@@ -219,7 +219,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
-			throws ImportException, StorageException {
+		throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -303,7 +303,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -336,6 +336,8 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 										session.begin();
 										try {
 											listenerDelegator.objectImportStarted(next);
+											// TODO: Transform the loaded object from the
+											// intermediate format into the target format
 											final ImportOutcome outcome = importObject(next, getTranslator(), ctx);
 											listenerDelegator.objectImportCompleted(next, outcome);
 											if (this.log.isDebugEnabled()) {
@@ -371,10 +373,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 												// the other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -606,7 +608,7 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 					}
 
 					this.log
-					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(translator, type, handler);
 					} catch (Exception e) {
@@ -693,10 +695,10 @@ TransferEngine<S, T, V, C, ImportEngineListener> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);

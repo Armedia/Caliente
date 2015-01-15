@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ExportEngineListener> {
+TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -276,6 +276,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			setContentQualifier(marshaled, contentHandle.getQualifier());
 		}
 
+		// TODO: do the translation from the source format to the intermediate format
+		// so that the object stored can then (more) easily be converted into "any other target"
 		final Long ret = objectStore.storeObject(marshaled, getTranslator());
 		if (ret == null) {
 			// Should be impossible, but still guard against it
@@ -313,7 +315,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -424,10 +426,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 									nextType = next.getType();
 									if (nextType == null) {
 										this.log
-											.error(String
-												.format(
-													"Failed to determine the object type for target with globally unique ID[%s]",
-													nextId));
+										.error(String
+											.format(
+												"Failed to determine the object type for target with globally unique ID[%s]",
+												nextId));
 										continue;
 									}
 								}
@@ -539,9 +541,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-									.warn(
-										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-										e);
+								.warn(
+									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+									e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -595,10 +597,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
