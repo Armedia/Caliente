@@ -194,8 +194,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		if (mappings != null) {
 			// TODO: normalize the CMS attribute name
 			IntermediateAttributes att = mappings.get(attributeName);
-			// TODO: remove the need to know IntermediateAttributes's internals
-			if (att != null) { return att.name; }
+			if (att != null) { return att.encode(); }
 		}
 		return super.encodeAttributeName(type, attributeName);
 	}
@@ -207,8 +206,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 			String att = null;
 			try {
 				// TODO: normalize the intermediate attribute name
-				// TODO: remove the need to know IntermediateAttributes's internals
-				att = mappings.getKey(IntermediateAttributes.valueOf(attributeName.toUpperCase()));
+				att = mappings.getKey(IntermediateAttributes.decode(attributeName));
 			} catch (IllegalArgumentException e) {
 				att = null;
 			}
