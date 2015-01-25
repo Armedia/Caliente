@@ -10,6 +10,13 @@ public class StoredAttribute<V> extends StoredProperty<V> {
 	private final boolean qualifiable;
 	private final int length;
 
+	public StoredAttribute(StoredAttribute<V> pattern) {
+		super(pattern);
+		this.id = pattern.id;
+		this.qualifiable = pattern.qualifiable;
+		this.length = pattern.length;
+	}
+
 	public StoredAttribute(String name, StoredDataType type, String id, int length, boolean repeating,
 		boolean qualifiable) {
 		this(name, type, id, length, repeating, qualifiable, null);

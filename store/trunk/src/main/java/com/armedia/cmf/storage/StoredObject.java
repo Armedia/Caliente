@@ -28,6 +28,20 @@ public class StoredObject<V> {
 	private final Map<String, StoredAttribute<V>> attributes = new HashMap<String, StoredAttribute<V>>();
 	private final Map<String, StoredProperty<V>> properties = new HashMap<String, StoredProperty<V>>();
 
+	public StoredObject(StoredObject<V> pattern) {
+		this.type = pattern.getType();
+		this.id = pattern.getId();
+		this.batchId = pattern.getBatchId();
+		this.label = pattern.getLabel();
+		this.subtype = pattern.getSubtype();
+		for (StoredAttribute<V> attribute : pattern.getAttributes()) {
+			this.attributes.put(attribute.getName(), new StoredAttribute<V>(attribute));
+		}
+		for (StoredProperty<V> property : pattern.getProperties()) {
+			this.properties.put(property.getName(), new StoredProperty<V>(property));
+		}
+	}
+
 	public StoredObject(StoredObjectType type, String id, String batchId, String label, String subtype) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }

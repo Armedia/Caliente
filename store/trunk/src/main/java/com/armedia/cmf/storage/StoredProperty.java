@@ -18,6 +18,17 @@ public class StoredProperty<V> implements Iterable<V> {
 	private V singleValue = null;
 	private final List<V> values;
 
+	public StoredProperty(StoredProperty<V> pattern) {
+		if (pattern == null) { throw new IllegalArgumentException("Must provide a pattern to construct from"); }
+		this.name = pattern.name;
+		this.type = pattern.type;
+		this.repeating = pattern.repeating;
+		this.singleValue = pattern.singleValue;
+		final int valueCount = pattern.values.size();
+		this.values = new ArrayList<V>(valueCount);
+		setValues(pattern.values);
+	}
+
 	public StoredProperty(String name, StoredDataType type) {
 		this(name, type, true, (V) null);
 	}
