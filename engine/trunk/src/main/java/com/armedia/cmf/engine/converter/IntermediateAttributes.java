@@ -4,7 +4,11 @@
 
 package com.armedia.cmf.engine.converter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
@@ -38,7 +42,7 @@ public enum IntermediateAttributes {
 	//
 	;
 
-	public final String name;
+	private final String name;
 	public final StoredDataType type;
 	public final boolean repeating;
 
@@ -47,8 +51,37 @@ public enum IntermediateAttributes {
 	}
 
 	private IntermediateAttributes(StoredDataType type, boolean repeating) {
-		this.name = name().toLowerCase();
+		this.name = String.format(":%s", name().toLowerCase());
 		this.type = type;
 		this.repeating = repeating;
+	}
+
+	public final String encode() {
+		return this.name;
+	}
+
+	private static volatile Map<String, IntermediateAttributes> MAPPINGS = null;
+
+	private static void initMappings() {
+		if (IntermediateAttributes.MAPPINGS == null) {
+			synchronized (IntermediateAttributes.class) {
+				if (IntermediateAttributes.MAPPINGS == null) {
+					Map<String, IntermediateAttributes> mappings = new HashMap<String, IntermediateAttributes>();
+					for (IntermediateAttributes a : IntermediateAttributes.values()) {
+						mappings.put(a.name, a);
+					}
+					IntermediateAttributes.MAPPINGS = Tools.freezeMap(mappings);
+				}
+			}
+		}
+	}
+
+	public static IntermediateAttributes decode(String name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
+		IntermediateAttributes.initMappings();
+		IntermediateAttributes ret = IntermediateAttributes.MAPPINGS.get(name);
+		if (ret == null) { throw new IllegalArgumentException(String.format(
+			"Failed to decode [%s] into a valid intermediate attribute", name)); }
+		return ret;
 	}
 }
