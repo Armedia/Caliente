@@ -243,8 +243,18 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
 			attValue[0] = objectId; // This should never change within the loop
+			final Map<String, String> encodedNames = new HashMap<String, String>();
 			for (final StoredAttribute<V> attribute : object.getAttributes()) {
-				final String name = attribute.getName();
+				final String name = translator.encodeAttributeName(object.getType(), attribute.getName());
+				final String duplicate = encodedNames.put(name, attribute.getName());
+				if (duplicate != null) {
+					this.log
+					.warn(String
+						.format(
+							"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+							name, attribute.getName(), duplicate));
+					continue;
+				}
 				final boolean repeating = attribute.isRepeating();
 				final String type = translator.encodeValue(attribute.getType());
 
@@ -277,9 +287,19 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			}
 
 			// Then, the properties
+			encodedNames.clear();
 			propData[0] = objectId; // This should never change within the loop
-			for (final String name : object.getPropertyNames()) {
-				final StoredProperty<V> property = object.getProperty(name);
+			for (final StoredProperty<V> property : object.getProperties()) {
+				final String name = translator.encodePropertyName(object.getType(), property.getName());
+				final String duplicate = encodedNames.put(name, property.getName());
+				if (duplicate != null) {
+					this.log
+					.warn(String
+						.format(
+							"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+							name, property.getName(), duplicate));
+					continue;
+				}
 				final String type = translator.encodeValue(property.getType());
 
 				propData[1] = name;
@@ -810,19 +830,19 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return new StoredObject<V>(type, id, batchId, label, subtype);
 	}
 
-	private <T, V> StoredProperty<V> loadProperty(ObjectStorageTranslator<T, V> translator, ResultSet rs)
-		throws SQLException, StoredValueDecoderException {
+	private <T, V> StoredProperty<V> loadProperty(StoredObjectType objectType,
+		ObjectStorageTranslator<T, V> translator, ResultSet rs) throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		String name = rs.getString("name");
+		String name = translator.decodePropertyName(objectType, rs.getString("name"));
 		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		return new StoredProperty<V>(name, type, repeating);
 	}
 
-	private <T, V> StoredAttribute<V> loadAttribute(ObjectStorageTranslator<T, V> translator, ResultSet rs)
-		throws SQLException, StoredValueDecoderException {
+	private <T, V> StoredAttribute<V> loadAttribute(StoredObjectType objectType,
+		ObjectStorageTranslator<T, V> translator, ResultSet rs) throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		String name = rs.getString("name");
+		String name = translator.decodeAttributeName(objectType, rs.getString("name"));
 		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		String id = rs.getString("id");
@@ -850,7 +870,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		List<StoredAttribute<V>> attributes = new LinkedList<StoredAttribute<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
-			attributes.add(loadAttribute(translator, rs));
+			attributes.add(loadAttribute(obj.getType(), translator, rs));
 		}
 		obj.setAttributes(attributes);
 	}
@@ -860,7 +880,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		List<StoredProperty<V>> properties = new LinkedList<StoredProperty<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
-			properties.add(loadProperty(translator, rs));
+			properties.add(loadProperty(obj.getType(), translator, rs));
 		}
 		obj.setProperties(properties);
 	}
