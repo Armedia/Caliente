@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine-documentum</artifactId>
-	<version>1.0.3</version>
+	<version>1.1.0</version>
 	<name>CMF Documentum Common Classes</name>
 	<description>CMF Documentum Common Classes</description>
 	<packaging>bundle</packaging>
@@ -55,7 +55,7 @@
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine</artifactId>
-			<version>1.0.2</version>
+			<version>1.1.0</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -71,6 +71,13 @@
 			<groupId>com.armedia.commons</groupId>
 			<artifactId>dfc-session-pool</artifactId>
 			<version>1.0.0</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.0</version>
 			<scope>compile</scope>
 		</dependency>
 
