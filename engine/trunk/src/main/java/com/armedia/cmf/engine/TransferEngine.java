@@ -27,33 +27,6 @@ import com.armedia.commons.utilities.Tools;
 
 public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>, L> {
 
-	protected class ListenerDelegator<R extends Enum<R>> {
-		protected final Logger log = TransferEngine.this.log;
-
-		private final StoredObjectCounter<R> counter;
-
-		protected ListenerDelegator(StoredObjectCounter<R> counter) {
-			if (counter == null) { throw new IllegalArgumentException("Must provide a counter"); }
-			this.counter = counter;
-		}
-
-		public final StoredObjectCounter<R> getStoredObjectCounter() {
-			return this.counter;
-		}
-
-		public final Map<R, Integer> getCummulative() {
-			return this.counter.getCummulative();
-		}
-
-		public final Map<StoredObjectType, Map<R, Integer>> getCounters() {
-			return this.counter.getCounters();
-		}
-
-		public final Map<R, Integer> getCounters(StoredObjectType type) {
-			return this.counter.getCounters(type);
-		}
-	}
-
 	private static final String CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
 
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
@@ -95,6 +68,33 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 		Map<String, Object> m = TransferEngine.REGISTRY.get(subclass.getCanonicalName());
 		if (m == null) { return null; }
 		return subclass.cast(m.get(targetName));
+	}
+
+	protected class ListenerDelegator<R extends Enum<R>> {
+		protected final Logger log = TransferEngine.this.log;
+
+		private final StoredObjectCounter<R> counter;
+
+		protected ListenerDelegator(StoredObjectCounter<R> counter) {
+			if (counter == null) { throw new IllegalArgumentException("Must provide a counter"); }
+			this.counter = counter;
+		}
+
+		public final StoredObjectCounter<R> getStoredObjectCounter() {
+			return this.counter;
+		}
+
+		public final Map<R, Integer> getCummulative() {
+			return this.counter.getCummulative();
+		}
+
+		public final Map<StoredObjectType, Map<R, Integer>> getCounters() {
+			return this.counter.getCounters();
+		}
+
+		public final Map<R, Integer> getCounters(StoredObjectType type) {
+			return this.counter.getCounters(type);
+		}
 	}
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
