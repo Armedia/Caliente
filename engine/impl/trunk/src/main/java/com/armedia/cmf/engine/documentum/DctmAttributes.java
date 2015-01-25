@@ -27,6 +27,9 @@ public class DctmAttributes {
 	/** The r_creator_name attribute of dm_sysobject. */
 	public static final String R_CREATOR_NAME = "r_creator_name";
 
+	/** The r_access_date attribute of dm_sysobject. */
+	public static final String R_ACCESS_DATE = "r_access_date";
+
 	/** The r_immutable_flag attribute of dm_sysobject. */
 	public static final String R_IMMUTABLE_FLAG = "r_immutable_flag";
 
@@ -84,6 +87,12 @@ public class DctmAttributes {
 	/** The owner_name attribute of dm_sysobject. */
 	public static final String OWNER_NAME = "owner_name";
 
+	/** The owner_permit attribute of dm_sysobject. */
+	public static final String OWNER_PERMIT = "owner_permit";
+
+	/** The group_permit attribute of dm_sysobject. */
+	public static final String GROUP_PERMIT = "group_permit";
+
 	/** The i_vstamp attribute of dm_sysobject. */
 	public static final String I_VSTAMP = "i_vstamp";
 
@@ -95,6 +104,9 @@ public class DctmAttributes {
 
 	/** The i_is_deleted attribute of dm_sysobject. */
 	public static final String I_IS_DELETED = "i_is_deleted";
+
+	/** The title attribute of dm_sysobject */
+	public static final String TITLE = "title";
 
 	// dm_folder Attributes
 	/** The r_folder_path attribute of dm_folder. */
@@ -189,6 +201,9 @@ public class DctmAttributes {
 	public static final String ACCESSOR_NAME_DM_GROUP = "dm_group";
 
 	// dm_type attributes
+	/** The owner attribute of dm_type. */
+	public static final String OWNER = "owner";
+
 	/** The super_name attribute of dm_type. */
 	public static final String SUPER_NAME = "super_name";
 
@@ -239,6 +254,15 @@ public class DctmAttributes {
 	/** The set_time attribute of dmr_content. */
 	public static final String SET_TIME = "set_time";
 
+	/** The parent_id attribute of dmr_content. */
+	public static final String PARENT_ID = "parent_id";
+
+	/** The content_size attribute of dmr_content. */
+	public static final String CONTENT_SIZE = "content_size";
+
+	/** The r_content_hash attribute of dmr_content. */
+	public static final String R_CONTENT_HASH = "r_content_hash";
+
 	// dm_server_config Attributes
 	/** The operator_name attribute of dm_server_config. */
 	public static final String OPERATOR_NAME = "operator_name";
@@ -262,6 +286,10 @@ public class DctmAttributes {
 	/** The r_docbase_id attribute of dm_docbase_config. */
 	public static final String R_DOCBASE_ID = "r_docbase_id";
 
+	// dm_document Attributes
+	/** The r_content_size attribute of dm_document. */
+	public static final String R_CONTENT_SIZE = "r_content_size";
+
 	// Connection config Attributes
 	/** The r_docbase_name attribute of connection config. */
 	public static final String R_DOCBASE_NAME = "r_docbase_name";
@@ -273,4 +301,6 @@ public class DctmAttributes {
 	/** The new_object_id column name of result collection returned by create type dql. */
 	public static final String NEW_OBJECT_ID = "new_object_ID";
 
+	/** the description attribute */
+	public static final String DESCRIPTION = "description";
 }
