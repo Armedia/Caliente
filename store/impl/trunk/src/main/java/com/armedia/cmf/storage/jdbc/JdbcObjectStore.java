@@ -364,71 +364,71 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	protected <T, V> int doLoadObjects(JdbcOperation operation, ObjectStorageTranslator<T, V> translator,
 		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException,
 		StoredValueDecoderException {
-		Connection objConn = null;
-		Connection attConn = null;
+		Connection objectConn = null;
+		Connection attributeConn = null;
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
 		try {
-			objConn = this.dataSource.getConnection();
-			attConn = this.dataSource.getConnection();
+			objectConn = this.dataSource.getConnection();
+			attributeConn = this.dataSource.getConnection();
 
-			PreparedStatement objPS = null;
-			PreparedStatement attPS = null;
-			PreparedStatement valPS = null;
-			PreparedStatement propPS = null;
-			PreparedStatement pvalPS = null;
+			PreparedStatement objectPS = null;
+			PreparedStatement attributePS = null;
+			PreparedStatement attributeValuePS = null;
+			PreparedStatement propertyPS = null;
+			PreparedStatement propertyValuePS = null;
 			try {
 				boolean limitByIDs = false;
 				boolean useSqlArray = false;
 				if (ids == null) {
-					objPS = objConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_SQL);
+					objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_SQL);
 				} else {
 					limitByIDs = true;
 					try {
-						objPS = objConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
+						objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
 						useSqlArray = true;
 					} catch (SQLException e) {
-						objPS = objConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
+						objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
 					}
 				}
 
-				attPS = attConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTES_SQL);
-				valPS = attConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
-				propPS = attConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTIES_SQL);
-				pvalPS = attConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTY_VALUES_SQL);
+				attributePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTES_SQL);
+				attributeValuePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
+				propertyPS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTIES_SQL);
+				propertyValuePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTY_VALUES_SQL);
 
-				ResultSet objRS = null;
-				ResultSet attRS = null;
-				ResultSet propRS = null;
-				ResultSet valRS = null;
+				ResultSet objectRS = null;
+				ResultSet attributeRS = null;
+				ResultSet propertyRS = null;
+				ResultSet valueRS = null;
 
 				if (!limitByIDs) {
-					objPS.setString(1, type.name());
+					objectPS.setString(1, type.name());
 				} else {
 					if (useSqlArray) {
-						objPS.setString(1, type.name());
-						objPS.setArray(2, objConn.createArrayOf("text", ids.toArray()));
+						objectPS.setString(1, type.name());
+						objectPS.setArray(2, objectConn.createArrayOf("text", ids.toArray()));
 					} else {
-						objPS.setObject(1, ids.toArray());
-						objPS.setString(2, type.name());
+						objectPS.setObject(1, ids.toArray());
+						objectPS.setString(2, type.name());
 					}
 				}
-				objRS = objPS.executeQuery();
+				objectRS = objectPS.executeQuery();
 				String currentBatch = null;
 				boolean ok = false;
 				int ret = 0;
 				try {
-					while (objRS.next()) {
+					while (objectRS.next()) {
 						final StoredObject<V> obj;
 						try {
-							final int objNum = objRS.getInt("object_number");
+							final int objNum = objectRS.getInt("object_number");
 							// If batching is not required, then we simply use the object number
 							// as the batch ID, to ensure that object_number remains the sole
 							// ordering factor
-							String batchId = objRS.getString("batch_id");
-							if ((batchId == null) || objRS.wasNull()) {
+							String batchId = objectRS.getString("batch_id");
+							if ((batchId == null) || objectRS.wasNull()) {
 								batchId = String.format("%08x", objNum);
 							}
 							if (!Tools.equals(currentBatch, batchId)) {
@@ -454,15 +454,15 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 								currentBatch = batchId;
 							}
 
-							final String objId = objRS.getString("object_id");
-							final String objLabel = objRS.getString("object_label");
+							final String objId = objectRS.getString("object_id");
+							final String objLabel = objectRS.getString("object_label");
 
 							if (this.log.isInfoEnabled()) {
 								this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
 									objLabel, objId));
 							}
 
-							obj = loadObject(objRS);
+							obj = loadObject(objectRS);
 							if (this.log.isTraceEnabled()) {
 								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 							} else if (this.log.isDebugEnabled()) {
@@ -470,45 +470,49 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 									objLabel, objId));
 							}
 
-							attPS.clearParameters();
-							attPS.setString(1, obj.getId());
-							attRS = attPS.executeQuery();
+							attributePS.clearParameters();
+							attributePS.setString(1, obj.getId());
+							attributeRS = attributePS.executeQuery();
 							try {
-								loadAttributes(translator, attRS, obj);
+								loadAttributes(translator, attributeRS, obj);
 							} finally {
-								DbUtils.closeQuietly(attRS);
+								DbUtils.closeQuietly(attributeRS);
 							}
 
-							valPS.clearParameters();
-							valPS.setString(1, obj.getId());
+							attributeValuePS.clearParameters();
+							attributeValuePS.setString(1, obj.getId());
 							for (StoredAttribute<V> att : obj.getAttributes()) {
-								valPS.setString(2, att.getName());
-								valRS = valPS.executeQuery();
+								// We need to re-encode, since that's the value that will be
+								// referenced in the DB
+								attributeValuePS.setString(2, translator.encodeAttributeName(type, att.getName()));
+								valueRS = attributeValuePS.executeQuery();
 								try {
-									loadValues(translator.getCodec(att.getType()), valRS, att);
+									loadValues(translator.getCodec(att.getType()), valueRS, att);
 								} finally {
-									DbUtils.closeQuietly(valRS);
+									DbUtils.closeQuietly(valueRS);
 								}
 							}
 
-							propPS.clearParameters();
-							propPS.setString(1, obj.getId());
-							propRS = propPS.executeQuery();
+							propertyPS.clearParameters();
+							propertyPS.setString(1, obj.getId());
+							propertyRS = propertyPS.executeQuery();
 							try {
-								loadProperties(translator, propRS, obj);
+								loadProperties(translator, propertyRS, obj);
 							} finally {
-								DbUtils.closeQuietly(propRS);
+								DbUtils.closeQuietly(propertyRS);
 							}
 
-							pvalPS.clearParameters();
-							pvalPS.setString(1, obj.getId());
+							propertyValuePS.clearParameters();
+							propertyValuePS.setString(1, obj.getId());
 							for (StoredProperty<V> prop : obj.getProperties()) {
-								pvalPS.setString(2, prop.getName());
-								valRS = pvalPS.executeQuery();
+								// We need to re-encode, since that's the value that will be
+								// referenced in the DB
+								propertyValuePS.setString(2, translator.encodePropertyName(type, prop.getName()));
+								valueRS = propertyValuePS.executeQuery();
 								try {
-									loadValues(translator.getCodec(prop.getType()), valRS, prop);
+									loadValues(translator.getCodec(prop.getType()), valueRS, prop);
 								} finally {
-									DbUtils.closeQuietly(valRS);
+									DbUtils.closeQuietly(valueRS);
 								}
 							}
 						} catch (SQLException e) {
@@ -543,21 +547,21 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 									currentBatch, ok), e);
 						}
 					}
-					DbUtils.closeQuietly(objRS);
+					DbUtils.closeQuietly(objectRS);
 				}
 			} finally {
-				DbUtils.closeQuietly(pvalPS);
-				DbUtils.closeQuietly(propPS);
-				DbUtils.closeQuietly(valPS);
-				DbUtils.closeQuietly(attPS);
-				DbUtils.closeQuietly(objPS);
+				DbUtils.closeQuietly(propertyValuePS);
+				DbUtils.closeQuietly(propertyPS);
+				DbUtils.closeQuietly(attributeValuePS);
+				DbUtils.closeQuietly(attributePS);
+				DbUtils.closeQuietly(objectPS);
 			}
 		} catch (SQLException e) {
 			throw new StorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
 				type), e);
 		} finally {
-			DbUtils.rollbackAndCloseQuietly(attConn);
-			DbUtils.rollbackAndCloseQuietly(objConn);
+			DbUtils.rollbackAndCloseQuietly(attributeConn);
+			DbUtils.rollbackAndCloseQuietly(objectConn);
 		}
 	}
 
