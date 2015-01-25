@@ -38,4 +38,27 @@ public abstract class ObjectStorageTranslator<T, V> implements StoredValueCodec<
 
 	public abstract StoredValueCodec<V> getCodec(StoredDataType type);
 
+	public StoredObject<V> decodeObject(StoredObject<V> rawObject) {
+		return rawObject;
+	}
+
+	public StoredObject<V> encodeObject(StoredObject<V> rawObject) {
+		return rawObject;
+	}
+
+	public String encodeAttributeName(StoredObjectType type, String attributeName) {
+		return attributeName;
+	}
+
+	public String decodeAttributeName(StoredObjectType type, String attributeName) {
+		return attributeName;
+	}
+
+	public String encodePropertyName(StoredObjectType type, String attributeName) {
+		return attributeName;
+	}
+
+	public String decodePropertyName(StoredObjectType type, String attributeName) {
+		return attributeName;
+	}
 }

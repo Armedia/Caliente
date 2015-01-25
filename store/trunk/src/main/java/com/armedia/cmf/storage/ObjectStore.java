@@ -290,7 +290,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doStoreObject(o, object, translator);
+			return doStoreObject(o, translator.encodeObject(object), translator);
 		} finally {
 			getReadLock().unlock();
 		}
@@ -396,8 +396,8 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 	}
 
 	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
-		ObjectStorageTranslator<T, V> translator, final StoredObjectType type, Collection<String> ids)
-			throws StorageException, StoredValueDecoderException {
+		final ObjectStorageTranslator<T, V> translator, final StoredObjectType type, Collection<String> ids)
+		throws StorageException, StoredValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must proved an operation to work under"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (translator == null) { throw new IllegalArgumentException(
@@ -425,7 +425,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 				@Override
 				public boolean handleObject(StoredObject<V> dataObject) throws StorageException {
-					ret.add(dataObject);
+					ret.add(translator.decodeObject(dataObject));
 					return true;
 				}
 
