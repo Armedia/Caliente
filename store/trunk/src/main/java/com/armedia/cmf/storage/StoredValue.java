@@ -12,28 +12,72 @@ public final class StoredValue {
 	private final Object value;
 
 	public StoredValue(int value) {
-		this(StoredDataType.INTEGER, value);
+		this.type = StoredDataType.INTEGER;
+		this.value = value;
 	}
 
 	public StoredValue(boolean value) {
-		this(StoredDataType.BOOLEAN, value);
+		this.type = StoredDataType.BOOLEAN;
+		this.value = value;
 	}
 
 	public StoredValue(double value) {
-		this(StoredDataType.DOUBLE, value);
+		this.type = StoredDataType.DOUBLE;
+		this.value = value;
 	}
 
 	public StoredValue(String value) {
-		this(StoredDataType.STRING, value);
+		this.type = StoredDataType.STRING;
+		this.value = value;
 	}
 
 	public StoredValue(Date value) {
-		this(StoredDataType.TIME, value);
+		this.type = StoredDataType.TIME;
+		this.value = value;
 	}
 
-	public StoredValue(StoredDataType type, Object value) {
+	public StoredValue(StoredDataType type, Object value) throws ParseException {
 		this.type = type;
-		this.value = value;
+		if (value != null) {
+			switch (type) {
+				case INTEGER:
+					if (value instanceof Number) {
+						this.value = Number.class.cast(value);
+					} else {
+						this.value = Integer.valueOf(value.toString());
+					}
+					break;
+				case BOOLEAN:
+					if (value instanceof Boolean) {
+						this.value = Boolean.class.cast(value);
+					} else {
+						this.value = Boolean.valueOf(value.toString());
+					}
+					break;
+				case DOUBLE:
+					if (value instanceof Number) {
+						this.value = Number.class.cast(value);
+					} else {
+						this.value = Double.valueOf(value.toString());
+					}
+					break;
+				case STRING:
+				case ID:
+					this.value = Tools.toString(value);
+					break;
+				case TIME:
+					if (value instanceof Date) {
+						this.value = Date.class.cast(value);
+					} else {
+						this.value = DateFormat.getDateInstance().parse(value.toString());
+					}
+					break;
+				default:
+					throw new IllegalArgumentException(String.format("Unsupported data type [%s]", type));
+			}
+		} else {
+			this.value = value;
+		}
 	}
 
 	public String asString() {
