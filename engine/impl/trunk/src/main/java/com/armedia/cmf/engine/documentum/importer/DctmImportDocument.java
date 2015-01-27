@@ -420,8 +420,11 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		// Now, create the content the contents
 		Set<String> contentIds = new HashSet<String>();
-		for (IDfValue contentId : storedObject.getProperty(DctmDocument.CONTENTS)) {
-			contentIds.add(contentId.asString());
+		StoredProperty<IDfValue> contentProperty = storedObject.getProperty(DctmDocument.CONTENTS);
+		if ((contentProperty != null) && (contentProperty.getValueCount() > 0)) {
+			for (IDfValue contentId : contentProperty) {
+				contentIds.add(contentId.asString());
+			}
 		}
 
 		final String documentId = document.getObjectId().getId();
