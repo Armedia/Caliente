@@ -163,12 +163,11 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 
 		// Avoid calling DQL twice
 		StoredProperty<IDfValue> property = marshaled.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
-		Iterable<IDfValue> it = property;
 		if (property == null) { throw new Exception(String.format(
 			"The export for group [%s] does not contain the critical property [%s]", marshaled.getLabel(),
 			DctmGroup.USERS_WITH_DEFAULT_GROUP)); }
 
-		for (IDfValue v : it) {
+		for (IDfValue v : property) {
 			if (DctmMappingUtils.isMappableUser(session, v.asString())) {
 				// This is a special user, we don't add it as a dependency
 				continue;
