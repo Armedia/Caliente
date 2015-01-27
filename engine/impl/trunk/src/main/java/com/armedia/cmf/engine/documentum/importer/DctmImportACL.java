@@ -152,7 +152,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context) throws DfException {
+	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context) throws DfException,
+		ImportException {
 		if (newObject) {
 			String user = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME).getValue().asString();
 			user = DctmMappingUtils.resolveMappableUser(acl.getSession(), user);
@@ -203,7 +204,33 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		if (this.log.isTraceEnabled()) {
 			this.log.trace(String.format("[%s]: %s", this.storedObject.getLabel(), permitValues));
 		}
+
+		// If all 3 are null, then we assume an empty list
+		if ((accessors == null) && (permitTypes == null) && (permitValues == null)) {
+			if (this.log.isDebugEnabled()) {
+				this.log.warn("Empty ACL created at [{}]({})", this.storedObject.getLabel(), this.storedObject.getId());
+			}
+			return;
+		}
+
+		// Ok...so at least "some" of the properties are there, so we validate that they
+		// all have the proper structure: none of them are missing, and they all have the
+		// same number of values
+		if ((accessors == null) || (permitTypes == null) || (permitValues == null)
+			|| (accessors.getValueCount() != permitTypes.getValueCount())
+			|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(String.format(
+			"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%permitType = %s%npermitValue = %s",
+			this.storedObject.getLabel(), this.storedObject.getId(), accessors, permitTypes, permitValues)); }
+
+		// One final check to shortcut and avoid unnecessary processing...
 		final int accessorCount = accessors.getValueCount();
+		if (accessorCount == 0) {
+			if (this.log.isDebugEnabled()) {
+				this.log.warn("Empty ACL created at [{}]({})", this.storedObject.getLabel(), this.storedObject.getId());
+			}
+			return;
+		}
+
 		List<IDfPermit> extendedPerms = new ArrayList<IDfPermit>(accessorCount);
 		DfPermit p = new DfPermit();
 		for (int i = 0; i < accessorCount; i++) {
