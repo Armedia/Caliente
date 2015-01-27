@@ -14,7 +14,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public enum IntermediateAttributes {
+public enum IntermediateAttribute {
 	//
 	OBJECT_ID(StoredDataType.ID),
 	OBJECT_CLASS(StoredDataType.STRING),
@@ -46,11 +46,11 @@ public enum IntermediateAttributes {
 	public final StoredDataType type;
 	public final boolean repeating;
 
-	private IntermediateAttributes(StoredDataType type) {
+	private IntermediateAttribute(StoredDataType type) {
 		this(type, false);
 	}
 
-	private IntermediateAttributes(StoredDataType type, boolean repeating) {
+	private IntermediateAttribute(StoredDataType type, boolean repeating) {
 		this.name = String.format(":%s", name().toLowerCase());
 		this.type = type;
 		this.repeating = repeating;
@@ -60,26 +60,26 @@ public enum IntermediateAttributes {
 		return this.name;
 	}
 
-	private static volatile Map<String, IntermediateAttributes> MAPPINGS = null;
+	private static volatile Map<String, IntermediateAttribute> MAPPINGS = null;
 
 	private static void initMappings() {
-		if (IntermediateAttributes.MAPPINGS == null) {
-			synchronized (IntermediateAttributes.class) {
-				if (IntermediateAttributes.MAPPINGS == null) {
-					Map<String, IntermediateAttributes> mappings = new HashMap<String, IntermediateAttributes>();
-					for (IntermediateAttributes a : IntermediateAttributes.values()) {
+		if (IntermediateAttribute.MAPPINGS == null) {
+			synchronized (IntermediateAttribute.class) {
+				if (IntermediateAttribute.MAPPINGS == null) {
+					Map<String, IntermediateAttribute> mappings = new HashMap<String, IntermediateAttribute>();
+					for (IntermediateAttribute a : IntermediateAttribute.values()) {
 						mappings.put(a.name, a);
 					}
-					IntermediateAttributes.MAPPINGS = Tools.freezeMap(mappings);
+					IntermediateAttribute.MAPPINGS = Tools.freezeMap(mappings);
 				}
 			}
 		}
 	}
 
-	public static IntermediateAttributes decode(String name) {
+	public static IntermediateAttribute decode(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
-		IntermediateAttributes.initMappings();
-		IntermediateAttributes ret = IntermediateAttributes.MAPPINGS.get(name);
+		IntermediateAttribute.initMappings();
+		IntermediateAttribute ret = IntermediateAttribute.MAPPINGS.get(name);
 		if (ret == null) { throw new IllegalArgumentException(String.format(
 			"Failed to decode [%s] into a valid intermediate attribute", name)); }
 		return ret;
