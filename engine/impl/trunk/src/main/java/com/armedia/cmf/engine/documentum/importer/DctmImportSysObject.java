@@ -48,7 +48,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -417,7 +417,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -571,7 +571,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
-		return this.storedObject.getProperty(DctmSysObject.TARGET_PATHS).getValues();
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String.format(
+			"No target paths specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
+		return p.getValues();
 	}
 
 	protected T locateExistingByPath(DctmImportContext ctx) throws ImportException, DfException {
@@ -630,7 +633,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				.getId(), currentPath));
 		}
 
 		return existing;
@@ -641,8 +644,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		return locateExistingByPath(ctx);
 	}
 
-	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException {
+	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
 		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		if ((parents == null) || (parents.getValueCount() == 0)) { throw new ImportException(String.format(
+			"No target parents specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
 		StoredAttributeMapper mapper = context.getAttributeMapper();
 		for (int i = 0; i < parents.getValueCount(); i++) {
