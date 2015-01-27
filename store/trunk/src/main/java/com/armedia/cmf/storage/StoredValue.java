@@ -129,4 +129,9 @@ public final class StoredValue {
 	public int hashCode() {
 		return Tools.hashTool(this, null, this.type, this.value);
 	}
+
+	@Override
+	public String toString() {
+		return asString();
+	}
 }
