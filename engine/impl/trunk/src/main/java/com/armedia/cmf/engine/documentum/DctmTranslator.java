@@ -9,6 +9,10 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
+import com.armedia.cmf.engine.documentum.common.DctmDocument;
+import com.armedia.cmf.engine.documentum.common.DctmFolder;
+import com.armedia.cmf.engine.documentum.common.DctmGroup;
+import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -34,6 +38,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		BidiMap<String, IntermediateProperty> pm = null;
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// OBJECT_CLASS (USER)
 		// OBJECT_TYPE (DM_USER)
@@ -46,6 +51,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		propertyMappings.put(StoredObjectType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// OBJECT_CLASS (GROUP)
 		// OBJECT_TYPE (DM_GROUP)
@@ -54,9 +60,11 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		pm.put(DctmGroup.USERS_WITH_DEFAULT_GROUP, IntermediateProperty.USERS_WITH_DEFAULT_GROUP);
 		propertyMappings.put(StoredObjectType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// OBJECT_CLASS (ACL)
 		// OBJECT_TYPE (DM_ACL)
@@ -67,6 +75,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		propertyMappings.put(StoredObjectType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// OBJECT_CLASS (TYPE)
 		// OBJECT_TYPE (DM_TYPE)
@@ -77,6 +86,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		propertyMappings.put(StoredObjectType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// OBJECT_CLASS (FORMAT)
 		// OBJECT_TYPE (DM_FORMAT)
@@ -86,6 +96,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		propertyMappings.put(StoredObjectType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// OBJECT_CLASS (FOLDER)
 		// OBJECT_TYPE (DM_FOLDER|DM_CABINET|...)
@@ -106,9 +117,14 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.ACL_REALM);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.TARGET_PATHS);
+		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.TARGET_PARENTS);
+		pm.put(DctmFolder.USERS_WITH_DEFAULT_FOLDER, IntermediateProperty.USERS_WITH_DEFAULT_FOLDER);
+		pm.put(DctmFolder.USERS_DEFAULT_FOLDER_PATHS, IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS);
 		propertyMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// OBJECT_CLASS (FOLDER)
 		// OBJECT_TYPE (DM_DOCUMENT|...)
@@ -129,9 +145,15 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.ACL_REALM);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.TARGET_PATHS);
+		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.TARGET_PARENTS);
+		pm.put(DctmDocument.CONTENTS, IntermediateProperty.CONTENTS);
+		pm.put(DctmSysObject.VERSION_PATCHES, IntermediateProperty.VERSION_PATCHES);
+		pm.put(DctmSysObject.PATCH_ANTECEDENT, IntermediateProperty.PATCH_ANTECEDENT);
 		propertyMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// OBJECT_CLASS (CONTENT)
 		// OBJECT_TYPE (DMR_CONTENT|...)
