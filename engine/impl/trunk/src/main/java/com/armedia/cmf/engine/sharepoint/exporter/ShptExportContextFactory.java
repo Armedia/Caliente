@@ -11,6 +11,7 @@ import com.armedia.cmf.engine.sharepoint.ShptObject;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Service;
 
@@ -19,7 +20,7 @@ import com.independentsoft.share.Service;
  *
  */
 public class ShptExportContextFactory extends
-	ContextFactory<Service, ShptObject<?>, Object, ShptExportContext, ShptExportEngine> {
+	ContextFactory<Service, ShptObject<?>, StoredValue, ShptExportContext, ShptExportEngine> {
 
 	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings) {
 		super(engine, settings);

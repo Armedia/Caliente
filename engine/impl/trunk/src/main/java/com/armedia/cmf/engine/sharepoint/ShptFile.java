@@ -5,6 +5,7 @@ import java.util.Date;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.independentsoft.share.CheckOutType;
 import com.independentsoft.share.CustomizedPageStatus;
 import com.independentsoft.share.File;
@@ -111,6 +112,6 @@ public class ShptFile extends ShptContentObject<File> {
 	}
 
 	@Override
-	protected void marshal(StoredObject<Object> object) throws ExportException {
+	protected void marshal(StoredObject<StoredValue> object) throws ExportException {
 	}
 }

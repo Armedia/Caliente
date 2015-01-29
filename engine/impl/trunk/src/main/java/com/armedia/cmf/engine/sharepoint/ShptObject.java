@@ -22,6 +22,7 @@ import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Service;
 
@@ -166,19 +167,11 @@ public abstract class ShptObject<T> {
 		return null;
 	}
 
-	public void setAttribute(String name, ShptValue value) {
-
-	}
-
-	public void clearAttribute(String name) {
-
-	}
-
 	protected final T castObject(Object object) throws Exception {
 		if (object == null) { return null; }
 		if (!this.wrappedClass.isInstance(object)) { throw new Exception(String.format(
 			"Expected an object of class %s, but got one of class %s", this.wrappedClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.wrappedClass.cast(object);
 	}
 
@@ -198,31 +191,31 @@ public abstract class ShptObject<T> {
 		return this.type;
 	}
 
-	public final StoredObject<Object> marshal() throws ExportException {
-		StoredObject<Object> object = new StoredObject<Object>(this.type, getBatchId(), getId(), getLabel(),
+	public final StoredObject<StoredValue> marshal() throws ExportException {
+		StoredObject<StoredValue> object = new StoredObject<StoredValue>(this.type, getBatchId(), getId(), getLabel(),
 			this.type.name());
 		marshal(object);
 		return object;
 	}
 
-	protected abstract void marshal(StoredObject<Object> object) throws ExportException;
+	protected abstract void marshal(StoredObject<StoredValue> object) throws ExportException;
 
-	public final Collection<ShptObject<?>> identifyDependents(Service service, StoredObject<Object> marshaled,
+	public final Collection<ShptObject<?>> identifyDependents(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return findDependents(service, marshaled, ctx);
 	}
 
-	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<Object> marshaled,
+	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return new ArrayList<ShptObject<?>>();
 	}
 
-	public final Collection<ShptObject<?>> identifyRequirements(Service session, StoredObject<Object> marshaled,
+	public final Collection<ShptObject<?>> identifyRequirements(Service session, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return findRequirements(session, marshaled, ctx);
 	}
 
-	protected Collection<ShptObject<?>> findRequirements(Service session, StoredObject<Object> marshaled,
+	protected Collection<ShptObject<?>> findRequirements(Service session, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return new ArrayList<ShptObject<?>>();
 	}

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.sharepoint.ShptObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Service;
 
@@ -16,7 +17,7 @@ import com.independentsoft.share.Service;
  * @author diego
  *
  */
-public class ShptExportContext extends ExportContext<Service, ShptObject<?>, Object> {
+public class ShptExportContext extends ExportContext<Service, ShptObject<?>, StoredValue> {
 
 	public ShptExportContext(ShptExportEngine engine, CfgTools settings, String rootId, StoredObjectType rootType,
 		Service session, Logger output) {

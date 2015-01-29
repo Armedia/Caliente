@@ -4,7 +4,10 @@
 
 package com.armedia.cmf.engine.sharepoint;
 
+import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.independentsoft.share.Service;
 
 /**
@@ -24,4 +27,9 @@ public abstract class ShptSecurityObject<T> extends ShptObject<T> {
 
 	protected abstract int getNumericId();
 
+	@Override
+	protected void marshal(StoredObject<StoredValue> object) throws ExportException {
+		// TODO Auto-generated method stub
+
+	}
 }
