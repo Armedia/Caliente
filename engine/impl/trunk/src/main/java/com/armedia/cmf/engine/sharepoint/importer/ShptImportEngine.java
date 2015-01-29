@@ -18,6 +18,7 @@ import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Service;
@@ -26,8 +27,8 @@ import com.independentsoft.share.Service;
  * @author diego
  *
  */
-public class ShptImportEngine<V> extends
-ImportEngine<Service, ShptSessionWrapper, ShptObject<?>, V, ShptImportContext<V>> {
+public class ShptImportEngine extends
+	ImportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptImportContext> {
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {
@@ -37,20 +38,20 @@ ImportEngine<Service, ShptSessionWrapper, ShptObject<?>, V, ShptImportContext<V>
 
 	@Override
 	protected ImportOutcome importObject(StoredObject<?> marshaled,
-		ObjectStorageTranslator<ShptObject<?>, V> translator, ShptImportContext<V> ctx) throws ImportException,
+		ObjectStorageTranslator<ShptObject<?>, StoredValue> translator, ShptImportContext ctx) throws ImportException,
 		StorageException, StoredValueDecoderException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected V getValue(StoredDataType type, Object value) {
+	protected StoredValue getValue(StoredDataType type, Object value) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected ObjectStorageTranslator<ShptObject<?>, V> getTranslator() {
+	protected ObjectStorageTranslator<ShptObject<?>, StoredValue> getTranslator() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -61,8 +62,8 @@ ImportEngine<Service, ShptSessionWrapper, ShptObject<?>, V, ShptImportContext<V>
 	}
 
 	@Override
-	protected ShptImportContextFactory<V> newContextFactory(CfgTools cfg) throws Exception {
-		return new ShptImportContextFactory<V>(this, cfg);
+	protected ShptImportContextFactory newContextFactory(CfgTools cfg) throws Exception {
+		return new ShptImportContextFactory(this, cfg);
 	}
 
 	@Override
