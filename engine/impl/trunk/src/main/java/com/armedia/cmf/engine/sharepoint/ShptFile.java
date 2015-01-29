@@ -101,14 +101,12 @@ public class ShptFile extends ShptContentObject<File> {
 
 	@Override
 	public String getBatchId() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.wrapped.getUniqueId();
 	}
 
 	@Override
 	public String getLabel() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.wrapped.getName();
 	}
 
 	@Override
