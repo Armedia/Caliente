@@ -20,7 +20,7 @@ import com.independentsoft.share.Service;
  *
  */
 public class ShptExportContextFactory extends
-	ContextFactory<Service, ShptObject<?>, StoredValue, ShptExportContext, ShptExportEngine> {
+ContextFactory<Service, ShptObject<?>, StoredValue, ShptExportContext, ShptExportEngine> {
 
 	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -29,6 +29,6 @@ public class ShptExportContextFactory extends
 	@Override
 	protected ShptExportContext constructContext(String rootId, StoredObjectType rootType, Service session,
 		Logger output, ObjectStore<?, ?> objectStore, ContentStore contentStore) {
-		return null;
+		return new ShptExportContext(getEngine(), getSettings(), rootId, rootType, session, output);
 	}
 }

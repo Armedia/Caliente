@@ -32,6 +32,8 @@ import com.independentsoft.share.Service;
  */
 public abstract class ShptObject<T> {
 
+	public static final String TARGET_NAME = "shpt";
+
 	protected static class AttributeDescriptor {
 		private final String name;
 		private final StoredDataType type;
@@ -171,7 +173,7 @@ public abstract class ShptObject<T> {
 		if (object == null) { return null; }
 		if (!this.wrappedClass.isInstance(object)) { throw new Exception(String.format(
 			"Expected an object of class %s, but got one of class %s", this.wrappedClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.wrappedClass.cast(object);
 	}
 
