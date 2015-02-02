@@ -14,6 +14,7 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
+import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
 import com.independentsoft.share.Service;
 
@@ -112,6 +113,19 @@ public class ShptFolder extends ShptContentObject<Folder> {
 		Folder parent = session.getFolder(FileNameTools.basename(this.wrapped.getServerRelativeUrl()));
 		if (parent != null) {
 			ret.add(new ShptFolder(session, parent));
+		}
+		return ret;
+	}
+
+	@Override
+	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
+		ShptExportContext ctx) throws Exception {
+		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
+		for (File f : service.getFiles(this.wrapped.getServerRelativeUrl())) {
+			ret.add(new ShptFile(service, f));
+		}
+		for (Folder f : service.getFolders(this.wrapped.getServerRelativeUrl())) {
+			ret.add(new ShptFolder(service, f));
 		}
 		return ret;
 	}

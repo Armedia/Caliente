@@ -7,7 +7,8 @@ public enum Setting implements ConfigurationSetting {
 	URL("url"),
 	USER("user"),
 	PASSWORD("password"),
-	DOMAIN("domain");
+	DOMAIN("domain"),
+	PATH("path");
 
 	public final String name;
 	private final Object defaultValue;
