@@ -33,7 +33,6 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
-import com.independentsoft.share.Folder;
 import com.independentsoft.share.Service;
 
 /**
@@ -41,7 +40,7 @@ import com.independentsoft.share.Service;
  *
  */
 public class ShptExportEngine extends
-ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -68,8 +67,7 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 		if (pathObj == null) { throw new ShptException("Must provide the name of the site to export"); }
 
 		final String path = Tools.toString(pathObj);
-		Folder f = service.getFolder(path);
-		ShptFolder folder = new ShptFolder(service, f);
+		ShptFolder folder = new ShptFolder(service, service.getFolder(path));
 		ExportTarget ret = new ExportTarget(StoredObjectType.FOLDER, folder.getId());
 		return Collections.singletonList(ret).iterator();
 	}

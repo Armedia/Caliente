@@ -14,9 +14,11 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
 import com.independentsoft.share.Service;
+import com.independentsoft.share.ServiceException;
 
 public class ShptFolder extends ShptContentObject<Folder> {
 
@@ -30,7 +32,7 @@ public class ShptFolder extends ShptContentObject<Folder> {
 
 	@Override
 	public String getId() {
-		return this.wrapped.getUniqueId();
+		return this.wrapped.getServerRelativeUrl();
 	}
 
 	@Override
@@ -110,9 +112,15 @@ public class ShptFolder extends ShptContentObject<Folder> {
 	protected Collection<ShptObject<?>> findRequirements(Service session, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(session, marshaled, ctx);
-		Folder parent = session.getFolder(FileNameTools.basename(this.wrapped.getServerRelativeUrl()));
-		if (parent != null) {
-			ret.add(new ShptFolder(session, parent));
+		String parentPath = FileNameTools.basename(this.wrapped.getServerRelativeUrl());
+		try {
+			Folder parent = session.getFolder(parentPath);
+			if (parent != null) {
+				ret.add(new ShptFolder(session, parent));
+			}
+		} catch (ServiceException e) {
+			if (!Tools.equals("404", e.getErrorCode())) { throw e; }
+			// No parent...we're good
 		}
 		return ret;
 	}
