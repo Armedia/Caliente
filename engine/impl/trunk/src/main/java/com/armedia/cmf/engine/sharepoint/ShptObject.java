@@ -7,6 +7,7 @@ package com.armedia.cmf.engine.sharepoint;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -89,7 +90,11 @@ public abstract class ShptObject<T> {
 	}
 
 	private static Map<String, AttributeDescriptor> getDescriptors(Class<?> k) {
-		return ShptObject.DESCRIPTORS.get(k.getCanonicalName());
+		Map<String, AttributeDescriptor> ret = ShptObject.DESCRIPTORS.get(k.getCanonicalName());
+		if (ret == null) {
+			ret = Collections.emptyMap();
+		}
+		return ret;
 	}
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -173,7 +178,7 @@ public abstract class ShptObject<T> {
 		if (object == null) { return null; }
 		if (!this.wrappedClass.isInstance(object)) { throw new Exception(String.format(
 			"Expected an object of class %s, but got one of class %s", this.wrappedClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.wrappedClass.cast(object);
 	}
 

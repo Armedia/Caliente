@@ -41,6 +41,7 @@ public enum ShptAttributes {
 	ACL_REALM,
 	ACL_NAME,
 	HOME_FOLDER,
+	WELCOME_PAGE,
 	//
 	;
 

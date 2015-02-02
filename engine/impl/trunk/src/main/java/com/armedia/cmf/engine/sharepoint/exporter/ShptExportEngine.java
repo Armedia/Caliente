@@ -37,7 +37,6 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.KeyValue;
 import com.independentsoft.share.ResultTable;
-import com.independentsoft.share.SearchQuery;
 import com.independentsoft.share.SearchResult;
 import com.independentsoft.share.SearchResultPropertyName;
 import com.independentsoft.share.Service;
@@ -51,7 +50,7 @@ import com.independentsoft.share.fql.Or;
  *
  */
 public class ShptExportEngine extends
-ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final List<ExportTarget> NO_TARGETS = Collections.emptyList();
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
@@ -144,27 +143,10 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 				return new ShptUser(session, session.getUser(Tools.decodeInteger(id)));
 			case GROUP:
 				return new ShptGroup(session, session.getGroup(Tools.decodeInteger(id)));
-			case DOCUMENT:
 			case FOLDER:
-				SearchQuery query = new SearchQuery(new IsEqualTo("UniqueId", id));
-				query.getSelectProperties().add(SearchResultPropertyName.PATH);
-				query.getSelectProperties().add(SearchResultPropertyName.TITLE);
-				query.getSelectProperties().add("UniqueId");
-				SearchResult searchResult = session.search(query);
-				ResultTable results = searchResult.getPrimaryQueryResult().getRelevantResult();
-				final int rows = results.getRowCount();
-				if (rows == 0) { return null; }
-				if (rows > 1) { throw new Exception(String.format("%s id [%s] returned %d results", type, id, rows)); }
-				for (SimpleDataRow row : results.getTable().getRows()) {
-					for (KeyValue kv : row.getCells()) {
-						if (Tools.equals(kv.getKey(), SearchResultPropertyName.PATH)) { return (type == StoredObjectType.FOLDER ? new ShptFolder(
-							session, session.getFolder(kv.getValue())) : new ShptFile(session, session.getFile(kv
-								.getValue()))); }
-					}
-					// If the search didn't return the object's path, then we can't return it...
-					throw new Exception(String.format(
-						"Failed to locate the PATH property for the query for %s with ID [%s]", type, id));
-				}
+				return new ShptFolder(session, session.getFolder(id));
+			case DOCUMENT:
+				return new ShptFile(session, session.getFile(id));
 			default:
 				throw new Exception(String.format("Unsupported object type [%s]", type));
 		}

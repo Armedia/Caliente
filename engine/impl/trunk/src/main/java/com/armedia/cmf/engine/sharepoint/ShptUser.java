@@ -1,6 +1,5 @@
 package com.armedia.cmf.engine.sharepoint;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +11,6 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.Role;
 import com.independentsoft.share.Service;
@@ -25,6 +23,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 
 	public ShptUser(Service service, User user) throws ServiceException {
 		super(service, user, StoredObjectType.USER);
+		/*
 		List<Integer> roles = this.service.getRoleAssignments(this.wrapped.getId());
 		if ((roles == null) || roles.isEmpty()) {
 			this.roles = Collections.emptyList();
@@ -38,6 +37,8 @@ public class ShptUser extends ShptSecurityObject<User> {
 			}
 			this.roles = Tools.freezeList(l);
 		}
+		 */
+		this.roles = Collections.emptyList();
 	}
 
 	@Override

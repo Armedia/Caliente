@@ -20,7 +20,7 @@ public class ShptFile extends ShptContentObject<File> {
 
 	@Override
 	public String getId() {
-		return this.wrapped.getUniqueId();
+		return this.wrapped.getServerRelativeUrl();
 	}
 
 	@Override
