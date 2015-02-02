@@ -39,12 +39,18 @@ public class ShptSessionFactory extends SessionFactory<Service> {
 
 	@Override
 	public boolean validateObject(Service service) {
-		// TODO: How to test the connection?
-		return (service != null);
+		if (service == null) { return false; }
+		try {
+			service.getContextInfo();
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	@Override
 	public void activateObject(Service service) throws Exception {
+		service.getContextInfo();
 	}
 
 	@Override
