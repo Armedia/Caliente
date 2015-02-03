@@ -21,6 +21,7 @@ public class StoredObject<V> {
 	private final StoredObjectType type;
 
 	private final String id;
+	private final String searchKey;
 	private final String batchId;
 	private final String label;
 	private final String subtype;
@@ -31,6 +32,7 @@ public class StoredObject<V> {
 	public StoredObject(StoredObject<V> pattern) {
 		this.type = pattern.getType();
 		this.id = pattern.getId();
+		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
 		this.label = pattern.getLabel();
 		this.subtype = pattern.getSubtype();
@@ -43,12 +45,17 @@ public class StoredObject<V> {
 	}
 
 	public StoredObject(StoredObjectType type, String id, String batchId, String label, String subtype) {
+		this(type, id, id, batchId, label, subtype);
+	}
+
+	public StoredObject(StoredObjectType type, String id, String searchKey, String batchId, String label, String subtype) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }
 		if (subtype == null) { throw new IllegalArgumentException("Must provide a valid object subtype"); }
 		this.type = type;
 		this.id = id;
+		this.searchKey = Tools.coalesce(searchKey, id);
 		this.batchId = Tools.coalesce(batchId, id);
 		this.label = label;
 		this.subtype = subtype;
@@ -72,6 +79,10 @@ public class StoredObject<V> {
 
 	public final String getId() {
 		return this.id;
+	}
+
+	public final String getSearchKey() {
+		return this.searchKey;
 	}
 
 	public final String getBatchId() {
@@ -158,7 +169,8 @@ public class StoredObject<V> {
 	public final String toString() {
 		final String trailer = toStringTrailer();
 		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
-		return String.format("%s [type=%s, subtype=%s, id=%s, batchId=%s, label=%s%s%s]", getClass().getSimpleName(),
-			this.type, this.subtype, this.id, this.batchId, this.label, trailerSep, trailer);
+		return String.format("%s [type=%s, subtype=%s, id=%s, searchKey=%s, batchId=%s, label=%s%s%s]", getClass()
+			.getSimpleName(), this.type, this.subtype, this.id, this.searchKey, this.batchId, this.label, trailerSep,
+			trailer);
 	}
 }
