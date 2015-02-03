@@ -129,7 +129,7 @@ public class ShptFile extends ShptFSObject<File> {
 	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
-		// TODO: Add the content object
+		ret.add(new ShptContent(service, this.wrapped));
 		return ret;
 	}
 }
