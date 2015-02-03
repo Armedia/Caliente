@@ -45,7 +45,7 @@
 			<column name="object_id" type="varchar(32)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="search_key" type="text" remarks="The object's Search Key">
+			<column name="search_key" type="varchar(1024)" remarks="The object's Search Key">
 				<constraints nullable="false" />
 			</column>
 			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
