@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ExportEngineListener> {
+TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
@@ -239,72 +239,81 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			return null;
 		}
 
-		if (this.log.isDebugEnabled()) {
+		if (referrent != null) {
+			ctx.pushReferrent(referrent);
+		}
+		try {
+			if (this.log.isDebugEnabled()) {
+				if (referrent != null) {
+					this.log.debug(String.format("Exporting %s (referenced by %s)", label, referrent));
+				} else {
+					this.log.debug(String.format("Exporting %s (from the main search)", label));
+				}
+			}
+
+			final StoredObject<V> marshaled = marshal(ctx, session, referrent, sourceObject);
+			Collection<T> referenced;
+			try {
+				referenced = identifyRequirements(session, marshaled, sourceObject, ctx);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to identify the requirements for %s", label), e);
+			}
+
+			if (this.log.isDebugEnabled()) {
+				this.log
+					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+			}
+			for (T requirement : referenced) {
+				exportObject(objectStore, streamStore, session, target, getExportTarget(requirement), requirement, ctx,
+					listenerDelegator);
+			}
+
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Executing supplemental storage for %s", label));
+			}
+			final Handle contentHandle;
+			try {
+				contentHandle = storeContent(session, marshaled, sourceObject, streamStore);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
+			}
+
+			if (contentHandle != null) {
+				setContentQualifier(marshaled, contentHandle.getQualifier());
+			}
+
+			final Long ret = objectStore.storeObject(marshaled, getTranslator());
+			if (ret == null) {
+				// Should be impossible, but still guard against it
+				if (this.log.isTraceEnabled()) {
+					this.log.trace(String.format("%s was stored by another thread", label));
+				}
+				return null;
+			}
+
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Successfully stored %s as object # %d", label, ret));
+			}
+
+			try {
+				referenced = identifyDependents(session, marshaled, sourceObject, ctx);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to identify the dependents for %s", label), e);
+			}
+
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("%s has %d dependent objects to store", label, referenced.size()));
+			}
+			for (T dependent : referenced) {
+				exportObject(objectStore, streamStore, session, target, getExportTarget(dependent), dependent, ctx,
+					listenerDelegator);
+			}
+			return new Result(ret, marshaled);
+		} finally {
 			if (referrent != null) {
-				this.log.debug(String.format("Exporting %s (referenced by %s)", label, referrent));
-			} else {
-				this.log.debug(String.format("Exporting %s (from the main search)", label));
+				ctx.popReferrent();
 			}
 		}
-
-		final StoredObject<V> marshaled = marshal(ctx, session, referrent, sourceObject);
-		Collection<T> referenced;
-		try {
-			referenced = identifyRequirements(session, marshaled, sourceObject, ctx);
-		} catch (Exception e) {
-			throw new ExportException(String.format("Failed to identify the requirements for %s", label), e);
-		}
-
-		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
-		}
-		for (T requirement : referenced) {
-			exportObject(objectStore, streamStore, session, target, getExportTarget(requirement), requirement, ctx,
-				listenerDelegator);
-		}
-
-		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Executing supplemental storage for %s", label));
-		}
-		final Handle contentHandle;
-		try {
-			contentHandle = storeContent(session, marshaled, sourceObject, streamStore);
-		} catch (Exception e) {
-			throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
-		}
-
-		if (contentHandle != null) {
-			setContentQualifier(marshaled, contentHandle.getQualifier());
-		}
-
-		final Long ret = objectStore.storeObject(marshaled, getTranslator());
-		if (ret == null) {
-			// Should be impossible, but still guard against it
-			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("%s was stored by another thread", label));
-			}
-			return null;
-		}
-
-		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Successfully stored %s as object # %d", label, ret));
-		}
-
-		try {
-			referenced = identifyDependents(session, marshaled, sourceObject, ctx);
-		} catch (Exception e) {
-			throw new ExportException(String.format("Failed to identify the dependents for %s", label), e);
-		}
-
-		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("%s has %d dependent objects to store", label, referenced.size()));
-		}
-		for (T dependent : referenced) {
-			exportObject(objectStore, streamStore, session, target, getExportTarget(dependent), dependent, ctx,
-				listenerDelegator);
-		}
-
-		return new Result(ret, marshaled);
 	}
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
@@ -314,7 +323,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -426,10 +435,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 									nextType = next.getType();
 									if (nextType == null) {
 										this.log
-											.error(String
-												.format(
-													"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
-													nextId, nextKey));
+										.error(String
+											.format(
+												"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
+												nextId, nextKey));
 										continue;
 									}
 								}
@@ -541,9 +550,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-									.warn(
-										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-										e);
+								.warn(
+									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+									e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -597,10 +606,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
