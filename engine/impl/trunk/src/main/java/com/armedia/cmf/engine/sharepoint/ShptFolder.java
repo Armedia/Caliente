@@ -20,7 +20,7 @@ import com.independentsoft.share.Folder;
 import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 
-public class ShptFolder extends ShptContentObject<Folder> {
+public class ShptFolder extends ShptFSObject<Folder> {
 
 	public ShptFolder(Service service, Folder folder) {
 		super(service, folder, StoredObjectType.FOLDER);
