@@ -14,7 +14,6 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
-import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
 import com.independentsoft.share.Service;
@@ -93,11 +92,17 @@ public class ShptFolder extends ShptContentObject<Folder> {
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
 			false, Collections.singleton(new StoredValue(this.wrapped.getName()))));
 
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name, StoredDataType.TIME,
-			false, Collections.singleton(new StoredValue(this.wrapped.getCreatedTime()))));
+		Date d = this.wrapped.getCreatedTime();
+		if (d != null) {
+			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name, StoredDataType.TIME,
+				false, Collections.singleton(new StoredValue(d))));
+		}
 
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
-			StoredDataType.TIME, false, Collections.singleton(new StoredValue(this.wrapped.getLastModifiedTime()))));
+		d = this.wrapped.getLastModifiedTime();
+		if (d != null) {
+			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
+				StoredDataType.TIME, false, Collections.singleton(new StoredValue(d))));
+		}
 
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.WELCOME_PAGE.name, StoredDataType.STRING,
 			false, Collections.singleton(new StoredValue(this.wrapped.getWelcomePage()))));
@@ -112,15 +117,13 @@ public class ShptFolder extends ShptContentObject<Folder> {
 	protected Collection<ShptObject<?>> findRequirements(Service session, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(session, marshaled, ctx);
-		String parentPath = FileNameTools.basename(this.wrapped.getServerRelativeUrl());
+		String parentPath = FileNameTools.dirname(this.wrapped.getServerRelativeUrl());
 		try {
-			Folder parent = session.getFolder(parentPath);
-			if (parent != null) {
-				ret.add(new ShptFolder(session, parent));
-			}
+			ret.add(new ShptFolder(session, session.getFolder(parentPath)));
 		} catch (ServiceException e) {
-			if (!Tools.equals("404", e.getErrorCode())) { throw e; }
-			// No parent...we're good
+			// TODO: We need to be clearer on the errors being returned... but the API ties our
+			// hands and thus we will eventually have to replace it with something better.
+			// No parent...
 		}
 		return ret;
 	}

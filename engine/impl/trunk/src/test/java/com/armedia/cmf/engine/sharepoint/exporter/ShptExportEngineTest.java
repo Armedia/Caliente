@@ -38,12 +38,14 @@ public class ShptExportEngineTest {
 	@Test
 	public void nextTest() throws Exception {
 		ExportEngine<?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("shpt");
+		this.objectStore.clearAllObjects();
+		this.objectStore.clearAttributeMappings();
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(Setting.URL.getLabel(), "http://daltew8aapp03/sites/cmf");
 		settings.put(Setting.USER.getLabel(), "drivera");
 		settings.put(Setting.PASSWORD.getLabel(), "N3v3rm0r3!2");
 		settings.put(Setting.DOMAIN.getLabel(), "ARMEDIA");
-		settings.put(Setting.PATH.getLabel(), "/sites/cmf/Documents");
+		settings.put(Setting.PATH.getLabel(), "/sites/cmf");
 		exporter.runExport(this.output, this.objectStore, this.contentStore, settings);
 	}
 
