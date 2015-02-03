@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -178,7 +180,7 @@ public abstract class ShptObject<T> {
 		if (object == null) { return null; }
 		if (!this.wrappedClass.isInstance(object)) { throw new Exception(String.format(
 			"Expected an object of class %s, but got one of class %s", this.wrappedClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.wrappedClass.cast(object);
 	}
 
@@ -229,5 +231,10 @@ public abstract class ShptObject<T> {
 	protected Collection<ShptObject<?>> findRequirements(Service session, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return new ArrayList<ShptObject<?>>();
+	}
+
+	public Handle storeContent(Service session, StoredObject<StoredValue> marshaled, ContentStore streamStore)
+		throws Exception {
+		return null;
 	}
 }
