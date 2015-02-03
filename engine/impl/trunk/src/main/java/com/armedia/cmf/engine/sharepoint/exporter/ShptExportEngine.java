@@ -40,7 +40,7 @@ import com.independentsoft.share.Service;
  *
  */
 public class ShptExportEngine extends
-ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -68,7 +68,7 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 
 		final String path = Tools.toString(pathObj);
 		ShptFolder folder = new ShptFolder(service, service.getFolder(path));
-		ExportTarget ret = new ExportTarget(StoredObjectType.FOLDER, folder.getServerRelativeUrl());
+		ExportTarget ret = new ExportTarget(StoredObjectType.FOLDER, folder.getId(), folder.getServerRelativeUrl());
 		return Collections.singletonList(ret).iterator();
 	}
 
@@ -102,7 +102,7 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 
 	@Override
 	protected ExportTarget getExportTarget(ShptObject<?> object) throws ExportException {
-		return new ExportTarget(object.getStoredType(), object.getSearchKey());
+		return new ExportTarget(object.getStoredType(), object.getId(), object.getSearchKey());
 	}
 
 	@Override

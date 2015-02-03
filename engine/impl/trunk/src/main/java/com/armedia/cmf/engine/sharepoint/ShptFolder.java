@@ -132,10 +132,22 @@ public class ShptFolder extends ShptContentObject<Folder> {
 	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
-		for (File f : service.getFiles(this.wrapped.getServerRelativeUrl())) {
+		List<File> files = Collections.emptyList();
+		try {
+			files = service.getFiles(this.wrapped.getServerRelativeUrl());
+		} catch (ServiceException e) {
+			files = Collections.emptyList();
+		}
+		for (File f : files) {
 			ret.add(new ShptFile(service, f));
 		}
-		for (Folder f : service.getFolders(this.wrapped.getServerRelativeUrl())) {
+		List<Folder> folders = Collections.emptyList();
+		try {
+			folders = service.getFolders(this.wrapped.getServerRelativeUrl());
+		} catch (ServiceException e) {
+			folders = Collections.emptyList();
+		}
+		for (Folder f : folders) {
 			ret.add(new ShptFolder(service, f));
 		}
 		return ret;
