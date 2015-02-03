@@ -79,7 +79,9 @@ public class LocalContentStore extends ContentStore {
 
 	@Override
 	protected OutputStream doOpenOutput(URI handleId) throws IOException {
-		return new FileOutputStream(getFile(handleId));
+		File f = getFile(handleId);
+		if (f.createNewFile() || f.exists()) { return new FileOutputStream(f); }
+		throw new IOException(String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath()));
 	}
 
 	@Override
