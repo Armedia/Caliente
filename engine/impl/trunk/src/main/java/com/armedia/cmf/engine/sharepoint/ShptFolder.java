@@ -30,7 +30,7 @@ public class ShptFolder extends ShptContentObject<Folder> {
 	}
 
 	@Override
-	public String getId() {
+	public String getSearchKey() {
 		return this.wrapped.getServerRelativeUrl();
 	}
 

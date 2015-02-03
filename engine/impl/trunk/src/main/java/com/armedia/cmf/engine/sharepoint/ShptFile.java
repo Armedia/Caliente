@@ -19,7 +19,7 @@ public class ShptFile extends ShptContentObject<File> {
 	}
 
 	@Override
-	public String getId() {
+	public String getSearchKey() {
 		return this.wrapped.getServerRelativeUrl();
 	}
 
