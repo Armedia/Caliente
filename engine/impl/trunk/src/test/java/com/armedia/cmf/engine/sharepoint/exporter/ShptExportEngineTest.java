@@ -40,6 +40,7 @@ public class ShptExportEngineTest {
 		ExportEngine<?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("shpt");
 		this.objectStore.clearAllObjects();
 		this.objectStore.clearAttributeMappings();
+		this.contentStore.clearAllStreams();
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(Setting.URL.getLabel(), "http://daltew8aapp03/sites/cmf");
 		settings.put(Setting.USER.getLabel(), "drivera");
