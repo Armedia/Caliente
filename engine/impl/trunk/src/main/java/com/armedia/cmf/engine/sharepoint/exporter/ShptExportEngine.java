@@ -40,7 +40,7 @@ import com.independentsoft.share.Service;
  *
  */
 public class ShptExportEngine extends
-	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -118,12 +118,9 @@ public class ShptExportEngine extends
 			"Must provide a session through which to store the contents"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
-		ExportTarget referrent = getReferrent(marshaled);
-		if (referrent != null) {
-			referrent.hashCode();
-		}
-		// TODO: Actually store the content
-		return null;
+		if (streamStore == null) { throw new IllegalArgumentException(
+			"Must provide a stream store in which to store the content"); }
+		return object.storeContent(session, marshaled, streamStore);
 	}
 
 	@Override
