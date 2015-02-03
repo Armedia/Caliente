@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
@@ -132,6 +133,16 @@ public class ShptFolder extends ShptContentObject<Folder> {
 	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
+		ExportTarget referrent = ctx.getReferrent();
+		if (referrent != null) {
+			// If the referrent object - i.e. the object that caused us to be added - is a child,
+			// then we don't recurse into the other children.
+			String referrentPath = referrent.getSearchKey();
+			String myPath = this.wrapped.getServerRelativeUrl();
+			// If the referrentPath starts with myPath plus a slash, then we can be 100% certain
+			// that there is a descendency relationship, and thus we shouldn't recurse.
+			if (referrentPath.startsWith(myPath)) { return ret; }
+		}
 		List<File> files = Collections.emptyList();
 		try {
 			files = service.getFiles(this.wrapped.getServerRelativeUrl());
