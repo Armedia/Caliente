@@ -14,19 +14,39 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
+import com.independentsoft.share.PrincipalType;
 import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 import com.independentsoft.share.User;
 
 public class ShptGroup extends ShptSecurityObject<Group> {
 
-	private final ShptUser owner;
+	private final ShptSecurityObject<?> owner;
 	private final List<ShptUser> members;
 
 	public ShptGroup(Service service, Group group) throws ServiceException {
 		super(service, group, StoredObjectType.GROUP);
 		User u = this.service.getGroupOwner(this.wrapped.getId());
-		this.owner = (u != null ? new ShptUser(service, u) : null);
+		if (u != null) {
+			switch (u.getType()) {
+				case USER:
+					this.owner = new ShptUser(service, u);
+					break;
+				case SHARE_POINT_GROUP:
+				case SECURITY_GROUP:
+					if (group.getId() != u.getId()) {
+						this.owner = new ShptGroup(service, service.getGroup(u.getId()));
+					} else {
+						this.owner = null;
+					}
+					break;
+				default:
+					this.owner = null;
+			}
+		} else {
+			this.owner = null;
+		}
+
 		List<User> l = service.getGroupUsers(group.getId());
 		if ((l == null) || l.isEmpty()) {
 			this.members = Collections.emptyList();
@@ -58,7 +78,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 		return this.wrapped.getId();
 	}
 
-	public ShptUser getOwner() {
+	public ShptSecurityObject<?> getOwner() {
 		return this.owner;
 	}
 
@@ -131,29 +151,22 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
-		ShptExportContext ctx) throws Exception {
-		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
-		User u = service.getGroupOwner(getNumericId());
-		if (u != null) {
-			ret.add(new ShptUser(service, u));
-		}
-		return ret;
-	}
-
-	@Override
 	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 		// Add the group's users
-		User owner = service.getGroupOwner(getNumericId());
-		if (owner != null) {
-			ret.add(new ShptUser(service, owner));
+		if (this.owner != null) {
+			ret.add(this.owner);
 		}
+
 		List<User> l = service.getGroupUsers(getNumericId());
 		if ((l != null) && !l.isEmpty()) {
 			for (User u : l) {
-				ret.add(new ShptUser(service, u));
+				if (u.getType() == PrincipalType.USER) {
+					ret.add(new ShptUser(service, u));
+				} else {
+					ret.add(new ShptGroup(service, service.getGroup(u.getId())));
+				}
 			}
 		}
 		return ret;
