@@ -7,30 +7,51 @@ package com.armedia.cmf.engine.sharepoint;
 import java.util.Date;
 
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.commons.utilities.Tools;
+import com.independentsoft.share.File;
 import com.independentsoft.share.Service;
 
 /**
  * @author diego
  *
  */
-public abstract class ShptContent<T> extends ShptObject<T> {
+public class ShptContent extends ShptFSObject<File> {
 
-	private final String id;
-
-	protected ShptContent(Service service, T wrapped, StoredObjectType type) {
-		super(service, wrapped, type);
-		this.id = String.format("%08X", Tools.hashTool(this, null, type, getSearchKey()));
+	public ShptContent(Service service, File wrapped) {
+		super(service, wrapped, StoredObjectType.CONTENT);
 	}
 
 	@Override
-	public final String getId() {
-		return this.id;
+	public String getSearchKey() {
+		return this.wrapped.getServerRelativeUrl();
 	}
 
-	public abstract String getServerRelativeUrl();
+	@Override
+	public String getName() {
+		return this.wrapped.getName();
+	}
 
-	public abstract Date getCreatedTime();
+	@Override
+	public String getServerRelativeUrl() {
+		return this.wrapped.getServerRelativeUrl();
+	}
 
-	public abstract Date getLastModifiedTime();
+	@Override
+	public Date getCreatedTime() {
+		return this.wrapped.getCreatedTime();
+	}
+
+	@Override
+	public Date getLastModifiedTime() {
+		return this.wrapped.getLastModifiedTime();
+	}
+
+	@Override
+	public String getBatchId() {
+		return this.wrapped.getUniqueId();
+	}
+
+	@Override
+	public String getLabel() {
+		return this.wrapped.getName();
+	}
 }
