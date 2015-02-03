@@ -121,9 +121,7 @@ public class ShptFile extends ShptFSObject<File> {
 	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
-		// TODO: Add the user
-		// TODO: Add the group
-		// etc....
+		ret.add(new ShptUser(service, service.getFileAuthor(this.wrapped.getServerRelativeUrl())));
 		return ret;
 	}
 
