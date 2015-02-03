@@ -1,8 +1,10 @@
 package com.armedia.cmf.engine.sharepoint;
 
+import java.util.Collection;
 import java.util.Date;
 
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
@@ -111,5 +113,23 @@ public class ShptFile extends ShptFSObject<File> {
 
 	@Override
 	protected void marshal(StoredObject<StoredValue> object) throws ExportException {
+	}
+
+	@Override
+	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<StoredValue> marshaled,
+		ShptExportContext ctx) throws Exception {
+		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
+		// TODO: Add the user
+		// TODO: Add the group
+		// etc....
+		return ret;
+	}
+
+	@Override
+	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
+		ShptExportContext ctx) throws Exception {
+		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
+		// TODO: Add the content object
+		return ret;
 	}
 }

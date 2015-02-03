@@ -115,21 +115,6 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findRequirements(Service session, StoredObject<StoredValue> marshaled,
-		ShptExportContext ctx) throws Exception {
-		Collection<ShptObject<?>> ret = super.findRequirements(session, marshaled, ctx);
-		String parentPath = FileNameTools.dirname(this.wrapped.getServerRelativeUrl());
-		try {
-			ret.add(new ShptFolder(session, session.getFolder(parentPath)));
-		} catch (ServiceException e) {
-			// TODO: We need to be clearer on the errors being returned... but the API ties our
-			// hands and thus we will eventually have to replace it with something better.
-			// No parent...
-		}
-		return ret;
-	}
-
-	@Override
 	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
