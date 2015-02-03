@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
@@ -53,6 +55,8 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
+
+	private static final Pattern OBJECT_ID_PARSER = Pattern.compile("^\\{(?:[\\da-fA-F][\\da-fA-F])+-(.*)\\}$");
 
 	private static final Object[][] NO_PARAMS = new Object[0][0];
 
@@ -227,7 +231,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		ObjectStorageTranslator<T, V> translator) throws StorageException, StoredValueEncoderException {
 		final Connection c = operation.getConnection();
 		final StoredObjectType objectType = object.getType();
-		final String objectId = object.getId();
+		final String objectId = String.format("{%02x-%s}", objectType.ordinal(), object.getId());
 
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
 		Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
@@ -471,7 +475,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							}
 
 							attributePS.clearParameters();
-							attributePS.setString(1, obj.getId());
+							attributePS.setString(1, objId);
 							attributeRS = attributePS.executeQuery();
 							try {
 								loadAttributes(translator, attributeRS, obj);
@@ -480,7 +484,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							}
 
 							attributeValuePS.clearParameters();
-							attributeValuePS.setString(1, obj.getId());
+							attributeValuePS.setString(1, objId);
 							for (StoredAttribute<V> att : obj.getAttributes()) {
 								// We need to re-encode, since that's the value that will be
 								// referenced in the DB
@@ -494,7 +498,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							}
 
 							propertyPS.clearParameters();
-							propertyPS.setString(1, obj.getId());
+							propertyPS.setString(1, objId);
 							propertyRS = propertyPS.executeQuery();
 							try {
 								loadProperties(translator, propertyRS, obj);
@@ -503,7 +507,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							}
 
 							propertyValuePS.clearParameters();
-							propertyValuePS.setString(1, obj.getId());
+							propertyValuePS.setString(1, objId);
 							for (StoredProperty<V> prop : obj.getProperties()) {
 								// We need to re-encode, since that's the value that will be
 								// referenced in the DB
@@ -828,6 +832,10 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		StoredObjectType type = StoredObjectType.decodeString(rs.getString("object_type"));
 		String id = rs.getString("object_id");
+		Matcher m = JdbcObjectStore.OBJECT_ID_PARSER.matcher(id);
+		if (m.matches()) {
+			id = m.group(1);
+		}
 		String searchKey = rs.getString("search_key");
 		if (rs.wasNull()) {
 			searchKey = id;
