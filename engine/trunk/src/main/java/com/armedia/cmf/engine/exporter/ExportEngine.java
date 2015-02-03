@@ -47,6 +47,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 	TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
+	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
 
 	private class Result {
@@ -399,6 +400,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 							StoredObjectType nextType = next.getType();
 							final String nextId = next.getId();
+							final String nextKey = next.getSearchKey();
 
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(String.format("Polled %s", next));
@@ -409,11 +411,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 							try {
 								// Begin transaction
 								tx = session.begin();
-								final T sourceObject = getObject(s, nextType, nextId);
+								final T sourceObject = getObject(s, nextType, nextKey);
 								if (sourceObject == null) {
 									// No object found with that ID...
-									this.log.warn(String.format("No %s object found with ID[%s]",
-										(nextType != null ? nextType.name() : "globally unique"), nextId));
+									this.log.warn(String.format("No %s object found with searchKey[%s]",
+										(nextType != null ? nextType.name() : "globally unique"), nextKey));
 									continue;
 								}
 
@@ -426,8 +428,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 										this.log
 											.error(String
 												.format(
-													"Failed to determine the object type for target with globally unique ID[%s]",
-													nextId));
+													"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
+													nextId, nextKey));
 										continue;
 									}
 								}
@@ -616,7 +618,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	protected abstract Iterator<ExportTarget> findExportResults(S session, Map<String, ?> settings) throws Exception;
 
-	protected abstract T getObject(S session, StoredObjectType type, String id) throws Exception;
+	protected abstract T getObject(S session, StoredObjectType type, String searchKey) throws Exception;
 
 	protected abstract Collection<T> identifyRequirements(S session, StoredObject<V> marshalled, T object, C ctx)
 		throws Exception;
@@ -638,6 +640,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				false);
 			referrentId.setValue(getValue(StoredDataType.STRING, referrent.getId()));
 			marshaled.setProperty(referrentId);
+			StoredProperty<V> referrentKey = new StoredProperty<V>(ExportEngine.REFERRENT_KEY, StoredDataType.STRING,
+				false);
+			referrentId.setValue(getValue(StoredDataType.STRING, referrent.getSearchKey()));
+			marshaled.setProperty(referrentKey);
 		}
 		return marshaled;
 	}
@@ -646,11 +652,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
 		StoredProperty<V> referrentType = marshaled.getProperty(ExportEngine.REFERRENT_TYPE);
 		StoredProperty<V> referrentId = marshaled.getProperty(ExportEngine.REFERRENT_ID);
-		if ((referrentType == null) || (referrentId == null)) { return null; }
+		StoredProperty<V> referrentKey = marshaled.getProperty(ExportEngine.REFERRENT_KEY);
+		if ((referrentType == null) || (referrentId == null) || (referrentKey == null)) { return null; }
 		String type = Tools.toString(referrentType.getValue(), true);
 		String id = Tools.toString(referrentId.getValue(), true);
-		if ((type == null) || (id == null)) { return null; }
-		return new ExportTarget(StoredObjectType.decodeString(type), id);
+		String key = Tools.toString(referrentKey.getValue(), true);
+		if ((type == null) || (id == null) || (key == null)) { return null; }
+		return new ExportTarget(StoredObjectType.decodeString(type), id, key);
 	}
 
 	protected abstract StoredObject<V> marshal(C ctx, S session, T object) throws ExportException;
