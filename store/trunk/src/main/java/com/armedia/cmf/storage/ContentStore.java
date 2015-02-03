@@ -259,8 +259,8 @@ public abstract class ContentStore extends Store {
 			"The URI [%s] is not supported by ContentStore class [%s]", uri, getClass().getCanonicalName())); }
 	}
 
-	protected final Handle constructHandle(StoredObjectType objectType, String objectId, String qualifier, URI uri) {
-		return new Handle(this, objectType, objectId, qualifier, uri);
+	protected final Handle constructHandle(StoredObject<?> object, String qualifier, URI uri) {
+		return new Handle(this, object.getType(), object.getId(), qualifier, uri);
 	}
 
 	protected final URI extractURI(Handle handle) {
@@ -270,24 +270,17 @@ public abstract class ContentStore extends Store {
 
 	public final Handle getHandle(StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
-		return getHandle(object.getType(), object.getId(), qualifier);
-	}
-
-	public final Handle getHandle(StoredObjectType objectType, String objectId, String qualifier) {
-		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
-		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
-		return constructHandle(objectType, objectId, qualifier, allocateHandleId(objectType, objectId, qualifier));
+		return constructHandle(object, qualifier, allocateHandleId(object, qualifier));
 	}
 
-	protected final URI allocateHandleId(StoredObjectType objectType, String objectId, String qualifier) {
-		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
-		if (objectId == null) { throw new IllegalArgumentException("Must provide an object ID"); }
+	protected final URI allocateHandleId(StoredObject<?> object, String qualifier) {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doAllocateHandleId(objectType, objectId, qualifier);
+			return doAllocateHandleId(object, qualifier);
 		} finally {
 			getReadLock().unlock();
 		}
@@ -375,7 +368,7 @@ public abstract class ContentStore extends Store {
 		}
 	}
 
-	protected abstract URI doAllocateHandleId(StoredObjectType objectType, String objectId, String qualifier);
+	protected abstract URI doAllocateHandleId(StoredObject<?> object, String qualifier);
 
 	protected abstract File doGetFile(URI uri);
 
