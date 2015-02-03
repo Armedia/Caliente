@@ -19,13 +19,14 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.common.DfId;
+import com.documentum.fc.common.IDfValue;
 
 /**
  * @author diego
@@ -38,8 +39,8 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 	}
 
 	@Override
-	protected Handle doStoreContent(IDfSession session, ExportTarget referrent, IDfContent content,
-		ContentStore streamStore) throws Exception {
+	protected Handle doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled, ExportTarget referrent,
+		IDfContent content, ContentStore streamStore) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (referrent == null) { throw new Exception(String.format(
 			"Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
@@ -65,7 +66,7 @@ public class DctmExportContent extends DctmExportAbstract<IDfContent> {
 			pageModifier, format) : String.format("[%04d].%s", pageNumber, format));
 
 		// Store the content in the filesystem
-		Handle contentHandle = streamStore.getHandle(StoredObjectType.CONTENT, contentId, qualifier);
+		Handle contentHandle = streamStore.getHandle(marshaled, qualifier);
 		final File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
 			final File parent = targetFile.getParentFile();

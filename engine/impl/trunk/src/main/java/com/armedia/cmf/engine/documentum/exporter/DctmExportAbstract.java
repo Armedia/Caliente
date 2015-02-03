@@ -105,13 +105,13 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 		return calculateLabel(object.getSession(), castObject(object));
 	}
 
-	public final Handle storeContent(IDfSession session, ExportTarget referrent, IDfPersistentObject object,
-		ContentStore streamStore) throws Exception {
-		return doStoreContent(session, referrent, castObject(object), streamStore);
+	public final Handle storeContent(IDfSession session, StoredObject<IDfValue> marshaled, ExportTarget referrent,
+		IDfPersistentObject object, ContentStore streamStore) throws Exception {
+		return doStoreContent(session, marshaled, referrent, castObject(object), streamStore);
 	}
 
-	protected Handle doStoreContent(IDfSession session, ExportTarget referrent, T object, ContentStore streamStore)
-		throws Exception {
+	protected Handle doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled, ExportTarget referrent,
+		T object, ContentStore streamStore) throws Exception {
 		return null;
 	}
 }

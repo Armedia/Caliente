@@ -2,7 +2,7 @@ package com.armedia.cmf.engine.documentum;
 
 import java.util.Arrays;
 
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.URIStrategy;
 import com.armedia.commons.utilities.FileNameTools;
 
@@ -13,7 +13,8 @@ public class DocumentumURIStrategy extends URIStrategy {
 	}
 
 	@Override
-	protected String calculateSSP(StoredObjectType objectType, String objectId) {
+	protected String calculateSSP(StoredObject<?> object) {
+		final String objectId = object.getId();
 		if (objectId.length() != 16) { return null; }
 
 		try {

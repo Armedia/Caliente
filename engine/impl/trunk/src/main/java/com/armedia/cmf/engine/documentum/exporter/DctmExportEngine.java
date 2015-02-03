@@ -43,7 +43,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
@@ -64,7 +64,7 @@ public class DctmExportEngine extends
 	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -154,7 +154,7 @@ public class DctmExportEngine extends
 			"Must provide a session through which to store the contents"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
-		return getExportDelegate(object).storeContent(session, getReferrent(marshaled), object, streamStore);
+		return getExportDelegate(object).storeContent(session, marshaled, getReferrent(marshaled), object, streamStore);
 	}
 
 	@Override
