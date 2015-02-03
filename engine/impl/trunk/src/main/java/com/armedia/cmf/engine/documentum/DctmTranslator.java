@@ -161,6 +161,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		am.put(DctmAttributes.CONTENT_SIZE, IntermediateAttribute.CONTENT_SIZE);
 		am.put(DctmAttributes.R_CONTENT_HASH, IntermediateAttribute.CONTENT_HASH);
 		am.put(DctmAttributes.PARENT_ID, IntermediateAttribute.PARENTS);
+		am.put(DctmAttributes.SET_TIME, IntermediateAttribute.MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
