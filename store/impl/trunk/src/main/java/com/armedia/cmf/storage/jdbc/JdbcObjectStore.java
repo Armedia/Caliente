@@ -84,53 +84,53 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from cmf_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-		"   select object_type, count(*) as total " + //
+	"   select object_type, count(*) as total " + //
 		" from cmf_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-		"    select o.* " + //
+	"    select o.* " + //
 		"  from cmf_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
@@ -226,12 +226,20 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return q;
 	}
 
+	private String composeDatabaseId(StoredObjectType type, String id) {
+		return String.format("{%02x-%s}", type.ordinal(), id);
+	}
+
+	private String composeDatabaseId(StoredObject<?> obj) {
+		return composeDatabaseId(obj.getType(), obj.getId());
+	}
+
 	@Override
 	protected <T, V> Long doStoreObject(JdbcOperation operation, StoredObject<V> object,
 		ObjectStorageTranslator<T, V> translator) throws StorageException, StoredValueEncoderException {
 		final Connection c = operation.getConnection();
 		final StoredObjectType objectType = object.getType();
-		final String objectId = String.format("{%02x-%s}", objectType.ordinal(), object.getId());
+		final String objectId = composeDatabaseId(object);
 
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
 		Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
@@ -253,10 +261,10 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
 					this.log
-					.warn(String
-						.format(
-							"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-							name, attribute.getName(), duplicate));
+						.warn(String
+							.format(
+								"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+								name, attribute.getName(), duplicate));
 					continue;
 				}
 				final boolean repeating = attribute.isRepeating();
@@ -298,10 +306,10 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				final String duplicate = encodedNames.put(name, property.getName());
 				if (duplicate != null) {
 					this.log
-					.warn(String
-						.format(
-							"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-							name, property.getName(), duplicate));
+						.warn(String
+							.format(
+								"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+								name, property.getName(), duplicate));
 					continue;
 				}
 				final String type = translator.encodeValue(property.getType());
@@ -411,11 +419,16 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				if (!limitByIDs) {
 					objectPS.setString(1, type.name());
 				} else {
+					// Process the IDs
+					Object[] arr = ids.toArray();
+					for (int i = 0; i < arr.length; i++) {
+						arr[i] = composeDatabaseId(type, arr[i].toString());
+					}
 					if (useSqlArray) {
 						objectPS.setString(1, type.name());
-						objectPS.setArray(2, objectConn.createArrayOf("text", ids.toArray()));
+						objectPS.setArray(2, objectConn.createArrayOf("text", arr));
 					} else {
-						objectPS.setObject(1, ids.toArray());
+						objectPS.setObject(1, arr);
 						objectPS.setString(2, type.name());
 					}
 				}
@@ -615,7 +628,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
-			.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
 				targetValue));
@@ -658,7 +671,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	private boolean doIsStored(Connection c, StoredObjectType type, String objectId) throws SQLException {
 		return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.CHECK_IF_OBJECT_EXISTS_SQL,
-			JdbcObjectStore.HANDLER_EXISTS, objectId, type.name());
+			JdbcObjectStore.HANDLER_EXISTS, composeDatabaseId(type, objectId), type.name());
 	}
 
 	@Override
@@ -685,27 +698,27 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			return new QueryRunner().query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
-				@Override
-				public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
-					Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
-						StoredObjectType.class);
-					while (rs.next()) {
-						String t = rs.getString("object_type");
-						if ((t == null) || rs.wasNull()) {
-							JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-							continue;
+					@Override
+					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
+							StoredObjectType.class);
+						while (rs.next()) {
+							String t = rs.getString("object_type");
+							if ((t == null) || rs.wasNull()) {
+								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
+							try {
+								ret.put(StoredObjectType.decodeString(t), rs.getInt("total"));
+							} catch (IllegalArgumentException e) {
+								JdbcObjectStore.this.log.warn(String.format(
+									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
 						}
-						try {
-							ret.put(StoredObjectType.decodeString(t), rs.getInt("total"));
-						} catch (IllegalArgumentException e) {
-							JdbcObjectStore.this.log.warn(String.format(
-								"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-							continue;
-						}
+						return ret;
 					}
-					return ret;
-				}
-			});
+				});
 		} catch (SQLException e) {
 			throw new StorageException("Failed to retrieve the stored object types", e);
 		}
@@ -915,8 +928,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		throws StorageException {
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcObjectStore.getQueryRunner();
+		final String dbid = composeDatabaseId(type, id);
 		try {
-			if (qr.query(c, JdbcObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, JdbcObjectStore.HANDLER_EXISTS, id)) {
+			if (qr.query(c, JdbcObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, JdbcObjectStore.HANDLER_EXISTS, dbid)) {
 				// Duplicate dependency...we skip it
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
@@ -926,7 +940,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("PERSISTING DEPENDENCY [%s::%s]", type.name(), id));
 			}
-			qr.insert(c, JdbcObjectStore.INSERT_EXPORT_PLAN_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), id);
+			qr.insert(c, JdbcObjectStore.INSERT_EXPORT_PLAN_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), dbid);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
 			}
