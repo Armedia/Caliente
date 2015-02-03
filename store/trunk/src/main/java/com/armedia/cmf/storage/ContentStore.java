@@ -270,7 +270,7 @@ public abstract class ContentStore extends Store {
 
 	public final Handle getHandle(StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
-		return getHandle(object.getType(), object.getId(), ContentStore.DEFAULT_QUALIFIER);
+		return getHandle(object.getType(), object.getId(), qualifier);
 	}
 
 	public final Handle getHandle(StoredObjectType objectType, String objectId, String qualifier) {
