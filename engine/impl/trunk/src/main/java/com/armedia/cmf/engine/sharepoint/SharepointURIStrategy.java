@@ -1,8 +1,7 @@
 package com.armedia.cmf.engine.sharepoint;
 
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.URIStrategy;
-import com.armedia.commons.utilities.FileNameTools;
 
 public class SharepointURIStrategy extends URIStrategy {
 
@@ -11,8 +10,8 @@ public class SharepointURIStrategy extends URIStrategy {
 	}
 
 	@Override
-	protected String calculateSSP(StoredObjectType objectType, String objectId) {
-		objectId = FileNameTools.normalizePath(objectId, '/');
-		return FileNameTools.removeEdgeSeparators(objectId, '/');
+	protected String calculateSSP(StoredObject<?> object) {
+		// Put it in the same path as it was in Sharepoint...
+		return object.getSearchKey();
 	}
 }
