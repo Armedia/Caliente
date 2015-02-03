@@ -45,6 +45,9 @@
 			<column name="object_id" type="varchar(32)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
+			<column name="search_key" type="text" remarks="The object's Search Key">
+				<constraints nullable="false" />
+			</column>
 			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
 				<constraints nullable="false" />
 			</column>
@@ -77,6 +80,9 @@
 			<column name="object_subtype" />
 			<column name="batch_id" />
 			<column name="object_number" />
+		</createIndex>
+		<createIndex tableName="cmf_object" indexName="idx_cmf_object_search_key" unique="true">
+			<column name="search_key" />
 		</createIndex>
 		<addAutoIncrement tableName="cmf_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>
 

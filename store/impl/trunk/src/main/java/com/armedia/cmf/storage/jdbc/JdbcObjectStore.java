@@ -58,7 +58,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from cmf_object where object_id = ? and object_type = ?";
 
-	private static final String INSERT_OBJECT_SQL = "insert into cmf_object (object_id, object_type, object_subtype, object_label, batch_id) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_OBJECT_SQL = "insert into cmf_object (object_id, search_key, object_type, object_subtype, object_label, batch_id) values (?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_SQL = "insert into cmf_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into cmf_attribute_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into cmf_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
@@ -325,8 +325,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 			// Do all the inserts in a row
 			Long ret = qr.insert(c, JdbcObjectStore.INSERT_OBJECT_SQL, JdbcObjectStore.HANDLER_OBJECT_NUMBER, objectId,
-				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
-				object.getBatchId());
+				object.getSearchKey(), objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()),
+				object.getLabel(), object.getBatchId());
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_SQL, JdbcObjectStore.HANDLER_NULL,
 				attributeParameters.toArray(JdbcObjectStore.NO_PARAMS));
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
@@ -828,10 +828,14 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		StoredObjectType type = StoredObjectType.decodeString(rs.getString("object_type"));
 		String id = rs.getString("object_id");
+		String searchKey = rs.getString("search_key");
+		if (rs.wasNull()) {
+			searchKey = id;
+		}
 		String batchId = rs.getString("batch_id");
 		String label = rs.getString("object_label");
 		String subtype = rs.getString("object_subtype");
-		return new StoredObject<V>(type, id, batchId, label, subtype);
+		return new StoredObject<V>(type, id, searchKey, batchId, label, subtype);
 	}
 
 	private <T, V> StoredProperty<V> loadProperty(StoredObjectType objectType,
