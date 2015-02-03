@@ -12,7 +12,6 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
 import com.independentsoft.share.File;
@@ -85,33 +84,9 @@ public class ShptFolder extends ShptFSObject<Folder> {
 
 	@Override
 	protected void marshal(StoredObject<StoredValue> object) throws ExportException {
-		// ObjectID
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_ID.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getServerRelativeUrl()))));
-
-		// Name
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getName()))));
-
-		Date d = this.wrapped.getCreatedTime();
-		if (d != null) {
-			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name, StoredDataType.TIME,
-				false, Collections.singleton(new StoredValue(d))));
-		}
-
-		d = this.wrapped.getLastModifiedTime();
-		if (d != null) {
-			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
-				StoredDataType.TIME, false, Collections.singleton(new StoredValue(d))));
-		}
-
+		super.marshal(object);
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.WELCOME_PAGE.name, StoredDataType.STRING,
 			false, Collections.singleton(new StoredValue(this.wrapped.getWelcomePage()))));
-
-		// Target Paths
-		final String path = FileNameTools.dirname(this.wrapped.getServerRelativeUrl());
-		object.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PATHS.name, StoredDataType.STRING,
-			true, Collections.singleton(new StoredValue(path))));
 	}
 
 	@Override

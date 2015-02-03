@@ -113,6 +113,8 @@ public class ShptFile extends ShptFSObject<File> {
 
 	@Override
 	protected void marshal(StoredObject<StoredValue> object) throws ExportException {
+		super.marshal(object);
+		// TODO: What else to marshal?
 	}
 
 	@Override
