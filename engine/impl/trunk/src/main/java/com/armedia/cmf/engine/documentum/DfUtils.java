@@ -290,7 +290,8 @@ public class DfUtils {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
 		final DctmObjectType type = DctmObjectType.decodeType(source);
-		return new ExportTarget(type.getStoredObjectType(), id.getId());
+		final String strId = id.getId();
+		return new ExportTarget(type.getStoredObjectType(), strId, strId);
 	}
 
 	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute, String typeAttribute)
@@ -311,7 +312,8 @@ public class DfUtils {
 		} else {
 			objectType = null;
 		}
-		return new ExportTarget(objectType, id.getId());
+		final String strId = id.getId();
+		return new ExportTarget(objectType, strId, strId);
 	}
 
 	public static IDfStore getStore(IDfSession session, String name) throws DfException {
