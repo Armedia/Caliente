@@ -31,7 +31,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 	protected ShptFSObject(Service service, T wrapped, StoredObjectType type) {
 		super(service, wrapped, type);
-		this.id = String.format("%08X", Tools.hashTool(this, null, type, getSearchKey()));
+		String searchKey = getSearchKey();
+		this.id = String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
 	}
 
 	@Override
