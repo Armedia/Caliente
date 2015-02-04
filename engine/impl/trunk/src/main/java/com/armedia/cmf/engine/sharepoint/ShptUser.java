@@ -72,8 +72,23 @@ public class ShptUser extends ShptSecurityObject<User> {
 			Collections.singleton(new StoredValue(String.format("USER(%08x)", this.wrapped.getId())))));
 
 		// LoginName
+		String loginName = this.wrapped.getLoginName();
+		final String userName;
+		final String userDomain;
+		final int backslash = loginName.indexOf('\\');
+		if (backslash >= 0) {
+			userName = loginName.substring(backslash + 1);
+			userDomain = loginName.substring(loginName.indexOf('|') + 1, backslash);
+		} else {
+			userName = loginName;
+			userDomain = "";
+		}
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getLoginName()))));
+			false, Collections.singleton(new StoredValue(userName))));
+		if (userDomain != null) {
+			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.DOMAIN.name, StoredDataType.STRING,
+				false, Collections.singleton(new StoredValue(userDomain))));
+		}
 
 		// SiteAdmin
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.SITE_ADMIN.name, StoredDataType.BOOLEAN,

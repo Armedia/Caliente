@@ -38,8 +38,7 @@ public enum ShptAttributes {
 	ACCESS_DATE,
 	PARENTS,
 	PATHS,
-	ACL_REALM,
-	ACL_NAME,
+	DOMAIN,
 	HOME_FOLDER,
 	WELCOME_PAGE,
 	//

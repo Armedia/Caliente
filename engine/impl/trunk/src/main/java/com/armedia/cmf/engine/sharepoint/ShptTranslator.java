@@ -55,6 +55,7 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 		// OBJECT_CLASS (USER)
 		// OBJECT_TYPE (DM_USER)
 		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.OBJECT_NAME);
+		am.put(ShptAttributes.DOMAIN.name, IntermediateAttribute.AUTH_REALM);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
