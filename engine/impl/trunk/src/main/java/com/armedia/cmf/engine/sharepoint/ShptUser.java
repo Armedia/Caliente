@@ -2,6 +2,7 @@ package com.armedia.cmf.engine.sharepoint;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -106,6 +107,9 @@ public class ShptUser extends ShptSecurityObject<User> {
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.PRINCIPAL_ID_ISSUER.name,
 			StoredDataType.STRING, false, Collections.singleton(new StoredValue(this.wrapped.getUserId()
 				.getNameIdIssuer()))));
+
+		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
+			StoredDataType.TIME, false, Collections.singleton(new StoredValue(new Date()))));
 
 		// Email
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.EMAIL.name, StoredDataType.STRING, false,
