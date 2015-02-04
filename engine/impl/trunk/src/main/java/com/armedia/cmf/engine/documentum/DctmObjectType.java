@@ -128,6 +128,10 @@ public enum DctmObjectType {
 		return this.cmsType;
 	}
 
+	public final String getDmType() {
+		return this.dmType;
+	}
+
 	public final boolean isSurrogate() {
 		return !this.surrogateOf.isEmpty();
 	}
