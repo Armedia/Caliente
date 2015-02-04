@@ -36,7 +36,7 @@ public enum IntermediateAttribute {
 	ACCESS_DATE(StoredDataType.TIME),
 	PARENTS(StoredDataType.STRING, true),
 	PATHS(StoredDataType.STRING, true),
-	ACL_REALM(StoredDataType.STRING),
+	AUTH_REALM(StoredDataType.STRING),
 	ACL_NAME(StoredDataType.STRING),
 	DEFAULT_FOLDER(StoredDataType.STRING),
 	//
