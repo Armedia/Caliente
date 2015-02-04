@@ -436,6 +436,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attrName == null) { throw new IllegalArgumentException(
 			"Must provide an attribute name to set on the object"); }
+		if (!object.hasAttr(attrName)) { return false; }
 		if (values == null) {
 			values = Collections.emptyList();
 		}
@@ -485,6 +486,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to clear the attribute from"); }
 		if (attrName == null) { throw new IllegalArgumentException(
 			"Must provide an attribute name to clear from object"); }
+		if (!object.hasAttr(attrName)) { return; }
 		if (repeating) {
 			object.removeAll(attrName);
 		} else {
