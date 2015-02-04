@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportEngine;
+import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.sharepoint.Setting;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
@@ -38,16 +39,25 @@ public class ShptExportEngineTest {
 	@Test
 	public void nextTest() throws Exception {
 		ExportEngine<?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("shpt");
+		ImportEngine<?, ?, ?, ?, ?> importer = ImportEngine.getImportEngine("dctm");
 		this.objectStore.clearAllObjects();
 		this.objectStore.clearAttributeMappings();
 		this.contentStore.clearAllStreams();
+
 		Map<String, String> settings = new HashMap<String, String>();
+
 		settings.put(Setting.URL.getLabel(), "http://daltew8aapp03/sites/cmf");
 		settings.put(Setting.USER.getLabel(), "drivera");
 		settings.put(Setting.PASSWORD.getLabel(), "N3v3rm0r3!2");
 		settings.put(Setting.DOMAIN.getLabel(), "ARMEDIA");
 		settings.put(Setting.PATH.getLabel(), "/sites/cmf/Documents");
 		exporter.runExport(this.output, this.objectStore, this.contentStore, settings);
+
+		settings.clear();
+		settings.put("docbase", "dctmvm01");
+		settings.put("username", "dctmadmin");
+		settings.put("password", "123");
+		importer.runImport(this.output, this.objectStore, this.contentStore, settings);
 	}
 
 	@After
