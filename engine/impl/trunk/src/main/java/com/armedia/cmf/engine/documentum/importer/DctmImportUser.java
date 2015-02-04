@@ -89,13 +89,19 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			final String userName = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
 
 			// Login name + domain
-			copyAttributeToObject(DctmAttributes.USER_LOGIN_DOMAIN, user);
-			copyAttributeToObject(DctmAttributes.USER_LOGIN_NAME, user);
+			if (this.storedObject.getAttributeNames().contains(DctmAttributes.USER_LOGIN_DOMAIN)) {
+				copyAttributeToObject(DctmAttributes.USER_LOGIN_DOMAIN, user);
+			}
+			if (this.storedObject.getAttributeNames().contains(DctmAttributes.USER_LOGIN_NAME)) {
+				copyAttributeToObject(DctmAttributes.USER_LOGIN_NAME, user);
+			} else {
+				setAttributeOnObject(DctmAttributes.USER_LOGIN_NAME, user.getValue(DctmAttributes.USER_NAME), user);
+			}
 
 			// Next, set the password
 			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.USER_SOURCE);
-			final IDfValue userSource = att.getValue();
-			if (Tools.equals(DctmConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
+			final IDfValue userSource = (att != null ? att.getValue() : null);
+			if ((att == null) || Tools.equals(DctmConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
 				final String inlinePasswordValue = ctx.getSettings().getString(
