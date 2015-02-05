@@ -5,8 +5,10 @@ import java.util.Date;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.independentsoft.share.CheckOutType;
 import com.independentsoft.share.CustomizedPageStatus;
@@ -129,7 +131,10 @@ public class ShptFile extends ShptFSObject<File> {
 	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
-		ret.add(new ShptContent(service, this.wrapped));
+		ShptContent content = new ShptContent(service, this.wrapped);
+		ret.add(content);
+		marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.CONTENTS.name, StoredDataType.ID, false,
+			new StoredValue(StoredDataType.ID, content.getId())));
 		return ret;
 	}
 }
