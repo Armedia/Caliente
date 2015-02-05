@@ -10,34 +10,41 @@ public final class StoredValue {
 
 	private final StoredDataType type;
 	private final Object value;
+	private final boolean nullValue;
 
 	public StoredValue(int value) {
 		this.type = StoredDataType.INTEGER;
 		this.value = value;
+		this.nullValue = false;
 	}
 
 	public StoredValue(boolean value) {
 		this.type = StoredDataType.BOOLEAN;
 		this.value = value;
+		this.nullValue = false;
 	}
 
 	public StoredValue(double value) {
 		this.type = StoredDataType.DOUBLE;
 		this.value = value;
+		this.nullValue = false;
 	}
 
 	public StoredValue(String value) {
 		this.type = StoredDataType.STRING;
 		this.value = value;
+		this.nullValue = (value == null);
 	}
 
 	public StoredValue(Date value) {
 		this.type = StoredDataType.TIME;
 		this.value = value;
+		this.nullValue = (value == null);
 	}
 
 	public StoredValue(StoredDataType type, Object value) throws ParseException {
 		this.type = type;
+		this.nullValue = (value == null);
 		if (value != null) {
 			switch (type) {
 				case INTEGER:
@@ -89,31 +96,35 @@ public final class StoredValue {
 	}
 
 	public int asInteger() {
-		if (this.value == null) { return 0; }
+		if (this.nullValue) { return 0; }
 		if (this.value instanceof Number) { return Number.class.cast(this.value).intValue(); }
 		return Integer.valueOf(this.value.toString());
 	}
 
 	public boolean asBoolean() {
-		if (this.value == null) { return false; }
+		if (this.nullValue) { return false; }
 		if (this.value instanceof Boolean) { return Boolean.class.cast(this.value).booleanValue(); }
 		return Boolean.valueOf(this.value.toString());
 	}
 
 	public double asDouble() {
-		if (this.value == null) { return 0; }
+		if (this.nullValue) { return Double.NaN; }
 		if (this.value instanceof Number) { return Number.class.cast(this.value).doubleValue(); }
 		return Double.valueOf(this.value.toString());
 	}
 
 	public Date asTime() throws ParseException {
-		if (this.value == null) { return null; }
+		if (this.nullValue) { return null; }
 		if (this.value instanceof Date) { return Date.class.cast(this.value); }
 		return DateFormat.getDateInstance().parse(this.value.toString());
 	}
 
 	public StoredDataType getDataType() {
 		return this.type;
+	}
+
+	public boolean isNull() {
+		return this.nullValue;
 	}
 
 	@Override

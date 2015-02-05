@@ -10,8 +10,12 @@ package com.armedia.cmf.storage;
  */
 public interface StoredValueCodec<V> {
 
-	public String encodeValue(V value) throws StoredValueEncoderException;
+	public StoredValue encodeValue(V value) throws StoredValueEncoderException;
 
-	public V decodeValue(String value) throws StoredValueDecoderException;
+	public V decodeValue(StoredValue value) throws StoredValueDecoderException;
+
+	public boolean isNull(V value);
+
+	public V getNull();
 
 }

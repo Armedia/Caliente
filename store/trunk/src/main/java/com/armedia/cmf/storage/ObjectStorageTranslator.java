@@ -1,6 +1,6 @@
 package com.armedia.cmf.storage;
 
-public abstract class ObjectStorageTranslator<T, V> implements StoredValueCodec<StoredDataType> {
+public abstract class ObjectStorageTranslator<T, V> {
 
 	public final StoredObjectType decodeObjectType(T object) throws UnsupportedObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose type to decode"); }
@@ -24,13 +24,11 @@ public abstract class ObjectStorageTranslator<T, V> implements StoredValueCodec<
 
 	protected abstract String doGetObjectId(T object) throws Exception;
 
-	@Override
 	public final String encodeValue(StoredDataType value) {
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to encode"); }
 		return value.name();
 	}
 
-	@Override
 	public final StoredDataType decodeValue(String value) {
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to decode"); }
 		return StoredDataType.decodeString(value);
