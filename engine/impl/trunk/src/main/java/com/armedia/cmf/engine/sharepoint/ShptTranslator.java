@@ -14,9 +14,6 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.engine.documentum.common.DctmDocument;
-import com.armedia.cmf.engine.documentum.common.DctmFolder;
-import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -120,10 +117,10 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENTS);
 		am.put(ShptAttributes.PATHS.name, IntermediateAttribute.PATHS);
 		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.TARGET_PATHS);
-		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.TARGET_PARENTS);
-		pm.put(DctmFolder.USERS_WITH_DEFAULT_FOLDER, IntermediateProperty.USERS_WITH_DEFAULT_FOLDER);
-		pm.put(DctmFolder.USERS_DEFAULT_FOLDER_PATHS, IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS);
+		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
+		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
+		pm.put(ShptProperties.USERS_WITH_DEFAULT_FOLDER.name, IntermediateProperty.USERS_WITH_DEFAULT_FOLDER);
+		pm.put(ShptProperties.USERS_DEFAULT_FOLDER_PATHS.name, IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS);
 		propertyMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
@@ -143,11 +140,11 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENTS);
 
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.TARGET_PATHS);
-		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.TARGET_PARENTS);
-		pm.put(DctmDocument.CONTENTS, IntermediateProperty.CONTENTS);
-		pm.put(DctmSysObject.VERSION_PATCHES, IntermediateProperty.VERSION_PATCHES);
-		pm.put(DctmSysObject.PATCH_ANTECEDENT, IntermediateProperty.PATCH_ANTECEDENT);
+		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
+		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
+		pm.put(ShptProperties.CONTENTS.name, IntermediateProperty.CONTENTS);
+		pm.put(ShptProperties.VERSION_PATCHES.name, IntermediateProperty.VERSION_PATCHES);
+		pm.put(ShptProperties.PATCH_ANTECEDENT.name, IntermediateProperty.PATCH_ANTECEDENT);
 		propertyMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
