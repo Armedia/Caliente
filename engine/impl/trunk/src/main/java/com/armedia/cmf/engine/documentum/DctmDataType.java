@@ -20,7 +20,7 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 
 		@Override
 		public IDfValue doDecode(StoredValue value) {
-			return new DfValue(value.asBoolean(), IDfValue.DF_BOOLEAN);
+			return new DfValue(Boolean.toString(value.asBoolean()), IDfValue.DF_BOOLEAN);
 		}
 
 		@Override
@@ -44,7 +44,7 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 
 		@Override
 		public IDfValue doDecode(StoredValue value) {
-			return new DfValue(value.asInteger(), IDfValue.DF_INTEGER);
+			return new DfValue(String.valueOf(value.asInteger()), IDfValue.DF_INTEGER);
 		}
 
 		@Override
@@ -96,7 +96,7 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 
 		@Override
 		public IDfValue doDecode(StoredValue value) {
-			return new DfValue(value.asId(), IDfValue.DF_ID);
+			return new DfValue(value.asString(), IDfValue.DF_ID);
 		}
 
 		@Override
