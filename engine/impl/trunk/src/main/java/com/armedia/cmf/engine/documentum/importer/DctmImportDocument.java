@@ -99,21 +99,25 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		if (isReference()) { return locateExistingByPath(ctx); }
 
 		// First things first: are we the root of the version hierarchy?
-		String sourceChronicleId = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID).getValue().asId()
-			.getId();
-		final String implicitLabel = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL).getValue()
-			.asString();
+		StoredAttribute<IDfValue> chronicleAtt = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
+		final Mapping chronicleMapping;
+		final String implicitLabel;
+		if (chronicleAtt != null) {
+			String sourceChronicleId = chronicleAtt.getValue().asId().getId();
+			implicitLabel = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL).getValue().asString();
 
-		IDfDocument existing = null;
-
-		final String chronicleId;
-
-		// Map to the new chronicle ID, from the old one...try for the quick win
-		final Mapping chronicleMapping = ctx.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
-			DctmAttributes.R_OBJECT_ID, sourceChronicleId);
+			// Map to the new chronicle ID, from the old one...try for the quick win
+			chronicleMapping = ctx.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
+				DctmAttributes.R_OBJECT_ID, sourceChronicleId);
+		} else {
+			chronicleMapping = null;
+			implicitLabel = null;
+		}
 
 		// If we don't have a chronicle mapping, we're likely the root document and thus
 		// will have to search by path...
+		final String chronicleId;
+		IDfDocument existing = null;
 		if (chronicleMapping != null) {
 			chronicleId = chronicleMapping.getTargetValue();
 		} else {
@@ -125,7 +129,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 			// If we found no match via path, then we can't locate a match at all and must assume
 			// that this object is a new object
-			if (existing == null) { return null; }
+			if ((existing == null) || (implicitLabel == null)) { return null; }
 
 			// We have a match, but it may not be the version we seek, so
 			// track the chronicle so the code below can find the right version.

@@ -28,14 +28,13 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.DfNameNotFoundException;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
@@ -263,11 +262,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							this.storedObject.getLabel(), this.storedObject.getId()), e);
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -346,14 +345,10 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	}
 
 	protected T newObject(DctmImportContext ctx) throws DfException, ImportException {
-		try {
-			return castObject(ctx.getSession().newObject(this.storedObject.getSubtype()));
-		} catch (DfNameNotFoundException e) {
-			final StoredObjectType storedType = this.storedObject.getType();
-			DctmObjectType type = DctmTranslator.translateType(storedType);
-			if (type == null) { throw new ImportException(String.format("Unsupported type [%s]", storedType.name())); }
-			return castObject(ctx.getSession().newObject(type.getDmType()));
-		}
+		IDfType type = DctmTranslator.translateType(ctx.getSession(), this.storedObject);
+		if (type == null) { throw new ImportException(String.format("Unsupported type [%s::%s]",
+			this.storedObject.getType(), this.storedObject.getSubtype())); }
+		return castObject(ctx.getSession().newObject(type.getName()));
 	}
 
 	protected abstract T locateInCms(DctmImportContext context) throws ImportException, DfException;
@@ -371,7 +366,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	/**
@@ -385,16 +380,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 

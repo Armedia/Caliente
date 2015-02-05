@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
@@ -477,6 +478,12 @@ DctmSysObject {
 		StoredAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
 		StoredAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
 
+		// If we lack ANY of the information we need, we simply don't do anything
+		@SuppressWarnings("unchecked")
+		int firstNull = Tools.firstNull(modifyDateAtt, modifierNameAtt, creationDateAtt, creatorNameAtt, deletedAtt,
+			aclDomainAtt);
+		if (firstNull >= 0) { return null; }
+
 		// Important: REPLACE QUOTES!!
 
 		// Make sure we ALWAYS store this, even if it's "null"...default to the connected user
@@ -581,13 +588,16 @@ DctmSysObject {
 		final IDfSession session = ctx.getSession();
 		final String documentName = this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 
-		final String dqlBase = String.format("%s (ALL) where object_name = %s and folder(%%s)",
-			this.storedObject.getSubtype(), DfUtils.quoteString(documentName));
+		final IDfType type = DctmTranslator.translateType(session, this.storedObject);
+		if (type == null) { throw new ImportException(String.format(
+			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.storedObject.getSubtype(),
+			this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId())); }
+		final String dqlBase = String.format("%s (ALL) where object_name = %s and folder(%%s)", type.getName(),
+			DfUtils.quoteString(documentName));
 
 		final boolean seeksReference = isReference();
 		String existingPath = null;
 		T existing = null;
-		final IDfType type = session.getType(this.storedObject.getSubtype());
 		final Class<T> dfClass = getDfClass();
 		for (IDfValue p : getTargetPaths()) {
 			final String dql = String.format(dqlBase, DfUtils.quoteString(p.asString()));
@@ -633,7 +643,7 @@ DctmSysObject {
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-				.getId(), currentPath));
+					.getId(), currentPath));
 		}
 
 		return existing;

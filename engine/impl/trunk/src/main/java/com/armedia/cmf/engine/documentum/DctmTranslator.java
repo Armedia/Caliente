@@ -21,6 +21,8 @@ import com.armedia.cmf.storage.StoredValueCodec;
 import com.armedia.cmf.storage.UnsupportedObjectTypeException;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
@@ -192,6 +194,15 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 			default:
 				return DctmDataType.DF_UNDEFINED;
 		}
+	}
+
+	public static IDfType translateType(IDfSession session, StoredObject<IDfValue> object) throws DfException {
+		String subType = object.getSubtype();
+		IDfType type = session.getType(subType);
+		if (type != null) { return type; }
+		DctmObjectType dctmType = DctmTranslator.translateType(object.getType());
+		if (dctmType == null) { return null; }
+		return session.getType(dctmType.getDmType());
 	}
 
 	public static DctmObjectType translateType(StoredObjectType type) {
