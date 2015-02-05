@@ -9,6 +9,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -44,9 +45,11 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueCodec;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.cmf.storage.StoredValueEncoderException;
+import com.armedia.cmf.storage.StoredValueSerializer;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
 
@@ -56,6 +59,8 @@ import com.armedia.commons.utilities.Tools;
  */
 public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
+	private static final String NULL = "{NULL-VALUE}";
+
 	private static final Pattern OBJECT_ID_PARSER = Pattern.compile("^\\{(?:[\\da-fA-F][\\da-fA-F])+-(.*)\\}$");
 
 	private static final Object[][] NO_PARAMS = new Object[0][0];
@@ -64,9 +69,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	private static final String INSERT_OBJECT_SQL = "insert into cmf_object (object_id, search_key, object_type, object_subtype, object_label, batch_id) values (?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_SQL = "insert into cmf_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
-	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into cmf_attribute_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
+	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into cmf_attribute_value (object_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into cmf_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
-	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into cmf_property_value (object_id, name, value_number, data) values (?, ?, ?, ?)";
+	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into cmf_property_value (object_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 
 	private static final String QUERY_EXPORT_PLAN_DUPE_SQL = "select * from cmf_export_plan where object_id = ?";
 	private static final String INSERT_EXPORT_PLAN_SQL = "insert into cmf_export_plan (object_type, object_id) values (?, ?)";
@@ -246,7 +251,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		Collection<Object[]> propertyParameters = new ArrayList<Object[]>();
 		Collection<Object[]> propertyValueParameters = new ArrayList<Object[]>();
 		Object[] attData = new Object[7];
-		Object[] attValue = new Object[4];
+		Object[] attValue = new Object[5];
 		Object[] propData = new Object[4];
 
 		try {
@@ -285,16 +290,29 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				}
 
 				attValue[1] = name; // This never changes inside this next loop
-				Object[][] values = new Object[attribute.getValueCount()][];
 				int v = 0;
 				// No special treatment, simply dump out all the values
 				final StoredValueCodec<V> codec = translator.getCodec(attribute.getType());
-				for (V value : attribute) {
-					attValue[2] = v;
-					attValue[3] = codec.encodeValue(value);
-					values[v] = attValue.clone();
-					attributeValueParameters.add(attValue.clone());
-					v++;
+				final StoredValueSerializer serializer = StoredValueSerializer.get(attribute.getType());
+				if (serializer != null) {
+					for (V value : attribute) {
+						StoredValue encoded = codec.encodeValue(value);
+						attValue[2] = v;
+						attValue[3] = encoded.isNull();
+						if (!encoded.isNull()) {
+							try {
+								attValue[4] = serializer.serialize(encoded);
+							} catch (ParseException e) {
+								throw new StoredValueEncoderException(String.format(
+									"Failed to encode value #%d for attribute [%s::%s]: %s", v, attValue[0],
+									attValue[1], encoded));
+							}
+						} else {
+							attValue[4] = JdbcObjectStore.NULL;
+						}
+						attributeValueParameters.add(attValue.clone());
+						v++;
+					}
 				}
 			}
 
@@ -322,16 +340,29 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				propertyParameters.add(propData.clone());
 
 				attValue[1] = name; // This never changes inside this next loop
-				Object[][] values = new Object[property.getValueCount()][];
 				int v = 0;
 				// No special treatment, simply dump out all the values
 				final StoredValueCodec<V> codec = translator.getCodec(property.getType());
-				for (V value : property) {
-					attValue[2] = v;
-					attValue[3] = codec.encodeValue(value);
-					values[v] = attValue.clone();
-					propertyValueParameters.add(attValue.clone());
-					v++;
+				final StoredValueSerializer serializer = StoredValueSerializer.get(property.getType());
+				if (serializer != null) {
+					for (V value : property) {
+						StoredValue encoded = codec.encodeValue(value);
+						attValue[2] = v;
+						attValue[3] = encoded.isNull();
+						if (encoded.isNull()) {
+							try {
+								attValue[4] = serializer.serialize(encoded);
+							} catch (ParseException e) {
+								throw new StoredValueEncoderException(String.format(
+									"Failed to encode value #%d for property [%s::%s]: %s", v, attValue[0],
+									attValue[1], encoded));
+							}
+						} else {
+							attValue[4] = JdbcObjectStore.NULL;
+						}
+						propertyValueParameters.add(attValue.clone());
+						v++;
+					}
 				}
 			}
 
@@ -504,7 +535,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 								attributeValuePS.setString(2, translator.encodeAttributeName(type, att.getName()));
 								valueRS = attributeValuePS.executeQuery();
 								try {
-									loadValues(translator.getCodec(att.getType()), valueRS, att);
+									loadValues(translator.getCodec(att.getType()),
+										StoredValueSerializer.get(att.getType()), valueRS, att);
 								} finally {
 									DbUtils.closeQuietly(valueRS);
 								}
@@ -527,7 +559,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 								propertyValuePS.setString(2, translator.encodePropertyName(type, prop.getName()));
 								valueRS = propertyValuePS.executeQuery();
 								try {
-									loadValues(translator.getCodec(prop.getType()), valueRS, prop);
+									loadValues(translator.getCodec(prop.getType()),
+										StoredValueSerializer.get(prop.getType()), valueRS, prop);
 								} finally {
 									DbUtils.closeQuietly(valueRS);
 								}
@@ -880,13 +913,25 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return new StoredAttribute<V>(name, type, id, length, repeating, qualifiable);
 	}
 
-	private <V> void loadValues(StoredValueCodec<V> codec, ResultSet rs, StoredProperty<V> property)
-		throws SQLException, StoredValueDecoderException {
+	private <V> void loadValues(StoredValueCodec<V> codec, StoredValueSerializer deserializer, ResultSet rs,
+		StoredProperty<V> property) throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		List<V> values = new LinkedList<V>();
 		while (rs.next()) {
-			String data = rs.getString("data");
-			values.add(codec.decodeValue(data));
+			final boolean nullValue = rs.getBoolean("null_value");
+			final String data = rs.getString("data");
+			final StoredValue v;
+			try {
+				if (rs.wasNull() || (nullValue && JdbcObjectStore.NULL.equals(data))) {
+					v = new StoredValue(property.getType(), null);
+				} else {
+					v = deserializer.deserialize(data);
+				}
+			} catch (ParseException e) {
+				throw new StoredValueDecoderException(String.format("Failed to deserialize value [%s] as a %s", data,
+					property.getType()), e);
+			}
+			values.add(codec.decodeValue(v));
 			if (!property.isRepeating()) {
 				break;
 			}

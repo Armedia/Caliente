@@ -129,6 +129,9 @@
 			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
 				<constraints nullable="false" />
 			</column>
+			<column name="null_value" type="boolean" remarks="Indicates whether this value is null">
+				<constraints nullable="false" />
+			</column>
 			<column name="data" type="text" remarks="The actual string-encoded data"/>
 		</createTable>
 		<addPrimaryKey tableName="cmf_attribute_value"
@@ -168,6 +171,9 @@
 				<constraints nullable="false" />
 			</column>
 			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
+				<constraints nullable="false" />
+			</column>
+			<column name="null_value" type="boolean" remarks="Indicates whether this value is null">
 				<constraints nullable="false" />
 			</column>
 			<column name="data" type="text" remarks="The actual string-encoded data" />
