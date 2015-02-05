@@ -45,7 +45,7 @@ public enum StoredValueSerializer {
 		@Override
 		public String doSerialize(StoredValue value) {
 			long l = Double.doubleToRawLongBits(value.asDouble());
-			return String.format("016x", l);
+			return String.format("%016x", l);
 		}
 
 		@Override
@@ -69,7 +69,7 @@ public enum StoredValueSerializer {
 
 		@Override
 		public String doSerialize(StoredValue value) {
-			return String.format("%ID{%s}%", value.asString());
+			return String.format("%%ID{%s}%%", value.asString());
 		}
 
 		@Override
