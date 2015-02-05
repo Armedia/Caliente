@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ExportEngineListener> {
+	TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
@@ -261,7 +261,7 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+				.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
 			for (T requirement : referenced) {
 				exportObject(objectStore, streamStore, session, target, getExportTarget(requirement), requirement, ctx,
@@ -273,7 +273,7 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 			}
 			final Handle contentHandle;
 			try {
-				contentHandle = storeContent(session, marshaled, sourceObject, streamStore);
+				contentHandle = storeContent(session, marshaled, referrent, sourceObject, streamStore);
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
 			}
@@ -323,7 +323,7 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-			throws ExportException, StorageException {
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -435,10 +435,10 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 									nextType = next.getType();
 									if (nextType == null) {
 										this.log
-										.error(String
-											.format(
-												"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
-												nextId, nextKey));
+											.error(String
+												.format(
+													"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
+													nextId, nextKey));
 										continue;
 									}
 								}
@@ -550,9 +550,9 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-								.warn(
-									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-									e);
+									.warn(
+										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+										e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -606,10 +606,10 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -672,8 +672,8 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	protected abstract StoredObject<V> marshal(C ctx, S session, T object) throws ExportException;
 
-	protected abstract Handle storeContent(S session, StoredObject<V> marshalled, T object, ContentStore streamStore)
-		throws Exception;
+	protected abstract Handle storeContent(S session, StoredObject<V> marshalled, ExportTarget referrent, T object,
+		ContentStore streamStore) throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
