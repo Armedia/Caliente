@@ -180,12 +180,12 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 
 		@Override
 		public StoredValue encodeValue(StoredValue value) throws StoredValueEncoderException {
-			return value;
+			return Tools.coalesce(value, this.nullValue);
 		}
 
 		@Override
 		public StoredValue decodeValue(StoredValue value) throws StoredValueDecoderException {
-			return value;
+			return Tools.coalesce(value, this.nullValue);
 		}
 
 		@Override
