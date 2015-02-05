@@ -40,6 +40,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
+import com.documentum.fc.common.admin.DfAdminException;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -505,7 +506,14 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		} else {
 			if (dataType == null) { throw new IllegalArgumentException(
 				"Must provide the data type for the attribute being cleared"); }
-			object.setValue(attrName, dataType.getNull());
+			try {
+				object.setValue(attrName, dataType.getNull());
+			} catch (DfAdminException e) {
+				// If it's not the kind of thing we're defending against, then rethrow it
+				if (!e.getMessageId().startsWith("DM_SET_")) { throw e; }
+				// This is raised when the attribute shouldn't be set (cleared) in this manner...
+				// it's safe to ignore it
+			}
 		}
 	}
 
