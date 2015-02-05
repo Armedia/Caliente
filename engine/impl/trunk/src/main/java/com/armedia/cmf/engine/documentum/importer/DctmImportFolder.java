@@ -126,10 +126,10 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			final IDfUser user = session.getUser(actualUser);
 			if (user == null) {
 				this.log
-				.warn(String
-					.format(
-						"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-						this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
+					.warn(String
+						.format(
+							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
 				continue;
 			}
 
@@ -148,11 +148,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-				.warn(
-					String
-					.format(
-						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-						actualUser, this.storedObject.getLabel()), e);
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+								actualUser, this.storedObject.getLabel()), e);
 			}
 		}
 	}
@@ -169,5 +169,12 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()));
 		}
 		return super.locateInCms(ctx);
+	}
+
+	@Override
+	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		if ((p == null) || !p.hasValues()) { return castObject(ctx.getSession().newObject("dm_cabinet")); }
+		return super.newObject(ctx);
 	}
 }

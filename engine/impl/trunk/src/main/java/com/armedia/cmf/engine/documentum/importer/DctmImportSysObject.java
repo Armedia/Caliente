@@ -49,7 +49,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-DctmSysObject {
+	DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -418,7 +418,7 @@ DctmSysObject {
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -643,7 +643,7 @@ DctmSysObject {
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				.getId(), currentPath));
 		}
 
 		return existing;
@@ -661,11 +661,11 @@ DctmSysObject {
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
 		StoredAttributeMapper mapper = context.getAttributeMapper();
 		for (int i = 0; i < parents.getValueCount(); i++) {
-			IDfId parentId = parents.getValue(i).asId();
+			String parentId = parents.getValue(i).asString();
 			// We already know the parents are folders, b/c that's how we harvested them in the
 			// export, so we stick to that
 			Mapping m = mapper.getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
-				DctmAttributes.R_OBJECT_ID, parentId.getId());
+				DctmAttributes.R_OBJECT_ID, parentId);
 			if (m == null) {
 				// TODO: HOW??! Must have been an import failure on the parent...
 				continue;
