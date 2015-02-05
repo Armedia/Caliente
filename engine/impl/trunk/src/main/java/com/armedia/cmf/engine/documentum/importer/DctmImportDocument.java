@@ -198,9 +198,11 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (isReference()) { return newReference(context); }
 
-		final String sourceChronicleId = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID).getValue()
-			.asId().getId();
-		final boolean root = (Tools.equals(this.storedObject.getId(), sourceChronicleId));
+		final StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
+		final String sourceChronicleId = (att != null ? att.getValue().asId().getId() : null);
+
+		// If we have no chronicle info to look for, we don't try to...
+		final boolean root = ((sourceChronicleId == null) || Tools.equals(this.storedObject.getId(), sourceChronicleId));
 		if (root) { return super.newObject(context); }
 
 		final IDfSession session = context.getSession();
@@ -398,9 +400,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		throws DfException {
 
 		// Is root?
-		String sourceChronicleId = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID).getValue().asId()
-			.getId();
-		final boolean root = (Tools.equals(this.storedObject.getId(), sourceChronicleId));
+		StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
+		String sourceChronicleId = (att != null ? att.getValue().asId().getId() : null);
+		final boolean root = ((sourceChronicleId == null) || Tools.equals(this.storedObject.getId(), sourceChronicleId));
 		if (!root && !newObject) {
 			this.antecedentTemporaryPermission = new TemporaryPermission(document, IDfACL.DF_PERMIT_VERSION);
 			if (this.antecedentTemporaryPermission.grant(document)) {
@@ -432,7 +434,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 
 		final String documentId = document.getObjectId().getId();
-		final String contentType = storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE).getValue().toString();
+		final StoredAttribute<IDfValue> contentTypeAtt = storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
+		// TODO: Default the content type?
+		final String contentType = (contentTypeAtt != null ? contentTypeAtt.getValue().toString() : "");
 		final int contentCount = contentIds.size();
 		final StoredObjectHandler<IDfValue> handler = new StoredObjectHandler<IDfValue>() {
 
