@@ -1,6 +1,10 @@
 package com.armedia.cmf.engine.documentum;
 
+import java.text.ParseException;
+import java.util.Date;
+
 import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueCodec;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
@@ -15,8 +19,8 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_BOOLEAN);
 
 		@Override
-		public IDfValue doDecode(String value) {
-			return new DfValue(value, IDfValue.DF_BOOLEAN);
+		public IDfValue doDecode(StoredValue value) {
+			return new DfValue(value.asBoolean(), IDfValue.DF_BOOLEAN);
 		}
 
 		@Override
@@ -25,13 +29,13 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNullValue() {
+		public IDfValue getNull() {
 			return this.nullValue;
 		}
 
 		@Override
-		public String getNullEncoding() {
-			return this.nullEncoding;
+		public boolean isNull(IDfValue v) {
+			return (v == null);
 		}
 	},
 	DF_INTEGER(StoredDataType.INTEGER, IDfValue.DF_INTEGER) {
@@ -39,8 +43,8 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_INTEGER);
 
 		@Override
-		public IDfValue doDecode(String value) {
-			return new DfValue(value, IDfValue.DF_INTEGER);
+		public IDfValue doDecode(StoredValue value) {
+			return new DfValue(value.asInteger(), IDfValue.DF_INTEGER);
 		}
 
 		@Override
@@ -49,13 +53,13 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNullValue() {
+		public IDfValue getNull() {
 			return this.nullValue;
 		}
 
 		@Override
-		public String getNullEncoding() {
-			return this.nullEncoding;
+		public boolean isNull(IDfValue v) {
+			return (v == null);
 		}
 	},
 	DF_STRING(StoredDataType.STRING, IDfValue.DF_STRING) {
@@ -63,8 +67,8 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_STRING);
 
 		@Override
-		public IDfValue doDecode(String value) {
-			return new DfValue(value, IDfValue.DF_STRING);
+		public IDfValue doDecode(StoredValue value) {
+			return new DfValue(value.asString(), IDfValue.DF_STRING);
 		}
 
 		@Override
@@ -73,13 +77,8 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNullValue() {
+		public IDfValue getNull() {
 			return this.nullValue;
-		}
-
-		@Override
-		public String getNullEncoding() {
-			return this.nullEncoding;
 		}
 	},
 	DF_ID(StoredDataType.ID, IDfValue.DF_ID) {
@@ -87,13 +86,17 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_ID);
 
 		@Override
-		public String doEncode(IDfValue value) {
-			return value.asId().getId();
+		public StoredValue doEncode(IDfValue value) {
+			try {
+				return new StoredValue(StoredDataType.ID, value.asId().getId());
+			} catch (ParseException e) {
+				throw new RuntimeException("Unexpected parsing exception", e);
+			}
 		}
 
 		@Override
-		public IDfValue doDecode(String value) {
-			return new DfValue(value, IDfValue.DF_ID);
+		public IDfValue doDecode(StoredValue value) {
+			return new DfValue(value.asId(), IDfValue.DF_ID);
 		}
 
 		@Override
@@ -102,30 +105,35 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNullValue() {
+		public IDfValue getNull() {
 			return this.nullValue;
-		}
-
-		@Override
-		public String getNullEncoding() {
-			return this.nullEncoding;
 		}
 	},
 	DF_TIME(StoredDataType.TIME, IDfValue.DF_TIME) {
 		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
-		private final String nullDate = this.nullValue.asString();
-		private final String timePattern = IDfTime.DF_TIME_PATTERN26;
 
 		@Override
-		public String doEncode(IDfValue value) {
-			if (value.asTime().isNullDate()) { return this.nullDate; }
-			return value.asTime().asString(this.timePattern);
+		public StoredValue doEncode(IDfValue value) {
+			IDfTime t = value.asTime();
+			if (t.isNullDate() || !t.isValid()) {
+				try {
+					return new StoredValue(StoredDataType.TIME, null);
+				} catch (ParseException e) {
+					// Not going to happen...
+					throw new RuntimeException("Unexpected parse exception", e);
+				}
+			}
+			return new StoredValue(t.getDate());
 		}
 
 		@Override
-		public IDfValue doDecode(String value) {
-			if (this.nullDate.equals(value)) { return getNullValue(); }
-			return new DfValue(new DfTime(value, this.timePattern));
+		public IDfValue doDecode(StoredValue value) {
+			try {
+				return new DfValue(new DfTime(value.asTime()));
+			} catch (ParseException e) {
+				throw new RuntimeException(String.format("Failed to decode the value [%s] as a Date value",
+					value.asString()));
+			}
 		}
 
 		@Override
@@ -134,13 +142,8 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNullValue() {
+		public IDfValue getNull() {
 			return this.nullValue;
-		}
-
-		@Override
-		public String getNullEncoding() {
-			return this.nullDate;
 		}
 	},
 	DF_DOUBLE(StoredDataType.DOUBLE, IDfValue.DF_DOUBLE) {
@@ -148,13 +151,13 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_DOUBLE);
 
 		@Override
-		public String doEncode(IDfValue value) {
-			return Double.toHexString(value.asDouble());
+		public StoredValue doEncode(IDfValue value) {
+			return new StoredValue(value.asDouble());
 		}
 
 		@Override
-		public IDfValue doDecode(String value) {
-			return new DfValue(value, IDfValue.DF_DOUBLE);
+		public IDfValue doDecode(StoredValue value) {
+			return new DfValue(Double.toHexString(value.asDouble()), IDfValue.DF_DOUBLE);
 		}
 
 		@Override
@@ -163,13 +166,8 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNullValue() {
+		public IDfValue getNull() {
 			return this.nullValue;
-		}
-
-		@Override
-		public String getNullEncoding() {
-			return this.nullEncoding;
 		}
 	},
 	DF_UNDEFINED(null, IDfValue.DF_UNDEFINED) {
@@ -178,12 +176,12 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		}
 
 		@Override
-		public String doEncode(IDfValue value) {
+		public StoredValue doEncode(IDfValue value) {
 			return fail();
 		}
 
 		@Override
-		public IDfValue doDecode(String value) {
+		public IDfValue doDecode(StoredValue value) {
 			return fail();
 		}
 
@@ -193,12 +191,7 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 		}
 
 		@Override
-		public IDfValue getNullValue() {
-			return fail();
-		}
-
-		@Override
-		public String getNullEncoding() {
+		public IDfValue getNull() {
 			return fail();
 		}
 	};
@@ -221,36 +214,45 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 
 	/**
 	 * <p>
-	 * Returns the string-form null-equivalent value for this data type. This will <b>never</b>
-	 * return {@code null}.
-	 *
-	 * @return the null-equivalent encoding for this data type
-	 */
-	public abstract String getNullEncoding();
-
-	/**
-	 * <p>
 	 * Returns the null-equivalent value for this data type. This will <b>never</b> return
-	 * {@code null}.
+	 * {@code null}. The strict definition of this method is that the invocation
+	 * {@code isNull(getNull())} <b><i>must</i></b> return {@code true}.
 	 * </p>
 	 *
 	 * @return the null-equivalent value for this data type
 	 */
-	public abstract IDfValue getNullValue();
+	@Override
+	public abstract IDfValue getNull();
 
 	/**
 	 * <p>
-	 * Encode the value into a string, such that for a given value {@code A}, invoking
-	 * {@link #decodeValue(String)} on that encoded string will result in a value {@code B}, such
-	 * that {@code A.equals(B)} returns {@code true}.
+	 * Returns {@code true} if the given value is the null-equivalent value for this data type. The
+	 * strict definition of this method is that the invocation {@code isNull(getNull())}
+	 * <b><i>must</i></b> return {@code true}.
+	 * </p>
+	 *
+	 * @return {@code true} if the given value is the null-equivalent value for this data type
+	 */
+	@Override
+	public boolean isNull(IDfValue v) {
+		return (v == null);
+	}
+
+	/**
+	 * <p>
+	 * Encode the value into a {@link StoredValue}, such that for a given value {@code A}, invoking
+	 * {@link #decodeValue(StoredValue)} on that encoded StoredValue will result in a value
+	 * {@code B}, such that {@code A.equals(B)} returns {@code true}.
 	 * </p>
 	 *
 	 * @param value
 	 * @return the string-encoded value
 	 */
 	@Override
-	public final String encodeValue(IDfValue value) {
-		if (value == null) { return getNullEncoding(); }
+	public final StoredValue encodeValue(IDfValue value) {
+		if (value == null) {
+			value = getNull();
+		}
 		return doEncode(value);
 	}
 
@@ -262,8 +264,30 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 	 * @param value
 	 * @return the encoded value
 	 */
-	protected String doEncode(IDfValue value) {
-		return value.asString();
+	protected StoredValue doEncode(IDfValue value) {
+		switch (this.type) {
+			case BOOLEAN:
+				return new StoredValue(value.asBoolean());
+			case DOUBLE:
+				return new StoredValue(value.asDouble());
+			case ID:
+			case INTEGER:
+				return new StoredValue(value.asInteger());
+			case STRING:
+				return new StoredValue(value.asString());
+			case TIME:
+				IDfTime t = value.asTime();
+				Date d = null;
+				if (t.isNullDate()) {
+
+				} else {
+					d = t.getDate();
+				}
+				return new StoredValue(d);
+			default:
+				break;
+		}
+		throw new IllegalArgumentException(String.format("Unsupported conversion type: [%s]", this.type));
 	}
 
 	/**
@@ -274,23 +298,23 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 	 * </p>
 	 * <p>
 	 * The exception to this rule is the value {@code null}: this will get encoded into an
-	 * {@link IDfValue} instance as specified by {@link #getNullValue()}.
+	 * {@link IDfValue} instance as specified by {@link #getNull()}.
 	 * </p>
 	 *
 	 * @param value
 	 * @return the string-encoded value
 	 */
 	@Override
-	public final IDfValue decodeValue(String value) {
-		if (value == null) { return getNullValue(); }
+	public final IDfValue decodeValue(StoredValue value) {
+		if ((value == null) || value.isNull()) { return getNull(); }
 		return doDecode(value);
 	}
 
-	protected abstract IDfValue doDecode(String value);
+	protected abstract IDfValue doDecode(StoredValue value);
 
 	public final Object getValue(IDfValue value) {
 		if (value == null) {
-			value = getNullValue();
+			value = getNull();
 		}
 		return doGetValue(value);
 	}

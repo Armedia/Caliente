@@ -25,7 +25,7 @@ public final class DfValueFactory {
 	}
 
 	public static IDfValue newValue(DctmDataType type, Object v) {
-		if (v == null) { return type.getNullValue(); }
+		if (v == null) { return type.getNull(); }
 		switch (type) {
 			case DF_BOOLEAN:
 				if (v instanceof Boolean) { return DfValueFactory.newBooleanValue(Boolean.class.cast(v)); }
@@ -53,7 +53,7 @@ public final class DfValueFactory {
 			default:
 				throw new RuntimeException(String.format("Unsupported type [%s] for value [%s]", type, v));
 		}
-		return type.decodeValue(Tools.toString(v));
+		return DfValueFactory.newStringValue(Tools.toString(v));
 	}
 
 	public static IDfValue newBooleanValue(boolean v) {

@@ -458,7 +458,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		clearAttributeFromObject(attrName, object);
 		for (IDfValue value : values) {
 			if (value == null) {
-				value = dataType.getNullValue();
+				value = dataType.getNull();
 			}
 			if (repeating) {
 				object.appendValue(attrName, value);
@@ -505,7 +505,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		} else {
 			if (dataType == null) { throw new IllegalArgumentException(
 				"Must provide the data type for the attribute being cleared"); }
-			object.setValue(attrName, dataType.getNullValue());
+			object.setValue(attrName, dataType.getNull());
 		}
 	}
 

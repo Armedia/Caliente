@@ -458,7 +458,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 					.getAttribute(DctmAttributes.PAGE_MODIFIER);
 				final StoredAttribute<IDfValue> fullFormatAtt = storedObject.getAttribute(DctmAttributes.FULL_FORMAT);
 				final String pageModifier = ((pageModifierAtt != null) && pageModifierAtt.hasValues() ? pageModifierAtt
-					.getValue().asString() : DctmDataType.DF_STRING.getNullEncoding());
+					.getValue() : DctmDataType.DF_STRING.getNull()).asString();
 				String fullFormat = (fullFormatAtt != null ? fullFormatAtt.getValue().asString() : contentType);
 
 				if ((renditionNumber == null) || (renditionNumber.getValue().asInteger() == 0)) {
