@@ -186,6 +186,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 			prepareOperation(object, isNew);
 			prepareForConstruction(object, isNew, context);
 
+			/*
 			if (!isNew) {
 				// If an existing object is being updated, clear out all of its attributes that are
 				// not part of our attribute set
@@ -200,6 +201,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 					}
 				}
 			}
+			 */
 
 			// We remove the version labels as well
 			if (updateVersionLabels) {
@@ -261,11 +263,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -369,7 +371,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -383,16 +385,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
