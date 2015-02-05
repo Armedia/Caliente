@@ -44,7 +44,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		throws DfException {
 		final IDfValue groupName = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
 		if (newObject) {
-			copyAttributeToObject(DctmAttributes.GROUP_NAME, group);
+			group.setGroupName(groupName.asString().toLowerCase());
 		}
 		final IDfSession session = group.getSession();
 		StoredAttribute<IDfValue> usersNames = this.storedObject.getAttribute(DctmAttributes.USERS_NAMES);
@@ -58,10 +58,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				if (user == null) {
 					missingUsers.add(actualUser);
 					this.log
-					.warn(String
-						.format(
-							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-							actualUser, groupName.asString()));
+						.warn(String
+							.format(
+								"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+								actualUser, groupName.asString()));
 					continue;
 				}
 				group.addUser(actualUser);
@@ -76,10 +76,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
 					this.log
-					.warn(String
-						.format(
-							"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-							actualGroup, groupName.asString()));
+						.warn(String
+							.format(
+								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
+								actualGroup, groupName.asString()));
 					continue;
 				}
 				group.addGroup(actualGroup);
@@ -130,10 +130,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			final IDfUser user = session.getUser(actualUser);
 			if (user == null) {
 				this.log
-				.warn(String
-					.format(
-						"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-						groupName, actualUser));
+					.warn(String
+						.format(
+							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+							groupName, actualUser));
 				continue;
 			}
 			if (Tools.equals(groupName, user.getUserGroupName())) {
@@ -150,11 +150,11 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-				.warn(
-					String
-					.format(
-						"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-						actualUser, group.getGroupName()), e);
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+								actualUser, group.getGroupName()), e);
 			}
 		}
 	}
