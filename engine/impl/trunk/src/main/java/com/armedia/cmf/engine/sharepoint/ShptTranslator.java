@@ -138,7 +138,6 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 		am.put(ShptAttributes.MODIFIER.name, IntermediateAttribute.MODIFIER);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
 		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENTS);
-
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
 		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
@@ -156,6 +155,11 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 		am.put(ShptAttributes.CONTENT_SIZE.name, IntermediateAttribute.CONTENT_SIZE);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
+		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
+		pm.put(ShptProperties.CONTENTS.name, IntermediateProperty.CONTENTS);
+		pm.put(ShptProperties.VERSION_PATCHES.name, IntermediateProperty.VERSION_PATCHES);
+		pm.put(ShptProperties.PATCH_ANTECEDENT.name, IntermediateProperty.PATCH_ANTECEDENT);
 		propertyMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
