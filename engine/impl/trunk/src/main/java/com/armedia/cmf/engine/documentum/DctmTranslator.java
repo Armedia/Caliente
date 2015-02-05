@@ -47,7 +47,8 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		am.put(DctmAttributes.USER_GROUP_NAME, IntermediateAttribute.GROUP);
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.MODIFICATION_DATE);
 		am.put(DctmAttributes.DEFAULT_FOLDER, IntermediateAttribute.DEFAULT_FOLDER);
-		am.put(DctmAttributes.USER_LOGIN_DOMAIN, IntermediateAttribute.AUTH_REALM);
+		am.put(DctmAttributes.USER_LOGIN_NAME, IntermediateAttribute.LOGIN_NAME);
+		am.put(DctmAttributes.USER_LOGIN_DOMAIN, IntermediateAttribute.LOGIN_REALM);
 		attributeMappings.put(StoredObjectType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
@@ -116,7 +117,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		am.put(DctmAttributes.I_FOLDER_ID, IntermediateAttribute.PARENTS);
 		am.put(DctmAttributes.R_FOLDER_PATH, IntermediateAttribute.PATHS);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
-		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.AUTH_REALM);
+		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
 		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.TARGET_PATHS);
 		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.TARGET_PARENTS);
@@ -144,7 +145,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.MODIFICATION_DATE);
 		am.put(DctmAttributes.I_FOLDER_ID, IntermediateAttribute.PARENTS);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
-		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.AUTH_REALM);
+		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.TARGET_PATHS);
 		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.TARGET_PARENTS);
