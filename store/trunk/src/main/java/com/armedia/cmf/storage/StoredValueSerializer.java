@@ -109,7 +109,7 @@ public enum StoredValueSerializer {
 
 	public final String serialize(StoredValue value) throws ParseException {
 		if (value == null) { return null; }
-		if (canSerialize(value.getDataType())) { throw new ParseException(String.format(
+		if (!canSerialize(value.getDataType())) { throw new ParseException(String.format(
 			"Can't serialize a value of type [%s] as a [%s]", value.getDataType(), name()), 0); }
 		return doSerialize(value);
 	}
