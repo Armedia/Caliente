@@ -124,6 +124,10 @@ public class ShptFile extends ShptFSObject<File> {
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 		ret.add(new ShptUser(service, service.getFileAuthor(this.wrapped.getServerRelativeUrl())));
+		ShptContent content = new ShptContent(service, this.wrapped);
+		ret.add(content);
+		marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.CONTENTS.name, StoredDataType.ID, false,
+			new StoredValue(StoredDataType.ID, content.getId())));
 		return ret;
 	}
 
@@ -131,10 +135,6 @@ public class ShptFile extends ShptFSObject<File> {
 	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
-		ShptContent content = new ShptContent(service, this.wrapped);
-		ret.add(content);
-		marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.CONTENTS.name, StoredDataType.ID, false,
-			new StoredValue(StoredDataType.ID, content.getId())));
 		return ret;
 	}
 }
