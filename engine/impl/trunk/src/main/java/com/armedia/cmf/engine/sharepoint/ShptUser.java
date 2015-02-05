@@ -86,9 +86,11 @@ public class ShptUser extends ShptSecurityObject<User> {
 		}
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
 			false, Collections.singleton(new StoredValue(userName))));
+		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.LOGIN_NAME.name, StoredDataType.STRING,
+			false, Collections.singleton(new StoredValue(userName))));
 		if (userDomain != null) {
-			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.DOMAIN.name, StoredDataType.STRING,
-				false, Collections.singleton(new StoredValue(userDomain))));
+			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.LOGIN_DOMAIN.name,
+				StoredDataType.STRING, false, Collections.singleton(new StoredValue(userDomain))));
 		}
 
 		// SiteAdmin
