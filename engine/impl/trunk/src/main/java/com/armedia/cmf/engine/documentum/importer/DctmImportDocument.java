@@ -32,9 +32,12 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
+import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
@@ -436,7 +439,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final String documentId = document.getObjectId().getId();
 		final StoredAttribute<IDfValue> contentTypeAtt = storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
 		// TODO: Default the content type?
-		final String contentType = (contentTypeAtt != null ? contentTypeAtt.getValue().toString() : "");
+		final String contentType = (contentTypeAtt != null ? contentTypeAtt.getValue().toString() : null);
 		final int contentCount = contentIds.size();
 		final StoredObjectHandler<IDfValue> handler = new StoredObjectHandler<IDfValue>() {
 
@@ -460,18 +463,52 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				final File path = contentHandle.getFile();
 				final String absolutePath = path.getAbsolutePath();
 
-				final int pageNumber = storedObject.getAttribute(DctmAttributes.PAGE).getValue().asInteger();
+				final StoredAttribute<IDfValue> pageAtt = storedObject.getAttribute(DctmAttributes.PAGE);
+				final int pageNumber = (pageAtt != null ? pageAtt.getValue().asInteger() : 0);
 				final StoredAttribute<IDfValue> renditionNumber = storedObject.getAttribute(DctmAttributes.RENDITION);
 				final StoredAttribute<IDfValue> pageModifierAtt = storedObject
 					.getAttribute(DctmAttributes.PAGE_MODIFIER);
 				final StoredAttribute<IDfValue> fullFormatAtt = storedObject.getAttribute(DctmAttributes.FULL_FORMAT);
 				final String pageModifier = ((pageModifierAtt != null) && pageModifierAtt.hasValues() ? pageModifierAtt
 					.getValue() : DctmDataType.DF_STRING.getNull()).asString();
-				String fullFormat = (fullFormatAtt != null ? fullFormatAtt.getValue().asString() : contentType);
+
+				String aContentType = contentType;
+				if (aContentType == null) {
+					StoredAttribute<IDfValue> att = storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
+					if (att != null) {
+						aContentType = att.getValue().asString();
+					} else {
+						aContentType = "application/octet-stream";
+					}
+					IDfFormat format = null;
+					try {
+						format = session.getFormat(aContentType);
+						if (format != null) {
+							aContentType = format.getName();
+						}
+					} catch (DfException e) {
+						// do nothing... :S
+					}
+					if (format == null) {
+						String dql = "select r_object_id, name from dm_format where mime_type = '%s'";
+						try {
+							IDfCollection result = DfUtils.executeQuery(session, String.format(dql, aContentType),
+								IDfQuery.DF_EXECREAD_QUERY);
+							aContentType = "binary";
+							if (result.next()) {
+								aContentType = result.getString("name");
+							}
+						} catch (DfException e) {
+							// Default to a binary file... :S
+							aContentType = "binary";
+						}
+					}
+				}
+				String fullFormat = (fullFormatAtt != null ? fullFormatAtt.getValue().asString() : aContentType);
 
 				if ((renditionNumber == null) || (renditionNumber.getValue().asInteger() == 0)) {
-					if ((fullFormat != null) && !Tools.equals(fullFormat, contentType)) {
-						fullFormat = contentType;
+					if ((fullFormat != null) && !Tools.equals(fullFormat, aContentType)) {
+						fullFormat = aContentType;
 					}
 					try {
 						document.setFileEx(absolutePath, fullFormat, pageNumber, null);
@@ -508,7 +545,15 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 					}
 				}
 
-				String setFile = storedObject.getAttribute(DctmAttributes.SET_FILE).getValue().asString();
+				StoredAttribute<IDfValue> setFileAtt = storedObject.getAttribute(DctmAttributes.SET_FILE);
+				StoredAttribute<IDfValue> setClientAtt = storedObject.getAttribute(DctmAttributes.SET_CLIENT);
+				StoredAttribute<IDfValue> setTimeAtt = storedObject.getAttribute(DctmAttributes.SET_TIME);
+
+				@SuppressWarnings("unchecked")
+				final int firstNull = Tools.firstNull(setFileAtt, setClientAtt, setTimeAtt);
+				if (firstNull != -1) { return true; }
+
+				String setFile = setFileAtt.getValue().asString();
 				if (StringUtils.isBlank(setFile)) {
 					setFile = " ";
 				}
@@ -516,12 +561,12 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				// with 4 single quotes.
 				setFile = setFile.replaceAll("'", "''''");
 
-				String setClient = storedObject.getAttribute(DctmAttributes.SET_CLIENT).getValue().asString();
+				String setClient = setClientAtt.getValue().asString();
 				if (StringUtils.isBlank(setClient)) {
 					setClient = " ";
 				}
 
-				IDfTime setTime = storedObject.getAttribute(DctmAttributes.SET_TIME).getValue().asTime();
+				IDfTime setTime = setTimeAtt.getValue().asTime();
 
 				String pageModifierClause = "";
 				if (!StringUtils.isBlank(pageModifier)) {

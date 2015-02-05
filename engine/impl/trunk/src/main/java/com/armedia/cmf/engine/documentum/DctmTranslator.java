@@ -162,6 +162,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		// OBJECT_CLASS (CONTENT)
 		// OBJECT_TYPE (DMR_CONTENT|...)
 		am.put(DctmAttributes.FULL_FORMAT, IntermediateAttribute.CONTENT_TYPE);
+		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_TYPE);
 		am.put(DctmAttributes.CONTENT_SIZE, IntermediateAttribute.CONTENT_SIZE);
 		am.put(DctmAttributes.R_CONTENT_HASH, IntermediateAttribute.CONTENT_HASH);
 		am.put(DctmAttributes.PARENT_ID, IntermediateAttribute.PARENTS);
