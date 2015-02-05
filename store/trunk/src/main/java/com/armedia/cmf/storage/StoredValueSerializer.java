@@ -80,6 +80,18 @@ public enum StoredValueSerializer {
 			return new StoredValue(StoredDataType.ID, m.group(1));
 		}
 
+		@Override
+		protected boolean canSerialize(StoredDataType type) {
+			switch (type) {
+				case STRING:
+				case ID:
+				case INTEGER:
+					return true;
+				default:
+					return false;
+			}
+		}
+
 	},
 	TIME(StoredDataType.TIME) {
 
@@ -105,6 +117,10 @@ public enum StoredValueSerializer {
 
 	protected boolean canSerialize(StoredDataType type) {
 		return (this.type == type);
+	}
+
+	public final StoredDataType getType() {
+		return this.type;
 	}
 
 	public final String serialize(StoredValue value) throws ParseException {
