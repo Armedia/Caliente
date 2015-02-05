@@ -88,7 +88,11 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(session, marshaled, ctx);
 		if (!StringUtils.isEmpty(getName())) {
-			ret.add(new ShptFolder(session, session.getFolder(FileNameTools.dirname(getServerRelativeUrl()))));
+			ShptFolder parent = new ShptFolder(session,
+				session.getFolder(FileNameTools.dirname(getServerRelativeUrl())));
+			ret.add(parent);
+			marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PARENTS.name,
+				StoredDataType.ID, true, Collections.singleton(new StoredValue(StoredDataType.ID, parent.getId()))));
 		}
 		return ret;
 	}
