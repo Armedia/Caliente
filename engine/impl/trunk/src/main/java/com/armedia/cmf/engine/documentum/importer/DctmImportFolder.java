@@ -9,6 +9,7 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmFolder;
+import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -16,7 +17,6 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
@@ -69,7 +69,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		}
 
 		// Only do the linking/unlinking for non-cabinets
-		if (!folder.getType().isTypeOf("dm_cabinet")) {
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		if ((p != null) && p.hasValues()) {
 			linkToParents(folder, context);
 		}
 	}
@@ -160,9 +161,13 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	protected IDfFolder locateInCms(DctmImportContext ctx) throws ImportException, DfException {
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
-		IDfType t = session.getType(this.storedObject.getSubtype());
-		if (t.isTypeOf("dm_cabinet")) { return session.getFolderByPath(String.format("/%s", this.storedObject
-			.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString())); }
+		// Easier way: determine if we have parent folders...if not, then we're a cabinet
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		if ((p == null) || !p.hasValues()) {
+			// This is a cabinet...
+			return session.getFolderByPath(String.format("/%s",
+				this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()));
+		}
 		return super.locateInCms(ctx);
 	}
 }
