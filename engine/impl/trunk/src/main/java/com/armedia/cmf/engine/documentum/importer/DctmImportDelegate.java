@@ -203,10 +203,6 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 			 */
 
 			// We remove the version labels as well
-			if (updateVersionLabels) {
-				object.removeAll(DctmAttributes.R_VERSION_LABEL);
-			}
-
 			// Set "default" attributes
 			for (StoredAttribute<IDfValue> attribute : this.storedObject.getAttributes()) {
 				// TODO check to see if we need to set any internal or system attributes of various
@@ -216,14 +212,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 
 				// for now ignore setting internal and system attributes
 				boolean doSet = (!name.startsWith("r_") && !name.startsWith("i_"));
-				// but process r_version_lebel
-				doSet |= (name.equals(DctmAttributes.R_VERSION_LABEL) && updateVersionLabels);
 				// allow for a last-minute interception...
 				doSet &= handler.includeInImport(object, attribute);
 
 				if (doSet) {
 					copyAttributeToObject(attribute, object);
 				}
+			}
+
+			if (updateVersionLabels) {
+				copyAttributeToObject(DctmAttributes.R_VERSION_LABEL, object);
 			}
 
 			finalizeConstruction(object, isNew, context);
@@ -262,11 +260,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							this.storedObject.getLabel(), this.storedObject.getId()), e);
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -366,7 +364,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	/**
@@ -380,16 +378,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 

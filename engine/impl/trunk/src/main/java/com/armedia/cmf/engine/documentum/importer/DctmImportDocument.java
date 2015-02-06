@@ -104,17 +104,15 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// First things first: are we the root of the version hierarchy?
 		StoredAttribute<IDfValue> chronicleAtt = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
 		final Mapping chronicleMapping;
-		final String implicitLabel;
+		StoredAttribute<IDfValue> implicitLabelAtt = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
+		final String implicitLabel = (implicitLabelAtt != null ? implicitLabelAtt.getValue().asString() : null);
 		if (chronicleAtt != null) {
 			String sourceChronicleId = chronicleAtt.getValue().asId().getId();
-			implicitLabel = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL).getValue().asString();
-
 			// Map to the new chronicle ID, from the old one...try for the quick win
 			chronicleMapping = ctx.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
 				DctmAttributes.R_OBJECT_ID, sourceChronicleId);
 		} else {
 			chronicleMapping = null;
-			implicitLabel = null;
 		}
 
 		// If we don't have a chronicle mapping, we're likely the root document and thus
@@ -132,7 +130,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 			// If we found no match via path, then we can't locate a match at all and must assume
 			// that this object is a new object
-			if ((existing == null) || (implicitLabel == null)) { return null; }
+			if (implicitLabel == null) { return existing; }
+			if (existing == null) { return null; }
 
 			// We have a match, but it may not be the version we seek, so
 			// track the chronicle so the code below can find the right version.
