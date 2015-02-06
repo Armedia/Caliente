@@ -42,6 +42,7 @@ public enum ShptAttributes {
 	LOGIN_DOMAIN,
 	HOME_FOLDER,
 	WELCOME_PAGE,
+	VERSION,
 	//
 	;
 

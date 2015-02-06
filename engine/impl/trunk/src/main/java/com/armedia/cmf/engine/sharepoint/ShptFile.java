@@ -1,10 +1,13 @@
 package com.armedia.cmf.engine.sharepoint;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -14,7 +17,9 @@ import com.independentsoft.share.CheckOutType;
 import com.independentsoft.share.CustomizedPageStatus;
 import com.independentsoft.share.File;
 import com.independentsoft.share.FileLevel;
+import com.independentsoft.share.FileVersion;
 import com.independentsoft.share.Service;
+import com.independentsoft.share.ServiceException;
 
 public class ShptFile extends ShptFSObject<File> {
 
@@ -116,7 +121,20 @@ public class ShptFile extends ShptFSObject<File> {
 	@Override
 	protected void marshal(StoredObject<StoredValue> object) throws ExportException {
 		super.marshal(object);
-		// TODO: What else to marshal?
+		List<StoredValue> versionNames = new ArrayList<StoredValue>();
+		versionNames.add(new StoredValue(String.format("%d.%d", this.wrapped.getMajorVersion(),
+			this.wrapped.getMinorVersion())));
+		versionNames.add(new StoredValue("CURRENT")); // temporary hardcode
+		try {
+			List<FileVersion> l = this.service.getFileVersions(this.wrapped.getServerRelativeUrl());
+			for (FileVersion v : l) {
+				v.hashCode();
+			}
+		} catch (ServiceException e) {
+
+		}
+		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION.name, StoredDataType.STRING, true,
+			versionNames));
 	}
 
 	@Override
