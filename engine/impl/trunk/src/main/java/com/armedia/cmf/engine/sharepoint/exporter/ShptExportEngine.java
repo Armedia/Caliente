@@ -72,6 +72,26 @@ public class ShptExportEngine extends
 		if (pathObj == null) { throw new ShptException("Must provide the name of the site to export"); }
 
 		final String path = Tools.toString(pathObj);
+
+		/*
+		Contains contains = new Contains(SearchResultPropertyName.PATH, service.getSiteUrl());
+		SearchQuery query = new SearchQuery(contains);
+		query.getSelectProperties().add(SearchResultPropertyName.PATH);
+		// query.getSelectProperties().add(SearchResultPropertyName.IS_CONTAINER);
+		// query.getSelectProperties().add(SearchResultPropertyName.IS_DOCUMENT);
+		SearchResult result = service.search(query);
+		SimpleDataTable table = result.getPrimaryQueryResult().getRelevantResult().getTable();
+
+		int i = 0;
+		for (SimpleDataRow row : table.getRows()) {
+			this.log.debug("\t\tRow #{}", i++);
+			for (KeyValue cell : row.getCells()) {
+				this.log.debug("\t\t\t{} = [{}]", cell.getKey(), cell.getValue());
+			}
+		}
+		 */
+
+		this.log.debug("Starting recursive search of [{}]...", path);
 		ShptFolder folder = new ShptFolder(service, service.getFolder(path));
 		Collection<ExportTarget> ret = new ArrayList<ExportTarget>();
 		addItemsRecursively(ret, folder);
