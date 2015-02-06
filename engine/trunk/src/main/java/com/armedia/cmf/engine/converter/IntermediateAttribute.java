@@ -40,7 +40,8 @@ public enum IntermediateAttribute {
 	LOGIN_REALM(StoredDataType.STRING),
 	ACL_NAME(StoredDataType.STRING),
 	DEFAULT_FOLDER(StoredDataType.STRING),
-	VERSION_ID(StoredDataType.STRING),
+	VERSION_LABEL(StoredDataType.STRING),
+	VERSION_TREE_ID(StoredDataType.STRING),
 	//
 	;
 
