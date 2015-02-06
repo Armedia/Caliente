@@ -5,9 +5,11 @@
 package com.armedia.cmf.engine.sharepoint.exporter;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,14 +35,17 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
+import com.independentsoft.share.File;
+import com.independentsoft.share.Folder;
 import com.independentsoft.share.Service;
+import com.independentsoft.share.ServiceException;
 
 /**
  * @author diego
  *
  */
 public class ShptExportEngine extends
-ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -68,8 +73,31 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 
 		final String path = Tools.toString(pathObj);
 		ShptFolder folder = new ShptFolder(service, service.getFolder(path));
-		ExportTarget ret = new ExportTarget(StoredObjectType.FOLDER, folder.getId(), folder.getServerRelativeUrl());
-		return Collections.singletonList(ret).iterator();
+		Collection<ExportTarget> ret = new ArrayList<ExportTarget>();
+		addItemsRecursively(ret, folder);
+		return ret.iterator();
+	}
+
+	private void addItemsRecursively(Collection<ExportTarget> c, ShptFolder folder) throws ServiceException {
+		this.log.trace("Exploring contents of: [{}]", folder.getServerRelativeUrl());
+		final Service service = folder.getService();
+		List<File> files = service.getFiles(folder.getServerRelativeUrl());
+		for (File f : files) {
+			ShptFile F = new ShptFile(service, f);
+			this.log.trace("\tExporting file: [{}]", f.getServerRelativeUrl());
+			c.add(new ExportTarget(StoredObjectType.DOCUMENT, F.getId(), F.getServerRelativeUrl()));
+		}
+
+		List<Folder> folders = service.getFolders(folder.getServerRelativeUrl());
+		for (Folder f : folders) {
+			addItemsRecursively(c, new ShptFolder(service, f));
+		}
+
+		if (folders.isEmpty() && files.isEmpty()) {
+			// We add the caller if and only if there are neither files nor folders
+			this.log.trace("\tFolder [{}] is empty - adding it", folder.getServerRelativeUrl());
+			c.add(new ExportTarget(StoredObjectType.FOLDER, folder.getId(), folder.getServerRelativeUrl()));
+		}
 	}
 
 	@Override
