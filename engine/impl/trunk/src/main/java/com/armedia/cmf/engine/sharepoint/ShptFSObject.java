@@ -32,12 +32,12 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 	protected ShptFSObject(Service service, T wrapped, StoredObjectType type) {
 		super(service, wrapped, type);
-		String searchKey = getSearchKey();
+		String searchKey = getServerRelativeUrl();
 		this.id = String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
 	}
 
 	@Override
-	public final String getId() {
+	public String getId() {
 		return this.id;
 	}
 
