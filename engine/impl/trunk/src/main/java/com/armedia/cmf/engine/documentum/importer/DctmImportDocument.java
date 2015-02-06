@@ -200,8 +200,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (isReference()) { return newReference(context); }
 
-		final StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
-		final String sourceChronicleId = (att != null ? att.getValue().asId().getId() : null);
+		final StoredAttribute<IDfValue> sourceChronicleAtt = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
+		final String sourceChronicleId = (sourceChronicleAtt != null ? sourceChronicleAtt.getValue().asId().getId() : null);
 
 		// If we have no chronicle info to look for, we don't try to...
 		final boolean root = ((sourceChronicleId == null) || Tools.equals(this.storedObject.getId(), sourceChronicleId));
@@ -214,7 +214,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final StoredProperty<IDfValue> antecedentProperty = this.storedObject
 			.getProperty(DctmSysObject.PATCH_ANTECEDENT);
 		if (antecedentProperty == null) {
-			antecedentId = this.storedObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID).getValue().asId();
+			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
+			antecedentId = (att != null ? att.getValue().asId() : DfId.DF_NULLID);
 		} else {
 			IDfId aid = antecedentProperty.getValue().asId();
 			if (aid.isObjectId()) {
