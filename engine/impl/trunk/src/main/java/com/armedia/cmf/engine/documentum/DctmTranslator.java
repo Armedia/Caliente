@@ -136,7 +136,8 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		am.put(DctmAttributes.TITLE, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_TYPE);
 		am.put(DctmAttributes.R_CONTENT_SIZE, IntermediateAttribute.CONTENT_SIZE);
-		am.put(DctmAttributes.R_VERSION_LABEL, IntermediateAttribute.VERSION_ID);
+		am.put(DctmAttributes.I_CHRONICLE_ID, IntermediateAttribute.VERSION_TREE_ID);
+		am.put(DctmAttributes.R_VERSION_LABEL, IntermediateAttribute.VERSION_LABEL);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
 		am.put(DctmAttributes.OWNER_PERMIT, IntermediateAttribute.OWNER_PERMISSION);
 		am.put(DctmAttributes.GROUP_NAME, IntermediateAttribute.GROUP);
