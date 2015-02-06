@@ -138,7 +138,9 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 		am.put(ShptAttributes.MODIFIER.name, IntermediateAttribute.MODIFIER);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
 		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENTS);
-		am.put(ShptAttributes.VERSION.name, IntermediateAttribute.VERSION_ID);
+		am.put(ShptAttributes.VERSION.name, IntermediateAttribute.VERSION_LABEL);
+		am.put(ShptAttributes.VERSION_TREE.name, IntermediateAttribute.VERSION_TREE_ID);
+		am.put(ShptAttributes.VERSION_PRIOR.name, IntermediateAttribute.VERSION_PRIOR_ID);
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
 		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
