@@ -74,7 +74,7 @@ public class ShptContent extends ShptFSObject<File> {
 	public Handle storeContent(Service session, StoredObject<StoredValue> marshaled, ContentStore streamStore)
 		throws Exception {
 		// TODO: We NEED to use something other than the object ID here...
-		Handle h = streamStore.getHandle(marshaled, "content");
+		Handle h = streamStore.getHandle(marshaled, "");
 		InputStream in = session.getFileStream(this.wrapped.getServerRelativeUrl());
 		// TODO: sadly, this is not memory efficient for larger files...
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer(10240);
