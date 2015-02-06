@@ -180,7 +180,7 @@ public abstract class ShptObject<T> {
 		if (object == null) { return null; }
 		if (!this.wrappedClass.isInstance(object)) { throw new Exception(String.format(
 			"Expected an object of class %s, but got one of class %s", this.wrappedClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.wrappedClass.cast(object);
 	}
 
@@ -202,6 +202,10 @@ public abstract class ShptObject<T> {
 
 	public final StoredObjectType getStoredType() {
 		return this.type;
+	}
+
+	public final T getWrapped() {
+		return this.wrapped;
 	}
 
 	public final StoredObject<StoredValue> marshal() throws ExportException {
