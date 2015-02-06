@@ -200,8 +200,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (isReference()) { return newReference(context); }
 
-		final StoredAttribute<IDfValue> sourceChronicleAtt = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
-		final String sourceChronicleId = (sourceChronicleAtt != null ? sourceChronicleAtt.getValue().asId().getId() : null);
+		final StoredAttribute<IDfValue> sourceChronicleAtt = this.storedObject
+			.getAttribute(DctmAttributes.I_CHRONICLE_ID);
+		final String sourceChronicleId = (sourceChronicleAtt != null ? sourceChronicleAtt.getValue().asId().getId()
+			: null);
 
 		// If we have no chronicle info to look for, we don't try to...
 		final boolean root = ((sourceChronicleId == null) || Tools.equals(this.storedObject.getId(), sourceChronicleId));
@@ -251,16 +253,24 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 					.asString());
 
 				// Set the owner and group
-				antecedentVersion.setOwnerName(this.storedObject.getAttribute(DctmAttributes.OWNER_NAME).getValue()
-					.asString());
-				antecedentVersion.setGroupName(this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue()
-					.asString());
+				StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
+				if (att != null) {
+					antecedentVersion.setOwnerName(att.getValue().asString());
+				}
+				att = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME);
+				if (att != null) {
+					antecedentVersion.setGroupName(att.getValue().asString());
+				}
 
 				// Set the ACL
-				antecedentVersion.setACLDomain(this.storedObject.getAttribute(DctmAttributes.ACL_DOMAIN).getValue()
-					.asString());
-				antecedentVersion.setACLName(this.storedObject.getAttribute(DctmAttributes.ACL_NAME).getValue()
-					.asString());
+				StoredAttribute<IDfValue> aclDomainAtt = this.storedObject.getAttribute(DctmAttributes.ACL_DOMAIN);
+				StoredAttribute<IDfValue> aclNameAtt = this.storedObject.getAttribute(DctmAttributes.ACL_NAME);
+				@SuppressWarnings("unchecked")
+				int firstNull = Tools.firstNull(aclDomainAtt, aclNameAtt);
+				if (firstNull == -1) {
+					antecedentVersion.setACLDomain(aclDomainAtt.getValue().asString());
+					antecedentVersion.setACLName(aclNameAtt.getValue().asString());
+				}
 
 				// Link to prospective parents
 				// TODO: Mess with parents' permissions?
