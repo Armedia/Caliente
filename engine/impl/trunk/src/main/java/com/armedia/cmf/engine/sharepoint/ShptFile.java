@@ -128,6 +128,7 @@ public class ShptFile extends ShptFSObject<File> {
 		try {
 			List<FileVersion> l = this.service.getFileVersions(this.wrapped.getServerRelativeUrl());
 			for (FileVersion v : l) {
+				// TODO: determine if it's the current version, or this version, etc...
 				v.hashCode();
 			}
 		} catch (ServiceException e) {
