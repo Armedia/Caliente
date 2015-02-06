@@ -40,7 +40,7 @@ import com.independentsoft.share.Service;
  *
  */
 public class ShptExportEngine extends
-	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -82,7 +82,7 @@ public class ShptExportEngine extends
 			case FOLDER:
 				return new ShptFolder(session, session.getFolder(id));
 			case DOCUMENT:
-				return new ShptFile(session, session.getFile(id));
+				return ShptFile.locateFile(session, id);
 			default:
 				throw new Exception(String.format("Unsupported object type [%s]", type));
 		}
