@@ -49,7 +49,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -262,7 +262,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.parent.save();
 			}
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("LINKING [%s] --> [%s]", this.link ? "" : "UN", child.getObjectId()
+				this.log.debug(String.format("%sLINKING [%s] --> [%s]", this.link ? "" : "UN", child.getObjectId()
 					.getId(), this.parent.getObjectId().getId()));
 			}
 			if (this.link) {
@@ -418,7 +418,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -643,7 +643,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-				.getId(), currentPath));
+					.getId(), currentPath));
 		}
 
 		return existing;
