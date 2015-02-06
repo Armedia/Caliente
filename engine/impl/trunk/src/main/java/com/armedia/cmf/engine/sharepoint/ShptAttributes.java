@@ -43,6 +43,8 @@ public enum ShptAttributes {
 	HOME_FOLDER,
 	WELCOME_PAGE,
 	VERSION,
+	VERSION_TREE,
+	VERSION_PRIOR,
 	//
 	;
 
