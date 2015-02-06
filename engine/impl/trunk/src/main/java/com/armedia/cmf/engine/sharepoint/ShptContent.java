@@ -23,6 +23,7 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.independentsoft.share.File;
+import com.independentsoft.share.FileVersion;
 import com.independentsoft.share.Service;
 
 /**
@@ -31,13 +32,28 @@ import com.independentsoft.share.Service;
  */
 public class ShptContent extends ShptFSObject<File> {
 
-	public ShptContent(Service service, File wrapped) {
-		super(service, wrapped, StoredObjectType.CONTENT);
+	private final FileVersion version;
+	private final ShptVersionNumber versionNumber;
+
+	public ShptContent(Service service, File file, FileVersion version) {
+		super(service, file, StoredObjectType.CONTENT);
+		this.version = version;
+		if (version == null) {
+			this.versionNumber = new ShptVersionNumber(file.getMajorVersion(), file.getMinorVersion());
+		} else {
+			this.versionNumber = new ShptVersionNumber(version.getLabel());
+		}
+	}
+
+	@Override
+	public String getId() {
+		return String.format("%s-%s", super.getId(), this.versionNumber.toString());
 	}
 
 	@Override
 	public String getSearchKey() {
-		return this.wrapped.getServerRelativeUrl();
+		return String
+			.format(String.format("%s#%s", this.wrapped.getServerRelativeUrl(), this.versionNumber.toString()));
 	}
 
 	@Override
@@ -75,7 +91,12 @@ public class ShptContent extends ShptFSObject<File> {
 		throws Exception {
 		// TODO: We NEED to use something other than the object ID here...
 		Handle h = streamStore.getHandle(marshaled, "");
-		InputStream in = session.getFileStream(this.wrapped.getServerRelativeUrl());
+		InputStream in = null;
+		if (this.version == null) {
+			in = session.getFileStream(this.wrapped.getServerRelativeUrl());
+		} else {
+			in = session.getInputStream(this.version.getUrl());
+		}
 		// TODO: sadly, this is not memory efficient for larger files...
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer(10240);
 		OutputStream out = h.openOutput();
