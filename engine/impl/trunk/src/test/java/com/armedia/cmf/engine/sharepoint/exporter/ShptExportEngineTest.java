@@ -37,23 +37,26 @@ public class ShptExportEngineTest {
 	}
 
 	@Test
-	public void nextTest() throws Exception {
+	public void exportTest() throws Exception {
 		ExportEngine<?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("shpt");
-		ImportEngine<?, ?, ?, ?, ?> importer = ImportEngine.getImportEngine("dctm");
 		this.objectStore.clearAllObjects();
 		this.objectStore.clearAttributeMappings();
 		this.contentStore.clearAllStreams();
 
 		Map<String, String> settings = new HashMap<String, String>();
-
 		settings.put(Setting.URL.getLabel(), "http://daltew8aapp03/sites/cmf");
 		settings.put(Setting.USER.getLabel(), "drivera");
 		settings.put(Setting.PASSWORD.getLabel(), "N3v3rm0r3!2");
 		settings.put(Setting.DOMAIN.getLabel(), "ARMEDIA");
 		settings.put(Setting.PATH.getLabel(), "/sites/cmf/Documents");
 		exporter.runExport(this.output, this.objectStore, this.contentStore, settings);
+	}
 
-		settings.clear();
+	@Test
+	public void importTest() throws Exception {
+		ImportEngine<?, ?, ?, ?, ?> importer = ImportEngine.getImportEngine("dctm");
+
+		Map<String, String> settings = new HashMap<String, String>();
 		settings.put("docbase", "dctmvm01");
 		settings.put("username", "dctmadmin");
 		settings.put("password", "123");
