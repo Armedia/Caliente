@@ -105,7 +105,7 @@ public class ShptExportEngine extends
 		for (File f : files) {
 			ShptFile F = new ShptFile(service, f);
 			this.log.trace("\tExporting file: [{}]", f.getServerRelativeUrl());
-			c.add(new ExportTarget(StoredObjectType.DOCUMENT, F.getId(), F.getServerRelativeUrl()));
+			c.add(new ExportTarget(StoredObjectType.DOCUMENT, F.getId(), F.getSearchKey()));
 		}
 
 		List<Folder> folders = service.getFolders(folder.getServerRelativeUrl());
