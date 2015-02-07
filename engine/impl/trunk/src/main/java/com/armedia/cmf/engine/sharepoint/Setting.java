@@ -8,7 +8,8 @@ public enum Setting implements ConfigurationSetting {
 	USER("user"),
 	PASSWORD("password"),
 	DOMAIN("domain"),
-	PATH("path");
+	PATH("path"),
+	INCLUDE_EMPTY_FOLDERS("includeEmptyFolders", Boolean.TRUE);
 
 	public final String name;
 	private final Object defaultValue;
