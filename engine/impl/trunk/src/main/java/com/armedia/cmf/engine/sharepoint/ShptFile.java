@@ -232,18 +232,21 @@ public class ShptFile extends ShptFSObject<File> {
 
 	public static ShptFile locateFile(Service service, String searchKey) throws ServiceException {
 		Matcher m = ShptFile.SEARCH_KEY_PARSER.matcher(searchKey);
-		if (m.matches()) {
-			searchKey = m.group(1);
+		if (!m.matches()) {
 			File f = service.getFile(searchKey);
-			if (f == null) { return null; }
-			String version = m.group(2);
-			for (FileVersion v : service.getFileVersions(searchKey)) {
-				if (Tools.equals(version, v.getLabel())) { return new ShptFile(service, f, v); }
-			}
-			return new ShptFile(service, f);
+			if (f != null) { return new ShptFile(service, f); }
+			return null;
 		}
-		File f = service.getFile(searchKey);
-		if (f != null) { return new ShptFile(service, f); }
+		final String url = m.group(1);
+		File f = service.getFile(url);
+		if (f == null) { return null; }
+		String version = m.group(2);
+		if (Tools.equals(version, String.format("%d.%d", f.getMajorVersion(), f.getMinorVersion()))) { return new ShptFile(
+			service, f); }
+		for (FileVersion v : service.getFileVersions(url)) {
+			if (Tools.equals(version, v.getLabel())) { return new ShptFile(service, f, v); }
+		}
+		// Nothing found...
 		return null;
 	}
 }
