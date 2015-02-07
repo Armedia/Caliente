@@ -7,7 +7,7 @@ package com.armedia.cmf.engine.sharepoint.importer;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.ContextFactory;
-import com.armedia.cmf.engine.sharepoint.ShptObject;
+import com.armedia.cmf.engine.sharepoint.types.ShptObject;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;

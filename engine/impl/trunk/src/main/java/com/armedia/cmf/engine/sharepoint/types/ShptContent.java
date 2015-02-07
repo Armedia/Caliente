@@ -2,7 +2,7 @@
  *
  */
 
-package com.armedia.cmf.engine.sharepoint;
+package com.armedia.cmf.engine.sharepoint.types;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,6 +13,8 @@ import javax.activation.MimeType;
 
 import org.apache.commons.io.IOUtils;
 
+import com.armedia.cmf.engine.sharepoint.ShptAttributes;
+import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
 import com.armedia.cmf.engine.sharepoint.common.MimeTools;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;

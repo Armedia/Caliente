@@ -2,7 +2,7 @@
  *
  */
 
-package com.armedia.cmf.engine.sharepoint;
+package com.armedia.cmf.engine.sharepoint.types;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;

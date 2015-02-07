@@ -14,6 +14,11 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
+import com.armedia.cmf.engine.sharepoint.types.ShptFile;
+import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
+import com.armedia.cmf.engine.sharepoint.types.ShptGroup;
+import com.armedia.cmf.engine.sharepoint.types.ShptObject;
+import com.armedia.cmf.engine.sharepoint.types.ShptUser;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;

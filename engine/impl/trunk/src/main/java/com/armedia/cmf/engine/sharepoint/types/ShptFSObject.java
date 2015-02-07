@@ -2,7 +2,7 @@
  *
  */
 
-package com.armedia.cmf.engine.sharepoint;
+package com.armedia.cmf.engine.sharepoint.types;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -11,6 +11,8 @@ import java.util.Date;
 import org.apache.commons.lang.StringUtils;
 
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.ShptAttributes;
+import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;

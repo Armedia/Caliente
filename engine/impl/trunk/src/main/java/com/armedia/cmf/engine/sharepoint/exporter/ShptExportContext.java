@@ -7,7 +7,7 @@ package com.armedia.cmf.engine.sharepoint.exporter;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.exporter.ExportContext;
-import com.armedia.cmf.engine.sharepoint.ShptObject;
+import com.armedia.cmf.engine.sharepoint.types.ShptObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
