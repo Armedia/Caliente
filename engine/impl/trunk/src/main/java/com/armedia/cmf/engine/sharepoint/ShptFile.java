@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,15 +33,20 @@ public class ShptFile extends ShptFSObject<File> {
 
 	private final FileVersion version;
 	private final ShptVersionNumber versionNumber;
+	private final String antecedentId;
 
 	private List<ShptFile> predecessors = Collections.emptyList();
 	private List<ShptFile> successors = Collections.emptyList();
 
 	public ShptFile(Service service, File file) {
-		this(service, file, null);
+		this(service, file, null, null);
 	}
 
-	public ShptFile(Service service, File file, FileVersion version) {
+	private ShptFile(Service service, File file, FileVersion version) {
+		this(service, file, version, null);
+	}
+
+	private ShptFile(Service service, File file, FileVersion version, ShptFile antecedent) {
 		super(service, file, StoredObjectType.DOCUMENT);
 		this.version = version;
 		if (version == null) {
@@ -47,6 +54,7 @@ public class ShptFile extends ShptFSObject<File> {
 		} else {
 			this.versionNumber = new ShptVersionNumber(version.getLabel());
 		}
+		this.antecedentId = (antecedent != null ? antecedent.getId() : null);
 	}
 
 	@Override
@@ -148,7 +156,7 @@ public class ShptFile extends ShptFSObject<File> {
 
 	@Override
 	public String getLabel() {
-		return this.wrapped.getName();
+		return String.format("%s#%s", this.wrapped.getName(), this.versionNumber.toString());
 	}
 
 	@Override
@@ -160,31 +168,69 @@ public class ShptFile extends ShptFSObject<File> {
 		if (this.version != null) {
 			this.predecessors = Collections.emptyList();
 			this.successors = Collections.emptyList();
+			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION_PRIOR.name, StoredDataType.ID,
+				false, Collections.singleton(new StoredValue(this.antecedentId))));
 		} else {
+			String antecedentId = this.antecedentId;
 			versionNames.add(new StoredValue("CURRENT"));
 			try {
 				List<FileVersion> l = this.service.getFileVersions(this.wrapped.getServerRelativeUrl());
 				// TODO: Temporarily disable traversing the version results
-				l = Collections.emptyList();
-				List<ShptFile> pred = new ArrayList<ShptFile>(l.size());
-				List<ShptFile> succ = new ArrayList<ShptFile>(l.size());
+				// l = Collections.emptyList();
+				Map<ShptVersionNumber, FileVersion> versions = new TreeMap<ShptVersionNumber, FileVersion>();
 				for (FileVersion v : l) {
-					final ShptFile f = new ShptFile(this.service, this.wrapped, v);
-					final ShptVersionNumber n = f.getVersionNumber();
-					int i = this.versionNumber.compareTo(n);
-					if (i > 0) {
-						pred.add(f);
-						this.log.debug("Version [{}] precedes [{}]", n.toString(), this.versionNumber.toString());
-					} else if (i < 0) {
-						succ.add(f);
-						this.log.debug("Version [{}] succeeds [{}]", n.toString(), this.versionNumber.toString());
-					} else {
-						// Must be this very selfsame version...
-						this.log.debug("Version [{}] is equal to [{}]", n.toString(), this.versionNumber.toString());
-					}
+					final ShptVersionNumber n = new ShptVersionNumber(v.getLabel());
+					versions.put(n, v);
 				}
+
+				List<ShptFile> pred = new ArrayList<ShptFile>(versions.size());
+				List<ShptFile> succ = new ArrayList<ShptFile>(versions.size());
+				ShptFile antecedent = null;
+				List<ShptFile> tgt = pred;
+				for (Map.Entry<ShptVersionNumber, FileVersion> e : versions.entrySet()) {
+					final ShptVersionNumber vn = e.getKey();
+					final FileVersion v = e.getValue();
+					final int c = this.versionNumber.compareTo(vn);
+					if (c > 0) {
+						tgt = pred;
+					} else if (c < 0) {
+						tgt = succ;
+						// If there is no antecedent, or the antecedent is prior to this version,
+						// then this should be the new antecedent, and our antecedent is the
+						// antecedent.
+						if ((antecedent == null) || (this.versionNumber.compareTo(antecedent.getVersionNumber()) < 0)) {
+							antecedentId = antecedent.getId();
+							antecedent = this;
+						}
+					} else if (c == 0) {
+						tgt = succ;
+						antecedent = this;
+						continue;
+					}
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("FILE [%s] - version %s is anteceded by %s", this.wrapped
+							.getServerRelativeUrl(), v.getLabel(), antecedent != null ? antecedent.getId() : "none"));
+					}
+					ShptFile f = new ShptFile(this.service, this.wrapped, v, antecedent);
+					tgt.add(f);
+					antecedent = f;
+				}
+
+				if ((antecedentId == null) && (antecedent != null)) {
+					antecedentId = antecedent.getId();
+				}
+
 				this.predecessors = Tools.freezeList(pred);
 				this.successors = Tools.freezeList(succ);
+				// TODO: See previous note about version detection/antecedent detection
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("FILE [%s] - version %s is anteceded by %s", this.wrapped
+						.getServerRelativeUrl(), this.versionNumber, antecedentId != null ? antecedentId : "none"));
+				}
+				if (antecedentId != null) {
+					object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION_PRIOR.name,
+						StoredDataType.ID, false, Collections.singleton(new StoredValue(antecedentId))));
+				}
 			} catch (ServiceException e) {
 				throw new ExportException(String.format("Failed to retrieve file versions for [%s]",
 					this.wrapped.getServerRelativeUrl()), e);
@@ -195,6 +241,7 @@ public class ShptFile extends ShptFSObject<File> {
 			versionNames));
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION_TREE.name, StoredDataType.ID,
 			false, Collections.singleton(new StoredValue(getBatchId()))));
+
 	}
 
 	@Override

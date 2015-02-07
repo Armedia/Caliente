@@ -21,6 +21,8 @@ import com.independentsoft.share.User;
 public class ShptUser extends ShptSecurityObject<User> {
 
 	private final List<Role> roles;
+	private final String userName;
+	private final String userDomain;
 
 	public ShptUser(Service service, User user) throws ServiceException {
 		super(service, user, StoredObjectType.USER);
@@ -40,6 +42,15 @@ public class ShptUser extends ShptSecurityObject<User> {
 		}
 		 */
 		this.roles = Collections.emptyList();
+		String loginName = this.wrapped.getLoginName();
+		final int backslash = loginName.indexOf('\\');
+		if (backslash >= 0) {
+			this.userName = loginName.substring(backslash + 1);
+			this.userDomain = loginName.substring(loginName.indexOf('|') + 1, backslash);
+		} else {
+			this.userName = loginName;
+			this.userDomain = "";
+		}
 	}
 
 	@Override
@@ -63,7 +74,11 @@ public class ShptUser extends ShptSecurityObject<User> {
 
 	@Override
 	public String getName() {
-		return this.wrapped.getLoginName();
+		return this.userName;
+	}
+
+	public String getDomain() {
+		return this.userDomain;
 	}
 
 	@Override
@@ -73,24 +88,13 @@ public class ShptUser extends ShptSecurityObject<User> {
 			Collections.singleton(new StoredValue(String.format("USER(%08x)", this.wrapped.getId())))));
 
 		// LoginName
-		String loginName = this.wrapped.getLoginName();
-		final String userName;
-		final String userDomain;
-		final int backslash = loginName.indexOf('\\');
-		if (backslash >= 0) {
-			userName = loginName.substring(backslash + 1);
-			userDomain = loginName.substring(loginName.indexOf('|') + 1, backslash);
-		} else {
-			userName = loginName;
-			userDomain = "";
-		}
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(userName))));
+			false, Collections.singleton(new StoredValue(this.userName))));
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.LOGIN_NAME.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(userName))));
-		if (userDomain != null) {
+			false, Collections.singleton(new StoredValue(this.userName))));
+		if (this.userDomain != null) {
 			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.LOGIN_DOMAIN.name,
-				StoredDataType.STRING, false, Collections.singleton(new StoredValue(userDomain))));
+				StoredDataType.STRING, false, Collections.singleton(new StoredValue(this.userDomain))));
 		}
 
 		// SiteAdmin
