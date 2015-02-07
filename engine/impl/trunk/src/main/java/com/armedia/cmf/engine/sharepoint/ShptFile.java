@@ -168,8 +168,10 @@ public class ShptFile extends ShptFSObject<File> {
 		if (this.version != null) {
 			this.predecessors = Collections.emptyList();
 			this.successors = Collections.emptyList();
-			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION_PRIOR.name, StoredDataType.ID,
-				false, Collections.singleton(new StoredValue(this.antecedentId))));
+			if (this.antecedentId != null) {
+				object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION_PRIOR.name,
+					StoredDataType.ID, false, Collections.singleton(new StoredValue(this.antecedentId))));
+			}
 		} else {
 			String antecedentId = this.antecedentId;
 			versionNames.add(new StoredValue("CURRENT"));
