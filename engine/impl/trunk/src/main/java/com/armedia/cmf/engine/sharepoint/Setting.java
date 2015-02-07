@@ -9,7 +9,7 @@ public enum Setting implements ConfigurationSetting {
 	PASSWORD("password"),
 	DOMAIN("domain"),
 	PATH("path"),
-	INCLUDE_EMPTY_FOLDERS("includeEmptyFolders", Boolean.TRUE);
+	EXCLUDE_EMPTY_FOLDERS("excludeEmptyFolders", Boolean.FALSE);
 
 	public final String name;
 	private final Object defaultValue;
