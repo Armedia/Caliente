@@ -27,7 +27,7 @@ import com.independentsoft.share.ServiceException;
 
 public class ShptFile extends ShptFSObject<File> {
 
-	private static final Pattern SEARCH_KEY_PARSER = Pattern.compile("^([^#]*)(?:#(\\d+\\.\\d+))?$");
+	private static final Pattern SEARCH_KEY_PARSER = Pattern.compile("^([^#]*)#(\\d+\\.\\d+)?$");
 
 	private final FileVersion version;
 	private final ShptVersionNumber versionNumber;
@@ -234,7 +234,16 @@ public class ShptFile extends ShptFSObject<File> {
 		Matcher m = ShptFile.SEARCH_KEY_PARSER.matcher(searchKey);
 		if (m.matches()) {
 			searchKey = m.group(1);
+			File f = service.getFile(searchKey);
+			if (f == null) { return null; }
+			String version = m.group(2);
+			for (FileVersion v : service.getFileVersions(searchKey)) {
+				if (Tools.equals(version, v.getLabel())) { return new ShptFile(service, f, v); }
+			}
+			return new ShptFile(service, f);
 		}
-		return new ShptFile(service, service.getFile(searchKey));
+		File f = service.getFile(searchKey);
+		if (f != null) { return new ShptFile(service, f); }
+		return null;
 	}
 }
