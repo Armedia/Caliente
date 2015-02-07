@@ -493,6 +493,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			executor.shutdown();
 
 			final Iterator<ExportTarget> results;
+			this.log.debug("Locating export results...");
 			try {
 				results = findExportResults(baseSession.getWrapped(), settings);
 			} catch (Exception e) {
@@ -505,6 +506,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				// 1: run the query for the given predicate
 				listenerDelegator.exportStarted(settings);
 				// 2: iterate over the results, gathering up the object IDs
+				this.log.debug("Processing the located results...");
 				while (results.hasNext()) {
 					final ExportTarget target = results.next();
 					if (this.log.isTraceEnabled()) {
