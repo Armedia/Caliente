@@ -48,7 +48,7 @@ public class ShptExportEngineTest {
 		settings.put(Setting.USER.getLabel(), "drivera");
 		settings.put(Setting.PASSWORD.getLabel(), "N3v3rm0r3!2");
 		settings.put(Setting.DOMAIN.getLabel(), "ARMEDIA");
-		settings.put(Setting.PATH.getLabel(), "/sites/cmf/Documents");
+		settings.put(Setting.PATH.getLabel(), "/sites/cmf");
 		exporter.runExport(this.output, this.objectStore, this.contentStore, settings);
 	}
 
