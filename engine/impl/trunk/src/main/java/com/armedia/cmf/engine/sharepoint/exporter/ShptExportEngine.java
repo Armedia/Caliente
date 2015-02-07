@@ -45,7 +45,7 @@ import com.independentsoft.share.ServiceException;
  *
  */
 public class ShptExportEngine extends
-	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -91,7 +91,7 @@ public class ShptExportEngine extends
 		}
 		 */
 
-		this.log.debug("Starting recursive search of [{}]...", path);
+		this.log.trace("Starting recursive search of [{}]...", path);
 		ShptFolder folder = new ShptFolder(service, service.getFolder(path));
 		Collection<ExportTarget> ret = new ArrayList<ExportTarget>();
 		addItemsRecursively(ret, folder);
