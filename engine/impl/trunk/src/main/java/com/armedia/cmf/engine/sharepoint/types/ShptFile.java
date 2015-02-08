@@ -182,8 +182,6 @@ public class ShptFile extends ShptFSObject<File> {
 			String antecedentId = this.antecedentId;
 			try {
 				List<FileVersion> l = this.service.getFileVersions(this.wrapped.getServerRelativeUrl());
-				// TODO: Temporarily disable traversing the version results
-				// l = Collections.emptyList();
 				Map<ShptVersionNumber, FileVersion> versions = new TreeMap<ShptVersionNumber, FileVersion>();
 				for (FileVersion v : l) {
 					final ShptVersionNumber n = new ShptVersionNumber(v.getLabel());
