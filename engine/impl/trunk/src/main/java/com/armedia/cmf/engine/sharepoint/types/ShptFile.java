@@ -168,6 +168,9 @@ public class ShptFile extends ShptFSObject<File> {
 		List<StoredValue> versionNames = new ArrayList<StoredValue>();
 
 		versionNames.add(new StoredValue(this.versionNumber.toString()));
+		if ((this.version == null) || this.version.isCurrentVersion()) {
+			versionNames.add(new StoredValue("CURRENT"));
+		}
 		if (this.version != null) {
 			this.predecessors = Collections.emptyList();
 			this.successors = Collections.emptyList();
@@ -175,12 +178,8 @@ public class ShptFile extends ShptFSObject<File> {
 				object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION_PRIOR.name,
 					StoredDataType.ID, false, Collections.singleton(new StoredValue(this.antecedentId))));
 			}
-			if (this.version.isCurrentVersion()) {
-				versionNames.add(new StoredValue("CURRENT"));
-			}
 		} else {
 			String antecedentId = this.antecedentId;
-			versionNames.add(new StoredValue("CURRENT"));
 			try {
 				List<FileVersion> l = this.service.getFileVersions(this.wrapped.getServerRelativeUrl());
 				// TODO: Temporarily disable traversing the version results
