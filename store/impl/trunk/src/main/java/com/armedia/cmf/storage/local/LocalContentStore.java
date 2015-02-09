@@ -65,7 +65,7 @@ public class LocalContentStore extends ContentStore {
 		}
 		this.baseDir = f;
 		this.strategy = strategy;
-		this.propertiesFile = new File(baseDir, "store.properties");
+		this.propertiesFile = new File(baseDir, "store-properties.xml");
 		loadProperties();
 	}
 
@@ -136,6 +136,8 @@ public class LocalContentStore extends ContentStore {
 	protected synchronized void loadProperties() throws StorageException {
 		InputStream in = null;
 		this.properties.clear();
+		// Allow an empty file...
+		if (this.propertiesFile.length() == 0) { return; }
 		try {
 			in = new FileInputStream(this.propertiesFile);
 			StorePropertiesT p = XmlTools.unmarshal(StorePropertiesT.class, LocalContentStore.XML_SCHEMA, in);
