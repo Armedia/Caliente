@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -45,7 +46,7 @@ import com.independentsoft.share.ServiceException;
  *
  */
 public class ShptExportEngine extends
-ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -208,5 +209,9 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 	@Override
 	protected Set<String> getTargetNames() {
 		return ShptExportEngine.TARGETS;
+	}
+
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
+		return TransferEngine.getTransferEngine(ExportEngine.class, ShptExportEngine.TARGETS.iterator().next());
 	}
 }

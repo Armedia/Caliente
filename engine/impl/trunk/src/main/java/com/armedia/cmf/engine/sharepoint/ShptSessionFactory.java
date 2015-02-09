@@ -14,6 +14,11 @@ import com.independentsoft.share.Service;
  */
 public class ShptSessionFactory extends SessionFactory<Service> {
 
+	public static final String URL = Setting.URL.name;
+	public static final String USER = Setting.USER.name;
+	public static final String DOMAIN = Setting.DOMAIN.name;
+	public static final String PASSWORD = Setting.PASSWORD.name;
+
 	private final String url;
 	private final String user;
 	private final String password;
