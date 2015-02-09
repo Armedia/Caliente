@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlType;
  * The following schema fragment specifies the expected content contained within this class.
  *
  * <pre>
- * &lt;complexType name="store_properties.t">
+ * &lt;complexType name="storeProperties.t">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "store_properties.t", propOrder = {
+@XmlType(name = "storeProperties.t", propOrder = {
 	"property"
 })
 public class StorePropertiesT {

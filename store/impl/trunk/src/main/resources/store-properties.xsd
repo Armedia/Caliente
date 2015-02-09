@@ -62,11 +62,11 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="store_properties.t">
+	<xsd:complexType name="storeProperties.t">
 		<xsd:sequence>
 			<xsd:element name="property" type="tns:property.t" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:element name="store-properties" type="tns:store_properties.t"/>
+	<xsd:element name="store-properties" type="tns:storeProperties.t"/>
 </xsd:schema>

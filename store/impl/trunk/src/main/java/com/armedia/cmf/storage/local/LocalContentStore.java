@@ -52,7 +52,6 @@ public class LocalContentStore extends ContentStore {
 
 	public LocalContentStore(File baseDir, URIStrategy strategy) throws StorageException {
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
-		if (strategy == null) { throw new IllegalArgumentException("Must provide a path strategy"); }
 		if (baseDir.exists() && !baseDir.isDirectory()) { throw new IllegalArgumentException(String.format(
 			"The file at [%s] is not a directory", baseDir.getAbsolutePath())); }
 		if (!baseDir.exists() && !baseDir.mkdirs()) { throw new IllegalArgumentException(String.format(
@@ -64,9 +63,22 @@ public class LocalContentStore extends ContentStore {
 			f = baseDir;
 		}
 		this.baseDir = f;
-		this.strategy = strategy;
 		this.propertiesFile = new File(baseDir, "store-properties.xml");
 		loadProperties();
+		StoredValue currentStrategyName = getProperty("strategy");
+		boolean storeStrategyName = true;
+		if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
+			URIStrategy currentStrategy = URIStrategy.getStrategy(currentStrategyName.asString());
+			if (currentStrategy != null) {
+				strategy = currentStrategy;
+				storeStrategyName = false;
+			}
+		}
+		this.strategy = strategy;
+		if (this.strategy == null) { throw new IllegalArgumentException("Must provide a path strategy"); }
+		if (storeStrategyName) {
+			setProperty("strategy", new StoredValue(strategy.getName()));
+		}
 	}
 
 	@Override
@@ -137,7 +149,7 @@ public class LocalContentStore extends ContentStore {
 		InputStream in = null;
 		this.properties.clear();
 		// Allow an empty file...
-		if (this.propertiesFile.length() == 0) { return; }
+		if (!this.propertiesFile.exists() || (this.propertiesFile.length() == 0)) { return; }
 		try {
 			in = new FileInputStream(this.propertiesFile);
 			StorePropertiesT p = XmlTools.unmarshal(StorePropertiesT.class, LocalContentStore.XML_SCHEMA, in);
@@ -170,7 +182,6 @@ public class LocalContentStore extends ContentStore {
 
 	protected synchronized void storeProperties() throws StorageException {
 		OutputStream out = null;
-		this.properties.clear();
 		try {
 			out = new FileOutputStream(this.propertiesFile);
 			StorePropertiesT p = new StorePropertiesT();
@@ -193,10 +204,13 @@ public class LocalContentStore extends ContentStore {
 				p.getProperty().add(property);
 			}
 			XmlTools.marshal(p, LocalContentStore.XML_SCHEMA, out, true);
+			out.flush();
 		} catch (FileNotFoundException e) {
 			return;
 		} catch (JAXBException e) {
-			throw new StorageException("Failed to parse the stored properties", e);
+			throw new StorageException("Failed to parse the store properties", e);
+		} catch (IOException e) {
+			throw new StorageException("Failed to write the store properties", e);
 		} finally {
 			IOUtils.closeQuietly(out);
 		}
