@@ -31,9 +31,10 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	protected final ContentStore contentStore;
 	protected final E engine;
 
-	protected final String docbase;
+	protected final String server;
 	protected final String user;
 	protected final String password;
+	protected final String domain;
 
 	AbstractCMSMFMain(E engine) throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
@@ -45,7 +46,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		this.console.info("Configuring the properties");
 		SettingManager.addPropertySource(CMSMFLauncher.getParameterProperties());
 
-		// A configuration file has been specifed, so use its values ahead of the defaults
+		// A configuration file has been specified, so use its values ahead of the defaults
 		if (CLIParam.cfg.getString() != null) {
 			SettingManager.addPropertySource(CLIParam.cfg.getString());
 		}
@@ -87,10 +88,12 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			this.console.info(msg);
 			this.log.info(msg);
 			this.objectStore.clearAllObjects();
+			this.objectStore.clearAttributeMappings();
 		}
-		this.docbase = CLIParam.docbase.getString();
+		this.server = CLIParam.server.getString();
 		this.user = CLIParam.user.getString();
 		this.password = CLIParam.password.getString();
+		this.domain = CLIParam.domain.getString();
 
 		// Set the filesystem location where files will be created or read from
 		this.log.info(String.format("Using database directory: [%s]", databaseDirectoryLocation));

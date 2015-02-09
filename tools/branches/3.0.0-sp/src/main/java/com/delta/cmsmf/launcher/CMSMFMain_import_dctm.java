@@ -33,8 +33,8 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements
-	ImportEngineListener {
+public class CMSMFMain_import_dctm extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements
+ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
@@ -43,7 +43,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, Im
 	private final Map<StoredObjectType, Integer> total = new HashMap<StoredObjectType, Integer>();
 	private final Map<StoredObjectType, AtomicInteger> current = new HashMap<StoredObjectType, AtomicInteger>();
 
-	CMSMFMain_import() throws Throwable {
+	CMSMFMain_import_dctm() throws Throwable {
 		super(DctmImportEngine.getImportEngine());
 	}
 
@@ -58,8 +58,8 @@ public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, Im
 	public void run() throws CMSMFException {
 		// lock
 		Map<String, Object> settings = new HashMap<String, Object>();
-		if (this.docbase != null) {
-			settings.put(DfcSessionFactory.DOCBASE, this.docbase);
+		if (this.server != null) {
+			settings.put(DfcSessionFactory.DOCBASE, this.server);
 		}
 		if (this.user != null) {
 			settings.put(DfcSessionFactory.USERNAME, this.user);

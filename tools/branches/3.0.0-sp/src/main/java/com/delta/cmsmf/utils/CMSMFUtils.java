@@ -43,7 +43,7 @@ public class CMSMFUtils {
 	static Logger log = LoggerFactory.getLogger(CMSMFUtils.class);
 
 	private static IDfSysObject getCmsmfStateObject(IDfSession dctmSession, boolean createIfMissing) throws DfException {
-		final String targetDocbaseName = CLIParam.docbase.getString();
+		final String targetDocbaseName = CLIParam.server.getString();
 		final String cabinetName = Setting.STATE_CABINET.getString();
 		final String objectName = CMSMFUtils.LAST_EXPORT_OBJ_NAME;
 		final String cabinetPath = String.format("/%s", cabinetName);
@@ -231,10 +231,10 @@ public class CMSMFUtils {
 
 		if (!CMSMFUtils.validateSmtp(smtpHostAddress, smtpHostPort)) {
 			CMSMFUtils.log
-				.warn(String
-					.format(
-						"Host [%s] is not running an SMTP server on port 25. The intended recipients (%s) won't receive an e-mail.",
-						smtpHostAddress, recipients));
+			.warn(String
+				.format(
+					"Host [%s] is not running an SMTP server on port 25. The intended recipients (%s) won't receive an e-mail.",
+					smtpHostAddress, recipients));
 			return;
 		}
 

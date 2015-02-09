@@ -1,6 +1,7 @@
 package com.delta.cmsmf.launcher;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,7 +16,7 @@ import com.delta.cmsmf.cfg.CLIParam;
 
 public class CMSMFLauncher extends AbstractLauncher {
 
-	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.CMSMFMain_%s";
+	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.CMSMFMain_%s_%s";
 
 	private static Properties PARAMETER_PROPERTIES = new Properties();
 
@@ -80,10 +81,21 @@ public class CMSMFLauncher extends AbstractLauncher {
 			}
 		}
 
+		String server = CLIParam.server.getString();
+		String engine = "dctm";
+		if (server != null) {
+			try {
+				new URL(server);
+				engine = "shpt";
+			} catch (MalformedURLException e) {
+				// must be documentum, which is already selected...
+			}
+		}
+
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
-		Class<?> klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode));
+		Class<?> klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode, engine));
 		CMSMFMain main = null;
 		if (CMSMFMain.class.isAssignableFrom(klass)) {
 			main = CMSMFMain.class.cast(klass.newInstance());

@@ -2,8 +2,13 @@ package com.delta.cmsmf.launcher;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -12,35 +17,23 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
-import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
+import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.commons.dfc.pool.DfcSessionFactory;
-import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.FileNameTools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
-import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.DfTime;
 
-public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
-	ExportEngineListener {
+public class CMSMFMain_export_shpt extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>>
+implements ExportEngineListener {
 
-	/**
-	 * The from and where clause of the export query that runs periodically. The application will
-	 * combine the select clause listed above with this from and where clauses to build the complete
-	 * dql query. Please note that this clause will be ignored when the export is running in the
-	 * adhoc mode. In that case the from and where clauses are specified in the properties file.
-	 */
-	private static final String DEFAULT_PREDICATE = "dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
-		+ "and not folder('/System', descend)"; // and r_modify_date >= DATE('XX_PLACE_HOLDER_XX')";
-
-	CMSMFMain_export() throws Throwable {
-		super(DctmExportEngine.getExportEngine());
+	CMSMFMain_export_shpt() throws Throwable {
+		super(ShptExportEngine.getExportEngine());
 	}
 
 	/**
@@ -55,21 +48,49 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 		this.engine.addListener(this);
 
 		Map<String, Object> settings = new HashMap<String, Object>();
-		if (this.docbase != null) {
-			settings.put(DfcSessionFactory.DOCBASE, this.docbase);
+		if (this.server == null) { throw new CMSMFException(
+			"Must provide the base URL where Sharepoint may be accessed"); }
+		URI baseUri;
+		// Ensure it has a trailing slash...this will be useful later
+		try {
+			baseUri = new URI(String.format("%s/", this.server));
+		} catch (URISyntaxException e) {
+			throw new CMSMFException(String.format("Bad URL for Sharepoint: [%s]", this.server), e);
 		}
-		if (this.user != null) {
-			settings.put(DfcSessionFactory.USERNAME, this.user);
-		}
-		if (this.password != null) {
-			settings.put(DfcSessionFactory.PASSWORD, this.password);
+		baseUri = baseUri.normalize();
+		final URL baseUrl;
+		try {
+			baseUrl = baseUri.toURL();
+		} catch (MalformedURLException e) {
+			throw new CMSMFException(String.format("Bad URL for Sharepoint: [%s]", this.server), e);
 		}
 
-		final DfcSessionPool pool;
+		String srcPath = CLIParam.source.getString();
+		if (srcPath == null) { throw new CMSMFException("Must provide the name of the sharepoint site to export"); }
+		List<String> l = FileNameTools.tokenize(srcPath, '/');
+		if (l.isEmpty()) { throw new CMSMFException("Must provide the name of the sharepoint site to export"); }
+		final String site = l.get(0);
+		if (StringUtils.isEmpty(site)) { throw new CMSMFException(
+			"Must provide the name of the sharepoint site to export"); }
+
+		srcPath = FileNameTools.reconstitute(l, false, false, '/');
+
 		try {
-			pool = new DfcSessionPool(settings);
-		} catch (Exception e) {
-			throw new CMSMFException("Failed to initialize the connection pool", e);
+			// We don't use a leading slash here in "sites" because the URL *SHOULD* contain a
+			// trailing slash
+			settings.put(ShptSessionFactory.BASE_URL, new URL(baseUrl, String.format("sites/%s", site)).toString());
+		} catch (MalformedURLException e) {
+			throw new CMSMFException("Bad base URL", e);
+		}
+		settings.put("path", String.format("/sites/%s", srcPath));
+		if (this.user != null) {
+			settings.put(ShptSessionFactory.USER, this.user);
+		}
+		if (this.password != null) {
+			settings.put(ShptSessionFactory.PASSWORD, this.password);
+		}
+		if (this.domain != null) {
+			settings.put(ShptSessionFactory.DOMAIN, this.domain);
 		}
 
 		Date end = null;
@@ -77,72 +98,23 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 		String exceptionReport = null;
 		StringBuilder report = new StringBuilder();
 		Date start = null;
+
+		start = new Date();
 		try {
-			final IDfSession session;
-			try {
-				session = pool.acquireSession();
-			} catch (Exception e) {
-				throw new CMSMFException("Failed to obtain the main session from the pool", e);
-			}
+			this.log.info("##### Export Process Started #####");
+			this.engine.runExport(this.console, this.objectStore, this.contentStore, settings);
+			this.log.info("##### Export Process Finished #####");
 
-			String dql = String.format("select r_object_id %s", buildExportPredicate(session));
-			settings.put("dql", dql);
-
-			start = new Date();
-			try {
-				this.log.info("##### Export Process Started #####");
-				this.engine.runExport(this.console, this.objectStore, this.contentStore, settings);
-				this.log.info("##### Export Process Finished #####");
-
-				/**
-				 * Now, we try to set the last export date
-				 */
-
-				boolean ok = false;
-				try {
-					session.beginTrans();
-					// If this is auto run type of an export instead of an adhoc query export, store
-					// the value of the current export date in the repository. This value will be
-					// looked up in the next run. This is indeed an auto run type of export
-					CMSMFUtils.setLastExportDate(session, start);
-					ok = true;
-				} finally {
-					try {
-						if (ok) {
-							session.commitTrans();
-						} else {
-							session.abortTrans();
-						}
-					} catch (DfException e) {
-						this.log.error(String.format(
-							"Exception caught while %s the transaction for saving the export metadata",
-							ok ? "committing" : "aborting"), e);
-					}
-				}
-
-				summary = this.objectStore.getStoredObjectTypes();
-			} catch (Throwable t) {
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				report.append(String.format("%n%nException caught while attempting an export%n%n"));
-				t.printStackTrace(pw);
-				exceptionReport = sw.toString();
-			} finally {
-				// unlock
-				end = new Date();
-			}
-
-			try {
-				session.disconnect();
-			} catch (DfException e) {
-				if (this.log.isTraceEnabled()) {
-					this.log.warn("Exception caught when releasing the master session", e);
-				} else {
-					this.log.warn("Exception caught when releasing the master session: {}", e.getMessage());
-				}
-			}
+			summary = this.objectStore.getStoredObjectTypes();
+		} catch (Throwable t) {
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			report.append(String.format("%n%nException caught while attempting an export%n%n"));
+			t.printStackTrace(pw);
+			exceptionReport = sw.toString();
 		} finally {
-			pool.close();
+			// unlock
+			end = new Date();
 		}
 
 		long duration = (end.getTime() - start.getTime());
@@ -196,32 +168,6 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 		} catch (MessagingException e) {
 			this.log.error("Exception caught attempting to send the report e-mail", e);
 		}
-	}
-
-	private String buildExportPredicate(IDfSession session) {
-
-		// First check to see if ad-hoc query property has any value. If it does have some value in
-		// it, use it to build the query string. If this value is blank, look into the source
-		// repository to see when was the last export run and pick up the sysobjects modified since
-		// then.
-
-		String predicate = Setting.EXPORT_PREDICATE.getString();
-		if (StringUtils.isBlank(predicate)) {
-			// Try to locate a object in source repository that represents a last successful export
-			// to a target repository.
-			// NOTE : We will create a cabinet named 'CMSMF_SYNC' in source repository. We will
-			// create a folder for each target repository in this cabinet, the name of the folder
-			// will be the name of a target repository. In this folder we will create an object
-			// named 'cmsmf_last_export' and
-
-			// first get the last export date from the source repository
-			Date lastExportRunDate = CMSMFUtils.getLastExportDate(session);
-			predicate = CMSMFMain_export.DEFAULT_PREDICATE;
-			if (lastExportRunDate != null) { return String.format("%s AND r_modify_date >= DATE('%s', '%s')",
-				predicate, new DfTime(lastExportRunDate).asString(AbstractCMSMFMain.LAST_EXPORT_DATETIME_PATTERN),
-				AbstractCMSMFMain.LAST_EXPORT_DATETIME_PATTERN); }
-		}
-		return predicate;
 	}
 
 	@Override
