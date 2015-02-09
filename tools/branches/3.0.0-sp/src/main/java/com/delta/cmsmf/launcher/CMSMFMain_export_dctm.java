@@ -28,7 +28,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
 
 public class CMSMFMain_export_dctm extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>>
-	implements ExportEngineListener {
+implements ExportEngineListener {
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
@@ -267,5 +267,10 @@ public class CMSMFMain_export_dctm extends AbstractCMSMFMain<ExportEngineListene
 			}
 			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
 		}
+	}
+
+	@Override
+	protected String getContentStrategyName() {
+		return "cmsmf";
 	}
 }

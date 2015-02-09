@@ -30,7 +30,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export_shpt extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>>
-implements ExportEngineListener {
+	implements ExportEngineListener {
 
 	CMSMFMain_export_shpt() throws Throwable {
 		super(ShptExportEngine.getExportEngine());
@@ -213,5 +213,10 @@ implements ExportEngineListener {
 			}
 			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
 		}
+	}
+
+	@Override
+	protected String getContentStrategyName() {
+		return "sharepoint";
 	}
 }

@@ -33,8 +33,8 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_import_dctm extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements
-ImportEngineListener {
+public class CMSMFMain_import_dctm extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>>
+implements ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);

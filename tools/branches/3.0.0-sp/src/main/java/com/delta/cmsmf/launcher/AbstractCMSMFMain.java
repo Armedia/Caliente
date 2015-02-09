@@ -75,6 +75,11 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 		cfg = Stores.getContentStoreConfiguration("cmsmf");
 		cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
+
+		String strategy = getContentStrategyName();
+		if (strategy != null) {
+			cfg.getSettings().put("dir.content.strategy", strategy);
+		}
 		this.contentStore = Stores.createContentStore(cfg);
 
 		if (requiresCleanData()) {
@@ -114,5 +119,9 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	@Override
 	public boolean requiresCleanData() {
 		return false;
+	}
+
+	protected String getContentStrategyName() {
+		return null;
 	}
 }
