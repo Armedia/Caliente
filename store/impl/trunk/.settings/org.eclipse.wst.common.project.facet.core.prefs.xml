@@ -9,6 +9,10 @@
     <node name="platform">
       <attribute name="platform-id" value="generic_2_1"/>
     </node>
-    <node name="schemas"/>
+    <node name="schemas">
+      <node name="schema-1">
+        <attribute name="location" value="platform:/resource/cmf-storage-local/src/main/resources/store-properties.xsd"/>
+      </node>
+    </node>
   </facet>
 </root>
