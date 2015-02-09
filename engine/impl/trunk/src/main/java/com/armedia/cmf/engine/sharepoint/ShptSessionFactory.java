@@ -14,7 +14,7 @@ import com.independentsoft.share.Service;
  */
 public class ShptSessionFactory extends SessionFactory<Service> {
 
-	public static final String URL = Setting.URL.name;
+	public static final String BASE_URL = Setting.BASE_URL.name;
 	public static final String USER = Setting.USER.name;
 	public static final String DOMAIN = Setting.DOMAIN.name;
 	public static final String PASSWORD = Setting.PASSWORD.name;
@@ -26,7 +26,7 @@ public class ShptSessionFactory extends SessionFactory<Service> {
 
 	public ShptSessionFactory(CfgTools settings) {
 		super(settings);
-		this.url = settings.getString(Setting.URL);
+		this.url = settings.getString(Setting.BASE_URL);
 		this.user = settings.getString(Setting.USER);
 		this.password = settings.getString(Setting.PASSWORD);
 		this.domain = settings.getString(Setting.DOMAIN);

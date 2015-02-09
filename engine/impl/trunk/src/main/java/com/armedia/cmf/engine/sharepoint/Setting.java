@@ -4,7 +4,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum Setting implements ConfigurationSetting {
 	//
-	URL("url"),
+	BASE_URL("url"),
 	USER("user"),
 	PASSWORD("password"),
 	DOMAIN("domain"),

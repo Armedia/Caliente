@@ -44,7 +44,7 @@ public class ShptExportEngineTest {
 		this.contentStore.clearAllStreams();
 
 		Map<String, String> settings = new HashMap<String, String>();
-		settings.put(Setting.URL.getLabel(), "http://daltew8aapp03/sites/cmf");
+		settings.put(Setting.BASE_URL.getLabel(), "http://daltew8aapp03/sites/cmf");
 		settings.put(Setting.USER.getLabel(), "drivera");
 		settings.put(Setting.PASSWORD.getLabel(), "N3v3rm0r3!2");
 		settings.put(Setting.DOMAIN.getLabel(), "ARMEDIA");
