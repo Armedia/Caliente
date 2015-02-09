@@ -1,5 +1,6 @@
 package com.armedia.cmf.storage;
 
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -54,4 +55,28 @@ public abstract class Store {
 	protected boolean doClose() {
 		return true;
 	}
+
+	public final StoredValue getProperty(String property) {
+		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to retrieve"); }
+		return doGetProperty(property);
+	}
+
+	protected abstract StoredValue doGetProperty(String property);
+
+	public final StoredValue setProperty(String property, StoredValue value) {
+		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to set"); }
+		if (value == null) { return doClearProperty(property); }
+		return doSetProperty(property, value);
+	}
+
+	protected abstract StoredValue doSetProperty(String property, StoredValue value);
+
+	public abstract Set<String> getPropertyNames();
+
+	public final StoredValue clearProperty(String property) {
+		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to set"); }
+		return doClearProperty(property);
+	}
+
+	protected abstract StoredValue doClearProperty(String property);
 }
