@@ -743,4 +743,57 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 	}
 
 	protected abstract void doClearAllObjects(O operation) throws StorageException;
+
+	protected abstract StoredValue doGetProperty(O operation, String property) throws StorageException;
+
+	@Override
+	protected final StoredValue doGetProperty(String property) throws StorageException {
+		assertOpen();
+		O operation = newOperation();
+		try {
+			return doGetProperty(operation, property);
+		} finally {
+			operation.close();
+		}
+	}
+
+	protected abstract StoredValue doSetProperty(O operation, String property, StoredValue value)
+		throws StorageException;
+
+	@Override
+	protected final StoredValue doSetProperty(String property, StoredValue value) throws StorageException {
+		assertOpen();
+		O operation = newOperation();
+		try {
+			return doSetProperty(operation, property, value);
+		} finally {
+			operation.close();
+		}
+	}
+
+	protected abstract Set<String> getPropertyNames(O operation) throws StorageException;
+
+	@Override
+	public final Set<String> getPropertyNames() throws StorageException {
+		assertOpen();
+		O operation = newOperation();
+		try {
+			return getPropertyNames(operation);
+		} finally {
+			operation.close();
+		}
+	}
+
+	protected abstract StoredValue doClearProperty(O operation, String property) throws StorageException;
+
+	@Override
+	protected final StoredValue doClearProperty(String property) throws StorageException {
+		assertOpen();
+		O operation = newOperation();
+		try {
+			return doClearProperty(operation, property);
+		} finally {
+			operation.close();
+		}
+	}
 }

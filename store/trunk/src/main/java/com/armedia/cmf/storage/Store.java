@@ -56,27 +56,27 @@ public abstract class Store {
 		return true;
 	}
 
-	public final StoredValue getProperty(String property) {
+	public final StoredValue getProperty(String property) throws StorageException {
 		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to retrieve"); }
 		return doGetProperty(property);
 	}
 
-	protected abstract StoredValue doGetProperty(String property);
+	protected abstract StoredValue doGetProperty(String property) throws StorageException;
 
-	public final StoredValue setProperty(String property, StoredValue value) {
+	public final StoredValue setProperty(String property, StoredValue value) throws StorageException {
 		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to set"); }
 		if (value == null) { return doClearProperty(property); }
 		return doSetProperty(property, value);
 	}
 
-	protected abstract StoredValue doSetProperty(String property, StoredValue value);
+	protected abstract StoredValue doSetProperty(String property, StoredValue value) throws StorageException;
 
-	public abstract Set<String> getPropertyNames();
+	public abstract Set<String> getPropertyNames() throws StorageException;
 
-	public final StoredValue clearProperty(String property) {
+	public final StoredValue clearProperty(String property) throws StorageException {
 		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to set"); }
 		return doClearProperty(property);
 	}
 
-	protected abstract StoredValue doClearProperty(String property);
+	protected abstract StoredValue doClearProperty(String property) throws StorageException;
 }
