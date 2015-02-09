@@ -105,7 +105,7 @@ public class SettingContainer {
 	@SuppressWarnings("unchecked")
 	public final Map<String, String> getEffectiveSettings() {
 		final Map<String, String> m = new HashMap<String, String>();
-		Tools.overlayMaps(m, (this.parent != null ? this.parent.getEffectiveSettings() : null), getSettings());
+		Tools.overlayMaps(m, getSettings(), (this.parent != null ? this.parent.getEffectiveSettings() : null));
 		StrSubstitutor sub = new StrSubstitutor(new Lookup(m));
 		// We make a copy of the keys to avoid concurrent modification errors
 		for (String k : new HashSet<String>(m.keySet())) {
