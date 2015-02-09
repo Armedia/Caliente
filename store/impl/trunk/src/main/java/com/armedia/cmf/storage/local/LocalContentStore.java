@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -161,7 +160,7 @@ public class LocalContentStore extends ContentStore {
 				final StoredValue v;
 				try {
 					v = deserializer.deserialize(property.getValue());
-				} catch (ParseException e) {
+				} catch (Exception e) {
 					this.log.warn(String.format(
 						"Failed to deserialize the value for store property [%s]:  [%s] not valid as a [%s]",
 						property.getName(), property.getValue(), property.getType()));
@@ -197,7 +196,7 @@ public class LocalContentStore extends ContentStore {
 				property.setType(v.getDataType());
 				try {
 					property.setValue(serializer.serialize(v));
-				} catch (ParseException ex) {
+				} catch (Exception ex) {
 					this.log.warn(String.format("Failed to serialize the value for store property [%s]:  [%s]", n, v));
 					continue;
 				}
