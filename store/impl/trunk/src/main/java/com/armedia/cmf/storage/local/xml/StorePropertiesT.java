@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlType;
  *
  *
  */
-@XmlRootElement
+@XmlRootElement(name = "store-properties")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "storeProperties.t", propOrder = {
 	"property"

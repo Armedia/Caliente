@@ -14,9 +14,9 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,7 +48,7 @@ public class LocalContentStore extends ContentStore {
 	private final URIStrategy strategy;
 	private final File propertiesFile;
 	private final AtomicBoolean modified = new AtomicBoolean(false);
-	private final Map<String, StoredValue> properties = new HashMap<String, StoredValue>();
+	private final Map<String, StoredValue> properties = new TreeMap<String, StoredValue>();
 
 	public LocalContentStore(File baseDir, URIStrategy strategy) throws StorageException {
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
