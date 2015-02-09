@@ -14,6 +14,9 @@
 			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
 				<constraints nullable="false" />
 			</column>
+			<column name="data_type" type="varchar(32)" remarks="The property's data type">
+				<constraints nullable="false" />
+			</column>
 			<column name="value" type="text" remarks="The property's value">
 				<constraints nullable="false" />
 			</column>
