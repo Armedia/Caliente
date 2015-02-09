@@ -6,19 +6,34 @@ package com.armedia.cmf.storage.local;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.StoredValueSerializer;
 import com.armedia.cmf.storage.URIStrategy;
+import com.armedia.cmf.storage.local.xml.PropertyT;
+import com.armedia.cmf.storage.local.xml.StorePropertiesT;
+import com.armedia.commons.utilities.XmlTools;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -27,9 +42,13 @@ import com.armedia.cmf.storage.URIStrategy;
 public class LocalContentStore extends ContentStore {
 
 	private static final String SCHEME = "local";
+	private static final String XML_SCHEMA = "store-properties.xsd";
 
 	private final File baseDir;
 	private final URIStrategy strategy;
+	private final File propertiesFile;
+	private final AtomicBoolean modified = new AtomicBoolean(false);
+	private final Map<String, StoredValue> properties = new HashMap<String, StoredValue>();
 
 	public LocalContentStore(File baseDir, URIStrategy strategy) throws StorageException {
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
@@ -46,6 +65,8 @@ public class LocalContentStore extends ContentStore {
 		}
 		this.baseDir = f;
 		this.strategy = strategy;
+		this.propertiesFile = new File(baseDir, "store.properties");
+		loadProperties();
 	}
 
 	@Override
@@ -110,5 +131,109 @@ public class LocalContentStore extends ContentStore {
 				// Ignore it, keep going
 			}
 		}
+	}
+
+	protected synchronized void loadProperties() throws StorageException {
+		InputStream in = null;
+		this.properties.clear();
+		try {
+			in = new FileInputStream(this.propertiesFile);
+			StorePropertiesT p = XmlTools.unmarshal(StorePropertiesT.class, LocalContentStore.XML_SCHEMA, in);
+			for (PropertyT property : p.getProperty()) {
+				StoredValueSerializer deserializer = StoredValueSerializer.get(property.getType());
+				if (deserializer == null) {
+					continue;
+				}
+				final StoredValue v;
+				try {
+					v = deserializer.deserialize(property.getValue());
+				} catch (ParseException e) {
+					this.log.warn(String.format(
+						"Failed to deserialize the value for store property [%s]:  [%s] not valid as a [%s]",
+						property.getName(), property.getValue(), property.getType()));
+					continue;
+				}
+				if ((v != null) && !v.isNull()) {
+					this.properties.put(property.getName(), v);
+				}
+			}
+		} catch (FileNotFoundException e) {
+			return;
+		} catch (JAXBException e) {
+			throw new StorageException("Failed to parse the stored properties", e);
+		} finally {
+			IOUtils.closeQuietly(in);
+		}
+	}
+
+	protected synchronized void storeProperties() throws StorageException {
+		OutputStream out = null;
+		this.properties.clear();
+		try {
+			out = new FileOutputStream(this.propertiesFile);
+			StorePropertiesT p = new StorePropertiesT();
+			for (Map.Entry<String, StoredValue> e : this.properties.entrySet()) {
+				final String n = e.getKey();
+				final StoredValue v = e.getValue();
+				StoredValueSerializer serializer = StoredValueSerializer.get(v.getDataType());
+				if (serializer == null) {
+					continue;
+				}
+				PropertyT property = new PropertyT();
+				property.setName(n);
+				property.setType(v.getDataType());
+				try {
+					property.setValue(serializer.serialize(v));
+				} catch (ParseException ex) {
+					this.log.warn(String.format("Failed to serialize the value for store property [%s]:  [%s]", n, v));
+					continue;
+				}
+				p.getProperty().add(property);
+			}
+			XmlTools.marshal(p, LocalContentStore.XML_SCHEMA, out, true);
+		} catch (FileNotFoundException e) {
+			return;
+		} catch (JAXBException e) {
+			throw new StorageException("Failed to parse the stored properties", e);
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+	}
+
+	@Override
+	protected StoredValue doGetProperty(String property) throws StorageException {
+		return this.properties.get(property);
+	}
+
+	@Override
+	protected StoredValue doSetProperty(String property, StoredValue value) throws StorageException {
+		StoredValue ret = this.properties.put(property, value);
+		this.modified.set(true);
+		return ret;
+	}
+
+	@Override
+	public Set<String> getPropertyNames() throws StorageException {
+		return new TreeSet<String>(this.properties.keySet());
+	}
+
+	@Override
+	protected StoredValue doClearProperty(String property) throws StorageException {
+		StoredValue ret = this.properties.remove(property);
+		this.modified.set(true);
+		return ret;
+	}
+
+	@Override
+	protected boolean doClose() {
+		if (this.modified.get()) {
+			try {
+				storeProperties();
+			} catch (StorageException e) {
+				this.log.error(String.format("Failed to write the store properties to [%s]",
+					this.propertiesFile.getAbsolutePath()), e);
+			}
+		}
+		return super.doClose();
 	}
 }
