@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -44,13 +43,12 @@ public enum StoredValueSerializer {
 
 		@Override
 		public String doSerialize(StoredValue value) {
-			long l = Double.doubleToRawLongBits(value.asDouble());
-			return String.format("%016x", l);
+			return String.format("%d", Double.doubleToRawLongBits(value.asDouble()));
 		}
 
 		@Override
 		public StoredValue doDeserialize(String str) {
-			return new StoredValue(Double.longBitsToDouble(Long.parseLong(str, 16)));
+			return new StoredValue(Double.longBitsToDouble(Long.decode(str)));
 		}
 
 	},
@@ -95,16 +93,16 @@ public enum StoredValueSerializer {
 	},
 	TIME(StoredDataType.TIME) {
 
-		private final FastDateFormat format = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT;
+		private final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 
 		@Override
 		public String doSerialize(StoredValue value) throws ParseException {
-			return this.format.format(value.asTime());
+			return DateFormatUtils.format(value.asTime(), this.PATTERN);
 		}
 
 		@Override
 		public StoredValue doDeserialize(String str) throws ParseException {
-			return new StoredValue(DateUtils.parseDate(str, this.format.getPattern()));
+			return new StoredValue(DateUtils.parseDate(str, this.PATTERN));
 		}
 
 	};
