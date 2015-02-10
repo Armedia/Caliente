@@ -167,6 +167,17 @@ public class ShptFile extends ShptFSObject<File> {
 		super.marshal(object);
 		List<StoredValue> versionNames = new ArrayList<StoredValue>();
 
+		if (this.version != null) {
+			Date d = this.version.getCreatedTime();
+			if (d != null) {
+				Collection<StoredValue> c = Collections.singleton(new StoredValue(d));
+				object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name,
+					StoredDataType.TIME, false, c));
+				object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
+					StoredDataType.TIME, false, c));
+			}
+		}
+
 		versionNames.add(new StoredValue(this.versionNumber.toString()));
 		if ((this.version == null) || this.version.isCurrentVersion()) {
 			versionNames.add(new StoredValue("CURRENT"));
@@ -257,9 +268,21 @@ public class ShptFile extends ShptFSObject<File> {
 		ret.add(author);
 		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OWNER.name, StoredDataType.STRING,
 			false, Collections.singleton(new StoredValue(author.getName()))));
+
+		ShptUser modifier = null;
+		ShptUser creator = author;
+		if (this.version == null) {
+			modifier = new ShptUser(service, service.getModifiedByUser(this.wrapped.getServerRelativeUrl()));
+		} else {
+			// TODO: How in the hell can we get the version's creator via JShare?
+			modifier = new ShptUser(service, service.getModifiedByUser(this.wrapped.getServerRelativeUrl()));
+			// creator = modifier;
+		}
+
+		ret.add(creator);
 		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATOR.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(author.getName()))));
-		ShptUser modifier = new ShptUser(service, service.getModifiedByUser(this.wrapped.getServerRelativeUrl()));
+			false, Collections.singleton(new StoredValue(creator.getName()))));
+
 		ret.add(modifier);
 		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFIER.name, StoredDataType.STRING,
 			false, Collections.singleton(new StoredValue(modifier.getName()))));
