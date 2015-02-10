@@ -45,9 +45,15 @@ public class ShptUser extends ShptSecurityObject<User> {
 		this.roles = Collections.emptyList();
 		String loginName = this.wrapped.getLoginName();
 		final int backslash = loginName.indexOf('\\');
+		final int atSign = loginName.indexOf('@');
 		if (backslash >= 0) {
+			// 1) ^.*|domain\\user$
 			this.userName = loginName.substring(backslash + 1);
 			this.userDomain = loginName.substring(loginName.indexOf('|') + 1, backslash);
+		} else if (atSign >= 0) {
+			// 2) ^.*|user@domain$
+			this.userName = loginName.substring(loginName.indexOf('|') + 1, atSign);
+			this.userDomain = loginName.substring(atSign + 1);
 		} else {
 			this.userName = loginName;
 			this.userDomain = "";
