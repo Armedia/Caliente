@@ -251,4 +251,11 @@ public class LocalContentStore extends ContentStore {
 		}
 		return super.doClose();
 	}
+
+	@Override
+	public void clearProperties() throws StorageException {
+		this.modified.set(true);
+		this.properties.clear();
+		this.propertiesFile.delete();
+	}
 }
