@@ -45,11 +45,10 @@ import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
-import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-DctmSysObject {
+	DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -418,7 +417,7 @@ DctmSysObject {
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -471,45 +470,62 @@ DctmSysObject {
 		final IDfSession session = sysObject.getSession();
 
 		// prepare sql to be executed
-		StoredAttribute<IDfValue> modifyDateAtt = stored.getAttribute(DctmAttributes.R_MODIFY_DATE);
-		StoredAttribute<IDfValue> modifierNameAtt = stored.getAttribute(DctmAttributes.R_MODIFIER);
-		StoredAttribute<IDfValue> creationDateAtt = stored.getAttribute(DctmAttributes.R_CREATION_DATE);
-		StoredAttribute<IDfValue> creatorNameAtt = stored.getAttribute(DctmAttributes.R_CREATOR_NAME);
-		StoredAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
-		StoredAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
-
-		// If we lack ANY of the information we need, we simply don't do anything
-		@SuppressWarnings("unchecked")
-		int firstNull = Tools.firstNull(modifyDateAtt, modifierNameAtt, creationDateAtt, creatorNameAtt, deletedAtt,
-			aclDomainAtt);
-		if (firstNull >= 0) { return null; }
-
 		// Important: REPLACE QUOTES!!
 
-		// Make sure we ALWAYS store this, even if it's "null"...default to the connected user
-		// if not set
-		String creatorName = creatorNameAtt.getValue().asString();
-		if (creatorName.length() == 0) {
-			creatorName = "${owner_name}";
+		StoredAttribute<IDfValue> modifyDateAtt = stored.getAttribute(DctmAttributes.R_MODIFY_DATE);
+		final String modifyDate;
+		if (modifyDateAtt != null) {
+			modifyDate = DfUtils.generateSqlDateClause(modifyDateAtt.getValue().asTime().getDate(), session);
+		} else {
+			modifyDate = "r_modify_date";
 		}
-		creatorName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, creatorName));
 
-		String modifierName = modifierNameAtt.getValue().asString();
+		StoredAttribute<IDfValue> modifierNameAtt = stored.getAttribute(DctmAttributes.R_MODIFIER);
+		String modifierName = "";
+		if (modifierNameAtt != null) {
+			modifierName = modifierNameAtt.getValue().asString();
+		}
 		if (modifierName.length() == 0) {
 			modifierName = "${owner_name}";
 		}
 		modifierName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, modifierName));
 
-		String aclDomain = aclDomainAtt.getValue().asString();
-		if (aclDomain.length() == 0) {
-			aclDomain = "${owner_name}";
+		StoredAttribute<IDfValue> creationDateAtt = stored.getAttribute(DctmAttributes.R_CREATION_DATE);
+		final String creationDate;
+		if (creationDateAtt != null) {
+			creationDate = DfUtils.generateSqlDateClause(creationDateAtt.getValue().asTime().getDate(), session);
+		} else {
+			creationDate = "r_creation_date";
 		}
-		aclDomain = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, aclDomain));
 
-		String aclName = DfUtils.sqlQuoteString(stored.getAttribute(DctmAttributes.ACL_NAME).getValue().asString());
+		StoredAttribute<IDfValue> creatorNameAtt = stored.getAttribute(DctmAttributes.R_CREATOR_NAME);
+		String creatorName = "";
+		if (creatorNameAtt != null) {
+			creatorName = creatorNameAtt.getValue().asString();
+		}
+		if (creatorName.length() == 0) {
+			creatorName = "${owner_name}";
+		}
+		creatorName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, creatorName));
 
-		IDfTime modifyDate = modifyDateAtt.getValue().asTime();
-		IDfTime creationDate = creationDateAtt.getValue().asTime();
+		StoredAttribute<IDfValue> aclNameAtt = stored.getAttribute(DctmAttributes.ACL_NAME);
+		StoredAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
+		String aclName = "acl_name";
+		String aclDomain = "acl_domain";
+		if ((aclNameAtt != null) && (aclDomainAtt != null)) {
+			aclName = DfUtils.sqlQuoteString(aclNameAtt.getValue().asString());
+			aclDomain = "";
+			if (aclDomainAtt != null) {
+				aclDomain = aclDomainAtt.getValue().asString();
+			}
+			if (aclDomain.length() == 0) {
+				aclDomain = "${owner_name}";
+			}
+			aclDomain = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, aclDomain));
+		}
+
+		StoredAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
+		final boolean deletedFlag = (deletedAtt != null) && deletedAtt.getValue().asBoolean();
 
 		String sql = "" //
 			+ "UPDATE dm_sysobject_s SET " //
@@ -526,10 +542,8 @@ DctmSysObject {
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
-		return String.format(sql, DfUtils.generateSqlDateClause(modifyDate.getDate(), session), modifierName,
-			DfUtils.generateSqlDateClause(creationDate.getDate(), session), creatorName, aclName, aclDomain,
-			(deletedAtt.getValue().asBoolean() ? 1 : 0), vstampFlag,
-			DfUtils.sqlQuoteString(sysObject.getObjectId().getId()));
+		return String.format(sql, modifyDate, modifierName, creationDate, creatorName, aclName, aclDomain,
+			(deletedFlag ? 1 : 0), vstampFlag, DfUtils.sqlQuoteString(sysObject.getObjectId().getId()));
 	}
 
 	/**
@@ -643,7 +657,7 @@ DctmSysObject {
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				.getId(), currentPath));
 		}
 
 		return existing;
