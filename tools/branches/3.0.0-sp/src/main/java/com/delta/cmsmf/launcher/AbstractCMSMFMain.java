@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
+import com.armedia.cmf.storage.StoreFactory;
 import com.armedia.cmf.storage.Stores;
 import com.armedia.cmf.storage.xml.StoreConfiguration;
 import com.delta.cmsmf.cfg.CLIParam;
@@ -70,11 +71,13 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		Stores.initializeConfigurations();
 
 		StoreConfiguration cfg = Stores.getObjectStoreConfiguration("cmsmf");
+		cfg.getSettings().put(StoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
 		cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 		this.objectStore = Stores.createObjectStore(cfg);
 
 		cfg = Stores.getContentStoreConfiguration("cmsmf");
 		cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
+		cfg.getSettings().put(StoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
 
 		String strategy = getContentStrategyName();
 		if (strategy != null) {
@@ -82,19 +85,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		}
 		this.contentStore = Stores.createContentStore(cfg);
 
-		if (requiresCleanData()) {
-			String msg = String.format("Cleaning out the content export directory at [%s]",
-				contentFilesDirectoryLocation);
-			this.console.info(msg);
-			this.log.info(msg);
-			this.contentStore.clearAllStreams();
-
-			msg = "Cleaning out all stored metadata";
-			this.console.info(msg);
-			this.log.info(msg);
-			this.objectStore.clearAllObjects();
-			this.objectStore.clearAttributeMappings();
-		}
 		this.server = CLIParam.server.getString();
 		this.user = CLIParam.user.getString();
 		this.password = CLIParam.password.getString();
