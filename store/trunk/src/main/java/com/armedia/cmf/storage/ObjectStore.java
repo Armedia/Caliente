@@ -397,7 +397,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
 		final ObjectStorageTranslator<T, V> translator, final StoredObjectType type, Collection<String> ids)
-		throws StorageException, StoredValueDecoderException {
+			throws StorageException, StoredValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must proved an operation to work under"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (translator == null) { throw new IllegalArgumentException(
@@ -744,7 +744,40 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 
 	protected abstract void doClearAllObjects(O operation) throws StorageException;
 
-	protected abstract StoredValue doGetProperty(O operation, String property) throws StorageException;
+	@Override
+	public final void clearProperties() throws StorageException {
+		assertOpen();
+		O operation = newOperation();
+		try {
+			doClearProperties(operation);
+		} finally {
+			operation.commit();
+		}
+	}
+
+	public final void clearProperties(ObjectStoreOperation<?> operation) throws StorageException {
+		O o = castOperation(operation);
+		getReadLock().lock();
+		try {
+			assertOpen();
+			doClearProperties(o);
+		} finally {
+			getReadLock().unlock();
+		}
+	}
+
+	protected abstract void doClearProperties(O operation) throws StorageException;
+
+	public final StoredValue getProperty(ObjectStoreOperation<?> operation, String property) throws StorageException {
+		O o = castOperation(operation);
+		getReadLock().lock();
+		try {
+			assertOpen();
+			return doGetProperty(o, property);
+		} finally {
+			getReadLock().unlock();
+		}
+	}
 
 	@Override
 	protected final StoredValue doGetProperty(String property) throws StorageException {
@@ -757,8 +790,19 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract StoredValue doSetProperty(O operation, String property, StoredValue value)
-		throws StorageException;
+	protected abstract StoredValue doGetProperty(O operation, String property) throws StorageException;
+
+	public final StoredValue setProperty(ObjectStoreOperation<?> operation, String property, StoredValue value)
+		throws StorageException {
+		O o = castOperation(operation);
+		getReadLock().lock();
+		try {
+			assertOpen();
+			return doSetProperty(o, property, value);
+		} finally {
+			getReadLock().unlock();
+		}
+	}
 
 	@Override
 	protected final StoredValue doSetProperty(String property, StoredValue value) throws StorageException {
@@ -771,20 +815,43 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract Set<String> getPropertyNames(O operation) throws StorageException;
+	protected abstract StoredValue doSetProperty(O operation, String property, StoredValue value)
+		throws StorageException;
 
 	@Override
 	public final Set<String> getPropertyNames() throws StorageException {
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return getPropertyNames(operation);
+			return doGetPropertyNames(operation);
 		} finally {
 			operation.close();
 		}
 	}
 
-	protected abstract StoredValue doClearProperty(O operation, String property) throws StorageException;
+	public final Set<String> getPropertyNames(ObjectStoreOperation<?> operation) throws StorageException {
+		O o = castOperation(operation);
+		getReadLock().lock();
+		try {
+			assertOpen();
+			return doGetPropertyNames(o);
+		} finally {
+			getReadLock().unlock();
+		}
+	}
+
+	protected abstract Set<String> doGetPropertyNames(O operation) throws StorageException;
+
+	public final StoredValue clearProperty(ObjectStoreOperation<?> operation, String property) throws StorageException {
+		O o = castOperation(operation);
+		getReadLock().lock();
+		try {
+			assertOpen();
+			return doClearProperty(o, property);
+		} finally {
+			getReadLock().unlock();
+		}
+	}
 
 	@Override
 	protected final StoredValue doClearProperty(String property) throws StorageException {
@@ -796,4 +863,6 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 			operation.close();
 		}
 	}
+
+	protected abstract StoredValue doClearProperty(O operation, String property) throws StorageException;
 }

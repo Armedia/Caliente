@@ -56,6 +56,8 @@ public abstract class Store {
 		return true;
 	}
 
+	public abstract void clearProperties() throws StorageException;
+
 	public final StoredValue getProperty(String property) throws StorageException {
 		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to retrieve"); }
 		return doGetProperty(property);
