@@ -15,7 +15,8 @@ public class LocalContentStoreFactory extends ContentStoreFactory<LocalContentSt
 	}
 
 	@Override
-	protected LocalContentStore newInstance(StoreConfiguration configuration) throws StorageException {
+	protected LocalContentStore newInstance(StoreConfiguration configuration, boolean cleanData)
+		throws StorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		String basePath = cfg.getString(Setting.BASE_DIR);
@@ -28,6 +29,6 @@ public class LocalContentStoreFactory extends ContentStoreFactory<LocalContentSt
 			this.log.debug(String.format("Creating a new local file store with base path [%s], and strategy [%s]",
 				basePath, strategy.getName()));
 		}
-		return new LocalContentStore(new File(basePath), strategy);
+		return new LocalContentStore(new File(basePath), strategy, cleanData);
 	}
 }

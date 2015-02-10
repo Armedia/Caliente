@@ -49,7 +49,7 @@ public class LocalContentStore extends ContentStore {
 	private final AtomicBoolean modified = new AtomicBoolean(false);
 	private final Map<String, StoredValue> properties = new TreeMap<String, StoredValue>();
 
-	public LocalContentStore(File baseDir, URIStrategy strategy) throws StorageException {
+	public LocalContentStore(File baseDir, URIStrategy strategy, boolean cleanData) throws StorageException {
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
 		if (baseDir.exists() && !baseDir.isDirectory()) { throw new IllegalArgumentException(String.format(
 			"The file at [%s] is not a directory", baseDir.getAbsolutePath())); }
@@ -64,13 +64,18 @@ public class LocalContentStore extends ContentStore {
 		this.baseDir = f;
 		this.propertiesFile = new File(baseDir, "store-properties.xml");
 		loadProperties();
-		StoredValue currentStrategyName = getProperty("strategy");
 		boolean storeStrategyName = true;
-		if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
-			URIStrategy currentStrategy = URIStrategy.getStrategy(currentStrategyName.asString());
-			if (currentStrategy != null) {
-				strategy = currentStrategy;
-				storeStrategyName = false;
+		if (cleanData) {
+			clearProperties();
+			clearAllStreams();
+		} else {
+			StoredValue currentStrategyName = getProperty("strategy");
+			if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
+				URIStrategy currentStrategy = URIStrategy.getStrategy(currentStrategyName.asString());
+				if (currentStrategy != null) {
+					strategy = currentStrategy;
+					storeStrategyName = false;
+				}
 			}
 		}
 		this.strategy = strategy;
@@ -257,5 +262,6 @@ public class LocalContentStore extends ContentStore {
 		this.modified.set(true);
 		this.properties.clear();
 		this.propertiesFile.delete();
+		this.modified.set(false);
 	}
 }
