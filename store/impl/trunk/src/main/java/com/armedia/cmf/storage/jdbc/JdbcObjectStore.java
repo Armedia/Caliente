@@ -185,7 +185,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
 
-	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema) throws StorageException {
+	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
+		throws StorageException {
 		super(JdbcOperation.class, true);
 		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
 			"Must provide a valid DataSource instance"); }
@@ -209,6 +210,11 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			} else {
 				liquibase.validate();
 			}
+			if (cleanData) {
+				doClearProperties(c);
+				doClearAllObjects(c);
+				doClearAttributeMappings(c);
+			}
 			ok = true;
 		} catch (DatabaseException e) {
 			throw new StorageException("Failed to find a supported database for the given connection", e);
@@ -218,6 +224,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			} else {
 				throw new StorageException("The SQL schema is of the wrong version or structure", e);
 			}
+		} catch (SQLException e) {
+			throw new StorageException("Failed to clean out the existing data", e);
 		} finally {
 			finalizeTransaction(c, ok);
 		}
@@ -780,7 +788,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return getStoredObjectTypes(operation.getConnection());
 	}
 
-	private int clearAttributeMappings(Connection c) throws StorageException {
+	private int doClearAttributeMappings(Connection c) throws StorageException {
 		try {
 			return new QueryRunner().update(c, JdbcObjectStore.CLEAR_ALL_MAPPINGS_SQL);
 		} catch (SQLException e) {
@@ -790,7 +798,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected int doClearAttributeMappings(JdbcOperation operation) throws StorageException {
-		return clearAttributeMappings(operation.getConnection());
+		return doClearAttributeMappings(operation.getConnection());
 	}
 
 	@Override
@@ -871,25 +879,29 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	protected final void doClearAllObjects(JdbcOperation operation) throws StorageException {
 		// Allow for subclasses to implement optimized clearing operations
 		if (doOptimizedClearAllObjects(operation)) { return; }
-		Connection c = operation.getConnection();
 		try {
-			DatabaseMetaData dmd = c.getMetaData();
-			ResultSet rs = null;
-			Set<String> tableNames = new TreeSet<String>();
-			try {
-				rs = dmd.getTables(null, null, "CMF_%", new String[] {
-					"TABLE"
-				});
-				while (rs.next()) {
-					tableNames.add(rs.getString("TABLE_NAME"));
-				}
-			} finally {
-				DbUtils.closeQuietly(rs);
-			}
-			doClearTables(operation, tableNames);
+			doClearAllObjects(operation.getConnection());
 		} catch (SQLException e) {
 			throw new StorageException("SQLException caught while removing all objects", e);
 		}
+	}
+
+	private void doClearAllObjects(Connection c) throws SQLException {
+		// Allow for subclasses to implement optimized clearing operations
+		DatabaseMetaData dmd = c.getMetaData();
+		ResultSet rs = null;
+		Set<String> tableNames = new TreeSet<String>();
+		try {
+			rs = dmd.getTables(null, null, "CMF_%", new String[] {
+				"TABLE"
+			});
+			while (rs.next()) {
+				tableNames.add(rs.getString("TABLE_NAME"));
+			}
+		} finally {
+			DbUtils.closeQuietly(rs);
+		}
+		doClearTables(c, tableNames);
 	}
 
 	private <V> StoredObject<V> loadObject(ResultSet rs) throws SQLException {
@@ -1018,10 +1030,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return false;
 	}
 
-	protected void doClearTables(JdbcOperation operation, Set<String> tableNames) throws SQLException {
+	private void doClearTables(Connection c, Set<String> tableNames) throws SQLException {
 		// TODO: We can probably find a way to do this using TRUNCATE TABLE, but there are many
 		// db-specific nuances to account for, so we'll defer that for later...
-		final Connection c = operation.getConnection();
 		QueryRunner qr = new QueryRunner();
 		for (String tableName : tableNames) {
 			if (this.log.isTraceEnabled()) {
@@ -1135,11 +1146,14 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected void doClearProperties(JdbcOperation operation) throws StorageException {
-		final Connection c = operation.getConnection();
 		try {
-			JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_ALL_STORE_PROPERTIES_SQL);
+			doClearProperties(operation.getConnection());
 		} catch (SQLException e) {
 			throw new StorageException("Failed to delete all the store properties", e);
 		}
+	}
+
+	private void doClearProperties(Connection c) throws SQLException {
+		JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_ALL_STORE_PROPERTIES_SQL);
 	}
 }

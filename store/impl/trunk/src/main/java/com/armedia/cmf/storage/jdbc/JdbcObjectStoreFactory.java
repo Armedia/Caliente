@@ -20,13 +20,14 @@ public class JdbcObjectStoreFactory extends ObjectStoreFactory<Connection, JdbcO
 	}
 
 	@Override
-	protected JdbcObjectStore newInstance(StoreConfiguration configuration) throws StorageException {
+	protected JdbcObjectStore newInstance(StoreConfiguration configuration, boolean cleanData) throws StorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		final String locationType = cfg.getString(Setting.LOCATION_TYPE);
 		for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor(locationType)) {
 			try {
-				return new JdbcObjectStore(locator.locateDataSource(cfg), cfg.getBoolean(Setting.UPDATE_SCHEMA));
+				return new JdbcObjectStore(locator.locateDataSource(cfg), cfg.getBoolean(Setting.UPDATE_SCHEMA),
+					cleanData);
 			} catch (Throwable e) {
 				// This one failed...log it, and try the next one
 				JdbcObjectStoreFactory.LOG.error(String.format("Failed to initialize the CmsObjectStore %s[%s]",
