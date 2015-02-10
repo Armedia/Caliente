@@ -156,6 +156,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	private static final String GET_STORE_PROPERTY_NAMES_SQL = //
 	"    select name from cmf_info order by name ";
 
+	private static final String DELETE_ALL_STORE_PROPERTIES_SQL = //
+	"    truncate table cmf_info ";
+
 	private static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
 		@Override
 		public Object handle(ResultSet rs) throws SQLException {
@@ -1098,7 +1101,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Set<String> getPropertyNames(JdbcOperation operation) throws StorageException {
+	protected Set<String> doGetPropertyNames(JdbcOperation operation) throws StorageException {
 		final Connection c = operation.getConnection();
 		try {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_NAMES_SQL,
@@ -1128,5 +1131,15 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			throw new StorageException(String.format("Failed to delete the store property [%s]", property), e);
 		}
 		return oldValue;
+	}
+
+	@Override
+	protected void doClearProperties(JdbcOperation operation) throws StorageException {
+		final Connection c = operation.getConnection();
+		try {
+			JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_ALL_STORE_PROPERTIES_SQL);
+		} catch (SQLException e) {
+			throw new StorageException("Failed to delete all the store properties", e);
+		}
 	}
 }
