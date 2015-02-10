@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.xml.StoreConfiguration;
 import com.armedia.cmf.storage.xml.StoreDefinitions;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
@@ -123,11 +124,12 @@ public final class Stores {
 			Store dupe = this.stores.get(id);
 			if (dupe != null) { throw new DuplicateStoreException(String.format(
 				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
-				.getCanonicalName())); }
+					.getCanonicalName())); }
 			StoreFactory<?> factory = this.factories.get(name);
 			if (factory == null) { throw new StorageException(String.format(
 				"No factory found for object store class [%s]", name)); }
-			Store instance = factory.newInstance(configuration);
+			CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
+			Store instance = factory.newInstance(configuration, cfg.getBoolean(StoreFactory.CFG_CLEAN_DATA, false));
 			this.stores.put(id, instance);
 			this.configurations.put(id, configuration);
 			return instance;
@@ -204,13 +206,13 @@ public final class Stores {
 	};
 
 	protected static StoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
-	JAXBException {
+		JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
 		return Stores.parseConfiguration(settings.toURI().toURL());
 	}
 
 	protected static StoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
-	JAXBException {
+		JAXBException {
 		Reader xml = null;
 		try {
 			xml = new InputStreamReader(settings.openStream());
@@ -319,7 +321,7 @@ public final class Stores {
 	}
 
 	public static ObjectStore<?, ?> createObjectStore(StoreConfiguration configuration) throws StorageException,
-	DuplicateStoreException {
+		DuplicateStoreException {
 		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {
@@ -330,7 +332,7 @@ public final class Stores {
 	}
 
 	public static ContentStore createContentStore(StoreConfiguration configuration) throws StorageException,
-	DuplicateStoreException {
+		DuplicateStoreException {
 		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {

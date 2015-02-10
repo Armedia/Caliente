@@ -14,6 +14,8 @@ import com.armedia.cmf.storage.xml.StoreConfiguration;
 
 public abstract class StoreFactory<S extends Store> {
 
+	public static final String CFG_CLEAN_DATA = "clean.data";
+
 	private static final Pattern VALIDATOR = Pattern.compile("^[a-zA-Z_$][a-zA-Z\\d_$]*$");
 
 	private static final boolean isValidAlias(String alias) {
@@ -52,7 +54,7 @@ public abstract class StoreFactory<S extends Store> {
 		return this.aliases;
 	}
 
-	protected abstract S newInstance(StoreConfiguration cfg) throws StorageException;
+	protected abstract S newInstance(StoreConfiguration cfg, boolean cleanData) throws StorageException;
 
 	protected void close() {
 	}
