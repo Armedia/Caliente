@@ -257,6 +257,12 @@ public class ShptFile extends ShptFSObject<File> {
 		ret.add(author);
 		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OWNER.name, StoredDataType.STRING,
 			false, Collections.singleton(new StoredValue(author.getName()))));
+		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATOR.name, StoredDataType.STRING,
+			false, Collections.singleton(new StoredValue(author.getName()))));
+		ShptUser modifier = new ShptUser(service, service.getModifiedByUser(this.wrapped.getServerRelativeUrl()));
+		ret.add(modifier);
+		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFIER.name, StoredDataType.STRING,
+			false, Collections.singleton(new StoredValue(modifier.getName()))));
 
 		for (ShptFile f : this.predecessors) {
 			ret.add(f);
