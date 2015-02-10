@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.storage.ObjectStoreFactory;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.xml.StoreConfiguration;
+import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.dslocator.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -25,14 +26,22 @@ public class JdbcObjectStoreFactory extends ObjectStoreFactory<Connection, JdbcO
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		final String locationType = cfg.getString(Setting.LOCATION_TYPE);
 		for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor(locationType)) {
+			final DataSourceDescriptor<?> ds;
 			try {
-				return new JdbcObjectStore(locator.locateDataSource(cfg), cfg.getBoolean(Setting.UPDATE_SCHEMA),
-					cleanData);
-			} catch (Throwable e) {
-				// This one failed...log it, and try the next one
-				JdbcObjectStoreFactory.LOG.error(String.format("Failed to initialize the CmsObjectStore %s[%s]",
-					configuration.getName(), configuration.getId()), e);
+				ds = locator.locateDataSource(cfg);
+			} catch (Exception e) {
+				if (JdbcObjectStoreFactory.LOG.isTraceEnabled()) {
+					JdbcObjectStoreFactory.LOG.warn(String.format(
+						"Exception caught attempting to locate a DataSource via %s for ObjectStore %s[%s]", locator
+							.getClass().getCanonicalName(), configuration.getName(), configuration.getId()), e);
+				}
 				continue;
+			}
+			try {
+				return new JdbcObjectStore(ds, cfg.getBoolean(Setting.UPDATE_SCHEMA), cleanData);
+			} catch (Exception e) {
+				throw new StorageException(String.format("Failed to initialize the CmsObjectStore %s[%s]",
+					configuration.getName(), configuration.getId()), e);
 			}
 		}
 
