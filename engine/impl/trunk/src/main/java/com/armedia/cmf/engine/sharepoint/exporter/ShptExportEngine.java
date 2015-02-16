@@ -5,11 +5,9 @@
 package com.armedia.cmf.engine.sharepoint.exporter;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,8 +34,6 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
-import com.independentsoft.share.File;
-import com.independentsoft.share.Folder;
 import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 
@@ -46,7 +42,7 @@ import com.independentsoft.share.ServiceException;
  *
  */
 public class ShptExportEngine extends
-	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -91,43 +87,14 @@ public class ShptExportEngine extends
 		}
 		 */
 
-		this.log.trace("Starting recursive search of [{}]...", path);
-		ShptFolder folder = new ShptFolder(service, service.getFolder(path));
-		Collection<ExportTarget> ret = new ArrayList<ExportTarget>();
+		// listener.searchStarted(new Date(), String.valueOf(service.hashCode()), settings);
+
 		try {
-			addItemsRecursively(ret, folder.getServerRelativeUrl(), folder, excludeEmptyFolders);
+			return new ShptRecursiveIterator(service, service.getFolder(path), excludeEmptyFolders);
 		} catch (ServiceException e) {
 			throw new ShptException(String.format("Export target search failed with URL [%s]", e.getRequestUrl()), e);
-		}
-		return ret.iterator();
-	}
-
-	private void addItemsRecursively(Collection<ExportTarget> c, String root, ShptFolder folder,
-		final boolean excludeEmptyFolders) throws ServiceException {
-		String url = folder.getServerRelativeUrl();
-		// We don't add a slash b/c all folders' relative URLs end with a slash
-		if (url.startsWith(String.format("%s_cts", root))) {
-			this.log.trace("Skipping [{}]", url);
-			return;
-		}
-		this.log.trace("Exploring contents of: [{}]", url);
-		final Service service = folder.getService();
-		List<File> files = service.getFiles(url);
-		for (File f : files) {
-			ShptFile F = new ShptFile(service, f);
-			this.log.trace("\tExporting file: [{}]", f.getServerRelativeUrl());
-			c.add(new ExportTarget(StoredObjectType.DOCUMENT, F.getId(), F.getSearchKey()));
-		}
-
-		List<Folder> folders = service.getFolders(url);
-		for (Folder f : folders) {
-			addItemsRecursively(c, root, new ShptFolder(service, f), excludeEmptyFolders);
-		}
-
-		if (!excludeEmptyFolders && folders.isEmpty() && files.isEmpty()) {
-			// We add the caller if and only if there are neither files nor folders
-			this.log.trace("\tExporting folder [{}] (the folder is empty)", folder.getServerRelativeUrl());
-			c.add(new ExportTarget(StoredObjectType.FOLDER, folder.getId(), folder.getServerRelativeUrl()));
+		} finally {
+			// listener.searchCompleted(null, path, getBacklogSize());
 		}
 	}
 
