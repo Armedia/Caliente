@@ -19,26 +19,6 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.armedia.cmf.storage.StoredDataType;
 
-/**
- * <p>
- * Java class for property.t complex type.
- *
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
- *
- * <pre>
- * &lt;complexType name="property.t">
- *   &lt;simpleContent>
- *     &lt;extension base="&lt;http://www.armedia.com/ns/cmf/stores/local/store-properties>trimmed_string.t">
- *       &lt;attribute name="name" use="required" type="{http://www.armedia.com/ns/cmf/stores/local/store-properties}propertyName.t" />
- *       &lt;attribute name="type" use="required" type="{http://www.armedia.com/ns/cmf/stores/local/store-properties}propertyType.t" />
- *     &lt;/extension>
- *   &lt;/simpleContent>
- * &lt;/complexType>
- * </pre>
- *
- *
- */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "property.t", propOrder = {
 	"value"

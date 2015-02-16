@@ -16,27 +16,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-/**
- * <p>
- * Java class for store_properties.t complex type.
- *
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
- *
- * <pre>
- * &lt;complexType name="storeProperties.t">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="property" type="{http://www.armedia.com/ns/cmf/stores/local/store-properties}property.t" maxOccurs="unbounded" minOccurs="0"/>
- *       &lt;/sequence>
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
- *
- *
- */
 @XmlRootElement(name = "store-properties")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "storeProperties.t", propOrder = {
