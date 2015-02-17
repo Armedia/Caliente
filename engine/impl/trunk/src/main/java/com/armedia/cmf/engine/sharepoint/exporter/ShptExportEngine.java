@@ -42,7 +42,7 @@ import com.independentsoft.share.ServiceException;
  *
  */
 public class ShptExportEngine extends
-ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+	ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -69,32 +69,10 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 		if (path == null) { throw new ShptException("Must provide the name of the site to export"); }
 		final boolean excludeEmptyFolders = CfgTools.decodeBoolean(Setting.EXCLUDE_EMPTY_FOLDERS, settings);
 
-		/*
-		Contains contains = new Contains(SearchResultPropertyName.PATH, service.getSiteUrl());
-		SearchQuery query = new SearchQuery(contains);
-		query.getSelectProperties().add(SearchResultPropertyName.PATH);
-		// query.getSelectProperties().add(SearchResultPropertyName.IS_CONTAINER);
-		// query.getSelectProperties().add(SearchResultPropertyName.IS_DOCUMENT);
-		SearchResult result = service.search(query);
-		SimpleDataTable table = result.getPrimaryQueryResult().getRelevantResult().getTable();
-
-		int i = 0;
-		for (SimpleDataRow row : table.getRows()) {
-			this.log.debug("\t\tRow #{}", i++);
-			for (KeyValue cell : row.getCells()) {
-				this.log.debug("\t\t\t{} = [{}]", cell.getKey(), cell.getValue());
-			}
-		}
-		 */
-
-		// listener.searchStarted(new Date(), String.valueOf(service.hashCode()), settings);
-
 		try {
 			return new ShptRecursiveIterator(service, service.getFolder(path), excludeEmptyFolders);
 		} catch (ServiceException e) {
 			throw new ShptException(String.format("Export target search failed with URL [%s]", e.getRequestUrl()), e);
-		} finally {
-			// listener.searchCompleted(null, path, getBacklogSize());
 		}
 	}
 
