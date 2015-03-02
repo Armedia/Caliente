@@ -75,15 +75,8 @@
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
-			<version>3.2.2</version>
+			<version>3.3.2</version>
 			<scope>compile</scope>
-			<!-- somehow liquibase wants to pull in jetty. Jetty should not be needed -->
-			<exclusions>
-				<exclusion>
-					<groupId>org.eclipse.jetty</groupId>
-					<artifactId>jetty-servlet</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 
