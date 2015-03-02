@@ -5,8 +5,8 @@
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine-sharepoint</artifactId>
 	<version>1.0.0</version>
-	<name>CMF Sharepoint Common Classes</name>
-	<description>CMF Sharepoint Common Classes</description>
+	<name>CMF Sharepoint Access Engine</name>
+	<description>CMF Sharepoint Access Engine</description>
 	<packaging>bundle</packaging>
 
 	<scm>
