@@ -39,6 +39,8 @@ public enum CLIParam {
 	post_process(Setting.POST_PROCESS_IMPORT, false, "Whether to post-process the imported content"),
 	source(Setting.EXPORT_PREDICATE, true,
 		"The DQL 'from-where' predicate, or the name of the Sharepoint site, to use for exporting"),
+	shpt_source_prefix(Setting.SHPT_SOURCE_PREFIX, true,
+		"The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)"),
 	db(Setting.DB_DIRECTORY, true, "The Database directory to use"),
 	content(Setting.CONTENT_DIRECTORY, true,
 		"The Content directory to use (if omitted, it will be placed in the 'content' subdirectory of the Database directory)"),

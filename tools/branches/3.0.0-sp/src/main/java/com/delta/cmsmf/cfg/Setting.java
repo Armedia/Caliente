@@ -39,6 +39,7 @@ public enum Setting {
 	SPECIAL_GROUPS("special.groups"),
 	SPECIAL_TYPES("special.types"),
 	POST_PROCESS_IMPORT("import.postprocess"),
+	SHPT_SOURCE_PREFIX("shpt.source.prefix"),
 	STATE_CABINET("state.cabinet"),
 	EXPORT_BATCH_SIZE("export.batch.size"),
 	JDBC_DRIVER("jdbc.driver"),

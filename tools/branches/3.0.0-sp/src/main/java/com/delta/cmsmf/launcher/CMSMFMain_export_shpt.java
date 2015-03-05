@@ -75,14 +75,26 @@ public class CMSMFMain_export_shpt extends AbstractCMSMFMain<ExportEngineListene
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
+		l = FileNameTools.tokenize(Setting.SHPT_SOURCE_PREFIX.getString(), '/');
+		final String srcPrefix;
+		if (l.isEmpty()) {
+			srcPrefix = "";
+		} else {
+			srcPrefix = FileNameTools.reconstitute(l, false, false, '/');
+		}
+
 		try {
 			// We don't use a leading slash here in "sites" because the URL *SHOULD* contain a
 			// trailing slash
-			settings.put(ShptSessionFactory.BASE_URL, new URL(baseUrl, String.format("sites/%s", site)).toString());
+			settings.put(
+				ShptSessionFactory.BASE_URL,
+				new URL(baseUrl, String.format("%s%s",
+					StringUtils.isEmpty(srcPrefix) ? "" : String.format("%s/", srcPrefix), site)).toString());
 		} catch (MalformedURLException e) {
 			throw new CMSMFException("Bad base URL", e);
 		}
-		settings.put("path", String.format("/sites/%s", srcPath));
+		settings.put("path",
+			String.format("%s/%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("/%s", srcPrefix), srcPath));
 		if (this.user != null) {
 			settings.put(ShptSessionFactory.USER, this.user);
 		}
