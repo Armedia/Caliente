@@ -1,6 +1,7 @@
 package com.delta.cmsmf.launcher;
 
 import java.io.File;
+import java.util.regex.Matcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +87,9 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		this.contentStore = Stores.createContentStore(cfg);
 
 		String server = CLIParam.server.getString();
-		this.server = CMSMFLauncher.SERVER_PARSER.matcher(server).group(2);
+		Matcher m = CMSMFLauncher.SERVER_PARSER.matcher(server);
+		m.matches();
+		this.server = m.group(2);
 		this.user = CLIParam.user.getString();
 		this.password = CLIParam.password.getString();
 		this.domain = CLIParam.domain.getString();
