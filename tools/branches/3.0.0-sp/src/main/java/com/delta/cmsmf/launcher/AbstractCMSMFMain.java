@@ -85,7 +85,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		}
 		this.contentStore = Stores.createContentStore(cfg);
 
-		this.server = CLIParam.server.getString();
+		String server = CLIParam.server.getString();
+		this.server = CMSMFLauncher.SERVER_PARSER.matcher(server).group(2);
 		this.user = CLIParam.user.getString();
 		this.password = CLIParam.password.getString();
 		this.domain = CLIParam.domain.getString();

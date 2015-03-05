@@ -22,7 +22,7 @@ public enum CLIParam {
 	dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
 	dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
 	mode(null, true, true, "The mode of operation, either 'encrypt', 'decrypt', 'import' or 'export'"),
-	server(null, true, "The server URL to connect to (dctm:${docbase}, or shpt:${url})"),
+	server(null, true, "The server URL to connect to (dctm:docbase, or shpt:url)"),
 	user(null, true, "The username to connect with"),
 	password(null, true, "The password to connect with"),
 	domain(null, true, "The domain the user belongs to"),

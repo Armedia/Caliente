@@ -1,11 +1,12 @@
 package com.delta.cmsmf.launcher;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -16,6 +17,7 @@ import com.delta.cmsmf.cfg.CLIParam;
 
 public class CMSMFLauncher extends AbstractLauncher {
 
+	static final Pattern SERVER_PARSER = Pattern.compile("^([^:]+):(.+)$");
 	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.CMSMFMain_%s_%s";
 
 	private static Properties PARAMETER_PROPERTIES = new Properties();
@@ -82,26 +84,31 @@ public class CMSMFLauncher extends AbstractLauncher {
 		}
 
 		String server = CLIParam.server.getString();
-		String engine = "dctm";
-		if (server != null) {
-			try {
-				new URL(server);
-				engine = "shpt";
-			} catch (MalformedURLException e) {
-				// must be documentum, which is already selected...
-			}
-		}
+		if (server == null) { throw new IllegalArgumentException(String.format("Must provide a --server parameter")); }
+		// The server spec will be of the form <engine>:<server-spec>, so parse it as such
+		Matcher m = CMSMFLauncher.SERVER_PARSER.matcher(server);
+		if (!m.matches()) { throw new IllegalArgumentException(String.format(
+			"Invalid --server parameter value [%s] - must match <engine>:<server-spec>", server)); }
+
+		String engine = m.group(1);
 
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
-		Class<?> klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode, engine));
-		CMSMFMain main = null;
+		final Class<?> klass;
+		try {
+			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode, engine));
+		} catch (ClassNotFoundException e) {
+			System.err
+			.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
+			return;
+		}
+
+		final CMSMFMain main;
 		if (CMSMFMain.class.isAssignableFrom(klass)) {
 			main = CMSMFMain.class.cast(klass.newInstance());
 		} else {
-			throw new RuntimeException(String.format("Class [%s] is not a valid AbstractCMSMFMain class",
-				klass.getName()));
+			throw new RuntimeException(String.format("Class [%s] is not a valid CMSMFMain class", klass.getName()));
 		}
 
 		// Lock for single execution
