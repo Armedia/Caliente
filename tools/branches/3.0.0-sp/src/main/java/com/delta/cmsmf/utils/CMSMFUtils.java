@@ -26,7 +26,6 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
@@ -43,7 +42,7 @@ public class CMSMFUtils {
 	static Logger log = LoggerFactory.getLogger(CMSMFUtils.class);
 
 	private static IDfSysObject getCmsmfStateObject(IDfSession dctmSession, boolean createIfMissing) throws DfException {
-		final String targetDocbaseName = CLIParam.server.getString();
+		final String targetDocbaseName = dctmSession.getDocbaseName();
 		final String cabinetName = Setting.STATE_CABINET.getString();
 		final String objectName = CMSMFUtils.LAST_EXPORT_OBJ_NAME;
 		final String cabinetPath = String.format("/%s", cabinetName);
@@ -231,10 +230,10 @@ public class CMSMFUtils {
 
 		if (!CMSMFUtils.validateSmtp(smtpHostAddress, smtpHostPort)) {
 			CMSMFUtils.log
-			.warn(String
-				.format(
-					"Host [%s] is not running an SMTP server on port 25. The intended recipients (%s) won't receive an e-mail.",
-					smtpHostAddress, recipients));
+				.warn(String
+					.format(
+						"Host [%s] is not running an SMTP server on port 25. The intended recipients (%s) won't receive an e-mail.",
+						smtpHostAddress, recipients));
 			return;
 		}
 
