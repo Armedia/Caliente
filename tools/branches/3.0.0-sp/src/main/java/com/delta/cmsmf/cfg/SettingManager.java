@@ -3,7 +3,6 @@ package com.delta.cmsmf.cfg;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -80,7 +79,7 @@ public class SettingManager {
 
 	public static void addPropertySource(Properties properties) throws ConfigurationException {
 		if (properties == null) { return; }
-		MapConfiguration cfg = new MapConfiguration(new HashMap<Object, Object>(properties));
+		MapConfiguration cfg = new MapConfiguration(new Properties(properties));
 		SettingManager.configure(cfg);
 		SettingManager.addConfiguration(cfg);
 	}
