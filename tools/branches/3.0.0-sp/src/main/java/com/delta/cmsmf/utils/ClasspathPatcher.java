@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-public class ClasspathPatcher {
+public abstract class ClasspathPatcher {
 
 	private static final Class<?>[] PARAMETERS = new Class[] {
 		URL.class
@@ -50,4 +52,22 @@ public class ClasspathPatcher {
 		if (f == null) { throw new IllegalArgumentException("Must provide a File path to add to the classpath"); }
 		ClasspathPatcher.addToClassPath(new File(f));
 	}
+
+	private final Set<String> engines;
+
+	protected ClasspathPatcher(String... engines) {
+		Set<String> s = new HashSet<String>();
+		for (String e : engines) {
+			if (e != null) {
+				s.add(e.toLowerCase());
+			}
+		}
+		this.engines = Collections.unmodifiableSet(s);
+	}
+
+	public boolean supportsEngine(String engine) {
+		return this.engines.contains(engine.toLowerCase());
+	}
+
+	public abstract List<URL> getPatches(String engine);
 }

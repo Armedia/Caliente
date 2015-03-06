@@ -13,8 +13,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
-import com.armedia.commons.utilities.Tools;
-
 public enum CLIParam {
 	//
 	help(null, false, "This help message"),
@@ -108,8 +106,8 @@ public enum CLIParam {
 	}
 
 	public String getString(String def) {
-		String v = getString();
-		return Tools.coalesce(v, def);
+		final String v = getString();
+		return (v != null ? v : def);
 	}
 
 	private static final String[] NO_OPTS = new String[0];

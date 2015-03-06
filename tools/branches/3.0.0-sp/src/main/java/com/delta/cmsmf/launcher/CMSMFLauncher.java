@@ -3,17 +3,21 @@ package com.delta.cmsmf.launcher;
 import java.io.File;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import com.armedia.commons.utilities.PluggableServiceLocator;
+import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.delta.cmsmf.cfg.CLIParam;
+import com.delta.cmsmf.utils.ClasspathPatcher;
 
 public class CMSMFLauncher extends AbstractLauncher {
 
@@ -33,27 +37,30 @@ public class CMSMFLauncher extends AbstractLauncher {
 			return;
 		}
 
-		// Just make sure it's initialized
-		AbstractLauncher.patchClasspath();
-
 		// Configure Log4J
 		final String mode = CLIParam.mode.getString();
+		final String server = CLIParam.server.getString();
+		if (server == null) { throw new IllegalArgumentException(String.format("Must provide a --server parameter")); }
+		// The server spec will be of the form <engine>:<server-spec>, so parse it as such
+		Matcher m = CMSMFLauncher.SERVER_PARSER.matcher(server);
+		if (!m.matches()) { throw new IllegalArgumentException(String.format(
+			"Invalid --server parameter value [%s] - must match <engine>:<server-spec>", server)); }
+		final String engine = m.group(1);
+
 		String log4j = CLIParam.log4j.getString();
 		boolean customLog4j = false;
 		if (log4j != null) {
 			final File cfg = new File(log4j);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
-				LogManager.resetConfiguration();
 				DOMConfigurator.configureAndWatch(cfg.getCanonicalPath());
 				customLog4j = true;
 			}
 		}
 		if (!customLog4j) {
-			LogManager.resetConfiguration();
 			String logName = CLIParam.log_name.getString();
 			if (logName == null) {
 				String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-				logName = String.format("cmsmf-%s-%s", mode.toLowerCase(), runTime);
+				logName = String.format("cmsmf-%s-%s-%s", engine.toLowerCase(), mode.toLowerCase(), runTime);
 			}
 			System.setProperty("logName", logName);
 			URL config = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
@@ -66,8 +73,35 @@ public class CMSMFLauncher extends AbstractLauncher {
 				}
 			}
 		}
+
 		// Make sure log4j is configured
 		Logger.getRootLogger().info("Logging active");
+
+		List<URL> patches = new ArrayList<URL>();
+		PluggableServiceSelector<ClasspathPatcher> selector = new PluggableServiceSelector<ClasspathPatcher>() {
+			@Override
+			public boolean matches(ClasspathPatcher p) {
+				return p.supportsEngine(engine);
+			}
+		};
+		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<ClasspathPatcher>(
+			ClasspathPatcher.class, selector);
+		patchers.setHideErrors(false);
+		for (ClasspathPatcher p : patchers) {
+			List<URL> l = p.getPatches(engine);
+			if ((l == null) || l.isEmpty()) {
+				continue;
+			}
+			for (URL u : l) {
+				if (u != null) {
+					patches.add(u);
+				}
+			}
+		}
+
+		for (URL u : patches) {
+			ClasspathPatcher.addToClassPath(u);
+		}
 
 		// Now, convert the command-line parameters into configuration properties
 		for (CLIParam p : CLIParam.values()) {
@@ -82,15 +116,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 				}
 			}
 		}
-
-		String server = CLIParam.server.getString();
-		if (server == null) { throw new IllegalArgumentException(String.format("Must provide a --server parameter")); }
-		// The server spec will be of the form <engine>:<server-spec>, so parse it as such
-		Matcher m = CMSMFLauncher.SERVER_PARSER.matcher(server);
-		if (!m.matches()) { throw new IllegalArgumentException(String.format(
-			"Invalid --server parameter value [%s] - must match <engine>:<server-spec>", server)); }
-
-		String engine = m.group(1);
 
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest

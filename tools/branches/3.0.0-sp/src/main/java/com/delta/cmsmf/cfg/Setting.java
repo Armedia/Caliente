@@ -55,27 +55,30 @@ public enum Setting {
 
 	private static final String DEFAULT_PROPERTIES = "default.properties";
 
-	static final Configuration DEFAULTS;
+	private static Configuration DEFAULTS = null;
 
-	static {
-		PropertiesConfiguration def = new PropertiesConfiguration();
-		URL url = Thread.currentThread().getContextClassLoader().getResource(Setting.DEFAULT_PROPERTIES);
-		if (url != null) {
-			def.setDelimiterParsingDisabled(true);
-			def.setListDelimiter('|');
-			try {
-				def.load(url);
-			} catch (ConfigurationException e) {
-				throw new RuntimeException(String.format("Failed to load the property defaults from [%s]",
-					Setting.DEFAULT_PROPERTIES));
+	private static synchronized Configuration getDefaults() {
+		if (Setting.DEFAULTS == null) {
+			PropertiesConfiguration def = new PropertiesConfiguration();
+			URL url = Thread.currentThread().getContextClassLoader().getResource(Setting.DEFAULT_PROPERTIES);
+			if (url != null) {
+				def.setDelimiterParsingDisabled(true);
+				def.setListDelimiter('|');
+				try {
+					def.load(url);
+				} catch (ConfigurationException e) {
+					throw new RuntimeException(String.format("Failed to load the property defaults from [%s]",
+						Setting.DEFAULT_PROPERTIES));
+				}
 			}
+			// Load the defaults
+			Setting.DEFAULTS = def;
 		}
-		// Load the defaults
-		DEFAULTS = def;
+		return Setting.DEFAULTS;
 	}
 
 	public int getInt() {
-		return getInt(Setting.DEFAULTS.getInt(this.name, 0));
+		return getInt(Setting.getDefaults().getInt(this.name, 0));
 	}
 
 	public int getInt(int altDefault) {
@@ -83,7 +86,7 @@ public enum Setting {
 	}
 
 	public boolean getBoolean() {
-		return getBoolean(Setting.DEFAULTS.getBoolean(this.name, false));
+		return getBoolean(Setting.getDefaults().getBoolean(this.name, false));
 	}
 
 	public boolean getBoolean(boolean altDefault) {
@@ -91,7 +94,7 @@ public enum Setting {
 	}
 
 	public String getString() {
-		return getString(Setting.DEFAULTS.getString(this.name, ""));
+		return getString(Setting.getDefaults().getString(this.name, ""));
 	}
 
 	public String getString(String altDefault) {
