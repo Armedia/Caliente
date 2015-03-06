@@ -4,6 +4,9 @@
 
 package com.armedia.cmf.engine.documentum;
 
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -27,28 +30,28 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 	}
 
 	@Override
-	public IDfSession makeObject() throws Exception {
-		return this.factory.makeObject();
+	public PooledObject<IDfSession> makeObject() throws Exception {
+		return new DefaultPooledObject<IDfSession>(this.factory.makeObject());
 	}
 
 	@Override
-	public void destroyObject(IDfSession obj) throws Exception {
-		this.factory.destroyObject(obj);
+	public void destroyObject(PooledObject<IDfSession> obj) throws Exception {
+		this.factory.destroyObject(obj.getObject());
 	}
 
 	@Override
-	public boolean validateObject(IDfSession obj) {
-		return this.factory.validateObject(obj);
+	public boolean validateObject(PooledObject<IDfSession> obj) {
+		return this.factory.validateObject(obj.getObject());
 	}
 
 	@Override
-	public void activateObject(IDfSession obj) throws Exception {
-		this.factory.activateObject(obj);
+	public void activateObject(PooledObject<IDfSession> obj) throws Exception {
+		this.factory.activateObject(obj.getObject());
 	}
 
 	@Override
-	public void passivateObject(IDfSession obj) throws Exception {
-		this.factory.passivateObject(obj);
+	public void passivateObject(PooledObject<IDfSession> obj) throws Exception {
+		this.factory.passivateObject(obj.getObject());
 	}
 
 	@Override
