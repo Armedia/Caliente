@@ -1,6 +1,9 @@
 package com.delta.cmsmf.launcher;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -10,12 +13,14 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.utils.ClasspathPatcher;
 
@@ -25,6 +30,30 @@ public class CMSMFLauncher extends AbstractLauncher {
 	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.CMSMFMain_%s_%s";
 
 	private static Properties PARAMETER_PROPERTIES = new Properties();
+
+	public static final String VERSION;
+
+	static {
+		String version = null;
+		URL url = Thread.currentThread().getContextClassLoader().getResource("version.properties");
+		if (url != null) {
+			Properties p = new Properties();
+			try {
+				InputStream in = url.openStream();
+				final String str;
+				try {
+					str = IOUtils.toString(in);
+				} finally {
+					IOUtils.closeQuietly(in);
+				}
+				p.load(new StringReader(str));
+				version = p.getProperty("version");
+			} catch (IOException e) {
+				version = "(failed to load)";
+			}
+		}
+		VERSION = Tools.coalesce(version, "(unknown)");
+	}
 
 	static Properties getParameterProperties() {
 		return CMSMFLauncher.PARAMETER_PROPERTIES;
@@ -117,6 +146,10 @@ public class CMSMFLauncher extends AbstractLauncher {
 			}
 		}
 
+		final Logger console = Logger.getLogger("console");
+		console.info(String.format("Launching CMSMF v%s %s mode for engine %s%n", CMSMFLauncher.VERSION,
+			CLIParam.mode.getString(), engine));
+
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
@@ -125,7 +158,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode, engine));
 		} catch (ClassNotFoundException e) {
 			System.err
-			.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
+				.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
 			return;
 		}
 

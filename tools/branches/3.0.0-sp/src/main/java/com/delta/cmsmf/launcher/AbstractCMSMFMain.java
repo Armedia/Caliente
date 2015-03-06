@@ -45,6 +45,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 		// If we have command-line parameters, these supersede all other configurations, even if
 		// we have a configuration file explicitly listed.
+		this.console.info(String.format("CMSMF v%s", CMSMFLauncher.VERSION));
 		this.console.info("Configuring the properties");
 		SettingManager.addPropertySource(CMSMFLauncher.getParameterProperties());
 
@@ -62,7 +63,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 		// First things first...
 		AbstractCMSMFMain.instance = this;
-		this.log.info(String.format("Launching CMSMF %s mode%n", CLIParam.mode.getString()));
 
 		File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
 		File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
