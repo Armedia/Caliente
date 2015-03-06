@@ -61,14 +61,14 @@
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-documentum</artifactId>
-			<version>1.1.1</version>
+			<version>1.1.2</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-sharepoint</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 			<scope>compile</scope>
 		</dependency>
 
