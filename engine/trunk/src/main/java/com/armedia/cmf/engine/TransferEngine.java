@@ -40,6 +40,7 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 
 		m = new HashMap<String, Object>();
 		PluggableServiceLocator<E> locator = new PluggableServiceLocator<E>(subclass);
+		locator.setHideErrors(true);
 		for (E e : locator) {
 			boolean empty = true;
 			for (String s : e.getTargetNames()) {
