@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine</artifactId>
-	<version>1.1.1</version>
+	<version>1.1.2</version>
 	<name>CMF Main Engine</name>
 	<description>CMF Main Engine</description>
 	<packaging>bundle</packaging>
@@ -68,9 +68,9 @@
 		-->
 
 		<dependency>
-			<groupId>commons-pool</groupId>
-			<artifactId>commons-pool</artifactId>
-			<version>1.6</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-pool2</artifactId>
+			<version>2.3</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
