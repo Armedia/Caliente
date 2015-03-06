@@ -4,6 +4,9 @@
 
 package com.armedia.cmf.engine.sharepoint;
 
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Service;
@@ -33,20 +36,20 @@ public class ShptSessionFactory extends SessionFactory<Service> {
 	}
 
 	@Override
-	public Service makeObject() {
-		return new Service(this.url, this.user, this.password, this.domain);
+	public PooledObject<Service> makeObject() {
+		return new DefaultPooledObject<Service>(new Service(this.url, this.user, this.password, this.domain));
 	}
 
 	@Override
-	public void destroyObject(Service service) {
+	public void destroyObject(PooledObject<Service> service) {
 		// Apparently, the client is stateless...
 	}
 
 	@Override
-	public boolean validateObject(Service service) {
-		if (service == null) { return false; }
+	public boolean validateObject(PooledObject<Service> service) {
+		if ((service == null) || (service.getObject() == null)) { return false; }
 		try {
-			service.getContextInfo();
+			service.getObject().getContextInfo();
 			return true;
 		} catch (Exception e) {
 			return false;
@@ -54,12 +57,12 @@ public class ShptSessionFactory extends SessionFactory<Service> {
 	}
 
 	@Override
-	public void activateObject(Service service) throws Exception {
-		service.getContextInfo();
+	public void activateObject(PooledObject<Service> service) throws Exception {
+		service.getObject().getContextInfo();
 	}
 
 	@Override
-	public void passivateObject(Service service) throws Exception {
+	public void passivateObject(PooledObject<Service> service) throws Exception {
 	}
 
 	@Override
