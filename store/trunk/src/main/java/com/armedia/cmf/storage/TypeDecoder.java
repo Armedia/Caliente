@@ -6,6 +6,9 @@ public class TypeDecoder {
 
 	static final PluggableServiceLocator<TypeDecoder> DECODERS = new PluggableServiceLocator<TypeDecoder>(
 		TypeDecoder.class);
+	static {
+		TypeDecoder.DECODERS.setHideErrors(true);
+	}
 
 	/**
 	 * <p>

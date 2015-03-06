@@ -31,7 +31,9 @@ public abstract class URIStrategy {
 
 	static {
 		Map<String, URIStrategy> strategies = new HashMap<String, URIStrategy>();
-		for (URIStrategy s : new PluggableServiceLocator<URIStrategy>(URIStrategy.class)) {
+		PluggableServiceLocator<URIStrategy> l = new PluggableServiceLocator<URIStrategy>(URIStrategy.class);
+		l.setHideErrors(true);
+		for (URIStrategy s : l) {
 			String name = s.getName();
 			if (name == null) {
 				URIStrategy.LOG.warn(String.format(

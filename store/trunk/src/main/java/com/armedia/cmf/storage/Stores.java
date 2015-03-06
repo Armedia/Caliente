@@ -43,6 +43,7 @@ public final class Stores {
 	private <F extends StoreFactory<?>> Stores(String type, Class<F> factoryClass) {
 		this.type = type;
 		PluggableServiceLocator<F> factories = new PluggableServiceLocator<F>(factoryClass);
+		factories.setHideErrors(true);
 		Set<String> registration = new TreeSet<String>();
 		Map<String, StoreFactory<?>> m = new HashMap<String, StoreFactory<?>>();
 		for (F f : factories) {
