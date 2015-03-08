@@ -37,12 +37,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 			f = new File(var).getCanonicalFile();
 			if (!f.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 				f.getAbsolutePath())); }
-
-			File tgt = new File(f, "config");
-			if (!tgt.isDirectory()) { throw new FileNotFoundException(String.format(
-				"Could not find the [%s] directory [%s]", DctmClasspathPatcher.ENV_DOCUMENTUM, tgt.getAbsolutePath())); }
-
-			ret.add(tgt.toURI().toURL());
+			ret.add(new File(f, "config").toURI().toURL());
 
 			// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
 			var = CLIParam.dfc.getString(System.getenv(DctmClasspathPatcher.ENV_DOCUMENTUM_SHARED));
@@ -57,7 +52,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 				f.getAbsolutePath())); }
 
 			// Next, does dctm.jar exist in there?
-			tgt = new File(f, DctmClasspathPatcher.DCTM_JAR);
+			File tgt = new File(f, DctmClasspathPatcher.DCTM_JAR);
 			if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
 				tgt.getAbsolutePath())); }
 

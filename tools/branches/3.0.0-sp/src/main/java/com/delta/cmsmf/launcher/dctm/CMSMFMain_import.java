@@ -1,4 +1,4 @@
-package com.delta.cmsmf.launcher;
+package com.delta.cmsmf.launcher.dctm;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -26,6 +26,7 @@ import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.launcher.AbstractCMSMFMain;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 /**
@@ -33,8 +34,8 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_import_dctm extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>>
-implements ImportEngineListener {
+public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements
+	ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
@@ -43,7 +44,7 @@ implements ImportEngineListener {
 	private final Map<StoredObjectType, Integer> total = new HashMap<StoredObjectType, Integer>();
 	private final Map<StoredObjectType, AtomicInteger> current = new HashMap<StoredObjectType, AtomicInteger>();
 
-	CMSMFMain_import_dctm() throws Throwable {
+	public CMSMFMain_import() throws Throwable {
 		super(DctmImportEngine.getImportEngine());
 	}
 

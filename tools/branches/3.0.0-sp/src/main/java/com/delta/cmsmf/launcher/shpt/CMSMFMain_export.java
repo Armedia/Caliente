@@ -1,4 +1,4 @@
-package com.delta.cmsmf.launcher;
+package com.delta.cmsmf.launcher.shpt;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -27,12 +27,13 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.launcher.AbstractCMSMFMain;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
-public class CMSMFMain_export_shpt extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>>
-	implements ExportEngineListener {
+public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
+	ExportEngineListener {
 
-	CMSMFMain_export_shpt() throws Throwable {
+	public CMSMFMain_export() throws Throwable {
 		super(ShptExportEngine.getExportEngine());
 	}
 

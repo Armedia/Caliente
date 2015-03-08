@@ -1,4 +1,4 @@
-package com.delta.cmsmf.launcher;
+package com.delta.cmsmf.launcher.dctm;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -22,13 +22,18 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.launcher.AbstractCMSMFMain;
 import com.delta.cmsmf.utils.CMSMFUtils;
+import com.delta.cmsmf.utils.DctmUtils;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
+import com.documentum.fc.common.IDfTime;
 
-public class CMSMFMain_export_dctm extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>>
-implements ExportEngineListener {
+public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
+ExportEngineListener {
+
+	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
@@ -39,7 +44,7 @@ implements ExportEngineListener {
 	private static final String DEFAULT_PREDICATE = "dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
 		+ "and not folder('/System', descend)"; // and r_modify_date >= DATE('XX_PLACE_HOLDER_XX')";
 
-	CMSMFMain_export_dctm() throws Throwable {
+	public CMSMFMain_export() throws Throwable {
 		super(DctmExportEngine.getExportEngine());
 	}
 
@@ -85,7 +90,7 @@ implements ExportEngineListener {
 				throw new CMSMFException("Failed to obtain the main session from the pool", e);
 			}
 
-			String dql = String.format("select r_object_id %s", buildExportPredicate(session));
+			String dql = String.format("select r_object_id from %s", buildExportPredicate(session));
 			settings.put("dql", dql);
 
 			start = new Date();
@@ -104,7 +109,7 @@ implements ExportEngineListener {
 					// If this is auto run type of an export instead of an adhoc query export, store
 					// the value of the current export date in the repository. This value will be
 					// looked up in the next run. This is indeed an auto run type of export
-					CMSMFUtils.setLastExportDate(session, start);
+					DctmUtils.setLastExportDate(session, start);
 					ok = true;
 				} finally {
 					try {
@@ -215,11 +220,11 @@ implements ExportEngineListener {
 			// named 'cmsmf_last_export' and
 
 			// first get the last export date from the source repository
-			Date lastExportRunDate = CMSMFUtils.getLastExportDate(session);
-			predicate = CMSMFMain_export_dctm.DEFAULT_PREDICATE;
+			Date lastExportRunDate = DctmUtils.getLastExportDate(session);
+			predicate = CMSMFMain_export.DEFAULT_PREDICATE;
 			if (lastExportRunDate != null) { return String.format("%s AND r_modify_date >= DATE('%s', '%s')",
-				predicate, new DfTime(lastExportRunDate).asString(AbstractCMSMFMain.LAST_EXPORT_DATETIME_PATTERN),
-				AbstractCMSMFMain.LAST_EXPORT_DATETIME_PATTERN); }
+				predicate, new DfTime(lastExportRunDate).asString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN),
+				CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN); }
 		}
 		return predicate;
 	}

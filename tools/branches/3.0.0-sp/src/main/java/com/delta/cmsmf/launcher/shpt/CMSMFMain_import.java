@@ -1,4 +1,4 @@
-package com.delta.cmsmf.launcher;
+package com.delta.cmsmf.launcher.shpt;
 
 import java.util.Map;
 
@@ -9,11 +9,12 @@ import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
+import com.delta.cmsmf.launcher.AbstractCMSMFMain;
 
-public class CMSMFMain_import_shpt extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>>
+public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>>
 implements ImportEngineListener {
 
-	public CMSMFMain_import_shpt() throws Throwable {
+	public CMSMFMain_import() throws Throwable {
 		super(ImportEngine.getImportEngine("dctm"));
 	}
 

@@ -15,13 +15,11 @@ import com.armedia.cmf.storage.xml.StoreConfiguration;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cfg.SettingManager;
-import com.documentum.fc.common.IDfTime;
 
 public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, L>> implements CMSMFMain {
 
 	protected static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 	protected static final String LAST_EXPORT_DATE_PATTERN = AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN;
-	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
 	/** The log object used for logging. */
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -38,7 +36,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	protected final String password;
 	protected final String domain;
 
-	AbstractCMSMFMain(E engine) throws Throwable {
+	protected AbstractCMSMFMain(E engine) throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
 
 		this.engine = engine;

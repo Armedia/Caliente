@@ -27,7 +27,7 @@ import com.delta.cmsmf.utils.ClasspathPatcher;
 public class CMSMFLauncher extends AbstractLauncher {
 
 	static final Pattern SERVER_PARSER = Pattern.compile("^([^:]+):(.+)$");
-	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.CMSMFMain_%s_%s";
+	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.%s.CMSMFMain_%s";
 
 	private static Properties PARAMETER_PROPERTIES = new Properties();
 
@@ -155,10 +155,10 @@ public class CMSMFLauncher extends AbstractLauncher {
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
 		final Class<?> klass;
 		try {
-			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, mode, engine));
+			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, engine, mode));
 		} catch (ClassNotFoundException e) {
 			System.err
-				.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
+			.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
 			return;
 		}
 
