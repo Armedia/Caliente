@@ -7,8 +7,9 @@ package com.armedia.cmf.engine.sharepoint;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
+import com.armedia.cmf.engine.Crypt;
+import com.armedia.cmf.engine.CryptException;
 import com.armedia.cmf.engine.SessionFactory;
-import com.armedia.cmf.engine.TransferEngineException;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Service;
 
@@ -34,8 +35,8 @@ public class ShptSessionFactory extends SessionFactory<Service> {
 		this.user = settings.getString(Setting.USER);
 		String pass = settings.getString(Setting.PASSWORD);
 		try {
-			pass = ShptEncrypterTool.decrypt(pass);
-		} catch (TransferEngineException t) {
+			pass = Crypt.decrypt(pass);
+		} catch (CryptException e) {
 			// Do nothing, use as literal
 		}
 		this.password = pass;
