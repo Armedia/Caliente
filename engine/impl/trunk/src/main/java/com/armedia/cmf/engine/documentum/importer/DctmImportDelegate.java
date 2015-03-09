@@ -19,6 +19,7 @@ import com.armedia.cmf.engine.documentum.DctmDelegateBase;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
+import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -260,11 +261,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -364,7 +365,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -378,16 +379,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
@@ -452,9 +453,15 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		// If an existing object is being updated, first clear repeating values if the attribute
 		// being set is repeating type.
 		clearAttributeFromObject(attrName, object);
+		final int truncateLength = (dataType == DctmDataType.DF_STRING ? object.getAttr(object.findAttrIndex(attrName))
+			.getLength() : 0);
 		for (IDfValue value : values) {
 			if (value == null) {
 				value = dataType.getNull();
+			}
+			// Ensure the value's length is always consistent
+			if ((truncateLength > 0) && (value.asString().length() > truncateLength)) {
+				value = DfValueFactory.newStringValue(value.asString().substring(0, truncateLength));
 			}
 			if (repeating) {
 				object.appendValue(attrName, value);
