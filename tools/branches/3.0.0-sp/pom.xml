@@ -52,6 +52,13 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.6</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.armedia.commons</groupId>
 			<artifactId>dfc-session-pool</artifactId>
 			<version>1.0.3</version>
