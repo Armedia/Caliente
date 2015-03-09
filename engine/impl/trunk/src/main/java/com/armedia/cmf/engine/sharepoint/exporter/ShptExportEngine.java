@@ -12,10 +12,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.TransferEngineException;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.Setting;
+import com.armedia.cmf.engine.sharepoint.ShptEncrypterTool;
 import com.armedia.cmf.engine.sharepoint.ShptException;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
@@ -158,5 +160,15 @@ public class ShptExportEngine extends
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
 		return TransferEngine.getTransferEngine(ExportEngine.class, ShptExportEngine.TARGETS.iterator().next());
+	}
+
+	@Override
+	protected String doEncrypt(String value) throws TransferEngineException {
+		return ShptEncrypterTool.encrypt(value);
+	}
+
+	@Override
+	protected String doDecrypt(String value) throws TransferEngineException {
+		return ShptEncrypterTool.decrypt(value);
 	}
 }

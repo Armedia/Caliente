@@ -6,10 +6,12 @@ package com.armedia.cmf.engine.sharepoint.importer;
 
 import java.util.Set;
 
+import com.armedia.cmf.engine.TransferEngineException;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportStrategy;
+import com.armedia.cmf.engine.sharepoint.ShptEncrypterTool;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.types.ShptObject;
@@ -70,5 +72,15 @@ public class ShptImportEngine extends
 	protected Set<String> getTargetNames() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	protected String doEncrypt(String value) throws TransferEngineException {
+		return ShptEncrypterTool.encrypt(value);
+	}
+
+	@Override
+	protected String doDecrypt(String value) throws TransferEngineException {
+		return ShptEncrypterTool.decrypt(value);
 	}
 }
