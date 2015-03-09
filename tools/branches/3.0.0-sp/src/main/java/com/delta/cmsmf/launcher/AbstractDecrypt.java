@@ -6,18 +6,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import com.delta.cmsmf.exception.CMSMFException;
-import com.documentum.fc.common.DfException;
-import com.documentum.fc.tools.RegistryPasswordUtils;
 
-/**
- * The main method of this class is an entry point for the cmsmf application.
- *
- * @author Shridev Makim 6/15/2010
- */
-public class CMSMFMain_decrypt implements CMSMFMain {
+public abstract class AbstractDecrypt implements CMSMFMain {
 
 	@Override
-	public void run() throws CMSMFException {
+	public final void run() throws CMSMFException {
 		final Console console = System.console();
 		String password = null;
 		if (console != null) {
@@ -30,20 +23,22 @@ public class CMSMFMain_decrypt implements CMSMFMain {
 			throw new CMSMFException("IOException caught reading the password", e);
 		}
 		try {
-			System.out.printf("%s%s%s%n", (console != null ? "The decrypted password is: [" : ""),
-				RegistryPasswordUtils.decrypt(password), (console != null ? "]" : ""));
-		} catch (DfException e) {
+			System.out.printf("%s%s%s%n", (console != null ? "The decrypted password is: [" : ""), decrypt(password),
+				(console != null ? "]" : ""));
+		} catch (Exception e) {
 			throw new CMSMFException("Failed to decrypt the password", e);
 		}
 	}
 
+	protected abstract String decrypt(String password) throws Exception;
+
 	@Override
-	public boolean requiresDataStore() {
+	public final boolean requiresDataStore() {
 		return false;
 	}
 
 	@Override
-	public boolean requiresCleanData() {
+	public final boolean requiresCleanData() {
 		return false;
 	}
 }

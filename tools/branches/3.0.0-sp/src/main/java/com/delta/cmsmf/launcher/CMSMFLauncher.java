@@ -26,7 +26,7 @@ import com.delta.cmsmf.utils.ClasspathPatcher;
 
 public class CMSMFLauncher extends AbstractLauncher {
 
-	static final Pattern SERVER_PARSER = Pattern.compile("^([^:]+):(.+)$");
+	static final Pattern ENGINE_PARSER = Pattern.compile("^\\w+$");
 	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.%s.CMSMFMain_%s";
 
 	private static Properties PARAMETER_PROPERTIES = new Properties();
@@ -68,13 +68,11 @@ public class CMSMFLauncher extends AbstractLauncher {
 
 		// Configure Log4J
 		final String mode = CLIParam.mode.getString();
-		final String server = CLIParam.server.getString();
-		if (server == null) { throw new IllegalArgumentException(String.format("Must provide a --server parameter")); }
-		// The server spec will be of the form <engine>:<server-spec>, so parse it as such
-		Matcher m = CMSMFLauncher.SERVER_PARSER.matcher(server);
+		final String engine = CLIParam.engine.getString();
+		if (engine == null) { throw new IllegalArgumentException(String.format("Must provide a --engine parameter")); }
+		Matcher m = CMSMFLauncher.ENGINE_PARSER.matcher(engine);
 		if (!m.matches()) { throw new IllegalArgumentException(String.format(
-			"Invalid --server parameter value [%s] - must match <engine>:<server-spec>", server)); }
-		final String engine = m.group(1);
+			"Invalid --engine parameter value [%s] - must only contain [a-zA-Z_0-9]", engine)); }
 
 		String log4j = CLIParam.log4j.getString();
 		boolean customLog4j = false;
