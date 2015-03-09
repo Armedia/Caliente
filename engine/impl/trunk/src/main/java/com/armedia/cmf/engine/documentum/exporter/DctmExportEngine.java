@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.armedia.cmf.engine.SessionFactory;
-import com.armedia.cmf.engine.TransferEngineException;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionFactory;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
@@ -38,14 +37,13 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfValue;
-import com.documentum.fc.tools.RegistryPasswordUtils;
 
 /**
  * @author diego
  *
  */
 public class DctmExportEngine extends
-ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
@@ -66,7 +64,7 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -203,23 +201,5 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(DctmCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected String doEncrypt(String value) throws TransferEngineException {
-		try {
-			return RegistryPasswordUtils.encrypt(value);
-		} catch (DfException e) {
-			throw new TransferEngineException("Failed to encrypt the requested value", e);
-		}
-	}
-
-	@Override
-	protected String doDecrypt(String value) throws TransferEngineException {
-		try {
-			return RegistryPasswordUtils.decrypt(value);
-		} catch (DfException e) {
-			throw new TransferEngineException("Failed to decrypt the requested value", e);
-		}
 	}
 }

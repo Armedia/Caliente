@@ -7,11 +7,14 @@ package com.armedia.cmf.engine.documentum;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
+import com.armedia.cmf.engine.Crypt;
+import com.armedia.cmf.engine.CryptException;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.tools.RegistryPasswordUtils;
 
 /**
  * @author diego
@@ -26,7 +29,15 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 
 	public DctmSessionFactory(CfgTools settings) throws DfException {
 		super(settings);
-		this.factory = new DfcSessionFactory(settings);
+		String username = settings.getString(DctmSessionFactory.USERNAME);
+		String password = settings.getString(DctmSessionFactory.PASSWORD);
+		try {
+			password = RegistryPasswordUtils.encrypt(Crypt.decrypt(password));
+		} catch (CryptException e) {
+			// Ignore, and use as literal
+		}
+		String docbase = settings.getString(DctmSessionFactory.DOCBASE);
+		this.factory = new DfcSessionFactory(username, password, docbase);
 	}
 
 	@Override
