@@ -123,7 +123,11 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 						this.log.warn(e.getMessage());
 					}
 				} else {
-					ret.add(new ShptGroup(service, service.getGroup(u.getId())));
+					try {
+						ret.add(new ShptGroup(service, service.getGroup(u.getId())));
+					} catch (ServiceException e) {
+						this.log.warn(String.format("Failed to locate group with ID [%d]", u.getId()));
+					}
 				}
 			}
 		}
