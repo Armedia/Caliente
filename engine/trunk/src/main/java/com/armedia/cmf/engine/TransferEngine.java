@@ -191,27 +191,4 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 	protected abstract ContextFactory<S, T, V, C, ?> newContextFactory(CfgTools cfg) throws Exception;
 
 	protected abstract Set<String> getTargetNames();
-
-	public final String encrypt(String value) throws TransferEngineException {
-		if (value == null) { throw new IllegalArgumentException("Must provide a value to encrypt"); }
-		return doEncrypt(value);
-	}
-
-	protected abstract String doEncrypt(String value) throws TransferEngineException;
-
-	public final String decrypt(String value) throws TransferEngineException {
-		if (value == null) { throw new IllegalArgumentException("Must provide a value to decrypt"); }
-		return doDecrypt(value);
-	}
-
-	protected abstract String doDecrypt(String value) throws TransferEngineException;
-
-	protected final String decodePassword(String value) {
-		try {
-			return decrypt(value);
-		} catch (TransferEngineException e) {
-			// Can't decrypt, just return the value
-			return value;
-		}
-	}
 }

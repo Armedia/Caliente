@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine</artifactId>
-	<version>1.1.4</version>
+	<version>1.1.5</version>
 	<name>CMF Main Engine</name>
 	<description>CMF Main Engine</description>
 	<packaging>bundle</packaging>
@@ -51,6 +51,13 @@
 	</pluginRepositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>armedia-crypt</artifactId>
+			<version>0.3.3</version>
+			<scope>compile</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-storage-api</artifactId>
