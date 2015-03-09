@@ -205,4 +205,13 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 	}
 
 	protected abstract String doDecrypt(String value) throws TransferEngineException;
+
+	protected final String decodePassword(String value) {
+		try {
+			return decrypt(value);
+		} catch (TransferEngineException e) {
+			// Can't decrypt, just return the value
+			return value;
+		}
+	}
 }
