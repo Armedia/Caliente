@@ -1,6 +1,5 @@
 package com.delta.cmsmf.launcher.shpt;
 
-import com.armedia.cmf.engine.sharepoint.ShptEncrypterTool;
 import com.delta.cmsmf.launcher.AbstractDecrypt;
 
 /**
@@ -9,9 +8,4 @@ import com.delta.cmsmf.launcher.AbstractDecrypt;
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFMain_decrypt extends AbstractDecrypt {
-
-	@Override
-	protected String decrypt(String password) throws Exception {
-		return ShptEncrypterTool.decrypt(password);
-	}
 }

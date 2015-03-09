@@ -12,6 +12,12 @@ public class CMSMFMain_decrypt extends AbstractDecrypt {
 
 	@Override
 	protected String decrypt(String password) throws Exception {
-		return RegistryPasswordUtils.decrypt(password);
+		// We do this to support old-version password encryption for old configurations/scripts
+		// that may be out there, and avoid forcing cumbersome re-encryption.
+		try {
+			return super.decrypt(password);
+		} catch (Exception e) {
+			return RegistryPasswordUtils.decrypt(password);
+		}
 	}
 }

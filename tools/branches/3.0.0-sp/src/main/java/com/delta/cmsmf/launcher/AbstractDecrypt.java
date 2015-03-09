@@ -5,6 +5,7 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.armedia.cmf.engine.Crypt;
 import com.delta.cmsmf.exception.CMSMFException;
 
 public abstract class AbstractDecrypt implements CMSMFMain {
@@ -30,7 +31,9 @@ public abstract class AbstractDecrypt implements CMSMFMain {
 		}
 	}
 
-	protected abstract String decrypt(String password) throws Exception;
+	protected String decrypt(String password) throws Exception {
+		return Crypt.decrypt(password);
+	}
 
 	@Override
 	public final boolean requiresDataStore() {
