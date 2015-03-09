@@ -52,13 +52,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>armedia-crypt</artifactId>
-			<version>0.3.3</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-storage-api</artifactId>
 			<version>1.1.2</version>
