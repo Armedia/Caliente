@@ -8,6 +8,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.cmf.engine.SessionFactory;
+import com.armedia.cmf.engine.TransferEngineException;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Service;
 
@@ -31,7 +32,13 @@ public class ShptSessionFactory extends SessionFactory<Service> {
 		super(settings);
 		this.url = settings.getString(Setting.BASE_URL);
 		this.user = settings.getString(Setting.USER);
-		this.password = settings.getString(Setting.PASSWORD);
+		String pass = settings.getString(Setting.PASSWORD);
+		try {
+			pass = ShptEncrypterTool.decrypt(pass);
+		} catch (TransferEngineException t) {
+			// Do nothing, use as literal
+		}
+		this.password = pass;
 		this.domain = settings.getString(Setting.DOMAIN);
 	}
 
