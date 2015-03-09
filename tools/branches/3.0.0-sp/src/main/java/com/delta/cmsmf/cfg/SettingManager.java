@@ -79,7 +79,9 @@ public class SettingManager {
 
 	public static void addPropertySource(Properties properties) throws ConfigurationException {
 		if (properties == null) { return; }
-		MapConfiguration cfg = new MapConfiguration(new Properties(properties));
+		Properties props = new Properties();
+		props.putAll(properties);
+		MapConfiguration cfg = new MapConfiguration(props);
 		SettingManager.configure(cfg);
 		SettingManager.addConfiguration(cfg);
 	}
