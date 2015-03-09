@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
@@ -264,28 +265,42 @@ public class ShptFile extends ShptFSObject<File> {
 	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
-		ShptUser author = new ShptUser(service, service.getFileAuthor(this.wrapped.getServerRelativeUrl()));
-		ret.add(author);
-		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OWNER.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(author.getName()))));
+		ShptUser author = null;
+		try {
+			author = new ShptUser(service, service.getFileAuthor(this.wrapped.getServerRelativeUrl()));
+			ret.add(author);
+			marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OWNER.name, StoredDataType.STRING,
+				false, Collections.singleton(new StoredValue(author.getName()))));
+		} catch (IncompleteDataException e) {
+			this.log.warn(e.getMessage());
+		}
 
 		ShptUser modifier = null;
 		ShptUser creator = author;
-		if (this.version == null) {
-			modifier = new ShptUser(service, service.getModifiedByUser(this.wrapped.getServerRelativeUrl()));
-		} else {
-			// TODO: How in the hell can we get the version's creator via JShare?
-			modifier = new ShptUser(service, service.getModifiedByUser(this.wrapped.getServerRelativeUrl()));
-			// creator = modifier;
+		try {
+			if (this.version == null) {
+				modifier = new ShptUser(service, service.getModifiedByUser(this.wrapped.getServerRelativeUrl()));
+			} else {
+				// TODO: How in the hell can we get the version's creator via JShare?
+				modifier = new ShptUser(service, service.getModifiedByUser(this.wrapped.getServerRelativeUrl()));
+				// creator = modifier;
+			}
+		} catch (IncompleteDataException e) {
+			this.log.warn(e.getMessage());
 		}
 
-		ret.add(creator);
-		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATOR.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(creator.getName()))));
+		if (creator != null) {
+			ret.add(creator);
+			marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATOR.name, StoredDataType.STRING,
+				false, Collections.singleton(new StoredValue(creator.getName()))));
 
-		ret.add(modifier);
-		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFIER.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(modifier.getName()))));
+		}
+
+		if (modifier != null) {
+			ret.add(modifier);
+			marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFIER.name,
+				StoredDataType.STRING, false, Collections.singleton(new StoredValue(modifier.getName()))));
+		}
 
 		for (ShptFile f : this.predecessors) {
 			ret.add(f);

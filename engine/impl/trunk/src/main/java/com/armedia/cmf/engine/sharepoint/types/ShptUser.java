@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -25,7 +26,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	private final String userName;
 	private final String userDomain;
 
-	public ShptUser(Service service, User user) throws ServiceException {
+	public ShptUser(Service service, User user) throws IncompleteDataException {
 		super(service, user, StoredObjectType.USER);
 		/*
 		List<Integer> roles = this.service.getRoleAssignments(this.wrapped.getId());
@@ -44,6 +45,8 @@ public class ShptUser extends ShptSecurityObject<User> {
 		 */
 		this.roles = Collections.emptyList();
 		String loginName = this.wrapped.getLoginName();
+		if (loginName == null) { throw new IncompleteDataException(String.format(
+			"The given user lacks a login name - cannot identify the user with ID [%s]", this.wrapped.getId())); }
 		final int backslash = loginName.indexOf('\\');
 		final int atSign = loginName.indexOf('@');
 		if (backslash >= 0) {

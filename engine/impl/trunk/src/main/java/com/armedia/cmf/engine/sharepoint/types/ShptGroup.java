@@ -1,11 +1,11 @@
 package com.armedia.cmf.engine.sharepoint.types;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -13,7 +13,6 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.PrincipalType;
 import com.independentsoft.share.Service;
@@ -22,42 +21,8 @@ import com.independentsoft.share.User;
 
 public class ShptGroup extends ShptSecurityObject<Group> {
 
-	private final ShptSecurityObject<?> owner;
-	private final List<ShptUser> members;
-
-	public ShptGroup(Service service, Group group) throws ServiceException {
+	public ShptGroup(Service service, Group group) {
 		super(service, group, StoredObjectType.GROUP);
-		User u = this.service.getGroupOwner(this.wrapped.getId());
-		if (u != null) {
-			switch (u.getType()) {
-				case USER:
-					this.owner = new ShptUser(service, u);
-					break;
-				case SHARE_POINT_GROUP:
-				case SECURITY_GROUP:
-					if (group.getId() != u.getId()) {
-						this.owner = new ShptGroup(service, service.getGroup(u.getId()));
-					} else {
-						this.owner = null;
-					}
-					break;
-				default:
-					this.owner = null;
-			}
-		} else {
-			this.owner = null;
-		}
-
-		List<User> l = service.getGroupUsers(group.getId());
-		if ((l == null) || l.isEmpty()) {
-			this.members = Collections.emptyList();
-		} else {
-			List<ShptUser> users = new ArrayList<ShptUser>(l.size());
-			for (User user : l) {
-				users.add(new ShptUser(service, user));
-			}
-			this.members = Tools.freezeList(users);
-		}
 	}
 
 	@Override
@@ -70,17 +35,9 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 		return getName();
 	}
 
-	public List<ShptUser> getMembers() {
-		return this.members;
-	}
-
 	@Override
 	public int getNumericId() {
 		return this.wrapped.getId();
-	}
-
-	public ShptSecurityObject<?> getOwner() {
-		return this.owner;
 	}
 
 	@Override
@@ -155,21 +112,52 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
-		// Add the group's users
-		if (this.owner != null) {
-			ret.add(this.owner);
-		}
 
 		List<User> l = service.getGroupUsers(getNumericId());
 		if ((l != null) && !l.isEmpty()) {
 			for (User u : l) {
 				if (u.getType() == PrincipalType.USER) {
-					ret.add(new ShptUser(service, u));
+					try {
+						ret.add(new ShptUser(service, u));
+					} catch (IncompleteDataException e) {
+						this.log.warn(e.getMessage());
+					}
 				} else {
 					ret.add(new ShptGroup(service, service.getGroup(u.getId())));
 				}
 			}
 		}
+
+		ShptSecurityObject<?> owner = null;
+		User u = this.service.getGroupOwner(this.wrapped.getId());
+		if (u != null) {
+			switch (u.getType()) {
+				case USER:
+					try {
+						owner = new ShptUser(service, u);
+					} catch (IncompleteDataException e) {
+						this.log.warn(e.getMessage());
+					}
+					break;
+				case SHARE_POINT_GROUP:
+				case SECURITY_GROUP:
+					if (getWrapped().getId() != u.getId()) {
+						try {
+							owner = new ShptGroup(service, service.getGroup(u.getId()));
+						} catch (ServiceException e) {
+							// Did not find an owner group
+							this.log.warn(String.format("Failed to find the group with ID [%d]", u.getId()));
+						}
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		if (owner != null) {
+			ret.add(owner);
+		}
+
 		return ret;
 	}
 }
