@@ -1,4 +1,4 @@
-package com.delta.cmsmf.utils;
+package com.delta.cmsmf.launcher.dctm;
 
 import java.util.Date;
 
@@ -14,7 +14,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 
-public class DctmUtils {
+class DctmUtils {
 
 	// CMSMF Last Export Related constants
 	private static final String LAST_EXPORT_OBJ_NAME = "cmsmf_last_export";

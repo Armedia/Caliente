@@ -1,10 +1,12 @@
-package com.delta.cmsmf.utils;
+package com.delta.cmsmf.launcher;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.delta.cmsmf.utils.ClasspathPatcher;
 
 public class CommonClasspathPatcher extends ClasspathPatcher {
 

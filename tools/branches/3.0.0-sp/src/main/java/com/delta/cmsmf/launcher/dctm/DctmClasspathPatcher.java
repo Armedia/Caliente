@@ -1,4 +1,4 @@
-package com.delta.cmsmf.utils;
+package com.delta.cmsmf.launcher.dctm;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.delta.cmsmf.cfg.CLIParam;
+import com.delta.cmsmf.utils.ClasspathPatcher;
 
 public class DctmClasspathPatcher extends ClasspathPatcher {
 

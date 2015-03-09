@@ -1,2 +1,2 @@
-com.delta.cmsmf.utils.CommonClasspathPatcher
-com.delta.cmsmf.utils.DctmClasspathPatcher
+com.delta.cmsmf.launcher.CommonClasspathPatcher
+com.delta.cmsmf.launcher.dctm.DctmClasspathPatcher

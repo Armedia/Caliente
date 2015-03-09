@@ -24,7 +24,6 @@ import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain;
 import com.delta.cmsmf.utils.CMSMFUtils;
-import com.delta.cmsmf.utils.DctmUtils;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
