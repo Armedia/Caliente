@@ -78,7 +78,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		if (!root) {
 			// TODO: is this safe? What if we have a "3-level root"? i.e. /sites/blabla/root
 			String path = getServerRelativeUrl();
-			path = FileNameTools.dirname(path);
+			path = FileNameTools.dirname(path, '/');
 			path = FileNameTools.removeLeadingSeparators(path).replaceFirst("/", "_");
 			path = String.format("/%s", path);
 			if (this.log.isDebugEnabled()) {
@@ -95,7 +95,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(session, marshaled, ctx);
 		if (!StringUtils.isEmpty(getName())) {
-			String parentPath = FileNameTools.dirname(getServerRelativeUrl());
+			String parentPath = getServerRelativeUrl();
+			parentPath = FileNameTools.dirname(parentPath, '/');
 			ShptFolder parent = new ShptFolder(session, session.getFolder(parentPath));
 			marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PARENTS.name,
 				StoredDataType.ID, true, Collections.singleton(new StoredValue(StoredDataType.ID, parent.getId()))));
