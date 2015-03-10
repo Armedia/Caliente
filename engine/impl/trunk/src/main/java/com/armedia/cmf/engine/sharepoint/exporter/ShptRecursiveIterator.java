@@ -83,8 +83,16 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 				try {
 					c = this.service.getFiles(current.getServerRelativeUrl());
 				} catch (ServiceException e) {
-					throw new RuntimeException(String.format("Exception caught getting the file list for [%s]",
-						current.getServerRelativeUrl()), e);
+					// Could not fetch files for this folder... so skip it altogether
+					c = null;
+					if (this.log.isTraceEnabled()) {
+						this.log.warn(
+							String.format("Exception caught getting the file list for [%s]",
+								current.getServerRelativeUrl()), e);
+					} else {
+						this.log.warn(String.format("Exception caught getting the file list for [%s] - %s",
+							current.getServerRelativeUrl(), e.getMessage()));
+					}
 				}
 
 				if ((c != null) && !c.isEmpty()) {
@@ -107,8 +115,15 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 				try {
 					c = this.service.getFolders(current.getServerRelativeUrl());
 				} catch (ServiceException e) {
-					throw new RuntimeException(String.format("Exception caught getting the folder list for [%s]",
-						current.getServerRelativeUrl()), e);
+					c = null;
+					if (this.log.isTraceEnabled()) {
+						this.log.warn(
+							String.format("Exception caught getting the folder list for [%s]",
+								current.getServerRelativeUrl()), e);
+					} else {
+						this.log.warn(String.format("Exception caught getting the folder list for [%s] - %s",
+							current.getServerRelativeUrl(), e.getMessage()));
+					}
 				}
 				if ((c != null) && !c.isEmpty()) {
 					state.folderIterator = c.iterator();
