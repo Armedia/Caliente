@@ -133,30 +133,39 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 		}
 
 		ShptSecurityObject<?> owner = null;
-		User u = this.service.getGroupOwner(this.wrapped.getId());
-		if (u != null) {
-			switch (u.getType()) {
-				case USER:
-					try {
-						owner = new ShptUser(service, u);
-					} catch (IncompleteDataException e) {
-						this.log.warn(e.getMessage());
-					}
-					break;
-				case SHARE_POINT_GROUP:
-				case SECURITY_GROUP:
-					if (getWrapped().getId() != u.getId()) {
+		try {
+			final User u = this.service.getGroupOwner(this.wrapped.getId());
+			if (u != null) {
+				switch (u.getType()) {
+					case USER:
 						try {
-							owner = new ShptGroup(service, service.getGroup(u.getId()));
-						} catch (ServiceException e) {
-							// Did not find an owner group
-							this.log.warn(String.format("Failed to find the group with ID [%d]", u.getId()));
+							owner = new ShptUser(service, u);
+						} catch (IncompleteDataException e) {
+							this.log.warn(e.getMessage());
 						}
-					}
-					break;
-				default:
-					break;
+						break;
+					case SHARE_POINT_GROUP:
+					case SECURITY_GROUP:
+						if (getWrapped().getId() != u.getId()) {
+							try {
+								owner = new ShptGroup(service, service.getGroup(u.getId()));
+							} catch (ServiceException e) {
+								// Did not find an owner group
+								if (this.log.isDebugEnabled()) {
+									this.log.warn(String.format("Failed to find the group with ID [%d]", u.getId()), e);
+								} else {
+									this.log.warn(String.format("Failed to find the group with ID [%d]", u.getId()));
+								}
+							}
+						}
+						break;
+					default:
+						break;
+				}
 			}
+		} catch (ServiceException e) {
+			this.log.warn(String.format("Failed to find the owner for group [%s] (ID[%d])", getLabel(),
+				this.wrapped.getId()));
 		}
 		if (owner != null) {
 			ret.add(owner);
