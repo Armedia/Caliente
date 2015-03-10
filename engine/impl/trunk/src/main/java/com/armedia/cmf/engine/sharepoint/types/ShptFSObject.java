@@ -77,9 +77,14 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		// Target Paths
 		if (!root) {
 			// TODO: is this safe? What if we have a "3-level root"? i.e. /sites/blabla/root
-			String path = FileNameTools.dirname(getServerRelativeUrl());
+			String path = getServerRelativeUrl();
+			path = FileNameTools.dirname(path);
 			path = FileNameTools.removeLeadingSeparators(path).replaceFirst("/", "_");
 			path = String.format("/%s", path);
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]",
+					path, getServerRelativeUrl(), getStoredType(), getId(), getLabel()));
+			}
 			object.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PATHS.name, StoredDataType.STRING,
 				true, Collections.singleton(new StoredValue(path))));
 		}
@@ -90,11 +95,16 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(session, marshaled, ctx);
 		if (!StringUtils.isEmpty(getName())) {
-			ShptFolder parent = new ShptFolder(session,
-				session.getFolder(FileNameTools.dirname(getServerRelativeUrl())));
-			ret.add(parent);
+			String parentPath = FileNameTools.dirname(getServerRelativeUrl());
+			ShptFolder parent = new ShptFolder(session, session.getFolder(parentPath));
 			marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PARENTS.name,
 				StoredDataType.ID, true, Collections.singleton(new StoredValue(StoredDataType.ID, parent.getId()))));
+			ret.add(parent);
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format(
+					"Adding parent dependency to [%s] from source path [%s] for %s [ID=%s/L=%s]", parentPath,
+					getServerRelativeUrl(), getStoredType(), getId(), getLabel()));
+			}
 		}
 		return ret;
 	}

@@ -67,7 +67,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 		this.stateStack.push(new RecursiveState(root));
 		this.excludeEmptyFolders = excludeEmptyFolders;
 		this.ctsPath = String.format("%s_cts", root.getServerRelativeUrl());
-		this.log.trace("Starting recursive search of [{}]...", root.getServerRelativeUrl());
+		this.log.debug("Starting recursive search of [{}]...", root.getServerRelativeUrl());
 	}
 
 	@Override
@@ -96,7 +96,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 			if (state.fileIterator.hasNext()) {
 				File f = state.fileIterator.next();
 				ShptFile F = new ShptFile(this.service, f);
-				this.log.trace("\tFound file: [{}]", f.getServerRelativeUrl());
+				this.log.debug("\tFound file: [{}]", f.getServerRelativeUrl());
 				state.next = new ExportTarget(StoredObjectType.DOCUMENT, F.getId(), F.getSearchKey());
 				state.fileCount++;
 				return true;
@@ -124,6 +124,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 					continue inner;
 				}
 				state.folderCount++;
+				this.log.debug("\tExporting the contents of folder: [{}]", f.getServerRelativeUrl());
 				this.stateStack.push(new RecursiveState(f));
 				continue recursion;
 			}
@@ -135,7 +136,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 				if (!this.excludeEmptyFolders && ((state.fileCount | state.folderCount) == 0)) {
 					Folder f = state.base;
 					ShptFolder F = new ShptFolder(this.service, f);
-					this.log.trace("\tExporting the contents of folder: [{}]", f.getServerRelativeUrl());
+					this.log.debug("\tExporting the contents of folder: [{}]", f.getServerRelativeUrl());
 					state.next = new ExportTarget(StoredObjectType.FOLDER, F.getId(), F.getSearchKey());
 					return true;
 				}
