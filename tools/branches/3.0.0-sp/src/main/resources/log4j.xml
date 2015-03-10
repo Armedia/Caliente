@@ -26,6 +26,12 @@
 		<level value="DEBUG"/>
 	</logger>
 
+	<logger name="com.armedia.cmf.engine.sharepoint">
+		<level value="DEBUG"/>
+		<appender-ref ref="stdout"/>
+		<appender-ref ref="default"/>
+	</logger>
+
 	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
 	<logger name="console" additivity="false">
 		<level value="INFO"/>
