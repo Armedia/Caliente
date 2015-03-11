@@ -58,7 +58,6 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 
 	private final ShptSession service;
 	private final boolean excludeEmptyFolders;
-	private final String ctsPath;
 
 	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
 
@@ -66,8 +65,12 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 		this.service = service;
 		this.stateStack.push(new RecursiveState(root));
 		this.excludeEmptyFolders = excludeEmptyFolders;
-		this.ctsPath = String.format("%s_cts", root.getServerRelativeUrl());
 		this.log.debug("Starting recursive search of [{}]...", root.getServerRelativeUrl());
+	}
+
+	private boolean ignorePath(String path) {
+		// TODO: A configuration setting "somewhere" should control which paths we ignore
+		return false;
 	}
 
 	@Override
@@ -134,8 +137,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 
 			inner: while (state.folderIterator.hasNext()) {
 				Folder f = state.folderIterator.next();
-				// TODO: Perhaps generalize this to have a list of paths we're not interested in
-				if (f.getServerRelativeUrl().startsWith(this.ctsPath)) {
+				if (ignorePath(f.getServerRelativeUrl())) {
 					continue inner;
 				}
 				state.folderCount++;
