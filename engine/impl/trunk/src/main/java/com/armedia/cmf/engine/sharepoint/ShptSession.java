@@ -103,7 +103,7 @@ public class ShptSession {
 			} else {
 				this.log.warn(String.format(
 					"Exception raised for URL [%s] resulted in a new Service instance being created - %s",
-					e.getRequestUrl()), e.getErrorString());
+					e.getRequestUrl(), e.getErrorString()));
 			}
 			this.service = newService();
 		}
