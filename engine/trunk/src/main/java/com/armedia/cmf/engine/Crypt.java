@@ -16,7 +16,7 @@ import javax.xml.bind.DatatypeConverter;
 public abstract class Crypt {
 
 	// This should never change... EVER...
-	private static final Pattern BASE64_VALIDATOR = Pattern.compile("^[a-zA-Z0-9+/](?:[AQgw]==|[AEIMQUYcgkosw048]=)$");
+	private static final Pattern BASE64_VALIDATOR = Pattern.compile("^[a-zA-Z0-9+/](?:[AEIMQUYcgkosw048]=|[AQgw]==)?$");
 	private static final byte[] NO_BYTES = new byte[0];
 	private static final String ENCODED_KEY = "6RBjZgfVO+KhuPU0qSqmdQ==";
 	private static final Charset CHARSET = Charset.forName("UTF-8");
@@ -43,7 +43,7 @@ public abstract class Crypt {
 	}
 
 	private static Cipher getCipher(boolean encrypt) throws NoSuchAlgorithmException, NoSuchPaddingException,
-		InvalidKeyException, InvalidAlgorithmParameterException {
+	InvalidKeyException, InvalidAlgorithmParameterException {
 		Cipher ret = Cipher.getInstance(Crypt.KEY.getAlgorithm());
 		ret.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, Crypt.KEY);
 		return ret;
