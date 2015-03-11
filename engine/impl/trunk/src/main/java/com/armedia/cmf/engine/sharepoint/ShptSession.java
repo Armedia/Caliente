@@ -8,6 +8,8 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.Credentials;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.HttpClientConnectionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.independentsoft.share.Attachment;
 import com.independentsoft.share.BasePermission;
@@ -64,6 +66,8 @@ import com.independentsoft.share.queryoptions.IQueryOption;
 
 public class ShptSession {
 
+	private final Logger log = LoggerFactory.getLogger(getClass());
+
 	private final URL url;
 	private final String user;
 	private final String password;
@@ -92,6 +96,15 @@ public class ShptSession {
 		}
 
 		if (replaceService == true) {
+			if (this.log.isTraceEnabled()) {
+				this.log.warn(
+					String.format("Exception raised for URL [%s] resulted in a new Service instance being created",
+						e.getRequestUrl()), e);
+			} else {
+				this.log.warn(String.format(
+					"Exception raised for URL [%s] resulted in a new Service instance being created - %s",
+					e.getRequestUrl()), e.getErrorString());
+			}
 			this.service = newService();
 		}
 		return e;
