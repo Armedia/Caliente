@@ -3,10 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.armedia.cmf</groupId>
-	<artifactId>cmf-export-documentum</artifactId>
+	<artifactId>cmf-engine-alfresco</artifactId>
 	<version>0.0.1</version>
-	<name>CMF Exporter for Documentum</name>
-	<description>CMF Exporter for Documentum</description>
+	<name>CMF Alfresco Access Engine</name>
+	<description>CMF Alfresco Access Engine</description>
 	<packaging>bundle</packaging>
 
 	<scm>
@@ -15,7 +15,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.target>1.7</project.build.target>
+		<project.build.target>1.6</project.build.target>
 	</properties>
 
 	<organization>
@@ -53,8 +53,8 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
-			<artifactId>cmf-export-api</artifactId>
-			<version>0.0.1</version>
+			<artifactId>cmf-engine</artifactId>
+			<version>1.1.5</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
