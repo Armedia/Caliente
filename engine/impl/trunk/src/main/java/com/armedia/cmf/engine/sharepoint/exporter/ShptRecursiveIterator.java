@@ -9,12 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.types.ShptFile;
 import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
-import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 
 public class ShptRecursiveIterator implements Iterator<ExportTarget> {
@@ -56,13 +56,13 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 	private static final Iterator<File> EMPTY_FILE_ITERATOR = new EmptyIterator<File>();
 	private static final Iterator<Folder> EMPTY_FOLDER_ITERATOR = new EmptyIterator<Folder>();
 
-	private final Service service;
+	private final ShptSession service;
 	private final boolean excludeEmptyFolders;
 	private final String ctsPath;
 
 	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
 
-	public ShptRecursiveIterator(Service service, Folder root, boolean excludeEmptyFolders) {
+	public ShptRecursiveIterator(ShptSession service, Folder root, boolean excludeEmptyFolders) {
 		this.service = service;
 		this.stateStack.push(new RecursiveState(root));
 		this.excludeEmptyFolders = excludeEmptyFolders;
@@ -158,7 +158,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 			}
 			this.stateStack.pop();
 		}
-		return false;
+	return false;
 	}
 
 	@Override

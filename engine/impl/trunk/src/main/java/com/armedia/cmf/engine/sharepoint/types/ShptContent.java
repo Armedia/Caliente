@@ -13,6 +13,7 @@ import javax.activation.MimeType;
 
 import org.apache.commons.io.IOUtils;
 
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
 import com.armedia.cmf.engine.sharepoint.common.MimeTools;
@@ -26,7 +27,6 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.independentsoft.share.File;
 import com.independentsoft.share.FileVersion;
-import com.independentsoft.share.Service;
 
 /**
  * @author diego
@@ -37,7 +37,7 @@ public class ShptContent extends ShptFSObject<File> {
 	private final FileVersion version;
 	private final ShptVersionNumber versionNumber;
 
-	public ShptContent(Service service, File file, FileVersion version) {
+	public ShptContent(ShptSession service, File file, FileVersion version) {
 		super(service, file, StoredObjectType.CONTENT);
 		this.version = version;
 		if (version == null) {
@@ -89,7 +89,7 @@ public class ShptContent extends ShptFSObject<File> {
 	}
 
 	@Override
-	public Handle storeContent(Service session, StoredObject<StoredValue> marshaled, ContentStore streamStore)
+	public Handle storeContent(ShptSession session, StoredObject<StoredValue> marshaled, ContentStore streamStore)
 		throws Exception {
 		// TODO: We NEED to use something other than the object ID here...
 		Handle h = streamStore.getHandle(marshaled, "");

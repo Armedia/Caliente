@@ -4,6 +4,9 @@
 
 package com.armedia.cmf.engine.sharepoint;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
@@ -11,27 +14,26 @@ import com.armedia.cmf.engine.Crypt;
 import com.armedia.cmf.engine.CryptException;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
-import com.independentsoft.share.Service;
 
 /**
  * @author diego
  *
  */
-public class ShptSessionFactory extends SessionFactory<Service> {
+public class ShptSessionFactory extends SessionFactory<ShptSession> {
 
 	public static final String BASE_URL = Setting.BASE_URL.name;
 	public static final String USER = Setting.USER.name;
 	public static final String DOMAIN = Setting.DOMAIN.name;
 	public static final String PASSWORD = Setting.PASSWORD.name;
 
-	private final String url;
+	private final URL url;
 	private final String user;
 	private final String password;
 	private final String domain;
 
-	public ShptSessionFactory(CfgTools settings) {
+	public ShptSessionFactory(CfgTools settings) throws MalformedURLException {
 		super(settings);
-		this.url = settings.getString(Setting.BASE_URL);
+		this.url = new URL(settings.getString(Setting.BASE_URL));
 		this.user = settings.getString(Setting.USER);
 		String pass = settings.getString(Setting.PASSWORD);
 		try {
@@ -44,17 +46,18 @@ public class ShptSessionFactory extends SessionFactory<Service> {
 	}
 
 	@Override
-	public PooledObject<Service> makeObject() {
-		return new DefaultPooledObject<Service>(new Service(this.url, this.user, this.password, this.domain));
+	public PooledObject<ShptSession> makeObject() {
+		return new DefaultPooledObject<ShptSession>(new ShptSession(this.url, this.user, this.password,
+			this.domain));
 	}
 
 	@Override
-	public void destroyObject(PooledObject<Service> service) {
+	public void destroyObject(PooledObject<ShptSession> service) {
 		// Apparently, the client is stateless...
 	}
 
 	@Override
-	public boolean validateObject(PooledObject<Service> service) {
+	public boolean validateObject(PooledObject<ShptSession> service) {
 		if ((service == null) || (service.getObject() == null)) { return false; }
 		try {
 			service.getObject().getContextInfo();
@@ -65,16 +68,16 @@ public class ShptSessionFactory extends SessionFactory<Service> {
 	}
 
 	@Override
-	public void activateObject(PooledObject<Service> service) throws Exception {
+	public void activateObject(PooledObject<ShptSession> service) throws Exception {
 		service.getObject().getContextInfo();
 	}
 
 	@Override
-	public void passivateObject(PooledObject<Service> service) throws Exception {
+	public void passivateObject(PooledObject<ShptSession> service) throws Exception {
 	}
 
 	@Override
-	protected ShptSessionWrapper newWrapper(Service session) throws Exception {
+	protected ShptSessionWrapper newWrapper(ShptSession session) throws Exception {
 		return new ShptSessionWrapper(this, session);
 	}
 }

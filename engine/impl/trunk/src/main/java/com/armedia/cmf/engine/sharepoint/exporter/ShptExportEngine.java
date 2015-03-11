@@ -15,6 +15,7 @@ import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.Setting;
 import com.armedia.cmf.engine.sharepoint.ShptException;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
@@ -34,7 +35,6 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
-import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 
 /**
@@ -42,7 +42,7 @@ import com.independentsoft.share.ServiceException;
  *
  */
 public class ShptExportEngine extends
-ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+ExportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -57,7 +57,8 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(Service service, Map<String, ?> settings) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(ShptSession service, Map<String, ?> settings)
+		throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) { throw new IllegalArgumentException(
@@ -77,7 +78,7 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 	}
 
 	@Override
-	protected ShptObject<?> getObject(Service session, StoredObjectType type, String id) throws Exception {
+	protected ShptObject<?> getObject(ShptSession session, StoredObjectType type, String id) throws Exception {
 		switch (type) {
 			case USER:
 				return new ShptUser(session, session.getUser(Tools.decodeInteger(id)));
@@ -93,14 +94,14 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> identifyRequirements(Service session, StoredObject<StoredValue> marshalled,
-		ShptObject<?> object, ShptExportContext ctx) throws Exception {
+	protected Collection<ShptObject<?>> identifyRequirements(ShptSession session,
+		StoredObject<StoredValue> marshalled, ShptObject<?> object, ShptExportContext ctx) throws Exception {
 		return object.identifyRequirements(session, marshalled, ctx);
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> identifyDependents(Service session, StoredObject<StoredValue> marshalled,
-		ShptObject<?> object, ShptExportContext ctx) throws Exception {
+	protected Collection<ShptObject<?>> identifyDependents(ShptSession session,
+		StoredObject<StoredValue> marshalled, ShptObject<?> object, ShptExportContext ctx) throws Exception {
 		return object.identifyDependents(session, marshalled, ctx);
 	}
 
@@ -110,13 +111,13 @@ ExportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExport
 	}
 
 	@Override
-	protected StoredObject<StoredValue> marshal(ShptExportContext ctx, Service session, ShptObject<?> object)
+	protected StoredObject<StoredValue> marshal(ShptExportContext ctx, ShptSession session, ShptObject<?> object)
 		throws ExportException {
 		return object.marshal();
 	}
 
 	@Override
-	protected Handle storeContent(Service session, StoredObject<StoredValue> marshaled, ExportTarget referrent,
+	protected Handle storeContent(ShptSession session, StoredObject<StoredValue> marshaled, ExportTarget referrent,
 		ShptObject<?> object, ContentStore streamStore) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to store the contents"); }

@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
@@ -28,7 +29,6 @@ import com.independentsoft.share.CustomizedPageStatus;
 import com.independentsoft.share.File;
 import com.independentsoft.share.FileLevel;
 import com.independentsoft.share.FileVersion;
-import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 
 public class ShptFile extends ShptFSObject<File> {
@@ -42,15 +42,15 @@ public class ShptFile extends ShptFSObject<File> {
 	private List<ShptFile> predecessors = Collections.emptyList();
 	private List<ShptFile> successors = Collections.emptyList();
 
-	public ShptFile(Service service, File file) {
+	public ShptFile(ShptSession service, File file) {
 		this(service, file, null, null);
 	}
 
-	private ShptFile(Service service, File file, FileVersion version) {
+	private ShptFile(ShptSession service, File file, FileVersion version) {
 		this(service, file, version, null);
 	}
 
-	private ShptFile(Service service, File file, FileVersion version, ShptFile antecedent) {
+	private ShptFile(ShptSession service, File file, FileVersion version, ShptFile antecedent) {
 		super(service, file, StoredObjectType.DOCUMENT);
 		this.version = version;
 		if (version == null) {
@@ -262,7 +262,7 @@ public class ShptFile extends ShptFSObject<File> {
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findRequirements(ShptSession service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 		ShptUser author = null;
@@ -315,7 +315,7 @@ public class ShptFile extends ShptFSObject<File> {
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findDependents(ShptSession service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
 
@@ -326,7 +326,7 @@ public class ShptFile extends ShptFSObject<File> {
 		return ret;
 	}
 
-	public static ShptFile locateFile(Service service, String searchKey) throws ServiceException {
+	public static ShptFile locateFile(ShptSession service, String searchKey) throws ServiceException {
 		Matcher m = ShptFile.SEARCH_KEY_PARSER.matcher(searchKey);
 		if (!m.matches()) {
 			File f = service.getFile(searchKey);

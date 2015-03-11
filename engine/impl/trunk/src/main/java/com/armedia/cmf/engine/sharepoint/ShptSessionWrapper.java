@@ -7,19 +7,18 @@ package com.armedia.cmf.engine.sharepoint;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.armedia.cmf.engine.SessionWrapper;
-import com.independentsoft.share.Service;
 
 /**
  * @author diego
  *
  */
-public class ShptSessionWrapper extends SessionWrapper<Service> {
+public class ShptSessionWrapper extends SessionWrapper<ShptSession> {
 
 	private static final AtomicLong SESSION_ID = new AtomicLong(0);
 
 	private final String id;
 
-	protected ShptSessionWrapper(ShptSessionFactory factory, Service wrapped) {
+	protected ShptSessionWrapper(ShptSessionFactory factory, ShptSession wrapped) {
 		super(factory, wrapped);
 		this.id = String.format("%08x", ShptSessionWrapper.SESSION_ID.incrementAndGet());
 	}

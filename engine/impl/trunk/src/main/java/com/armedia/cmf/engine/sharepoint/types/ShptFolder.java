@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -17,12 +18,11 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
-import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 
 public class ShptFolder extends ShptFSObject<Folder> {
 
-	public ShptFolder(Service service, Folder folder) {
+	public ShptFolder(ShptSession service, Folder folder) {
 		super(service, folder, StoredObjectType.FOLDER);
 	}
 
@@ -91,7 +91,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findDependents(Service service, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findDependents(ShptSession service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
 		ExportTarget referrent = ctx.getReferrent();

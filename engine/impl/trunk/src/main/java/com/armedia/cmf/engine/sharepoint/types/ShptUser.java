@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -16,7 +17,6 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.Role;
-import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 import com.independentsoft.share.User;
 
@@ -26,7 +26,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	private final String userName;
 	private final String userDomain;
 
-	public ShptUser(Service service, User user) throws IncompleteDataException {
+	public ShptUser(ShptSession service, User user) throws IncompleteDataException {
 		super(service, user, StoredObjectType.USER);
 		/*
 		List<Integer> roles = this.service.getRoleAssignments(this.wrapped.getId());
@@ -161,7 +161,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findRequirements(ShptSession service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 		List<Group> l = service.getUserGroups(getNumericId());

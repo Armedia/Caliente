@@ -10,6 +10,7 @@ import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportStrategy;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.types.ShptObject;
@@ -21,14 +22,13 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
-import com.independentsoft.share.Service;
 
 /**
  * @author diego
  *
  */
 public class ShptImportEngine extends
-ImportEngine<Service, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptImportContext> {
+	ImportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptImportContext> {
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {

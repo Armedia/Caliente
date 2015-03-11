@@ -11,6 +11,7 @@ import java.util.Date;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
@@ -22,7 +23,6 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
-import com.independentsoft.share.Service;
 
 /**
  * @author diego
@@ -32,7 +32,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 	private final String id;
 
-	protected ShptFSObject(Service service, T wrapped, StoredObjectType type) {
+	protected ShptFSObject(ShptSession service, T wrapped, StoredObjectType type) {
 		super(service, wrapped, type);
 		String searchKey = getServerRelativeUrl();
 		this.id = String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
@@ -91,7 +91,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findRequirements(Service session, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findRequirements(ShptSession session, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(session, marshaled, ctx);
 		if (!StringUtils.isEmpty(getName())) {

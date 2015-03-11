@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -15,13 +16,12 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.PrincipalType;
-import com.independentsoft.share.Service;
 import com.independentsoft.share.ServiceException;
 import com.independentsoft.share.User;
 
 public class ShptGroup extends ShptSecurityObject<Group> {
 
-	public ShptGroup(Service service, Group group) {
+	public ShptGroup(ShptSession service, Group group) {
 		super(service, group, StoredObjectType.GROUP);
 	}
 
@@ -109,7 +109,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findRequirements(Service service, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findRequirements(ShptSession service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 

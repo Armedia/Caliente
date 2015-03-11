@@ -5,10 +5,10 @@
 package com.armedia.cmf.engine.sharepoint.types;
 
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
-import com.independentsoft.share.Service;
 
 /**
  * @author diego
@@ -16,7 +16,7 @@ import com.independentsoft.share.Service;
  */
 public abstract class ShptSecurityObject<T> extends ShptObject<T> {
 
-	protected ShptSecurityObject(Service service, T wrapped, StoredObjectType type) {
+	protected ShptSecurityObject(ShptSession service, T wrapped, StoredObjectType type) {
 		super(service, wrapped, type);
 	}
 
