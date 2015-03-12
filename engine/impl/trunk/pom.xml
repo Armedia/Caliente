@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine-sharepoint</artifactId>
-	<version>1.0.8</version>
+	<version>1.0.9-beta01</version>
 	<name>CMF Sharepoint Access Engine</name>
 	<description>CMF Sharepoint Access Engine</description>
 	<packaging>bundle</packaging>
