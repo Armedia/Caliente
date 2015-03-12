@@ -7,8 +7,9 @@ import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
+import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
@@ -18,7 +19,6 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
-import com.independentsoft.share.ServiceException;
 
 public class ShptFolder extends ShptFSObject<Folder> {
 
@@ -107,7 +107,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 		List<File> files = Collections.emptyList();
 		try {
 			files = service.getFiles(this.wrapped.getServerRelativeUrl());
-		} catch (ServiceException e) {
+		} catch (ShptSessionException e) {
 			files = Collections.emptyList();
 		}
 		for (File f : files) {
@@ -116,7 +116,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 		List<Folder> folders = Collections.emptyList();
 		try {
 			folders = service.getFolders(this.wrapped.getServerRelativeUrl());
-		} catch (ServiceException e) {
+		} catch (ShptSessionException e) {
 			folders = Collections.emptyList();
 		}
 		for (Folder f : folders) {

@@ -7,8 +7,9 @@ import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
-import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
+import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
@@ -17,7 +18,6 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.Role;
-import com.independentsoft.share.ServiceException;
 import com.independentsoft.share.User;
 
 public class ShptUser extends ShptSecurityObject<User> {
@@ -139,7 +139,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 		final List<Group> l;
 		try {
 			l = this.service.getUserGroups(getNumericId());
-		} catch (ServiceException e) {
+		} catch (ShptSessionException e) {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
 				this.wrapped.getLoginName(), this.wrapped.getId()), e);
 		}

@@ -10,12 +10,12 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
+import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.types.ShptFile;
 import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
-import com.independentsoft.share.ServiceException;
 
 public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 
@@ -85,7 +85,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 				Collection<File> c;
 				try {
 					c = this.service.getFiles(current.getServerRelativeUrl());
-				} catch (ServiceException e) {
+				} catch (ShptSessionException e) {
 					throw new RuntimeException(String.format("Exception caught getting the file list for [%s]",
 						current.getServerRelativeUrl()), e);
 				}
@@ -109,7 +109,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 				Collection<Folder> c;
 				try {
 					c = this.service.getFolders(current.getServerRelativeUrl());
-				} catch (ServiceException e) {
+				} catch (ShptSessionException e) {
 					throw new RuntimeException(String.format("Exception caught getting the folder list for [%s]",
 						current.getServerRelativeUrl()), e);
 				}
@@ -145,7 +145,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 			}
 			this.stateStack.pop();
 		}
-	return false;
+		return false;
 	}
 
 	@Override

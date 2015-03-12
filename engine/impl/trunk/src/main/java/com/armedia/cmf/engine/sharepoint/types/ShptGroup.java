@@ -6,8 +6,9 @@ import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
-import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
+import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
@@ -16,7 +17,6 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.PrincipalType;
-import com.independentsoft.share.ServiceException;
 import com.independentsoft.share.User;
 
 public class ShptGroup extends ShptSecurityObject<Group> {
@@ -94,7 +94,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 		final List<User> l;
 		try {
 			l = this.service.getGroupUsers(getNumericId());
-		} catch (ServiceException e) {
+		} catch (ShptSessionException e) {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
 				this.wrapped.getLoginName(), this.wrapped.getId()), e);
 		}
@@ -125,7 +125,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 				} else {
 					try {
 						ret.add(new ShptGroup(service, service.getGroup(u.getId())));
-					} catch (ServiceException e) {
+					} catch (ShptSessionException e) {
 						this.log.warn(String.format("Failed to locate group with ID [%d]", u.getId()));
 					}
 				}
@@ -149,7 +149,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 						if (getWrapped().getId() != u.getId()) {
 							try {
 								owner = new ShptGroup(service, service.getGroup(u.getId()));
-							} catch (ServiceException e) {
+							} catch (ShptSessionException e) {
 								// Did not find an owner group
 								if (this.log.isDebugEnabled()) {
 									this.log.warn(String.format("Failed to find the group with ID [%d]", u.getId()), e);
@@ -163,7 +163,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 						break;
 				}
 			}
-		} catch (ServiceException e) {
+		} catch (ShptSessionException e) {
 			this.log.warn(String.format("Failed to find the owner for group [%s] (ID[%d])", getLabel(),
 				this.wrapped.getId()));
 		}

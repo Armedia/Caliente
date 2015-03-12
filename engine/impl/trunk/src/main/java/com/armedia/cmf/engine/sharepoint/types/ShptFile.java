@@ -12,9 +12,10 @@ import java.util.regex.Pattern;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
-import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptProperties;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
+import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -29,7 +30,6 @@ import com.independentsoft.share.CustomizedPageStatus;
 import com.independentsoft.share.File;
 import com.independentsoft.share.FileLevel;
 import com.independentsoft.share.FileVersion;
-import com.independentsoft.share.ServiceException;
 
 public class ShptFile extends ShptFSObject<File> {
 
@@ -248,7 +248,7 @@ public class ShptFile extends ShptFSObject<File> {
 					object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION_PRIOR.name,
 						StoredDataType.ID, false, Collections.singleton(new StoredValue(antecedentId))));
 				}
-			} catch (ServiceException e) {
+			} catch (ShptSessionException e) {
 				throw new ExportException(String.format("Failed to retrieve file versions for [%s]",
 					this.wrapped.getServerRelativeUrl()), e);
 			}
@@ -326,7 +326,7 @@ public class ShptFile extends ShptFSObject<File> {
 		return ret;
 	}
 
-	public static ShptFile locateFile(ShptSession service, String searchKey) throws ServiceException {
+	public static ShptFile locateFile(ShptSession service, String searchKey) throws ShptSessionException {
 		Matcher m = ShptFile.SEARCH_KEY_PARSER.matcher(searchKey);
 		if (!m.matches()) {
 			File f = service.getFile(searchKey);

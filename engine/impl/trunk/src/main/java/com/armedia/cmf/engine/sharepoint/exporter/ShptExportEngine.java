@@ -15,9 +15,10 @@ import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.Setting;
 import com.armedia.cmf.engine.sharepoint.ShptException;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
+import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.ShptTranslator;
@@ -35,14 +36,13 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
-import com.independentsoft.share.ServiceException;
 
 /**
  * @author diego
  *
  */
 public class ShptExportEngine extends
-ExportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+	ExportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -57,8 +57,7 @@ ExportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptEx
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(ShptSession service, Map<String, ?> settings)
-		throws Exception {
+	protected Iterator<ExportTarget> findExportResults(ShptSession service, Map<String, ?> settings) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) { throw new IllegalArgumentException(
@@ -72,8 +71,8 @@ ExportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptEx
 
 		try {
 			return new ShptRecursiveIterator(service, service.getFolder(path), excludeEmptyFolders);
-		} catch (ServiceException e) {
-			throw new ShptException(String.format("Export target search failed with URL [%s]", e.getRequestUrl()), e);
+		} catch (ShptSessionException e) {
+			throw new ShptException("Export target search failed", e);
 		}
 	}
 
@@ -94,14 +93,14 @@ ExportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptEx
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> identifyRequirements(ShptSession session,
-		StoredObject<StoredValue> marshalled, ShptObject<?> object, ShptExportContext ctx) throws Exception {
+	protected Collection<ShptObject<?>> identifyRequirements(ShptSession session, StoredObject<StoredValue> marshalled,
+		ShptObject<?> object, ShptExportContext ctx) throws Exception {
 		return object.identifyRequirements(session, marshalled, ctx);
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> identifyDependents(ShptSession session,
-		StoredObject<StoredValue> marshalled, ShptObject<?> object, ShptExportContext ctx) throws Exception {
+	protected Collection<ShptObject<?>> identifyDependents(ShptSession session, StoredObject<StoredValue> marshalled,
+		ShptObject<?> object, ShptExportContext ctx) throws Exception {
 		return object.identifyDependents(session, marshalled, ctx);
 	}
 
