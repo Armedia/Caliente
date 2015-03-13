@@ -61,7 +61,6 @@ import com.independentsoft.share.TimeZone;
 import com.independentsoft.share.User;
 import com.independentsoft.share.View;
 import com.independentsoft.share.WorkflowTemplate;
-import com.independentsoft.share.fql.IRestriction;
 import com.independentsoft.share.queryoptions.IQueryOption;
 
 public class ShptSession {
@@ -109,7 +108,7 @@ public class ShptSession {
 		}
 		return new ShptSessionException(String.format(
 			"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s", e
-				.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
+			.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
 			e);
 	}
 
@@ -2139,7 +2138,15 @@ public class ShptSession {
 		}
 	}
 
-	public SearchResult search(IRestriction restriction) throws ShptSessionException {
+	public SearchResult search(com.independentsoft.share.fql.IRestriction restriction) throws ShptSessionException {
+		try {
+			return this.service.search(restriction);
+		} catch (ServiceException e) {
+			throw processException(e);
+		}
+	}
+
+	public SearchResult search(com.independentsoft.share.kql.IRestriction restriction) throws ShptSessionException {
 		try {
 			return this.service.search(restriction);
 		} catch (ServiceException e) {
