@@ -20,15 +20,17 @@ public class ShptSessionException extends Exception {
 		super(message);
 	}
 
-	public ShptSessionException(ServiceException cause) {
+	public ShptSessionException(Throwable cause) {
 		super(cause);
 	}
 
-	public ShptSessionException(String message, ServiceException cause) {
+	public ShptSessionException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
 	public ServiceException getServiceException() {
-		return ServiceException.class.cast(getCause());
+		Throwable cause = getCause();
+		if ((cause != null) && (cause instanceof ServiceException)) { return ServiceException.class.cast(cause); }
+		return null;
 	}
 }
