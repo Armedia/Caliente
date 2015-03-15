@@ -1,8 +1,11 @@
 package com.armedia.cmf.engine.sharepoint;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Proxy;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.Credentials;
@@ -11,6 +14,7 @@ import org.apache.http.conn.HttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.commons.utilities.FileNameTools;
 import com.independentsoft.share.Attachment;
 import com.independentsoft.share.BasePermission;
 import com.independentsoft.share.Change;
@@ -1185,10 +1189,22 @@ public class ShptSession {
 	}
 
 	public InputStream getInputStream(String url) throws ShptSessionException {
+		java.util.List<String> l = FileNameTools.tokenize(url, '/');
+		java.util.List<String> l2 = new ArrayList<String>(l.size());
+		for (String s : l) {
+			try {
+				l2.add(URLEncoder.encode(s, "UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				// UTF-8 unsupported? This is a big problem...
+				throw new ShptSessionException("UTF-8 is not supported", e);
+			}
+		}
+		url = FileNameTools.reconstitute(l2, url.startsWith("/"), url.endsWith("/"));
+
 		try {
 			return this.service.getInputStream(url);
-		} catch (ServiceException e) {
-			throw processException(e);
+		} catch (ServiceException se) {
+			throw processException(se);
 		}
 	}
 
