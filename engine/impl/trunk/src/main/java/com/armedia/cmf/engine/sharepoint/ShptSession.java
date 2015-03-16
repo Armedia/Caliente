@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Attachment;
 import com.independentsoft.share.BasePermission;
 import com.independentsoft.share.Change;
@@ -1191,17 +1192,30 @@ public class ShptSession {
 	}
 
 	public InputStream getInputStream(String url) throws ShptSessionException {
-		if (url != null) {
+		try {
+			return this.service.getInputStream(url);
+		} catch (ServiceException e) {
+			ShptSessionException rethrowable = processException(e);
+			String errorString = Tools.coalesce(e.getErrorString(), "");
+			errorString = errorString.toLowerCase();
+			if (!errorString.startsWith("400 ") && !errorString.startsWith("404 ")) {
+				//
+				throw rethrowable;
+			}
+
+			// Ok...so...let's try to reprocess, as a last resort...
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("Will reprocess URL [%s] for getInputStream() invocation", url));
 			}
 			java.util.List<String> items = new ArrayList<String>();
 			for (String s : FileNameTools.tokenize(url, '/')) {
 				try {
-					items.add(URLEncoder.encode(s, ShptSession.URL_ENCODING));
-				} catch (UnsupportedEncodingException e) {
+					String S = URLEncoder.encode(s, ShptSession.URL_ENCODING);
+					S = S.replaceAll("\\+", "%20");
+					items.add(S);
+				} catch (UnsupportedEncodingException e2) {
 					throw new ShptSessionException(String.format("%s encoding is not supported (while encoding [%s])",
-						ShptSession.URL_ENCODING, s), e);
+						ShptSession.URL_ENCODING, s), e2);
 				}
 			}
 			final String newUrl = FileNameTools.reconstitute(items, url.startsWith("/"), url.endsWith("/"), '/');
@@ -1210,14 +1224,11 @@ public class ShptSession {
 				.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
 					url, newUrl, newUrl));
 			}
-			url = newUrl;
-		} else {
-			this.log.trace("NULL URL provided for getInputStream() invocation");
-		}
-		try {
-			return this.service.getInputStream(url);
-		} catch (ServiceException se) {
-			throw processException(se);
+			try {
+				return this.service.getInputStream(newUrl);
+			} catch (ServiceException se) {
+				throw processException(se);
+			}
 		}
 	}
 
