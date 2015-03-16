@@ -89,7 +89,7 @@ public class ShptSession {
 		this.service = newService();
 	}
 
-	private ShptSessionException processException(ServiceException e) {
+	private ShptSessionException processException(ServiceException e, boolean silent) {
 		boolean replaceService = false;
 		String errorString = e.getErrorString();
 		if (errorString != null) {
@@ -102,21 +102,27 @@ public class ShptSession {
 		}
 
 		if (replaceService == true) {
-			if (this.log.isTraceEnabled()) {
-				this.log.warn(
-					String.format("Exception raised for URL [%s] resulted in a new Service instance being created",
+			if (!silent) {
+				if (this.log.isTraceEnabled()) {
+					this.log.warn(String.format(
+						"Exception raised for URL [%s] resulted in a new Service instance being created",
 						e.getRequestUrl()), e);
-			} else {
-				this.log.warn(String.format(
-					"Exception raised for URL [%s] resulted in a new Service instance being created - %s",
-					e.getRequestUrl(), e.getErrorString()));
+				} else {
+					this.log.warn(String.format(
+						"Exception raised for URL [%s] resulted in a new Service instance being created - %s",
+						e.getRequestUrl(), e.getErrorString()));
+				}
 			}
 			this.service = newService();
 		}
 		return new ShptSessionException(String.format(
 			"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s", e
-				.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
+			.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
 			e);
+	}
+
+	private ShptSessionException processException(ServiceException e) {
+		return processException(e, false);
 	}
 
 	protected Service newService() {
@@ -1195,7 +1201,7 @@ public class ShptSession {
 		try {
 			return this.service.getInputStream(url);
 		} catch (ServiceException e) {
-			ShptSessionException rethrowable = processException(e);
+			ShptSessionException rethrowable = processException(e, true);
 			String errorString = Tools.coalesce(e.getErrorString(), "");
 			errorString = errorString.toLowerCase();
 			if (!errorString.startsWith("400 ") && !errorString.startsWith("404 ")) {
@@ -1221,8 +1227,8 @@ public class ShptSession {
 			final String newUrl = FileNameTools.reconstitute(items, url.startsWith("/"), url.endsWith("/"), '/');
 			if (this.log.isTraceEnabled()) {
 				this.log
-					.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
-						url, newUrl, newUrl));
+				.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
+					url, newUrl, newUrl));
 			}
 			try {
 				return this.service.getInputStream(newUrl);
