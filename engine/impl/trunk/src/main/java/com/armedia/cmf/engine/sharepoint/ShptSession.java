@@ -114,7 +114,7 @@ public class ShptSession {
 		}
 		return new ShptSessionException(String.format(
 			"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s", e
-			.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
+				.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
 			e);
 	}
 
@@ -1190,26 +1190,32 @@ public class ShptSession {
 		return this.service.getHttpURLConnectionProxy();
 	}
 
-	public InputStream getInputStream(final String url) throws ShptSessionException {
-		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format("Will reprocess URL [%s] for getInputStream() invocation", url));
-		}
-		java.util.List<String> items = new ArrayList<String>();
-		for (String s : FileNameTools.tokenize(url, '/')) {
-			try {
-				items.add(URLEncoder.encode(s, ShptSession.URL_ENCODING));
-			} catch (UnsupportedEncodingException e) {
-				throw new ShptSessionException(String.format("%s encoding is not supported (while encoding [%s])",
-					ShptSession.URL_ENCODING, s), e);
+	public InputStream getInputStream(String url) throws ShptSessionException {
+		if (url != null) {
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("Will reprocess URL [%s] for getInputStream() invocation", url));
 			}
-		}
-		final String newUrl = FileNameTools.reconstitute(items, url.startsWith("/"), url.endsWith("/"));
-		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
-				url, newUrl, newUrl));
+			java.util.List<String> items = new ArrayList<String>();
+			for (String s : FileNameTools.tokenize(url, '/')) {
+				try {
+					items.add(URLEncoder.encode(s, ShptSession.URL_ENCODING));
+				} catch (UnsupportedEncodingException e) {
+					throw new ShptSessionException(String.format("%s encoding is not supported (while encoding [%s])",
+						ShptSession.URL_ENCODING, s), e);
+				}
+			}
+			final String newUrl = FileNameTools.reconstitute(items, url.startsWith("/"), url.endsWith("/"));
+			if (this.log.isTraceEnabled()) {
+				this.log
+					.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
+						url, newUrl, newUrl));
+			}
+			url = newUrl;
+		} else {
+			this.log.trace("NULL URL provided for getInputStream() invocation");
 		}
 		try {
-			return this.service.getInputStream(newUrl);
+			return this.service.getInputStream(url);
 		} catch (ServiceException se) {
 			throw processException(se);
 		}
