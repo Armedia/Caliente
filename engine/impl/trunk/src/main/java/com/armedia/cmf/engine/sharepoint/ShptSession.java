@@ -69,6 +69,8 @@ import com.independentsoft.share.queryoptions.IQueryOption;
 
 public class ShptSession {
 
+	private static final String URL_ENCODING = "UTF-8";
+
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final URL url;
@@ -1188,21 +1190,26 @@ public class ShptSession {
 		return this.service.getHttpURLConnectionProxy();
 	}
 
-	public InputStream getInputStream(String url) throws ShptSessionException {
-		java.util.List<String> l = FileNameTools.tokenize(url, '/');
-		java.util.List<String> l2 = new ArrayList<String>(l.size());
-		for (String s : l) {
+	public InputStream getInputStream(final String url) throws ShptSessionException {
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(String.format("Will reprocess URL [%s] for getInputStream() invocation", url));
+		}
+		java.util.List<String> items = new ArrayList<String>();
+		for (String s : FileNameTools.tokenize(url, '/')) {
 			try {
-				l2.add(URLEncoder.encode(s, "UTF-8"));
+				items.add(URLEncoder.encode(s, ShptSession.URL_ENCODING));
 			} catch (UnsupportedEncodingException e) {
-				// UTF-8 unsupported? This is a big problem...
-				throw new ShptSessionException("UTF-8 is not supported", e);
+				throw new ShptSessionException(String.format("%s encoding is not supported (while encoding [%s])",
+					ShptSession.URL_ENCODING, s), e);
 			}
 		}
-		url = FileNameTools.reconstitute(l2, url.startsWith("/"), url.endsWith("/"));
-
+		final String newUrl = FileNameTools.reconstitute(items, url.startsWith("/"), url.endsWith("/"));
+		if (this.log.isTraceEnabled()) {
+			this.log.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
+				url, newUrl, newUrl));
+		}
 		try {
-			return this.service.getInputStream(url);
+			return this.service.getInputStream(newUrl);
 		} catch (ServiceException se) {
 			throw processException(se);
 		}
