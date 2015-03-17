@@ -11,9 +11,9 @@ import java.util.Date;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptProperties;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
@@ -79,7 +79,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			// TODO: is this safe? What if we have a "3-level root"? i.e. /sites/blabla/root
 			String path = getServerRelativeUrl();
 			path = FileNameTools.dirname(path, '/');
-			path = FileNameTools.removeLeadingSeparators(path).replaceFirst("/", "_");
+			path = FileNameTools.removeEdgeSeparators(path, '/').replaceFirst("/", "_");
 			path = String.format("/%s", path);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]",
