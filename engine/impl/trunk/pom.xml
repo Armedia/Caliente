@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine-sharepoint</artifactId>
-	<version>1.0.10</version>
+	<version>1.0.11</version>
 	<name>CMF Sharepoint Access Engine</name>
 	<description>CMF Sharepoint Access Engine</description>
 	<packaging>bundle</packaging>
@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>com.independentsoft</groupId>
 			<artifactId>jshare</artifactId>
-			<version>1.0</version>
+			<version>1.0.409</version>
 			<scope>compile</scope>
 		</dependency>
 
