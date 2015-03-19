@@ -110,6 +110,10 @@ public abstract class TransferContext<S, T, V> {
 		return this.engine.getContentQualifier(marshaled);
 	}
 
+	public final boolean isSupported(StoredObjectType type) {
+		return this.engine.isSupported(type);
+	}
+
 	public void close() {
 
 	}
