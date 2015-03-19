@@ -10,7 +10,6 @@ import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmDelegateBase;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
@@ -41,13 +40,12 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 	}
 
 	public final Collection<IDfPersistentObject> identifyDependents(IDfSession session,
-		StoredObject<IDfValue> marshaled, IDfPersistentObject object,
-		ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		StoredObject<IDfValue> marshaled, IDfPersistentObject object, DctmExportContext ctx) throws Exception {
 		return findDependents(session, marshaled, castObject(object), ctx);
 	}
 
 	protected Collection<IDfPersistentObject> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
-		T object, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		T object, DctmExportContext ctx) throws Exception {
 		return new ArrayList<IDfPersistentObject>();
 	}
 

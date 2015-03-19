@@ -20,7 +20,6 @@ import com.armedia.cmf.engine.documentum.DctmVersionTree;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -126,8 +125,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 	 * @throws DfException
 	 * @throws ExportException
 	 */
-	protected final List<T> getVersionHistory(ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx, T object)
-		throws DfException, ExportException {
+	protected final List<T> getVersionHistory(DctmExportContext ctx, T object) throws DfException, ExportException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
 		final IDfSession session = object.getSession();
 		final IDfId chronicleId = object.getChronicleId();

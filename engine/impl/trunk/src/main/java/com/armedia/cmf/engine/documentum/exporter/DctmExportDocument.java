@@ -16,7 +16,6 @@ import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -114,8 +113,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
 	}
 
-	private List<IDfDocument> getVersions(ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx, boolean prior,
-		IDfDocument document) throws ExportException, DfException {
+	private List<IDfDocument> getVersions(DctmExportContext ctx, boolean prior, IDfDocument document)
+		throws ExportException, DfException {
 		if (document == null) { throw new IllegalArgumentException("Must provide a document whose versions to analyze"); }
 
 		final List<IDfDocument> ret = new LinkedList<IDfDocument>();
@@ -206,7 +205,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected Collection<IDfPersistentObject> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
-		IDfDocument document, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		IDfDocument document, DctmExportContext ctx) throws Exception {
 		// TODO Auto-generated method stub
 		Collection<IDfPersistentObject> ret = super.findDependents(session, marshaled, document, ctx);
 

@@ -14,7 +14,6 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmFolder;
-import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -104,9 +103,13 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			usersDefaultFolderPaths = new StoredProperty<IDfValue>(DctmFolder.USERS_DEFAULT_FOLDER_PATHS,
 				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
-				// TODO: This probably should not be done for special users
-				usersWithDefaultFolder.addValue(DctmMappingUtils.substituteMappableUsers(folder,
-					resultCol.getValueAt(0)));
+				IDfValue v = resultCol.getValueAt(0);
+				if (DctmMappingUtils.isMappableUser(ctx.getSession(), v.asString()) || ctx.isSpecialUser(v.asString())) {
+					// We don't modify the home directory for mappable users or special users...
+					continue;
+				}
+
+				usersWithDefaultFolder.addValue(DctmMappingUtils.substituteMappableUsers(folder, v));
 				usersDefaultFolderPaths.addValue(resultCol.getValueAt(1));
 			}
 			properties.add(usersWithDefaultFolder);
@@ -118,11 +121,11 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 
 	@Override
 	protected Collection<IDfPersistentObject> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
-		IDfFolder folder, ExportContext<IDfSession, IDfPersistentObject, IDfValue> ctx) throws Exception {
+		IDfFolder folder, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> ret = super.findDependents(session, marshaled, folder, ctx);
 
 		String owner = DctmMappingUtils.resolveMappableUser(session, folder.getOwnerName());
-		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner)) {
+		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
 			IDfUser user = session.getUser(owner);
 			if (user != null) {
 				ret.add(user);
@@ -144,6 +147,23 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 				continue;
 			}
 			ret.add(obj);
+		}
+
+		StoredProperty<IDfValue> usersWithDefaultFolder = marshaled.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
+		if (usersWithDefaultFolder == null) { throw new Exception(String.format(
+			"The export for folder [%s] does not contain the critical property [%s]", marshaled.getLabel(),
+			DctmFolder.USERS_WITH_DEFAULT_FOLDER)); }
+		for (IDfValue v : usersWithDefaultFolder) {
+			IDfUser user = session.getUser(v.asString());
+			if (user == null) {
+				// in theory, this should be impossible as we just got the list via a direct query
+				// to dm_user, and thus the users listed do exist
+				throw new Exception(String.format(
+					"Missing dependent for folder [%s] - user [%s] not found (as default folder)",
+					marshaled.getLabel(), v.asString()));
+			}
+			ret.add(user);
+
 		}
 
 		// Export the object type

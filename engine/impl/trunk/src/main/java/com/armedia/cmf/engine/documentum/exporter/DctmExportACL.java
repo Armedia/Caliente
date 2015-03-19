@@ -123,9 +123,13 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 			final boolean group = acl.isGroup(i);
 
 			if (!group) {
-				if (DctmMappingUtils.isMappableUser(session, name)) {
+				if (DctmMappingUtils.isMappableUser(session, name) || ctx.isSpecialUser(name)) {
 					// User is mapped to a special user, so we shouldn't include it as a dependency
 					// because it will be mapped on the target
+					continue;
+				}
+			} else {
+				if (ctx.isSpecialGroup(name)) {
 					continue;
 				}
 			}
@@ -147,7 +151,7 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 
 		// Do the owner
 		final String owner = acl.getDomain();
-		if (DctmMappingUtils.isMappableUser(session, owner)) {
+		if (DctmMappingUtils.isMappableUser(session, owner) || ctx.isSpecialUser(owner)) {
 			this.log.warn(String.format("Skipping export of special user [%s]", owner));
 		} else {
 			IDfUser user = session.getUser(owner);
