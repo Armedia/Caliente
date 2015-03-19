@@ -22,10 +22,11 @@ import com.armedia.commons.utilities.CfgTools;
  */
 public class ShptImportContext extends ImportContext<ShptSession, ShptObject<?>, StoredValue> {
 
-	public ShptImportContext(ShptImportEngine engine, CfgTools settings, String rootId, StoredObjectType rootType,
-		ShptSession session, Logger output, ObjectStorageTranslator<ShptObject<?>, StoredValue> translator,
-		ObjectStore<?, ?> objectStore, ContentStore streamStore) {
-		super(engine, settings, rootId, rootType, session, output, translator, objectStore, streamStore);
+	public ShptImportContext(ShptImportContextFactory factory, CfgTools settings, String rootId,
+		StoredObjectType rootType, ShptSession session, Logger output,
+		ObjectStorageTranslator<ShptObject<?>, StoredValue> translator, ObjectStore<?, ?> objectStore,
+		ContentStore streamStore) {
+		super(factory, settings, rootId, rootType, session, output, translator, objectStore, streamStore);
 	}
 
 	@Override

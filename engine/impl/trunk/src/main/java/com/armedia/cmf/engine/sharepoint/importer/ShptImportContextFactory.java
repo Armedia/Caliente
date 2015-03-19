@@ -20,7 +20,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public class ShptImportContextFactory extends
-ContextFactory<ShptSession, ShptObject<?>, StoredValue, ShptImportContext, ShptImportEngine> {
+	ContextFactory<ShptSession, ShptObject<?>, StoredValue, ShptImportContext, ShptImportEngine> {
 
 	ShptImportContextFactory(ShptImportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -29,7 +29,7 @@ ContextFactory<ShptSession, ShptObject<?>, StoredValue, ShptImportContext, ShptI
 	@Override
 	protected ShptImportContext constructContext(String rootId, StoredObjectType rootType, ShptSession session,
 		Logger output, ObjectStore<?, ?> objectStore, ContentStore contentStore) {
-		return new ShptImportContext(getEngine(), getSettings(), rootId, rootType, session, output, null, objectStore,
+		return new ShptImportContext(this, getSettings(), rootId, rootType, session, output, null, objectStore,
 			contentStore);
 	}
 }

@@ -19,9 +19,9 @@ import com.armedia.commons.utilities.CfgTools;
  */
 public class ShptExportContext extends ExportContext<ShptSession, ShptObject<?>, StoredValue> {
 
-	public ShptExportContext(ShptExportEngine engine, CfgTools settings, String rootId, StoredObjectType rootType,
-		ShptSession session, Logger output) {
-		super(engine, settings, rootId, rootType, session, output);
+	public ShptExportContext(ShptExportContextFactory factory, CfgTools settings, String rootId,
+		StoredObjectType rootType, ShptSession session, Logger output) {
+		super(factory, settings, rootId, rootType, session, output);
 	}
 
 }
