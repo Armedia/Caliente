@@ -192,7 +192,12 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 	public final boolean isSupported(StoredObjectType type) {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		Map<StoredObjectType, Boolean> m = this.supported.get();
-		return (m == null) || m.isEmpty() || m.containsKey(type);
+		Boolean result = (m != null ? Tools.coalesce(m.get(type), Boolean.TRUE) : Boolean.TRUE);
+		return result && checkSupported(type);
+	}
+
+	protected boolean checkSupported(StoredObjectType type) {
+		return true;
 	}
 
 	public final synchronized boolean addListener(L listener) {
