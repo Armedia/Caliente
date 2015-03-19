@@ -15,6 +15,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +66,7 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 	}
 
 	private static StoredObjectType decodeObjectType(Object o) {
+		if (o == null) { return null; }
 		if (o instanceof StoredObjectType) { return StoredObjectType.class.cast(o); }
 		if (o instanceof String) {
 			try {
@@ -77,7 +79,9 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 	}
 
 	private static Iterable<?> getAsIterable(final Object o) {
-		if (o instanceof Collection) { return Collection.class.cast(o); }
+		if (o == null) { return Collections.emptyList(); }
+		if (o instanceof Iterable) { return Iterable.class.cast(o); }
+		if (o instanceof String) { return new StrTokenizer(o.toString(), ',').getTokenList(); }
 		if (o.getClass().isArray()) {
 			if (!o.getClass().getComponentType().isPrimitive()) { return new Iterable<Object>() {
 				private final Object[] arr = (Object[]) o;
