@@ -81,7 +81,7 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 
 	public final boolean isSupported(StoredObjectType type) {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
-		return !this.excludes.contains(type) && this.engine.checkSupported(type);
+		return !this.excludes.contains(type) && this.engine.checkSupported(this.excludes, type);
 	}
 
 	public final CfgTools getSettings() {

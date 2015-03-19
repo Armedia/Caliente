@@ -28,10 +28,9 @@ public class ExportContext<S, T, V> extends TransferContext<S, T, V> {
 	 * @param session
 	 * @param output
 	 */
-	public ExportContext(ExportEngine<S, ?, T, V, ?> engine,
-		ContextFactory<S, T, V, TransferContext<S, T, V>, ? extends TransferEngine<S, T, V, ?, ?>> factory,
-		CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output) {
-		super(engine, factory, settings, rootId, rootType, session, output);
+	public <C extends TransferContext<S, T, V>, E extends TransferEngine<S, T, V, C, ?>, F extends ContextFactory<S, T, V, C, E>> ExportContext(
+		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output) {
+		super(factory, settings, rootId, rootType, session, output);
 	}
 
 	final void pushReferrent(ExportTarget referrent) {

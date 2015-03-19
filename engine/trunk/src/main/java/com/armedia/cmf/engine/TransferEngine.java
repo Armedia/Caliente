@@ -128,8 +128,8 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 			TransferEngine.MAX_THREAD_COUNT);
 	}
 
-	protected boolean checkSupported(StoredObjectType type) {
-		return true;
+	protected boolean checkSupported(Set<StoredObjectType> excludes, StoredObjectType type) {
+		return !excludes.contains(type);
 	}
 
 	public final synchronized boolean addListener(L listener) {

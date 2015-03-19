@@ -19,8 +19,8 @@ import com.armedia.commons.utilities.CfgTools;
  */
 public abstract class TransferContext<S, T, V> {
 
+	private final ContextFactory<S, T, V, ? extends TransferContext<S, T, V>, ? extends TransferEngine<S, T, V, ?, ?>> factory;
 	private final TransferEngine<S, T, V, ?, ?> engine;
-	private final ContextFactory<S, T, V, TransferContext<S, T, V>, ? extends TransferEngine<S, T, V, ?, ?>> factory;
 	private final String rootId;
 	private final StoredObjectType rootType;
 	private final S session;
@@ -29,16 +29,15 @@ public abstract class TransferContext<S, T, V> {
 	private final CfgTools settings;
 	private final Logger output;
 
-	protected TransferContext(TransferEngine<S, T, V, ?, ?> engine,
-		ContextFactory<S, T, V, TransferContext<S, T, V>, ? extends TransferEngine<S, T, V, ?, ?>> factory,
-		CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output) {
-		this.engine = engine;
+	protected <C extends TransferContext<S, T, V>, E extends TransferEngine<S, T, V, C, ?>, F extends ContextFactory<S, T, V, C, E>> TransferContext(
+		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output) {
+		this.factory = factory;
+		this.engine = factory.getEngine();
 		this.settings = settings;
 		this.rootId = rootId;
 		this.rootType = rootType;
 		this.session = session;
 		this.output = output;
-		this.factory = factory;
 	}
 
 	public final CfgTools getSettings() {
