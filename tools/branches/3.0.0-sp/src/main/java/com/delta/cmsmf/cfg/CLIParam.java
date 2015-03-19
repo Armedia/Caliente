@@ -30,6 +30,8 @@ public enum CLIParam {
 	threads(null, true, "The number of threads to use while importing or exporting"),
 	non_recursive(null, false, "Turn off counter recursion (i.e. to count a single folder without descending)"),
 	count_path(null, false, "The path within which to count objects for"),
+	cmf_exclude_types(Setting.CMF_EXCLUDE_TYPES, true,
+		"The list of object types to be ignored during the operation (comma-separated)"),
 	special_users(Setting.SPECIAL_USERS, true,
 		"The special users that should not be imported into the target instance (comma-separated)"),
 	special_groups(Setting.SPECIAL_GROUPS, true,

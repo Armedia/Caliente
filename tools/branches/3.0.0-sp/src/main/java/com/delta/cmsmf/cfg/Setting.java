@@ -45,7 +45,13 @@ public enum Setting {
 	JDBC_DRIVER("jdbc.driver"),
 	JDBC_URL("jdbc.url"),
 	JDBC_USER("jdbc.user"),
-	JDBC_PASSWORD("jdbc.password");
+	JDBC_PASSWORD("jdbc.password"),
+
+	//
+	CMF_EXCLUDE_TYPES("cmf.exclude.types"),
+
+	// END OF LIST
+	;
 
 	public final String name;
 

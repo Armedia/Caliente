@@ -12,6 +12,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import com.armedia.cmf.engine.TransferEngineSetting;
 import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
@@ -30,7 +31,7 @@ import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfTime;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
-ExportEngineListener {
+	ExportEngineListener {
 
 	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
@@ -68,6 +69,7 @@ ExportEngineListener {
 		if (this.password != null) {
 			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
+		settings.put(TransferEngineSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(null));
 
 		final DfcSessionPool pool;
 		try {
