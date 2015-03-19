@@ -4,6 +4,9 @@
 
 package com.armedia.cmf.engine.documentum.importer;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
@@ -13,6 +16,7 @@ import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -109,39 +113,53 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			|| (usersWithDefaultFolder.getValueCount() == 0) || (usersDefaultFolderPaths.getValueCount() == 0)) { return; }
 
 		final int total = usersWithDefaultFolder.getValueCount();
+		Map<String, String> m = new TreeMap<String, String>();
 		for (int i = 0; i < total; i++) {
-			IDfValue userValue = usersWithDefaultFolder.getValue(i);
-			IDfValue pathValue = usersDefaultFolderPaths.getValue(i);
-
-			if (DctmMappingUtils.isSubstitutionForMappableUser(userValue.asString())) {
+			String user = usersWithDefaultFolder.getValue(i).asString();
+			if (DctmMappingUtils.isSubstitutionForMappableUser(user)) {
 				this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
-					DctmMappingUtils.resolveMappableUser(session, userValue.asString())));
+					DctmMappingUtils.resolveMappableUser(session, user)));
 				continue;
 			}
+			m.put(user, usersDefaultFolderPaths.getValue(i).asString());
+		}
+
+		for (Map.Entry<String, String> entry : m.entrySet()) {
+			final String actualUser = entry.getKey();
+			final String pathValue = entry.getValue();
 
 			// TODO: How do we decide if we should update the default folder for this user? What
 			// if the user's default folder has been modified on the target CMS and we don't
 			// want to clobber that? That's a decision that needs to be made later...
-			final String actualUser = userValue.asString();
-			final IDfUser user = session.getUser(actualUser);
+			final IDfUser user;
+			try {
+				user = DctmImportUser.locateExistingUser(session, actualUser, null);
+			} catch (MultipleUserMatchesException e) {
+				String msg = String.format("Failed to link folder [%s](%s) to user [%s] as its default folder - %s",
+					this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser, e.getMessage());
+				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				this.log.warn(msg);
+				continue;
+			}
 			if (user == null) {
-				this.log
-					.warn(String
-						.format(
-							"Failed to link Folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-							this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser));
+				String msg = String
+					.format(
+						"Failed to link folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+						this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser);
+				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				this.log.warn(msg);
 				continue;
 			}
 
 			// Ok...so...is the user's default path one of ours? Or is it perhaps a different
 			// object? This will determine if the user's default folder will be private or
 			// not...
-			IDfFolder actual = session.getFolderByPath(pathValue.asString());
+			IDfFolder actual = session.getFolderByPath(pathValue);
 
 			// Ok...so...we set the path to "whatever"...
 			user.lock();
 			user.fetch(null);
-			user.setDefaultFolder(pathValue.asString(), (actual == null));
+			user.setDefaultFolder(pathValue, (actual == null));
 			user.save();
 			// Update the system attributes, if we can
 			try {
@@ -174,7 +192,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
 		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
-		if ((p == null) || !p.hasValues()) { return castObject(ctx.getSession().newObject("dm_cabinet")); }
+		if ((p == null) || !p.hasValues()) {
+			IDfFolder newObject = castObject(ctx.getSession().newObject("dm_cabinet"));
+			setOwnerGroupACLData(newObject, ctx);
+			return newObject;
+		}
 		return super.newObject(ctx);
 	}
 }

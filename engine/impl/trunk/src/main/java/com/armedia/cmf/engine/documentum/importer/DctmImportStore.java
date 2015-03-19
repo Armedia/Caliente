@@ -31,9 +31,9 @@ public class DctmImportStore extends DctmImportDelegate<IDfStore> {
 		IDfValue name = this.storedObject.getAttribute(DctmAttributes.NAME).getValue();
 		throw new ImportException(
 			String
-			.format(
-				"Store object creation is not supported - please contact an administrator and ask them to create a store named [%s]",
-				name));
+				.format(
+					"Store object creation is not supported - please contact an administrator and ask them to create a store named [%s]",
+					name));
 	}
 
 	@Override
@@ -54,8 +54,8 @@ public class DctmImportStore extends DctmImportDelegate<IDfStore> {
 	}
 
 	@Override
-	protected String generateSystemAttributesSQL(StoredObject<IDfValue> stored, IDfPersistentObject object)
-		throws DfException {
+	protected String generateSystemAttributesSQL(StoredObject<IDfValue> stored, IDfPersistentObject object,
+		DctmImportContext context) throws DfException {
 		return null;
 	}
 }

@@ -140,4 +140,11 @@ public class DctmImportEngine extends
 	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(DctmCommon.TARGET_NAME);
 	}
+
+	@Override
+	protected boolean checkSupported(StoredObjectType type) {
+		if (type == StoredObjectType.ACL) { return isSupported(StoredObjectType.USER)
+			&& isSupported(StoredObjectType.GROUP); }
+		return super.checkSupported(type);
+	}
 }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
@@ -153,12 +154,17 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 	@Override
 	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		if (newObject) {
 			String user = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME).getValue().asString();
+			String name = this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 			user = DctmMappingUtils.resolveMappableUser(acl.getSession(), user);
-			acl.setDomain(user);
-			acl.setObjectName(this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
+			IDfUser u = DctmImportUser.locateExistingUser(context.getSession(), user, null);
+			if (u == null) { throw new ImportException(String.format(
+				"Failed to locate the owner [%s] for ACL [%s](%s)", user, this.storedObject.getLabel(),
+				this.storedObject.getId())); }
+			acl.setDomain(u.getUserName());
+			acl.setObjectName(name);
 			acl.save();
 		}
 
@@ -179,11 +185,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
 					// we can survive this...
 					this.log
-						.warn(String
-							.format(
-								"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
-								this.storedObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
-								permit.getPermitValueInt(), permit.getPermitValueString()));
+					.warn(String
+						.format(
+							"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
+							this.storedObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
+							permit.getPermitValueInt(), permit.getPermitValueString()));
 					continue;
 				}
 				// something else? don't snuff it...
@@ -219,8 +225,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		if ((accessors == null) || (permitTypes == null) || (permitValues == null)
 			|| (accessors.getValueCount() != permitTypes.getValueCount())
 			|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(String.format(
-			"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%permitType = %s%npermitValue = %s",
-			this.storedObject.getLabel(), this.storedObject.getId(), accessors, permitTypes, permitValues)); }
+				"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%permitType = %s%npermitValue = %s",
+				this.storedObject.getLabel(), this.storedObject.getId(), accessors, permitTypes, permitValues)); }
 
 		// One final check to shortcut and avoid unnecessary processing...
 		final int accessorCount = accessors.getValueCount();
@@ -262,15 +268,28 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 					exists = (acl.getSession().getGroup(name) != null);
 				} else {
 					accessorType = "user";
-					exists = (acl.getSession().getUser(name) != null);
+					try {
+						IDfUser u = DctmImportUser.locateExistingUser(session, name, null);
+						if (u != null) {
+							name = u.getUserName();
+							exists = true;
+						} else {
+							exists = false;
+						}
+					} catch (ImportException e) {
+						this.log.warn(String.format(
+							"ACL [%s] references the user %s - %s - will not add the accessor to the ACL",
+							this.storedObject.getLabel(), name, e.getMessage()));
+						continue;
+					}
 					// Safety net?
 					if (!exists) {
 						// This shouldn't be necessary
 						this.log
-							.warn(String
-								.format(
-									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-									this.storedObject.getLabel(), name));
+						.warn(String
+							.format(
+								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+								this.storedObject.getLabel(), name));
 						exists = (acl.getSession().getGroup(name) != null);
 						accessorType = "accessor (user or group)";
 					}
@@ -330,16 +349,31 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		if ((usersWithDefaultACL == null) || (usersWithDefaultACL.getValueCount() == 0)) { return; }
 
 		final IDfSession session = context.getSession();
+		Set<String> users = new TreeSet<String>();
 		for (IDfValue value : DctmMappingUtils.resolveMappableUsers(acl, usersWithDefaultACL)) {
+			users.add(value.asString());
+		}
+
+		// First we sort the user names to ensure we don't have deadlocks - since we lock the users
+		// in the next loop, it's CRITICAL for us to ensure we lock them in the same order
+		for (String userName : users) {
 
 			// TODO: How do we decide if we should update the default ACL for this user? What if
 			// the user's default ACL has been modified on the target CMS and we don't want to
 			// clobber that?
-			final IDfUser user = session.getUser(value.asString());
+			final IDfUser user;
+			try {
+				user = DctmImportUser.locateExistingUser(session, userName, null);
+			} catch (MultipleUserMatchesException e) {
+				this.log.warn(String.format("Failed to link ACL [%s.%s] to user [%s] as its default ACL - %s",
+					acl.getDomain(), acl.getObjectName(), userName, e.getMessage()));
+				continue;
+			}
+
 			if (user == null) {
 				this.log.warn(String.format(
 					"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
-					acl.getDomain(), acl.getObjectName(), value.asString()));
+					acl.getDomain(), acl.getObjectName(), userName));
 				continue;
 			}
 
@@ -353,11 +387,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-								user.getUserName(), this.storedObject.getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+						user.getUserName(), this.storedObject.getLabel()), e);
 			}
 		}
 	}

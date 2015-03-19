@@ -6,6 +6,7 @@ package com.armedia.cmf.engine.documentum.importer;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,6 +17,7 @@ import com.armedia.cmf.engine.documentum.common.DctmGroup;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfGroup;
@@ -41,7 +43,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 
 	@Override
 	protected void finalizeConstruction(IDfGroup group, boolean newObject, DctmImportContext context)
-		throws DfException {
+		throws ImportException, DfException {
 		final IDfValue groupName = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
 		if (newObject) {
 			group.setGroupName(groupName.asString().toLowerCase());
@@ -54,17 +56,69 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			group.removeAllUsers();
 			for (IDfValue v : usersNames) {
 				final String actualUser = DctmMappingUtils.resolveMappableUser(session, v.asString());
-				final IDfUser user = session.getUser(actualUser);
-				if (user == null) {
-					missingUsers.add(actualUser);
-					this.log
-						.warn(String
-							.format(
-								"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-								actualUser, groupName.asString()));
+				final IDfUser user;
+				try {
+					user = DctmImportUser.locateExistingUser(session, actualUser, null);
+				} catch (MultipleUserMatchesException e) {
+					String msg = String.format("Failed to add user [%s] as a member of [%s] - %s", actualUser,
+						groupName.asString(), e.getMessage());
+					if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
 					continue;
 				}
-				group.addUser(actualUser);
+				if (user == null) {
+					missingUsers.add(actualUser);
+					String msg = String
+						.format(
+							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+							actualUser, groupName.asString());
+					if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
+					continue;
+				}
+				group.addUser(user.getUserName());
+			}
+		}
+
+		StoredAttribute<IDfValue> specialUser = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
+		if (specialUser != null) {
+			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
+			if (!StringUtils.isBlank(actualUser)) {
+				final IDfUser user;
+				try {
+					user = DctmImportUser.locateExistingUser(session, actualUser, null);
+					if (user != null) {
+						group.setOwnerName(user.getUserName());
+					} else {
+						this.log.warn(String.format(
+							"Failed to set user [%s] as the owner for group [%s] - the user wasn't found", actualUser,
+							groupName.asString()));
+					}
+				} catch (ImportException e) {
+					this.log.warn(String.format("Failed to set user [%s] as the owner for group [%s] - %s", actualUser,
+						groupName.asString(), e.getMessage()));
+				}
+			}
+		}
+
+		specialUser = this.storedObject.getAttribute(DctmAttributes.GROUP_ADMIN);
+		if (specialUser != null) {
+			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
+			if (!StringUtils.isBlank(actualUser)) {
+				final IDfUser user;
+				try {
+					user = DctmImportUser.locateExistingUser(session, actualUser, null);
+					if (user != null) {
+						group.setGroupAdmin(user.getUserName());
+					} else {
+						this.log.warn(String.format(
+							"Failed to set user [%s] as the administrator for group [%s] - the user wasn't found",
+							actualUser, groupName.asString()));
+					}
+				} catch (ImportException e) {
+					this.log.warn(String.format("Failed to set user [%s] as the administrator for group [%s] - %s",
+						actualUser, groupName.asString(), e.getMessage()));
+				}
 			}
 		}
 
@@ -85,36 +139,6 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				group.addGroup(actualGroup);
 			}
 		}
-
-		StoredAttribute<IDfValue> specialUser = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
-		if (specialUser != null) {
-			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
-			if (!StringUtils.isBlank(actualUser)) {
-				IDfUser user = session.getUser(actualUser);
-				if (user != null) {
-					group.setOwnerName(actualUser);
-				} else {
-					this.log.warn(String.format(
-						"Failed to set user [%s] as the owner for group [%s] - the user wasn't found", actualUser,
-						groupName.asString()));
-				}
-			}
-		}
-
-		specialUser = this.storedObject.getAttribute(DctmAttributes.GROUP_ADMIN);
-		if (specialUser != null) {
-			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
-			if (!StringUtils.isBlank(actualUser)) {
-				IDfUser user = session.getUser(actualUser);
-				if (user != null) {
-					group.setGroupAdmin(actualUser);
-				} else {
-					this.log.warn(String.format(
-						"Failed to set user [%s] as the admin for group [%s] - the user wasn't found", actualUser,
-						groupName.asString()));
-				}
-			}
-		}
 	}
 
 	@Override
@@ -125,15 +149,28 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		// Set this group as users' default group
 		StoredProperty<IDfValue> property = this.storedObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
 		if ((property == null) || (property.getValueCount() == 0)) { return; }
+		Set<String> users = new TreeSet<String>();
 		for (IDfValue v : property) {
-			final String actualUser = DctmMappingUtils.resolveMappableUser(session, v.asString());
-			final IDfUser user = session.getUser(actualUser);
+			users.add(DctmMappingUtils.resolveMappableUser(session, v.asString()));
+		}
+		for (String actualUser : users) {
+			final IDfUser user;
+			try {
+				user = DctmImportUser.locateExistingUser(session, actualUser, null);
+			} catch (MultipleUserMatchesException e) {
+				String msg = String.format("Failed to set group [%s] as the default group for the user [%s] - %s",
+					groupName, actualUser, e.getMessage());
+				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				this.log.warn(msg);
+				continue;
+			}
 			if (user == null) {
-				this.log
-					.warn(String
-						.format(
-							"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-							groupName, actualUser));
+				String msg = String
+					.format(
+						"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+						groupName, actualUser);
+				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				this.log.warn(msg);
 				continue;
 			}
 			if (Tools.equals(groupName, user.getUserGroupName())) {

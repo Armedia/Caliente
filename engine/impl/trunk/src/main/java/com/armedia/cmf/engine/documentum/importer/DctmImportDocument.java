@@ -252,26 +252,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				antecedentVersion.setObjectName(this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
 					.asString());
 
-				// Set the owner and group
-				StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
-				if (att != null) {
-					antecedentVersion.setOwnerName(att.getValue().asString());
-				}
-				att = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME);
-				if (att != null) {
-					antecedentVersion.setGroupName(att.getValue().asString());
-				}
-
-				// Set the ACL
-				StoredAttribute<IDfValue> aclDomainAtt = this.storedObject.getAttribute(DctmAttributes.ACL_DOMAIN);
-				StoredAttribute<IDfValue> aclNameAtt = this.storedObject.getAttribute(DctmAttributes.ACL_NAME);
-				@SuppressWarnings("unchecked")
-				int firstNull = Tools.firstNull(aclDomainAtt, aclNameAtt);
-				if (firstNull == -1) {
-					antecedentVersion.setACLDomain(aclDomainAtt.getValue().asString());
-					antecedentVersion.setACLName(aclNameAtt.getValue().asString());
-				}
-
 				// Link to prospective parents
 				// TODO: Mess with parents' permissions?
 				linkToParents(antecedentVersion, context);
@@ -333,7 +313,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	private IDfDocument createSuccessorVersion(IDfDocument antecedentVersion, StoredProperty<IDfValue> rVersionLabel,
-		DctmImportContext context) throws DfException {
+		DctmImportContext context) throws ImportException, DfException {
 		final IDfSession session = antecedentVersion.getSession();
 		antecedentVersion.fetch(null);
 		this.antecedentTemporaryPermission = new TemporaryPermission(antecedentVersion, IDfACL.DF_PERMIT_DELETE);
@@ -371,6 +351,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			antecedentVersion.checkout();
 			antecedentVersion.fetch(null);
 		}
+		setOwnerGroupACLData(antecedentVersion, context);
 		return antecedentVersion;
 	}
 

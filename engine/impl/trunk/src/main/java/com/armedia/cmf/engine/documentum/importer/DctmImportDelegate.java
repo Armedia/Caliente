@@ -278,7 +278,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 							this.storedObject.getLabel(), this.storedObject.getId()));
 					}
 
-					if (!updateSystemAttributes(this.storedObject, object)) {
+					if (!updateSystemAttributes(this.storedObject, object, context)) {
 						this.log.warn(String.format("Failed to update the system attributes for [%s](%s)",
 							this.storedObject.getLabel(), this.storedObject.getId()));
 					}
@@ -570,15 +570,15 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		}
 		if (loaded.get() == null) { return false; }
 		try {
-			return updateSystemAttributes(loaded.get(), targetObject);
+			return updateSystemAttributes(loaded.get(), targetObject, context);
 		} catch (DfException e) {
 			throw new ImportException(String.format("Failed to update the system attributes for %s object [%s](%s)",
 				this.storedObject.getType().name(), this.storedObject.getLabel(), objectId), e);
 		}
 	}
 
-	protected String generateSystemAttributesSQL(StoredObject<IDfValue> stored, IDfPersistentObject object)
-		throws DfException {
+	protected String generateSystemAttributesSQL(StoredObject<IDfValue> stored, IDfPersistentObject object,
+		DctmImportContext ctx) throws DfException {
 
 		final String objType = object.getType().getName();
 		StoredAttribute<IDfValue> attribute = stored.getAttribute(DctmAttributes.R_MODIFY_DATE);
@@ -608,9 +608,9 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private boolean updateSystemAttributes(StoredObject<IDfValue> stored, IDfPersistentObject object)
-		throws DfException {
-		final String sqlStr = generateSystemAttributesSQL(stored, object);
+	private boolean updateSystemAttributes(StoredObject<IDfValue> stored, IDfPersistentObject object,
+		DctmImportContext ctx) throws DfException {
+		final String sqlStr = generateSystemAttributesSQL(stored, object, ctx);
 		if (sqlStr == null) { return true; }
 		return runExecSQL(object.getSession(), sqlStr);
 	}

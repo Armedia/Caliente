@@ -4,17 +4,25 @@
 
 package com.armedia.cmf.engine.documentum.importer;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmConstant;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.Setting;
+import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.IDfUser;
@@ -28,6 +36,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 
+	private static final String FIND_USER_BY_LOGIN_DQL = "select distinct user_name, user_login_domain from dm_user where user_login_name = %s order by user_login_domain";
+
 	public DctmImportUser(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
 		super(engine, DctmObjectType.USER, storedObject);
 	}
@@ -38,12 +48,51 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected IDfUser locateInCms(DctmImportContext ctx) throws DfException {
+	protected IDfUser locateInCms(DctmImportContext ctx) throws ImportException, DfException {
 		// If that search failed, go by username
 		final IDfSession session = ctx.getSession();
-		String userName = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
+		final String userName = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
+		final StoredAttribute<IDfValue> domainAtt = this.storedObject.getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
+		return DctmImportUser.locateExistingUser(session, userName, (domainAtt != null ? domainAtt.getValue()
+			.asString() : null));
+	}
+
+	public static IDfUser locateExistingUser(IDfSession session, String userName, String domainName)
+		throws MultipleUserMatchesException, DfException {
+		// If that search failed, go by username
 		userName = DctmMappingUtils.resolveMappableUser(session, userName);
 		IDfUser ret = session.getUser(userName);
+		// No match? Ok...try by login name + domain
+		if (ret == null) {
+			domainName = Tools.coalesce(domainName, "");
+			ret = session.getUserByLoginName(userName, !StringUtils.isBlank(domainName) ? domainName : null);
+		}
+		// Still no match? try by just login name, any domain
+		if (ret == null) {
+			String dql = String.format(DctmImportUser.FIND_USER_BY_LOGIN_DQL, DfUtils.quoteString(userName));
+			IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
+			try {
+				List<String> candidates = null;
+				while (c.next()) {
+					if (ret != null) {
+						// If we've found more than one candidate, we list them all...
+						if (candidates == null) {
+							candidates = new ArrayList<String>();
+							candidates.add(String.format("%s (D=%s)", ret.getString(DctmAttributes.USER_NAME),
+								ret.getString(DctmAttributes.USER_LOGIN_DOMAIN)));
+						}
+						candidates.add(String.format("%s (D=%s)", c.getString(DctmAttributes.USER_NAME),
+							c.getString(DctmAttributes.USER_LOGIN_DOMAIN)));
+						continue;
+					}
+					ret = session.getUser(c.getString(DctmAttributes.USER_NAME));
+				}
+				if (candidates != null) { throw new MultipleUserMatchesException(String.format(
+					"Found multiple candidate matches for login name [%s]: %s", userName, candidates)); }
+			} finally {
+				DfUtils.closeQuietly(c);
+			}
+		}
 		return ret;
 	}
 

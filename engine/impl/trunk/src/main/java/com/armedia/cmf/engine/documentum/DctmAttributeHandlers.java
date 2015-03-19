@@ -165,7 +165,7 @@ public class DctmAttributeHandlers {
 		// ACL
 		//
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
 			DctmAttributes.OBJECT_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
@@ -189,9 +189,13 @@ public class DctmAttributeHandlers {
 			DctmAttributes.I_CHRONICLE_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			DctmAttributes.GROUP_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
+			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.USER_NAME_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
+			DctmAttributes.ACL_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
 			DctmAttributes.BINDING_CONDITION, DctmAttributeHandlers.NO_IMPORT_HANDLER);
@@ -219,9 +223,13 @@ public class DctmAttributeHandlers {
 			DctmAttributes.OBJECT_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
+			DctmAttributes.GROUP_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
+			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.USER_NAME_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
+			DctmAttributes.ACL_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		//
 		// Format
@@ -244,19 +252,19 @@ public class DctmAttributeHandlers {
 			DctmAttributes.GROUP_GLOBAL_UNIQUE_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-				@Override
-				public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
-					throws DfException {
-					return false;
-				}
+			@Override
+			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+				throws DfException {
+				return false;
+			}
 
-				@Override
-				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-					throws DfException {
-					return DctmMappingUtils.substituteMappableUsers(object, attr);
-				}
+			@Override
+			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+				throws DfException {
+				return DctmMappingUtils.substituteMappableUsers(object, attr);
+			}
 
-			});
+		});
 
 		//
 		// Type
@@ -299,7 +307,7 @@ public class DctmAttributeHandlers {
 
 		// The default ACL will be linked back when the ACL's are imported.
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING, DctmAttributes.ACL_NAME,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 

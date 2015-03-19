@@ -32,23 +32,26 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -417,7 +420,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -460,8 +463,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	@Override
-	protected String generateSystemAttributesSQL(StoredObject<IDfValue> stored, IDfPersistentObject sysObject)
-		throws DfException {
+	protected String generateSystemAttributesSQL(StoredObject<IDfValue> stored, IDfPersistentObject sysObject,
+		DctmImportContext ctx) throws DfException {
 		if (!(sysObject instanceof IDfSysObject)) {
 			// how, exactly, did we get here?
 			return null;
@@ -484,6 +487,14 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		String modifierName = "";
 		if (modifierNameAtt != null) {
 			modifierName = modifierNameAtt.getValue().asString();
+			try {
+				IDfUser u = DctmImportUser.locateExistingUser(session, modifierName, null);
+				if (u == null) {
+					modifierName = "";
+				}
+			} catch (MultipleUserMatchesException e) {
+				modifierName = "";
+			}
 		}
 		if (modifierName.length() == 0) {
 			modifierName = "${owner_name}";
@@ -501,7 +512,14 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		StoredAttribute<IDfValue> creatorNameAtt = stored.getAttribute(DctmAttributes.R_CREATOR_NAME);
 		String creatorName = "";
 		if (creatorNameAtt != null) {
-			creatorName = creatorNameAtt.getValue().asString();
+			try {
+				IDfUser u = DctmImportUser.locateExistingUser(session, creatorNameAtt.getValue().asString(), null);
+				if (u != null) {
+					creatorName = u.getUserName();
+				}
+			} catch (ImportException e) {
+				// Multiple matches...so don't do anything
+			}
 		}
 		if (creatorName.length() == 0) {
 			creatorName = "${owner_name}";
@@ -512,7 +530,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		StoredAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
 		String aclName = "acl_name";
 		String aclDomain = "acl_domain";
-		if ((aclNameAtt != null) && (aclDomainAtt != null)) {
+		if (ctx.isSupported(StoredObjectType.ACL) && (aclNameAtt != null) && (aclDomainAtt != null)) {
 			aclName = DfUtils.sqlQuoteString(aclNameAtt.getValue().asString());
 			aclDomain = "";
 			if (aclDomainAtt != null) {
@@ -769,6 +787,99 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				action.cleanUp();
 			}
 			this.parentLinkActions = null;
+		}
+	}
+
+	@Override
+	protected T newObject(DctmImportContext ctx) throws DfException, ImportException {
+		T newObj = super.newObject(ctx);
+		setOwnerGroupACLData(newObj, ctx);
+		return newObj;
+	}
+
+	protected void setOwnerGroupACLData(T sysObject, DctmImportContext ctx) throws ImportException, DfException {
+		// Set the owner and group
+		final IDfSession session = ctx.getSession();
+		StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
+		if (att != null) {
+			final String actualUser = DctmMappingUtils.resolveMappableUser(session, att.getValue().asString());
+			try {
+				IDfUser u = DctmImportUser.locateExistingUser(session, actualUser, null);
+				if (u != null) {
+					sysObject.setOwnerName(u.getUserName());
+				} else {
+					String msg = String
+						.format(
+							"Failed to set the owner for %s [%s](%s) to user [%s] - the user wasn't found - probably didn't need to be copied over",
+							this.storedObject.getType(), this.storedObject.getLabel(), sysObject.getObjectId().getId(),
+							actualUser);
+					if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
+				}
+			} catch (MultipleUserMatchesException e) {
+				String msg = String.format("Failed to set the owner for %s [%s](%s) to user [%s] - %s",
+					this.storedObject.getType(), this.storedObject.getLabel(), sysObject.getObjectId().getId(),
+					actualUser, e.getMessage());
+				if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				this.log.warn(msg);
+			}
+		}
+
+		att = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME);
+		if (att != null) {
+			String group = att.getValue().asString();
+			IDfGroup g = session.getGroup(group);
+			if (g != null) {
+				sysObject.setGroupName(g.getGroupName());
+			} else {
+				String msg = String
+					.format(
+						"Failed to set the group for %s [%s](%s) to group [%s] - the group wasn't found - probably didn't need to be copied over",
+						this.storedObject.getType(), this.storedObject.getLabel(), sysObject.getObjectId().getId(),
+						group);
+				if (ctx.isSupported(StoredObjectType.GROUP)) { throw new ImportException(msg); }
+				this.log.warn(msg);
+			}
+		}
+
+		// Set the ACL
+		StoredAttribute<IDfValue> aclDomainAtt = this.storedObject.getAttribute(DctmAttributes.ACL_DOMAIN);
+		StoredAttribute<IDfValue> aclNameAtt = this.storedObject.getAttribute(DctmAttributes.ACL_NAME);
+		@SuppressWarnings("unchecked")
+		int firstNull = Tools.firstNull(aclDomainAtt, aclNameAtt);
+		if (firstNull == -1) {
+			String aclDomain = DctmMappingUtils.resolveMappableUser(session, aclDomainAtt.getValue().asString());
+			try {
+				IDfUser u = DctmImportUser.locateExistingUser(session, aclDomain, null);
+				if (u != null) {
+					aclDomain = u.getUserName();
+					IDfACL acl = session.getACL(aclDomain, aclNameAtt.getValue().asString());
+					if (acl != null) {
+						sysObject.setACL(acl);
+					} else {
+						String msg = String
+							.format(
+								"Failed to set the ACL [%s:%s] for %s [%s](%s) - the ACL wasn't found - probably didn't need to be copied over",
+								aclDomain, aclNameAtt.getValue().asString(), this.storedObject.getType(),
+								this.storedObject.getLabel(), sysObject.getObjectId().getId());
+						if (ctx.isSupported(StoredObjectType.ACL)) { throw new ImportException(msg); }
+						this.log.warn(msg);
+					}
+				} else {
+					String msg = String
+						.format(
+							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
+							aclDomain, this.storedObject.getType(), this.storedObject.getLabel(), sysObject
+								.getObjectId().getId());
+					if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
+				}
+			} catch (MultipleUserMatchesException e) {
+				String msg = String.format("Failed to find the user [%s] who owns the ACL for folder [%s](%s) - %s",
+					aclDomain, this.storedObject.getLabel(), sysObject.getObjectId().getId(), e.getMessage());
+				if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				this.log.warn(msg);
+			}
 		}
 	}
 }
