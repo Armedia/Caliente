@@ -25,7 +25,6 @@ import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
-import com.armedia.cmf.engine.TransferEngineException;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStore;
@@ -45,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ExportEngineListener> {
+TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
@@ -265,7 +264,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+				.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
 			for (T requirement : referenced) {
 				exportObject(objectStore, streamStore, session, target, getExportTarget(requirement), requirement, ctx,
@@ -327,317 +326,305 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
+		final SessionFactory<S> sessionFactory;
 		try {
-			configure(configuration);
-		} catch (TransferEngineException e) {
-			throw new ExportException("Failed to configure this export engine instance", e);
+			sessionFactory = newSessionFactory(configuration);
+		} catch (Exception e) {
+			throw new ExportException("Failed to configure the session factory to carry out the export", e);
 		}
 
+		final ContextFactory<S, T, V, C, ?> contextFactory;
 		try {
-			final SessionFactory<S> sessionFactory;
 			try {
-				sessionFactory = newSessionFactory(configuration);
+				contextFactory = newContextFactory(configuration);
 			} catch (Exception e) {
-				throw new ExportException("Failed to configure the session factory to carry out the export", e);
+				throw new ExportException("Failed to configure the context factory to carry out the export", e);
 			}
 
-			final ContextFactory<S, T, V, C, ?> contextFactory;
+			final SessionWrapper<S> baseSession;
 			try {
-				try {
-					contextFactory = newContextFactory(configuration);
-				} catch (Exception e) {
-					throw new ExportException("Failed to configure the context factory to carry out the export", e);
-				}
+				baseSession = sessionFactory.acquireSession();
+			} catch (Exception e) {
+				throw new ExportException("Failed to obtain the main export session", e);
+			}
 
-				final SessionWrapper<S> baseSession;
-				try {
-					baseSession = sessionFactory.acquireSession();
-				} catch (Exception e) {
-					throw new ExportException("Failed to obtain the main export session", e);
-				}
+			final int threadCount;
+			final int backlogSize;
+			// Ensure nobody changes this under our feet
+			synchronized (this) {
+				threadCount = getThreadCount();
+				backlogSize = getBacklogSize();
+			}
 
-				final int threadCount;
-				final int backlogSize;
-				// Ensure nobody changes this under our feet
-				synchronized (this) {
-					threadCount = getThreadCount();
-					backlogSize = getBacklogSize();
-				}
+			final AtomicInteger activeCounter = new AtomicInteger(0);
+			final ExportTarget exitValue = new ExportTarget();
+			final BlockingQueue<ExportTarget> workQueue = new ArrayBlockingQueue<ExportTarget>(backlogSize);
+			final ExecutorService executor = newExecutor(threadCount);
+			if (counter == null) {
+				counter = new StoredObjectCounter<ExportResult>(ExportResult.class);
+			}
+			final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
 
-				final AtomicInteger activeCounter = new AtomicInteger(0);
-				final ExportTarget exitValue = new ExportTarget();
-				final BlockingQueue<ExportTarget> workQueue = new ArrayBlockingQueue<ExportTarget>(backlogSize);
-				final ExecutorService executor = newExecutor(threadCount);
-				if (counter == null) {
-					counter = new StoredObjectCounter<ExportResult>(ExportResult.class);
-				}
-				final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
+			Runnable worker = new Runnable() {
+				private final Logger log = ExportEngine.this.log;
 
-				Runnable worker = new Runnable() {
-					private final Logger log = ExportEngine.this.log;
+				@Override
+				public void run() {
+					final SessionWrapper<S> session;
+					try {
+						session = sessionFactory.acquireSession();
+					} catch (Exception e) {
+						this.log.error("Failed to obtain a worker session", e);
+						return;
+					}
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Got session [%s]", session.getId()));
+					}
+					final S s = session.getWrapped();
+					activeCounter.incrementAndGet();
+					try {
+						while (!Thread.interrupted()) {
+							if (this.log.isDebugEnabled()) {
+								this.log.debug("Polling the queue...");
+							}
+							ExportTarget next = null;
+							try {
+								next = workQueue.take();
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+								return;
+							}
 
-					@Override
-					public void run() {
-						final SessionWrapper<S> session;
-						try {
-							session = sessionFactory.acquireSession();
-						} catch (Exception e) {
-							this.log.error("Failed to obtain a worker session", e);
-							return;
-						}
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("Got session [%s]", session.getId()));
-						}
-						final S s = session.getWrapped();
-						activeCounter.incrementAndGet();
-						try {
-							while (!Thread.interrupted()) {
-								if (this.log.isDebugEnabled()) {
-									this.log.debug("Polling the queue...");
+							// We compare instances, and not values, because we're interested
+							// in seeing if the EXACT exit value flag is used, not one that
+							// looks the same out of some unfortunate coincidence. By checking
+							// instances, we ensure that we will not exit the loop prematurely
+							// due to a value collision.
+							if (next == exitValue) {
+								// Work complete
+								this.log.info("Exiting the export polling loop");
+								return;
+							}
+
+							StoredObjectType nextType = next.getType();
+							final String nextId = next.getId();
+							final String nextKey = next.getSearchKey();
+
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format("Polled %s", next));
+							}
+
+							boolean tx = false;
+							boolean ok = false;
+							try {
+								// Begin transaction
+								tx = session.begin();
+								final T sourceObject = getObject(s, nextType, nextKey);
+								if (sourceObject == null) {
+									// No object found with that ID...
+									this.log.warn(String.format("No %s object found with searchKey[%s]",
+										(nextType != null ? nextType.name() : "globally unique"), nextKey));
+									continue;
 								}
-								ExportTarget next = null;
-								try {
-									next = workQueue.take();
-								} catch (InterruptedException e) {
-									Thread.currentThread().interrupt();
-									return;
-								}
 
-								// We compare instances, and not values, because we're interested
-								// in seeing if the EXACT exit value flag is used, not one that
-								// looks the same out of some unfortunate coincidence. By checking
-								// instances, we ensure that we will not exit the loop prematurely
-								// due to a value collision.
-								if (next == exitValue) {
-									// Work complete
-									this.log.info("Exiting the export polling loop");
-									return;
-								}
-
-								StoredObjectType nextType = next.getType();
-								final String nextId = next.getId();
-								final String nextKey = next.getSearchKey();
-
-								if (this.log.isDebugEnabled()) {
-									this.log.debug(String.format("Polled %s", next));
-								}
-
-								boolean tx = false;
-								boolean ok = false;
-								try {
-									// Begin transaction
-									tx = session.begin();
-									final T sourceObject = getObject(s, nextType, nextKey);
-									if (sourceObject == null) {
-										// No object found with that ID...
-										this.log.warn(String.format("No %s object found with searchKey[%s]",
-											(nextType != null ? nextType.name() : "globally unique"), nextKey));
+								if (nextType == null) {
+									// We have a source object, but don't know its type, so we
+									// recalculate the export target (which means getting the
+									// type)
+									next = getExportTarget(sourceObject);
+									nextType = next.getType();
+									if (nextType == null) {
+										this.log
+											.error(String
+												.format(
+													"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
+													nextId, nextKey));
 										continue;
 									}
-
-									if (nextType == null) {
-										// We have a source object, but don't know its type, so we
-										// recalculate the export target (which means getting the
-										// type)
-										next = getExportTarget(sourceObject);
-										nextType = next.getType();
-										if (nextType == null) {
-											this.log
-												.error(String
-													.format(
-														"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
-														nextId, nextKey));
-											continue;
-										}
-									}
-
-									if (this.log.isDebugEnabled()) {
-										this.log.debug(String.format("Exporting the %s object with ID[%s]", nextType,
-											nextId));
-									}
-
-									final C ctx = contextFactory.newContext(nextId, nextType, session.getWrapped(),
-										output, objectStore, contentStore);
-									try {
-										initContext(ctx);
-										Result result = exportObject(objectStore, contentStore, s, null, next,
-											sourceObject, ctx, listenerDelegator);
-										if (result != null) {
-											if (this.log.isDebugEnabled()) {
-												this.log.debug(String.format("Exported %s [%s](%s) in position %d",
-													result.marshaled.getType(), result.marshaled.getLabel(),
-													result.marshaled.getId(), result.objectNumber));
-											}
-										}
-										ok = true;
-									} finally {
-										ctx.close();
-									}
-								} catch (Throwable t) {
-									this.log.error(
-										String.format("Failed to export %s object with ID[%s]", nextType, nextId), t);
-									listenerDelegator.objectExportFailed(nextType, nextId, t);
-									if (tx) {
-										if (ok) {
-											session.commit();
-										} else {
-											session.rollback();
-										}
-									}
 								}
-							}
-						} finally {
-							activeCounter.decrementAndGet();
-							session.close();
-						}
-					}
-				};
 
-				// Fire off the workers
-				List<Future<?>> futures = new ArrayList<Future<?>>(threadCount);
-				for (int i = 0; i < threadCount; i++) {
-					futures.add(executor.submit(worker));
-				}
-				executor.shutdown();
+								if (this.log.isDebugEnabled()) {
+									this.log.debug(String.format("Exporting the %s object with ID[%s]", nextType,
+										nextId));
+								}
 
-				final Iterator<ExportTarget> results;
-				this.log.debug("Locating export results...");
-				try {
-					results = findExportResults(baseSession.getWrapped(), settings);
-				} catch (Exception e) {
-					throw new ExportException(String.format("Failed to obtain the export results with settings: %s",
-						settings), e);
-				}
-
-				try {
-					int c = 0;
-					// 1: run the query for the given predicate
-					listenerDelegator.exportStarted(settings);
-					// 2: iterate over the results, gathering up the object IDs
-					this.log.debug("Processing the located results...");
-					while (results.hasNext()) {
-						final ExportTarget target = results.next();
-						if (this.log.isTraceEnabled()) {
-							this.log.trace(String.format("Processing item %s", target));
-						}
-						try {
-							workQueue.put(target);
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-							if (this.log.isDebugEnabled()) {
-								this.log
-									.warn(String.format("Thread interrupted after reading %d object targets", c), e);
-							} else {
-								this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
-							}
-							break;
-						}
-					}
-					this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
-
-					// Ask the workers to exit civilly
-					this.log.info("Signaling work completion for the workers");
-					boolean waitCleanly = true;
-					for (int i = 0; i < threadCount; i++) {
-						try {
-							workQueue.put(exitValue);
-						} catch (InterruptedException e) {
-							waitCleanly = false;
-							// Here we have a problem: we're timing out while adding the exit
-							// values...
-							this.log.warn("Interrupted while attempting to request executor thread termination", e);
-							Thread.currentThread().interrupt();
-							executor.shutdownNow();
-							break;
-						}
-					}
-
-					try {
-						// We're done, we must wait until all workers are waiting
-						if (waitCleanly) {
-							this.log.info(String.format("Waiting for %d workers to finish processing", threadCount));
-							for (Future<?> future : futures) {
+								final C ctx = contextFactory.newContext(nextId, nextType, session.getWrapped(), output,
+									objectStore, contentStore);
 								try {
-									future.get();
-								} catch (InterruptedException e) {
-									this.log
-										.warn(
-											"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-											e);
-									Thread.currentThread().interrupt();
-									executor.shutdownNow();
-									break;
-								} catch (ExecutionException e) {
-									this.log.warn("An executor thread raised an exception", e);
-								} catch (CancellationException e) {
-									this.log.warn("An executor thread was canceled!", e);
+									initContext(ctx);
+									Result result = exportObject(objectStore, contentStore, s, null, next,
+										sourceObject, ctx, listenerDelegator);
+									if (result != null) {
+										if (this.log.isDebugEnabled()) {
+											this.log.debug(String.format("Exported %s [%s](%s) in position %d",
+												result.marshaled.getType(), result.marshaled.getLabel(),
+												result.marshaled.getId(), result.objectNumber));
+										}
+									}
+									ok = true;
+								} finally {
+									ctx.close();
+								}
+							} catch (Throwable t) {
+								this.log.error(
+									String.format("Failed to export %s object with ID[%s]", nextType, nextId), t);
+								listenerDelegator.objectExportFailed(nextType, nextId, t);
+								if (tx) {
+									if (ok) {
+										session.commit();
+									} else {
+										session.rollback();
+									}
 								}
 							}
-							this.log.info("All the export workers are done.");
 						}
 					} finally {
-						List<ExportTarget> remaining = new ArrayList<ExportTarget>();
-						workQueue.drainTo(remaining);
-						for (ExportTarget v : remaining) {
-							if (v == exitValue) {
-								continue;
-							}
-							this.log.error(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
-						}
-						remaining.clear();
-					}
-
-					// If there are still pending workers, then wait for them to finish for up to 5
-					// minutes
-					int pending = activeCounter.get();
-					if (pending > 0) {
-						this.log.info(String
-							.format("Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)",
-								pending));
-						try {
-							executor.awaitTermination(5, TimeUnit.MINUTES);
-						} catch (InterruptedException e) {
-							this.log.warn("Interrupted while waiting for normal executor termination", e);
-							Thread.currentThread().interrupt();
-						}
-					}
-					return listenerDelegator.getStoredObjectCounter();
-				} finally {
-					baseSession.close(false);
-
-					Map<StoredObjectType, Integer> summary = Collections.emptyMap();
-					try {
-						summary = objectStore.getStoredObjectTypes();
-					} catch (StorageException e) {
-						this.log.warn("Exception caught attempting to get the work summary", e);
-					}
-					listenerDelegator.exportFinished(summary);
-
-					executor.shutdownNow();
-					int pending = activeCounter.get();
-					if (pending > 0) {
-						try {
-							this.log
-								.info(String
-									.format(
-										"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-										pending));
-							executor.awaitTermination(1, TimeUnit.MINUTES);
-						} catch (InterruptedException e) {
-							this.log.warn("Interrupted while waiting for immediate executor termination", e);
-							Thread.currentThread().interrupt();
-						}
+						activeCounter.decrementAndGet();
+						session.close();
 					}
 				}
+			};
+
+			// Fire off the workers
+			List<Future<?>> futures = new ArrayList<Future<?>>(threadCount);
+			for (int i = 0; i < threadCount; i++) {
+				futures.add(executor.submit(worker));
+			}
+			executor.shutdown();
+
+			final Iterator<ExportTarget> results;
+			this.log.debug("Locating export results...");
+			try {
+				results = findExportResults(baseSession.getWrapped(), settings);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to obtain the export results with settings: %s",
+					settings), e);
+			}
+
+			try {
+				int c = 0;
+				// 1: run the query for the given predicate
+				listenerDelegator.exportStarted(settings);
+				// 2: iterate over the results, gathering up the object IDs
+				this.log.debug("Processing the located results...");
+				while (results.hasNext()) {
+					final ExportTarget target = results.next();
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(String.format("Processing item %s", target));
+					}
+					try {
+						workQueue.put(target);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						if (this.log.isDebugEnabled()) {
+							this.log.warn(String.format("Thread interrupted after reading %d object targets", c), e);
+						} else {
+							this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
+						}
+						break;
+					}
+				}
+				this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
+
+				// Ask the workers to exit civilly
+				this.log.info("Signaling work completion for the workers");
+				boolean waitCleanly = true;
+				for (int i = 0; i < threadCount; i++) {
+					try {
+						workQueue.put(exitValue);
+					} catch (InterruptedException e) {
+						waitCleanly = false;
+						// Here we have a problem: we're timing out while adding the exit
+						// values...
+						this.log.warn("Interrupted while attempting to request executor thread termination", e);
+						Thread.currentThread().interrupt();
+						executor.shutdownNow();
+						break;
+					}
+				}
+
+				try {
+					// We're done, we must wait until all workers are waiting
+					if (waitCleanly) {
+						this.log.info(String.format("Waiting for %d workers to finish processing", threadCount));
+						for (Future<?> future : futures) {
+							try {
+								future.get();
+							} catch (InterruptedException e) {
+								this.log
+									.warn(
+										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+										e);
+								Thread.currentThread().interrupt();
+								executor.shutdownNow();
+								break;
+							} catch (ExecutionException e) {
+								this.log.warn("An executor thread raised an exception", e);
+							} catch (CancellationException e) {
+								this.log.warn("An executor thread was canceled!", e);
+							}
+						}
+						this.log.info("All the export workers are done.");
+					}
+				} finally {
+					List<ExportTarget> remaining = new ArrayList<ExportTarget>();
+					workQueue.drainTo(remaining);
+					for (ExportTarget v : remaining) {
+						if (v == exitValue) {
+							continue;
+						}
+						this.log.error(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
+					}
+					remaining.clear();
+				}
+
+				// If there are still pending workers, then wait for them to finish for up to 5
+				// minutes
+				int pending = activeCounter.get();
+				if (pending > 0) {
+					this.log.info(String.format(
+						"Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
+					try {
+						executor.awaitTermination(5, TimeUnit.MINUTES);
+					} catch (InterruptedException e) {
+						this.log.warn("Interrupted while waiting for normal executor termination", e);
+						Thread.currentThread().interrupt();
+					}
+				}
+				return listenerDelegator.getStoredObjectCounter();
 			} finally {
-				sessionFactory.close();
+				baseSession.close(false);
+
+				Map<StoredObjectType, Integer> summary = Collections.emptyMap();
+				try {
+					summary = objectStore.getStoredObjectTypes();
+				} catch (StorageException e) {
+					this.log.warn("Exception caught attempting to get the work summary", e);
+				}
+				listenerDelegator.exportFinished(summary);
+
+				executor.shutdownNow();
+				int pending = activeCounter.get();
+				if (pending > 0) {
+					try {
+						this.log
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
+						executor.awaitTermination(1, TimeUnit.MINUTES);
+					} catch (InterruptedException e) {
+						this.log.warn("Interrupted while waiting for immediate executor termination", e);
+						Thread.currentThread().interrupt();
+					}
+				}
 			}
 		} finally {
-			cleanup();
+			sessionFactory.close();
 		}
 	}
 

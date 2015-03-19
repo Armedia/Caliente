@@ -1,18 +1,55 @@
 package com.armedia.cmf.engine;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.lang3.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>, E extends TransferEngine<S, T, V, C, ?>> {
+
+	private static StoredObjectType decodeObjectType(Object o) {
+		if (o == null) { return null; }
+		if (o instanceof StoredObjectType) { return StoredObjectType.class.cast(o); }
+		if (o instanceof String) {
+			try {
+				return StoredObjectType.decodeString(String.valueOf(o));
+			} catch (IllegalArgumentException e) {
+				// Do nothing...
+			}
+		}
+		return null;
+	}
+
+	private static Iterable<?> getAsIterable(final Object o) {
+		if (o == null) { return Collections.emptyList(); }
+		if (o instanceof Iterable) { return Iterable.class.cast(o); }
+		if (o instanceof String) { return new StrTokenizer(o.toString(), ',').getTokenList(); }
+		if (o.getClass().isArray()) {
+			if (!o.getClass().getComponentType().isPrimitive()) { return new Iterable<Object>() {
+				private final Object[] arr = (Object[]) o;
+
+				@Override
+				public Iterator<Object> iterator() {
+					return new ArrayIterator<Object>(this.arr);
+				}
+
+			}; }
+		}
+		return Collections.emptyList();
+	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -22,11 +59,29 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 
 	private CfgTools settings = CfgTools.EMPTY;
 	private final E engine;
+	private final Set<StoredObjectType> excludes;
 
 	protected ContextFactory(E engine, CfgTools settings) {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to which this factory is tied"); }
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
+		Set<StoredObjectType> excludes = EnumSet.noneOf(StoredObjectType.class);
+		for (Object o : ContextFactory.getAsIterable(settings.getObject(TransferEngineSetting.EXCLUDE_TYPES))) {
+			StoredObjectType t = ContextFactory.decodeObjectType(o);
+			if (t != null) {
+				excludes.add(t);
+			}
+		}
+		if (this.log.isDebugEnabled()) {
+			this.log.debug(String.format("Excluded types for this context factory instance: %s", getClass()
+				.getSimpleName(), excludes));
+		}
+		this.excludes = Tools.freezeSet(excludes);
+	}
+
+	public final boolean isSupported(StoredObjectType type) {
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
+		return !this.excludes.contains(type) && this.engine.checkSupported(type);
 	}
 
 	public final CfgTools getSettings() {
