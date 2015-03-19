@@ -23,7 +23,7 @@ class DctmExportContext extends ExportContext<IDfSession, IDfPersistentObject, I
 
 	DctmExportContext(DctmExportContextFactory factory, String rootId, StoredObjectType rootType, IDfSession session,
 		Logger output) {
-		super(factory.getEngine(), factory.getSettings(), rootId, rootType, session, output);
+		super(factory, factory.getSettings(), rootId, rootType, session, output);
 		this.specialValues = factory.getSpecialValues();
 	}
 

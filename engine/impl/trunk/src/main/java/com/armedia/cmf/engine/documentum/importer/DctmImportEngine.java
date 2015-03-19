@@ -37,7 +37,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine extends
-	ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
+ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -86,7 +86,7 @@ public class DctmImportEngine extends
 	@Override
 	protected ImportOutcome importObject(StoredObject<?> marshaled,
 		ObjectStorageTranslator<IDfPersistentObject, IDfValue> translator, DctmImportContext ctx)
-			throws ImportException, StorageException, StoredValueDecoderException {
+		throws ImportException, StorageException, StoredValueDecoderException {
 		@SuppressWarnings("unchecked")
 		StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		try {
@@ -142,9 +142,9 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected boolean checkSupported(StoredObjectType type) {
-		if (type == StoredObjectType.ACL) { return isSupported(StoredObjectType.USER)
-			&& isSupported(StoredObjectType.GROUP); }
-		return super.checkSupported(type);
+	protected boolean checkSupported(Set<StoredObjectType> excludes, StoredObjectType type) {
+		if (type == StoredObjectType.ACL) { return !excludes.contains(StoredObjectType.USER)
+			&& !excludes.contains(StoredObjectType.GROUP); }
+		return super.checkSupported(excludes, type);
 	}
 }

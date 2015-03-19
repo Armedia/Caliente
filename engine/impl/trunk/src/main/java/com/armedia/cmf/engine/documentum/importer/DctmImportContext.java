@@ -27,8 +27,8 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfPersistentOb
 
 	DctmImportContext(DctmImportContextFactory factory, String rootId, StoredObjectType rootType, IDfSession session,
 		Logger output, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
-		super(factory.getEngine(), factory.getSettings(), rootId, rootType, session, output, DctmTranslator.INSTANCE,
-			objectStore, streamStore);
+		super(factory, factory.getSettings(), rootId, rootType, session, output, DctmTranslator.INSTANCE, objectStore,
+			streamStore);
 		this.specialValues = factory.getSpecialValues();
 	}
 
