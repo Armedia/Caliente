@@ -18,6 +18,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import com.armedia.cmf.storage.ObjectStore;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
@@ -168,10 +170,25 @@ public class CMSMFLauncher extends AbstractLauncher {
 		}
 
 		// Lock for single execution
+		ObjectStore<?, ?> store = main.getObjectStore();
 		try {
+			if (store != null) {
+				store.setProperty("cmsmf.version", new StoredValue(CMSMFLauncher.VERSION));
+				store.setProperty("cmsmf.start", new StoredValue(new Date()));
+				store.setProperty("cmsmf.engine", new StoredValue(engine));
+				store.setProperty("cmsmf.mode", new StoredValue(mode));
+			}
 			main.run();
+		} catch (Throwable t) {
+			if (store != null) {
+				store.setProperty("cmsmf.error", new StoredValue(Tools.dumpStackTrace(t)));
+			}
+			throw new RuntimeException("Execution failed", t);
 		} finally {
 			// Unlock from single execution
+			if (store != null) {
+				store.setProperty("cmsmf.end", new StoredValue(new Date()));
+			}
 		}
 	}
 }

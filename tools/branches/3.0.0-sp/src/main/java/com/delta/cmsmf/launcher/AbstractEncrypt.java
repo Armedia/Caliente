@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import com.armedia.cmf.engine.Crypt;
+import com.armedia.cmf.storage.ObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 
 /**
@@ -14,6 +15,11 @@ import com.delta.cmsmf.exception.CMSMFException;
  * @author Shridev Makim 6/15/2010
  */
 public abstract class AbstractEncrypt implements CMSMFMain {
+
+	@Override
+	public ObjectStore<?, ?> getObjectStore() {
+		return null;
+	}
 
 	@Override
 	public final void run() throws CMSMFException {

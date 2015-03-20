@@ -100,6 +100,11 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	}
 
 	@Override
+	public ObjectStore<?, ?> getObjectStore() {
+		return this.objectStore;
+	}
+
+	@Override
 	public boolean requiresDataStore() {
 		return true;
 	}
