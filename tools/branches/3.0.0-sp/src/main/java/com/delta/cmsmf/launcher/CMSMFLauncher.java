@@ -171,23 +171,23 @@ public class CMSMFLauncher extends AbstractLauncher {
 
 		// Lock for single execution
 		ObjectStore<?, ?> store = main.getObjectStore();
+		final boolean writeProperties = main.requiresCleanData() && (store != null);
+		String pfx = String.format("cmsmf.%s.%s", engine, mode);
 		try {
-			if (store != null) {
-				store.setProperty("cmsmf.version", new StoredValue(CMSMFLauncher.VERSION));
-				store.setProperty("cmsmf.start", new StoredValue(new Date()));
-				store.setProperty("cmsmf.engine", new StoredValue(engine));
-				store.setProperty("cmsmf.mode", new StoredValue(mode));
+			if (writeProperties) {
+				store.setProperty(String.format("%s.version", pfx), new StoredValue(CMSMFLauncher.VERSION));
+				store.setProperty(String.format("%s.start", pfx), new StoredValue(new Date()));
 			}
 			main.run();
 		} catch (Throwable t) {
-			if (store != null) {
-				store.setProperty("cmsmf.error", new StoredValue(Tools.dumpStackTrace(t)));
+			if (writeProperties) {
+				store.setProperty(String.format("%s.error", pfx), new StoredValue(Tools.dumpStackTrace(t)));
 			}
 			throw new RuntimeException("Execution failed", t);
 		} finally {
 			// Unlock from single execution
-			if (store != null) {
-				store.setProperty("cmsmf.end", new StoredValue(new Date()));
+			if (writeProperties) {
+				store.setProperty(String.format("%s.end", pfx), new StoredValue(new Date()));
 			}
 		}
 	}
