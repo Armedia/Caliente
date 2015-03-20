@@ -102,6 +102,9 @@ public class DctmAttributes {
 	/** The a_content_type attribute of dm_sysobject. */
 	public static final String A_CONTENT_TYPE = "a_content_type";
 
+	/** The a_storage_type attribute of dm_sysobject. */
+	public static final String A_STORAGE_TYPE = "a_storage_type";
+
 	/** The i_is_deleted attribute of dm_sysobject. */
 	public static final String I_IS_DELETED = "i_is_deleted";
 
