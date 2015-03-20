@@ -1087,7 +1087,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		final StoredValue oldValue = doGetProperty(operation, property);
 		final Connection c = operation.getConnection();
 		final StoredValueSerializer serializer = StoredValueSerializer.get(newValue.getDataType());
-		String newValueString;
+		final String newValueString;
 		try {
 			newValueString = serializer.serialize(newValue);
 		} catch (ParseException e) {
@@ -1096,8 +1096,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		}
 		try {
 			if (oldValue != null) {
-				int n = JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.UPDATE_STORE_PROPERTY_SQL, property,
-					newValueString);
+				int n = JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.UPDATE_STORE_PROPERTY_SQL,
+					newValueString, property);
 				if (n != 1) { throw new StorageException(String.format(
 					"Failed to properly update store property [%s] - updated %d values instead of just 1", property, n)); }
 			} else {
