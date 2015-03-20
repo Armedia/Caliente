@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine-documentum</artifactId>
-	<version>1.1.8-beta01</version>
+	<version>1.1.8-beta02</version>
 	<name>CMF Documentum Access Engine</name>
 	<description>CMF Documentum Access Engine</description>
 	<packaging>bundle</packaging>
