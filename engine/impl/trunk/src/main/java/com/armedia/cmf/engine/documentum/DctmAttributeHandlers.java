@@ -213,6 +213,8 @@ public class DctmAttributeHandlers {
 			DctmAttributes.REFERENCE_BY_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_ID,
 			DctmAttributes.REFRESH_INTERVAL, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
+			DctmAttributes.A_STORAGE_TYPE, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		//
 		// Folder
@@ -230,6 +232,8 @@ public class DctmAttributeHandlers {
 			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
 			DctmAttributes.ACL_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
+			DctmAttributes.A_STORAGE_TYPE, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		//
 		// Format

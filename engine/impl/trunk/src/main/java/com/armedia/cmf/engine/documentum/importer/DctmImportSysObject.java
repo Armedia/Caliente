@@ -51,7 +51,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -420,7 +420,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -675,7 +675,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				.getId(), currentPath));
 		}
 
 		return existing;
@@ -794,7 +794,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected T newObject(DctmImportContext ctx) throws DfException, ImportException {
 		T newObj = super.newObject(ctx);
 		setOwnerGroupACLData(newObj, ctx);
-		/*
 		if (ctx.isSupported(StoredObjectType.DATASTORE)) {
 			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.A_STORAGE_TYPE);
 			String dataStore = "";
@@ -805,7 +804,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				newObj.setStorageType(dataStore);
 			}
 		}
-		 */
 		return newObj;
 	}
 
@@ -882,7 +880,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 						.format(
 							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
 							aclDomain, this.storedObject.getType(), this.storedObject.getLabel(), sysObject
-							.getObjectId().getId());
+								.getObjectId().getId());
 					if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 				}
