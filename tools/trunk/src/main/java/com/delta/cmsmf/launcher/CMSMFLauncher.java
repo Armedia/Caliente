@@ -158,7 +158,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, engine, mode));
 		} catch (ClassNotFoundException e) {
 			System.err
-			.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
+				.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
 			return;
 		}
 
@@ -171,8 +171,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 
 		// Lock for single execution
 		ObjectStore<?, ?> store = main.getObjectStore();
-		final boolean writeProperties = main.requiresCleanData() && (store != null);
-		String pfx = String.format("cmsmf.%s.%s", engine, mode);
+		final boolean writeProperties = (store != null);
+		final String pfx = String.format("cmsmf.%s.%s", engine, mode);
 		try {
 			if (writeProperties) {
 				store.setProperty(String.format("%s.version", pfx), new StoredValue(CMSMFLauncher.VERSION));
