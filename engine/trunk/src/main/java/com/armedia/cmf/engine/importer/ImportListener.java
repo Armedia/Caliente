@@ -1,8 +1,23 @@
 package com.armedia.cmf.engine.importer;
 
+import java.util.Map;
+
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 
 public interface ImportListener {
+
+	/**
+	 * <p>
+	 * Invoked when the import of a batch of objects has begun, and the estimated number of objects
+	 * that will be processed.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @param batchId
+	 * @param count
+	 */
+	public void objectBatchImportStarted(StoredObjectType objectType, String batchId, int count);
 
 	/**
 	 * <p>
@@ -34,4 +49,17 @@ public interface ImportListener {
 	 * @param thrown
 	 */
 	public void objectImportFailed(StoredObject<?> object, Throwable thrown);
+
+	/**
+	 * <p>
+	 * Invoked when the import of a batch has finished.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @param batchId
+	 * @param outcomes
+	 * @param failed
+	 */
+	public void objectBatchImportFinished(StoredObjectType objectType, String batchId,
+		Map<String, ImportOutcome> outcomes, boolean failed);
 }

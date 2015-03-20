@@ -1,8 +1,15 @@
 package com.armedia.cmf.engine.importer;
 
+import java.util.Map;
+
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 
 public class DefaultImportListener implements ImportListener {
+
+	@Override
+	public void objectBatchImportStarted(StoredObjectType objectType, String batchId, int count) {
+	}
 
 	@Override
 	public void objectImportStarted(StoredObject<?> object) {
@@ -14,6 +21,11 @@ public class DefaultImportListener implements ImportListener {
 
 	@Override
 	public void objectImportFailed(StoredObject<?> object, Throwable thrown) {
+	}
+
+	@Override
+	public void objectBatchImportFinished(StoredObjectType objectType, String batchId,
+		Map<String, ImportOutcome> outcomes, boolean failed) {
 	}
 
 }

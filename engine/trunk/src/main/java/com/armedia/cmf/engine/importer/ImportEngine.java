@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 	}
 
 	private class Batch {
+		private final StoredObjectType type;
 		private final String id;
 		private final Collection<StoredObject<?>> contents;
 		private final ImportStrategy strategy;
@@ -62,10 +64,11 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		private Throwable thrown = null;
 
 		private Batch() {
-			this(null, null, null);
+			this(null, null, null, null);
 		}
 
-		private Batch(String id, Collection<StoredObject<?>> contents, ImportStrategy strategy) {
+		private Batch(StoredObjectType type, String id, Collection<StoredObject<?>> contents, ImportStrategy strategy) {
+			this.type = type;
 			this.id = id;
 			this.contents = contents;
 			this.strategy = strategy;
@@ -90,9 +93,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		public String toString() {
 			return String
 				.format(
-					"Batch [id=%s, status=%s, strategy.parallel=%s, strategy.batching=%s, strategy.failRemainder=%s, contents=%s]",
-					this.id, this.status, this.strategy.isParallelCapable(), this.strategy.getBatchItemStrategy(),
-					this.strategy.isBatchFailRemainder(), this.contents);
+					"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.batching=%s, strategy.failRemainder=%s, contents=%s]",
+					this.type, this.id, this.status, this.strategy.isParallelCapable(),
+					this.strategy.getBatchItemStrategy(), this.strategy.isBatchFailRemainder(), this.contents);
 		}
 	}
 
@@ -205,6 +208,33 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			importFinished(getStoredObjectCounter().getCummulative());
 		}
 
+		@Override
+		public void objectBatchImportStarted(StoredObjectType objectType, String batchId, int count) {
+			for (ImportEngineListener l : this.listeners) {
+				try {
+					l.objectBatchImportStarted(objectType, batchId, count);
+				} catch (Exception e) {
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void objectBatchImportFinished(StoredObjectType objectType, String batchId,
+			Map<String, ImportOutcome> outcomes, boolean failed) {
+			for (ImportEngineListener l : this.listeners) {
+				try {
+					l.objectBatchImportFinished(objectType, batchId, outcomes, failed);
+				} catch (Exception e) {
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
 	}
 
 	protected abstract ImportStrategy getImportStrategy(StoredObjectType type);
@@ -219,7 +249,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
-		throws ImportException, StorageException {
+			throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -293,6 +323,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								return;
 							}
 
+							boolean failBatch = false;
+							Map<String, ImportOutcome> outcomes = new LinkedHashMap<String, ImportOutcome>(
+								batch.contents.size());
 							try {
 								if ((batch == null) || (batch.contents == null) || batch.contents.isEmpty()) {
 									// Shouldn't happen, but still
@@ -318,7 +351,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 									this.log.debug(String.format("Got session [%s]", session.getId()));
 								}
 
-								boolean failBatch = false;
+								listenerDelegator.objectBatchImportStarted(batch.type, batch.id, batch.contents.size());
 								for (StoredObject<?> next : batch.contents) {
 									if (failBatch) {
 										final ImportResult result = ImportResult.SKIPPED;
@@ -341,6 +374,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 											// intermediate format into the target format
 											final ImportOutcome outcome = importObject(next, getTranslator(), ctx);
 											listenerDelegator.objectImportCompleted(next, outcome);
+											outcomes.put(next.getId(), outcome);
 											if (this.log.isDebugEnabled()) {
 												String msg = null;
 												switch (outcome.getResult()) {
@@ -386,8 +420,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 										ctx.close();
 									}
 								}
-								batch.markCompleted();
 							} finally {
+								batch.markCompleted();
+								listenerDelegator.objectBatchImportFinished(batch.type, batch.id, outcomes, failBatch);
 								if (session != null) {
 									session.close();
 								}
@@ -459,7 +494,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 							// contents serially (but whole batches in parallel), then we submit
 							// batches as a group, and don't wait
 							try {
-								workQueue.put(new Batch(this.batchId, this.contents, strategy));
+								workQueue.put(new Batch(storedType, this.batchId, this.contents, strategy));
 							} catch (InterruptedException e) {
 								Thread.currentThread().interrupt();
 								String msg = String.format(
@@ -489,7 +524,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 								List<StoredObject<?>> l = new ArrayList<StoredObject<?>>(1);
 								l.add(o);
 								try {
-									Batch batch = new Batch(this.batchId, l, strategy);
+									Batch batch = new Batch(o.getType(), this.batchId, l, strategy);
 									batches.add(batch);
 									workQueue.put(batch);
 								} catch (InterruptedException e) {
