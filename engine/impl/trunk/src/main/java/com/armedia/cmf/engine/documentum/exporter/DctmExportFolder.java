@@ -163,7 +163,6 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 					marshaled.getLabel(), v.asString()));
 			}
 			ret.add(user);
-
 		}
 
 		// Export the object type
