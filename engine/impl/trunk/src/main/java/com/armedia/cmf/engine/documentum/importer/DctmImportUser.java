@@ -107,6 +107,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		IDfValue userNameValue = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
 		if (DctmMappingUtils.isSubstitutionForMappableUser(userName)) { return true; }
+		if (DctmMappingUtils.isMappableUser(ctx.getSession(), userName)) { return true; }
 		if (ctx.isSpecialUser(userName)) { return true; }
 		return super.skipImport(ctx);
 	}
