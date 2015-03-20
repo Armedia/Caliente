@@ -195,14 +195,6 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 	}
 
 	@Override
-	protected boolean isValidForLoad(DctmImportContext ctx, IDfType type) throws DfException {
-		if (ctx.isSpecialType(type.getName())) { return false; }
-		// If the type name is the same as dmi_${objectId}, we skip it
-		if (Tools.equals(type.getName(), String.format("dmi_%s", type.getObjectId().getId()))) { return false; }
-		return super.isValidForLoad(ctx, type);
-	}
-
-	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException {
 		IDfValue typeNameValue = this.storedObject.getAttribute(DctmAttributes.NAME).getValue();
 		final String typeName = typeNameValue.asString();

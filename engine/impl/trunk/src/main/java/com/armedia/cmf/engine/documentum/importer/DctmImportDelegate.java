@@ -62,10 +62,6 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		this.storedObject = storedObject;
 	}
 
-	protected boolean isValidForLoad(DctmImportContext ctx, T object) throws DfException {
-		return true;
-	}
-
 	protected abstract String calculateLabel(T object) throws DfException, ImportException;
 
 	protected String calculateBatchId(T object) throws DfException {
@@ -261,11 +257,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							this.storedObject.getLabel(), this.storedObject.getId()), e);
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -365,7 +361,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	/**
@@ -379,16 +375,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 

@@ -130,10 +130,10 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
 					this.log
-						.warn(String
-							.format(
-								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-								actualGroup, groupName.asString()));
+					.warn(String
+						.format(
+							"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
+							actualGroup, groupName.asString()));
 					continue;
 				}
 				group.addGroup(actualGroup);
@@ -187,19 +187,13 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-								actualUser, group.getGroupName()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+						actualUser, group.getGroupName()), e);
 			}
 		}
-	}
-
-	@Override
-	protected boolean isValidForLoad(DctmImportContext ctx, IDfGroup group) throws DfException {
-		if (ctx.isSpecialGroup(group.getGroupName())) { return false; }
-		return super.isValidForLoad(ctx, group);
 	}
 
 	@Override

@@ -97,12 +97,6 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected boolean isValidForLoad(DctmImportContext ctx, IDfUser user) throws DfException {
-		if (ctx.isSpecialUser(user.getUserName())) { return false; }
-		return super.isValidForLoad(ctx, user);
-	}
-
-	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException {
 		IDfValue userNameValue = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
