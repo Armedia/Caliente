@@ -51,6 +51,8 @@ public enum CLIParam {
 	errorCount(Setting.IMPORT_MAX_ERRORS, true, "The number of errors to accept before aborting an import"),
 	default_password(Setting.DEFAULT_USER_PASSWORD, true,
 		"The default password to use for users being copied over (the default is to use the same login name)"),
+	manifest_types(Setting.MANIFEST_TYPES, true, "The object types to include in the manifest (ALL = all types)"),
+	manifest_outcomes(Setting.MANIFEST_OUTCOMES, true, "The outcomes to include in the manifest (ALL = all outcomes)"),
 	mail_to(Setting.MAIL_RECIPIENTS, true, "The comma-separated list of recipients for the status e-mails"),
 	mail_from(Setting.MAIL_FROM_ADDX, true, "The e-mail address to use as the sender for the status e-mails"),
 	smtp_host(Setting.MAIL_SMTP_HOST, true, "The SMTP server through which e-mail must be sent"),

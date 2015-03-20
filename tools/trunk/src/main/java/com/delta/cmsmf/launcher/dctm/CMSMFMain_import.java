@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -24,10 +25,12 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectCounter;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain;
+import com.delta.cmsmf.launcher.ImportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 /**
@@ -36,7 +39,7 @@ import com.delta.cmsmf.utils.CMSMFUtils;
  * @author Shridev Makim 6/15/2010
  */
 public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements
-	ImportEngineListener {
+ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
@@ -58,6 +61,13 @@ public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, Im
 	 */
 	@Override
 	public void run() throws CMSMFException {
+		Set<ImportResult> outcomes = Tools.parseEnumCSV(ImportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
+			AbstractCMSMFMain.ALL, false);
+		Set<StoredObjectType> types = Tools.parseEnumCSV(StoredObjectType.class, Setting.MANIFEST_TYPES.getString(),
+			AbstractCMSMFMain.ALL, false);
+		this.engine.addListener(this);
+		this.engine.addListener(new ImportManifest(outcomes, types));
+
 		// lock
 		Map<String, Object> settings = new HashMap<String, Object>();
 		if (this.server != null) {
@@ -71,7 +81,6 @@ public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, Im
 		}
 		settings.put(TransferEngineSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(null));
 
-		this.engine.addListener(this);
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();
 		Date end = null;
@@ -243,6 +252,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, Im
 			}
 			this.console.info(String.format("%-10s: %8d", r.name(), v.intValue()));
 		}
+		showProgress(objectType);
 	}
 
 	@Override
@@ -255,5 +265,17 @@ public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, Im
 			}
 			this.console.info(String.format("%-10s: %8d", r.name(), v.intValue()));
 		}
+		showProgress(null);
+	}
+
+	@Override
+	public void objectBatchImportStarted(StoredObjectType objectType, String batchId, int count) {
+		showProgress(objectType);
+	}
+
+	@Override
+	public void objectBatchImportFinished(StoredObjectType objectType, String batchId,
+		Map<String, ImportOutcome> outcomes, boolean failed) {
+		showProgress(objectType);
 	}
 }

@@ -46,6 +46,8 @@ public enum Setting {
 	JDBC_URL("jdbc.url"),
 	JDBC_USER("jdbc.user"),
 	JDBC_PASSWORD("jdbc.password"),
+	MANIFEST_OUTCOMES("manifest.outcomes"),
+	MANIFEST_TYPES("manifest.types"),
 
 	//
 	CMF_EXCLUDE_TYPES("cmf.exclude.types"),

@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
@@ -20,19 +21,22 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import com.armedia.cmf.engine.TransferEngineSetting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
+import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain;
+import com.delta.cmsmf.launcher.ExportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
-ExportEngineListener {
+	ExportEngineListener {
 
 	public CMSMFMain_export() throws Throwable {
 		super(ShptExportEngine.getExportEngine());
@@ -46,8 +50,12 @@ ExportEngineListener {
 	 */
 	@Override
 	public void run() throws CMSMFException {
-
+		Set<ExportResult> outcomes = Tools.parseEnumCSV(ExportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
+			AbstractCMSMFMain.ALL, false);
+		Set<StoredObjectType> types = Tools.parseEnumCSV(StoredObjectType.class, Setting.MANIFEST_TYPES.getString(),
+			AbstractCMSMFMain.ALL, false);
 		this.engine.addListener(this);
+		this.engine.addListener(new ExportManifest(outcomes, types));
 
 		Map<String, Object> settings = new HashMap<String, Object>();
 		if (this.server == null) { throw new CMSMFException(
