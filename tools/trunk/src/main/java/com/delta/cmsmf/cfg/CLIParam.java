@@ -13,21 +13,25 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
-import com.armedia.commons.utilities.Tools;
-
 public enum CLIParam {
 	//
 	help(null, false, "This help message"),
 	cfg(null, true, "The configuration file to use"),
 	dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
 	dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
-	mode(null, true, true, "The mode of operation, either 'counter', 'encrypt', 'decrypt', 'import' or 'export'"),
-	docbase(null, true, "The docbase name to connect to"),
+	mode(null, true, true, "The mode of operation, either 'import', 'export', 'encrypt', 'decrypt' or 'counter'"),
+	engine(null, true, true, "The engine to use for the operation (either dctm or shpt)"),
+	server(null, true, "The server URL to connect to (Documentum docbase spec, or the sharepoint server URL)"),
 	user(null, true, "The username to connect with"),
 	password(null, true, "The password to connect with"),
+	domain(null, true, "The domain the user belongs to"),
 	log_name(null, true, "The base name of the log file to use instead of the default (cmsmf-${action})"),
 	log4j(null, true, "The Log4j configuration (XML format) to use instead of the default (overrides --log_name)"),
-	threads(Setting.THREADS, true, "The number of threads to use while importing or exporting"),
+	threads(null, true, "The number of threads to use while importing or exporting"),
+	non_recursive(null, false, "Turn off counter recursion (i.e. to count a single folder without descending)"),
+	count_path(null, false, "The path within which to count objects for"),
+	cmf_exclude_types(Setting.CMF_EXCLUDE_TYPES, true,
+		"The list of object types to be ignored during the operation (comma-separated)"),
 	special_users(Setting.SPECIAL_USERS, true,
 		"The special users that should not be imported into the target instance (comma-separated)"),
 	special_groups(Setting.SPECIAL_GROUPS, true,
@@ -36,7 +40,10 @@ public enum CLIParam {
 		"The special types that should not be imported into the target instance (comma-separated)"),
 	batch_size(Setting.EXPORT_BATCH_SIZE, true, "The batch size to use when exporting objects from Documentum"),
 	post_process(Setting.POST_PROCESS_IMPORT, false, "Whether to post-process the imported content"),
-	predicate(Setting.EXPORT_PREDICATE, true, "The DQL 'from-where' predicate to use for exporting"),
+	source(Setting.EXPORT_PREDICATE, true,
+		"The DQL 'from-where' predicate, or the name of the Sharepoint site, to use for exporting"),
+	shpt_source_prefix(Setting.SHPT_SOURCE_PREFIX, true,
+		"The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)"),
 	db(Setting.DB_DIRECTORY, true, "The Database directory to use"),
 	content(Setting.CONTENT_DIRECTORY, true,
 		"The Content directory to use (if omitted, it will be placed in the 'content' subdirectory of the Database directory)"),
@@ -50,11 +57,7 @@ public enum CLIParam {
 	smtp_port(Setting.MAIL_SMTP_HOST, true, "The port SMTP server is listening on"),
 	skip_users(Setting.SKIP_USERS, false, "Skip exporting users"),
 	skip_groups(Setting.SKIP_GROUPS, false, "Skip exporting groups"),
-	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls"),
-	manifest_types(Setting.MANIFEST_TYPES, true, "The object types to include in the manifest (ALL = all types)"),
-	manifest_outcomes(Setting.MANIFEST_OUTCOMES, true, "The outcomes to include in the manifest (ALL = all outcomes)"),
-	count_path(null, true, "The path within which to count objects for"),
-	non_recursive(null, false, "Turn off recursion (i.e. to export a single folder without descending)");
+	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls");
 
 	public final Setting property;
 	public final Option option;
@@ -108,8 +111,8 @@ public enum CLIParam {
 	}
 
 	public String getString(String def) {
-		String v = getString();
-		return Tools.coalesce(v, def);
+		final String v = getString();
+		return (v != null ? v : def);
 	}
 
 	private static final String[] NO_OPTS = new String[0];

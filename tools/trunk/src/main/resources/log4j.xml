@@ -20,16 +20,6 @@
 		</layout>
 	</appender>
 
-	<appender name="mfst" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="${logName}.manifest"/>
-		<param name="ImmediateFlush" value="true"/>
-		<param name="Append" value="false"/>
-		<param name="Threshold" value="trace"/>
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%m%n"/>
-		</layout>
-	</appender>
-
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
 
 	<logger name="com.delta.cmsmf">
@@ -41,11 +31,6 @@
 		<level value="INFO"/>
 		<appender-ref ref="stdout"/>
 		<appender-ref ref="default"/>
-	</logger>
-
-	<logger name="manifest" additivity="false">
-		<level value="INFO"/>
-		<appender-ref ref="mfst"/>
 	</logger>
 
 	<root>
