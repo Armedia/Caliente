@@ -6,6 +6,7 @@ package com.armedia.cmf.engine.documentum.importer;
 
 import org.slf4j.Logger;
 
+import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.common.DctmSpecialValues;
@@ -15,6 +16,7 @@ import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -42,6 +44,11 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfPersistentOb
 
 	public final boolean isSpecialType(String type) {
 		return this.specialValues.isSpecialType(type);
+	}
+
+	public boolean isUntouchableUser(IDfSession session, String user) throws DfException {
+		return isSpecialUser(user) || DctmMappingUtils.isSubstitutionForMappableUser(user)
+			|| DctmMappingUtils.isMappableUser(session, user);
 	}
 
 	@Override

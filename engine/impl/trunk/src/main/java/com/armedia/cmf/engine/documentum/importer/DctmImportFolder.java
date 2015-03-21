@@ -118,8 +118,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		for (int i = 0; i < total; i++) {
 			String user = usersWithDefaultFolder.getValue(i).asString();
 			// Don't touch the special users!!
-			if (context.isSpecialUser(user) || DctmMappingUtils.isSubstitutionForMappableUser(user)
-				|| DctmMappingUtils.isMappableUser(session, user)) {
+			if (context.isUntouchableUser(session, user)) {
 				this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
 					DctmMappingUtils.resolveMappableUser(session, user)));
 				continue;
@@ -169,11 +168,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-				.warn(
-					String
-					.format(
-						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-						actualUser, this.storedObject.getLabel()), e);
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+								actualUser, this.storedObject.getLabel()), e);
 			}
 		}
 	}
