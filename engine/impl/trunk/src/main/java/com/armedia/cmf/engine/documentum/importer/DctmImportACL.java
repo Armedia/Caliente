@@ -353,7 +353,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		for (IDfValue value : usersWithDefaultACL) {
 			String userName = value.asString();
 			// Don't touch the special users!!
-			if (DctmMappingUtils.isSubstitutionForMappableUser(userName) || context.isSpecialUser(userName)) {
+			if (context.isSpecialUser(userName) || DctmMappingUtils.isSubstitutionForMappableUser(userName)
+				|| DctmMappingUtils.isMappableUser(session, userName)) {
 				this.log.warn(String.format("Will not substitute the default ACL for the special user [%s]",
 					DctmMappingUtils.resolveMappableUser(session, userName)));
 				continue;
