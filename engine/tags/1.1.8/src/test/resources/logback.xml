@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+<configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{ISO8601} [%-16t] %m%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="default" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>test.logback.log</file>
+		<append>false</append>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>test.logback.%i.log</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>10</maxIndex>
+		</rollingPolicy>
+
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>1024MB</maxFileSize>
+		</triggeringPolicy>
+
+		<encoder>
+			<pattern>%d{ISO8601} %-5p [%-16t] %c - %m%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
+
+	<logger name="com.armedia.cmf" level="DEBUG"/>
+
+	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
+	<logger name="console" level="INFO">
+		<appender-ref ref="stdout"/>
+		<appender-ref ref="default"/>
+	</logger>
+
+	<root level="INFO">
+		<appender-ref ref="default"/>
+	</root>
+</configuration>
