@@ -350,7 +350,14 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 		final IDfSession session = context.getSession();
 		Set<String> users = new TreeSet<String>();
-		for (IDfValue value : DctmMappingUtils.resolveMappableUsers(acl, usersWithDefaultACL)) {
+		for (IDfValue value : usersWithDefaultACL) {
+			String userName = value.asString();
+			// Don't touch the special users!!
+			if (DctmMappingUtils.isSubstitutionForMappableUser(userName) || context.isSpecialUser(userName)) {
+				this.log.warn(String.format("Will not substitute the default ACL for the special user [%s]",
+					DctmMappingUtils.resolveMappableUser(session, userName)));
+				continue;
+			}
 			users.add(value.asString());
 		}
 
@@ -378,7 +385,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			}
 
 			// Ok...so we relate this thing back to its owner as its internal ACL
-			user.lock();
+			DfUtils.lockObject(this.log, user);
 			user.fetch(null);
 			user.setDefaultACLEx(acl.getDomain(), acl.getObjectName());
 			user.save();

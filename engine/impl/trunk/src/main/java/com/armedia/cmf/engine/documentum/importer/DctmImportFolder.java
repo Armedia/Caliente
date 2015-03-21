@@ -10,6 +10,7 @@ import java.util.TreeMap;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmFolder;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
@@ -116,7 +117,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		Map<String, String> m = new TreeMap<String, String>();
 		for (int i = 0; i < total; i++) {
 			String user = usersWithDefaultFolder.getValue(i).asString();
-			if (DctmMappingUtils.isSubstitutionForMappableUser(user)) {
+			// Don't touch the special users!!
+			if (DctmMappingUtils.isSubstitutionForMappableUser(user) || context.isSpecialUser(user)) {
 				this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
 					DctmMappingUtils.resolveMappableUser(session, user)));
 				continue;
@@ -157,7 +159,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			IDfFolder actual = session.getFolderByPath(pathValue);
 
 			// Ok...so...we set the path to "whatever"...
-			user.lock();
+			DfUtils.lockObject(this.log, user);
 			user.fetch(null);
 			user.setDefaultFolder(pathValue, (actual == null));
 			user.save();
@@ -166,11 +168,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-								actualUser, this.storedObject.getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+						actualUser, this.storedObject.getLabel()), e);
 			}
 		}
 	}

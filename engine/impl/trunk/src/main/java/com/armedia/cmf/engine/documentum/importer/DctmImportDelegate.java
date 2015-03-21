@@ -147,7 +147,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				newLabel = calculateLabel(object);
 				this.log.info(String.format("Acquiring lock on %s [%s](%s)", getDctmType().name(),
 					this.storedObject.getLabel(), this.storedObject.getId()));
-				object.lock();
+				DfUtils.lockObject(this.log, object);
 				object.fetch(null);
 				this.log.info(String.format("Acquired lock on %s [%s](%s)", getDctmType().name(),
 					this.storedObject.getLabel(), this.storedObject.getId()));
@@ -257,11 +257,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 			if (transOpen) {
@@ -361,7 +361,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -375,16 +375,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 

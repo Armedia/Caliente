@@ -238,21 +238,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		private void ensureLocked() throws DfException {
 			if (!this.locked) {
-				boolean ok = false;
-				try {
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("LOCKING [%s]", this.parentId));
-					}
-					this.parent.lock();
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("LOCKED [%s]", this.parentId));
-					}
-					ok = true;
-				} finally {
-					if (!ok) {
-						hashCode();
-					}
-				}
+				DfUtils.lockObject(this.log, this.parent);
 				this.parent.fetch(null);
 				this.locked = true;
 			}
@@ -750,7 +736,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			final IDfId id = new DfId(parentId);
 			session.flushObject(id);
 			final IDfSysObject parent = IDfSysObject.class.cast(session.getObject(id));
-			parent.lock();
+			DfUtils.lockObject(this.log, parent);
 			parent.fetch(null);
 			parentCache.put(parentId, parent);
 		}

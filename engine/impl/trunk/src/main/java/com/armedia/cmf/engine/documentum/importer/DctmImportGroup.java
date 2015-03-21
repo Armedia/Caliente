@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmGroup;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -151,7 +152,14 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		if ((property == null) || (property.getValueCount() == 0)) { return; }
 		Set<String> users = new TreeSet<String>();
 		for (IDfValue v : property) {
-			users.add(DctmMappingUtils.resolveMappableUser(session, v.asString()));
+			String user = v.asString();
+			// Don't touch the special users!
+			if (DctmMappingUtils.isMappableUser(session, user) || context.isSpecialUser(user)) {
+				this.log.warn(String.format("Will not substitute the default group for the special user [%s]",
+					DctmMappingUtils.resolveMappableUser(session, user)));
+				continue;
+			}
+			users.add(user);
 		}
 		for (String actualUser : users) {
 			final IDfUser user;
@@ -178,7 +186,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			}
 			this.log.info(String.format("Setting group [%s] as the default group for user [%s]", groupName,
 				user.getUserName()));
-			user.lock();
+			DfUtils.lockObject(this.log, user);
 			user.fetch(null);
 			user.setUserGroupName(groupName);
 			user.save();
