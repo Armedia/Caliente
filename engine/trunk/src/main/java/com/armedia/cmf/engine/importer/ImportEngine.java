@@ -249,7 +249,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
-			throws ImportException, StorageException {
+		throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -337,7 +337,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -408,10 +408,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 												// the other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -652,56 +652,57 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 					}
 
 					this.log
-					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(translator, type, handler);
 					} catch (Exception e) {
 						throw new ImportException(String.format("Exception raised while loading objects of type [%s]",
 							type), e);
-					}
-
-					try {
-						// Ask the workers to exit civilly after the entire workload is
-						// submitted
-						this.log.info(String.format("Signaling work completion for the %s workers", type.name()));
-						for (int i = 0; i < workerCount; i++) {
-							try {
-								workQueue.put(exitValue);
-							} catch (InterruptedException e) {
-								// Here we have a problem: we're timing out while adding the
-								// exit values...
-								this.log.warn("Interrupted while attempting to request executor thread termination", e);
-								Thread.currentThread().interrupt();
-								break;
-							}
-						}
-
-						// Here, we wait for all the workers to conclude
-						this.log.info(String.format("Waiting for the %s workers to exit...", type.name()));
-						for (Future<?> future : futures) {
-							try {
-								future.get();
-							} catch (InterruptedException e) {
-								this.log.warn("Interrupted while wiating for an executor thread to exit", e);
-								Thread.currentThread().interrupt();
-								break;
-							} catch (ExecutionException e) {
-								this.log.warn("An executor thread raised an exception", e);
-							} catch (CancellationException e) {
-								this.log.warn("An executor thread was canceled!", e);
-							}
-						}
-						this.log.info(String.format("All the %s workers have exited", type.name()));
 					} finally {
-						listenerDelegator.objectTypeImportFinished(type);
-						workQueue.drainTo(remaining);
-						for (Batch v : remaining) {
-							if (v == exitValue) {
-								continue;
+						try {
+							// Ask the workers to exit civilly after the entire workload is
+							// submitted
+							this.log.info(String.format("Signaling work completion for the %s workers", type.name()));
+							for (int i = 0; i < workerCount; i++) {
+								try {
+									workQueue.put(exitValue);
+								} catch (InterruptedException e) {
+									// Here we have a problem: we're timing out while adding the
+									// exit values...
+									this.log.warn(
+										"Interrupted while attempting to request executor thread termination", e);
+									Thread.currentThread().interrupt();
+									break;
+								}
 							}
-							this.log.error(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
+
+							// Here, we wait for all the workers to conclude
+							this.log.info(String.format("Waiting for the %s workers to exit...", type.name()));
+							for (Future<?> future : futures) {
+								try {
+									future.get();
+								} catch (InterruptedException e) {
+									this.log.warn("Interrupted while waiting for an executor thread to exit", e);
+									Thread.currentThread().interrupt();
+									break;
+								} catch (ExecutionException e) {
+									this.log.warn("An executor thread raised an exception", e);
+								} catch (CancellationException e) {
+									this.log.warn("An executor thread was canceled!", e);
+								}
+							}
+							this.log.info(String.format("All the %s workers have exited", type.name()));
+						} finally {
+							listenerDelegator.objectTypeImportFinished(type);
+							workQueue.drainTo(remaining);
+							for (Batch v : remaining) {
+								if (v == exitValue) {
+									continue;
+								}
+								this.log.error(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
+							}
+							remaining.clear();
 						}
-						remaining.clear();
 					}
 
 					// Finally, decide what to do if errors were encountered
@@ -740,10 +741,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);

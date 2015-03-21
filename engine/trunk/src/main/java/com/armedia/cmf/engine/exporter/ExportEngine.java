@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ExportEngineListener> {
+	TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
@@ -264,7 +264,7 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 
 			if (this.log.isDebugEnabled()) {
 				this.log
-				.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
 			for (T requirement : referenced) {
 				exportObject(objectStore, streamStore, session, target, getExportTarget(requirement), requirement, ctx,
@@ -326,7 +326,7 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-			throws ExportException, StorageException {
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -489,13 +489,6 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 				}
 			};
 
-			// Fire off the workers
-			List<Future<?>> futures = new ArrayList<Future<?>>(threadCount);
-			for (int i = 0; i < threadCount; i++) {
-				futures.add(executor.submit(worker));
-			}
-			executor.shutdown();
-
 			final Iterator<ExportTarget> results;
 			this.log.debug("Locating export results...");
 			try {
@@ -506,44 +499,54 @@ TransferEngine<S, T, V, C, ExportEngineListener> {
 			}
 
 			try {
+				// Fire off the workers
+				List<Future<?>> futures = new ArrayList<Future<?>>(threadCount);
+				for (int i = 0; i < threadCount; i++) {
+					futures.add(executor.submit(worker));
+				}
+				executor.shutdown();
+
 				int c = 0;
 				// 1: run the query for the given predicate
 				listenerDelegator.exportStarted(settings);
 				// 2: iterate over the results, gathering up the object IDs
-				this.log.debug("Processing the located results...");
-				while (results.hasNext()) {
-					final ExportTarget target = results.next();
-					if (this.log.isTraceEnabled()) {
-						this.log.trace(String.format("Processing item %s", target));
-					}
-					try {
-						workQueue.put(target);
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						if (this.log.isDebugEnabled()) {
-							this.log.warn(String.format("Thread interrupted after reading %d object targets", c), e);
-						} else {
-							this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
-						}
-						break;
-					}
-				}
-				this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
-
-				// Ask the workers to exit civilly
-				this.log.info("Signaling work completion for the workers");
 				boolean waitCleanly = true;
-				for (int i = 0; i < threadCount; i++) {
-					try {
-						workQueue.put(exitValue);
-					} catch (InterruptedException e) {
-						waitCleanly = false;
-						// Here we have a problem: we're timing out while adding the exit
-						// values...
-						this.log.warn("Interrupted while attempting to request executor thread termination", e);
-						Thread.currentThread().interrupt();
-						executor.shutdownNow();
-						break;
+				try {
+					this.log.debug("Processing the located results...");
+					while (results.hasNext()) {
+						final ExportTarget target = results.next();
+						if (this.log.isTraceEnabled()) {
+							this.log.trace(String.format("Processing item %s", target));
+						}
+						try {
+							workQueue.put(target);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							if (this.log.isDebugEnabled()) {
+								this.log
+									.warn(String.format("Thread interrupted after reading %d object targets", c), e);
+							} else {
+								this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
+							}
+							break;
+						}
+					}
+					this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
+				} finally {
+					// Ask the workers to exit civilly
+					this.log.info("Signaling work completion for the workers");
+					for (int i = 0; i < threadCount; i++) {
+						try {
+							workQueue.put(exitValue);
+						} catch (InterruptedException e) {
+							waitCleanly = false;
+							// Here we have a problem: we're timing out while adding the exit
+							// values...
+							this.log.warn("Interrupted while attempting to request executor thread termination", e);
+							Thread.currentThread().interrupt();
+							executor.shutdownNow();
+							break;
+						}
 					}
 				}
 
