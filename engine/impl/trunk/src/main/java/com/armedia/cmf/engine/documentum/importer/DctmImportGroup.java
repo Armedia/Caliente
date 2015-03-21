@@ -154,7 +154,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		for (IDfValue v : property) {
 			String user = v.asString();
 			// Don't touch the special users!
-			if (context.isUntouchableUser(session, user)) {
+			if (context.isUntouchableUser(user)) {
 				this.log.warn(String.format("Will not substitute the default group for the special user [%s]",
 					DctmMappingUtils.resolveMappableUser(session, user)));
 				continue;

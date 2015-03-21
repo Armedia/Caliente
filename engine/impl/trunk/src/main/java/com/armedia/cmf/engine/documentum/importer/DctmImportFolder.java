@@ -118,7 +118,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		for (int i = 0; i < total; i++) {
 			String user = usersWithDefaultFolder.getValue(i).asString();
 			// Don't touch the special users!!
-			if (context.isUntouchableUser(session, user)) {
+			if (context.isUntouchableUser(user)) {
 				this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
 					DctmMappingUtils.resolveMappableUser(session, user)));
 				continue;

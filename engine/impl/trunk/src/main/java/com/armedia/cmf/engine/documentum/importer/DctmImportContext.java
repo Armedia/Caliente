@@ -46,9 +46,9 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfPersistentOb
 		return this.specialValues.isSpecialType(type);
 	}
 
-	public boolean isUntouchableUser(IDfSession session, String user) throws DfException {
+	public boolean isUntouchableUser(String user) throws DfException {
 		return isSpecialUser(user) || DctmMappingUtils.isSubstitutionForMappableUser(user)
-			|| DctmMappingUtils.isMappableUser(session, user);
+			|| DctmMappingUtils.isMappableUser(getSession(), user);
 	}
 
 	@Override
