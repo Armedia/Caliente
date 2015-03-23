@@ -248,13 +248,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				object.getObjectId().getId()));
 
 			ImportOutcome ret = new ImportOutcome(cmsImportResult, object.getObjectId().getId(), newLabel);
-			try {
-				finalizeOperation(object);
-			} catch (DfException e) {
-				this.log.error(String.format(
-					"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-					this.storedObject.getLabel(), this.storedObject.getId()), e);
-			}
+			finalizeOperation(object);
 			// This has to be the last thing that happens, else some of the attributes won't
 			// take. There is no need to save() the object for this, as this is a direct
 			// modification
@@ -354,7 +348,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	/**
@@ -368,16 +362,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
