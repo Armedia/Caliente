@@ -248,63 +248,56 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				object.getObjectId().getId()));
 
 			ImportOutcome ret = new ImportOutcome(cmsImportResult, object.getObjectId().getId(), newLabel);
+			try {
+				finalizeOperation(object);
+			} catch (DfException e) {
+				this.log.error(String.format(
+					"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+					this.storedObject.getLabel(), this.storedObject.getId()), e);
+			}
+			// This has to be the last thing that happens, else some of the attributes won't
+			// take. There is no need to save() the object for this, as this is a direct
+			// modification
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("Updating the system attributes for [%s](%s)",
+					this.storedObject.getLabel(), this.storedObject.getId()));
+			}
+
+			if (!updateSystemAttributes(this.storedObject, object, context)) {
+				this.log.warn(String.format("Failed to update the system attributes for [%s](%s)",
+					this.storedObject.getLabel(), this.storedObject.getId()));
+			}
+			this.log.info(String.format("Committing the transaction for [%s](%s)", this.storedObject.getLabel(),
+				this.storedObject.getId()));
+
+			if (transOpen) {
+				if (localTx != null) {
+					session.commitTransEx(localTx);
+				} else {
+					session.commitTrans();
+				}
+			}
 			ok = true;
 			return ret;
 		} finally {
-			if (ok) {
+			if (transOpen && !ok) {
+				this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
+					this.storedObject.getId()));
+				// Clear the mapping
+				context.getAttributeMapper().clearSourceMapping(getDctmType().getStoredObjectType(),
+					DctmAttributes.R_OBJECT_ID, this.storedObject.getId());
 				try {
-					finalizeOperation(object);
-				} catch (DfException e) {
-					ok = false;
-					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							this.storedObject.getLabel(), this.storedObject.getId()), e);
-				}
-			}
-			if (transOpen) {
-				if (ok) {
-					// This has to be the last thing that happens, else some of the attributes won't
-					// take. There is no need to save() the object for this, as this is a direct
-					// modification
-					if (this.log.isTraceEnabled()) {
-						this.log.trace(String.format("Updating the system attributes for [%s](%s)",
-							this.storedObject.getLabel(), this.storedObject.getId()));
-					}
-
-					if (!updateSystemAttributes(this.storedObject, object, context)) {
-						this.log.warn(String.format("Failed to update the system attributes for [%s](%s)",
-							this.storedObject.getLabel(), this.storedObject.getId()));
-					}
-					this.log.info(String.format("Committing the transaction for [%s](%s)",
-						this.storedObject.getLabel(), this.storedObject.getId()));
 					if (localTx != null) {
-						session.commitTransEx(localTx);
+						session.abortTransEx(localTx);
 					} else {
-						session.commitTrans();
+						session.abortTrans();
 					}
-				} else {
-					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
-						this.storedObject.getId()));
-					// Clear the mapping
-					context.getAttributeMapper().clearSourceMapping(getDctmType().getStoredObjectType(),
-						DctmAttributes.R_OBJECT_ID, this.storedObject.getId());
-					try {
-						if (localTx != null) {
-							session.abortTransEx(localTx);
-						} else {
-							session.abortTrans();
-						}
-					} catch (DfException e) {
-						// We log this here and don't raise it because if we're aborting, it means
-						// that there's another exception already bubbling up, so we don't want
-						// to intercept that
-						this.log.error(
-							String.format("Failed to roll back the transaction for [%s](%s)",
-								this.storedObject.getLabel(), this.storedObject.getId()), e);
-					}
+				} catch (DfException e) {
+					// We log this here and don't raise it because if we're aborting, it means
+					// that there's another exception already bubbling up, so we don't want
+					// to intercept that
+					this.log.error(String.format("Failed to roll back the transaction for [%s](%s)",
+						this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
 		}
