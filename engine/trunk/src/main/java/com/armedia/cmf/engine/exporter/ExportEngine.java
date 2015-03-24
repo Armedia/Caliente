@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ExportEngineListener> {
+	TransferEngine<S, T, V, C, ExportContextFactory<S, W, T, V, C, ?>, ExportEngineListener> {
 
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";

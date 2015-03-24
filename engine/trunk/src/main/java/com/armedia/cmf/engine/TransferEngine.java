@@ -25,14 +25,14 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>, L> {
+public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>, F extends ContextFactory<S, T, V, C, ?>, L> {
 
 	private static final String CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
 
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
 	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<String, PluggableServiceLocator<?>>();
 
-	private static synchronized <E extends TransferEngine<?, ?, ?, ?, ?>> void registerSubclass(Class<E> subclass) {
+	private static synchronized <E extends TransferEngine<?, ?, ?, ?, ?, ?>> void registerSubclass(Class<E> subclass) {
 
 		final String key = subclass.getCanonicalName();
 		Map<String, Object> m = TransferEngine.REGISTRY.get(key);
@@ -60,7 +60,7 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 		TransferEngine.LOCATORS.put(key, locator);
 	}
 
-	protected static synchronized <E extends TransferEngine<?, ?, ?, ?, ?>> E getTransferEngine(Class<E> subclass,
+	protected static synchronized <E extends TransferEngine<?, ?, ?, ?, ?, ?>> E getTransferEngine(Class<E> subclass,
 		String targetName) {
 		if (subclass == null) { throw new IllegalArgumentException("Must provide a valid engine subclass"); }
 		if (StringUtils.isEmpty(targetName)) { throw new IllegalArgumentException(
@@ -192,7 +192,7 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 
 	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg) throws Exception;
 
-	protected abstract ContextFactory<S, T, V, C, ?> newContextFactory(CfgTools cfg) throws Exception;
+	protected abstract F newContextFactory(CfgTools cfg) throws Exception;
 
 	protected abstract Set<String> getTargetNames();
 }

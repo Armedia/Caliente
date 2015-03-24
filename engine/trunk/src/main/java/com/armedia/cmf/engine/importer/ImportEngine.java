@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
-import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
@@ -46,7 +45,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ImportEngineListener> {
+	TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineListener> {
 
 	private static enum BatchStatus {
 		//
@@ -266,7 +265,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			throw new ImportException("Failed to configure the session factory to carry out the import", e);
 		}
 
-		final ContextFactory<S, T, V, C, ?> contextFactory;
+		final ImportContextFactory<S, W, T, V, C, ?> contextFactory;
 		try {
 			try {
 				contextFactory = newContextFactory(configuration);
@@ -609,6 +608,27 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				List<Batch> remaining = new ArrayList<Batch>();
 				objectStore.clearAttributeMappings();
 				listenerDelegator.importStarted(containedTypes);
+
+				// Ensure the target path exists
+				{
+					final SessionWrapper<S> rootSession;
+					try {
+						rootSession = sessionFactory.acquireSession();
+					} catch (Exception e) {
+						throw new ImportException("Failed to obtain the root session to ensure the target path", e);
+					}
+					try {
+						rootSession.begin();
+						contextFactory.ensureTargetPath(rootSession.getWrapped());
+						rootSession.commit();
+					} catch (Exception e) {
+						rootSession.rollback();
+						throw new ImportException("Failed to ensure the target path", e);
+					} finally {
+						rootSession.close();
+					}
+				}
+
 				final ObjectStorageTranslator<T, V> translator = getTranslator();
 				for (final StoredObjectType type : StoredObjectType.values()) {
 					final Integer total = containedTypes.get(type);
