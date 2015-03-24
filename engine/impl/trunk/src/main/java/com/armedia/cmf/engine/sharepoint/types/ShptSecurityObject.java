@@ -21,7 +21,7 @@ public abstract class ShptSecurityObject<T> extends ShptObject<T> {
 	}
 
 	@Override
-	public final String getId() {
+	public String getId() {
 		return String.format("%04x", getNumericId());
 	}
 

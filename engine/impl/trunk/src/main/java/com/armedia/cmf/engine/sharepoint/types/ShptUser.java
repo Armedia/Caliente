@@ -16,15 +16,18 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.Role;
 import com.independentsoft.share.User;
+import com.independentsoft.share.UserId;
 
 public class ShptUser extends ShptSecurityObject<User> {
 
 	private final List<Role> roles;
 	private final String userName;
 	private final String userDomain;
+	private final String userId;
 
 	public ShptUser(ShptSession service, User user) throws IncompleteDataException {
 		super(service, user, StoredObjectType.USER);
@@ -52,15 +55,20 @@ public class ShptUser extends ShptSecurityObject<User> {
 		if (backslash >= 0) {
 			// 1) ^.*|domain\\user$
 			this.userName = loginName.substring(backslash + 1);
-			this.userDomain = loginName.substring(loginName.indexOf('|') + 1, backslash);
+			this.userDomain = loginName.substring(loginName.indexOf('|') + 1, backslash).toLowerCase();
 		} else if (atSign >= 0) {
 			// 2) ^.*|user@domain$
 			this.userName = loginName.substring(loginName.indexOf('|') + 1, atSign);
-			this.userDomain = loginName.substring(atSign + 1);
+			this.userDomain = loginName.substring(atSign + 1).toLowerCase();
 		} else {
 			this.userName = loginName;
 			this.userDomain = "";
 		}
+		UserId uid = user.getUserId();
+		if (uid == null) { throw new IncompleteDataException(String.format(
+			"No userId information available for user [%s\\%s]", this.userDomain, this.userName)); }
+		this.userId = String.format("%08X",
+			Tools.hashTool(this, null, uid.getNameId().toLowerCase(), uid.getNameIdIssuer().toLowerCase()));
 	}
 
 	@Override
@@ -75,6 +83,11 @@ public class ShptUser extends ShptSecurityObject<User> {
 
 	public Collection<Role> getRoles() {
 		return this.roles;
+	}
+
+	@Override
+	public String getId() {
+		return this.userId;
 	}
 
 	@Override
@@ -95,7 +108,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	public void marshal(StoredObject<StoredValue> object) throws ExportException {
 		// UserID
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_ID.name, StoredDataType.ID, false,
-			Collections.singleton(new StoredValue(String.format("USER(%08x)", this.wrapped.getId())))));
+			Collections.singleton(new StoredValue(String.format("USER(%s)", getId())))));
 
 		// LoginName
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
