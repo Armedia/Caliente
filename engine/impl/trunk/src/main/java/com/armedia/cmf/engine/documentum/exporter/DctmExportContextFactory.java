@@ -6,8 +6,9 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import org.slf4j.Logger;
 
-import com.armedia.cmf.engine.ContextFactory;
+import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.documentum.common.DctmSpecialValues;
+import com.armedia.cmf.engine.exporter.ExportContextFactory;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -20,8 +21,9 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportContextFactory extends
-ContextFactory<IDfSession, IDfPersistentObject, IDfValue, DctmExportContext, DctmExportEngine> {
+public class DctmExportContextFactory
+extends
+	ExportContextFactory<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext, DctmExportEngine> {
 
 	private final DctmSpecialValues specialValues;
 

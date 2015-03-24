@@ -14,9 +14,6 @@ import com.armedia.cmf.engine.importer.ImportContext;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.commons.utilities.FileNameTools;
-import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -61,35 +58,5 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfPersistentOb
 		DctmObjectType dctmTarget = DctmTranslator.translateType(target);
 		if (dctmTarget == null) { return false; }
 		return dctmTarget.getSurrogateOf().contains(dctmRootType) || super.isSurrogateType(rootType, target);
-	}
-
-	@Override
-	protected IDfPersistentObject locateOrCreatePath(String path) throws Exception {
-		return doEnsurePath(path);
-	}
-
-	public final IDfFolder ensurePath(String path) throws Exception {
-		if (path == null) { throw new IllegalArgumentException("Must provide a path to ensure"); }
-		if (!path.startsWith("/")) { throw new IllegalArgumentException(String.format("The path [%s] is not absolute",
-			path)); }
-		return doEnsurePath(FileNameTools.normalizePath(path, '/'));
-	}
-
-	private IDfFolder doEnsurePath(String path) throws Exception {
-		final IDfSession session = getSession();
-		IDfFolder f = session.getFolderByPath(path);
-		if (f != null) { return f; }
-
-		final String dirName = FileNameTools.dirname(path, '/');
-		final boolean cabinet = Tools.equals("/", dirName);
-		final String type = (cabinet ? "dm_cabinet" : DctmObjectType.FOLDER.getDmType());
-		f = IDfFolder.class.cast(session.newObject(type));
-		if (!cabinet) {
-			final IDfFolder parent = doEnsurePath(dirName);
-			f.link(parent.getObjectId().getId());
-			parent.save();
-		}
-		f.save();
-		return f;
 	}
 }
