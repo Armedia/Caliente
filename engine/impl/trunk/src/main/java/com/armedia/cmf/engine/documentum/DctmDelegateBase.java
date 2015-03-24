@@ -10,7 +10,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
-public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferEngine<IDfSession, IDfPersistentObject, IDfValue, ?, ?>> {
+public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferEngine<IDfSession, IDfPersistentObject, IDfValue, ?, ?, ?>> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final Class<T> dfClass;
@@ -49,7 +49,7 @@ public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferE
 		if (object == null) { return null; }
 		if (!this.dfClass.isInstance(object)) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-				.getClass().getCanonicalName())); }
+			.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 }
