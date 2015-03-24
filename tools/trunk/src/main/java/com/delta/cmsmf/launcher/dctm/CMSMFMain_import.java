@@ -15,7 +15,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
-import com.armedia.cmf.engine.TransferEngineSetting;
+import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.documentum.importer.DctmImportEngine;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
@@ -79,7 +79,7 @@ ImportEngineListener {
 		if (this.password != null) {
 			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
-		settings.put(TransferEngineSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(null));
+		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(null));
 
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();

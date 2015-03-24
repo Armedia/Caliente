@@ -18,7 +18,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
-import com.armedia.cmf.engine.TransferEngineSetting;
+import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
@@ -114,7 +114,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 		if (this.domain != null) {
 			settings.put(ShptSessionFactory.DOMAIN, this.domain);
 		}
-		settings.put(TransferEngineSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(null));
+		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(null));
 
 		Date end = null;
 		Map<StoredObjectType, Integer> summary = null;
