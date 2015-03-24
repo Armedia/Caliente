@@ -2,18 +2,18 @@ package com.armedia.cmf.engine;
 
 import com.armedia.commons.utilities.ConfigurationSetting;
 
-public enum TransferEngineSetting implements ConfigurationSetting {
+public enum TransferSetting implements ConfigurationSetting {
 	//
 	EXCLUDE_TYPES;
 
 	private final String label;
 	private final Object defaultValue;
 
-	private TransferEngineSetting() {
+	private TransferSetting() {
 		this(null);
 	}
 
-	private TransferEngineSetting(Object defaultValue) {
+	private TransferSetting(Object defaultValue) {
 		this.label = String.format("cmf.%s", name().toLowerCase().replaceAll("_", "."));
 		this.defaultValue = defaultValue;
 	}

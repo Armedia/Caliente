@@ -66,7 +66,7 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
 		Set<StoredObjectType> excludes = EnumSet.noneOf(StoredObjectType.class);
-		for (Object o : ContextFactory.getAsIterable(settings.getObject(TransferEngineSetting.EXCLUDE_TYPES))) {
+		for (Object o : ContextFactory.getAsIterable(settings.getObject(TransferSetting.EXCLUDE_TYPES))) {
 			StoredObjectType t = ContextFactory.decodeObjectType(o);
 			if (t != null) {
 				excludes.add(t);
