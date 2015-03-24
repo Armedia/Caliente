@@ -22,8 +22,8 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportContextFactory
-extends
-	ExportContextFactory<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext, DctmExportEngine> {
+	extends
+ExportContextFactory<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext, DctmExportEngine> {
 
 	private final DctmSpecialValues specialValues;
 
