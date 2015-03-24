@@ -26,8 +26,8 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportContextFactory
-extends
-ImportContextFactory<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext, DctmImportEngine> {
+	extends
+	ImportContextFactory<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext, DctmImportEngine> {
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg) {
@@ -63,9 +63,11 @@ ImportContextFactory<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfVal
 		if (f != null) { return f; }
 
 		final String dirName = FileNameTools.dirname(path, '/');
+		final String baseName = FileNameTools.basename(path, '/');
 		final boolean cabinet = Tools.equals("/", dirName);
 		final String type = (cabinet ? "dm_cabinet" : DctmObjectType.FOLDER.getDmType());
 		f = IDfFolder.class.cast(session.newObject(type));
+		f.setObjectName(baseName);
 		if (!cabinet) {
 			final IDfFolder parent = doEnsurePath(session, dirName);
 			f.link(parent.getObjectId().getId());
