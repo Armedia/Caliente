@@ -8,9 +8,8 @@ import java.util.Stack;
 
 import org.slf4j.Logger;
 
-import com.armedia.cmf.engine.ContextFactory;
+import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferContext;
-import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -28,7 +27,7 @@ public class ExportContext<S, T, V> extends TransferContext<S, T, V> {
 	 * @param session
 	 * @param output
 	 */
-	public <C extends TransferContext<S, T, V>, E extends TransferEngine<S, T, V, C, ?>, F extends ContextFactory<S, T, V, C, E>> ExportContext(
+	public <C extends ExportContext<S, T, V>, W extends SessionWrapper<S>, E extends ExportEngine<S, W, T, V, C>, F extends ExportContextFactory<S, W, T, V, C, E>> ExportContext(
 		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output) {
 		super(factory, settings, rootId, rootType, session, output);
 	}

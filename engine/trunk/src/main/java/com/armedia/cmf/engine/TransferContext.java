@@ -43,6 +43,10 @@ public abstract class TransferContext<S, T, V> {
 		this.output = output;
 	}
 
+	protected ContextFactory<S, T, V, ? extends TransferContext<S, T, V>, ? extends TransferEngine<S, T, V, ?, ?>> getFactory() {
+		return this.factory;
+	}
+
 	public final CfgTools getSettings() {
 		return this.settings;
 	}
