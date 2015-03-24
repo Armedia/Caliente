@@ -74,7 +74,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		}
 
 		// Only do the linking/unlinking for non-cabinets
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
 		if ((p != null) && p.hasValues()) {
 			linkToParents(folder, context);
 		}
@@ -168,11 +168,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-								actualUser, this.storedObject.getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+						actualUser, this.storedObject.getLabel()), e);
 			}
 		}
 	}
@@ -182,18 +182,20 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
 		// Easier way: determine if we have parent folders...if not, then we're a cabinet
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
-			return session.getFolderByPath(String.format("/%s",
-				this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()));
+			String path = String.format("/%s", this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
+				.asString());
+			path = ctx.getTargetPath(path);
+			return session.getFolderByPath(path);
 		}
 		return super.locateInCms(ctx);
 	}
 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
 		if ((p == null) || !p.hasValues()) {
 			IDfFolder newObject = castObject(ctx.getSession().newObject("dm_cabinet"));
 			setOwnerGroupACLData(newObject, ctx);
