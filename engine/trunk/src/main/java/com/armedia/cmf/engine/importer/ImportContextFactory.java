@@ -3,8 +3,6 @@ package com.armedia.cmf.engine.importer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.commons.utilities.CfgTools;
@@ -12,9 +10,10 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>, E extends ImportEngine<S, W, T, V, C>>
-	extends ContextFactory<S, T, V, C, E> {
+extends ContextFactory<S, T, V, C, E> {
 
 	private final List<String> rootPath;
+	private final String rootPathStr;
 	private final int pathTrunc;
 
 	protected ImportContextFactory(E engine, CfgTools settings) {
@@ -22,28 +21,31 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, T, V,
 		String rootPath = settings.getString(ImportSetting.TARGET_LOCATION);
 		this.rootPath = Tools.freezeList(FileNameTools.tokenize(rootPath, '/'));
 		this.pathTrunc = Math.max(0, settings.getInteger(ImportSetting.TRIM_PREFIX));
+		this.rootPathStr = FileNameTools.reconstitute(this.rootPath, true, false, '/');
 	}
 
 	public final void ensureTargetPath(S session) throws ImportException {
-		if (this.rootPath.isEmpty()) { return; }
-		List<String> l = new ArrayList<String>(this.rootPath.size());
-		for (String s : this.rootPath) {
-			if (StringUtils.isBlank(s)) {
-				// Should never happen, but be safe...
-				continue;
-			}
-			l.add(s);
-			final String path = FileNameTools.reconstitute(l, true, false, '/');
-			try {
-				locateOrCreatePath(session, path);
-			} catch (Exception e) {
-				throw new ImportException(String.format("Exception raised while locating or creating the path [%s]",
-					path), e);
-			}
+		try {
+			ensurePath(session, this.rootPathStr);
+		} catch (Exception e) {
+			throw new ImportException(String.format("Failed to ensure the existence of the target path [%s]",
+				this.rootPathStr), e);
 		}
 	}
 
-	protected abstract T locateOrCreatePath(S session, String path) throws Exception;
+	private T ensurePath(S session, String path) throws Exception {
+		if (Tools.equals("/", path)) { return null; }
+		T target = locateFolder(session, path);
+		if (target == null) {
+			T parent = ensurePath(session, FileNameTools.dirname(path, '/'));
+			target = createFolder(session, parent, FileNameTools.basename(path, '/'));
+		}
+		return target;
+	}
+
+	protected abstract T locateFolder(S session, String path) throws Exception;
+
+	protected abstract T createFolder(S session, T parent, String name) throws Exception;
 
 	public final String getTargetPath(String sourcePath) throws ImportException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }
@@ -52,9 +54,9 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, T, V,
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
 		if (l.size() <= this.pathTrunc) { throw new ImportException(
 			String
-			.format(
-				"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
-				this.pathTrunc, sourcePath, l.size())); }
+				.format(
+					"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
+					this.pathTrunc, sourcePath, l.size())); }
 		for (int i = 0; i < this.pathTrunc; i++) {
 			l.remove(0);
 		}
