@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.importer.ImportContextFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
-import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
 import com.armedia.cmf.engine.sharepoint.types.ShptObject;
@@ -17,7 +16,6 @@ import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.independentsoft.share.Folder;
 
 /**
  * @author diego
@@ -39,13 +37,15 @@ public class ShptImportContextFactory
 	}
 
 	@Override
-	protected ShptObject<?> locateOrCreatePath(ShptSession session, String path) throws Exception {
+	protected ShptObject<?> locateFolder(ShptSession session, String path) throws Exception {
 		// TODO: does this raise a 404 exception? or return null?
-		Folder f = session.getFolder(path);
-		if (f == null) {
-			f = session.createFolder(path);
-		}
-		if (f == null) { throw new ShptSessionException(String.format("Failed to locate or create the path [%s]", path)); }
-		return new ShptFolder(session, f);
+		return new ShptFolder(session, session.getFolder(path));
+	}
+
+	@Override
+	protected ShptObject<?> createFolder(ShptSession session, ShptObject<?> parent, String name) throws Exception {
+		ShptFolder parentFolder = ShptFolder.class.cast(parent);
+		return new ShptFolder(session, session.createFolder(String.format("%s/%s", parentFolder.getServerRelativeUrl(),
+			name)));
 	}
 }
