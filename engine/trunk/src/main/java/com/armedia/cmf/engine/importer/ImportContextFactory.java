@@ -53,7 +53,7 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, T, V,
 			"The path [%s] must be absolute", sourcePath)); }
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
 		final int delta = (this.rootPath.size() > 0 ? 1 : 0);
-		if (l.size() < (this.pathTrunc + delta)) { throw new ImportException(
+		if (l.size() < (this.pathTrunc - delta)) { throw new ImportException(
 			String
 				.format(
 					"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
