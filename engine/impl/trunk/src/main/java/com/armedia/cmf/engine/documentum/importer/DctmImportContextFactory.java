@@ -14,8 +14,6 @@ import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.FileNameTools;
-import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -46,30 +44,16 @@ public class DctmImportContextFactory
 	}
 
 	@Override
-	protected IDfPersistentObject locateOrCreatePath(IDfSession session, String path) throws Exception {
-		return doEnsurePath(session, path);
+	protected IDfFolder locateFolder(IDfSession session, String path) throws Exception {
+		return session.getFolderByPath(path);
 	}
 
-	public final IDfFolder ensurePath(IDfSession session, String path) throws Exception {
-		if (session == null) { throw new IllegalArgumentException("Must provide a session to work with"); }
-		if (path == null) { throw new IllegalArgumentException("Must provide a path to ensure"); }
-		if (!path.startsWith("/")) { throw new IllegalArgumentException(String.format("The path [%s] is not absolute",
-			path)); }
-		return doEnsurePath(session, FileNameTools.normalizePath(path, '/'));
-	}
-
-	private IDfFolder doEnsurePath(IDfSession session, String path) throws Exception {
-		IDfFolder f = session.getFolderByPath(path);
-		if (f != null) { return f; }
-
-		final String dirName = FileNameTools.dirname(path, '/');
-		final String baseName = FileNameTools.basename(path, '/');
-		final boolean cabinet = Tools.equals("/", dirName);
-		final String type = (cabinet ? "dm_cabinet" : DctmObjectType.FOLDER.getDmType());
-		f = IDfFolder.class.cast(session.newObject(type));
-		f.setObjectName(baseName);
-		if (!cabinet) {
-			final IDfFolder parent = doEnsurePath(session, dirName);
+	@Override
+	protected IDfFolder createFolder(IDfSession session, IDfPersistentObject parent, String name) throws Exception {
+		final String type = (parent != null ? DctmObjectType.FOLDER.getDmType() : "dm_cabinet");
+		IDfFolder f = IDfFolder.class.cast(session.newObject(type));
+		f.setObjectName(name);
+		if (parent != null) {
 			f.link(parent.getObjectId().getId());
 			parent.save();
 		}
