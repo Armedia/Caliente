@@ -90,6 +90,8 @@ public abstract class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	protected abstract T locateOrCreatePath(String path) throws Exception;
 
 	public final String getTargetPath(String sourcePath) throws ImportException {
+		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }
+		if (!sourcePath.startsWith("/")) { throw new IllegalArgumentException(String.format("The path [%s] must be absolute", sourcePath)); }
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
 		if (l.size() <= this.pathTrunc) { throw new ImportException(
 			String
