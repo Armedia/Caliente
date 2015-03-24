@@ -10,7 +10,7 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>, E extends ImportEngine<S, W, T, V, C>>
-extends ContextFactory<S, T, V, C, E> {
+	extends ContextFactory<S, T, V, C, E> {
 
 	private final List<String> rootPath;
 	private final String rootPathStr;
@@ -52,7 +52,8 @@ extends ContextFactory<S, T, V, C, E> {
 		if (!sourcePath.startsWith("/")) { throw new IllegalArgumentException(String.format(
 			"The path [%s] must be absolute", sourcePath)); }
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
-		if (l.size() <= this.pathTrunc) { throw new ImportException(
+		final int delta = (this.rootPath.size() > 0 ? 1 : 0);
+		if (l.size() < (this.pathTrunc + delta)) { throw new ImportException(
 			String
 				.format(
 					"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
