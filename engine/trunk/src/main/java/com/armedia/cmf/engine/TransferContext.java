@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -18,6 +19,8 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class TransferContext<S, T, V> {
+
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final ContextFactory<S, T, V, ? extends TransferContext<S, T, V>, ? extends TransferEngine<S, T, V, ?, ?>> factory;
 	private final TransferEngine<S, T, V, ?, ?> engine;
