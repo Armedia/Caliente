@@ -7,6 +7,9 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
+import com.armedia.cmf.engine.TransferSetting;
+import com.armedia.cmf.engine.importer.ImportSetting;
+
 public enum Setting {
 	//
 	EXPORT_PREDICATE("export.predicate"),
@@ -50,7 +53,9 @@ public enum Setting {
 	MANIFEST_TYPES("manifest.types"),
 
 	//
-	CMF_EXCLUDE_TYPES("cmf.exclude.types"),
+	CMF_EXCLUDE_TYPES(TransferSetting.EXCLUDE_TYPES.getLabel()),
+	CMF_IMPORT_TARGET_LOCATION(ImportSetting.TARGET_LOCATION.getLabel()),
+	CMF_IMPORT_TRIM_PREFIX(ImportSetting.TRIM_PREFIX.getLabel()),
 
 	// END OF LIST
 	;

@@ -32,6 +32,10 @@ public enum CLIParam {
 	count_path(null, false, "The path within which to count objects for"),
 	cmf_exclude_types(Setting.CMF_EXCLUDE_TYPES, true,
 		"The list of object types to be ignored during the operation (comma-separated)"),
+	cmf_import_target_location(Setting.CMF_IMPORT_TARGET_LOCATION, true,
+		"The path location into which to import the contents"),
+	cmf_import_trim_prefix(Setting.CMF_IMPORT_TRIM_PREFIX, true,
+		"The number of leading path components to trim from the content being imported"),
 	special_users(Setting.SPECIAL_USERS, true,
 		"The special users that should not be imported into the target instance (comma-separated)"),
 	special_groups(Setting.SPECIAL_GROUPS, true,
@@ -59,7 +63,10 @@ public enum CLIParam {
 	smtp_port(Setting.MAIL_SMTP_HOST, true, "The port SMTP server is listening on"),
 	skip_users(Setting.SKIP_USERS, false, "Skip exporting users"),
 	skip_groups(Setting.SKIP_GROUPS, false, "Skip exporting groups"),
-	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls");
+	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls"),
+
+	//
+	;
 
 	public final Setting property;
 	public final Option option;
