@@ -106,21 +106,56 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 
 	public final ImportOutcome importObject(DctmImportContext context) throws DfException, ImportException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
+		final IDfSession session = context.getSession();
+		boolean ok = false;
+		final IDfLocalTransaction localTx;
+		if (session.isTransactionActive()) {
+			localTx = session.beginTransEx();
+		} else {
+			localTx = null;
+			session.beginTrans();
+		}
+		try {
+			ImportOutcome ret = doImportObject(context);
+			this.log.debug(String.format("Committing the transaction for [%s](%s)", this.storedObject.getLabel(),
+				this.storedObject.getId()));
+			if (localTx != null) {
+				session.commitTransEx(localTx);
+			} else {
+				session.commitTrans();
+			}
+			ok = true;
+			return ret;
+		} finally {
+			if (!ok) {
+				this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
+					this.storedObject.getId()));
+				try {
+					if (localTx != null) {
+						session.abortTransEx(localTx);
+					} else {
+						session.abortTrans();
+					}
+				} catch (DfException e) {
+					// We log this here and don't raise it because if we're aborting, it means
+					// that there's another exception already bubbling up, so we don't want
+					// to intercept that
+					this.log.error(String.format("Failed to roll back the transaction for [%s](%s)",
+						this.storedObject.getLabel(), this.storedObject.getId()), e);
+				}
+			}
+		}
+	}
 
-		boolean transOpen = false;
+	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
+		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
+
 		boolean ok = false;
 
 		// We assume the worst, out of the gate
-		IDfLocalTransaction localTx = null;
 		final IDfSession session = context.getSession();
 		T object = null;
 		try {
-			if (session.isTransactionActive()) {
-				localTx = session.beginTransEx();
-			} else {
-				session.beginTrans();
-			}
-			transOpen = true;
 			if (skipImport(context)) { return new ImportOutcome(ImportResult.SKIPPED); }
 
 			object = locateInCms(context);
@@ -263,49 +298,22 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
 									this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
-			}
-			if (transOpen) {
-				if (ok) {
-					// This has to be the last thing that happens, else some of the attributes won't
-					// take. There is no need to save() the object for this, as this is a direct
-					// modification
-					if (this.log.isTraceEnabled()) {
-						this.log.trace(String.format("Updating the system attributes for [%s](%s)",
-							this.storedObject.getLabel(), this.storedObject.getId()));
-					}
-
-					if (!updateSystemAttributes(this.storedObject, object, context)) {
-						this.log.warn(String.format("Failed to update the system attributes for [%s](%s)",
-							this.storedObject.getLabel(), this.storedObject.getId()));
-					}
-					this.log.info(String.format("Committing the transaction for [%s](%s)",
+				// This has to be the last thing that happens, else some of the attributes won't
+				// take. There is no need to save() the object for this, as this is a direct
+				// modification
+				if (this.log.isTraceEnabled()) {
+					this.log.trace(String.format("Updating the system attributes for [%s](%s)",
 						this.storedObject.getLabel(), this.storedObject.getId()));
-					if (localTx != null) {
-						session.commitTransEx(localTx);
-					} else {
-						session.commitTrans();
-					}
-				} else {
-					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
-						this.storedObject.getId()));
-					// Clear the mapping
-					context.getAttributeMapper().clearSourceMapping(getDctmType().getStoredObjectType(),
-						DctmAttributes.R_OBJECT_ID, this.storedObject.getId());
-					try {
-						if (localTx != null) {
-							session.abortTransEx(localTx);
-						} else {
-							session.abortTrans();
-						}
-					} catch (DfException e) {
-						// We log this here and don't raise it because if we're aborting, it means
-						// that there's another exception already bubbling up, so we don't want
-						// to intercept that
-						this.log.error(
-							String.format("Failed to roll back the transaction for [%s](%s)",
-								this.storedObject.getLabel(), this.storedObject.getId()), e);
-					}
 				}
+
+				if (!updateSystemAttributes(this.storedObject, object, context)) {
+					this.log.warn(String.format("Failed to update the system attributes for [%s](%s)",
+						this.storedObject.getLabel(), this.storedObject.getId()));
+				}
+			} else {
+				// Clear the mapping
+				context.getAttributeMapper().clearSourceMapping(getDctmType().getStoredObjectType(),
+					DctmAttributes.R_OBJECT_ID, this.storedObject.getId());
 			}
 		}
 	}
