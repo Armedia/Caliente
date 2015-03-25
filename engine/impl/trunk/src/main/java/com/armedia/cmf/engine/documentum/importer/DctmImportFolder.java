@@ -185,10 +185,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
-			String path = String.format("/%s", this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
-				.asString());
-			path = ctx.getTargetPath(path);
-			return session.getFolderByPath(path);
+			return session.getFolderByPath(String.format("/%s",
+				this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()));
 		}
 		return super.locateInCms(ctx);
 	}

@@ -26,8 +26,10 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
+import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
+import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
@@ -37,6 +39,7 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
+import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
@@ -51,7 +54,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-DctmSysObject {
+	DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -406,7 +409,7 @@ DctmSysObject {
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -606,10 +609,11 @@ DctmSysObject {
 		final IDfSession session = ctx.getSession();
 		final String documentName = this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 
-		final IDfType type = DctmTranslator.translateType(session, this.storedObject);
+		IDfType type = DctmTranslator.translateType(session, this.storedObject);
 		if (type == null) { throw new ImportException(String.format(
 			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.storedObject.getSubtype(),
 			this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId())); }
+
 		final String dqlBase = String.format("%s (ALL) where object_name = %s and folder(%%s)", type.getName(),
 			DfUtils.quoteString(documentName));
 
@@ -618,8 +622,7 @@ DctmSysObject {
 		T existing = null;
 		final Class<T> dfClass = getDfClass();
 		for (IDfValue p : getTargetPaths()) {
-			String candidatePath = ctx.getTargetPath(p.asString());
-			final String dql = String.format(dqlBase, DfUtils.quoteString(candidatePath));
+			final String dql = String.format(dqlBase, DfUtils.quoteString(p.asString()));
 			final String currentPath = String.format("%s/%s", p.asString(), documentName);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
@@ -662,7 +665,7 @@ DctmSysObject {
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-				.getId(), currentPath));
+					.getId(), currentPath));
 		}
 
 		return existing;
@@ -679,12 +682,25 @@ DctmSysObject {
 			"No target parents specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
 		StoredAttributeMapper mapper = context.getAttributeMapper();
+		StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		final IDfSession session = context.getSession();
 		for (int i = 0; i < parents.getValueCount(); i++) {
-			String parentId = parents.getValue(i).asString();
+			IDfId parentId = parents.getValue(i).asId();
+			if (parentId.isNull()) {
+				// This is a "fixup" from the path repairs, so we look up by path
+				String fixup = paths.getValue(i).asString();
+				IDfFolder f = session.getFolderByPath(fixup);
+				if (f == null) {
+					this.log.warn(String.format("Fixup path [%s] for %s [%s](%s) was not found", fixup,
+						this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()));
+				}
+				newParents.add(f.getObjectId().getId());
+				continue;
+			}
 			// We already know the parents are folders, b/c that's how we harvested them in the
 			// export, so we stick to that
 			Mapping m = mapper.getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
-				DctmAttributes.R_OBJECT_ID, parentId);
+				DctmAttributes.R_OBJECT_ID, parentId.getId());
 			if (m == null) {
 				// TODO: HOW??! Must have been an import failure on the parent...
 				continue;
@@ -707,9 +723,6 @@ DctmSysObject {
 		}
 
 		List<String> newParents = getProspectiveParents(ctx);
-		if (newParents.isEmpty()) {
-			getProspectiveParents(ctx);
-		}
 
 		// This ensures that we acquire ALL locks in the correct lowest-id-first order,
 		// since parentLinkActions will be a sorted tree in that order.
@@ -867,7 +880,7 @@ DctmSysObject {
 						.format(
 							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
 							aclDomain, this.storedObject.getType(), this.storedObject.getLabel(), sysObject
-							.getObjectId().getId());
+								.getObjectId().getId());
 					if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 				}
@@ -878,5 +891,27 @@ DctmSysObject {
 				this.log.warn(msg);
 			}
 		}
+	}
+
+	@Override
+	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
+		// First things first: fix the parent paths in the incoming object
+		if (context.isPathAltering()) {
+			StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+			StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+
+			if (!paths.hasValues()) {
+				paths.addValue(DfValueFactory.newStringValue("/"));
+				parents.addValue(DfValueFactory.newIdValue(DfId.DF_NULLID));
+			}
+			List<IDfValue> newPaths = new ArrayList<IDfValue>(paths.getValueCount());
+			final int pathCount = paths.getValueCount();
+			for (int i = 0; i < pathCount; i++) {
+				newPaths.add(DfValueFactory.newStringValue(context.getTargetPath(paths.getValue(i).asString())));
+			}
+			paths.setValues(newPaths);
+		}
+
+		return super.doImportObject(context);
 	}
 }
