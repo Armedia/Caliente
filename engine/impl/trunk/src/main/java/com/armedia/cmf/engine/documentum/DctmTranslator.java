@@ -17,6 +17,7 @@ import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValueCodec;
 import com.armedia.cmf.storage.UnsupportedObjectTypeException;
 import com.armedia.commons.utilities.Tools;
@@ -203,7 +204,14 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 	public static IDfType translateType(IDfSession session, StoredObject<IDfValue> object) throws DfException {
 		String subType = object.getSubtype();
 		IDfType type = session.getType(subType);
-		if (type != null) { return type; }
+		if (type != null) {
+			// TODO: Fix this kludge for something cleaner
+			StoredProperty<IDfValue> targetPaths = object.getProperty(DctmSysObject.TARGET_PATHS);
+			if (Tools.equals("dm_cabinet", type.getName()) && targetPaths.hasValues()) {
+				type = type.getSuperType();
+			}
+			return type;
+		}
 		DctmObjectType dctmType = DctmTranslator.translateType(object.getType());
 		if (dctmType == null) { return null; }
 		return session.getType(dctmType.getDmType());
