@@ -66,4 +66,8 @@ public abstract class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	public final String getTargetPath(String sourcePath) throws ImportException {
 		return this.factory.getTargetPath(sourcePath);
 	}
+
+	public final boolean isPathAltering() {
+		return this.factory.isPathAltering();
+	}
 }
