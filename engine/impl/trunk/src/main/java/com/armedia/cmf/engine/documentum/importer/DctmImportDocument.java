@@ -182,14 +182,13 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			referenceById.asString())); }
 
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
-		IDfValue mainFolderAtt = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS).getValue();
-		Mapping m = context.getAttributeMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
-			DctmAttributes.R_OBJECT_ID, mainFolderAtt.asString());
-		if (m == null) { throw new ImportException(String.format(
-			"Reference [%s] mapping for its parent folder [%s->???] could not be found", this.storedObject.getLabel(),
-			mainFolderAtt.asString())); }
-
-		IDfId mainFolderId = new DfId(m.getTargetValue());
+		IDfId mainFolderId = getMappedParentId(context);
+		if (mainFolderId == null) {
+			mainFolderId = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS).getValue().asId();
+			throw new ImportException(String.format(
+				"Reference [%s] mapping for its parent folder [%s->???] could not be found",
+				this.storedObject.getLabel(), mainFolderId.getId()));
+		}
 		// TODO: Can a reference be *linked* to other folders?
 		IDfId newId = targetSysObj.addReference(mainFolderId, bindingCondition.asString(), bindingLabel.asString());
 		return castObject(session.getObject(newId));

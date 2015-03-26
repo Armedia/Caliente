@@ -31,8 +31,8 @@ import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredAttributeMapper;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
+import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
@@ -676,37 +676,44 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		return locateExistingByPath(ctx);
 	}
 
+	protected IDfId getMappedParentId(DctmImportContext context) throws DfException, ImportException {
+		return getMappedParentId(context, 0);
+	}
+
+	protected IDfId getMappedParentId(DctmImportContext context, int pos) throws DfException, ImportException {
+		final IDfSession session = context.getSession();
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		IDfId mainFolderId = parents.getValue(pos).asId();
+		if (mainFolderId.isNull()) {
+			// This is only valid if pos is 0, and it's the only parent value, and there's only one
+			// path value. If it's used under any other circumstance, it's an error.
+			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.getValueCount() == 1)) {
+				// This is a "fixup" from the path repairs, so we look up by path
+				IDfValue path = paths.getValue();
+				IDfFolder f = session.getFolderByPath(path.asString());
+				if (f != null) { return f.getObjectId(); }
+				this.log.warn(String.format("Fixup path [%s] for %s [%s](%s) was not found", path.asString(),
+					this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()));
+			}
+		}
+		Mapping m = context.getAttributeMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
+			DctmAttributes.R_OBJECT_ID, mainFolderId.getId());
+		if (m != null) { return new DfId(m.getTargetValue()); }
+		return null;
+	}
+
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
 		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
 		if ((parents == null) || (parents.getValueCount() == 0)) { throw new ImportException(String.format(
 			"No target parents specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
-		StoredAttributeMapper mapper = context.getAttributeMapper();
-		StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
-		final IDfSession session = context.getSession();
 		for (int i = 0; i < parents.getValueCount(); i++) {
-			IDfId parentId = parents.getValue(i).asId();
-			if (parentId.isNull()) {
-				// This is a "fixup" from the path repairs, so we look up by path
-				String fixup = paths.getValue(i).asString();
-				IDfFolder f = session.getFolderByPath(fixup);
-				if (f == null) {
-					this.log.warn(String.format("Fixup path [%s] for %s [%s](%s) was not found", fixup,
-						this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()));
-				}
-				newParents.add(f.getObjectId().getId());
+			IDfId parentId = getMappedParentId(context, i);
+			if (parentId == null) {
 				continue;
 			}
-			// We already know the parents are folders, b/c that's how we harvested them in the
-			// export, so we stick to that
-			Mapping m = mapper.getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
-				DctmAttributes.R_OBJECT_ID, parentId.getId());
-			if (m == null) {
-				// TODO: HOW??! Must have been an import failure on the parent...
-				continue;
-			}
-
-			newParents.add(m.getTargetValue());
+			newParents.add(parentId.toString());
 		}
 		return newParents;
 	}
@@ -896,13 +903,29 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	@Override
 	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
 		// First things first: fix the parent paths in the incoming object
-		if (context.isPathAltering()) {
-			StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
-			StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		if (paths == null) {
+			paths = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PATHS, StoredDataType.STRING, true);
+			this.storedObject.setProperty(paths);
+			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
+				DctmSysObject.TARGET_PATHS, this.storedObject.getLabel(), this.storedObject.getId()));
+		}
 
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		if (parents == null) {
+			parents = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PARENTS, StoredDataType.ID, true);
+			this.storedObject.setProperty(parents);
+			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
+				DctmSysObject.TARGET_PARENTS, this.storedObject.getLabel(), this.storedObject.getId()));
+		}
+
+		if (context.isPathAltering()) {
 			if (!paths.hasValues()) {
-				paths.addValue(DfValueFactory.newStringValue("/"));
-				parents.addValue(DfValueFactory.newIdValue(DfId.DF_NULLID));
+				// If there are no paths, by definition there are also no parents, so
+				// we simply make do by adding a singular path, and a singular "dummy"
+				// parent that can be used later on
+				paths.setValue(DfValueFactory.newStringValue("/"));
+				parents.setValue(DfValueFactory.newIdValue(DfId.DF_NULLID));
 			}
 			List<IDfValue> newPaths = new ArrayList<IDfValue>(paths.getValueCount());
 			final int pathCount = paths.getValueCount();
