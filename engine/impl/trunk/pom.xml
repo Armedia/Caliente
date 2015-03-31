@@ -3,10 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.armedia.cmf</groupId>
-	<artifactId>cmf-engine-alfresco</artifactId>
+	<artifactId>cmf-engine-cmis</artifactId>
 	<version>0.0.1</version>
-	<name>CMF Alfresco Access Engine</name>
-	<description>CMF Alfresco Access Engine</description>
+	<name>CMF CMIS Access Engine</name>
+	<description>CMF CMIS Access Engine</description>
 	<packaging>bundle</packaging>
 
 	<scm>
@@ -54,7 +54,13 @@
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine</artifactId>
-			<version>1.1.8</version>
+			<version>1.2.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.chemistry.opencmis</groupId>
+			<artifactId>chemistry-opencmis-client-impl</artifactId>
+			<version>0.5.0</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
