@@ -1,4 +1,4 @@
-package com.armedia.cmf.engine.cmis.export;
+package com.armedia.cmf.engine.cmis.exporter;
 
 import java.util.Collection;
 import java.util.Iterator;

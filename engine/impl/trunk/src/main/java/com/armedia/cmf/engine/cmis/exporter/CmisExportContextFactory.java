@@ -1,4 +1,4 @@
-package com.armedia.cmf.engine.cmis.export;
+package com.armedia.cmf.engine.cmis.exporter;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Property;
