@@ -6,6 +6,7 @@ import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.Session;
 
+import com.armedia.cmf.engine.cmis.CmisCommon;
 import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.importer.ImportEngine;
@@ -28,7 +29,6 @@ ImportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisImportCon
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -36,25 +36,22 @@ ImportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisImportCon
 	protected ImportOutcome importObject(StoredObject<?> marshaled,
 		ObjectStorageTranslator<CmisObject, Property<?>> translator, CmisImportContext ctx) throws ImportException,
 		StorageException, StoredValueDecoderException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected Property<?> getValue(StoredDataType type, Object value) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected ObjectStorageTranslator<CmisObject, Property<?>> getTranslator() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected CmisSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
-		return null;
+		return new CmisSessionFactory(cfg);
 	}
 
 	@Override
@@ -64,7 +61,6 @@ ImportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisImportCon
 
 	@Override
 	protected Set<String> getTargetNames() {
-		// TODO Auto-generated method stub
-		return null;
+		return CmisCommon.TARGETS;
 	}
 }

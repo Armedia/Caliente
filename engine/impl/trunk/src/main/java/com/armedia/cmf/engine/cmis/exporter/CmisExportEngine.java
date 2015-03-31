@@ -9,6 +9,7 @@ import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.Session;
 
+import com.armedia.cmf.engine.cmis.CmisCommon;
 import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.exporter.ExportEngine;
@@ -23,7 +24,7 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisExportEngine extends
-	ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
+ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
 
 	public CmisExportEngine() {
 	}
@@ -89,16 +90,16 @@ public class CmisExportEngine extends
 
 	@Override
 	protected CmisSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
-		return null;
+		return new CmisSessionFactory(cfg);
 	}
 
 	@Override
 	protected CmisExportContextFactory newContextFactory(CfgTools cfg) throws Exception {
-		return null;
+		return new CmisExportContextFactory(this, cfg);
 	}
 
 	@Override
 	protected Set<String> getTargetNames() {
-		return null;
+		return CmisCommon.TARGETS;
 	}
 }
