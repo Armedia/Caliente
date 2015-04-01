@@ -37,6 +37,7 @@ public enum CmisSessionSetting implements ConfigurationSetting {
 	//
 	;
 
+	private final String label;
 	private final String sessionParameter;
 	private final String defaultValue;
 
@@ -46,6 +47,7 @@ public enum CmisSessionSetting implements ConfigurationSetting {
 
 	private CmisSessionSetting(String sessionParameter, String defaultValue) {
 		if (sessionParameter == null) { throw new IllegalArgumentException("Must provide a valid session parameter"); }
+		this.label = name().toLowerCase().replace('_', '.');
 		this.sessionParameter = sessionParameter;
 		this.defaultValue = defaultValue;
 	}
@@ -56,7 +58,7 @@ public enum CmisSessionSetting implements ConfigurationSetting {
 
 	@Override
 	public final String getLabel() {
-		return this.sessionParameter;
+		return this.label;
 	}
 
 	@Override
