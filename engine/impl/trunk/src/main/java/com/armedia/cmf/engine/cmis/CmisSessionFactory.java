@@ -38,7 +38,6 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 		if (!parameters.containsKey(SessionParameter.BINDING_TYPE)) {
 			parameters.put(SessionParameter.BINDING_TYPE, BindingType.ATOMPUB.value());
 		}
-
 		this.parameters = Tools.freezeMap(parameters);
 	}
 
