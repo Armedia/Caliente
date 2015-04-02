@@ -102,4 +102,8 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 	protected Set<String> getTargetNames() {
 		return CmisCommon.TARGETS;
 	}
+
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
+		return ExportEngine.getExportEngine(CmisCommon.TARGET_NAME);
+	}
 }

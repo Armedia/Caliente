@@ -22,7 +22,7 @@ import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportEngine extends
-ImportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisImportContext> {
+	ImportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisImportContext> {
 
 	public CmisImportEngine() {
 	}
@@ -62,5 +62,9 @@ ImportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisImportCon
 	@Override
 	protected Set<String> getTargetNames() {
 		return CmisCommon.TARGETS;
+	}
+
+	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine() {
+		return ImportEngine.getImportEngine(CmisCommon.TARGET_NAME);
 	}
 }
