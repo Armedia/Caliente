@@ -54,7 +54,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -409,7 +409,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -477,7 +477,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (modifierNameAtt != null) {
 			modifierName = modifierNameAtt.getValue().asString();
 			try {
-				IDfUser u = DctmImportUser.locateExistingUser(session, modifierName, null);
+				IDfUser u = DctmImportUser.locateExistingUser(ctx, modifierName);
 				if (u == null) {
 					modifierName = "";
 				}
@@ -502,7 +502,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		String creatorName = "";
 		if (creatorNameAtt != null) {
 			try {
-				IDfUser u = DctmImportUser.locateExistingUser(session, creatorNameAtt.getValue().asString(), null);
+				IDfUser u = DctmImportUser.locateExistingUser(ctx, creatorNameAtt.getValue().asString());
 				if (u != null) {
 					creatorName = u.getUserName();
 				}
@@ -665,7 +665,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				.getId(), currentPath));
 		}
 
 		return existing;
@@ -821,7 +821,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (att != null) {
 			final String actualUser = DctmMappingUtils.resolveMappableUser(session, att.getValue().asString());
 			try {
-				IDfUser u = DctmImportUser.locateExistingUser(session, actualUser, null);
+				IDfUser u = DctmImportUser.locateExistingUser(ctx, actualUser);
 				if (u != null) {
 					sysObject.setOwnerName(u.getUserName());
 				} else {
@@ -867,7 +867,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (firstNull == -1) {
 			String aclDomain = DctmMappingUtils.resolveMappableUser(session, aclDomainAtt.getValue().asString());
 			try {
-				IDfUser u = DctmImportUser.locateExistingUser(session, aclDomain, null);
+				IDfUser u = DctmImportUser.locateExistingUser(ctx, aclDomain);
 				if (u != null) {
 					aclDomain = u.getUserName();
 					IDfACL acl = session.getACL(aclDomain, aclNameAtt.getValue().asString());
@@ -887,7 +887,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 						.format(
 							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
 							aclDomain, this.storedObject.getType(), this.storedObject.getLabel(), sysObject
-								.getObjectId().getId());
+							.getObjectId().getId());
 					if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 				}

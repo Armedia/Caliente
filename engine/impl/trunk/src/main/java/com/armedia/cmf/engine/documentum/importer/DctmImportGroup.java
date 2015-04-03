@@ -59,7 +59,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				final String actualUser = DctmMappingUtils.resolveMappableUser(session, v.asString());
 				final IDfUser user;
 				try {
-					user = DctmImportUser.locateExistingUser(session, actualUser, null);
+					user = DctmImportUser.locateExistingUser(context, actualUser);
 				} catch (MultipleUserMatchesException e) {
 					String msg = String.format("Failed to add user [%s] as a member of [%s] - %s", actualUser,
 						groupName.asString(), e.getMessage());
@@ -87,7 +87,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			if (!StringUtils.isBlank(actualUser)) {
 				final IDfUser user;
 				try {
-					user = DctmImportUser.locateExistingUser(session, actualUser, null);
+					user = DctmImportUser.locateExistingUser(context, actualUser);
 					if (user != null) {
 						group.setOwnerName(user.getUserName());
 					} else {
@@ -108,7 +108,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			if (!StringUtils.isBlank(actualUser)) {
 				final IDfUser user;
 				try {
-					user = DctmImportUser.locateExistingUser(session, actualUser, null);
+					user = DctmImportUser.locateExistingUser(context, actualUser);
 					if (user != null) {
 						group.setGroupAdmin(user.getUserName());
 					} else {
@@ -164,7 +164,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		for (String actualUser : users) {
 			final IDfUser user;
 			try {
-				user = DctmImportUser.locateExistingUser(session, actualUser, null);
+				user = DctmImportUser.locateExistingUser(context, actualUser);
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to set group [%s] as the default group for the user [%s] - %s",
 					groupName, actualUser, e.getMessage());

@@ -135,7 +135,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			// want to clobber that? That's a decision that needs to be made later...
 			final IDfUser user;
 			try {
-				user = DctmImportUser.locateExistingUser(session, actualUser, null);
+				user = DctmImportUser.locateExistingUser(context, actualUser);
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to link folder [%s](%s) to user [%s] as its default folder - %s",
 					this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser, e.getMessage());
