@@ -13,7 +13,7 @@ import com.armedia.commons.utilities.CfgTools;
 
 public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final GenericObjectPool<S> pool;
 

@@ -51,7 +51,7 @@ public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>
 		return Collections.emptyList();
 	}
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private boolean open = true;
 

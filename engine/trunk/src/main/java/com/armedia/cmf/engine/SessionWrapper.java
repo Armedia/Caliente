@@ -1,6 +1,11 @@
 package com.armedia.cmf.engine;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class SessionWrapper<S> {
+
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final SessionFactory<S> factory;
 	private final S wrapped;
