@@ -24,7 +24,6 @@ public class BaseTest {
 		Logger out = LoggerFactory.getLogger("console");
 
 		settings.put(CmisSessionSetting.BASE_URL.getLabel(), "http://armedia-vm.rivera.prv/alfresco");
-		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), "");
 		settings.put(CmisSessionSetting.USER.getLabel(), "admin");
 		settings.put(CmisSessionSetting.PASSWORD.getLabel(), "123");
 
