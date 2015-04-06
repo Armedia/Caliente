@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
+import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.Session;
 
@@ -22,9 +23,10 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
+	ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
 
 	public CmisExportEngine() {
 	}
@@ -63,7 +65,15 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 
 	@Override
 	protected ExportTarget getExportTarget(CmisObject object) throws ExportException {
-		return null;
+		return new ExportTarget(decodeType(object.getType()), object.getId(), object.getId());
+	}
+
+	protected StoredObjectType decodeType(ObjectType type) throws ExportException {
+		StoredObjectType ret = null;
+		if (!type.isBaseType()) { return decodeType(type.getParentType()); }
+		if (Tools.equals("cmis:folder", type.getId())) { return StoredObjectType.FOLDER; }
+		if (Tools.equals("cmis:document", type.getId())) { return StoredObjectType.DOCUMENT; }
+		return ret;
 	}
 
 	@Override
