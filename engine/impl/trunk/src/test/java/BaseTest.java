@@ -16,17 +16,18 @@ public class BaseTest {
 
 	@Test
 	public void test() throws Exception {
-		ExportEngine<?, ?, ?, ?, ?> e = CmisExportEngine.getExportEngine();
-		ObjectStore<?, ?> db = Stores.getObjectStore("default");
-		ContentStore content = Stores.getContentStore("default");
+		final ExportEngine<?, ?, ?, ?, ?> engine = CmisExportEngine.getExportEngine();
+		ObjectStore<?, ?> objectStore = Stores.getObjectStore("default");
+		ContentStore contentStore = Stores.getContentStore("default");
+		Logger output = LoggerFactory.getLogger("console");
 
 		Map<String, String> settings = new TreeMap<String, String>();
-		Logger out = LoggerFactory.getLogger("console");
-
-		settings.put(CmisSessionSetting.BASE_URL.getLabel(), "http://armedia-vm.rivera.prv/alfresco");
+		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(),
+			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.0/atom");
 		settings.put(CmisSessionSetting.USER.getLabel(), "admin");
 		settings.put(CmisSessionSetting.PASSWORD.getLabel(), "123");
+		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), "-default-");
 
-		e.runExport(out, db, content, settings);
+		engine.runExport(output, objectStore, contentStore, settings);
 	}
 }
