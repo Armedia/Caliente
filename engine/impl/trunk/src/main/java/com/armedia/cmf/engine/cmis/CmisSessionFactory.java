@@ -22,7 +22,7 @@ import com.armedia.commons.utilities.Tools;
 public class CmisSessionFactory extends SessionFactory<Session> {
 
 	private static final Pattern VERSION_PATTERN = Pattern.compile("^\\d+\\.\\d+$");
-	private static final String ATMOMPUB_URL_TEMPLATE = "%s/api/-default-/public/cmis/versions/%s/atom";
+	private static final String ATMOMPUB_URL_TEMPLATE = "%s/api/%s/public/cmis/versions/%s/atom";
 
 	private final org.apache.chemistry.opencmis.client.api.SessionFactory factory = SessionFactoryImpl.newInstance();
 	private final Map<String, String> parameters;
@@ -32,7 +32,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 		Map<String, String> parameters = new HashMap<String, String>();
 
 		for (CmisSessionSetting s : CmisSessionSetting.values()) {
-			if (s.getSessionParameter() == null) {
+			if ((s.getSessionParameter() == null) || !settings.hasValue(s)) {
 				continue;
 			}
 			String v = settings.getString(s);
@@ -66,7 +66,8 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 						this.log.warn(String.format(
 							"Illegal version identifier [%s] - using the default value of [%s]", bad, ver));
 					}
-					v = String.format(CmisSessionFactory.ATMOMPUB_URL_TEMPLATE, v, ver);
+					String repoId = settings.getString(CmisSessionSetting.REPOSITORY_ID);
+					v = String.format(CmisSessionFactory.ATMOMPUB_URL_TEMPLATE, v, repoId, ver);
 					break;
 				default:
 					break;
@@ -74,6 +75,10 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 			if (!StringUtils.isBlank(v)) {
 				parameters.put(s.getSessionParameter(), v);
 			}
+		}
+		if (!parameters.containsKey(SessionParameter.REPOSITORY_ID)) {
+			parameters.put(SessionParameter.REPOSITORY_ID,
+				Tools.toString(CmisSessionSetting.REPOSITORY_ID.getDefaultValue()));
 		}
 		if (!parameters.containsKey(SessionParameter.BINDING_TYPE)) {
 			parameters.put(SessionParameter.BINDING_TYPE, BindingType.ATOMPUB.value());
@@ -83,7 +88,8 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 
 	@Override
 	public PooledObject<Session> makeObject() throws Exception {
-		return new DefaultPooledObject<Session>(this.factory.createSession(this.parameters));
+		return new DefaultPooledObject<Session>(
+			this.factory.createSession(new HashMap<String, String>(this.parameters)));
 	}
 
 	@Override
