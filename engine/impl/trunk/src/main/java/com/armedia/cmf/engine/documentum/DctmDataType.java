@@ -328,8 +328,12 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 	public static DctmDataType fromAttribute(IDfAttr attribute) {
 		if (attribute == null) { throw new IllegalArgumentException(
 			"Must provide an attribute to decode the data type from"); }
+		return DctmDataType.fromDataType(attribute.getDataType());
+	}
+
+	public static DctmDataType fromDataType(int dataType) {
 		// We do this just to be safe, but we could also use the constant as an array index
-		switch (attribute.getDataType()) {
+		switch (dataType) {
 			case IDfValue.DF_BOOLEAN:
 				return DF_BOOLEAN;
 			case IDfValue.DF_INTEGER:
