@@ -34,7 +34,13 @@ public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 		IDfUser user, DctmExportContext ctx) throws Exception {
 		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, user, ctx);
 		final IDfPersistentObject[] deps = {
-			session.getGroup(user.getUserGroupName()), session.getFolderByPath(user.getDefaultFolder()),
+			// The user's default group
+			session.getGroup(user.getUserGroupName()),
+
+			// The user's home folder
+			session.getFolderByPath(user.getDefaultFolder()),
+
+			// The user's default ACL
 			session.getACL(user.getACLDomain(), user.getACLName())
 		};
 		for (IDfPersistentObject dep : deps) {
