@@ -32,7 +32,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 		Map<String, String> parameters = new HashMap<String, String>();
 
 		for (CmisSessionSetting s : CmisSessionSetting.values()) {
-			if (s.getSessionParameter() != null) {
+			if (s.getSessionParameter() == null) {
 				continue;
 			}
 			String v = settings.getString(s);

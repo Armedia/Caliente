@@ -47,7 +47,6 @@ public enum CmisSessionSetting implements ConfigurationSetting {
 	}
 
 	private CmisSessionSetting(String sessionParameter, String defaultValue) {
-		if (sessionParameter == null) { throw new IllegalArgumentException("Must provide a valid session parameter"); }
 		this.label = name().toLowerCase().replace('_', '.');
 		this.sessionParameter = sessionParameter;
 		this.defaultValue = defaultValue;
