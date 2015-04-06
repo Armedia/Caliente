@@ -407,23 +407,31 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 	}
 
-	@Override
-	protected void finalizeConstruction(final IDfDocument document, boolean newObject, final DctmImportContext context)
+	protected boolean loadContent(final IDfDocument document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
+		StoredProperty<IDfValue> contentProperty = this.storedObject.getProperty(DctmDocument.CONTENT_HANDLES);
+		if ((contentProperty == null) || !contentProperty.hasValues()) { return false; }
 
-		// References don't require any of this being done
-		if (isReference()) { return; }
+		Set<String> contentIds = new HashSet<String>();
+		for (IDfValue contentId : contentProperty) {
+			contentIds.add(contentId.asString());
+		}
+
+		return false;
+	}
+
+	protected boolean loadContentLegacy(final IDfDocument document, boolean newObject, final DctmImportContext context)
+		throws DfException, ImportException {
+		// Now, create the content the contents
+		StoredProperty<IDfValue> contentProperty = this.storedObject.getProperty(DctmDocument.CONTENTS);
+		if ((contentProperty == null) || !contentProperty.hasValues()) { return false; }
 
 		final StoredObject<IDfValue> storedObject = this.storedObject;
 		final IDfSession session = document.getSession();
 
-		// Now, create the content the contents
 		Set<String> contentIds = new HashSet<String>();
-		StoredProperty<IDfValue> contentProperty = storedObject.getProperty(DctmDocument.CONTENTS);
-		if ((contentProperty != null) && (contentProperty.getValueCount() > 0)) {
-			for (IDfValue contentId : contentProperty) {
-				contentIds.add(contentId.asString());
-			}
+		for (IDfValue contentId : contentProperty) {
+			contentIds.add(contentId.asString());
 		}
 
 		final String documentId = document.getObjectId().getId();
@@ -631,6 +639,19 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		} catch (Exception e) {
 			throw new ImportException(String.format("Exception caught loading content for document [%s](%s)",
 				storedObject.getLabel(), storedObject.getId()), e);
+		}
+		return true;
+	}
+
+	@Override
+	protected void finalizeConstruction(final IDfDocument document, boolean newObject, final DctmImportContext context)
+		throws DfException, ImportException {
+
+		// References don't require any of this being done
+		if (isReference()) { return; }
+
+		if (!loadContentLegacy(document, newObject, context)) {
+			loadContent(document, newObject, context);
 		}
 
 		// Now, link to the parent folders

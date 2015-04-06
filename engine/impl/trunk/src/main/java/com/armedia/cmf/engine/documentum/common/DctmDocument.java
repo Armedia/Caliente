@@ -12,4 +12,6 @@ public interface DctmDocument extends DctmSysObject {
 
 	static final String CONTENTS = "contents";
 
+	static final String CONTENT_HANDLES = "contentHandles";
+
 }
