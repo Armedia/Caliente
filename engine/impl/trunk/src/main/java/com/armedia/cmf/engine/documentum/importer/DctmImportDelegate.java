@@ -292,11 +292,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
@@ -369,7 +369,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -383,16 +383,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
@@ -459,6 +459,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		clearAttributeFromObject(attrName, object);
 		final int truncateLength = (dataType == DctmDataType.DF_STRING ? object.getAttr(object.findAttrIndex(attrName))
 			.getLength() : 0);
+		int i = 0;
 		for (IDfValue value : values) {
 			if (value == null) {
 				value = dataType.getNull();
@@ -467,11 +468,42 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 			if ((truncateLength > 0) && (value.asString().length() > truncateLength)) {
 				value = DfValueFactory.newStringValue(value.asString().substring(0, truncateLength));
 			}
-			if (repeating) {
-				object.appendValue(attrName, value);
-			} else {
-				// I wonder if appendValue() can also be used for non-repeating attributes...
-				object.setValue(attrName, value);
+			boolean ok = false;
+			try {
+				if (repeating) {
+					object.appendValue(attrName, value);
+				} else {
+					// I wonder if appendValue() can also be used for non-repeating attributes...
+					object.setValue(attrName, value);
+				}
+				i++;
+				ok = true;
+			} finally {
+				// Here we EXPLICITLY don't catch the exception because we don't want to interfere
+				// with the natural exception's lifecycle. We simply note that there has been
+				// a problem, and move on.
+				if (!ok) {
+					String msg = null;
+					String valueTypeLabel = null;
+					try {
+						valueTypeLabel = DctmDataType.fromDataType(value.getDataType()).name();
+					} catch (IllegalArgumentException e) {
+						valueTypeLabel = String.format("UNK-%d", value.getDataType());
+					}
+					if (repeating) {
+						msg = String
+							.format(
+								"Failed to set the value in position %d for the repeating %s attribute [%s] to [%s](%s) on %s [%s](%s)",
+								i, dataType, attrName, value.asString(), valueTypeLabel, this.storedObject.getType(),
+								this.storedObject.getLabel(), this.storedObject.getId());
+					} else {
+						msg = String.format(
+							"Failed to set the value for the %s attribute [%s] to [%s](%s) on %s [%s](%s)", dataType,
+							attrName, value.asString(), valueTypeLabel, this.storedObject.getType(),
+							this.storedObject.getLabel(), this.storedObject.getId());
+					}
+					this.log.warn(msg);
+				}
 			}
 		}
 		return true;
