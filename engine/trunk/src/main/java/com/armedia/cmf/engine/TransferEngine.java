@@ -27,7 +27,7 @@ import com.armedia.commons.utilities.Tools;
 
 public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>, F extends ContextFactory<S, T, V, C, ?>, L> {
 
-	private static final String CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
+	private static final String CONTENT_QUALIFIERS = "${CONTENT_QUALIFIERS}$";
 	private static final String CONTENT_PROPERTIES = "${CONTENT_PROPERTIES}$";
 
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
@@ -171,7 +171,7 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 
 	protected final List<ContentInfo> getContentInfo(StoredObject<V> marshaled) throws Exception {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		StoredProperty<V> qualifiers = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIER);
+		StoredProperty<V> qualifiers = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIERS);
 		StoredProperty<V> properties = marshaled.getProperty(TransferEngine.CONTENT_PROPERTIES);
 		List<ContentInfo> info = new ArrayList<ContentInfo>();
 		if ((qualifiers != null) && (properties != null)) {
@@ -191,7 +191,7 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 	protected final void setContentInfo(StoredObject<V> marshaled, List<ContentInfo> contents) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
 		if (contents == null) { return; }
-		StoredProperty<V> q = new StoredProperty<V>(TransferEngine.CONTENT_QUALIFIER, StoredDataType.STRING, true);
+		StoredProperty<V> q = new StoredProperty<V>(TransferEngine.CONTENT_QUALIFIERS, StoredDataType.STRING, true);
 		marshaled.setProperty(q);
 		StoredProperty<V> p = new StoredProperty<V>(TransferEngine.CONTENT_PROPERTIES, StoredDataType.STRING, true);
 		marshaled.setProperty(p);
