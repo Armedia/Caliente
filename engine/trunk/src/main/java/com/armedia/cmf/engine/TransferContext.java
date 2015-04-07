@@ -116,7 +116,7 @@ public abstract class TransferContext<S, T, V> {
 		}
 	}
 
-	protected final List<ContentInfo> getContentInfo(StoredObject<V> marshaled) throws Exception {
+	public final List<ContentInfo> getContentInfo(StoredObject<V> marshaled) throws Exception {
 		return this.engine.getContentInfo(marshaled);
 	}
 
