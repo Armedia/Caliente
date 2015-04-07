@@ -464,51 +464,56 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 
 		String setFile = info.getProperty(DctmAttributes.SET_FILE);
-		String setClient = info.getProperty(DctmAttributes.SET_CLIENT);
-		String setTimeStr = info.getProperty(DctmAttributes.SET_TIME);
-
-		final int firstNull = Tools.firstNull(setFile, setClient, setTimeStr);
-		if (firstNull != -1) { return true; }
-
 		if (StringUtils.isBlank(setFile)) {
 			setFile = " ";
 		}
-		// If setFile contains single quote in its contents, to escape it, replace it
-		// with 4 single quotes.
-		setFile = setFile.replaceAll("'", "''''");
 
+		String setClient = info.getProperty(DctmAttributes.SET_CLIENT);
 		if (StringUtils.isBlank(setClient)) {
 			setClient = " ";
 		}
 
-		IDfTime setTime = new DfTime(setTimeStr, DctmDocument.CONTENT_SET_TIME_PATTERN);
-		String pageModifierClause = "";
+		String setTimeStr = info.getProperty(DctmAttributes.SET_TIME);
+		IDfTime setTime = DfTime.DF_NULLDATE;
+		if (setTimeStr != null) {
+			setTime = new DfTime(setTimeStr, DctmDocument.CONTENT_SET_TIME_PATTERN);
+		}
+
 		if (!StringUtils.isBlank(pageModifier)) {
-			pageModifierClause = String.format("and dcr.page_modifier = ''%s''", pageModifier);
+			pageModifier = DfUtils.sqlQuoteString(pageModifier);
+		} else {
+			pageModifier = "dcr.page_modifier";
 		}
 
 		// Prepare the sql to be executed
 		String sql = "" //
 			+ "UPDATE dmr_content_s SET " //
-			+ "       set_file = ''%s'', " //
-			+ "       set_client = ''%s'', " //
+			+ "       set_file = %s, " //
+			+ "       set_client = %s, " //
 			+ "       set_time = %s " //
 			+ " WHERE r_object_id = (" //
 			+ "           select dcs.r_object_id " //
 			+ "             from dmr_content_s dcs, dmr_content_r dcr " //
-			+ "            where dcr.parent_id = ''%s'' " //
+			+ "            where dcr.parent_id = %s " //
 			+ "              and dcs.r_object_id = dcr.r_object_id " //
 			+ "              and dcs.rendition = %d " //
-			+ "              %s " //
+			+ "              and dcr.page_modifier = %s " //
 			+ "              and dcr.page = %d " //
-			+ "              and dcs.full_format = ''%s''" //
+			+ "              and dcs.full_format = %s" //
 			+ "       )";
+
+		if (setTime.isNullDate() || !setTime.isValid()) {
+			setTimeStr = "set_time";
+		} else {
+			setTimeStr = DfUtils.generateSqlDateClause(setTime.getDate(), session);
+		}
 
 		final String documentId = document.getObjectId().getId();
 		try {
 			// Run the exec sql
-			sql = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime.getDate(), session),
-				documentId, renditionNumber, pageModifierClause, pageNumber, fullFormat);
+			sql = String.format(sql, DfUtils.sqlQuoteString(setFile), DfUtils.sqlQuoteString(setClient), setTimeStr,
+				DfUtils.sqlQuoteString(documentId), renditionNumber, pageModifier, pageNumber,
+				DfUtils.sqlQuoteString(fullFormat));
 			if (!runExecSQL(session, sql)) {
 				final String msg = String
 					.format(
