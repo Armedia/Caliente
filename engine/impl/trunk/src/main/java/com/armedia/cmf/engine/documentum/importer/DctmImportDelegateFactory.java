@@ -30,7 +30,6 @@ public class DctmImportDelegateFactory {
 				return new DctmImportType(engine, marshaled);
 			case USER:
 				return new DctmImportUser(engine, marshaled);
-			case CONTENT:
 			default:
 				break;
 		}

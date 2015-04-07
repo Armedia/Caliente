@@ -185,12 +185,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			}
 		}
 
-		// We export our contents...
-		for (IDfValue contentId : marshaled.getProperty(DctmDocument.CONTENTS)) {
-			IDfPersistentObject content = session.getObject(contentId.asId());
-			req.add(content);
-		}
-
 		return req;
 	}
 

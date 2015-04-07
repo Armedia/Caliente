@@ -57,6 +57,7 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportDocument extends DctmImportSysObject<IDfDocument> implements DctmDocument {
 
+	private static final String LEGACY_CONTENTS_PROPERTY = "contents";
 	private static final String LEGACY_CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
 
 	private TemporaryPermission antecedentTemporaryPermission = null;
@@ -568,7 +569,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	protected boolean loadContentLegacy(final IDfDocument document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
 		// Now, create the content the contents
-		StoredProperty<IDfValue> contentProperty = this.storedObject.getProperty(DctmDocument.CONTENTS);
+		StoredProperty<IDfValue> contentProperty = this.storedObject
+			.getProperty(DctmImportDocument.LEGACY_CONTENTS_PROPERTY);
 		if ((contentProperty == null) || !contentProperty.hasValues()) { return false; }
 
 		final IDfSession session = document.getSession();
@@ -711,7 +713,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		};
 		try {
-			context.loadObjects(DctmObjectType.CONTENT.getStoredObjectType(), contentIds, handler);
+			context.loadObjects(StoredObjectType.CONTENT, contentIds, handler);
 		} catch (Exception e) {
 			throw new ImportException(String.format("Exception caught loading content for document [%s](%s)",
 				this.storedObject.getLabel(), this.storedObject.getId()), e);
