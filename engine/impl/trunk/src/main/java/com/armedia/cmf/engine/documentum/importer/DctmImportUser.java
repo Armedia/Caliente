@@ -72,7 +72,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			user.getUserName());
 	}
 
-	protected static IDfUser locateByLoginName(IDfSession session, String loginName, String domainName)
+	public static IDfUser locateByLoginName(IDfSession session, String loginName, String domainName)
 		throws DfException, MultipleUserMatchesException {
 		// Still no match? Ok...try by mapping the username to the login name (+ domain)...
 		IDfUser ret = session.getUserByLoginName(loginName, !StringUtils.isBlank(domainName) ? domainName : null);
@@ -110,8 +110,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		return DctmImportUser.locateExistingUser(ctx, userName, null, null);
 	}
 
-	public static IDfUser locateExistingUser(DctmImportContext ctx, String userName, String loginName, String domainName)
-		throws MultipleUserMatchesException, DfException {
+	private static IDfUser locateExistingUser(DctmImportContext ctx, String userName, String loginName,
+		String domainName) throws MultipleUserMatchesException, DfException {
 		if (ctx == null) { throw new IllegalArgumentException("Must provide an import context to search with"); }
 		if (userName == null) { throw new IllegalArgumentException("Must provide a username to locate"); }
 		final IDfSession session = ctx.getSession();
