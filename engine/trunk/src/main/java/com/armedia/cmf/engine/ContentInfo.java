@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.commons.utilities.CfgTools;
+
 public final class ContentInfo {
 	private static final String ENCODING = "UTF-8";
 	private static final char ENTRY_SEP = '|';
@@ -21,6 +23,7 @@ public final class ContentInfo {
 
 	private final String qualifier;
 	private final Map<String, String> properties = new HashMap<String, String>();
+	private final CfgTools cfg = new CfgTools(this.properties);
 
 	public ContentInfo(String qualifier) {
 		this.qualifier = qualifier;
@@ -51,6 +54,10 @@ public final class ContentInfo {
 
 	public String getQualifier() {
 		return this.qualifier;
+	}
+
+	public CfgTools getCfgTools() {
+		return this.cfg;
 	}
 
 	public String setProperty(String name, String value) {
