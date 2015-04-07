@@ -168,11 +168,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-				.warn(
-					String
-					.format(
-						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-						actualUser, this.storedObject.getLabel()), e);
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+								actualUser, this.storedObject.getLabel()), e);
 			}
 		}
 	}
