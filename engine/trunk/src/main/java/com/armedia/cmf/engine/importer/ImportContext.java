@@ -7,12 +7,10 @@ import org.slf4j.Logger;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferContext;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttributeMapper;
-import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
@@ -48,11 +46,8 @@ public abstract class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 		}
 	}
 
-	public final Handle getContentHandle(StoredObject<V> object) {
-		if (object == null) { throw new IllegalArgumentException("Must provide an object to inspect for a content URI"); }
-		String qualifier = getContentQualifier(object);
-		if (qualifier == null) { return null; }
-		return this.streamStore.getHandle(object, qualifier);
+	public final ContentStore getContentStore() {
+		return this.streamStore;
 	}
 
 	protected boolean isSurrogateType(StoredObjectType rootType, StoredObjectType target) {

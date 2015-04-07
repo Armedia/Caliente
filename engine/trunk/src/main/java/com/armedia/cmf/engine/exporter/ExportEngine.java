@@ -21,12 +21,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
@@ -274,16 +274,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Executing supplemental storage for %s", label));
 			}
-			final Handle contentHandle;
+
+			final List<ContentInfo> contentInfo;
 			try {
-				contentHandle = storeContent(session, marshaled, referrent, sourceObject, streamStore);
+				contentInfo = storeContent(session, marshaled, referrent, sourceObject, streamStore);
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
 			}
 
-			if (contentHandle != null) {
-				setContentQualifier(marshaled, contentHandle.getQualifier());
-			}
+			setContentInfo(marshaled, contentInfo);
 
 			final Long ret = objectStore.storeObject(marshaled, getTranslator());
 			if (ret == null) {
@@ -681,8 +680,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	protected abstract StoredObject<V> marshal(C ctx, S session, T object) throws ExportException;
 
-	protected abstract Handle storeContent(S session, StoredObject<V> marshalled, ExportTarget referrent, T object,
-		ContentStore streamStore) throws Exception;
+	protected abstract List<ContentInfo> storeContent(S session, StoredObject<V> marshalled, ExportTarget referrent,
+		T object, ContentStore streamStore) throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);

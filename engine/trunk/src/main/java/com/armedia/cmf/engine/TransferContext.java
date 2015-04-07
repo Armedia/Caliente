@@ -5,6 +5,7 @@
 package com.armedia.cmf.engine;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -115,8 +116,8 @@ public abstract class TransferContext<S, T, V> {
 		}
 	}
 
-	protected final String getContentQualifier(StoredObject<V> marshaled) {
-		return this.engine.getContentQualifier(marshaled);
+	protected final List<ContentInfo> getContentInfo(StoredObject<V> marshaled) throws Exception {
+		return this.engine.getContentInfo(marshaled);
 	}
 
 	public final boolean isSupported(StoredObjectType type) {

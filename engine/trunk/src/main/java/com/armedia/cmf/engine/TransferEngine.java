@@ -28,6 +28,7 @@ import com.armedia.commons.utilities.Tools;
 public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>, F extends ContextFactory<S, T, V, C, ?>, L> {
 
 	private static final String CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
+	private static final String CONTENT_PROPERTIES = "${CONTENT_PROPERTIES}$";
 
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
 	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<String, PluggableServiceLocator<?>>();
@@ -168,17 +169,36 @@ public abstract class TransferEngine<S, T, V, C extends TransferContext<S, T, V>
 		return old;
 	}
 
-	protected final String getContentQualifier(StoredObject<V> marshaled) {
+	protected final List<ContentInfo> getContentInfo(StoredObject<V> marshaled) throws Exception {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		StoredProperty<V> contentQualifier = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIER);
-		if (contentQualifier == null) { return null; }
-		return Tools.toString(contentQualifier.getValue());
+		StoredProperty<V> qualifiers = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIER);
+		StoredProperty<V> properties = marshaled.getProperty(TransferEngine.CONTENT_PROPERTIES);
+		List<ContentInfo> info = new ArrayList<ContentInfo>();
+		if ((qualifiers != null) && (properties != null)) {
+			if (qualifiers.getValueCount() != properties.getValueCount()) { throw new Exception(String.format(
+				"Attribute count mismatch - %d qualifiers and %d properties for %s [%s](%s)",
+				qualifiers.getValueCount(), properties.getValueCount(), marshaled.getType(), marshaled.getLabel(),
+				marshaled.getId())); }
+			for (int i = 0; i < qualifiers.getValueCount(); i++) {
+				V q = qualifiers.getValue(i);
+				V p = properties.getValue(i);
+				info.add(new ContentInfo(Tools.toString(q), Tools.toString(p)));
+			}
+		}
+		return info;
 	}
 
-	protected final void setContentQualifier(StoredObject<V> marshaled, String qualifier) {
-		StoredProperty<V> p = new StoredProperty<V>(TransferEngine.CONTENT_QUALIFIER, StoredDataType.STRING, true);
-		p.setValue(getValue(StoredDataType.STRING, qualifier));
+	protected final void setContentInfo(StoredObject<V> marshaled, List<ContentInfo> contents) {
+		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
+		if (contents == null) { return; }
+		StoredProperty<V> q = new StoredProperty<V>(TransferEngine.CONTENT_QUALIFIER, StoredDataType.STRING, true);
+		marshaled.setProperty(q);
+		StoredProperty<V> p = new StoredProperty<V>(TransferEngine.CONTENT_PROPERTIES, StoredDataType.STRING, true);
 		marshaled.setProperty(p);
+		for (ContentInfo d : contents) {
+			q.addValue(getValue(StoredDataType.STRING, d.getQualifier()));
+			p.addValue(getValue(StoredDataType.STRING, d.encodeProperties()));
+		}
 	}
 
 	protected final ExecutorService newExecutor(int threadCount) {
