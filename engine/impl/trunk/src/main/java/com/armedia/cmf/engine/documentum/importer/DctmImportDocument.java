@@ -7,11 +7,13 @@ package com.armedia.cmf.engine.documentum.importer;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
@@ -21,6 +23,7 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
+import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -30,6 +33,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
@@ -42,6 +46,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
+import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
@@ -51,6 +56,8 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportDocument extends DctmImportSysObject<IDfDocument> implements DctmDocument {
+
+	private static final String LEGACY_CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
 
 	private TemporaryPermission antecedentTemporaryPermission = null;
 	private TemporaryPermission branchTemporaryPermission = null;
@@ -407,14 +414,147 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 	}
 
+	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, ContentInfo info,
+		Handle contentHandle, String contentType, String fullFormat, int pageNumber, int renditionNumber,
+		String pageModifier, int currentContent, int totalContentCount) throws DfException, ImportException {
+		// Step one: what's the content's path in the filesystem?
+		if (this.storedObject.getType() != StoredObjectType.CONTENT) { return true; }
+
+		final IDfSession session = context.getSession();
+		final File path = contentHandle.getFile();
+		final String absolutePath = path.getAbsolutePath();
+
+		fullFormat = Tools.coalesce(fullFormat, contentType);
+
+		if (renditionNumber == 0) {
+			if ((fullFormat != null) && !Tools.equals(fullFormat, contentType)) {
+				fullFormat = contentType;
+			}
+			try {
+				document.setFileEx(absolutePath, fullFormat, pageNumber, null);
+				final String msg = String.format("Added the primary content to document [%s](%s) -> {%s/%s/%s}",
+					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber);
+				DctmImportDocument.this.log.info(msg);
+				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
+			} catch (DfException e) {
+				final String msg = String.format(
+					"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}",
+					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber);
+				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
+					.getCanonicalName(), e.getMessage());
+				throw new ImportException(msg, e);
+			}
+		} else {
+			try {
+				document.addRenditionEx2(absolutePath, fullFormat, pageNumber, pageModifier, null, false, false, false);
+				final String msg = String.format("Added rendition content to document [%s](%s) -> {%s/%s/%s/%s}",
+					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber,
+					pageModifier);
+				DctmImportDocument.this.log.info(msg);
+				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
+			} catch (DfException e) {
+				final String msg = String.format(
+					"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}",
+					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber,
+					pageModifier);
+				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
+					.getCanonicalName(), e.getMessage());
+				throw new ImportException(msg, e);
+			}
+		}
+
+		String setFile = info.getProperty(DctmAttributes.SET_FILE);
+		String setClient = info.getProperty(DctmAttributes.SET_CLIENT);
+		String setTimeStr = info.getProperty(DctmAttributes.SET_TIME);
+
+		final int firstNull = Tools.firstNull(setFile, setClient, setTimeStr);
+		if (firstNull != -1) { return true; }
+
+		if (StringUtils.isBlank(setFile)) {
+			setFile = " ";
+		}
+		// If setFile contains single quote in its contents, to escape it, replace it
+		// with 4 single quotes.
+		setFile = setFile.replaceAll("'", "''''");
+
+		if (StringUtils.isBlank(setClient)) {
+			setClient = " ";
+		}
+
+		IDfTime setTime = new DfTime(setTimeStr, DctmDocument.CONTENT_SET_TIME_PATTERN);
+		String pageModifierClause = "";
+		if (!StringUtils.isBlank(pageModifier)) {
+			pageModifierClause = String.format("and dcr.page_modifier = ''%s''", pageModifier);
+		}
+
+		// Prepare the sql to be executed
+		String sql = "" //
+			+ "UPDATE dmr_content_s SET " //
+			+ "       set_file = ''%s'', " //
+			+ "       set_client = ''%s'', " //
+			+ "       set_time = %s " //
+			+ " WHERE r_object_id = (" //
+			+ "           select dcs.r_object_id " //
+			+ "             from dmr_content_s dcs, dmr_content_r dcr " //
+			+ "            where dcr.parent_id = ''%s'' " //
+			+ "              and dcs.r_object_id = dcr.r_object_id " //
+			+ "              and dcs.rendition = %d " //
+			+ "              %s " //
+			+ "              and dcr.page = %d " //
+			+ "              and dcs.full_format = ''%s''" //
+			+ "       )";
+
+		final String documentId = document.getObjectId().getId();
+		try {
+			// Run the exec sql
+			sql = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime.getDate(), session),
+				documentId, renditionNumber, pageModifierClause, pageNumber, fullFormat);
+			if (!runExecSQL(session, sql)) {
+				final String msg = String
+					.format(
+						"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
+						this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber,
+						pageModifier, sql);
+				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
+				throw new ImportException(msg);
+			}
+			return true;
+		} catch (DfException e) {
+			final String msg = String
+				.format(
+					"Exception caught generating updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber,
+					pageModifier);
+			context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
+				.getCanonicalName(), e.getMessage());
+			throw new ImportException(msg, e);
+		}
+	}
+
 	protected boolean loadContent(final IDfDocument document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
-		StoredProperty<IDfValue> contentProperty = this.storedObject.getProperty(DctmDocument.CONTENT_HANDLES);
-		if ((contentProperty == null) || !contentProperty.hasValues()) { return false; }
+		List<ContentInfo> infoList;
+		try {
+			infoList = context.getContentInfo(this.storedObject);
+		} catch (Exception e) {
+			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)",
+				this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()), e);
+		}
+		ContentStore contentStore = context.getContentStore();
+		int i = 0;
+		final StoredAttribute<IDfValue> contentTypeAtt = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
+		final String contentType = (contentTypeAtt != null ? contentTypeAtt.getValue().toString() : null);
+		for (ContentInfo info : infoList) {
+			Handle h = contentStore.getHandle(this.storedObject, info.getQualifier());
 
-		Set<String> contentIds = new HashSet<String>();
-		for (IDfValue contentId : contentProperty) {
-			contentIds.add(contentId.asString());
+			CfgTools cfg = info.getCfgTools();
+			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);
+			int page = cfg.getInteger(DctmAttributes.PAGE);
+			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER);
+			int rendition = cfg.getInteger(DctmAttributes.RENDITION);
+
+			saveContentStream(context, document, info, h, contentType, fullFormat, page, rendition, pageModifier, ++i,
+				infoList.size());
 		}
 
 		return false;
@@ -426,7 +566,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		StoredProperty<IDfValue> contentProperty = this.storedObject.getProperty(DctmDocument.CONTENTS);
 		if ((contentProperty == null) || !contentProperty.hasValues()) { return false; }
 
-		final StoredObject<IDfValue> storedObject = this.storedObject;
 		final IDfSession session = document.getSession();
 
 		Set<String> contentIds = new HashSet<String>();
@@ -434,8 +573,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			contentIds.add(contentId.asString());
 		}
 
-		final String documentId = document.getObjectId().getId();
-		final StoredAttribute<IDfValue> contentTypeAtt = storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
+		final StoredAttribute<IDfValue> contentTypeAtt = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
 		// TODO: Default the content type?
 		final String contentType = (contentTypeAtt != null ? contentTypeAtt.getValue().toString() : null);
 		final int contentCount = contentIds.size();
@@ -446,8 +584,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			@Override
 			public boolean newBatch(String batchId) throws StorageException {
 				this.current.set(0);
-				String msg = String.format("Content addition started for document [%s](%s)", storedObject.getLabel(),
-					storedObject.getId());
+				String msg = String.format("Content addition started for document [%s](%s)",
+					DctmImportDocument.this.storedObject.getLabel(), DctmImportDocument.this.storedObject.getId());
 				DctmImportDocument.this.log.info(msg);
 				context.printf("\t%s (%d items)", msg, contentCount);
 				return true;
@@ -457,10 +595,15 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			public boolean handleObject(StoredObject<IDfValue> storedObject) throws StorageException {
 				// Step one: what's the content's path in the filesystem?
 				if (storedObject.getType() != StoredObjectType.CONTENT) { return true; }
-				final Handle contentHandle = context.getContentHandle(storedObject);
-				final File path = contentHandle.getFile();
-				final String absolutePath = path.getAbsolutePath();
 
+				StoredProperty<IDfValue> p = storedObject.getProperty(DctmImportDocument.LEGACY_CONTENT_QUALIFIER);
+				if (p == null) { return true; }
+				String qualifier = null;
+				if (!p.isRepeating() || p.hasValues()) {
+					qualifier = p.getValue().asString();
+				}
+
+				final Handle contentHandle = context.getContentStore().getHandle(storedObject, qualifier);
 				final StoredAttribute<IDfValue> pageAtt = storedObject.getAttribute(DctmAttributes.PAGE);
 				final int pageNumber = (pageAtt != null ? pageAtt.getValue().asInteger() : 0);
 				final StoredAttribute<IDfValue> renditionNumber = storedObject.getAttribute(DctmAttributes.RENDITION);
@@ -503,122 +646,50 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 					}
 				}
 				String fullFormat = (fullFormatAtt != null ? fullFormatAtt.getValue().asString() : aContentType);
-
-				if ((renditionNumber == null) || (renditionNumber.getValue().asInteger() == 0)) {
-					if ((fullFormat != null) && !Tools.equals(fullFormat, aContentType)) {
-						fullFormat = aContentType;
-					}
-					try {
-						document.setFileEx(absolutePath, fullFormat, pageNumber, null);
-						final String msg = String.format(
-							"Added the primary content to document [%s](%s) -> {%s/%s/%s}", storedObject.getLabel(),
-							storedObject.getId(), absolutePath, fullFormat, pageNumber);
-						DctmImportDocument.this.log.info(msg);
-						context.printf("\t%s (item %d of %d)", msg, this.current.incrementAndGet(), contentCount);
-					} catch (DfException e) {
-						final String msg = String.format(
-							"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}",
-							storedObject.getLabel(), storedObject.getId(), absolutePath, fullFormat, pageNumber);
-						context.printf("\t%s (item %d of %d): %s [%s]", msg, this.current.incrementAndGet(),
-							contentCount, e.getClass().getCanonicalName(), e.getMessage());
-						throw new StorageException(msg, e);
-					}
-				} else {
-					try {
-						document.addRenditionEx2(absolutePath, fullFormat, pageNumber, pageModifier, null, false,
-							false, false);
-						final String msg = String.format(
-							"Added rendition content to document [%s](%s) -> {%s/%s/%s/%s}", storedObject.getLabel(),
-							storedObject.getId(), absolutePath, fullFormat, pageNumber, pageModifier);
-						DctmImportDocument.this.log.info(msg);
-						context.printf("\t%s (item %d of %d)", msg, this.current.incrementAndGet(), contentCount);
-					} catch (DfException e) {
-						final String msg = String.format(
-							"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}",
-							storedObject.getLabel(), storedObject.getId(), absolutePath, fullFormat, pageNumber,
-							pageModifier);
-						context.printf("\t%s (item %d of %d): %s [%s]", msg, this.current.incrementAndGet(),
-							contentCount, e.getClass().getCanonicalName(), e.getMessage());
-						throw new StorageException(msg, e);
-					}
-				}
-
+				ContentInfo info = new ContentInfo(contentHandle.getQualifier());
 				StoredAttribute<IDfValue> setFileAtt = storedObject.getAttribute(DctmAttributes.SET_FILE);
 				StoredAttribute<IDfValue> setClientAtt = storedObject.getAttribute(DctmAttributes.SET_CLIENT);
 				StoredAttribute<IDfValue> setTimeAtt = storedObject.getAttribute(DctmAttributes.SET_TIME);
 
 				@SuppressWarnings("unchecked")
 				final int firstNull = Tools.firstNull(setFileAtt, setClientAtt, setTimeAtt);
-				if (firstNull != -1) { return true; }
+				if (firstNull == -1) {
+					String setFile = setFileAtt.getValue().asString();
+					if (StringUtils.isBlank(setFile)) {
+						setFile = " ";
+					}
 
-				String setFile = setFileAtt.getValue().asString();
-				if (StringUtils.isBlank(setFile)) {
-					setFile = " ";
+					// If setFile contains single quote in its contents, to escape it, replace it
+					// with 4 single quotes.
+					setFile = setFile.replaceAll("'", "''''");
+					info.setProperty(DctmAttributes.SET_FILE, setFile);
+
+					String setClient = setClientAtt.getValue().asString();
+					if (StringUtils.isBlank(setClient)) {
+						setClient = " ";
+					}
+					info.setProperty(DctmAttributes.SET_CLIENT, setClient);
+
+					IDfTime setTime = setTimeAtt.getValue().asTime();
+					info.setProperty(DctmAttributes.SET_TIME, setTime.asString(DctmDocument.CONTENT_SET_TIME_PATTERN));
 				}
-				// If setFile contains single quote in its contents, to escape it, replace it
-				// with 4 single quotes.
-				setFile = setFile.replaceAll("'", "''''");
-
-				String setClient = setClientAtt.getValue().asString();
-				if (StringUtils.isBlank(setClient)) {
-					setClient = " ";
-				}
-
-				IDfTime setTime = setTimeAtt.getValue().asTime();
-
-				String pageModifierClause = "";
-				if (!StringUtils.isBlank(pageModifier)) {
-					pageModifierClause = String.format("and dcr.page_modifier = ''%s''", pageModifier);
-				}
-
-				// Prepare the sql to be executed
-				String sql = "" //
-					+ "UPDATE dmr_content_s SET " //
-					+ "       set_file = ''%s'', " //
-					+ "       set_client = ''%s'', " //
-					+ "       set_time = %s " //
-					+ " WHERE r_object_id = (" //
-					+ "           select dcs.r_object_id " //
-					+ "             from dmr_content_s dcs, dmr_content_r dcr " //
-					+ "            where dcr.parent_id = ''%s'' " //
-					+ "              and dcs.r_object_id = dcr.r_object_id " //
-					+ "              and dcs.rendition = %d " //
-					+ "              %s " //
-					+ "              and dcr.page = %d " //
-					+ "              and dcs.full_format = ''%s''" //
-					+ "       )";
 
 				try {
-					// Run the exec sql
-					sql = String.format(sql, setFile, setClient, DfUtils.generateSqlDateClause(setTime.getDate(),
-						session), documentId, renditionNumber.getValue().asInteger(), pageModifierClause, pageNumber,
-						fullFormat);
-					if (!runExecSQL(session, sql)) {
-						final String msg = String
-							.format(
-								"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
-								storedObject.getLabel(), storedObject.getId(), absolutePath, fullFormat, pageNumber,
-								pageModifier, sql);
-						context.printf("\t%s (item %d of %d)", msg, this.current.incrementAndGet(), contentCount);
-						throw new StorageException(msg);
-					}
-					return true;
-				} catch (DfException e) {
-					final String msg = String
-						.format(
-							"Exception caught generating updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-							storedObject.getLabel(), storedObject.getId(), absolutePath, fullFormat, pageNumber,
-							pageModifier);
-					context.printf("\t%s (item %d of %d): %s [%s]", msg, this.current.incrementAndGet(), contentCount,
-						e.getClass().getCanonicalName(), e.getMessage());
-					throw new StorageException(msg, e);
+					return saveContentStream(context, document, info, contentHandle, contentType, fullFormat,
+						pageNumber, renditionNumber.getValue().asInteger(), pageModifier,
+						this.current.incrementAndGet(), contentCount);
+				} catch (Exception e) {
+					throw new StorageException(String.format(
+						"Failed to save the content data for [%s](%s) from content with ID [%s]",
+						DctmImportDocument.this.storedObject.getLabel(), DctmImportDocument.this.storedObject.getId(),
+						storedObject.getId()), e);
 				}
 			}
 
 			@Override
 			public boolean closeBatch(boolean ok) throws StorageException {
-				String msg = String.format("Content addition finished for document [%s](%s)", storedObject.getLabel(),
-					storedObject.getId());
+				String msg = String.format("Content addition finished for document [%s](%s)",
+					DctmImportDocument.this.storedObject.getLabel(), DctmImportDocument.this.storedObject.getId());
 				DctmImportDocument.this.log.info(msg);
 				context.printf("\t%s (%d items)", msg, contentCount);
 				return true;
@@ -627,7 +698,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			@Override
 			public boolean handleException(SQLException e) {
 				String msg = String.format("SQLException caught processing content for [%s](%s)",
-					storedObject.getLabel(), storedObject.getId());
+					DctmImportDocument.this.storedObject.getLabel(), DctmImportDocument.this.storedObject.getId());
 				DctmImportDocument.this.log.error(msg, e);
 				context.printf("\t%s: %s", msg, e.getMessage());
 				return true;
@@ -638,7 +709,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			context.loadObjects(DctmObjectType.CONTENT.getStoredObjectType(), contentIds, handler);
 		} catch (Exception e) {
 			throw new ImportException(String.format("Exception caught loading content for document [%s](%s)",
-				storedObject.getLabel(), storedObject.getId()), e);
+				this.storedObject.getLabel(), this.storedObject.getId()), e);
 		}
 		return true;
 	}

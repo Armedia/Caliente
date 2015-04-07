@@ -4,10 +4,19 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
@@ -17,6 +26,9 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
@@ -28,6 +40,7 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
+import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.client.distributed.impl.ReferenceFinder;
 import com.documentum.fc.common.DfException;
@@ -39,6 +52,8 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportDocument extends DctmExportSysObject<IDfDocument> implements DctmDocument {
+
+	private static final String QUALIFIER_FMT = "[%08x]%s.%s";
 
 	protected DctmExportDocument(DctmExportEngine engine) {
 		super(engine, DctmObjectType.DOCUMENT);
@@ -54,33 +69,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		IDfDocument document) throws DfException, ExportException {
 		super.getDataProperties(ctx, properties, document);
 
-		final IDfSession session = document.getSession();
+		final IDfSession session = ctx.getSession();
 
 		if (!isDfReference(document)) {
-			// We export our contents...
-			StoredProperty<IDfValue> contents = new StoredProperty<IDfValue>(DctmDocument.CONTENTS,
-				DctmDataType.DF_ID.getStoredType(), true);
-			properties.add(contents);
-			String dql = "" //
-				+ "select dcs.r_object_id " //
-				+ "  from dmr_content_r dcr, dmr_content_s dcs " //
-				+ " where dcr.r_object_id = dcs.r_object_id " //
-				+ "   and dcr.parent_id = '%s' " //
-				+ "   and dcr.page = %d " //
-				+ " order by dcs.rendition ";
-			final String parentId = document.getObjectId().getId();
-			final int pageCount = document.getPageCount();
-			for (int i = 0; i < pageCount; i++) {
-				IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
-					IDfQuery.DF_EXECREAD_QUERY);
-				try {
-					while (results.next()) {
-						contents.addValue(results.getValue(DctmAttributes.R_OBJECT_ID));
-					}
-				} finally {
-					DfUtils.closeQuietly(results);
-				}
-			}
 			getVersionHistory(ctx, document);
 			List<IDfValue> patches = getVersionPatches(document, ctx);
 			if ((patches != null) && !patches.isEmpty()) {
@@ -227,5 +218,112 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			}
 		}
 		return ret;
+	}
+
+	@Override
+	protected List<ContentInfo> doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled,
+		ExportTarget referrent, IDfDocument document, ContentStore streamStore) throws Exception {
+		if (!isDfReference(document)) { return super.doStoreContent(session, marshaled, referrent, document,
+			streamStore); }
+		// We export our contents...
+		String dql = "" //
+			+ "select dcs.r_object_id " //
+			+ "  from dmr_content_r dcr, dmr_content_s dcs " //
+			+ " where dcr.r_object_id = dcs.r_object_id " //
+			+ "   and dcr.parent_id = '%s' " //
+			+ "   and dcr.page = %d " //
+			+ " order by dcs.rendition ";
+		final String parentId = document.getObjectId().getId();
+		final int pageCount = document.getPageCount();
+		List<ContentInfo> contentInfo = new ArrayList<ContentInfo>();
+		for (int i = 0; i < pageCount; i++) {
+			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
+				IDfQuery.DF_EXECREAD_QUERY);
+			try {
+				while (results.next()) {
+					final IDfContent content = IDfContent.class.cast(session.getObject(results
+						.getId(DctmAttributes.R_OBJECT_ID)));
+					Handle handle = storeContentStream(session, marshaled, document, content, streamStore);
+					ContentInfo info = new ContentInfo(handle.getQualifier());
+					info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
+					info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
+					info.setProperty(DctmAttributes.SET_TIME,
+						content.getTime(DctmAttributes.SET_TIME).asString(DctmDocument.CONTENT_SET_TIME_PATTERN));
+					info.setProperty(DctmAttributes.FULL_FORMAT, content.getString(DctmAttributes.FULL_FORMAT));
+					info.setProperty(DctmAttributes.PAGE_MODIFIER, content.getString(DctmAttributes.PAGE_MODIFIER));
+					info.setProperty(DctmAttributes.PAGE, content.getString(DctmAttributes.PAGE));
+					info.setProperty(DctmAttributes.RENDITION, content.getString(DctmAttributes.RENDITION));
+					contentInfo.add(info);
+				}
+			} finally {
+				DfUtils.closeQuietly(results);
+			}
+		}
+		return contentInfo;
+	}
+
+	protected Handle storeContentStream(IDfSession session, StoredObject<IDfValue> marshaled, IDfDocument document,
+		IDfContent content, ContentStore streamStore) throws Exception {
+		final String contentId = content.getObjectId().getId();
+		if (document == null) { throw new Exception(String.format(
+			"Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
+
+		String format = content.getString(DctmAttributes.FULL_FORMAT);
+		int pageNumber = content.getInt(DctmAttributes.PAGE);
+		String pageModifier = content.getString(DctmAttributes.PAGE_MODIFIER);
+		if (pageModifier == null) {
+			pageModifier = "";
+		}
+		String qualifier = String.format(DctmExportDocument.QUALIFIER_FMT, pageNumber, pageModifier, format);
+
+		// Store the content in the filesystem
+		Handle contentHandle = streamStore.getHandle(marshaled, qualifier);
+		final File targetFile = contentHandle.getFile();
+		if (targetFile != null) {
+			final File parent = targetFile.getParentFile();
+			// Deal with a race condition with multiple threads trying to export to the same folder
+			if (!parent.exists()) {
+				IOException caught = null;
+				for (int i = 0; (i < 3); i++) {
+					if (i > 0) {
+						// Only sleep if this is a retry
+						try {
+							Thread.sleep(333);
+						} catch (InterruptedException e2) {
+							// Ignore...
+						}
+					}
+
+					try {
+						caught = null;
+						FileUtils.forceMkdir(parent);
+						break;
+					} catch (IOException e) {
+						// Something went wrong...
+						caught = e;
+					}
+				}
+				if (caught != null) { throw new ExportException(String.format(
+					"Failed to create the parent content directory [%s]", parent.getAbsolutePath()), caught); }
+			}
+
+			if (!parent.isDirectory()) { throw new ExportException(String.format(
+				"The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
+
+			document.getFileEx2(targetFile.getAbsolutePath(), format, pageNumber, pageModifier, false);
+		} else {
+			// Doesn't support file-level, so we (sadly) use stream-level transfers
+			InputStream in = null;
+			OutputStream out = contentHandle.openOutput();
+			try {
+				// Don't pull the content until we're sure we can put it somewhere...
+				in = document.getContentEx3(format, pageNumber, pageModifier, false);
+				IOUtils.copy(in, out);
+			} finally {
+				IOUtils.closeQuietly(in);
+				IOUtils.closeQuietly(out);
+			}
+		}
+		return contentHandle;
 	}
 }

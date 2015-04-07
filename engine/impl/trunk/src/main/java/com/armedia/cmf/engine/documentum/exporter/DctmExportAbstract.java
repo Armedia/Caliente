@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmDataType;
@@ -13,7 +14,6 @@ import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -103,13 +103,13 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 		return calculateLabel(object.getSession(), castObject(object));
 	}
 
-	public final Handle storeContent(IDfSession session, StoredObject<IDfValue> marshaled, ExportTarget referrent,
-		IDfPersistentObject object, ContentStore streamStore) throws Exception {
+	public final List<ContentInfo> storeContent(IDfSession session, StoredObject<IDfValue> marshaled,
+		ExportTarget referrent, IDfPersistentObject object, ContentStore streamStore) throws Exception {
 		return doStoreContent(session, marshaled, referrent, castObject(object), streamStore);
 	}
 
-	protected Handle doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled, ExportTarget referrent,
-		T object, ContentStore streamStore) throws Exception {
+	protected List<ContentInfo> doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled,
+		ExportTarget referrent, T object, ContentStore streamStore) throws Exception {
 		return null;
 	}
 }

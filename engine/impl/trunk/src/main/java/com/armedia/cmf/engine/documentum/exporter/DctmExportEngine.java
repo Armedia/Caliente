@@ -8,9 +8,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionFactory;
@@ -25,7 +27,6 @@ import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -43,7 +44,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-	ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
+ExportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 	private final Map<DctmObjectType, DctmExportAbstract<?>> delegates;
@@ -52,7 +53,6 @@ public class DctmExportEngine extends
 		Map<DctmObjectType, DctmExportAbstract<?>> m = new EnumMap<DctmObjectType, DctmExportAbstract<?>>(
 			DctmObjectType.class);
 		m.put(DctmObjectType.ACL, new DctmExportACL(this));
-		m.put(DctmObjectType.CONTENT, new DctmExportContent(this));
 		m.put(DctmObjectType.DOCUMENT, new DctmExportDocument(this));
 		m.put(DctmObjectType.STORE, new DctmExportStore(this));
 		m.put(DctmObjectType.FOLDER, new DctmExportFolder(this));
@@ -64,7 +64,7 @@ public class DctmExportEngine extends
 	}
 
 	private DctmExportAbstract<?> getExportDelegate(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		DctmObjectType type = DctmObjectType.decodeType(object);
 		DctmExportAbstract<?> delegate = this.delegates.get(type);
 		if (delegate == null) { throw new IllegalStateException(String.format(
@@ -148,8 +148,8 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected Handle storeContent(IDfSession session, StoredObject<IDfValue> marshaled, ExportTarget referrent,
-		IDfPersistentObject object, ContentStore streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(IDfSession session, StoredObject<IDfValue> marshaled,
+		ExportTarget referrent, IDfPersistentObject object, ContentStore streamStore) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to store the contents"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
