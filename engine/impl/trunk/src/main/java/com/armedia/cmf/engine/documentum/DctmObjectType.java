@@ -18,6 +18,7 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
+import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 
@@ -34,6 +35,7 @@ public enum DctmObjectType {
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
 	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
+	CONTENT(StoredObjectType.CONTENT, IDfContent.class, "dmr_content", DOCUMENT),
 	//
 	;
 
@@ -152,13 +154,13 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}
 
 	public static DctmObjectType decodeType(IDfSession session, String typeName) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to find the type in"); }
 		if (typeName == null) { throw new IllegalArgumentException("Must provide a type to find"); }
 		IDfType type = session.getType(typeName);
