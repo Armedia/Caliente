@@ -680,9 +680,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				}
 
 				try {
+					int rendition = ((renditionNumber != null) && renditionNumber.hasValues() ? renditionNumber
+						.getValue().asInteger() : 0);
 					return saveContentStream(context, document, info, contentHandle, contentType, fullFormat,
-						pageNumber, renditionNumber.getValue().asInteger(), pageModifier,
-						this.current.incrementAndGet(), contentCount);
+						pageNumber, rendition, pageModifier, this.current.incrementAndGet(), contentCount);
 				} catch (Exception e) {
 					throw new StorageException(String.format(
 						"Failed to save the content data for [%s](%s) from content with ID [%s]",
