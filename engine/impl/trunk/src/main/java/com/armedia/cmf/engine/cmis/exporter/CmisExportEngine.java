@@ -1,15 +1,25 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
+import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Property;
+import org.apache.chemistry.opencmis.client.api.Rendition;
 import org.apache.chemistry.opencmis.client.api.Session;
+import org.apache.chemistry.opencmis.commons.data.ContentStream;
+import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.cmis.CmisCommon;
 import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
@@ -28,9 +38,6 @@ import com.armedia.commons.utilities.Tools;
 public class CmisExportEngine extends
 ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
 
-	public CmisExportEngine() {
-	}
-
 	@Override
 	protected String getObjectId(CmisObject sourceObject) {
 		return sourceObject.getId();
@@ -48,7 +55,7 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 
 	@Override
 	protected CmisObject getObject(Session session, StoredObjectType type, String searchKey) throws Exception {
-		return null;
+		return session.getObject(searchKey);
 	}
 
 	@Override
@@ -69,11 +76,10 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 	}
 
 	protected StoredObjectType decodeType(ObjectType type) throws ExportException {
-		StoredObjectType ret = null;
 		if (!type.isBaseType()) { return decodeType(type.getParentType()); }
 		if (Tools.equals("cmis:folder", type.getId())) { return StoredObjectType.FOLDER; }
 		if (Tools.equals("cmis:document", type.getId())) { return StoredObjectType.DOCUMENT; }
-		return ret;
+		return null;
 	}
 
 	@Override
@@ -83,9 +89,34 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 	}
 
 	@Override
-	protected Handle storeContent(Session session, StoredObject<Property<?>> marshalled, ExportTarget referrent,
-		CmisObject object, ContentStore streamStore) throws Exception {
-		return null;
+	protected List<ContentInfo> storeContent(Session session, StoredObject<Property<?>> marshaled,
+		ExportTarget referrent, CmisObject object, ContentStore streamStore) throws Exception {
+		if (session == null) { throw new IllegalArgumentException(
+			"Must provide a session through which to store the contents"); }
+		if (marshaled == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
+		if (object == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
+		if (streamStore == null) { throw new IllegalArgumentException(
+			"Must provide a stream store in which to store the content"); }
+		List<ContentInfo> info = null;
+		if (object instanceof Document) {
+			info = new ArrayList<ContentInfo>();
+			Document d = Document.class.cast(object);
+			for (Rendition r : d.getRenditions()) {
+				Handle h = streamStore.getHandle(marshaled, URLEncoder.encode(r.getKind(), "UTF-8"));
+				ContentStream c = r.getContentStream();
+				OutputStream out = null;
+				InputStream in = null;
+				try {
+					out = h.openOutput();
+					in = c.getStream();
+					IOUtils.copy(in, out);
+				} finally {
+					IOUtils.closeQuietly(out);
+					IOUtils.closeQuietly(in);
+				}
+			}
+		}
+		return info;
 	}
 
 	@Override
