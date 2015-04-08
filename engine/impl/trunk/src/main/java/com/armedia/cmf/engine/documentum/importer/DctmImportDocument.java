@@ -419,8 +419,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		Handle contentHandle, String contentType, String fullFormat, int pageNumber, int renditionNumber,
 		String pageModifier, int currentContent, int totalContentCount) throws DfException, ImportException {
 		// Step one: what's the content's path in the filesystem?
-		if (this.storedObject.getType() != StoredObjectType.CONTENT) { return true; }
-
 		final IDfSession session = context.getSession();
 		final File path = contentHandle.getFile();
 		final String absolutePath = path.getAbsolutePath();
