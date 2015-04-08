@@ -59,6 +59,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 	private static final String LEGACY_CONTENTS_PROPERTY = "contents";
 	private static final String LEGACY_CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
+	private static final String DEFAULT_BINARY_MIME = "application/octet-stream";
+	private static final String DEFAULT_BINARY_FORMAT = "binary";
 
 	private TemporaryPermission antecedentTemporaryPermission = null;
 	private TemporaryPermission branchTemporaryPermission = null;
@@ -535,6 +537,37 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 	}
 
+	protected String determineFormat(IDfSession session, String contentType) throws DfException {
+		String aContentType = contentType;
+		if (aContentType == null) {
+			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
+			if (att == null) { return DctmImportDocument.DEFAULT_BINARY_FORMAT; }
+			aContentType = att.getValue().asString();
+		}
+		if (Tools.equals(aContentType, DctmImportDocument.DEFAULT_BINARY_MIME)) { return DctmImportDocument.DEFAULT_BINARY_FORMAT; }
+		IDfFormat format = null;
+		try {
+			format = session.getFormat(aContentType);
+			if (format != null) { return format.getName(); }
+		} catch (DfException e) {
+			// do nothing... :S
+		}
+
+		String dql = "select distinct name from dm_format where mime_type = '%s'";
+		try {
+			IDfCollection result = DfUtils.executeQuery(session, String.format(dql, aContentType),
+				IDfQuery.DF_EXECREAD_QUERY);
+			aContentType = DctmImportDocument.DEFAULT_BINARY_FORMAT;
+			if (result.next()) {
+				aContentType = result.getString("name");
+			}
+		} catch (DfException e) {
+			// Default to a binary file... :S
+			aContentType = DctmImportDocument.DEFAULT_BINARY_FORMAT;
+		}
+		return aContentType;
+	}
+
 	protected boolean loadContent(final IDfDocument document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
 		List<ContentInfo> infoList;
@@ -547,15 +580,17 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		ContentStore contentStore = context.getContentStore();
 		int i = 0;
 		final StoredAttribute<IDfValue> contentTypeAtt = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
-		final String contentType = (contentTypeAtt != null ? contentTypeAtt.getValue().toString() : null);
+		final String contentType = determineFormat(context.getSession(), (contentTypeAtt != null ? contentTypeAtt
+			.getValue().toString() : null));
 		for (ContentInfo info : infoList) {
 			Handle h = contentStore.getHandle(this.storedObject, info.getQualifier());
 
 			CfgTools cfg = info.getCfgTools();
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);
-			int page = cfg.getInteger(DctmAttributes.PAGE);
-			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER);
-			int rendition = cfg.getInteger(DctmAttributes.RENDITION);
+			int page = cfg.getInteger(DctmAttributes.PAGE, 0);
+			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER, DctmDataType.DF_STRING.getNull()
+				.asString());
+			int rendition = cfg.getInteger(DctmAttributes.RENDITION, 0);
 
 			saveContentStream(context, document, info, h, contentType, fullFormat, page, rendition, pageModifier, ++i,
 				infoList.size());
@@ -618,37 +653,13 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				final String pageModifier = ((pageModifierAtt != null) && pageModifierAtt.hasValues() ? pageModifierAtt
 					.getValue() : DctmDataType.DF_STRING.getNull()).asString();
 
-				String aContentType = contentType;
-				if (aContentType == null) {
-					StoredAttribute<IDfValue> att = storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
-					if (att != null) {
-						aContentType = att.getValue().asString();
-					} else {
-						aContentType = "application/octet-stream";
-					}
-					IDfFormat format = null;
-					try {
-						format = session.getFormat(aContentType);
-						if (format != null) {
-							aContentType = format.getName();
-						}
-					} catch (DfException e) {
-						// do nothing... :S
-					}
-					if (format == null) {
-						String dql = "select r_object_id, name from dm_format where mime_type = '%s'";
-						try {
-							IDfCollection result = DfUtils.executeQuery(session, String.format(dql, aContentType),
-								IDfQuery.DF_EXECREAD_QUERY);
-							aContentType = "binary";
-							if (result.next()) {
-								aContentType = result.getString("name");
-							}
-						} catch (DfException e) {
-							// Default to a binary file... :S
-							aContentType = "binary";
-						}
-					}
+				String aContentType;
+				try {
+					aContentType = determineFormat(session, contentType);
+				} catch (DfException e) {
+					throw new StorageException(String.format(
+						"Failed to determine the format for %s [%s](%s) (contentType was [%s])",
+						storedObject.getType(), storedObject.getLabel(), storedObject.getId(), contentType), e);
 				}
 				String fullFormat = (fullFormatAtt != null ? fullFormatAtt.getValue().asString() : aContentType);
 				ContentInfo info = new ContentInfo(contentHandle.getQualifier());
