@@ -426,7 +426,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		fullFormat = Tools.coalesce(fullFormat, contentType);
 
 		if (renditionNumber == 0) {
-			if ((fullFormat != null) && !Tools.equals(fullFormat, contentType)) {
+			if (!Tools.equals(fullFormat, contentType)) {
 				fullFormat = contentType;
 			}
 			try {
