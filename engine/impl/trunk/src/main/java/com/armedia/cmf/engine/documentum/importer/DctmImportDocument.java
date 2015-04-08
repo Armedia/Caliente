@@ -682,7 +682,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				try {
 					int rendition = ((renditionNumber != null) && renditionNumber.hasValues() ? renditionNumber
 						.getValue().asInteger() : 0);
-					return saveContentStream(context, document, info, contentHandle, contentType, fullFormat,
+					return saveContentStream(context, document, info, contentHandle, aContentType, fullFormat,
 						pageNumber, rendition, pageModifier, this.current.incrementAndGet(), contentCount);
 				} catch (Exception e) {
 					throw new StorageException(String.format(
