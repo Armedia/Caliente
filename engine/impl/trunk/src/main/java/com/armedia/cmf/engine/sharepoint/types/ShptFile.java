@@ -1,5 +1,7 @@
 package com.armedia.cmf.engine.sharepoint.types;
 
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,20 +12,27 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.activation.MimeType;
+
+import org.apache.commons.io.IOUtils;
+
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
-import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
+import com.armedia.cmf.engine.sharepoint.common.MimeTools;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.CheckOutType;
 import com.independentsoft.share.CustomizedPageStatus;
@@ -306,11 +315,6 @@ public class ShptFile extends ShptFSObject<File> {
 			ret.add(f);
 		}
 
-		ShptContent content = new ShptContent(service, this.wrapped, this.version);
-		ret.add(content);
-		marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.CONTENTS.name, StoredDataType.ID, false,
-			new StoredValue(StoredDataType.ID, content.getId())));
-
 		return ret;
 	}
 
@@ -344,5 +348,42 @@ public class ShptFile extends ShptFSObject<File> {
 		}
 		// Nothing found...
 		return null;
+	}
+
+	@Override
+	public List<ContentInfo> storeContent(ShptSession session, StoredObject<StoredValue> marshaled,
+		ContentStore streamStore) throws Exception {
+		// TODO: We NEED to use something other than the object ID here...
+		Handle h = streamStore.getHandle(marshaled, "");
+		InputStream in = null;
+		if (this.version == null) {
+			in = session.getFileStream(this.wrapped.getServerRelativeUrl());
+		} else {
+			in = session.getInputStream(this.version.getUrl());
+		}
+		// TODO: sadly, this is not memory efficient for larger files...
+		BinaryMemoryBuffer buf = new BinaryMemoryBuffer(10240);
+		OutputStream out = h.openOutput();
+		try {
+			IOUtils.copy(in, buf);
+			buf.close();
+			IOUtils.copy(buf.getInputStream(), out);
+		} finally {
+			IOUtils.closeQuietly(in);
+			IOUtils.closeQuietly(out);
+		}
+		// Now, try to identify the content type...
+		in = buf.getInputStream();
+		MimeType type = null;
+		try {
+			type = MimeTools.determineMimeType(in);
+		} catch (Exception e) {
+			type = MimeTools.DEFAULT_MIME_TYPE;
+		}
+		marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CONTENT_TYPE.name,
+			StoredDataType.STRING, false, Collections.singleton(new StoredValue(type.getBaseType()))));
+		List<ContentInfo> ret = new ArrayList<ContentInfo>();
+		ret.add(new ContentInfo(h.getQualifier()));
+		return ret;
 	}
 }

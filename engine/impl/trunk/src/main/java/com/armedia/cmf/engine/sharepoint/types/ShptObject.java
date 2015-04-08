@@ -6,15 +6,16 @@ package com.armedia.cmf.engine.sharepoint.types;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
@@ -91,8 +92,8 @@ public abstract class ShptObject<T> {
 
 	protected abstract void marshal(StoredObject<StoredValue> object) throws ExportException;
 
-	public final Collection<ShptObject<?>> identifyDependents(ShptSession service,
-		StoredObject<StoredValue> marshaled, ShptExportContext ctx) throws Exception {
+	public final Collection<ShptObject<?>> identifyDependents(ShptSession service, StoredObject<StoredValue> marshaled,
+		ShptExportContext ctx) throws Exception {
 		return findDependents(service, marshaled, ctx);
 	}
 
@@ -111,8 +112,8 @@ public abstract class ShptObject<T> {
 		return new ArrayList<ShptObject<?>>();
 	}
 
-	public Handle storeContent(ShptSession session, StoredObject<StoredValue> marshaled, ContentStore streamStore)
-		throws Exception {
+	public List<ContentInfo> storeContent(ShptSession session, StoredObject<StoredValue> marshaled,
+		ContentStore streamStore) throws Exception {
 		return null;
 	}
 }

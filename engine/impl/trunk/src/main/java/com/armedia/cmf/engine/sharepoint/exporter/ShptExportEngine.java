@@ -8,9 +8,11 @@ import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -28,7 +30,6 @@ import com.armedia.cmf.engine.sharepoint.types.ShptGroup;
 import com.armedia.cmf.engine.sharepoint.types.ShptObject;
 import com.armedia.cmf.engine.sharepoint.types.ShptUser;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -116,8 +117,8 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected Handle storeContent(ShptSession session, StoredObject<StoredValue> marshaled, ExportTarget referrent,
-		ShptObject<?> object, ContentStore streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(ShptSession session, StoredObject<StoredValue> marshaled,
+		ExportTarget referrent, ShptObject<?> object, ContentStore streamStore) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to store the contents"); }
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
