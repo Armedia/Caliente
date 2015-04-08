@@ -217,8 +217,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	@Override
 	protected List<ContentInfo> doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled,
 		ExportTarget referrent, IDfDocument document, ContentStore streamStore) throws Exception {
-		if (!isDfReference(document)) { return super.doStoreContent(session, marshaled, referrent, document,
-			streamStore); }
+		if (isDfReference(document)) { return super
+			.doStoreContent(session, marshaled, referrent, document, streamStore); }
+
 		// We export our contents...
 		String dql = "" //
 			+ "select dcs.r_object_id " //
