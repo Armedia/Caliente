@@ -123,4 +123,20 @@ public class ContentInfoTest {
 		}
 		Assert.assertEquals(names, a.getPropertyNames());
 	}
+
+	@Test
+	public void testEncodeProperties() {
+		ContentInfo a = new ContentInfo(UUID.randomUUID().toString());
+		for (int i = 0; i < 100; i++) {
+			String k = String.format("key %03d", i);
+			String v = String.format("value %03d", i);
+			a.setProperty(k, v);
+		}
+		String encoded = a.encodeProperties();
+		ContentInfo b = new ContentInfo(a.getQualifier(), encoded);
+		Assert.assertEquals(a.getPropertyCount(), b.getPropertyCount());
+		for (String n : a.getPropertyNames()) {
+			Assert.assertEquals(a.getProperty(n), b.getProperty(n));
+		}
+	}
 }

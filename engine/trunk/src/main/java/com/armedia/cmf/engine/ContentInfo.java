@@ -17,9 +17,9 @@ public final class ContentInfo {
 	private static final String ENCODING = "UTF-8";
 	private static final char ENTRY_SEP = '|';
 	private static final char VALUE_SEP = '=';
-	private static final Pattern CHECKER = Pattern.compile("^(?:[\\w-.~%]*\\Q" + ContentInfo.VALUE_SEP
-		+ "\\E[\\w-.~%]*(?:\\Q" + ContentInfo.ENTRY_SEP + "\\E[\\w-.~%]*\\Q" + ContentInfo.VALUE_SEP
-		+ "\\E[\\w-.~%]*)*)?$");
+	private static final Pattern CHECKER = Pattern.compile("^(?:[\\w-.~+%]*\\Q" + ContentInfo.VALUE_SEP
+		+ "\\E[\\w-.~+%]*(?:\\Q" + ContentInfo.ENTRY_SEP + "\\E[\\w-.~+%]*\\Q" + ContentInfo.VALUE_SEP
+		+ "\\E[\\w-.~+%]*)*)?$");
 
 	private final String qualifier;
 	private final Map<String, String> properties = new HashMap<String, String>();
