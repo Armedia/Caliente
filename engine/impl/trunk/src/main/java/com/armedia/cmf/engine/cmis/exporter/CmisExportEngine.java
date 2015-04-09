@@ -20,6 +20,7 @@ import org.apache.chemistry.opencmis.client.api.QueryResult;
 import org.apache.chemistry.opencmis.client.api.Rendition;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
+import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
@@ -43,7 +44,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
+	ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
 
 	private final CmisResultTransformer<ExportTarget> transformer = new CmisResultTransformer<ExportTarget>() {
 		@Override
@@ -62,8 +63,35 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 		return null;
 	}
 
-	protected ExportTarget newExportTarget(QueryResult r) {
-		return null;
+	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
+		PropertyData<?> objectId = r.getPropertyById("cmis:objectId");
+		if (objectId == null) { throw new ExportException(
+			"Failed to find the cmis:objectId property as part of the query result"); }
+
+		StoredObjectType type = null;
+		PropertyData<?>[] objectTypes = {
+			r.getPropertyById("cmis:objectTypeId"), r.getPropertyById("cmis:baseTypeId")
+		};
+
+		for (PropertyData<?> t : objectTypes) {
+			if (t == null) {
+				continue;
+			}
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("Found property [%s] with value [%s]", t.getId(), t.getFirstValue()));
+			}
+			type = decodeType(Tools.toString(t.getFirstValue()));
+			if (type != null) {
+				if (this.log.isTraceEnabled()) {
+					this.log.trace(String.format("Object type [%s] decoded as [%s]", t.getFirstValue(), type));
+				}
+				break;
+			}
+		}
+		if (type == null) { throw new ExportException(
+			"Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result, or the returned value couldn't be decoded"); }
+		String id = Tools.toString(objectId.getFirstValue());
+		return new ExportTarget(type, id, id);
 	}
 
 	@Override
@@ -84,7 +112,10 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 			final int itemsPerPage = Math.max(10, cfg.getInteger(CmisSetting.EXPORT_QUERY_PAGE_SIZE));
 			final OperationContext ctx = session.createOperationContext();
 			ctx.setMaxItemsPerPage(itemsPerPage);
-			return new CmisPagingTransformerIterator<ExportTarget>(session.query(query, true, ctx), this.transformer);
+			final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
+				.isAllVersionsSearchableSupported();
+			return new CmisPagingTransformerIterator<ExportTarget>(session.query(query, searchAllVersions, ctx),
+				this.transformer);
 		}
 		return null;
 	}
@@ -113,8 +144,12 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 
 	protected StoredObjectType decodeType(ObjectType type) throws ExportException {
 		if (!type.isBaseType()) { return decodeType(type.getParentType()); }
-		if (Tools.equals("cmis:folder", type.getId())) { return StoredObjectType.FOLDER; }
-		if (Tools.equals("cmis:document", type.getId())) { return StoredObjectType.DOCUMENT; }
+		return decodeType(type.getId());
+	}
+
+	protected StoredObjectType decodeType(String type) throws ExportException {
+		if (Tools.equals("cmis:folder", type)) { return StoredObjectType.FOLDER; }
+		if (Tools.equals("cmis:document", type)) { return StoredObjectType.DOCUMENT; }
 		return null;
 	}
 

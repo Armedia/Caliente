@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.cmis.CmisSessionSetting;
+import com.armedia.cmf.engine.cmis.CmisSetting;
 import com.armedia.cmf.engine.cmis.exporter.CmisExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.storage.ContentStore;
@@ -27,7 +28,8 @@ public class BaseTest {
 		settings.put(CmisSessionSetting.USER.getLabel(), "admin");
 		settings.put(CmisSessionSetting.PASSWORD.getLabel(), "123");
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), "-default-");
-
+		settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
+		settings.put(CmisSetting.EXPORT_QUERY_PAGE_SIZE.getLabel(), "5");
 		engine.runExport(output, objectStore, contentStore, settings);
 	}
 }
