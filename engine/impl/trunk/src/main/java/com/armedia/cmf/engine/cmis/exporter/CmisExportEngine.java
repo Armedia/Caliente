@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -13,16 +14,22 @@ import java.util.Set;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
+import org.apache.chemistry.opencmis.client.api.OperationContext;
 import org.apache.chemistry.opencmis.client.api.Property;
+import org.apache.chemistry.opencmis.client.api.QueryResult;
 import org.apache.chemistry.opencmis.client.api.Rendition;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
+import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.cmis.CmisCommon;
+import com.armedia.cmf.engine.cmis.CmisPagingTransformerIterator;
+import com.armedia.cmf.engine.cmis.CmisResultTransformer;
 import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
+import com.armedia.cmf.engine.cmis.CmisSetting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -38,6 +45,13 @@ import com.armedia.commons.utilities.Tools;
 public class CmisExportEngine extends
 ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
 
+	private final CmisResultTransformer<ExportTarget> transformer = new CmisResultTransformer<ExportTarget>() {
+		@Override
+		public ExportTarget transform(QueryResult result) throws Exception {
+			return newExportTarget(result);
+		}
+	};
+
 	@Override
 	protected String getObjectId(CmisObject sourceObject) {
 		return sourceObject.getId();
@@ -48,8 +62,30 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 		return null;
 	}
 
+	protected ExportTarget newExportTarget(QueryResult r) {
+		return null;
+	}
+
 	@Override
-	protected Iterator<ExportTarget> findExportResults(Session session, Map<String, ?> settings) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(final Session session, Map<String, ?> settings) throws Exception {
+		CfgTools cfg = new CfgTools(settings);
+		String path = cfg.getString(CmisSetting.EXPORT_PATH);
+		if (path != null) {
+			CmisObject obj = session.getObjectByPath(path);
+			try {
+				return Collections.singleton(new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId()))
+					.iterator();
+			} catch (CmisObjectNotFoundException e) {
+				return null;
+			}
+		}
+		final String query = cfg.getString(CmisSetting.EXPORT_QUERY);
+		if (query != null) {
+			final int itemsPerPage = Math.max(10, cfg.getInteger(CmisSetting.EXPORT_QUERY_PAGE_SIZE));
+			final OperationContext ctx = session.createOperationContext();
+			ctx.setMaxItemsPerPage(itemsPerPage);
+			return new CmisPagingTransformerIterator<ExportTarget>(session.query(query, true, ctx), this.transformer);
+		}
 		return null;
 	}
 
