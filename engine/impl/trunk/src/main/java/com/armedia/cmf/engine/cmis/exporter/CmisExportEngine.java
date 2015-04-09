@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
+import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.OperationContext;
@@ -62,8 +63,14 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 	}
 
 	@Override
-	protected String calculateLabel(CmisObject sourceObject) throws Exception {
-		return null;
+	protected String calculateLabel(CmisObject obj) throws Exception {
+		if (obj instanceof FileableCmisObject) {
+			FileableCmisObject f = FileableCmisObject.class.cast(obj);
+			List<String> paths = f.getPaths();
+			if (!paths.isEmpty()) { return paths.get(0); }
+			return String.format("${unfiled}:%s", obj.getName());
+		}
+		return String.format("[%s|%s]", obj.getType().getId(), obj.getName());
 	}
 
 	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
@@ -144,6 +151,7 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 				}
 			}
 		}
+
 		final String query = cfg.getString(CmisSetting.EXPORT_QUERY);
 		if (query != null) {
 			final int itemsPerPage = Math.max(10, cfg.getInteger(CmisSetting.EXPORT_QUERY_PAGE_SIZE));
