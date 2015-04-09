@@ -61,18 +61,26 @@ public class CmisRecursiveIterator implements Iterator<CmisObject> {
 					continue;
 				}
 
-				String fullPath = String.format("${unfiled}:%s", f.getName());
+				final String fullPath;
 				if (f instanceof FileableCmisObject) {
 					FileableCmisObject F = FileableCmisObject.class.cast(f);
 					List<String> paths = F.getPaths();
 					if (!paths.isEmpty()) {
 						fullPath = paths.get(0);
+					} else {
+						fullPath = String.format("${unfiled}:%s", f.getName());
 					}
+				} else {
+					fullPath = String.format("${unfiled}:%s", f.getName());
 				}
-				this.log.info(String.format("Found %s [%s]", f.getType().getId(), fullPath));
+				if (this.log.isTraceEnabled()) {
+					this.log.trace(String.format("Found %s [%s]", f.getType().getId(), fullPath));
+				}
 
 				if (f instanceof Folder) {
-					this.log.info(String.format("Recursing into %s [%s]", f.getType().getId(), fullPath));
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(String.format("Recursing into %s [%s]", f.getType().getId(), fullPath));
+					}
 					state.folderCount++;
 					this.stateStack.push(new RecursiveState(Folder.class.cast(f)));
 					continue recursion;
@@ -95,7 +103,7 @@ public class CmisRecursiveIterator implements Iterator<CmisObject> {
 			}
 			this.stateStack.pop();
 		}
-	return false;
+		return false;
 	}
 
 	@Override
