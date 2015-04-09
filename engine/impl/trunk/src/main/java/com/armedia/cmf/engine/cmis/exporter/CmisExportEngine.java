@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-	ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
+ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
 
 	private final CmisResultTransformer<ExportTarget> transformer = new CmisResultTransformer<ExportTarget>() {
 		@Override
@@ -128,13 +128,13 @@ public class CmisExportEngine extends
 	@Override
 	protected Collection<CmisObject> identifyRequirements(Session session, StoredObject<Property<?>> marshalled,
 		CmisObject object, CmisExportContext ctx) throws Exception {
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
 	protected Collection<CmisObject> identifyDependents(Session session, StoredObject<Property<?>> marshalled,
 		CmisObject object, CmisExportContext ctx) throws Exception {
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
