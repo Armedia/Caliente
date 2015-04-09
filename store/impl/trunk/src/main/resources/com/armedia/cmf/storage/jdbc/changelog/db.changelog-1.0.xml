@@ -25,7 +25,7 @@
 
 		<!-- The export plan table -->
 		<createTable tableName="cmf_export_plan">
-			<column name="object_id" type="varchar(96)" remarks="The object which is to be exported">
+			<column name="object_id" type="varchar(32)" remarks="The object which is to be exported">
 				<constraints nullable="false" />
 			</column>
 			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
@@ -45,7 +45,7 @@
 
 		<!-- The main objects table -->
 		<createTable tableName="cmf_object" remarks="The CMS objects">
-			<column name="object_id" type="varchar(96)" remarks="The object's ID">
+			<column name="object_id" type="varchar(32)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
 			<column name="search_key" type="varchar(1024)" remarks="The object's Search Key">
@@ -57,7 +57,7 @@
 			<column name="object_subtype" type="varchar(32)" remarks="The exact type of CMS object">
 				<constraints nullable="false" />
 			</column>
-			<column name="batch_id" type="varchar(96)" remarks="The batch identifier that links multiple related objects together to be imported in order">
+			<column name="batch_id" type="varchar(32)" remarks="The batch identifier that links multiple related objects together to be imported in order">
 				<constraints nullable="false" unique="false"/>
 			</column>
 			<column name="object_number" type="long" remarks="The export ordinal number of the object (import will be done in this order as well)">
@@ -93,10 +93,10 @@
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="cmf_attribute">
-			<column name="object_id" type="varchar(96)" remarks="The object the attribute is for">
+			<column name="object_id" type="varchar(32)" remarks="The object the attribute is for">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(64)" remarks="The attribute's name">
+			<column name="name" type="varchar(32)" remarks="The attribute's name">
 				<constraints nullable="false" />
 			</column>
 			<column name="data_type" type="varchar(32)" remarks="The attribute's data type">
@@ -123,10 +123,10 @@
 
 		<!-- The attribute values table -->
 		<createTable tableName="cmf_attribute_value">
-			<column name="object_id" type="varchar(96)" remarks="The object the attribute is for">
+			<column name="object_id" type="varchar(32)" remarks="The object the attribute is for">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(64)" remarks="The attribute's name">
+			<column name="name" type="varchar(32)" remarks="The attribute's name">
 				<constraints nullable="false" />
 			</column>
 			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
@@ -146,10 +146,10 @@
 
 		<!-- The property descriptor table -->
 		<createTable tableName="cmf_property">
-			<column name="object_id" type="varchar(96)" remarks="The object the property is for">
+			<column name="object_id" type="varchar(32)" remarks="The object the property is for">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(64)" remarks="The property's name">
+			<column name="name" type="varchar(32)" remarks="The property's name">
 				<constraints nullable="false" />
 			</column>
 			<column name="data_type" type="varchar(32)" remarks="The property's data type">
@@ -167,10 +167,10 @@
 
 		<!-- The property values table -->
 		<createTable tableName="cmf_property_value">
-			<column name="object_id" type="varchar(96)" remarks="The object the property is for">
+			<column name="object_id" type="varchar(32)" remarks="The object the property is for">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(64)" remarks="The property's name">
+			<column name="name" type="varchar(32)" remarks="The property's name">
 				<constraints nullable="false" />
 			</column>
 			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
@@ -193,7 +193,7 @@
 			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
 				<constraints nullable="false" />
 			</column>
-			<column name="name" type="varchar(64)" remarks="The name of the attribute to map">
+			<column name="name" type="varchar(32)" remarks="The name of the attribute to map">
 				<constraints nullable="false" />
 			</column>
 			<column name="source_value" type="varchar(32)" remarks="The value on the source CMS">
@@ -279,31 +279,75 @@
 	    </preConditions>
 	</changeSet>
 
-	<!-- make sure one of the above was executed (they're negated, so either-or) -->
 	<changeSet author="cmf" id="1004">
     	<preConditions>
-    		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
+    		<or>
+	    		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
+	    		<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
+    		</or>
 	    </preConditions>
+		<sql dbms="mysql, oracle, h2"><![CDATA[
+			alter table cmf_export_plan modify column object_id varchar(96);
+			alter table cmf_object modify column object_id varchar(96);
+			alter table cmf_object modify column batch_id varchar(96);
+			alter table cmf_object modify column object_subtype varchar(64);
+			alter table cmf_attribute modify column object_id varchar(96);
+			alter table cmf_attribute modify column name varchar(64);
+			alter table cmf_attribute modify column id varchar(96);
+			alter table cmf_attribute_value modify column object_id varchar(96);
+			alter table cmf_attribute_value modify column name varchar(64);
+			alter table cmf_property modify column object_id varchar(96);
+			alter table cmf_property modify column name varchar(64);
+			alter table cmf_property_value modify column object_id varchar(96);
+			alter table cmf_property_value modify column name varchar(64);
+		]]></sql>
+		<sql dbms="postgresql"><![CDATA[
+			alter table cmf_export_plan alter column object_id type varchar(96);
+			alter table cmf_object alter column object_id type varchar(96);
+			alter table cmf_object alter column batch_id type varchar(96);
+			alter table cmf_object alter column object_subtype type varchar(64);
+			alter table cmf_attribute alter column object_id type varchar(96);
+			alter table cmf_attribute alter column name type varchar(64);
+			alter table cmf_attribute alter column id type varchar(96);
+			alter table cmf_attribute_value alter column object_id type varchar(96);
+			alter table cmf_attribute_value alter column name type varchar(64);
+			alter table cmf_property alter column object_id type varchar(96);
+			alter table cmf_property alter column name type varchar(64);
+			alter table cmf_property_value alter column object_id type varchar(96);
+			alter table cmf_property_value alter column name type varchar(64);
+		]]></sql>
 
 		<rollback>
-			<sql><![CDATA[
-				delete from cmf_info where name = 'strategy'
+			<sql dbms="mysql, oracle, h2"><![CDATA[
+				alter table cmf_export_plan modify column object_id varchar(32);
+				alter table cmf_object modify column object_id varchar(32);
+				alter table cmf_object modify column batch_id varchar(32);
+				alter table cmf_object modify column object_subtype varchar(32);
+				alter table cmf_attribute modify column object_id varchar(32);
+				alter table cmf_attribute modify column name varchar(32);
+				alter table cmf_attribute modify column id varchar(32);
+				alter table cmf_attribute_value modify column object_id varchar(32);
+				alter table cmf_attribute_value modify column name varchar(32);
+				alter table cmf_property modify column object_id varchar(32);
+				alter table cmf_property modify column name varchar(32);
+				alter table cmf_property_value modify column object_id varchar(32);
+				alter table cmf_property_value modify column name varchar(32);
 			]]></sql>
-			<sql><![CDATA[
-				delete from cmf_property_value where name = '${CONTENT_QUALIFIER}$'
+			<sql dbms="postgresql"><![CDATA[
+				alter table cmf_export_plan alter column object_id type varchar(32);
+				alter table cmf_object alter column object_id type varchar(32);
+				alter table cmf_object alter column batch_id type varchar(32);
+				alter table cmf_object alter column object_subtype type varchar(32);
+				alter table cmf_attribute alter column object_id type varchar(32);
+				alter table cmf_attribute alter column name type varchar(32);
+				alter table cmf_attribute alter column id type varchar(32);
+				alter table cmf_attribute_value alter column object_id type varchar(32);
+				alter table cmf_attribute_value alter column name type varchar(32);
+				alter table cmf_property alter column object_id type varchar(32);
+				alter table cmf_property alter column name type varchar(32);
+				alter table cmf_property_value alter column object_id type varchar(32);
+				alter table cmf_property_value alter column name type varchar(32);
 			]]></sql>
-			<sql><![CDATA[
-				delete from cmf_property where name = '${CONTENT_QUALIFIER}$'
-			]]></sql>
-
-		    <renameTable oldTableName="cmf_mapper" newTableName="dctm_mapper"/>
-		    <renameTable oldTableName="cmf_property_value" newTableName="dctm_property_value"/>
-		    <renameTable oldTableName="cmf_property" newTableName="dctm_property"/>
-		    <renameTable oldTableName="cmf_attribute_value" newTableName="dctm_attribute_value"/>
-		    <renameTable oldTableName="cmf_attribute" newTableName="dctm_attribute"/>
-		    <renameTable oldTableName="cmf_object" newTableName="dctm_object"/>
-		    <renameTable oldTableName="cmf_export_plan" newTableName="dctm_export_plan"/>
-		    <renameTable oldTableName="cmf_info" newTableName="cmsmf_info"/>
 		</rollback>
 	</changeSet>
 </databaseChangeLog>
