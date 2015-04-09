@@ -3,17 +3,16 @@ package com.armedia.cmf.engine.cmis;
 import java.util.Iterator;
 
 import org.apache.chemistry.opencmis.client.api.ItemIterable;
-import org.apache.chemistry.opencmis.client.api.QueryResult;
 
-public final class CmisPagingTransformerIterator<E> implements Iterator<E> {
+public final class CmisPagingTransformerIterator<S, T> implements Iterator<T> {
 
-	private final CmisPagingIterator it;
-	private final CmisResultTransformer<E> transformer;
+	private final CmisPagingIterator<S> it;
+	private final CmisResultTransformer<S, T> transformer;
 
-	public CmisPagingTransformerIterator(ItemIterable<QueryResult> results, CmisResultTransformer<E> transformer) {
+	public CmisPagingTransformerIterator(ItemIterable<S> results, CmisResultTransformer<S, T> transformer) {
 		if (transformer == null) { throw new IllegalArgumentException("Must provide a transformer"); }
 		this.transformer = transformer;
-		this.it = new CmisPagingIterator(results);
+		this.it = new CmisPagingIterator<S>(results);
 	}
 
 	@Override
@@ -22,7 +21,7 @@ public final class CmisPagingTransformerIterator<E> implements Iterator<E> {
 	}
 
 	@Override
-	public E next() {
+	public T next() {
 		try {
 			return this.transformer.transform(this.it.next());
 		} catch (Exception e) {

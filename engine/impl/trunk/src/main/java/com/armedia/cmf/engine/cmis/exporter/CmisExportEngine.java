@@ -13,12 +13,14 @@ import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
+import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.OperationContext;
 import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.QueryResult;
 import org.apache.chemistry.opencmis.client.api.Rendition;
 import org.apache.chemistry.opencmis.client.api.Session;
+import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
@@ -27,6 +29,7 @@ import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.cmis.CmisCommon;
 import com.armedia.cmf.engine.cmis.CmisPagingTransformerIterator;
+import com.armedia.cmf.engine.cmis.CmisRecursiveIterator;
 import com.armedia.cmf.engine.cmis.CmisResultTransformer;
 import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
@@ -46,7 +49,7 @@ import com.armedia.commons.utilities.Tools;
 public class CmisExportEngine extends
 ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
 
-	private final CmisResultTransformer<ExportTarget> transformer = new CmisResultTransformer<ExportTarget>() {
+	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
 		public ExportTarget transform(QueryResult result) throws Exception {
 			return newExportTarget(result);
@@ -64,13 +67,13 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 	}
 
 	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
-		PropertyData<?> objectId = r.getPropertyById("cmis:objectId");
+		PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
 		if (objectId == null) { throw new ExportException(
 			"Failed to find the cmis:objectId property as part of the query result"); }
 
 		StoredObjectType type = null;
 		PropertyData<?>[] objectTypes = {
-			r.getPropertyById("cmis:objectTypeId"), r.getPropertyById("cmis:baseTypeId")
+			r.getPropertyById(PropertyIds.OBJECT_TYPE_ID), r.getPropertyById(PropertyIds.BASE_TYPE_ID)
 		};
 
 		for (PropertyData<?> t : objectTypes) {
@@ -99,12 +102,46 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 		CfgTools cfg = new CfgTools(settings);
 		String path = cfg.getString(CmisSetting.EXPORT_PATH);
 		if (path != null) {
-			CmisObject obj = session.getObjectByPath(path);
+			final CmisObject obj;
 			try {
-				return Collections.singleton(new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId()))
-					.iterator();
+				obj = session.getObjectByPath(path);
 			} catch (CmisObjectNotFoundException e) {
 				return null;
+			}
+			if (obj instanceof Folder) {
+				return new Iterator<ExportTarget>() {
+					private final Iterator<CmisObject> it = new CmisRecursiveIterator(session, Folder.class.cast(obj),
+						true);
+
+					@Override
+					public boolean hasNext() {
+						return this.it.hasNext();
+					}
+
+					@Override
+					public ExportTarget next() {
+						final CmisObject next = this.it.next();
+						try {
+							return new ExportTarget(decodeType(next.getType()), next.getId(), next.getId());
+						} catch (ExportException e) {
+							throw new RuntimeException(String.format(
+								"Failed to decode the object type [%s] for object [%s]", next.getType().getId(),
+								next.getId()), e);
+						}
+					}
+
+					@Override
+					public void remove() {
+						this.it.remove();
+					}
+				};
+			} else {
+				try {
+					return Collections.singleton(
+						new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId())).iterator();
+				} catch (CmisObjectNotFoundException e) {
+					return null;
+				}
 			}
 		}
 		final String query = cfg.getString(CmisSetting.EXPORT_QUERY);
@@ -114,8 +151,8 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 			ctx.setMaxItemsPerPage(itemsPerPage);
 			final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 				.isAllVersionsSearchableSupported();
-			return new CmisPagingTransformerIterator<ExportTarget>(session.query(query, searchAllVersions, ctx),
-				this.transformer);
+			return new CmisPagingTransformerIterator<QueryResult, ExportTarget>(session.query(query, searchAllVersions,
+				ctx), this.transformer);
 		}
 		return null;
 	}

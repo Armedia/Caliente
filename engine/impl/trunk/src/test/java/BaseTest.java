@@ -28,7 +28,8 @@ public class BaseTest {
 		settings.put(CmisSessionSetting.USER.getLabel(), "admin");
 		settings.put(CmisSessionSetting.PASSWORD.getLabel(), "123");
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), "-default-");
-		settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
+		// settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
+		settings.put(CmisSetting.EXPORT_PATH.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_QUERY_PAGE_SIZE.getLabel(), "5");
 		engine.runExport(output, objectStore, contentStore, settings);
 	}

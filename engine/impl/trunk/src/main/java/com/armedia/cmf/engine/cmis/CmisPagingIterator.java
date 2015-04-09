@@ -4,31 +4,30 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.chemistry.opencmis.client.api.ItemIterable;
-import org.apache.chemistry.opencmis.client.api.QueryResult;
 
-public class CmisPagingIterator implements Iterator<QueryResult> {
+public class CmisPagingIterator<E> implements Iterator<E> {
 
 	/**
 	 * The set of pages to iterate over
 	 */
-	private final ItemIterable<QueryResult> results;
+	private final ItemIterable<E> results;
 
 	/**
 	 * The current page beinge iterated over
 	 */
-	private ItemIterable<QueryResult> currentPage = null;
+	private ItemIterable<E> currentPage = null;
 
 	/**
 	 * The current delegate iterator
 	 */
-	private Iterator<QueryResult> it = null;
+	private Iterator<E> it = null;
 
 	/**
 	 * the number of elements that have been successfully returned by this iterator's next() method
 	 */
 	private int count = 0;
 
-	public CmisPagingIterator(ItemIterable<QueryResult> results) {
+	public CmisPagingIterator(ItemIterable<E> results) {
 		this.results = results;
 		if (results != null) {
 			this.currentPage = this.results.skipTo(0).getPage();
@@ -36,12 +35,16 @@ public class CmisPagingIterator implements Iterator<QueryResult> {
 		}
 	}
 
-	public final ItemIterable<QueryResult> getResults() {
+	public final ItemIterable<E> getResults() {
 		return this.results;
 	}
 
 	public final int getCount() {
 		return this.count;
+	}
+
+	protected boolean accept(E next) {
+		return true;
 	}
 
 	protected boolean terminate() {
@@ -70,9 +73,9 @@ public class CmisPagingIterator implements Iterator<QueryResult> {
 	}
 
 	@Override
-	public QueryResult next() {
+	public E next() {
 		if (!hasNext()) { throw new NoSuchElementException(); }
-		QueryResult ret = this.it.next();
+		E ret = this.it.next();
 		this.count++;
 		return ret;
 	}
