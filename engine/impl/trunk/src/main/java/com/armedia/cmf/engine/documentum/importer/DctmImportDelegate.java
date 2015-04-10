@@ -81,7 +81,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 
 	protected final StoredAttribute<IDfValue> newStoredAttribute(IDfAttr attr, Collection<IDfValue> values) {
 		return new StoredAttribute<IDfValue>(attr.getName(), DctmDataType.fromAttribute(attr).getStoredType(),
-			attr.getId(), attr.getLength(), attr.isRepeating(), attr.isQualifiable(), values);
+			attr.isRepeating(), values);
 	}
 
 	protected boolean isTransitoryObject(T object) throws DfException, ImportException {
@@ -292,11 +292,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
@@ -369,7 +369,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -383,16 +383,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 

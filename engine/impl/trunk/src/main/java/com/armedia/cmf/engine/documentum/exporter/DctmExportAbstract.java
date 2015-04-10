@@ -68,8 +68,7 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 			// Get the attribute handler
 			if (handler.includeInExport(object, attr)) {
 				StoredAttribute<IDfValue> attribute = new StoredAttribute<IDfValue>(attr.getName(), DctmDataType
-					.fromAttribute(attr).getStoredType(), attr.getId(), attr.getLength(), attr.isRepeating(),
-					attr.isQualifiable(), handler.getExportableValues(object, attr));
+					.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(object, attr));
 				storedObject.setAttribute(attribute);
 			}
 		}
