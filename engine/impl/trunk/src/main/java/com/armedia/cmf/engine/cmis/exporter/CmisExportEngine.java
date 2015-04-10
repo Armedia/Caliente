@@ -3,6 +3,7 @@ package com.armedia.cmf.engine.cmis.exporter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,7 +18,6 @@ import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.OperationContext;
-import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.QueryResult;
 import org.apache.chemistry.opencmis.client.api.Rendition;
 import org.apache.chemistry.opencmis.client.api.Session;
@@ -44,11 +44,12 @@ import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportContext> {
+ExportEngine<Session, CmisSessionWrapper, CmisObject, StoredValue, CmisExportContext> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -171,13 +172,13 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 	}
 
 	@Override
-	protected Collection<CmisObject> identifyRequirements(Session session, StoredObject<Property<?>> marshalled,
+	protected Collection<CmisObject> identifyRequirements(Session session, StoredObject<StoredValue> marshalled,
 		CmisObject object, CmisExportContext ctx) throws Exception {
 		return Collections.emptyList();
 	}
 
 	@Override
-	protected Collection<CmisObject> identifyDependents(Session session, StoredObject<Property<?>> marshalled,
+	protected Collection<CmisObject> identifyDependents(Session session, StoredObject<StoredValue> marshalled,
 		CmisObject object, CmisExportContext ctx) throws Exception {
 		return Collections.emptyList();
 	}
@@ -199,13 +200,13 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 	}
 
 	@Override
-	protected StoredObject<Property<?>> marshal(CmisExportContext ctx, Session session, CmisObject object)
+	protected StoredObject<StoredValue> marshal(CmisExportContext ctx, Session session, CmisObject object)
 		throws ExportException {
 		return null;
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(Session session, StoredObject<Property<?>> marshaled,
+	protected List<ContentInfo> storeContent(Session session, StoredObject<StoredValue> marshaled,
 		ExportTarget referrent, CmisObject object, ContentStore streamStore) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to store the contents"); }
@@ -236,12 +237,16 @@ ExportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisExportCon
 	}
 
 	@Override
-	protected Property<?> getValue(StoredDataType type, Object value) {
-		return null;
+	protected StoredValue getValue(StoredDataType type, Object value) {
+		try {
+			return new StoredValue(type, value);
+		} catch (ParseException e) {
+			throw new RuntimeException(String.format("Can't convert [%s] as a %s", value, type), e);
+		}
 	}
 
 	@Override
-	protected ObjectStorageTranslator<CmisObject, Property<?>> getTranslator() {
+	protected ObjectStorageTranslator<CmisObject, StoredValue> getTranslator() {
 		return null;
 	}
 
