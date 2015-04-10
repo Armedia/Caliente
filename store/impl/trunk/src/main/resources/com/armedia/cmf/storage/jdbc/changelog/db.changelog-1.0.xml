@@ -102,15 +102,6 @@
 			<column name="data_type" type="varchar(32)" remarks="The attribute's data type">
 				<constraints nullable="false" />
 			</column>
-			<column name="id" type="varchar(32)" remarks="The attribute's id">
-				<constraints nullable="false" />
-			</column>
-			<column name="length" type="integer" remarks="The maximum length of stored values">
-				<constraints nullable="false" />
-			</column>
-			<column name="qualifiable" type="boolean" remarks="The flag indicating whether the attriute is qualifiable">
-				<constraints nullable="false" />
-			</column>
 			<column name="repeating" type="boolean" remarks="The flag indicating whether this is a single or repeating value attribute">
 				<constraints nullable="false" />
 			</column>
