@@ -13,7 +13,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisExportContextFactory extends
-ExportContextFactory<Session, CmisSessionWrapper, CmisObject, StoredValue, CmisExportContext, CmisExportEngine> {
+	ExportContextFactory<Session, CmisSessionWrapper, CmisObject, StoredValue, CmisExportContext, CmisExportEngine> {
 
 	CmisExportContextFactory(CmisExportEngine engine, CfgTools settings) {
 		super(engine, settings);

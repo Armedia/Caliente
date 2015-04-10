@@ -49,7 +49,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-ExportEngine<Session, CmisSessionWrapper, CmisObject, StoredValue, CmisExportContext> {
+	ExportEngine<Session, CmisSessionWrapper, CmisObject, StoredValue, CmisExportContext> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
