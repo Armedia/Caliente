@@ -60,6 +60,12 @@
 			<column name="batch_id" type="varchar(32)" remarks="The batch identifier that links multiple related objects together to be imported in order">
 				<constraints nullable="false" unique="false"/>
 			</column>
+			<column name="acl_domain" type="varchar(96)" remarks="The ACL's domain">
+				<constraints nullable="true" />
+			</column>
+			<column name="acl_name" type="varchar(96)" remarks="The ACL's name">
+				<constraints nullable="true" />
+			</column>
 			<column name="object_number" type="long" remarks="The export ordinal number of the object (import will be done in this order as well)">
 				<constraints nullable="false" unique="true"/>
 			</column>
@@ -90,6 +96,31 @@
 			<column name="search_key" />
 		</createIndex>
 		<addAutoIncrement tableName="cmf_object" columnName="object_number" columnDataType="long" startWith="1" incrementBy="1"/>
+
+		<!-- The ACL  table -->
+		<createTable tableName="cmf_acl">
+			<column name="object_id" type="varchar(32)" remarks="The object the ACL is for">
+				<constraints nullable="false" />
+			</column>
+			<column name="principal" type="varchar(96)" remarks="The principal this entry is for">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar(96)" remarks="The permission's name">
+				<constraints nullable="false" />
+			</column>
+			<column name="type" type="varchar(32)" remarks="The permission's type">
+				<constraints nullable="false" />
+			</column>
+			<column name="grant" type="boolean" remarks="Whether this is a permission grant (true) or a denial (false)">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_acl" columnNames="object_id, principal, name, type" />
+		<addForeignKeyConstraint constraintName="fk_cmf_acl_object"
+			baseTableName="cmf_acl" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="cmf_attribute">
