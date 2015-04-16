@@ -268,7 +268,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		return this.operationClass.cast(operation);
 	}
 
-	public final <T, V> Long storeObject(StoredObject<V> object, ObjectStorageTranslator<T, V> translator)
+	public final <V> Long storeObject(StoredObject<V> object, ObjectStorageTranslator<V> translator)
 		throws StorageException, StoredValueEncoderException {
 		O operation = newOperation();
 		boolean ok = false;
@@ -281,8 +281,8 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	public final <T, V> Long storeObject(ObjectStoreOperation<?> operation, StoredObject<V> object,
-		ObjectStorageTranslator<T, V> translator) throws StorageException, StoredValueEncoderException {
+	public final <V> Long storeObject(ObjectStoreOperation<?> operation, StoredObject<V> object,
+		ObjectStorageTranslator<V> translator) throws StorageException, StoredValueEncoderException {
 		O o = castOperation(operation);
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		if (translator == null) { throw new IllegalArgumentException(
@@ -296,8 +296,8 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <T, V> Long doStoreObject(O operation, StoredObject<V> object,
-		ObjectStorageTranslator<T, V> translator) throws StorageException, StoredValueEncoderException;
+	protected abstract <V> Long doStoreObject(O operation, StoredObject<V> object, ObjectStorageTranslator<V> translator)
+		throws StorageException, StoredValueEncoderException;
 
 	public final boolean isStored(StoredObjectType type, String objectId) throws StorageException {
 		assertOpen();
@@ -355,7 +355,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 	protected abstract boolean doLockForStorage(O operation, StoredObjectType type, String objectId)
 		throws StorageException;
 
-	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStorageTranslator<T, V> translator,
+	public final <V> Collection<StoredObject<V>> loadObjects(ObjectStorageTranslator<V> translator,
 		final StoredObjectType type, String... ids) throws StorageException, StoredValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
@@ -369,8 +369,8 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
-		ObjectStorageTranslator<T, V> translator, final StoredObjectType type, String... ids) throws StorageException,
+	public final <V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
+		ObjectStorageTranslator<V> translator, final StoredObjectType type, String... ids) throws StorageException,
 		StoredValueDecoderException {
 		getReadLock().lock();
 		try {
@@ -381,7 +381,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStorageTranslator<T, V> translator,
+	public final <V> Collection<StoredObject<V>> loadObjects(ObjectStorageTranslator<V> translator,
 		final StoredObjectType type, Collection<String> ids) throws StorageException, StoredValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
@@ -395,9 +395,9 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	public final <T, V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
-		final ObjectStorageTranslator<T, V> translator, final StoredObjectType type, Collection<String> ids)
-			throws StorageException, StoredValueDecoderException {
+	public final <V> Collection<StoredObject<V>> loadObjects(ObjectStoreOperation<?> operation,
+		final ObjectStorageTranslator<V> translator, final StoredObjectType type, Collection<String> ids)
+		throws StorageException, StoredValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must proved an operation to work under"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		if (translator == null) { throw new IllegalArgumentException(
@@ -446,7 +446,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	public final <T, V> int loadObjects(ObjectStorageTranslator<T, V> translator, final StoredObjectType type,
+	public final <V> int loadObjects(ObjectStorageTranslator<V> translator, final StoredObjectType type,
 		StoredObjectHandler<V> handler) throws StorageException, StoredValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
@@ -460,13 +460,13 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	public final <T, V> int loadObjects(ObjectStoreOperation<?> operation, ObjectStorageTranslator<T, V> translator,
+	public final <V> int loadObjects(ObjectStoreOperation<?> operation, ObjectStorageTranslator<V> translator,
 		final StoredObjectType type, StoredObjectHandler<V> handler) throws StorageException,
 		StoredValueDecoderException {
 		return loadObjects(operation, translator, type, null, handler);
 	}
 
-	public final <T, V> int loadObjects(ObjectStorageTranslator<T, V> translator, final StoredObjectType type,
+	public final <V> int loadObjects(ObjectStorageTranslator<V> translator, final StoredObjectType type,
 		Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException, StoredValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
@@ -480,7 +480,7 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	public final <T, V> int loadObjects(ObjectStoreOperation<?> operation, ObjectStorageTranslator<T, V> translator,
+	public final <V> int loadObjects(ObjectStoreOperation<?> operation, ObjectStorageTranslator<V> translator,
 		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException,
 		StoredValueDecoderException {
 		O o = castOperation(operation);
@@ -496,9 +496,8 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <T, V> int doLoadObjects(O operation, ObjectStorageTranslator<T, V> translator,
-		StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException,
-		StoredValueDecoderException;
+	protected abstract <V> int doLoadObjects(O operation, ObjectStorageTranslator<V> translator, StoredObjectType type,
+		Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException, StoredValueDecoderException;
 
 	private void createMapping(ObjectStoreOperation<?> operation, StoredObjectType type, String name, String source,
 		String target) throws StorageException {

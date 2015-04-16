@@ -48,8 +48,7 @@ public abstract class DependencyManager<T, V> {
 		}
 	}
 
-	public final boolean persistRelatedObject(T object, ObjectStorageTranslator<T, V> translator)
-		throws StorageException {
+	public final boolean persistRelatedObject(T object, ObjectStorageTranslator<V> translator) throws StorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an T object"); }
 		Boolean ret = persistObject(object, translator);
 		if (ret == null) {
@@ -100,7 +99,7 @@ public abstract class DependencyManager<T, V> {
 	 *         {@code null} to indicate that the method did nothing.
 	 * @throws StorageException
 	 */
-	protected Boolean persistObject(T object, ObjectStorageTranslator<T, V> translator) throws StorageException {
+	protected Boolean persistObject(T object, ObjectStorageTranslator<V> translator) throws StorageException {
 		return null;
 	}
 
