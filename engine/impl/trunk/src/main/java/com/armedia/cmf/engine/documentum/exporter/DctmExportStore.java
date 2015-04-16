@@ -4,10 +4,8 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
-import com.armedia.cmf.engine.documentum.DctmObjectType;
-import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.content.IDfStore;
-import com.documentum.fc.common.DfException;
 
 /**
  * @author diego
@@ -15,12 +13,16 @@ import com.documentum.fc.common.DfException;
  */
 public class DctmExportStore extends DctmExportAbstract<IDfStore> {
 
-	protected DctmExportStore(DctmExportEngine engine) {
-		super(engine, DctmObjectType.STORE);
+	protected DctmExportStore(DctmExportEngine engine, IDfStore store) throws Exception {
+		super(engine, IDfStore.class, store);
+	}
+
+	DctmExportStore(DctmExportEngine engine, IDfPersistentObject store) throws Exception {
+		this(engine, staticCast(IDfStore.class, store));
 	}
 
 	@Override
-	protected String calculateLabel(IDfSession session, IDfStore store) throws DfException {
+	protected String calculateLabel(IDfStore store) throws Exception {
 		return store.getName();
 	}
 }

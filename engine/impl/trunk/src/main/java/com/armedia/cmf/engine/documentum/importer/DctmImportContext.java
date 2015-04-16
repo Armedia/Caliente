@@ -14,7 +14,6 @@ import com.armedia.cmf.engine.importer.ImportContext;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
@@ -23,7 +22,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmImportContext extends ImportContext<IDfSession, IDfPersistentObject, IDfValue> {
+public class DctmImportContext extends ImportContext<IDfSession, IDfValue> {
 
 	private final DctmSpecialValues specialValues;
 
@@ -53,9 +52,9 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfPersistentOb
 
 	@Override
 	protected boolean isSurrogateType(StoredObjectType rootType, StoredObjectType target) {
-		DctmObjectType dctmRootType = DctmTranslator.translateType(rootType);
+		DctmObjectType dctmRootType = DctmObjectType.decodeType(rootType);
 		if (dctmRootType == null) { return false; }
-		DctmObjectType dctmTarget = DctmTranslator.translateType(target);
+		DctmObjectType dctmTarget = DctmObjectType.decodeType(target);
 		if (dctmTarget == null) { return false; }
 		return dctmTarget.getSurrogateOf().contains(dctmRootType) || super.isSurrogateType(rootType, target);
 	}

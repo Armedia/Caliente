@@ -13,7 +13,6 @@ import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
@@ -21,9 +20,8 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportContextFactory
-	extends
-ExportContextFactory<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmExportContext, DctmExportEngine> {
+public class DctmExportContextFactory extends
+	ExportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
 
 	private final DctmSpecialValues specialValues;
 

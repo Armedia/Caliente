@@ -13,7 +13,6 @@ import com.armedia.cmf.engine.documentum.DctmSessionFactory;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
-import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.documentum.common.DctmCommon;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
@@ -25,19 +24,15 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
-import com.armedia.cmf.storage.UnsupportedObjectTypeException;
 import com.armedia.commons.utilities.CfgTools;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
  * @author diego
  *
  */
-public class DctmImportEngine extends
-ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext> {
+public class DctmImportEngine extends ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -71,33 +66,25 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	public DctmImportEngine() {
 	}
 
-	private DctmImportDelegate<?> getImportDelegate(StoredObject<IDfValue> marshaled)
-		throws UnsupportedDctmObjectTypeException, UnsupportedObjectTypeException {
+	private DctmImportDelegate<?> getImportDelegate(StoredObject<IDfValue> marshaled) throws Exception {
 		return DctmImportDelegateFactory.newDelegate(this, marshaled);
 	}
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {
-		DctmObjectType dctmType = DctmTranslator.translateType(type);
+		DctmObjectType dctmType = DctmObjectType.decodeType(type);
 		if (dctmType == null) { return DctmImportEngine.NOT_SUPPORTED; }
 		return dctmType.importStrategy;
 	}
 
 	@Override
-	protected ImportOutcome importObject(StoredObject<?> marshaled,
-		ObjectStorageTranslator<IDfPersistentObject, IDfValue> translator, DctmImportContext ctx)
-		throws ImportException, StorageException, StoredValueDecoderException {
+	protected ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<IDfValue> translator,
+		DctmImportContext ctx) throws ImportException, StorageException, StoredValueDecoderException {
 		@SuppressWarnings("unchecked")
 		StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		try {
 			return getImportDelegate(castedMarshaled).importObject(ctx);
-		} catch (DfException e) {
-			throw new ImportException(String.format("Exception raised while importing %s [%s](%s)",
-				marshaled.getType(), marshaled.getLabel(), marshaled.getId()), e);
-		} catch (UnsupportedDctmObjectTypeException e) {
-			throw new ImportException(String.format("Exception raised while importing %s [%s](%s)",
-				marshaled.getType(), marshaled.getLabel(), marshaled.getId()), e);
-		} catch (UnsupportedObjectTypeException e) {
+		} catch (Exception e) {
 			throw new ImportException(String.format("Exception raised while importing %s [%s](%s)",
 				marshaled.getType(), marshaled.getLabel(), marshaled.getId()), e);
 		}
@@ -114,7 +101,7 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 	}
 
 	@Override
-	protected ObjectStorageTranslator<IDfPersistentObject, IDfValue> getTranslator() {
+	protected ObjectStorageTranslator<IDfValue> getTranslator() {
 		return DctmTranslator.INSTANCE;
 	}
 
@@ -137,7 +124,7 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, Dctm
 		return super.abortImport(type, errors);
 	}
 
-	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine() {
+	public static ImportEngine<?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(DctmCommon.TARGET_NAME);
 	}
 

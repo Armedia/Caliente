@@ -9,7 +9,6 @@ import java.util.Collection;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmGroup;
@@ -38,12 +37,16 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_GROUP = "SELECT u.user_name FROM dm_user u, dm_group g WHERE u.user_group_name = g.group_name AND g.r_object_id = '%s'";
 
-	protected DctmExportGroup(DctmExportEngine engine) {
-		super(engine, DctmObjectType.GROUP);
+	protected DctmExportGroup(DctmExportEngine engine, IDfGroup group) throws Exception {
+		super(engine, IDfGroup.class, group);
+	}
+
+	DctmExportGroup(DctmExportEngine engine, IDfPersistentObject group) throws Exception {
+		this(engine, DctmExportAbstract.staticCast(IDfGroup.class, group));
 	}
 
 	@Override
-	protected String calculateLabel(IDfSession session, IDfGroup group) throws DfException {
+	protected String calculateLabel(IDfGroup group) throws Exception {
 		return group.getGroupName();
 	}
 

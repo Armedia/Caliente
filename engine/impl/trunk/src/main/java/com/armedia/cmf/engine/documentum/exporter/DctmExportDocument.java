@@ -20,7 +20,6 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
@@ -55,13 +54,12 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	private static final String QUALIFIER_FMT = "[%08x]%s.%s";
 
-	protected DctmExportDocument(DctmExportEngine engine) {
-		super(engine, DctmObjectType.DOCUMENT);
+	protected DctmExportDocument(DctmExportEngine engine, IDfDocument document) throws Exception {
+		super(engine, IDfDocument.class, document);
 	}
 
-	@Override
-	protected String calculateBatchId(IDfSession session, IDfDocument document) throws DfException {
-		return document.getChronicleId().getId();
+	DctmExportDocument(DctmExportEngine engine, IDfPersistentObject document) throws Exception {
+		this(engine, DctmExportAbstract.staticCast(IDfDocument.class, document));
 	}
 
 	@Override

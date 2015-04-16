@@ -4,10 +4,8 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.documentum.fc.client.IDfFormat;
-import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.common.DfException;
+import com.documentum.fc.client.IDfPersistentObject;
 
 /**
  * @author diego
@@ -15,12 +13,16 @@ import com.documentum.fc.common.DfException;
  */
 public class DctmExportFormat extends DctmExportAbstract<IDfFormat> {
 
-	protected DctmExportFormat(DctmExportEngine engine) {
-		super(engine, DctmObjectType.FORMAT);
+	protected DctmExportFormat(DctmExportEngine engine, IDfFormat format) throws Exception {
+		super(engine, IDfFormat.class, format);
+	}
+
+	DctmExportFormat(DctmExportEngine engine, IDfPersistentObject format) throws Exception {
+		this(engine, DctmExportAbstract.staticCast(IDfFormat.class, format));
 	}
 
 	@Override
-	protected String calculateLabel(IDfSession session, IDfFormat format) throws DfException {
+	protected String calculateLabel(IDfFormat format) throws Exception {
 		return format.getName();
 	}
 }

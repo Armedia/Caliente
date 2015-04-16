@@ -11,7 +11,6 @@ import java.util.Set;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmFolder;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -39,12 +38,16 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = '%s'";
 
-	protected DctmExportFolder(DctmExportEngine engine) {
-		super(engine, DctmObjectType.FOLDER);
+	protected DctmExportFolder(DctmExportEngine engine, IDfFolder folder) throws Exception {
+		super(engine, IDfFolder.class, folder);
+	}
+
+	DctmExportFolder(DctmExportEngine engine, IDfPersistentObject folder) throws Exception {
+		this(engine, DctmExportAbstract.staticCast(IDfFolder.class, folder));
 	}
 
 	@Override
-	protected String calculateLabel(IDfSession session, IDfFolder folder) throws DfException {
+	protected String calculateLabel(IDfFolder folder) throws Exception {
 		return folder.getFolderPath(0);
 	}
 
@@ -77,11 +80,11 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected String calculateBatchId(IDfSession session, IDfFolder folder) throws DfException {
+	protected String calculateBatchId(IDfFolder folder) throws Exception {
 		// Calculate the maximum depth that this folder resides in, from its parents.
 		// Keep track of visited nodes, and explode on a loop.
 		Set<String> visited = new LinkedHashSet<String>();
-		int depth = calculateDepth(session, folder.getObjectId(), visited);
+		int depth = calculateDepth(folder.getSession(), folder.getObjectId(), visited);
 		// We return it in zero-padded hex to allow for large numbers (up to 2^64
 		// depth), and also maintain consistent sorting
 		return String.format("%016x", depth);

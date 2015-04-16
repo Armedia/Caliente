@@ -19,7 +19,7 @@ public class DctmImportEngineTest extends DctmEngineTest {
 
 	@Test
 	public void test() throws Exception {
-		ImportEngine<?, ?, ?, ?, ?> importer = ImportEngine.getImportEngine("dctm");
+		ImportEngine<?, ?, ?, ?> importer = ImportEngine.getImportEngine("dctm");
 
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(DctmSessionFactory.DOCBASE, "dctmvm01");

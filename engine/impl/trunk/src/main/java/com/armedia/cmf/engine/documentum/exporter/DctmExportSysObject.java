@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmException;
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmVersionNumber;
 import com.armedia.cmf.engine.documentum.DctmVersionTree;
 import com.armedia.cmf.engine.documentum.DfUtils;
@@ -45,8 +44,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
 	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
 
-	protected DctmExportSysObject(DctmExportEngine engine, DctmObjectType type) {
-		super(engine, type);
+	protected DctmExportSysObject(DctmExportEngine engine, Class<T> objectClass, T object) throws Exception {
+		super(engine, objectClass, object);
 	}
 
 	@Override
@@ -190,7 +189,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 	}
 
 	@Override
-	protected String calculateLabel(IDfSession session, IDfSysObject sysObject) throws DfException {
+	protected String calculateLabel(T sysObject) throws Exception {
+		final IDfSession session = sysObject.getSession();
 		final int folderCount = sysObject.getFolderIdCount();
 		final String objectName = sysObject.getObjectName();
 		for (int i = 0; i < folderCount; i++) {
@@ -204,6 +204,11 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 		}
 		throw new DfException(String.format("None of the parent paths for object [%s] were found", sysObject
 			.getObjectId().getId()));
+	}
+
+	@Override
+	protected String calculateBatchId(T object) throws Exception {
+		return object.getChronicleId().getId();
 	}
 
 	protected boolean isDfReference(T object) throws DfException {

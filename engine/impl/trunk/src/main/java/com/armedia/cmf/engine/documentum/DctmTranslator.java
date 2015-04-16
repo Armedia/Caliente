@@ -27,7 +27,7 @@ import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
-public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentObject, IDfValue> {
+public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 	private static final Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 	private static final Map<StoredObjectType, BidiMap<String, IntermediateProperty>> PROPERTY_MAPPINGS;
 
@@ -212,16 +212,9 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 			}
 			return type;
 		}
-		DctmObjectType dctmType = DctmTranslator.translateType(object.getType());
+		DctmObjectType dctmType = DctmObjectType.decodeType(object.getType());
 		if (dctmType == null) { return null; }
 		return session.getType(dctmType.getDmType());
-	}
-
-	public static DctmObjectType translateType(StoredObjectType type) {
-		for (DctmObjectType t : DctmObjectType.values()) {
-			if (t.getStoredObjectType() == type) { return t; }
-		}
-		return null;
 	}
 
 	@Override
@@ -229,22 +222,24 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 		return DctmTranslator.translateType(type);
 	}
 
-	public static final ObjectStorageTranslator<IDfPersistentObject, IDfValue> INSTANCE = new DctmTranslator();
+	public static final ObjectStorageTranslator<IDfValue> INSTANCE = new DctmTranslator();
 
 	@Override
-	protected StoredObjectType doDecodeObjectType(IDfPersistentObject object) throws UnsupportedObjectTypeException {
+	protected StoredObjectType doDecodeObjectType(Object object) throws UnsupportedObjectTypeException {
 		return null;
 	}
 
 	@Override
-	protected Class<? extends IDfPersistentObject> doDecodeObjectType(StoredObjectType type)
-		throws UnsupportedObjectTypeException {
+	protected Class<?> doDecodeObjectType(StoredObjectType type) throws UnsupportedObjectTypeException {
 		return null;
 	}
 
 	@Override
-	protected String doGetObjectId(IDfPersistentObject object) throws DfException {
-		return object.getObjectId().getId();
+	protected String doGetObjectId(Object object) throws DfException {
+		if (object instanceof IDfPersistentObject) { return IDfPersistentObject.class.cast(object).getObjectId()
+			.getId(); }
+		throw new DfException(String.format("Object of class [%s] is not an instance of IDfPersistentObject", object
+			.getClass().getCanonicalName()));
 	}
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {
@@ -319,5 +314,10 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfPersistentO
 	public StoredObject<IDfValue> encodeObject(StoredObject<IDfValue> rawObject) {
 		// TODO: Perhaps perform specific attribute and property processing here?
 		return super.encodeObject(rawObject);
+	}
+
+	@Override
+	public IDfValue getValue(StoredDataType type, Object value) {
+		return DfValueFactory.newValue(type, value);
 	}
 }

@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import com.armedia.cmf.engine.documentum.common.DctmSpecialValues;
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
@@ -17,7 +16,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-class DctmExportContext extends ExportContext<IDfSession, IDfPersistentObject, IDfValue> {
+class DctmExportContext extends ExportContext<IDfSession, IDfValue> {
 
 	private final DctmSpecialValues specialValues;
 

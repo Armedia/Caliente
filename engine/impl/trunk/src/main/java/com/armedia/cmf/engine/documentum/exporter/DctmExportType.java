@@ -6,7 +6,6 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collection;
 
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -20,12 +19,16 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportType extends DctmExportAbstract<IDfType> {
 
-	protected DctmExportType(DctmExportEngine engine) {
-		super(engine, DctmObjectType.TYPE);
+	protected DctmExportType(DctmExportEngine engine, IDfType type) throws Exception {
+		super(engine, IDfType.class, type);
+	}
+
+	DctmExportType(DctmExportEngine engine, IDfPersistentObject type) throws Exception {
+		this(engine, DctmExportAbstract.staticCast(IDfType.class, type));
 	}
 
 	@Override
-	protected String calculateLabel(IDfSession session, IDfType type) throws DfException {
+	protected String calculateLabel(IDfType type) throws Exception {
 		String superName = type.getSuperName();
 		if ((superName != null) && (superName.length() > 0)) {
 			superName = String.format(" (extends %s)", superName);
@@ -36,12 +39,12 @@ public class DctmExportType extends DctmExportAbstract<IDfType> {
 	}
 
 	@Override
-	protected String calculateBatchId(IDfSession session, IDfType type) throws DfException {
+	protected String calculateBatchId(IDfType type) throws DfException {
 		// Calculate the maximum depth that this folder resides in, from its parents.
 		// Keep track of visited nodes, and explode on a loop.
 		// We return it in zero-padded hex to allow for large numbers (up to 2^64
 		// depth), and also maintain consistent sorting
-		return String.format("%016x", calculateDepth(session, type));
+		return String.format("%016x", calculateDepth(type.getSession(), type));
 	}
 
 	private int calculateDepth(IDfSession session, IDfType type) throws DfException {

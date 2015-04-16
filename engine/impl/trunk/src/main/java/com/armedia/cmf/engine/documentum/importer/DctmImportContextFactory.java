@@ -15,7 +15,6 @@ import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfFolder;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
@@ -23,9 +22,8 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmImportContextFactory
-	extends
-	ImportContextFactory<IDfSession, DctmSessionWrapper, IDfPersistentObject, IDfValue, DctmImportContext, DctmImportEngine> {
+public class DctmImportContextFactory extends
+	ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine, IDfFolder> {
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg) {
@@ -49,7 +47,7 @@ public class DctmImportContextFactory
 	}
 
 	@Override
-	protected IDfFolder createFolder(IDfSession session, IDfPersistentObject parent, String name) throws Exception {
+	protected IDfFolder createFolder(IDfSession session, IDfFolder parent, String name) throws Exception {
 		final String type = (parent != null ? DctmObjectType.FOLDER.getDmType() : "dm_cabinet");
 		IDfFolder f = IDfFolder.class.cast(session.newObject(type));
 		f.setObjectName(name);

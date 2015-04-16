@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.documentum;
 
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +10,7 @@ import java.util.TreeSet;
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
@@ -152,6 +154,7 @@ public enum DctmObjectType {
 	}
 
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
+	private static Map<StoredObjectType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
 		UnsupportedDctmObjectTypeException {
@@ -191,12 +194,26 @@ public enum DctmObjectType {
 				for (DctmObjectType t : DctmObjectType.values()) {
 					m.put(t.dmType, t);
 				}
-				DctmObjectType.DM_TYPE_DECODER = Collections.unmodifiableMap(m);
+				DctmObjectType.DM_TYPE_DECODER = Tools.freezeMap(m);
 			}
 		}
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
 		DctmObjectType ret = DctmObjectType.DM_TYPE_DECODER.get(type);
 		if (ret == null) { throw new UnsupportedDctmObjectTypeException(type); }
 		return ret;
+	}
+
+	public static DctmObjectType decodeType(StoredObjectType type) {
+		synchronized (DctmObjectType.class) {
+			if (DctmObjectType.OBJECT_TYPE_TRANSLATOR == null) {
+				Map<StoredObjectType, DctmObjectType> m = new EnumMap<StoredObjectType, DctmObjectType>(
+					StoredObjectType.class);
+				for (DctmObjectType t : DctmObjectType.values()) {
+					m.put(t.getStoredObjectType(), t);
+				}
+				DctmObjectType.OBJECT_TYPE_TRANSLATOR = Tools.freezeMap(m);
+			}
+		}
+		return DctmObjectType.OBJECT_TYPE_TRANSLATOR.get(type);
 	}
 }

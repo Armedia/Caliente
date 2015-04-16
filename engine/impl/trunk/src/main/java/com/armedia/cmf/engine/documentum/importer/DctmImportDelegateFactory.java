@@ -1,7 +1,6 @@
 package com.armedia.cmf.engine.documentum.importer;
 
 import com.armedia.cmf.engine.documentum.DctmObjectType;
-import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.UnsupportedObjectTypeException;
@@ -10,8 +9,8 @@ import com.documentum.fc.common.IDfValue;
 public class DctmImportDelegateFactory {
 
 	public static DctmImportDelegate<?> newDelegate(DctmImportEngine engine, StoredObject<IDfValue> marshaled)
-		throws UnsupportedDctmObjectTypeException, UnsupportedObjectTypeException {
-		DctmObjectType type = DctmTranslator.translateType(marshaled.getType());
+		throws UnsupportedObjectTypeException, UnsupportedDctmObjectTypeException {
+		DctmObjectType type = DctmObjectType.decodeType(marshaled.getType());
 		if (type == null) { throw new UnsupportedObjectTypeException(marshaled.getType()); }
 		switch (type) {
 			case ACL:

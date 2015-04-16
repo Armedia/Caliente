@@ -8,8 +8,6 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmDataType;
-import com.armedia.cmf.engine.documentum.DctmDelegateBase;
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -23,10 +21,10 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
-public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDelegateBase<T, DctmExportEngine> {
+public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmExportDelegate<T> {
 
-	protected DctmExportAbstract(DctmExportEngine engine, DctmObjectType type) {
-		super(engine, type);
+	protected DctmExportAbstract(DctmExportEngine engine, Class<T> objectClass, T object) throws Exception {
+		super(engine, objectClass, object);
 	}
 
 	public final Collection<IDfPersistentObject> identifyRequirements(IDfSession session,
@@ -49,26 +47,29 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 		return new ArrayList<IDfPersistentObject>();
 	}
 
-	protected final StoredObject<IDfValue> marshal(DctmExportContext ctx, IDfSession session, IDfPersistentObject object)
-		throws DfException, ExportException, UnsupportedDctmObjectTypeException {
-		final String id = object.getObjectId().getId();
-		final String subtype = object.getType().getName();
-		final T typedObject = castObject(object);
+	@Override
+	protected void marshal(DctmExportContext ctx, StoredObject<IDfValue> object) throws ExportException {
+		// TODO Auto-generated method stub
+		try {
+			doMarshal(ctx, object);
+		} catch (Exception e) {
+			throw new ExportException(String.format("Failed to export %s %s", getType(), getObjectId()), e);
+		}
+	}
 
-		final String batchId = calculateBatchId(session, typedObject);
-		final String label = calculateLabel(session, typedObject);
-		final StoredObject<IDfValue> storedObject = new StoredObject<IDfValue>(getDctmType().getStoredObjectType(), id,
-			batchId, label, subtype);
-
+	protected final void doMarshal(DctmExportContext ctx, StoredObject<IDfValue> storedObject) throws DfException,
+	ExportException, UnsupportedDctmObjectTypeException {
+		final T typedObject = castObject(this.object);
 		// First, the attributes
-		final int attCount = object.getAttrCount();
+		final int attCount = this.object.getAttrCount();
 		for (int i = 0; i < attCount; i++) {
-			final IDfAttr attr = object.getAttr(i);
+			final IDfAttr attr = this.object.getAttr(i);
 			final AttributeHandler handler = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
 			// Get the attribute handler
-			if (handler.includeInExport(object, attr)) {
+			if (handler.includeInExport(this.object, attr)) {
 				StoredAttribute<IDfValue> attribute = new StoredAttribute<IDfValue>(attr.getName(), DctmDataType
-					.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(object, attr));
+					.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(this.object,
+						attr));
 				storedObject.setAttribute(attribute);
 			}
 		}
@@ -83,23 +84,10 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 			// This mechanism overwrites properties, and intentionally so
 			storedObject.setProperty(property);
 		}
-		return storedObject;
 	}
 
 	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
-	}
-
-	protected String calculateBatchId(IDfSession session, T object) throws DfException {
-		return null;
-	}
-
-	protected String calculateLabel(IDfSession session, T object) throws DfException {
-		return String.format("%s[%s]", getDctmType().name(), object.getObjectId().getId());
-	}
-
-	protected final String calculateLabel(IDfPersistentObject object) throws DfException {
-		return calculateLabel(object.getSession(), castObject(object));
 	}
 
 	public final List<ContentInfo> storeContent(IDfSession session, StoredObject<IDfValue> marshaled,
@@ -110,5 +98,14 @@ public class DctmExportAbstract<T extends IDfPersistentObject> extends DctmDeleg
 	protected List<ContentInfo> doStoreContent(IDfSession session, StoredObject<IDfValue> marshaled,
 		ExportTarget referrent, T object, ContentStore streamStore) throws Exception {
 		return null;
+	}
+
+	protected static <T extends IDfPersistentObject> T staticCast(Class<T> klazz, IDfPersistentObject p)
+		throws ClassCastException {
+		if (klazz == null) { throw new IllegalArgumentException("Must provide a class to cast to"); }
+		if (p == null) { return null; }
+		if (!klazz.isInstance(p)) { throw new ClassCastException(String.format("Can't convert a [%s] into a [%s]", p
+			.getClass().getCanonicalName(), klazz.getCanonicalName())); }
+		return klazz.cast(p);
 	}
 }

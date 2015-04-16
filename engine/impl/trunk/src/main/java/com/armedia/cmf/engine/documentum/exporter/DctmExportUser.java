@@ -6,12 +6,10 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collection;
 
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.storage.StoredObject;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
-import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -20,12 +18,16 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 
-	protected DctmExportUser(DctmExportEngine engine) {
-		super(engine, DctmObjectType.USER);
+	protected DctmExportUser(DctmExportEngine engine, IDfUser user) throws Exception {
+		super(engine, IDfUser.class, user);
+	}
+
+	DctmExportUser(DctmExportEngine engine, IDfPersistentObject user) throws Exception {
+		this(engine, DctmExportAbstract.staticCast(IDfUser.class, user));
 	}
 
 	@Override
-	protected String calculateLabel(IDfSession session, IDfUser user) throws DfException {
+	protected String calculateLabel(IDfUser user) throws Exception {
 		return user.getUserName();
 	}
 

@@ -10,7 +10,6 @@ import java.util.Set;
 
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmACL;
@@ -39,12 +38,16 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
-	protected DctmExportACL(DctmExportEngine engine) {
-		super(engine, DctmObjectType.ACL);
+	protected DctmExportACL(DctmExportEngine engine, IDfACL acl) throws Exception {
+		super(engine, IDfACL.class, acl);
+	}
+
+	DctmExportACL(DctmExportEngine engine, IDfPersistentObject acl) throws Exception {
+		this(engine, DctmExportAbstract.staticCast(IDfACL.class, acl));
 	}
 
 	@Override
-	protected String calculateLabel(IDfSession session, IDfACL acl) throws DfException {
+	protected String calculateLabel(IDfACL acl) throws Exception {
 		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
 	}
 
@@ -97,8 +100,8 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 				// Accessor not there, skip it...
 				if (!missingAccessors.contains(accessor)) {
 					this.log.warn(String.format(
-						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)",
-						calculateLabel(session, acl), (group ? "group" : "user"), accessor));
+						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", getLabel(),
+						(group ? "group" : "user"), accessor));
 					missingAccessors.add(accessor);
 				}
 				continue;
