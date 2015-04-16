@@ -1,6 +1,5 @@
 package com.armedia.cmf.storage;
 
-
 public enum StoredObjectType {
 	//
 	DATASTORE,
@@ -11,8 +10,7 @@ public enum StoredObjectType {
 	FORMAT,
 	FOLDER,
 	DOCUMENT,
-	WORKFLOW,
-	CONTENT;
+	WORKFLOW;
 
 	public static StoredObjectType decodeString(String str) {
 		if (str == null) { throw new NullPointerException("Must provide a valid string to decode"); }
