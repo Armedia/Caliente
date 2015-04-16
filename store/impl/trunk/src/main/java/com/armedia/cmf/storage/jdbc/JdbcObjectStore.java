@@ -89,75 +89,75 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from cmf_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-		"   select object_type, count(*) as total " + //
+	"   select object_type, count(*) as total " + //
 		" from cmf_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-		"    select o.* " + //
+	"    select o.* " + //
 		"  from cmf_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-		"    select * " + //
+	"    select * " + //
 		"  from cmf_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String GET_STORE_PROPERTY_SQL = //
-		"    select * from cmf_info where name = ? ";
+	"    select * from cmf_info where name = ? ";
 
 	private static final String UPDATE_STORE_PROPERTY_SQL = //
-		"    update cmf_info set value = ? where name = ? ";
+	"    update cmf_info set value = ? where name = ? ";
 
 	private static final String INSERT_STORE_PROPERTY_SQL = //
-		"    insert into cmf_info (name, data_type, value) values (?, ?, ?) ";
+	"    insert into cmf_info (name, data_type, value) values (?, ?, ?) ";
 
 	private static final String DELETE_STORE_PROPERTY_SQL = //
-		"    delete from cmf_info where name = ? ";
+	"    delete from cmf_info where name = ? ";
 
 	private static final String GET_STORE_PROPERTY_NAMES_SQL = //
-		"    select name from cmf_info order by name ";
+	"    select name from cmf_info order by name ";
 
 	private static final String DELETE_ALL_STORE_PROPERTIES_SQL = //
-		"    truncate table cmf_info ";
+	"    truncate table cmf_info ";
 
 	private static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
 		@Override
@@ -266,8 +266,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <T, V> Long doStoreObject(JdbcOperation operation, StoredObject<V> object,
-		ObjectStorageTranslator<T, V> translator) throws StorageException, StoredValueEncoderException {
+	protected <V> Long doStoreObject(JdbcOperation operation, StoredObject<V> object,
+		ObjectStorageTranslator<V> translator) throws StorageException, StoredValueEncoderException {
 		final Connection c = operation.getConnection();
 		final StoredObjectType objectType = object.getType();
 		final String objectId = composeDatabaseId(object);
@@ -292,10 +292,10 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
 					this.log
-					.warn(String
-						.format(
-							"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-							name, attribute.getName(), duplicate));
+						.warn(String
+							.format(
+								"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+								name, attribute.getName(), duplicate));
 					continue;
 				}
 				final boolean repeating = attribute.isRepeating();
@@ -347,10 +347,10 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				final String duplicate = encodedNames.put(name, property.getName());
 				if (duplicate != null) {
 					this.log
-					.warn(String
-						.format(
-							"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-							name, property.getName(), duplicate));
+						.warn(String
+							.format(
+								"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+								name, property.getName(), duplicate));
 					continue;
 				}
 				final String type = translator.encodeValue(property.getType());
@@ -427,18 +427,16 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <T, V> int doLoadObjects(JdbcOperation operation, ObjectStorageTranslator<T, V> translator,
+	protected <V> int doLoadObjects(JdbcOperation operation, ObjectStorageTranslator<V> translator,
 		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException,
 		StoredValueDecoderException {
-		Connection objectConn = null;
-		Connection attributeConn = null;
+		Connection connection = null;
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
 		try {
-			objectConn = this.dataSource.getConnection();
-			attributeConn = this.dataSource.getConnection();
+			connection = this.dataSource.getConnection();
 
 			PreparedStatement objectPS = null;
 			PreparedStatement attributePS = null;
@@ -449,21 +447,21 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				boolean limitByIDs = false;
 				boolean useSqlArray = false;
 				if (ids == null) {
-					objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_SQL);
+					objectPS = connection.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_SQL);
 				} else {
 					limitByIDs = true;
 					try {
-						objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
+						objectPS = connection.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
 						useSqlArray = true;
 					} catch (SQLException e) {
-						objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
+						objectPS = connection.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
 					}
 				}
 
-				attributePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTES_SQL);
-				attributeValuePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
-				propertyPS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTIES_SQL);
-				propertyValuePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTY_VALUES_SQL);
+				attributePS = connection.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTES_SQL);
+				attributeValuePS = connection.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
+				propertyPS = connection.prepareStatement(JdbcObjectStore.LOAD_PROPERTIES_SQL);
+				propertyValuePS = connection.prepareStatement(JdbcObjectStore.LOAD_PROPERTY_VALUES_SQL);
 
 				ResultSet objectRS = null;
 				ResultSet attributeRS = null;
@@ -480,7 +478,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					}
 					if (useSqlArray) {
 						objectPS.setString(1, type.name());
-						objectPS.setArray(2, objectConn.createArrayOf("text", arr));
+						objectPS.setArray(2, connection.createArrayOf("text", arr));
 					} else {
 						objectPS.setObject(1, arr);
 						objectPS.setString(2, type.name());
@@ -633,8 +631,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			throw new StorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
 				type), e);
 		} finally {
-			DbUtils.rollbackAndCloseQuietly(attributeConn);
-			DbUtils.rollbackAndCloseQuietly(objectConn);
+			DbUtils.rollbackAndCloseQuietly(connection);
 		}
 	}
 
@@ -684,7 +681,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
-			.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
 				targetValue));
@@ -754,27 +751,27 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			return new QueryRunner().query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
-				@Override
-				public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
-					Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
-						StoredObjectType.class);
-					while (rs.next()) {
-						String t = rs.getString("object_type");
-						if ((t == null) || rs.wasNull()) {
-							JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-							continue;
+					@Override
+					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
+							StoredObjectType.class);
+						while (rs.next()) {
+							String t = rs.getString("object_type");
+							if ((t == null) || rs.wasNull()) {
+								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
+							try {
+								ret.put(StoredObjectType.decodeString(t), rs.getInt("total"));
+							} catch (IllegalArgumentException e) {
+								JdbcObjectStore.this.log.warn(String.format(
+									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+								continue;
+							}
 						}
-						try {
-							ret.put(StoredObjectType.decodeString(t), rs.getInt("total"));
-						} catch (IllegalArgumentException e) {
-							JdbcObjectStore.this.log.warn(String.format(
-								"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-							continue;
-						}
+						return ret;
 					}
-					return ret;
-				}
-			});
+				});
 		} catch (SQLException e) {
 			throw new StorageException("Failed to retrieve the stored object types", e);
 		}
@@ -901,26 +898,27 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		doClearTables(c, tableNames);
 	}
 
-	private <V> StoredObject<V> loadObject(ResultSet rs) throws SQLException {
-		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		StoredObjectType type = StoredObjectType.decodeString(rs.getString("object_type"));
-		String id = rs.getString("object_id");
+	private <V> StoredObject<V> loadObject(ResultSet objRs) throws SQLException {
+		if (objRs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
+		StoredObjectType type = StoredObjectType.decodeString(objRs.getString("object_type"));
+		String id = objRs.getString("object_id");
 		Matcher m = JdbcObjectStore.OBJECT_ID_PARSER.matcher(id);
 		if (m.matches()) {
 			id = m.group(1);
 		}
-		String searchKey = rs.getString("search_key");
-		if (rs.wasNull()) {
+		String searchKey = objRs.getString("search_key");
+		if (objRs.wasNull()) {
 			searchKey = id;
 		}
-		String batchId = rs.getString("batch_id");
-		String label = rs.getString("object_label");
-		String subtype = rs.getString("object_subtype");
+		String batchId = objRs.getString("batch_id");
+		String label = objRs.getString("object_label");
+		String subtype = objRs.getString("object_subtype");
+
 		return new StoredObject<V>(type, id, searchKey, batchId, label, subtype);
 	}
 
-	private <T, V> StoredProperty<V> loadProperty(StoredObjectType objectType,
-		ObjectStorageTranslator<T, V> translator, ResultSet rs) throws SQLException, StoredValueDecoderException {
+	private <V> StoredProperty<V> loadProperty(StoredObjectType objectType, ObjectStorageTranslator<V> translator,
+		ResultSet rs) throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = translator.decodePropertyName(objectType, rs.getString("name"));
 		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
@@ -928,8 +926,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return new StoredProperty<V>(name, type, repeating);
 	}
 
-	private <T, V> StoredAttribute<V> loadAttribute(StoredObjectType objectType,
-		ObjectStorageTranslator<T, V> translator, ResultSet rs) throws SQLException, StoredValueDecoderException {
+	private <V> StoredAttribute<V> loadAttribute(StoredObjectType objectType, ObjectStorageTranslator<V> translator,
+		ResultSet rs) throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = translator.decodeAttributeName(objectType, rs.getString("name"));
 		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
@@ -963,7 +961,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		property.setValues(values);
 	}
 
-	private <T, V> void loadAttributes(ObjectStorageTranslator<T, V> translator, ResultSet rs, StoredObject<V> obj)
+	private <V> void loadAttributes(ObjectStorageTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
 		throws SQLException, StoredValueDecoderException {
 		List<StoredAttribute<V>> attributes = new LinkedList<StoredAttribute<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
@@ -973,7 +971,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		obj.setAttributes(attributes);
 	}
 
-	private <T, V> void loadProperties(ObjectStorageTranslator<T, V> translator, ResultSet rs, StoredObject<V> obj)
+	private <V> void loadProperties(ObjectStorageTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
 		throws SQLException, StoredValueDecoderException {
 		List<StoredProperty<V>> properties = new LinkedList<StoredProperty<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
@@ -1045,30 +1043,30 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_SQL,
 				new ResultSetHandler<StoredValue>() {
-				@Override
-				public StoredValue handle(ResultSet rs) throws SQLException {
-					if (!rs.next()) { return null; }
-					String name = rs.getString("name");
-					String type = rs.getString("data_type");
-					final StoredDataType t;
+					@Override
+					public StoredValue handle(ResultSet rs) throws SQLException {
+						if (!rs.next()) { return null; }
+						String name = rs.getString("name");
+						String type = rs.getString("data_type");
+						final StoredDataType t;
 
-					try {
-						t = StoredDataType.decodeString(type);
-					} catch (IllegalArgumentException e) {
-						throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
+						try {
+							t = StoredDataType.decodeString(type);
+						} catch (IllegalArgumentException e) {
+							throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
+						}
+						final StoredValueSerializer deserializer = StoredValueSerializer.get(t);
+						if (deserializer == null) { throw new SQLException(String.format(
+							"Unsupported data type name for serialization: [%s]", type)); }
+						String value = rs.getString("value");
+						try {
+							return deserializer.deserialize(value);
+						} catch (ParseException e) {
+							throw new SQLException(String.format(
+								"Failed to deserialize store property [%s]:[%s] as a %s", name, value, type), e);
+						}
 					}
-					final StoredValueSerializer deserializer = StoredValueSerializer.get(t);
-					if (deserializer == null) { throw new SQLException(String.format(
-						"Unsupported data type name for serialization: [%s]", type)); }
-					String value = rs.getString("value");
-					try {
-						return deserializer.deserialize(value);
-					} catch (ParseException e) {
-						throw new SQLException(String.format(
-							"Failed to deserialize store property [%s]:[%s] as a %s", name, value, type), e);
-					}
-				}
-			}, property);
+				}, property);
 		} catch (SQLException e) {
 			throw new StorageException(String.format("Failed to retrieve the value of store property [%s]", property),
 				e);
@@ -1112,15 +1110,15 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_NAMES_SQL,
 				new ResultSetHandler<Set<String>>() {
 
-				@Override
-				public Set<String> handle(ResultSet rs) throws SQLException {
-					Set<String> ret = new TreeSet<String>();
-					while (rs.next()) {
-						ret.add(rs.getString("name"));
+					@Override
+					public Set<String> handle(ResultSet rs) throws SQLException {
+						Set<String> ret = new TreeSet<String>();
+						while (rs.next()) {
+							ret.add(rs.getString("name"));
+						}
+						return ret;
 					}
-					return ret;
-				}
-			});
+				});
 		} catch (SQLException e) {
 			throw new StorageException("Failed to retrieve the store property names", e);
 		}
