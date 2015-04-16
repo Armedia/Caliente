@@ -1,9 +1,14 @@
 package com.armedia.cmf.engine;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.StoredObjectType;
 
 public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?, ?, ?>> {
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+
 	protected final E engine;
 	protected final Class<T> objectClass;
 	protected final T object;
