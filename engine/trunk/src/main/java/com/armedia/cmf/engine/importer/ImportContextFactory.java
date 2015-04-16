@@ -9,8 +9,8 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>, E extends ImportEngine<S, W, T, V, C>>
-extends ContextFactory<S, T, V, C, E> {
+public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V>, E extends ImportEngine<S, W, V, C>, F>
+extends ContextFactory<S, V, C, E> {
 
 	private final List<String> rootPath;
 	private final String rootPathStr;
@@ -33,19 +33,19 @@ extends ContextFactory<S, T, V, C, E> {
 		}
 	}
 
-	private T ensurePath(S session, String path) throws Exception {
+	private F ensurePath(S session, String path) throws Exception {
 		if (Tools.equals("/", path)) { return null; }
-		T target = locateFolder(session, path);
+		F target = locateFolder(session, path);
 		if (target == null) {
-			T parent = ensurePath(session, FileNameTools.dirname(path, '/'));
+			F parent = ensurePath(session, FileNameTools.dirname(path, '/'));
 			target = createFolder(session, parent, FileNameTools.basename(path, '/'));
 		}
 		return target;
 	}
 
-	protected abstract T locateFolder(S session, String path) throws Exception;
+	protected abstract F locateFolder(S session, String path) throws Exception;
 
-	protected abstract T createFolder(S session, T parent, String name) throws Exception;
+	protected abstract F createFolder(S session, F parent, String name) throws Exception;
 
 	public final String getTargetPath(String sourcePath) throws ImportException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }

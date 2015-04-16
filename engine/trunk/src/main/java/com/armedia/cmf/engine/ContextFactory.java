@@ -18,7 +18,7 @@ import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class ContextFactory<S, T, V, C extends TransferContext<S, T, V>, E extends TransferEngine<S, T, V, C, ?, ?>> {
+public abstract class ContextFactory<S, V, C extends TransferContext<S, V>, E extends TransferEngine<S, V, C, ?, ?>> {
 
 	private static StoredObjectType decodeObjectType(Object o) {
 		if (o == null) { return null; }

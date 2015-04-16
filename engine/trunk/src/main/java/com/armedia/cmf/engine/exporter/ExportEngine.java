@@ -40,8 +40,8 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C extends ExportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ExportContextFactory<S, W, T, V, C, ?>, ExportEngineListener> {
+public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>> extends
+	TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, ExportEngineListener> {
 
 	private class Result {
 		private final Long objectNumber;
@@ -144,19 +144,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		}
 	}
 
-	protected abstract String getObjectId(T sourceObject);
-
-	protected abstract String calculateLabel(T sourceObject) throws Exception;
-
-	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore, S session,
-		final ExportTarget referrent, final ExportTarget target, ExportDelegate<S, W, ?, V, C> sourceObject, C ctx,
+	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore,
+		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?> sourceObject, C ctx,
 		ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
 		StoredValueEncoderException, UnsupportedObjectTypeException {
 		try {
 			listenerDelegator.objectExportStarted(target.getType(), target.getId());
 			Result result = null;
 			if (ctx.isSupported(target.getType())) {
-				result = doExportObject(objectStore, streamStore, session, referrent, target, sourceObject, ctx,
+				result = doExportObject(objectStore, streamStore, referrent, target, sourceObject, ctx,
 					listenerDelegator);
 			}
 			if (result != null) {
@@ -175,11 +171,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		}
 	}
 
-	private Result doExportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore, S session,
-		final ExportTarget referrent, final ExportTarget target, ExportDelegate<S, W, ?, V, C> sourceObject, C ctx,
+	private Result doExportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore,
+		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?> sourceObject, C ctx,
 		ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
 		StoredValueEncoderException, UnsupportedObjectTypeException {
-		if (session == null) { throw new IllegalArgumentException("Must provide a session to operate with"); }
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
@@ -187,7 +182,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		final String id = target.getId();
 		String objectLabel = null;
 		try {
-			objectLabel = sourceObject.calculateLabel();
+			objectLabel = sourceObject.getLabel();
 		} catch (Exception e) {
 			this.log.warn(String.format("Failed to calculate object label for %s (%s)", type, id), e);
 			objectLabel = String.format("{Failed to calculate object label: %s}", e.getMessage());
@@ -247,10 +242,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				}
 			}
 
-			final StoredObject<V> marshaled = sourceObject.marshal(ctx, session, referrent);
-			Collection<ExportDelegate<S, W, ?, V, C>> referenced;
+			final StoredObject<V> marshaled = sourceObject.marshal(ctx, referrent);
+			Collection<? extends ExportDelegate<?, S, W, V, C, ?>> referenced;
 			try {
-				referenced = sourceObject.identifyRequirements(session, marshaled, ctx);
+				referenced = sourceObject.identifyRequirements(marshaled, ctx);
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to identify the requirements for %s", label), e);
 			}
@@ -259,9 +254,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				this.log
 					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
-			for (ExportDelegate<S, W, ?, V, C> requirement : referenced) {
-				exportObject(objectStore, streamStore, session, target, requirement.getExportTarget(), requirement,
-					ctx, listenerDelegator);
+			for (ExportDelegate<?, S, W, V, C, ?> requirement : referenced) {
+				exportObject(objectStore, streamStore, target, requirement.getExportTarget(), requirement, ctx,
+					listenerDelegator);
 			}
 
 			if (this.log.isDebugEnabled()) {
@@ -270,7 +265,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 			final List<ContentInfo> contentInfo;
 			try {
-				contentInfo = sourceObject.storeContent(session, marshaled, referrent, streamStore);
+				contentInfo = sourceObject.storeContent(ctx.getSession(), marshaled, referrent, streamStore);
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
 			}
@@ -291,7 +286,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			}
 
 			try {
-				referenced = sourceObject.identifyDependents(session, marshaled, ctx);
+				referenced = sourceObject.identifyDependents(marshaled, ctx);
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to identify the dependents for %s", label), e);
 			}
@@ -299,8 +294,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("%s has %d dependent objects to store", label, referenced.size()));
 			}
-			for (ExportDelegate<S, W, ?, V, C> dependent : referenced) {
-				exportObject(objectStore, streamStore, session, target, dependent.getExportTarget(), dependent, ctx,
+			for (ExportDelegate<?, S, W, V, C, ?> dependent : referenced) {
+				exportObject(objectStore, streamStore, target, dependent.getExportTarget(), dependent, ctx,
 					listenerDelegator);
 			}
 			return new Result(ret, marshaled);
@@ -329,7 +324,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			throw new ExportException("Failed to configure the session factory to carry out the export", e);
 		}
 
-		final ContextFactory<S, T, V, C, ?> contextFactory;
+		final ContextFactory<S, V, C, ?> contextFactory;
 		try {
 			try {
 				contextFactory = newContextFactory(configuration);
@@ -415,7 +410,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 							try {
 								// Begin transaction
 								tx = session.begin();
-								final ExportDelegate<S, W, ?, V, C> sourceObject = getExportDelegate(s, nextType,
+								final ExportDelegate<?, S, W, V, C, ?> sourceObject = getExportDelegate(s, nextType,
 									nextKey);
 								if (sourceObject == null) {
 									// No object found with that ID...
@@ -449,8 +444,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 									objectStore, contentStore);
 								try {
 									initContext(ctx);
-									Result result = exportObject(objectStore, contentStore, s, null, next,
-										sourceObject, ctx, listenerDelegator);
+									Result result = exportObject(objectStore, contentStore, null, next, sourceObject,
+										ctx, listenerDelegator);
 									if (result != null) {
 										if (this.log.isDebugEnabled()) {
 											this.log.debug(String.format("Exported %s [%s](%s) in position %d",
@@ -629,10 +624,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	protected abstract Iterator<ExportTarget> findExportResults(S session, Map<String, ?> settings) throws Exception;
 
-	protected abstract ExportDelegate<S, W, ?, V, C> getExportDelegate(S session, StoredObjectType type,
+	protected abstract ExportDelegate<?, S, W, V, C, ?> getExportDelegate(S session, StoredObjectType type,
 		String searchKey) throws Exception;
 
-	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
+	public static ExportEngine<?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
 	}
 }

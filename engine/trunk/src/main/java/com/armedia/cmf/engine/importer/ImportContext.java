@@ -16,16 +16,16 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ImportContext<S, T, V> extends TransferContext<S, T, V> {
+public abstract class ImportContext<S, V> extends TransferContext<S, V> {
 
-	private final ImportContextFactory<S, ?, T, V, ?, ?> factory;
+	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final ObjectStore<?, ?> objectStore;
-	private final ObjectStorageTranslator<T, V> translator;
+	private final ObjectStorageTranslator<V> translator;
 	private final ContentStore streamStore;
 
-	public <C extends ImportContext<S, T, V>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, T, V, C>, F extends ImportContextFactory<S, W, T, V, C, E>> ImportContext(
+	public <C extends ImportContext<S, V>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output,
-		ObjectStorageTranslator<T, V> translator, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		ObjectStorageTranslator<V> translator, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
 		super(factory, settings, rootId, rootType, session, output);
 		this.factory = factory;
 		this.translator = translator;

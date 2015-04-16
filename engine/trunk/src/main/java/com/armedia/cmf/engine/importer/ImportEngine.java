@@ -44,8 +44,8 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineListener> {
+public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V>> extends
+	TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportEngineListener> {
 
 	private static enum BatchStatus {
 		//
@@ -238,7 +238,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	protected abstract ImportStrategy getImportStrategy(StoredObjectType type);
 
-	protected abstract ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<T, V> translator,
+	protected abstract ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<V> translator,
 		C ctx) throws ImportException, StorageException, StoredValueDecoderException;
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
@@ -265,7 +265,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			throw new ImportException("Failed to configure the session factory to carry out the import", e);
 		}
 
-		final ImportContextFactory<S, W, T, V, C, ?> contextFactory;
+		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory;
 		try {
 			try {
 				contextFactory = newContextFactory(configuration);
@@ -629,7 +629,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 					}
 				}
 
-				final ObjectStorageTranslator<T, V> translator = getTranslator();
+				final ObjectStorageTranslator<V> translator = getTranslator();
 				for (final StoredObjectType type : StoredObjectType.values()) {
 					final Integer total = containedTypes.get(type);
 					if (total == null) {
@@ -782,7 +782,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		return false;
 	}
 
-	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine(String targetName) {
+	public static ImportEngine<?, ?, ?, ?> getImportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ImportEngine.class, targetName);
 	}
 
