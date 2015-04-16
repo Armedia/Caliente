@@ -11,9 +11,9 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, E extends ExportEngine<S, W, V, C>>
-	extends TransferDelegate<T, S, V, E> {
+extends TransferDelegate<T, S, V, E> {
 
-	protected ExportDelegate(E engine, Class<T> objectClass, T object) {
+	protected ExportDelegate(E engine, Class<T> objectClass, T object) throws Exception {
 		super(engine, objectClass, object);
 	}
 

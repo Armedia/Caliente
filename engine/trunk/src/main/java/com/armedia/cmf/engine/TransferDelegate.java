@@ -13,15 +13,21 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 	protected final Class<T> objectClass;
 	protected final T object;
 	protected final ExportTarget exportTarget;
+	protected final StoredObjectType type;
+	protected final String label;
+	protected final String batchId;
 
-	protected TransferDelegate(E engine, Class<T> objectClass, T object) {
+	protected TransferDelegate(E engine, Class<T> objectClass, T object) throws Exception {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to process with"); }
 		if (objectClass == null) { throw new IllegalArgumentException("Must provide an object class to work with"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to process"); }
 		this.engine = engine;
 		this.objectClass = objectClass;
 		this.object = object;
-		this.exportTarget = new ExportTarget(getType(), getObjectId(), getSearchKey());
+		this.exportTarget = new ExportTarget(getType(), calculateObjectId(object), calculateSearchKey(object));
+		this.type = calculateType(object);
+		this.label = calculateLabel(object);
+		this.batchId = calculateBatchId(object);
 	}
 
 	protected final T castObject(Object o) {
@@ -42,13 +48,35 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 		return this.exportTarget;
 	}
 
-	public abstract StoredObjectType getType();
+	protected abstract StoredObjectType calculateType(T object) throws Exception;
 
-	public abstract String getLabel();
+	public final StoredObjectType getType() {
+		return this.type;
+	}
 
-	public abstract String getObjectId();
+	protected abstract String calculateLabel(T object) throws Exception;
 
-	public abstract String getSearchKey();
+	public final String getLabel() {
+		return this.label;
+	}
 
-	public abstract String getBatchId();
+	protected abstract String calculateObjectId(T object) throws Exception;
+
+	public final String getObjectId() {
+		return this.exportTarget.getId();
+	}
+
+	protected abstract String calculateSearchKey(T object) throws Exception;
+
+	public final String getSearchKey() {
+		return this.exportTarget.getSearchKey();
+	}
+
+	protected String calculateBatchId(T object) throws Exception {
+		return null;
+	}
+
+	public final String getBatchId() {
+		return this.batchId;
+	}
 }
