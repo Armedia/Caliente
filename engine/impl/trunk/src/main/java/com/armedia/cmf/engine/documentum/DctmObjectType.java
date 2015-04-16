@@ -1,11 +1,8 @@
 package com.armedia.cmf.engine.documentum;
 
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
@@ -20,7 +17,6 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
-import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 
@@ -37,7 +33,6 @@ public enum DctmObjectType {
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
 	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
-	CONTENT(StoredObjectType.CONTENT, IDfContent.class, "dmr_content", DOCUMENT),
 	//
 	;
 
@@ -47,12 +42,11 @@ public enum DctmObjectType {
 	private final BatchItemStrategy batchingStrategy;
 	private final boolean supportsBatching;
 	private final boolean failureInterruptsBatch;
-	private final Set<Object> surrogateOf;
 	public final ImportStrategy importStrategy = new ImportStrategy() {
 
 		@Override
 		public boolean isIgnored() {
-			return !DctmObjectType.this.surrogateOf.isEmpty();
+			return false;
 		}
 
 		@Override
@@ -79,29 +73,26 @@ public enum DctmObjectType {
 		}
 	};
 
-	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		DctmObjectType... surrogateOf) {
-		this(cmsType, dfClass, null, null, surrogateOf);
+	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass) {
+		this(cmsType, dfClass, null, null);
 	}
 
-	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass, String dmType,
-		DctmObjectType... surrogateOf) {
-		this(cmsType, dfClass, null, dmType, surrogateOf);
-	}
-
-	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		BatchItemStrategy batchingStrategy, DctmObjectType... surrogateOf) {
-		this(cmsType, dfClass, batchingStrategy, null, surrogateOf);
+	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass, String dmType) {
+		this(cmsType, dfClass, null, dmType);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		BatchItemStrategy batchingStrategy, String dmType, DctmObjectType... surrogateOf) {
-		this(cmsType, dfClass, batchingStrategy, dmType, false, false, surrogateOf);
+		BatchItemStrategy batchingStrategy) {
+		this(cmsType, dfClass, batchingStrategy, null);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
-		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
-		DctmObjectType... surrogateOf) {
+		BatchItemStrategy batchingStrategy, String dmType) {
+		this(cmsType, dfClass, batchingStrategy, dmType, false, false);
+	}
+
+	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
+		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
@@ -112,20 +103,6 @@ public enum DctmObjectType {
 		this.batchingStrategy = batchingStrategy;
 		this.supportsBatching = supportsBatching;
 		this.failureInterruptsBatch = failureInterruptsBatch;
-		Set<Object> s = null;
-		if (surrogateOf != null) {
-			s = new TreeSet<Object>();
-			for (DctmObjectType t : surrogateOf) {
-				if (t != null) {
-					s.add(t);
-				}
-			}
-		}
-		if ((s == null) || s.isEmpty()) {
-			this.surrogateOf = Collections.emptySet();
-		} else {
-			this.surrogateOf = Collections.unmodifiableSet(s);
-		}
 	}
 
 	public final StoredObjectType getStoredObjectType() {
@@ -134,14 +111,6 @@ public enum DctmObjectType {
 
 	public final String getDmType() {
 		return this.dmType;
-	}
-
-	public final boolean isSurrogate() {
-		return !this.surrogateOf.isEmpty();
-	}
-
-	public final Set<Object> getSurrogateOf() {
-		return this.surrogateOf;
 	}
 
 	public final boolean isProperClass(IDfPersistentObject o) {

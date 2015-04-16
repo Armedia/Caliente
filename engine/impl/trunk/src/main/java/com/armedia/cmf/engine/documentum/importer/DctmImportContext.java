@@ -7,7 +7,6 @@ package com.armedia.cmf.engine.documentum.importer;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.common.DctmSpecialValues;
 import com.armedia.cmf.engine.importer.ImportContext;
@@ -48,14 +47,5 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfValue> {
 	public boolean isUntouchableUser(String user) throws DfException {
 		return isSpecialUser(user) || DctmMappingUtils.isSubstitutionForMappableUser(user)
 			|| DctmMappingUtils.isMappableUser(getSession(), user);
-	}
-
-	@Override
-	protected boolean isSurrogateType(StoredObjectType rootType, StoredObjectType target) {
-		DctmObjectType dctmRootType = DctmObjectType.decodeType(rootType);
-		if (dctmRootType == null) { return false; }
-		DctmObjectType dctmTarget = DctmObjectType.decodeType(target);
-		if (dctmTarget == null) { return false; }
-		return dctmTarget.getSurrogateOf().contains(dctmRootType) || super.isSurrogateType(rootType, target);
 	}
 }
