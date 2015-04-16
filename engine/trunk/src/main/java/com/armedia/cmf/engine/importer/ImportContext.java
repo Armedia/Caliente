@@ -39,19 +39,11 @@ public abstract class ImportContext<S, V> extends TransferContext<S, V> {
 
 	public final int loadObjects(StoredObjectType type, Set<String> ids, StoredObjectHandler<V> handler)
 		throws StorageException, StoredValueDecoderException {
-		if (isSurrogateType(getRootObjectType(), type)) {
-			return this.objectStore.loadObjects(this.translator, type, ids, handler);
-		} else {
-			return 0;
-		}
+		return this.objectStore.loadObjects(this.translator, type, ids, handler);
 	}
 
 	public final ContentStore getContentStore() {
 		return this.streamStore;
-	}
-
-	protected boolean isSurrogateType(StoredObjectType rootType, StoredObjectType target) {
-		return false;
 	}
 
 	public final void ensureTargetPath() throws ImportException {
