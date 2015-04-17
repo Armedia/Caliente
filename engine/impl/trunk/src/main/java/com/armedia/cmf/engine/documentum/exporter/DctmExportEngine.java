@@ -92,13 +92,15 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 			"Must provide a session through which to retrieve the object"); }
 		if (searchKey == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
 
+		IDfPersistentObject object = session.getObject(new DfId(searchKey));
+
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
-		final DctmObjectType dctmType = DctmObjectType.decodeType(type);
+		final DctmObjectType dctmType = (type != null ? DctmObjectType.decodeType(type) : DctmObjectType
+			.decodeType(object));
 		if (dctmType == null) { throw new ExportException(String.format(
 			"Unsupported object type [%s] (search key = [%s])", type, searchKey)); }
 
-		IDfPersistentObject object = session.getObject(new DfId(searchKey));
 		Class<? extends IDfPersistentObject> requiredClass = dctmType.getDfClass();
 		if (requiredClass.isInstance(object)) {
 			DctmExportDelegate<?> delegate = null;
