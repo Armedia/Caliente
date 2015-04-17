@@ -13,7 +13,6 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 	protected final Class<T> objectClass;
 	protected final T object;
 	protected final ExportTarget exportTarget;
-	protected final StoredObjectType type;
 	protected final String label;
 	protected final String batchId;
 
@@ -24,8 +23,8 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 		this.engine = engine;
 		this.objectClass = objectClass;
 		this.object = object;
-		this.exportTarget = new ExportTarget(getType(), calculateObjectId(object), calculateSearchKey(object));
-		this.type = calculateType(object);
+		this.exportTarget = new ExportTarget(calculateType(object), calculateObjectId(object),
+			calculateSearchKey(object));
 		this.label = calculateLabel(object);
 		this.batchId = calculateBatchId(object);
 	}
@@ -51,7 +50,7 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 	protected abstract StoredObjectType calculateType(T object) throws Exception;
 
 	public final StoredObjectType getType() {
-		return this.type;
+		return this.exportTarget.getType();
 	}
 
 	protected abstract String calculateLabel(T object) throws Exception;
