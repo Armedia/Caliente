@@ -276,7 +276,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
 		Collection<Object[]> propertyParameters = new ArrayList<Object[]>();
 		Collection<Object[]> propertyValueParameters = new ArrayList<Object[]>();
-		Object[] attData = new Object[4];
+		Object[] attData = new Object[7];
 		Object[] attValue = new Object[5];
 		Object[] propData = new Object[4];
 
@@ -285,6 +285,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
+			attData[4] = 0; // Explicitly hardcoded
+			attData[5] = false; // Explicitly hardcoded
 			attValue[0] = objectId; // This should never change within the loop
 			final Map<String, String> encodedNames = new HashMap<String, String>();
 			for (final StoredAttribute<V> attribute : object.getAttributes()) {
@@ -302,8 +304,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				final String type = translator.encodeValue(attribute.getType());
 
 				attData[1] = name;
-				attData[2] = type;
-				attData[3] = repeating;
+				attData[2] = name;
+				attData[3] = type;
+				attData[6] = repeating;
 
 				// Insert the attribute
 				attributeParameters.add(attData.clone());
