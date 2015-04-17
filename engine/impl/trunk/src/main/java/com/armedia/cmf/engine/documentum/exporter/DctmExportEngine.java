@@ -85,15 +85,8 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 		return ExportEngine.getExportEngine(DctmCommon.TARGET_NAME);
 	}
 
-	@Override
-	protected DctmExportDelegate<?> getExportDelegate(IDfSession session, StoredObjectType type, String searchKey)
-		throws Exception {
-		if (session == null) { throw new IllegalArgumentException(
-			"Must provide a session through which to retrieve the object"); }
-		if (searchKey == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
-
-		IDfPersistentObject object = session.getObject(new DfId(searchKey));
-
+	protected DctmExportDelegate<?> newDelegate(IDfPersistentObject object, StoredObjectType type) throws Exception {
+		final String searchKey = object.getObjectId().getId();
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
 		final DctmObjectType dctmType = (type != null ? DctmObjectType.decodeType(type) : DctmObjectType
@@ -137,5 +130,18 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 		this.log.warn(String.format("Type [%s] is not supported - no delegate created for search key [%s]", type,
 			searchKey));
 		return null;
+	}
+
+	protected DctmExportDelegate<?> newDelegate(IDfPersistentObject object) throws Exception {
+		return newDelegate(object, null);
+	}
+
+	@Override
+	protected DctmExportDelegate<?> getExportDelegate(IDfSession session, StoredObjectType type, String searchKey)
+		throws Exception {
+		if (session == null) { throw new IllegalArgumentException(
+			"Must provide a session through which to retrieve the object"); }
+		if (searchKey == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
+		return newDelegate(session.getObject(new DfId(searchKey)), type);
 	}
 }

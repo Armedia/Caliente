@@ -59,7 +59,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	DctmExportDocument(DctmExportEngine engine, IDfPersistentObject document) throws Exception {
-		this(engine, DctmExportAbstract.staticCast(IDfDocument.class, document));
+		this(engine, DctmExportDelegate.staticCast(IDfDocument.class, document));
 	}
 
 	@Override
@@ -134,23 +134,23 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfDocument document, DctmExportContext ctx) throws Exception {
-		Collection<IDfPersistentObject> req = super.findRequirements(session, marshaled, document, ctx);
+		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, document, ctx);
 
 		// Export the ACL
-		req.add(document.getACL());
+		req.add(this.engine.newDelegate(document.getACL()));
 
 		// We do nothing else for references, as we need nothing else
 		if (isDfReference(document)) { return req; }
 
 		// Export the object type
-		req.add(document.getType());
+		req.add(this.engine.newDelegate(document.getType()));
 
 		// Export the format
 		IDfFormat format = document.getFormat();
 		if (format != null) {
-			req.add(format);
+			req.add(this.engine.newDelegate(format));
 		}
 
 		// Export the owner
@@ -158,14 +158,14 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner)) {
 			IDfUser user = session.getUser(document.getOwnerName());
 			if (user != null) {
-				req.add(user);
+				req.add(this.engine.newDelegate(user));
 			}
 		}
 
 		// Export the group
 		IDfGroup group = session.getGroup(document.getGroupName());
 		if (group != null) {
-			req.add(group);
+			req.add(this.engine.newDelegate(group));
 		}
 
 		// We only export versions if we're the root object of the context operation
@@ -179,7 +179,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					this.log.debug(String
 						.format("Adding prior version [%s]", calculateVersionString(versionDoc, false)));
 				}
-				req.add(versionDoc);
+				req.add(this.engine.newDelegate(versionDoc));
 			}
 		}
 
@@ -187,10 +187,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfDocument document, DctmExportContext ctx) throws Exception {
 		// TODO Auto-generated method stub
-		Collection<IDfPersistentObject> ret = super.findDependents(session, marshaled, document, ctx);
+		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, document, ctx);
 
 		// References need only the ACL as a dependent
 		if (isDfReference(document)) { return ret; }
@@ -206,7 +206,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					this.log.debug(String.format("Adding subsequent version [%s]",
 						calculateVersionString(versionDoc, false)));
 				}
-				ret.add(versionDoc);
+				ret.add(this.engine.newDelegate(versionDoc));
 			}
 		}
 		return ret;

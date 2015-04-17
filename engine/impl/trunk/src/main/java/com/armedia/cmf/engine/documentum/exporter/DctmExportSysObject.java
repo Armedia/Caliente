@@ -25,7 +25,6 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfFolder;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.content.IDfStore;
@@ -38,7 +37,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstract<T> implements DctmSysObject {
+public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDelegate<T> implements DctmSysObject {
 
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
 	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
@@ -219,16 +218,16 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		T sysObject, DctmExportContext ctx) throws Exception {
-		Collection<IDfPersistentObject> req = super.findRequirements(session, marshaled, sysObject, ctx);
+		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, sysObject, ctx);
 
 		// The parent folders
 		final int pathCount = sysObject.getFolderIdCount();
 		for (int i = 0; i < pathCount; i++) {
 			IDfId folderId = sysObject.getFolderId(i);
 			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
-			req.add(parent);
+			req.add(this.engine.newDelegate(parent));
 		}
 
 		// We export our filestore
@@ -236,7 +235,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportAbstr
 		if (StringUtils.isNotBlank(storeName)) {
 			IDfStore store = DfUtils.getStore(session, storeName);
 			if (store != null) {
-				req.add(store);
+				req.add(this.engine.newDelegate(store));
 			} else {
 				this.log.warn("SysObject {} refers to missing store [{}]", marshaled.getLabel(), storeName);
 			}

@@ -17,14 +17,14 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportType extends DctmExportAbstract<IDfType> {
+public class DctmExportType extends DctmExportDelegate<IDfType> {
 
 	protected DctmExportType(DctmExportEngine engine, IDfType type) throws Exception {
 		super(engine, IDfType.class, type);
 	}
 
 	DctmExportType(DctmExportEngine engine, IDfPersistentObject type) throws Exception {
-		this(engine, DctmExportAbstract.staticCast(IDfType.class, type));
+		this(engine, DctmExportDelegate.staticCast(IDfType.class, type));
 	}
 
 	@Override
@@ -53,16 +53,16 @@ public class DctmExportType extends DctmExportAbstract<IDfType> {
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfType type, DctmExportContext ctx) throws Exception {
-		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, type, ctx);
+		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, type, ctx);
 		IDfType superType = type.getSuperType();
 		if (superType != null) {
 			if (ctx.isSpecialType(superType.getName())) {
 				this.log.warn(String.format("Will not export special type [%s] (supertype of [%s])",
 					superType.getName(), type.getName()));
 			} else {
-				ret.add(superType);
+				ret.add(this.engine.newDelegate(superType));
 			}
 		}
 		return ret;

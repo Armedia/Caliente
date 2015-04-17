@@ -16,14 +16,14 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportUser extends DctmExportAbstract<IDfUser> {
+public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 
 	protected DctmExportUser(DctmExportEngine engine, IDfUser user) throws Exception {
 		super(engine, IDfUser.class, user);
 	}
 
 	DctmExportUser(DctmExportEngine engine, IDfPersistentObject user) throws Exception {
-		this(engine, DctmExportAbstract.staticCast(IDfUser.class, user));
+		this(engine, DctmExportDelegate.staticCast(IDfUser.class, user));
 	}
 
 	@Override
@@ -32,9 +32,9 @@ public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfUser user, DctmExportContext ctx) throws Exception {
-		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, user, ctx);
+		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, user, ctx);
 		final IDfPersistentObject[] deps = {
 			// The user's default group
 			session.getGroup(user.getUserGroupName()),
@@ -49,7 +49,7 @@ public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 			if (dep == null) {
 				continue;
 			}
-			ret.add(dep);
+			ret.add(this.engine.newDelegate(dep));
 		}
 		return ret;
 	}

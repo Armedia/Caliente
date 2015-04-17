@@ -43,7 +43,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	DctmExportFolder(DctmExportEngine engine, IDfPersistentObject folder) throws Exception {
-		this(engine, DctmExportAbstract.staticCast(IDfFolder.class, folder));
+		this(engine, DctmExportDelegate.staticCast(IDfFolder.class, folder));
 	}
 
 	@Override
@@ -123,15 +123,15 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfFolder folder, DctmExportContext ctx) throws Exception {
-		Collection<IDfPersistentObject> ret = super.findDependents(session, marshaled, folder, ctx);
+		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, folder, ctx);
 
 		String owner = DctmMappingUtils.resolveMappableUser(session, folder.getOwnerName());
 		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
 			IDfUser user = session.getUser(owner);
 			if (user != null) {
-				ret.add(user);
+				ret.add(this.engine.newDelegate(user));
 			}
 		}
 
@@ -149,7 +149,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			if (obj == null) {
 				continue;
 			}
-			ret.add(obj);
+			ret.add(this.engine.newDelegate(obj));
 		}
 
 		StoredProperty<IDfValue> usersWithDefaultFolder = marshaled.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
@@ -165,7 +165,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 					"Missing dependent for folder [%s] - user [%s] not found (as default folder)",
 					marshaled.getLabel(), v.asString()));
 			}
-			ret.add(user);
+			ret.add(this.engine.newDelegate(user));
 		}
 
 		// Export the object type

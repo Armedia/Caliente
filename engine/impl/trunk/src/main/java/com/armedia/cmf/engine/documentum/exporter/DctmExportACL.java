@@ -30,7 +30,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL {
+public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL {
 
 	/**
 	 * This DQL will find all users for which this ACL is marked as the default ACL, and thus all
@@ -43,7 +43,7 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 	}
 
 	DctmExportACL(DctmExportEngine engine, IDfPersistentObject acl) throws Exception {
-		this(engine, DctmExportAbstract.staticCast(IDfACL.class, acl));
+		this(engine, DctmExportDelegate.staticCast(IDfACL.class, acl));
 	}
 
 	@Override
@@ -117,9 +117,9 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfACL acl, DctmExportContext ctx) throws Exception {
-		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, acl, ctx);
+		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, acl, ctx);
 		final int count = acl.getAccessorCount();
 		for (int i = 0; i < count; i++) {
 			final String name = acl.getAccessorName(i);
@@ -149,7 +149,7 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 					acl.getObjectName(), (group ? "group" : "user"), name));
 				continue;
 			}
-			ret.add(obj);
+			ret.add(this.engine.newDelegate(obj));
 		}
 
 		// Do the owner
@@ -161,7 +161,7 @@ public class DctmExportACL extends DctmExportAbstract<IDfACL> implements DctmACL
 			if (user == null) { throw new Exception(String.format(
 				"Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner, acl.getObjectName(),
 				owner)); }
-			ret.add(user);
+			ret.add(this.engine.newDelegate(user));
 		}
 		return ret;
 	}

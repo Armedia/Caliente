@@ -29,7 +29,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements DctmGroup {
+public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements DctmGroup {
 
 	/**
 	 * This DQL will find all users for which this group is marked as the default group, and thus
@@ -42,7 +42,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 	}
 
 	DctmExportGroup(DctmExportEngine engine, IDfPersistentObject group) throws Exception {
-		this(engine, DctmExportAbstract.staticCast(IDfGroup.class, group));
+		this(engine, DctmExportDelegate.staticCast(IDfGroup.class, group));
 	}
 
 	@Override
@@ -76,9 +76,9 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfGroup group, DctmExportContext ctx) throws Exception {
-		Collection<IDfPersistentObject> ret = super.findRequirements(session, marshaled, group, ctx);
+		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, group, ctx);
 
 		String groupOwner = group.getOwnerName();
 		if (!DctmMappingUtils.isMappableUser(session, groupOwner) && !ctx.isSpecialUser(groupOwner)) {
@@ -86,7 +86,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 			if (owner == null) { throw new Exception(String.format(
 				"Missing dependency for group [%s] - user [%s] not found (as group owner)", group.getGroupName(),
 				groupOwner)); }
-			ret.add(owner);
+			ret.add(this.engine.newDelegate(owner));
 		} else {
 			this.log.warn(String.format("Skipping export of special user [%s] as the owner of group [%s]", groupOwner,
 				group.getGroupName()));
@@ -98,7 +98,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 			if (admin == null) { throw new Exception(String.format(
 				"Missing dependency for group [%s] - user [%s] not found (as group admin)", group.getGroupName(),
 				groupAdmin)); }
-			ret.add(admin);
+			ret.add(this.engine.newDelegate(admin));
 		} else {
 			this.log.warn(String.format("Skipping export of special user [%s] as the admin of group [%s]", groupAdmin,
 				group.getGroupName()));
@@ -131,7 +131,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 					this.log.warn(msg);
 					ctx.printf(msg);
 				}
-				ret.add(member);
+				ret.add(this.engine.newDelegate(member));
 			}
 		}
 
@@ -149,16 +149,16 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 				if (member == null) { throw new Exception(String.format(
 					"Missing dependency for group [%s] - group [%s] not found (as group member)", group.getGroupName(),
 					groupName)); }
-				ret.add(member);
+				ret.add(this.engine.newDelegate(member));
 			}
 		}
 		return ret;
 	}
 
 	@Override
-	protected Collection<IDfPersistentObject> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
 		IDfGroup group, DctmExportContext ctx) throws Exception {
-		Collection<IDfPersistentObject> ret = super.findDependents(session, marshaled, group, ctx);
+		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, group, ctx);
 
 		// Avoid calling DQL twice
 		StoredProperty<IDfValue> property = marshaled.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
@@ -175,7 +175,7 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 					"Missing dependent for group [%s] - user [%s] not found (as default group)", group.getGroupName(),
 					v.asString()));
 			}
-			ret.add(user);
+			ret.add(this.engine.newDelegate(user));
 		}
 		return ret;
 	}
