@@ -15,10 +15,10 @@ import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
@@ -30,27 +30,36 @@ import com.armedia.commons.utilities.Tools;
  */
 public abstract class ShptFSObject<T> extends ShptObject<T> {
 
-	private final String id;
+	private final String url;
 
-	protected ShptFSObject(ShptSession service, T wrapped, StoredObjectType type) {
-		super(service, wrapped, type);
-		String searchKey = getServerRelativeUrl();
-		this.id = String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
+	protected ShptFSObject(ShptExportEngine engine, Class<T> objectClass, T object) throws Exception {
+		super(engine, objectClass, object);
+		this.url = calculateServerRelativeUrl(object);
 	}
 
 	@Override
-	public String getId() {
-		return this.id;
+	protected String calculateObjectId(T object) {
+		String searchKey = calculateServerRelativeUrl(object);
+		return String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
 	}
 
-	public abstract String getServerRelativeUrl();
+	@Override
+	protected String calculateSearchKey(T object) {
+		return calculateServerRelativeUrl(object);
+	}
+
+	protected abstract String calculateServerRelativeUrl(T object);
+
+	public final String getServerRelativeUrl() {
+		return this.url;
+	}
 
 	public abstract Date getCreatedTime();
 
 	public abstract Date getLastModifiedTime();
 
 	@Override
-	protected void marshal(StoredObject<StoredValue> object) throws ExportException {
+	protected void marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		// Name
 		String name = getName();
 		final boolean root = StringUtils.isEmpty(name);
@@ -83,7 +92,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			path = String.format("/%s", path);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]",
-					path, getServerRelativeUrl(), getStoredType(), getId(), getLabel()));
+					path, getServerRelativeUrl(), getStoredType(), getObjectId(), getLabel()));
 			}
 			object.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PATHS.name, StoredDataType.STRING,
 				true, Collections.singleton(new StoredValue(path))));
@@ -97,14 +106,15 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		if (!StringUtils.isEmpty(getName())) {
 			String parentPath = getServerRelativeUrl();
 			parentPath = FileNameTools.dirname(parentPath, '/');
-			ShptFolder parent = new ShptFolder(session, session.getFolder(parentPath));
+			ShptFolder parent = new ShptFolder(getEngine(), session.getFolder(parentPath));
 			marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PARENTS.name,
-				StoredDataType.ID, true, Collections.singleton(new StoredValue(StoredDataType.ID, parent.getId()))));
+				StoredDataType.ID, true,
+				Collections.singleton(new StoredValue(StoredDataType.ID, parent.getObjectId()))));
 			ret.add(parent);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format(
 					"Adding parent dependency to [%s] from source path [%s] for %s [ID=%s/L=%s]", parentPath,
-					getServerRelativeUrl(), getStoredType(), getId(), getLabel()));
+					getServerRelativeUrl(), getStoredType(), getObjectId(), getLabel()));
 			}
 		}
 		return ret;

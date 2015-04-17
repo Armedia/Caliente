@@ -5,16 +5,18 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
@@ -27,12 +29,11 @@ public class ShptUser extends ShptSecurityObject<User> {
 	private final List<Role> roles;
 	private final String userName;
 	private final String userDomain;
-	private final String userId;
 
-	public ShptUser(ShptSession service, User user) throws IncompleteDataException {
-		super(service, user, StoredObjectType.USER);
+	public ShptUser(ShptExportEngine engine, User user) throws Exception {
+		super(engine, User.class, user);
 		/*
-		List<Integer> roles = this.service.getRoleAssignments(this.wrapped.getId());
+		List<Integer> roles = this.service.getRoleAssignments(this.object.getId());
 		if ((roles == null) || roles.isEmpty()) {
 			this.roles = Collections.emptyList();
 		} else {
@@ -47,9 +48,9 @@ public class ShptUser extends ShptSecurityObject<User> {
 		}
 		 */
 		this.roles = Collections.emptyList();
-		String loginName = this.wrapped.getLoginName();
+		String loginName = this.object.getLoginName();
 		if (loginName == null) { throw new IncompleteDataException(String.format(
-			"The given user lacks a login name - cannot identify the user with ID [%s]", this.wrapped.getId())); }
+			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }
 		final int backslash = loginName.indexOf('\\');
 		final int atSign = loginName.indexOf('@');
 		if (backslash >= 0) {
@@ -64,35 +65,49 @@ public class ShptUser extends ShptSecurityObject<User> {
 			this.userName = loginName;
 			this.userDomain = "";
 		}
+	}
+
+	@Override
+	public String calculateObjectId(User user) throws Exception {
 		UserId uid = user.getUserId();
 		if (uid == null) { throw new IncompleteDataException(String.format(
 			"No userId information available for user [%s\\%s]", this.userDomain, this.userName)); }
-		this.userId = String.format("%08X",
+		return String.format("%08X",
 			Tools.hashTool(this, null, uid.getNameId().toLowerCase(), uid.getNameIdIssuer().toLowerCase()));
 	}
 
 	@Override
-	public String getBatchId() {
-		return getId();
+	protected int calculateNumericId(User object) {
+		return object.getId();
 	}
 
 	@Override
-	public String getLabel() {
-		return getName();
+	protected String calculateLabel(User object) throws Exception {
+		String loginName = object.getLoginName();
+		if (loginName == null) { throw new IncompleteDataException(String.format(
+			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }
+		final int backslash = loginName.indexOf('\\');
+		final int atSign = loginName.indexOf('@');
+		String userName = null;
+		String userDomain = null;
+		if (backslash >= 0) {
+			// 1) ^.*|domain\\user$
+			userName = loginName.substring(backslash + 1);
+			userDomain = loginName.substring(loginName.indexOf('|') + 1, backslash).toLowerCase();
+		} else if (atSign >= 0) {
+			// 2) ^.*|user@domain$
+			userName = loginName.substring(loginName.indexOf('|') + 1, atSign);
+			userDomain = loginName.substring(atSign + 1).toLowerCase();
+		} else {
+			userName = loginName;
+			userDomain = null;
+		}
+		if (!StringUtils.isBlank(userDomain)) { return String.format("\\\\%s\\%s", userDomain, userName); }
+		return userName;
 	}
 
 	public Collection<Role> getRoles() {
 		return this.roles;
-	}
-
-	@Override
-	public String getId() {
-		return this.userId;
-	}
-
-	@Override
-	public int getNumericId() {
-		return this.wrapped.getId();
 	}
 
 	@Override
@@ -105,10 +120,11 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	public void marshal(StoredObject<StoredValue> object) throws ExportException {
+	protected void marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		super.marshal(ctx, object);
 		// UserID
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_ID.name, StoredDataType.ID, false,
-			Collections.singleton(new StoredValue(String.format("USER(%s)", getId())))));
+			Collections.singleton(new StoredValue(String.format("USER(%s)", getObjectId())))));
 
 		// LoginName
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
@@ -122,19 +138,19 @@ public class ShptUser extends ShptSecurityObject<User> {
 
 		// SiteAdmin
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.SITE_ADMIN.name, StoredDataType.BOOLEAN,
-			false, Collections.singleton(new StoredValue(this.wrapped.isSiteAdmin()))));
+			false, Collections.singleton(new StoredValue(this.object.isSiteAdmin()))));
 
 		// PrincipalType
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.PRINCIPAL_TYPE.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getType().name()))));
+			false, Collections.singleton(new StoredValue(this.object.getType().name()))));
 
 		// UserIdName
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.PRINCIPAL_ID.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getUserId().getNameId()))));
+			false, Collections.singleton(new StoredValue(this.object.getUserId().getNameId()))));
 
 		// UserIdIssuer
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.PRINCIPAL_ID_ISSUER.name,
-			StoredDataType.STRING, false, Collections.singleton(new StoredValue(this.wrapped.getUserId()
+			StoredDataType.STRING, false, Collections.singleton(new StoredValue(this.object.getUserId()
 				.getNameIdIssuer()))));
 
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
@@ -142,19 +158,20 @@ public class ShptUser extends ShptSecurityObject<User> {
 
 		// Email
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.EMAIL.name, StoredDataType.STRING, false,
-			Collections.singleton(new StoredValue(this.wrapped.getEmail()))));
+			Collections.singleton(new StoredValue(this.object.getEmail()))));
 
 		// Title
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.TITLE.name, StoredDataType.STRING, false,
-			Collections.singleton(new StoredValue(this.wrapped.getTitle()))));
+			Collections.singleton(new StoredValue(this.object.getTitle()))));
 
 		// User Groups
 		final List<Group> l;
+		final ShptSession service = ctx.getSession();
 		try {
-			l = this.service.getUserGroups(getNumericId());
+			l = service.getUserGroups(this.object.getId());
 		} catch (ShptSessionException e) {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
-				this.wrapped.getLoginName(), this.wrapped.getId()), e);
+				this.object.getLoginName(), this.object.getId()), e);
 		}
 		StoredAttribute<StoredValue> groups = new StoredAttribute<StoredValue>(ShptAttributes.USER_GROUPS.name,
 			StoredDataType.STRING, true);
@@ -177,10 +194,10 @@ public class ShptUser extends ShptSecurityObject<User> {
 	protected Collection<ShptObject<?>> findRequirements(ShptSession service, StoredObject<StoredValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
-		List<Group> l = service.getUserGroups(getNumericId());
+		List<Group> l = service.getUserGroups(this.object.getId());
 		if ((l != null) && !l.isEmpty()) {
 			for (Group g : l) {
-				ret.add(new ShptGroup(service, g));
+				ret.add(new ShptGroup(getEngine(), g));
 			}
 		}
 

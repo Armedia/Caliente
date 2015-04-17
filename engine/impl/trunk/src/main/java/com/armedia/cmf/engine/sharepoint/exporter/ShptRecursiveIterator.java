@@ -56,12 +56,14 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 	private static final Iterator<File> EMPTY_FILE_ITERATOR = new EmptyIterator<File>();
 	private static final Iterator<Folder> EMPTY_FOLDER_ITERATOR = new EmptyIterator<Folder>();
 
+	private final ShptExportEngine engine;
 	private final ShptSession service;
 	private final boolean excludeEmptyFolders;
 
 	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
 
-	public ShptRecursiveIterator(ShptSession service, Folder root, boolean excludeEmptyFolders) {
+	public ShptRecursiveIterator(ShptExportEngine engine, ShptSession service, Folder root, boolean excludeEmptyFolders) {
+		this.engine = engine;
 		this.service = service;
 		this.stateStack.push(new RecursiveState(root));
 		this.excludeEmptyFolders = excludeEmptyFolders;
@@ -98,9 +100,15 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 			}
 			if (state.fileIterator.hasNext()) {
 				File f = state.fileIterator.next();
-				ShptFile F = new ShptFile(this.service, f);
+				ShptFile F;
+				try {
+					F = new ShptFile(this.engine, f);
+				} catch (Exception e) {
+					throw new RuntimeException(String.format("Failed to create a new ShptFile instance for file [%s]",
+						f.getServerRelativeUrl()));
+				}
 				this.log.debug("\tFound file: [{}]", f.getServerRelativeUrl());
-				state.next = new ExportTarget(StoredObjectType.DOCUMENT, F.getId(), F.getSearchKey());
+				state.next = new ExportTarget(StoredObjectType.DOCUMENT, F.getObjectId(), F.getSearchKey());
 				state.fileCount++;
 				return true;
 			}
@@ -137,9 +145,15 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 				state.completed = true;
 				if (!this.excludeEmptyFolders && ((state.fileCount | state.folderCount) == 0)) {
 					Folder f = state.base;
-					ShptFolder F = new ShptFolder(this.service, f);
+					ShptFolder F;
+					try {
+						F = new ShptFolder(this.engine, f);
+					} catch (Exception e) {
+						throw new RuntimeException(String.format(
+							"Failed to create a new ShptFolder instance for folder [%s]", f.getServerRelativeUrl()));
+					}
 					this.log.debug("\tExporting the contents of folder: [{}]", f.getServerRelativeUrl());
-					state.next = new ExportTarget(StoredObjectType.FOLDER, F.getId(), F.getSearchKey());
+					state.next = new ExportTarget(StoredObjectType.FOLDER, F.getObjectId(), F.getSearchKey());
 					return true;
 				}
 			}

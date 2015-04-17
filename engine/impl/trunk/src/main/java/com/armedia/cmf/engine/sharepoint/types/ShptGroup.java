@@ -10,10 +10,10 @@ import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.PrincipalType;
@@ -21,82 +21,84 @@ import com.independentsoft.share.User;
 
 public class ShptGroup extends ShptSecurityObject<Group> {
 
-	public ShptGroup(ShptSession service, Group group) {
-		super(service, group, StoredObjectType.GROUP);
+	public ShptGroup(ShptExportEngine engine, Group object) throws Exception {
+		super(engine, Group.class, object);
 	}
 
 	@Override
-	public String getBatchId() {
-		return getId();
+	protected String calculateLabel(Group object) throws Exception {
+		return object.getLoginName();
 	}
 
 	@Override
-	public String getLabel() {
-		return getName();
+	protected int calculateNumericId(Group object) {
+		return object.getId();
 	}
 
 	@Override
-	public int getNumericId() {
-		return this.wrapped.getId();
+	protected String calculateBatchId(Group object) throws Exception {
+		return calculateObjectId(object);
 	}
 
 	@Override
 	public String getName() {
-		return this.wrapped.getLoginName();
+		return this.object.getLoginName();
 	}
 
 	@Override
-	protected void marshal(StoredObject<StoredValue> object) throws ExportException {
+	protected void marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		super.marshal(ctx, object);
 		// UserID
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_ID.name, StoredDataType.ID, false,
-			Collections.singleton(new StoredValue(String.format("USER(%08x)", this.wrapped.getId())))));
+			Collections.singleton(new StoredValue(String.format("USER(%08x)", this.object.getId())))));
 
 		// LoginName
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getLoginName()))));
+			false, Collections.singleton(new StoredValue(this.object.getLoginName()))));
 
 		// AutoAcceptMembershipRequest
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name,
-			StoredDataType.BOOLEAN, false, Collections.singleton(new StoredValue(this.wrapped
+			StoredDataType.BOOLEAN, false, Collections.singleton(new StoredValue(this.object
 				.isAutoAcceptRequestToJoinLeave()))));
 
 		// AllowMembershipRequest
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.ALLOW_MEMBERSHIP_REQUEST.name,
-			StoredDataType.BOOLEAN, false, Collections.singleton(new StoredValue(this.wrapped
+			StoredDataType.BOOLEAN, false, Collections.singleton(new StoredValue(this.object
 				.isRequestToJoinLeaveAllowed()))));
 
 		// AllowMembersEditMembership
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name,
-			StoredDataType.BOOLEAN, false, Collections.singleton(new StoredValue(this.wrapped
+			StoredDataType.BOOLEAN, false, Collections.singleton(new StoredValue(this.object
 				.isMembersEditMembershipAllowed()))));
 
 		// PrincipalType
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.PRINCIPAL_TYPE.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getType().name()))));
+			false, Collections.singleton(new StoredValue(this.object.getType().name()))));
 
 		// Description
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.DESCRIPTION.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getDescription()))));
+			false, Collections.singleton(new StoredValue(this.object.getDescription()))));
 
 		// Email
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.EMAIL.name, StoredDataType.STRING, false,
-			Collections.singleton(new StoredValue(this.wrapped.getRequestToJoinLeaveEmailSetting()))));
+			Collections.singleton(new StoredValue(this.object.getRequestToJoinLeaveEmailSetting()))));
 
 		// Title
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.TITLE.name, StoredDataType.STRING, false,
-			Collections.singleton(new StoredValue(this.wrapped.getTitle()))));
+			Collections.singleton(new StoredValue(this.object.getTitle()))));
 
 		// Owner Title
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OWNER_TITLE.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.wrapped.getOwnerTitle()))));
+			false, Collections.singleton(new StoredValue(this.object.getOwnerTitle()))));
 
 		// User Groups
 		final List<User> l;
+		final ShptSession service = ctx.getSession();
 		try {
-			l = this.service.getGroupUsers(getNumericId());
+			l = service.getGroupUsers(this.object.getId());
 		} catch (ShptSessionException e) {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
-				this.wrapped.getLoginName(), this.wrapped.getId()), e);
+				this.object.getLoginName(), this.object.getId()), e);
 		}
 		StoredAttribute<StoredValue> users = new StoredAttribute<StoredValue>(ShptAttributes.GROUP_MEMBERS.name,
 			StoredDataType.STRING, true);
@@ -113,18 +115,18 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 
-		List<User> l = service.getGroupUsers(getNumericId());
+		List<User> l = service.getGroupUsers(this.object.getId());
 		if ((l != null) && !l.isEmpty()) {
 			for (User u : l) {
 				if (u.getType() == PrincipalType.USER) {
 					try {
-						ret.add(new ShptUser(service, u));
+						ret.add(new ShptUser(getEngine(), u));
 					} catch (IncompleteDataException e) {
 						this.log.warn(e.getMessage());
 					}
 				} else {
 					try {
-						ret.add(new ShptGroup(service, service.getGroup(u.getId())));
+						ret.add(new ShptGroup(getEngine(), service.getGroup(u.getId())));
 					} catch (ShptSessionException e) {
 						this.log.warn(String.format("Failed to locate group with ID [%d]", u.getId()));
 					}
@@ -134,21 +136,21 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 
 		ShptSecurityObject<?> owner = null;
 		try {
-			final User u = this.service.getGroupOwner(this.wrapped.getId());
+			final User u = service.getGroupOwner(this.object.getId());
 			if (u != null) {
 				switch (u.getType()) {
 					case USER:
 						try {
-							owner = new ShptUser(service, u);
+							owner = new ShptUser(getEngine(), u);
 						} catch (IncompleteDataException e) {
 							this.log.warn(e.getMessage());
 						}
 						break;
 					case SHARE_POINT_GROUP:
 					case SECURITY_GROUP:
-						if (getWrapped().getId() != u.getId()) {
+						if (this.object.getId() != u.getId()) {
 							try {
-								owner = new ShptGroup(service, service.getGroup(u.getId()));
+								owner = new ShptGroup(getEngine(), service.getGroup(u.getId()));
 							} catch (ShptSessionException e) {
 								// Did not find an owner group
 								if (this.log.isDebugEnabled()) {
@@ -165,7 +167,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			}
 		} catch (ShptSessionException e) {
 			this.log.warn(String.format("Failed to find the owner for group [%s] (ID[%d])", getLabel(),
-				this.wrapped.getId()));
+				this.object.getId()));
 		}
 		if (owner != null) {
 			ret.add(owner);

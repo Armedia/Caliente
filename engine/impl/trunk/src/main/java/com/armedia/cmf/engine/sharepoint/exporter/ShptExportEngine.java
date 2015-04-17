@@ -5,17 +5,13 @@
 package com.armedia.cmf.engine.sharepoint.exporter;
 
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
-import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.Setting;
 import com.armedia.cmf.engine.sharepoint.ShptException;
@@ -29,10 +25,8 @@ import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
 import com.armedia.cmf.engine.sharepoint.types.ShptGroup;
 import com.armedia.cmf.engine.sharepoint.types.ShptObject;
 import com.armedia.cmf.engine.sharepoint.types.ShptUser;
-import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -42,20 +36,9 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public class ShptExportEngine extends
-	ExportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext> {
+public class ShptExportEngine extends ExportEngine<ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
-
-	@Override
-	protected String getObjectId(ShptObject<?> sourceObject) {
-		return sourceObject.getId();
-	}
-
-	@Override
-	protected String calculateLabel(ShptObject<?> sourceObject) throws Exception {
-		return sourceObject.getLabel();
-	}
 
 	@Override
 	protected Iterator<ExportTarget> findExportResults(ShptSession service, Map<String, ?> settings) throws Exception {
@@ -71,61 +54,27 @@ public class ShptExportEngine extends
 		final boolean excludeEmptyFolders = CfgTools.decodeBoolean(Setting.EXCLUDE_EMPTY_FOLDERS, settings);
 
 		try {
-			return new ShptRecursiveIterator(service, service.getFolder(path), excludeEmptyFolders);
+			return new ShptRecursiveIterator(this, service, service.getFolder(path), excludeEmptyFolders);
 		} catch (ShptSessionException e) {
 			throw new ShptException("Export target search failed", e);
 		}
 	}
 
 	@Override
-	protected ShptObject<?> getObject(ShptSession session, StoredObjectType type, String id) throws Exception {
+	protected ShptExportDelegate<?> getExportDelegate(ShptSession session, StoredObjectType type, String searchKey)
+		throws Exception {
 		switch (type) {
 			case USER:
-				return new ShptUser(session, session.getUser(Tools.decodeInteger(id)));
+				return new ShptUser(this, session.getUser(Tools.decodeInteger(searchKey)));
 			case GROUP:
-				return new ShptGroup(session, session.getGroup(Tools.decodeInteger(id)));
+				return new ShptGroup(this, session.getGroup(Tools.decodeInteger(searchKey)));
 			case FOLDER:
-				return new ShptFolder(session, session.getFolder(id));
+				return new ShptFolder(this, session.getFolder(searchKey));
 			case DOCUMENT:
-				return ShptFile.locateFile(session, id);
+				return ShptFile.locateFile(this, session, searchKey);
 			default:
 				throw new Exception(String.format("Unsupported object type [%s]", type));
 		}
-	}
-
-	@Override
-	protected Collection<ShptObject<?>> identifyRequirements(ShptSession session, StoredObject<StoredValue> marshalled,
-		ShptObject<?> object, ShptExportContext ctx) throws Exception {
-		return object.identifyRequirements(session, marshalled, ctx);
-	}
-
-	@Override
-	protected Collection<ShptObject<?>> identifyDependents(ShptSession session, StoredObject<StoredValue> marshalled,
-		ShptObject<?> object, ShptExportContext ctx) throws Exception {
-		return object.identifyDependents(session, marshalled, ctx);
-	}
-
-	@Override
-	protected ExportTarget getExportTarget(ShptObject<?> object) throws ExportException {
-		return new ExportTarget(object.getStoredType(), object.getId(), object.getSearchKey());
-	}
-
-	@Override
-	protected StoredObject<StoredValue> marshal(ShptExportContext ctx, ShptSession session, ShptObject<?> object)
-		throws ExportException {
-		return object.marshal();
-	}
-
-	@Override
-	protected List<ContentInfo> storeContent(ShptSession session, StoredObject<StoredValue> marshaled,
-		ExportTarget referrent, ShptObject<?> object, ContentStore streamStore) throws Exception {
-		if (session == null) { throw new IllegalArgumentException(
-			"Must provide a session through which to store the contents"); }
-		if (marshaled == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
-		if (object == null) { throw new IllegalArgumentException("Must provide an object whose contents to store"); }
-		if (streamStore == null) { throw new IllegalArgumentException(
-			"Must provide a stream store in which to store the content"); }
-		return object.storeContent(session, marshaled, streamStore);
 	}
 
 	@Override
@@ -138,7 +87,7 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected ObjectStorageTranslator<ShptObject<?>, StoredValue> getTranslator() {
+	protected ObjectStorageTranslator<StoredValue> getTranslator() {
 		return ShptTranslator.INSTANCE;
 	}
 
@@ -157,7 +106,7 @@ public class ShptExportEngine extends
 		return ShptExportEngine.TARGETS;
 	}
 
-	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
+	public static ExportEngine<?, ?, ?, ?> getExportEngine() {
 		return TransferEngine.getTransferEngine(ExportEngine.class, ShptExportEngine.TARGETS.iterator().next());
 	}
 }

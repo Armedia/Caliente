@@ -12,9 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.ContentInfo;
-import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.exporter.ExportDelegate;
+import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
+import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegate;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -24,87 +28,37 @@ import com.armedia.cmf.storage.StoredValue;
  * @author diego
  *
  */
-public abstract class ShptObject<T> {
+public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 
 	public static final String TARGET_NAME = "shpt";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
-	protected final StoredObjectType type;
-	private final Class<T> wrappedClass;
-	protected final T wrapped;
-	protected final ShptSession service;
 
-	protected ShptObject(ShptSession service, T wrapped, StoredObjectType type) {
-		if (service == null) { throw new IllegalArgumentException(
-			"Must provide the service this item was retrieved with"); }
-		if (wrapped == null) { throw new IllegalArgumentException("Must provide an object to wrap around"); }
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type"); }
-		@SuppressWarnings("unchecked")
-		Class<T> c = (Class<T>) wrapped.getClass();
-		this.wrappedClass = c;
-		this.service = service;
-		this.wrapped = wrapped;
-		this.type = type;
+	/**
+	 * @param engine
+	 * @param objectClass
+	 * @param object
+	 * @throws Exception
+	 */
+	protected ShptObject(ShptExportEngine engine, Class<T> objectClass, T object) throws Exception {
+		super(engine, objectClass, object);
 	}
-
-	public final ShptSession getService() {
-		return this.service;
-	}
-
-	protected final T castObject(Object object) throws Exception {
-		if (object == null) { return null; }
-		if (!this.wrappedClass.isInstance(object)) { throw new Exception(String.format(
-			"Expected an object of class %s, but got one of class %s", this.wrappedClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
-		return this.wrappedClass.cast(object);
-	}
-
-	public final T getObject() {
-		return this.wrapped;
-	}
-
-	public abstract String getId();
-
-	public String getSearchKey() {
-		return getId();
-	}
-
-	public abstract String getBatchId();
-
-	public abstract String getLabel();
 
 	public abstract String getName();
+
+	@Override
+	protected String calculateSearchKey(T object) throws Exception {
+		return calculateObjectId(object);
+	}
 
 	public final StoredObjectType getStoredType() {
 		return this.type;
 	}
 
-	public final T getWrapped() {
-		return this.wrapped;
-	}
-
-	public final StoredObject<StoredValue> marshal() throws ExportException {
-		StoredObject<StoredValue> object = new StoredObject<StoredValue>(this.type, getId(), getSearchKey(),
-			getBatchId(), getLabel(), this.type.name());
-		marshal(object);
-		return object;
-	}
-
-	protected abstract void marshal(StoredObject<StoredValue> object) throws ExportException;
-
-	public final Collection<ShptObject<?>> identifyDependents(ShptSession service, StoredObject<StoredValue> marshaled,
-		ShptExportContext ctx) throws Exception {
-		return findDependents(service, marshaled, ctx);
-	}
-
-	protected Collection<ShptObject<?>> findDependents(ShptSession service, StoredObject<StoredValue> marshaled,
-		ShptExportContext ctx) throws Exception {
-		return new ArrayList<ShptObject<?>>();
-	}
-
-	public final Collection<ShptObject<?>> identifyRequirements(ShptSession session,
+	@Override
+	protected Collection<? extends ExportDelegate<?, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ?>> identifyRequirements(
 		StoredObject<StoredValue> marshaled, ShptExportContext ctx) throws Exception {
-		return findRequirements(session, marshaled, ctx);
+		return findRequirements(ctx.getSession(), marshaled, ctx);
 	}
 
 	protected Collection<ShptObject<?>> findRequirements(ShptSession session, StoredObject<StoredValue> marshaled,
@@ -112,8 +66,21 @@ public abstract class ShptObject<T> {
 		return new ArrayList<ShptObject<?>>();
 	}
 
-	public List<ContentInfo> storeContent(ShptSession session, StoredObject<StoredValue> marshaled,
-		ContentStore streamStore) throws Exception {
+	@Override
+	protected Collection<? extends ExportDelegate<?, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ?>> identifyDependents(
+		StoredObject<StoredValue> marshaled, ShptExportContext ctx) throws Exception {
+		return findDependents(ctx.getSession(), marshaled, ctx);
+	}
+
+	protected Collection<ShptObject<?>> findDependents(ShptSession service, StoredObject<StoredValue> marshaled,
+		ShptExportContext ctx) throws Exception {
+		return new ArrayList<ShptObject<?>>();
+	}
+
+	@Override
+	protected List<ContentInfo> storeContent(ShptSession session, StoredObject<StoredValue> marshalled,
+		ExportTarget referrent, ContentStore streamStore) throws Exception {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

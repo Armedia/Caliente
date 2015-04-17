@@ -33,7 +33,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>, StoredValue> {
+public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 
 	private static final Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 	private static final Map<StoredObjectType, BidiMap<String, IntermediateProperty>> PROPERTY_MAPPINGS;
@@ -226,8 +226,9 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 	}
 
 	@Override
-	protected StoredObjectType doDecodeObjectType(ShptObject<?> object) throws UnsupportedObjectTypeException {
-		return object.getStoredType();
+	protected StoredObjectType doDecodeObjectType(Object object) throws UnsupportedObjectTypeException {
+		if (object instanceof ShptObject) { return ShptObject.class.cast(object).getStoredType(); }
+		throw new UnsupportedObjectTypeException(null);
 	}
 
 	@Override
@@ -248,8 +249,10 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 	}
 
 	@Override
-	protected String doGetObjectId(ShptObject<?> object) throws Exception {
-		return object.getId();
+	protected String doGetObjectId(Object object) throws Exception {
+		if (object instanceof ShptObject) { return ShptObject.class.cast(object).getObjectId(); }
+		throw new IllegalArgumentException(String.format(
+			"The given object of class [%s] is not a subclass of ShptObject", object.getClass().getCanonicalName()));
 	}
 
 	@Override
@@ -317,5 +320,14 @@ public final class ShptTranslator extends ObjectStorageTranslator<ShptObject<?>,
 			if (prop != null) { return prop; }
 		}
 		return super.decodePropertyName(type, propertyName);
+	}
+
+	@Override
+	public StoredValue getValue(StoredDataType type, Object value) throws ParseException {
+		try {
+			return new StoredValue(type, value);
+		} catch (ParseException e) {
+			throw new RuntimeException("Exception raised while creating a new value", e);
+		}
 	}
 }

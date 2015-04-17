@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import com.armedia.cmf.engine.exporter.ExportContextFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
-import com.armedia.cmf.engine.sharepoint.types.ShptObject;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -20,9 +19,8 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public class ShptExportContextFactory
-	extends
-	ExportContextFactory<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptExportContext, ShptExportEngine> {
+public class ShptExportContextFactory extends
+ExportContextFactory<ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportEngine> {
 
 	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings) {
 		super(engine, settings);

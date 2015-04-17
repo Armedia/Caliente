@@ -13,7 +13,6 @@ import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
-import com.armedia.cmf.engine.sharepoint.types.ShptObject;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
@@ -27,8 +26,7 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public class ShptImportEngine extends
-	ImportEngine<ShptSession, ShptSessionWrapper, ShptObject<?>, StoredValue, ShptImportContext> {
+public class ShptImportEngine extends ImportEngine<ShptSession, ShptSessionWrapper, StoredValue, ShptImportContext> {
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {
@@ -37,9 +35,8 @@ public class ShptImportEngine extends
 	}
 
 	@Override
-	protected ImportOutcome importObject(StoredObject<?> marshaled,
-		ObjectStorageTranslator<ShptObject<?>, StoredValue> translator, ShptImportContext ctx) throws ImportException,
-		StorageException, StoredValueDecoderException {
+	protected ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<StoredValue> translator,
+		ShptImportContext ctx) throws ImportException, StorageException, StoredValueDecoderException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -51,7 +48,7 @@ public class ShptImportEngine extends
 	}
 
 	@Override
-	protected ObjectStorageTranslator<ShptObject<?>, StoredValue> getTranslator() {
+	protected ObjectStorageTranslator<StoredValue> getTranslator() {
 		// TODO Auto-generated method stub
 		return null;
 	}
