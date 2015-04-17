@@ -92,7 +92,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			path = String.format("/%s", path);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]",
-					path, getServerRelativeUrl(), getStoredType(), getObjectId(), getLabel()));
+					path, getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
 			}
 			object.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PATHS.name, StoredDataType.STRING,
 				true, Collections.singleton(new StoredValue(path))));
@@ -114,7 +114,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format(
 					"Adding parent dependency to [%s] from source path [%s] for %s [ID=%s/L=%s]", parentPath,
-					getServerRelativeUrl(), getStoredType(), getObjectId(), getLabel()));
+					getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
 			}
 		}
 		return ret;

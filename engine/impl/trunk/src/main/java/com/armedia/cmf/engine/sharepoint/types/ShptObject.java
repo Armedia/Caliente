@@ -21,7 +21,6 @@ import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegate;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 
 /**
@@ -49,10 +48,6 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	@Override
 	protected String calculateSearchKey(T object) throws Exception {
 		return calculateObjectId(object);
-	}
-
-	public final StoredObjectType getStoredType() {
-		return this.type;
 	}
 
 	@Override

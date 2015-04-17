@@ -227,7 +227,7 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 
 	@Override
 	protected StoredObjectType doDecodeObjectType(Object object) throws UnsupportedObjectTypeException {
-		if (object instanceof ShptObject) { return ShptObject.class.cast(object).getStoredType(); }
+		if (object instanceof ShptObject) { return ShptObject.class.cast(object).getType(); }
 		throw new UnsupportedObjectTypeException(null);
 	}
 
