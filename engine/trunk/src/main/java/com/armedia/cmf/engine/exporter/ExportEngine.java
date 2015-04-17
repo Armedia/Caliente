@@ -410,9 +410,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							try {
 								// Begin transaction
 								tx = session.begin();
-								final ExportDelegate<?, S, W, V, C, ?> sourceObject = getExportDelegate(s, nextType,
+								final ExportDelegate<?, S, W, V, C, ?> exportDelegate = getExportDelegate(s, nextType,
 									nextKey);
-								if (sourceObject == null) {
+								if (exportDelegate == null) {
 									// No object found with that ID...
 									this.log.warn(String.format("No %s object found with searchKey[%s]",
 										(nextType != null ? nextType.name() : "globally unique"), nextKey));
@@ -423,7 +423,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 									// We have a source object, but don't know its type, so we
 									// recalculate the export target (which means getting the
 									// type)
-									next = sourceObject.getExportTarget();
+									next = exportDelegate.getExportTarget();
 									nextType = next.getType();
 									if (nextType == null) {
 										this.log
@@ -444,7 +444,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 									objectStore, contentStore);
 								try {
 									initContext(ctx);
-									Result result = exportObject(objectStore, contentStore, null, next, sourceObject,
+									Result result = exportObject(objectStore, contentStore, null, next, exportDelegate,
 										ctx, listenerDelegator);
 									if (result != null) {
 										if (this.log.isDebugEnabled()) {
