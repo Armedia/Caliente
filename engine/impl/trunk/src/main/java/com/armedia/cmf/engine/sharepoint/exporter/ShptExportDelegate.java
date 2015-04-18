@@ -9,17 +9,17 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
+import com.armedia.cmf.engine.sharepoint.types.ShptVersion;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
-import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.User;
 
 public abstract class ShptExportDelegate<T> extends
-	ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportEngine> {
+ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportEngine> {
 
 	protected ShptExportDelegate(ShptExportEngine engine, Class<T> objectClass, T object) throws Exception {
 		super(engine, objectClass, object);
@@ -51,7 +51,7 @@ public abstract class ShptExportDelegate<T> extends
 
 	@Override
 	protected final StoredObjectType calculateType(T object) throws Exception {
-		if (object instanceof File) { return StoredObjectType.DOCUMENT; }
+		if (object instanceof ShptVersion) { return StoredObjectType.DOCUMENT; }
 		if (object instanceof Folder) { return StoredObjectType.FOLDER; }
 		if (object instanceof Group) { return StoredObjectType.GROUP; }
 		if (object instanceof User) { return StoredObjectType.USER; }
