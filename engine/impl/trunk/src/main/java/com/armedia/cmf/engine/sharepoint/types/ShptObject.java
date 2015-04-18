@@ -12,10 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.ContentInfo;
-import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
-import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegate;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
@@ -51,8 +49,8 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	}
 
 	@Override
-	protected Collection<? extends ExportDelegate<?, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ?>> identifyRequirements(
-		StoredObject<StoredValue> marshaled, ShptExportContext ctx) throws Exception {
+	protected Collection<? extends ShptExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshaled,
+		ShptExportContext ctx) throws Exception {
 		return findRequirements(ctx.getSession(), marshaled, ctx);
 	}
 
@@ -62,8 +60,8 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	}
 
 	@Override
-	protected Collection<? extends ExportDelegate<?, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ?>> identifyDependents(
-		StoredObject<StoredValue> marshaled, ShptExportContext ctx) throws Exception {
+	protected Collection<? extends ShptExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshaled,
+		ShptExportContext ctx) throws Exception {
 		return findDependents(ctx.getSession(), marshaled, ctx);
 	}
 
