@@ -1,6 +1,5 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
-import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
 
@@ -13,7 +12,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisExportContextFactory extends
-	ExportContextFactory<Session, CmisSessionWrapper, CmisObject, StoredValue, CmisExportContext, CmisExportEngine> {
+ExportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportEngine> {
 
 	CmisExportContextFactory(CmisExportEngine engine, CfgTools settings) {
 		super(engine, settings);

@@ -2,7 +2,6 @@ package com.armedia.cmf.engine.cmis.importer;
 
 import java.util.Set;
 
-import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.Session;
 
@@ -21,8 +20,7 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public class CmisImportEngine extends
-	ImportEngine<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisImportContext> {
+public class CmisImportEngine extends ImportEngine<Session, CmisSessionWrapper, Property<?>, CmisImportContext> {
 
 	public CmisImportEngine() {
 	}
@@ -33,9 +31,8 @@ public class CmisImportEngine extends
 	}
 
 	@Override
-	protected ImportOutcome importObject(StoredObject<?> marshaled,
-		ObjectStorageTranslator<CmisObject, Property<?>> translator, CmisImportContext ctx) throws ImportException,
-		StorageException, StoredValueDecoderException {
+	protected ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<Property<?>> translator,
+		CmisImportContext ctx) throws ImportException, StorageException, StoredValueDecoderException {
 		return null;
 	}
 
@@ -45,7 +42,7 @@ public class CmisImportEngine extends
 	}
 
 	@Override
-	protected ObjectStorageTranslator<CmisObject, Property<?>> getTranslator() {
+	protected ObjectStorageTranslator<Property<?>> getTranslator() {
 		return null;
 	}
 
@@ -64,7 +61,7 @@ public class CmisImportEngine extends
 		return CmisCommon.TARGETS;
 	}
 
-	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine() {
+	public static ImportEngine<?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(CmisCommon.TARGET_NAME);
 	}
 }

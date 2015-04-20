@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.cmis.importer;
 
-import org.apache.chemistry.opencmis.client.api.CmisObject;
+import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportContextFactory extends
-	ImportContextFactory<Session, CmisSessionWrapper, CmisObject, Property<?>, CmisImportContext, CmisImportEngine> {
+	ImportContextFactory<Session, CmisSessionWrapper, Property<?>, CmisImportContext, CmisImportEngine, Folder> {
 
 	CmisImportContextFactory(CmisImportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -27,12 +27,12 @@ public class CmisImportContextFactory extends
 	}
 
 	@Override
-	protected CmisObject locateFolder(Session session, String path) throws Exception {
+	protected Folder locateFolder(Session session, String path) throws Exception {
 		return null;
 	}
 
 	@Override
-	protected CmisObject createFolder(Session session, CmisObject parent, String name) throws Exception {
+	protected Folder createFolder(Session session, Folder parent, String name) throws Exception {
 		return null;
 	}
 }
