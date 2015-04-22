@@ -155,11 +155,6 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	}
 
 	@Override
-	protected ObjectStorageTranslator<StoredValue> getTranslator() {
-		return null;
-	}
-
-	@Override
 	protected CmisSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
 		return new CmisSessionFactory(cfg);
 	}
@@ -176,6 +171,11 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 
 	public static ExportEngine<?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(CmisCommon.TARGET_NAME);
+	}
+
+	@Override
+	protected ObjectStorageTranslator<StoredValue> getTranslator() {
+		return null;
 	}
 
 	@Override
