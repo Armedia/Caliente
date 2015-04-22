@@ -14,11 +14,7 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.engine.sharepoint.types.ShptFile;
-import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
-import com.armedia.cmf.engine.sharepoint.types.ShptGroup;
 import com.armedia.cmf.engine.sharepoint.types.ShptObject;
-import com.armedia.cmf.engine.sharepoint.types.ShptUser;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -26,7 +22,6 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueCodec;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.cmf.storage.StoredValueEncoderException;
-import com.armedia.cmf.storage.UnsupportedObjectTypeException;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -223,29 +218,6 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 
 	private ShptTranslator() {
 		// Avoid instantiation
-	}
-
-	@Override
-	protected StoredObjectType doDecodeObjectType(Object object) throws UnsupportedObjectTypeException {
-		if (object instanceof ShptObject) { return ShptObject.class.cast(object).getType(); }
-		throw new UnsupportedObjectTypeException(null);
-	}
-
-	@Override
-	protected Class<? extends ShptObject<?>> doDecodeObjectType(StoredObjectType type)
-		throws UnsupportedObjectTypeException {
-		switch (type) {
-			case DOCUMENT:
-				return ShptFile.class;
-			case FOLDER:
-				return ShptFolder.class;
-			case USER:
-				return ShptUser.class;
-			case GROUP:
-				return ShptGroup.class;
-			default:
-				return null;
-		}
 	}
 
 	@Override
