@@ -4,20 +4,6 @@ import java.text.ParseException;
 
 public abstract class ObjectStorageTranslator<V> {
 
-	public final StoredObjectType decodeObjectType(Object object) throws UnsupportedObjectTypeException {
-		if (object == null) { throw new IllegalArgumentException("Must provide an object whose type to decode"); }
-		return doDecodeObjectType(object);
-	}
-
-	protected abstract StoredObjectType doDecodeObjectType(Object object) throws UnsupportedObjectTypeException;
-
-	public final Class<?> decodeObjectType(StoredObjectType type) throws UnsupportedObjectTypeException {
-		if (type == null) { throw new IllegalArgumentException("Must provide a type whose object class to decode"); }
-		return doDecodeObjectType(type);
-	}
-
-	protected abstract Class<?> doDecodeObjectType(StoredObjectType type) throws UnsupportedObjectTypeException;
-
 	public final String getObjectId(Object object) throws Exception {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose ID to retrieve"); }
 		return doGetObjectId(object);
