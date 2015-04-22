@@ -19,7 +19,6 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValueCodec;
-import com.armedia.cmf.storage.UnsupportedObjectTypeException;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -223,16 +222,6 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 	}
 
 	public static final ObjectStorageTranslator<IDfValue> INSTANCE = new DctmTranslator();
-
-	@Override
-	protected StoredObjectType doDecodeObjectType(Object object) throws UnsupportedObjectTypeException {
-		return null;
-	}
-
-	@Override
-	protected Class<?> doDecodeObjectType(StoredObjectType type) throws UnsupportedObjectTypeException {
-		return null;
-	}
 
 	@Override
 	protected String doGetObjectId(Object object) throws DfException {
