@@ -4,13 +4,6 @@ import java.text.ParseException;
 
 public abstract class ObjectStorageTranslator<V> {
 
-	public final String getObjectId(Object object) throws Exception {
-		if (object == null) { throw new IllegalArgumentException("Must provide an object whose ID to retrieve"); }
-		return doGetObjectId(object);
-	}
-
-	protected abstract String doGetObjectId(Object object) throws Exception;
-
 	public final String encodeValue(StoredDataType value) {
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to encode"); }
 		return value.name();
