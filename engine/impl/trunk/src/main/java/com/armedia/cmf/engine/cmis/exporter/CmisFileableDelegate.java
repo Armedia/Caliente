@@ -2,6 +2,7 @@ package com.armedia.cmf.engine.cmis.exporter;
 
 import java.util.List;
 
+import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 
@@ -23,7 +24,10 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 	@Override
 	protected final StoredObjectType calculateType(T object) throws Exception {
+		if (Document.class.isInstance(object)) { return StoredObjectType.DOCUMENT; }
 		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
-		return StoredObjectType.DOCUMENT;
+		throw new Exception(String.format(
+			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
+				.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }
