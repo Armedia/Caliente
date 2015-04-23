@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
+import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.OperationContext;
@@ -16,6 +17,7 @@ import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
+import com.armedia.cmf.engine.cmis.CmisAcl;
 import com.armedia.cmf.engine.cmis.CmisCommon;
 import com.armedia.cmf.engine.cmis.CmisPagingTransformerIterator;
 import com.armedia.cmf.engine.cmis.CmisRecursiveIterator;
@@ -181,6 +183,23 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	@Override
 	protected CmisExportDelegate<?> getExportDelegate(Session session, StoredObjectType type, String searchKey)
 		throws Exception {
+		CmisObject obj = session.getObject(searchKey);
+		switch (type) {
+			case ACL:
+				return new CmisAclDelegate(this, new CmisAcl(decodeType(obj.getBaseType()), searchKey, obj.getAcl()));
+			case FOLDER:
+				if (obj instanceof Folder) { return new CmisFolderDelegate(this, Folder.class.cast(obj)); }
+				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Folder-type",
+					searchKey, obj.getClass().getCanonicalName()));
+			case DOCUMENT:
+				if (obj instanceof Document) { return new CmisDocumentDelegate(this, Document.class.cast(obj)); }
+				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Document-type",
+					searchKey, obj.getClass().getCanonicalName()));
+			case USER:
+			case GROUP:
+			default:
+				break;
+		}
 		return null;
 	}
 }

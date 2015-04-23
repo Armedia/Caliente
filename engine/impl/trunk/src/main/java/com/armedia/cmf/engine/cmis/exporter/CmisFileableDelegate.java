@@ -1,12 +1,16 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 
+import com.armedia.cmf.engine.cmis.CmisAcl;
+import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
 
@@ -20,6 +24,18 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		List<String> paths = f.getPaths();
 		if (!paths.isEmpty()) { return paths.get(0); }
 		return String.format("${unfiled}:%s", f.getName());
+	}
+
+	@Override
+	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
+		CmisExportContext ctx) throws Exception {
+		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
+		for (Folder f : this.object.getParents()) {
+			ret.add(new CmisFolderDelegate(this.engine, f));
+		}
+		ret.add(new CmisAclDelegate(this.engine, new CmisAcl(this.engine.decodeType(this.object.getType()), this.object
+			.getId(), this.object.getAcl())));
+		return ret;
 	}
 
 	@Override
