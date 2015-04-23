@@ -14,7 +14,6 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.engine.sharepoint.types.ShptObject;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -218,13 +217,6 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 
 	private ShptTranslator() {
 		// Avoid instantiation
-	}
-
-	@Override
-	protected String doGetObjectId(Object object) throws Exception {
-		if (object instanceof ShptObject) { return ShptObject.class.cast(object).getObjectId(); }
-		throw new IllegalArgumentException(String.format(
-			"The given object of class [%s] is not a subclass of ShptObject", object.getClass().getCanonicalName()));
 	}
 
 	@Override
