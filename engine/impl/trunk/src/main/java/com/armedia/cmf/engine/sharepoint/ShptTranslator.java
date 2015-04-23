@@ -19,8 +19,6 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueCodec;
-import com.armedia.cmf.storage.StoredValueDecoderException;
-import com.armedia.cmf.storage.StoredValueEncoderException;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -168,52 +166,7 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		PROPERTY_MAPPINGS = Tools.freezeMap(propertyMappings);
 	}
 
-	private static class Codec implements StoredValueCodec<StoredValue> {
-
-		private final StoredDataType type;
-		private final StoredValue nullValue;
-
-		private Codec(StoredDataType type) {
-			this.type = type;
-			try {
-				this.nullValue = new StoredValue(this.type, null);
-			} catch (ParseException e) {
-				throw new RuntimeException("Unexpected parse exception", e);
-			}
-		}
-
-		@Override
-		public StoredValue encodeValue(StoredValue value) throws StoredValueEncoderException {
-			return Tools.coalesce(value, this.nullValue);
-		}
-
-		@Override
-		public StoredValue decodeValue(StoredValue value) throws StoredValueDecoderException {
-			return Tools.coalesce(value, this.nullValue);
-		}
-
-		@Override
-		public boolean isNull(StoredValue value) {
-			return value.isNull();
-		}
-
-		@Override
-		public StoredValue getNull() {
-			return this.nullValue;
-		}
-	};
-
-	private static final Map<StoredDataType, Codec> CODECS;
-
 	public static ShptTranslator INSTANCE = new ShptTranslator();
-
-	static {
-		Map<StoredDataType, Codec> codecs = new EnumMap<StoredDataType, Codec>(StoredDataType.class);
-		for (StoredDataType t : StoredDataType.values()) {
-			codecs.put(t, new Codec(t));
-		}
-		CODECS = Tools.freezeMap(codecs);
-	}
 
 	private ShptTranslator() {
 		// Avoid instantiation
@@ -221,7 +174,7 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 
 	@Override
 	public StoredValueCodec<StoredValue> getCodec(StoredDataType type) {
-		return ShptTranslator.CODECS.get(type);
+		return ObjectStorageTranslator.getStoredValueCodec(type);
 	}
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {
