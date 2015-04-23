@@ -20,7 +20,6 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValueCodec;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
@@ -222,14 +221,6 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 	}
 
 	public static final ObjectStorageTranslator<IDfValue> INSTANCE = new DctmTranslator();
-
-	@Override
-	protected String doGetObjectId(Object object) throws DfException {
-		if (object instanceof IDfPersistentObject) { return IDfPersistentObject.class.cast(object).getObjectId()
-			.getId(); }
-		throw new DfException(String.format("Object of class [%s] is not an instance of IDfPersistentObject", object
-			.getClass().getCanonicalName()));
-	}
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {
 		return DctmTranslator.ATTRIBUTE_MAPPINGS.get(type);
