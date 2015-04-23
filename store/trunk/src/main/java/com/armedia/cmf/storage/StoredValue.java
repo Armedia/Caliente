@@ -2,6 +2,7 @@ package com.armedia.cmf.storage;
 
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 
 import com.armedia.commons.utilities.Tools;
@@ -75,6 +76,8 @@ public final class StoredValue {
 				case TIME:
 					if (value instanceof Date) {
 						this.value = Date.class.cast(value);
+					} else if (value instanceof Calendar) {
+						this.value = Calendar.class.cast(value).getTime();
 					} else {
 						this.value = DateFormat.getDateInstance().parse(value.toString());
 					}
