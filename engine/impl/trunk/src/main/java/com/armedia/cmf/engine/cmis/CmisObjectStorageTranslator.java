@@ -80,11 +80,11 @@ public class CmisObjectStorageTranslator extends ObjectStorageTranslator<StoredV
 
 	@Override
 	public StoredValueCodec<StoredValue> getCodec(StoredDataType type) {
-		return null;
+		return ObjectStorageTranslator.getStoredValueCodec(type);
 	}
 
 	@Override
 	public StoredValue getValue(StoredDataType type, Object value) throws ParseException {
-		return null;
+		return new StoredValue(type, value);
 	}
 }
