@@ -43,6 +43,12 @@ public final class StoredValue {
 		this.nullValue = (value == null);
 	}
 
+	public StoredValue(Calendar value) {
+		this.type = StoredDataType.TIME;
+		this.value = (value != null ? value.getTime() : null);
+		this.nullValue = (value == null);
+	}
+
 	public StoredValue(StoredDataType type, Object value) throws ParseException {
 		this.type = type;
 		this.nullValue = (value == null);
