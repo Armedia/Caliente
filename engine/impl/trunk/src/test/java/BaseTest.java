@@ -19,6 +19,9 @@ public class BaseTest {
 	public void test() throws Exception {
 		final ExportEngine<?, ?, ?, ?> engine = CmisExportEngine.getExportEngine();
 		ObjectStore<?, ?> objectStore = Stores.getObjectStore("default");
+		objectStore.clearProperties();
+		objectStore.clearAllObjects();
+		objectStore.clearAttributeMappings();
 		ContentStore contentStore = Stores.getContentStore("default");
 		Logger output = LoggerFactory.getLogger("console");
 

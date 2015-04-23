@@ -22,22 +22,23 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return null;
+		return super.identifyRequirements(marshalled, ctx);
 	}
 
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		super.marshal(ctx, object);
 	}
 
 	@Override
 	protected List<ContentInfo> storeContent(Session session, StoredObject<StoredValue> marshalled,
 		ExportTarget referrent, ContentStore streamStore) throws Exception {
-		return null;
+		return super.storeContent(session, marshalled, referrent, streamStore);
 	}
 
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return null;
+		return super.identifyDependents(marshalled, ctx);
 	}
 }

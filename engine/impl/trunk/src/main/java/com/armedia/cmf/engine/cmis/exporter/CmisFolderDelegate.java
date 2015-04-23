@@ -14,5 +14,6 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		super.marshal(ctx, object);
 	}
 }

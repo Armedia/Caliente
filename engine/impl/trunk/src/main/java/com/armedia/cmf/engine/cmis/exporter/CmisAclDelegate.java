@@ -23,7 +23,7 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return null;
+		return super.identifyRequirements(marshalled, ctx);
 	}
 
 	@Override
@@ -33,13 +33,13 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 	@Override
 	protected final Collection<CmisExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return null;
+		return super.identifyDependents(marshalled, ctx);
 	}
 
 	@Override
 	protected final List<ContentInfo> storeContent(Session session, StoredObject<StoredValue> marshalled,
 		ExportTarget referrent, ContentStore streamStore) throws Exception {
-		return null;
+		return super.storeContent(session, marshalled, referrent, streamStore);
 	}
 
 	@Override
