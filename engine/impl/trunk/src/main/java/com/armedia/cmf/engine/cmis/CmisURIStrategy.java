@@ -29,7 +29,7 @@ public class CmisURIStrategy extends URIStrategy {
 	protected String calculateSSP(StoredObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		String path = null;
+		String path = object.getLabel();
 		StoredProperty<?> p = object.getProperty(CmisFileableDelegate.MAIN_PATH);
 		if ((p != null) && p.hasValues()) {
 			path = p.getValue().toString();

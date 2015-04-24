@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.cmis.CmisAcl;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -27,8 +28,18 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	protected final String calculateLabel(T obj) throws Exception {
 		FileableCmisObject f = FileableCmisObject.class.cast(obj);
 		List<String> paths = f.getPaths();
-		if (!paths.isEmpty()) { return paths.get(0); }
-		return String.format("${unfiled}:%s", f.getName());
+		String ret = null;
+		if (!paths.isEmpty()) {
+			ret = paths.get(0);
+		} else {
+			ret = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
+		}
+		String version = calculateVersion(obj);
+		return String.format("%s%s%s", ret, StringUtils.isBlank(version) ? "" : "#", version);
+	}
+
+	protected String calculateVersion(T obj) throws Exception {
+		return null;
 	}
 
 	@Override

@@ -26,6 +26,16 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
+	protected String calculateBatchId(Document object) throws Exception {
+		return object.getVersionSeriesId();
+	}
+
+	@Override
+	protected String calculateVersion(Document obj) throws Exception {
+		return obj.getVersionLabel();
+	}
+
+	@Override
 	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		return super.identifyRequirements(marshalled, ctx);
