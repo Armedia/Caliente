@@ -23,6 +23,8 @@ public class BaseTest {
 		objectStore.clearAllObjects();
 		objectStore.clearAttributeMappings();
 		ContentStore contentStore = Stores.getContentStore("default");
+		contentStore.clearProperties();
+		contentStore.clearAllStreams();
 		Logger output = LoggerFactory.getLogger("console");
 
 		Map<String, String> settings = new TreeMap<String, String>();
