@@ -1,5 +1,6 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 
@@ -9,9 +10,12 @@ import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.cmis.CmisAcl;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
@@ -49,6 +53,25 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			object.setProperty(path);
 		}
 		 */
+		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(
+			IntermediateProperty.TARGET_PARENTS.encode(), StoredDataType.ID, true);
+		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.TARGET_PATHS.encode(),
+			StoredDataType.STRING, true);
+
+		for (Folder f : this.object.getParents()) {
+			try {
+				parents.addValue(new StoredValue(StoredDataType.ID, f.getId()));
+			} catch (ParseException e) {
+				// Will not happen...but still
+				throw new ExportException(String.format("Failed to store the parent ID [%s] for %s [%s]", f.getId(),
+					object.getType(), object.getId()), e);
+			}
+			for (String p : f.getPaths()) {
+				paths.addValue(new StoredValue(p));
+			}
+		}
+		object.setProperty(paths);
+		object.setProperty(parents);
 	}
 
 	@Override
