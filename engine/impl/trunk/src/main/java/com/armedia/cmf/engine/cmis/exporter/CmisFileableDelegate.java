@@ -10,15 +10,11 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.cmis.CmisAcl;
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
-
-	public static final String MAIN_PATH = "mainPath";
 
 	protected CmisFileableDelegate(CmisExportEngine engine, Class<T> objectClass, T object) throws Exception {
 		super(engine, objectClass, object);
@@ -45,12 +41,14 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		super.marshal(ctx, object);
+		/*
 		List<String> l = this.object.getPaths();
 		if ((l != null) && !l.isEmpty()) {
 			StoredProperty<StoredValue> path = new StoredProperty<StoredValue>(CmisFileableDelegate.MAIN_PATH,
 				StoredDataType.STRING, new StoredValue(l.get(0)));
 			object.setProperty(path);
 		}
+		 */
 	}
 
 	@Override
