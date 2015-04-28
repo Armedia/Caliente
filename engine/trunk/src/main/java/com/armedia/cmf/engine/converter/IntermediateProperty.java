@@ -18,9 +18,9 @@ import com.armedia.commons.utilities.Tools;
  */
 public enum IntermediateProperty {
 	// CMIS-inspired properties
-	TARGET_PATHS(PropertyIds.PATH, StoredDataType.STRING),
-	TARGET_PARENTS(PropertyIds.PARENT_ID, StoredDataType.STRING),
-	CONTENTS(PropertyIds.CONTENT_STREAM_ID, StoredDataType.STRING),
+	PATH(PropertyIds.PATH, StoredDataType.STRING),
+	PARENT_ID(PropertyIds.PARENT_ID, StoredDataType.STRING),
+	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, StoredDataType.STRING),
 
 	// Non-CMIS properties
 	USERS_WITH_DEFAULT_GROUP(StoredDataType.ID),
