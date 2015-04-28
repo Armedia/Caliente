@@ -4,11 +4,11 @@
 
 package com.armedia.cmf.engine.converter;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
+import com.armedia.cmf.engine.converter.MappingManager.Mappable;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -16,7 +16,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public enum IntermediateProperty {
+public enum IntermediateProperty implements Mappable {
 	// CMIS-inspired properties
 	PATH(PropertyIds.PATH, StoredDataType.STRING),
 	PARENT_ID(PropertyIds.PARENT_ID, StoredDataType.STRING),
@@ -48,9 +48,14 @@ public enum IntermediateProperty {
 	}
 
 	private IntermediateProperty(String propertyId, StoredDataType type, boolean repeating) {
-		this.name = (propertyId != null ? propertyId : String.format(":%s", name().toLowerCase()));
+		this.name = MappingManager.generateMapping(propertyId, name());
 		this.type = type;
 		this.repeating = repeating;
+	}
+
+	@Override
+	public final String getMapping() {
+		return this.name;
 	}
 
 	public final String encode() {
@@ -63,14 +68,8 @@ public enum IntermediateProperty {
 		if (IntermediateProperty.MAPPINGS == null) {
 			synchronized (IntermediateProperty.class) {
 				if (IntermediateProperty.MAPPINGS == null) {
-					Map<String, IntermediateProperty> mappings = new HashMap<String, IntermediateProperty>();
-					for (IntermediateProperty a : IntermediateProperty.values()) {
-						IntermediateProperty b = mappings.put(a.name, a);
-						if (b != null) { throw new IllegalStateException(String.format(
-							"Both intermediate properties %s and %s resolve the same mapping name (%s|%s)", a, b,
-							a.name, b.name)); }
-					}
-					IntermediateProperty.MAPPINGS = Tools.freezeMap(mappings);
+					IntermediateProperty.MAPPINGS = Tools.freezeMap(MappingManager.createMappings(
+						IntermediateProperty.class, IntermediateProperty.values()));
 				}
 			}
 		}
@@ -81,7 +80,7 @@ public enum IntermediateProperty {
 		IntermediateProperty.initMappings();
 		IntermediateProperty ret = IntermediateProperty.MAPPINGS.get(name);
 		if (ret == null) { throw new IllegalArgumentException(String.format(
-			"Failed to decode [%s] into a valid intermediate attribute", name)); }
+			"Failed to decode [%s] into a valid intermediate property", name)); }
 		return ret;
 	}
 }

@@ -4,11 +4,11 @@
 
 package com.armedia.cmf.engine.converter;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
+import com.armedia.cmf.engine.converter.MappingManager.Mappable;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -16,7 +16,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public enum IntermediateAttribute {
+public enum IntermediateAttribute implements Mappable {
 	// CMIS attributes
 	OBJECT_ID(PropertyIds.OBJECT_ID, StoredDataType.ID),
 	BASE_TYPE_ID(PropertyIds.BASE_TYPE_ID, StoredDataType.STRING),
@@ -73,9 +73,14 @@ public enum IntermediateAttribute {
 	}
 
 	private IntermediateAttribute(String propertyId, StoredDataType type, boolean repeating) {
-		this.name = (propertyId != null ? propertyId : String.format(":%s", name().toLowerCase()));
+		this.name = MappingManager.generateMapping(propertyId, name());
 		this.type = type;
 		this.repeating = repeating;
+	}
+
+	@Override
+	public final String getMapping() {
+		return this.name;
 	}
 
 	public final String encode() {
@@ -88,14 +93,8 @@ public enum IntermediateAttribute {
 		if (IntermediateAttribute.MAPPINGS == null) {
 			synchronized (IntermediateAttribute.class) {
 				if (IntermediateAttribute.MAPPINGS == null) {
-					Map<String, IntermediateAttribute> mappings = new HashMap<String, IntermediateAttribute>();
-					for (IntermediateAttribute a : IntermediateAttribute.values()) {
-						IntermediateAttribute b = mappings.put(a.name, a);
-						if (b != null) { throw new IllegalStateException(String.format(
-							"Both intermediate attributes %s and %s resolve the same mapping name (%s|%s)", a, b,
-							a.name, b.name)); }
-					}
-					IntermediateAttribute.MAPPINGS = Tools.freezeMap(mappings);
+					IntermediateAttribute.MAPPINGS = Tools.freezeMap(MappingManager.createMappings(
+						IntermediateAttribute.class, IntermediateAttribute.values()));
 				}
 			}
 		}
