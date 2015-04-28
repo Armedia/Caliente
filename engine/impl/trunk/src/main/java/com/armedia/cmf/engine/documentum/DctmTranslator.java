@@ -41,12 +41,12 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (USER)
-		// OBJECT_TYPE (DM_USER)
-		am.put(DctmAttributes.USER_NAME, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (USER)
+		// OBJECT_TYPE_ID (DM_USER)
+		am.put(DctmAttributes.USER_NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.USER_GROUP_NAME, IntermediateAttribute.GROUP);
-		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.MODIFICATION_DATE);
+		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(DctmAttributes.DEFAULT_FOLDER, IntermediateAttribute.DEFAULT_FOLDER);
 		am.put(DctmAttributes.USER_LOGIN_NAME, IntermediateAttribute.LOGIN_NAME);
 		am.put(DctmAttributes.USER_LOGIN_DOMAIN, IntermediateAttribute.LOGIN_REALM);
@@ -56,12 +56,12 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (GROUP)
-		// OBJECT_TYPE (DM_GROUP)
-		am.put(DctmAttributes.GROUP_NAME, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (GROUP)
+		// OBJECT_TYPE_ID (DM_GROUP)
+		am.put(DctmAttributes.GROUP_NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
-		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.MODIFICATION_DATE);
+		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		pm.put(DctmGroup.USERS_WITH_DEFAULT_GROUP, IntermediateProperty.USERS_WITH_DEFAULT_GROUP);
 		propertyMappings.put(StoredObjectType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
@@ -69,9 +69,9 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (ACL)
-		// OBJECT_TYPE (DM_ACL)
-		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (ACL)
+		// OBJECT_TYPE_ID (DM_ACL)
+		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
 		attributeMappings.put(StoredObjectType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
@@ -80,10 +80,10 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (TYPE)
-		// OBJECT_TYPE (DM_TYPE)
-		am.put(DctmAttributes.NAME, IntermediateAttribute.OBJECT_NAME);
-		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.MODIFICATION_DATE);
+		// BASE_TYPE_ID (TYPE)
+		// OBJECT_TYPE_ID (DM_TYPE)
+		am.put(DctmAttributes.NAME, IntermediateAttribute.NAME);
+		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(DctmAttributes.OWNER, IntermediateAttribute.OWNER);
 		attributeMappings.put(StoredObjectType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
@@ -91,9 +91,9 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (FORMAT)
-		// OBJECT_TYPE (DM_FORMAT)
-		am.put(DctmAttributes.NAME, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (FORMAT)
+		// OBJECT_TYPE_ID (DM_FORMAT)
+		am.put(DctmAttributes.NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		attributeMappings.put(StoredObjectType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
@@ -101,22 +101,22 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (FOLDER)
-		// OBJECT_TYPE (DM_FOLDER|DM_CABINET|...)
-		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (FOLDER)
+		// OBJECT_TYPE_ID (DM_FOLDER|DM_CABINET|...)
+		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.TITLE, IntermediateAttribute.DESCRIPTION);
-		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_TYPE);
+		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
 		am.put(DctmAttributes.OWNER_PERMIT, IntermediateAttribute.OWNER_PERMISSION);
 		am.put(DctmAttributes.GROUP_NAME, IntermediateAttribute.GROUP);
 		am.put(DctmAttributes.GROUP_PERMIT, IntermediateAttribute.GROUP_PERMISSION);
-		am.put(DctmAttributes.R_CREATOR_NAME, IntermediateAttribute.CREATOR);
-		am.put(DctmAttributes.R_CREATION_DATE, IntermediateAttribute.CREATE_DATE);
-		am.put(DctmAttributes.R_ACCESS_DATE, IntermediateAttribute.ACCESS_DATE);
-		am.put(DctmAttributes.R_MODIFIER, IntermediateAttribute.MODIFIER);
-		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.MODIFICATION_DATE);
-		am.put(DctmAttributes.I_FOLDER_ID, IntermediateAttribute.PARENTS);
-		am.put(DctmAttributes.R_FOLDER_PATH, IntermediateAttribute.PATHS);
+		am.put(DctmAttributes.R_CREATOR_NAME, IntermediateAttribute.CREATED_BY);
+		am.put(DctmAttributes.R_CREATION_DATE, IntermediateAttribute.CREATION_DATE);
+		am.put(DctmAttributes.R_ACCESS_DATE, IntermediateAttribute.LAST_ACCESS_DATE);
+		am.put(DctmAttributes.R_MODIFIER, IntermediateAttribute.LAST_MODIFIED_BY);
+		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
+		am.put(DctmAttributes.I_FOLDER_ID, IntermediateAttribute.PARENT_ID);
+		am.put(DctmAttributes.R_FOLDER_PATH, IntermediateAttribute.PATH);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
 		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
@@ -129,25 +129,25 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (FOLDER)
-		// OBJECT_TYPE (DM_DOCUMENT|...)
-		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (FOLDER)
+		// OBJECT_TYPE_ID (DM_DOCUMENT|...)
+		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.TITLE, IntermediateAttribute.DESCRIPTION);
-		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_TYPE);
-		am.put(DctmAttributes.R_CONTENT_SIZE, IntermediateAttribute.CONTENT_SIZE);
-		am.put(DctmAttributes.I_CHRONICLE_ID, IntermediateAttribute.VERSION_TREE_ID);
-		am.put(DctmAttributes.I_ANTECEDENT_ID, IntermediateAttribute.VERSION_PRIOR_ID);
+		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
+		am.put(DctmAttributes.R_CONTENT_SIZE, IntermediateAttribute.CONTENT_STREAM_LENGTH);
+		am.put(DctmAttributes.I_CHRONICLE_ID, IntermediateAttribute.VERSION_SERIES_ID);
+		am.put(DctmAttributes.I_ANTECEDENT_ID, IntermediateAttribute.VERSION_ANTECEDENT_ID);
 		am.put(DctmAttributes.R_VERSION_LABEL, IntermediateAttribute.VERSION_LABEL);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
 		am.put(DctmAttributes.OWNER_PERMIT, IntermediateAttribute.OWNER_PERMISSION);
 		am.put(DctmAttributes.GROUP_NAME, IntermediateAttribute.GROUP);
 		am.put(DctmAttributes.GROUP_PERMIT, IntermediateAttribute.GROUP_PERMISSION);
-		am.put(DctmAttributes.R_CREATOR_NAME, IntermediateAttribute.CREATOR);
-		am.put(DctmAttributes.R_CREATION_DATE, IntermediateAttribute.CREATE_DATE);
-		am.put(DctmAttributes.R_ACCESS_DATE, IntermediateAttribute.ACCESS_DATE);
-		am.put(DctmAttributes.R_MODIFIER, IntermediateAttribute.MODIFIER);
-		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.MODIFICATION_DATE);
-		am.put(DctmAttributes.I_FOLDER_ID, IntermediateAttribute.PARENTS);
+		am.put(DctmAttributes.R_CREATOR_NAME, IntermediateAttribute.CREATED_BY);
+		am.put(DctmAttributes.R_CREATION_DATE, IntermediateAttribute.CREATION_DATE);
+		am.put(DctmAttributes.R_ACCESS_DATE, IntermediateAttribute.LAST_ACCESS_DATE);
+		am.put(DctmAttributes.R_MODIFIER, IntermediateAttribute.LAST_MODIFIED_BY);
+		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
+		am.put(DctmAttributes.I_FOLDER_ID, IntermediateAttribute.PARENT_ID);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
@@ -161,14 +161,14 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (CONTENT)
-		// OBJECT_TYPE (DMR_CONTENT|...)
-		am.put(DctmAttributes.FULL_FORMAT, IntermediateAttribute.CONTENT_TYPE);
-		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_TYPE);
-		am.put(DctmAttributes.CONTENT_SIZE, IntermediateAttribute.CONTENT_SIZE);
-		am.put(DctmAttributes.R_CONTENT_HASH, IntermediateAttribute.CONTENT_HASH);
-		am.put(DctmAttributes.PARENT_ID, IntermediateAttribute.PARENTS);
-		am.put(DctmAttributes.SET_TIME, IntermediateAttribute.MODIFICATION_DATE);
+		// BASE_TYPE_ID (CONTENT)
+		// OBJECT_TYPE_ID (DMR_CONTENT|...)
+		am.put(DctmAttributes.FULL_FORMAT, IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
+		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
+		am.put(DctmAttributes.CONTENT_SIZE, IntermediateAttribute.CONTENT_STREAM_LENGTH);
+		am.put(DctmAttributes.R_CONTENT_HASH, IntermediateAttribute.CONTENT_STREAM_HASH);
+		am.put(DctmAttributes.PARENT_ID, IntermediateAttribute.PARENT_ID);
+		am.put(DctmAttributes.SET_TIME, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
@@ -192,7 +192,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 				return DctmDataType.DF_DOUBLE;
 			case ID:
 				return DctmDataType.DF_ID;
-			case TIME:
+			case DATETIME:
 				return DctmDataType.DF_TIME;
 			default:
 				return DctmDataType.DF_UNDEFINED;

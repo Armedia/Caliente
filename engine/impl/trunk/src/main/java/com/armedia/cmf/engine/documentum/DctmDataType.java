@@ -109,7 +109,7 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 			return this.nullValue;
 		}
 	},
-	DF_TIME(StoredDataType.TIME, IDfValue.DF_TIME) {
+	DF_TIME(StoredDataType.DATETIME, IDfValue.DF_TIME) {
 		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
 
 		@Override
@@ -117,7 +117,7 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 			IDfTime t = value.asTime();
 			if (t.isNullDate() || !t.isValid()) {
 				try {
-					return new StoredValue(StoredDataType.TIME, null);
+					return new StoredValue(StoredDataType.DATETIME, null);
 				} catch (ParseException e) {
 					// Not going to happen...
 					throw new RuntimeException("Unexpected parse exception", e);
@@ -275,7 +275,7 @@ public enum DctmDataType implements StoredValueCodec<IDfValue> {
 				return new StoredValue(value.asInteger());
 			case STRING:
 				return new StoredValue(value.asString());
-			case TIME:
+			case DATETIME:
 				IDfTime t = value.asTime();
 				Date d = null;
 				if (t.isNullDate()) {
