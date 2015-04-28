@@ -54,8 +54,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		}
 		 */
 		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(
-			IntermediateProperty.TARGET_PARENTS.encode(), StoredDataType.ID, true);
-		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.TARGET_PATHS.encode(),
+			IntermediateProperty.PARENT_ID.encode(), StoredDataType.ID, true);
+		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
 			StoredDataType.STRING, true);
 
 		for (Folder f : this.object.getParents()) {
