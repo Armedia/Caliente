@@ -23,7 +23,7 @@ public class CmisObjectStorageTranslator extends ObjectStorageTranslator<StoredV
 		m.put(PropertyType.BOOLEAN, StoredDataType.BOOLEAN);
 		m.put(PropertyType.INTEGER, StoredDataType.INTEGER);
 		m.put(PropertyType.DECIMAL, StoredDataType.DOUBLE);
-		m.put(PropertyType.DATETIME, StoredDataType.TIME);
+		m.put(PropertyType.DATETIME, StoredDataType.DATETIME);
 		m.put(PropertyType.ID, StoredDataType.ID);
 		m.put(PropertyType.STRING, StoredDataType.STRING);
 		m.put(PropertyType.URI, StoredDataType.STRING); // TODO: Add this to StoredDataType
@@ -34,7 +34,7 @@ public class CmisObjectStorageTranslator extends ObjectStorageTranslator<StoredV
 		n.put(StoredDataType.BOOLEAN, PropertyType.BOOLEAN);
 		n.put(StoredDataType.INTEGER, PropertyType.INTEGER);
 		n.put(StoredDataType.DOUBLE, PropertyType.DECIMAL);
-		n.put(StoredDataType.TIME, PropertyType.DATETIME);
+		n.put(StoredDataType.DATETIME, PropertyType.DATETIME);
 		n.put(StoredDataType.ID, PropertyType.ID);
 		n.put(StoredDataType.STRING, PropertyType.STRING); // TODO: Need to handle HTML and URI
 		DATA_TYPES_REV = Tools.freezeMap(n);
