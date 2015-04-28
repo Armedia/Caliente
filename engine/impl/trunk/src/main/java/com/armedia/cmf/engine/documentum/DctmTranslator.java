@@ -120,8 +120,8 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
 		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.TARGET_PATHS);
-		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.TARGET_PARENTS);
+		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.PATH);
+		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.PARENT_ID);
 		pm.put(DctmFolder.USERS_WITH_DEFAULT_FOLDER, IntermediateProperty.USERS_WITH_DEFAULT_FOLDER);
 		pm.put(DctmFolder.USERS_DEFAULT_FOLDER_PATHS, IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS);
 		propertyMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
@@ -151,9 +151,9 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.TARGET_PATHS);
-		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.TARGET_PARENTS);
-		pm.put(DctmDocument.LEGACY_CONTENTS_PROPERTY, IntermediateProperty.CONTENTS);
+		pm.put(DctmSysObject.TARGET_PATHS, IntermediateProperty.PATH);
+		pm.put(DctmSysObject.TARGET_PARENTS, IntermediateProperty.PARENT_ID);
+		pm.put(DctmDocument.LEGACY_CONTENTS_PROPERTY, IntermediateProperty.CONTENT_STREAM_ID);
 		pm.put(DctmSysObject.VERSION_PATCHES, IntermediateProperty.VERSION_PATCHES);
 		pm.put(DctmSysObject.PATCH_ANTECEDENT, IntermediateProperty.PATCH_ANTECEDENT);
 		propertyMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
