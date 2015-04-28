@@ -91,7 +91,7 @@ public enum StoredValueSerializer {
 		}
 
 	},
-	TIME(StoredDataType.TIME) {
+	TIME(StoredDataType.DATETIME) {
 
 		private final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 

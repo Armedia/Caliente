@@ -38,13 +38,13 @@ public final class StoredValue {
 	}
 
 	public StoredValue(Date value) {
-		this.type = StoredDataType.TIME;
+		this.type = StoredDataType.DATETIME;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
 	public StoredValue(Calendar value) {
-		this.type = StoredDataType.TIME;
+		this.type = StoredDataType.DATETIME;
 		this.value = (value != null ? value.getTime() : null);
 		this.nullValue = (value == null);
 	}
@@ -79,7 +79,7 @@ public final class StoredValue {
 				case ID:
 					this.value = Tools.toString(value);
 					break;
-				case TIME:
+				case DATETIME:
 					if (value instanceof Date) {
 						this.value = Date.class.cast(value);
 					} else if (value instanceof Calendar) {

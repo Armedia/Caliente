@@ -1,6 +1,5 @@
 package com.armedia.cmf.storage;
 
-
 public enum StoredDataType {
 	//
 	BOOLEAN,
@@ -8,7 +7,7 @@ public enum StoredDataType {
 	DOUBLE,
 	STRING,
 	ID,
-	TIME,
+	DATETIME,
 	OTHER;
 
 	public static StoredDataType decodeString(String str) {
