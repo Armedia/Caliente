@@ -42,34 +42,34 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (USER)
-		// OBJECT_TYPE (DM_USER)
-		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (USER)
+		// OBJECT_TYPE_ID (DM_USER)
+		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.LOGIN_NAME.name, IntermediateAttribute.LOGIN_NAME);
 		am.put(ShptAttributes.LOGIN_DOMAIN.name, IntermediateAttribute.LOGIN_REALM);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
-		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
+		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (GROUP)
-		// OBJECT_TYPE (DM_GROUP)
-		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (GROUP)
+		// OBJECT_TYPE_ID (DM_GROUP)
+		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		am.put(ShptAttributes.GROUP_OWNER.name, IntermediateAttribute.OWNER);
-		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
+		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (ACL)
-		// OBJECT_TYPE (DM_ACL)
-		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (ACL)
+		// OBJECT_TYPE_ID (DM_ACL)
+		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
 		attributeMappings.put(StoredObjectType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
@@ -78,10 +78,10 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (TYPE)
-		// OBJECT_TYPE (DM_TYPE)
-		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.OBJECT_NAME);
-		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
+		// BASE_TYPE_ID (TYPE)
+		// OBJECT_TYPE_ID (DM_TYPE)
+		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
+		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
 		attributeMappings.put(StoredObjectType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
@@ -89,9 +89,9 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (FORMAT)
-		// OBJECT_TYPE (DM_FORMAT)
-		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (FORMAT)
+		// OBJECT_TYPE_ID (DM_FORMAT)
+		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		attributeMappings.put(StoredObjectType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		propertyMappings.put(StoredObjectType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
@@ -99,20 +99,20 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (FOLDER)
-		// OBJECT_TYPE (DM_FOLDER|DM_CABINET|...)
-		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (FOLDER)
+		// OBJECT_TYPE_ID (DM_FOLDER|DM_CABINET|...)
+		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.TITLE.name, IntermediateAttribute.DESCRIPTION);
-		am.put(ShptAttributes.CONTENT_TYPE.name, IntermediateAttribute.CONTENT_TYPE);
+		am.put(ShptAttributes.CONTENT_TYPE.name, IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
 		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
 		am.put(ShptAttributes.GROUP.name, IntermediateAttribute.GROUP);
-		am.put(ShptAttributes.CREATOR.name, IntermediateAttribute.CREATOR);
-		am.put(ShptAttributes.CREATE_DATE.name, IntermediateAttribute.CREATE_DATE);
-		am.put(ShptAttributes.ACCESS_DATE.name, IntermediateAttribute.ACCESS_DATE);
-		am.put(ShptAttributes.MODIFIER.name, IntermediateAttribute.MODIFIER);
-		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
-		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENTS);
-		am.put(ShptAttributes.PATHS.name, IntermediateAttribute.PATHS);
+		am.put(ShptAttributes.CREATOR.name, IntermediateAttribute.CREATED_BY);
+		am.put(ShptAttributes.CREATE_DATE.name, IntermediateAttribute.CREATION_DATE);
+		am.put(ShptAttributes.ACCESS_DATE.name, IntermediateAttribute.LAST_ACCESS_DATE);
+		am.put(ShptAttributes.MODIFIER.name, IntermediateAttribute.LAST_MODIFIED_BY);
+		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
+		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENT_ID);
+		am.put(ShptAttributes.PATHS.name, IntermediateAttribute.PATH);
 		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
 		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
@@ -123,21 +123,21 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (FOLDER)
-		// OBJECT_TYPE (DM_DOCUMENT|...)
-		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.OBJECT_NAME);
+		// BASE_TYPE_ID (FOLDER)
+		// OBJECT_TYPE_ID (DM_DOCUMENT|...)
+		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.TITLE.name, IntermediateAttribute.DESCRIPTION);
-		am.put(ShptAttributes.CONTENT_TYPE.name, IntermediateAttribute.CONTENT_TYPE);
-		am.put(ShptAttributes.CONTENT_SIZE.name, IntermediateAttribute.CONTENT_SIZE);
+		am.put(ShptAttributes.CONTENT_TYPE.name, IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
+		am.put(ShptAttributes.CONTENT_SIZE.name, IntermediateAttribute.CONTENT_STREAM_LENGTH);
 		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
-		am.put(ShptAttributes.CREATOR.name, IntermediateAttribute.CREATOR);
-		am.put(ShptAttributes.CREATE_DATE.name, IntermediateAttribute.CREATE_DATE);
-		am.put(ShptAttributes.MODIFIER.name, IntermediateAttribute.MODIFIER);
-		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
-		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENTS);
+		am.put(ShptAttributes.CREATOR.name, IntermediateAttribute.CREATED_BY);
+		am.put(ShptAttributes.CREATE_DATE.name, IntermediateAttribute.CREATION_DATE);
+		am.put(ShptAttributes.MODIFIER.name, IntermediateAttribute.LAST_MODIFIED_BY);
+		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
+		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENT_ID);
 		am.put(ShptAttributes.VERSION.name, IntermediateAttribute.VERSION_LABEL);
-		am.put(ShptAttributes.VERSION_TREE.name, IntermediateAttribute.VERSION_TREE_ID);
-		am.put(ShptAttributes.VERSION_PRIOR.name, IntermediateAttribute.VERSION_PRIOR_ID);
+		am.put(ShptAttributes.VERSION_TREE.name, IntermediateAttribute.VERSION_SERIES_ID);
+		am.put(ShptAttributes.VERSION_PRIOR.name, IntermediateAttribute.VERSION_ANTECEDENT_ID);
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
 		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
@@ -149,11 +149,11 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// OBJECT_CLASS (CONTENT)
-		// OBJECT_TYPE (DMR_CONTENT|...)
-		am.put(ShptAttributes.CONTENT_TYPE.name, IntermediateAttribute.CONTENT_TYPE);
-		am.put(ShptAttributes.CONTENT_SIZE.name, IntermediateAttribute.CONTENT_SIZE);
-		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.MODIFICATION_DATE);
+		// BASE_TYPE_ID (CONTENT)
+		// OBJECT_TYPE_ID (DMR_CONTENT|...)
+		am.put(ShptAttributes.CONTENT_TYPE.name, IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
+		am.put(ShptAttributes.CONTENT_SIZE.name, IntermediateAttribute.CONTENT_STREAM_LENGTH);
+		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
 		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);

@@ -73,14 +73,14 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 		Date d = getCreatedTime();
 		if (d != null) {
-			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name, StoredDataType.TIME,
+			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name, StoredDataType.DATETIME,
 				false, Collections.singleton(new StoredValue(d))));
 		}
 
 		d = getLastModifiedTime();
 		if (d != null) {
 			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
-				StoredDataType.TIME, false, Collections.singleton(new StoredValue(d))));
+				StoredDataType.DATETIME, false, Collections.singleton(new StoredValue(d))));
 		}
 
 		// Target Paths

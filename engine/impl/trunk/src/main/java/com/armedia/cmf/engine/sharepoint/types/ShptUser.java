@@ -154,7 +154,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 				.getNameIdIssuer()))));
 
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
-			StoredDataType.TIME, false, Collections.singleton(new StoredValue(new Date()))));
+			StoredDataType.DATETIME, false, Collections.singleton(new StoredValue(new Date()))));
 
 		// Email
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.EMAIL.name, StoredDataType.STRING, false,

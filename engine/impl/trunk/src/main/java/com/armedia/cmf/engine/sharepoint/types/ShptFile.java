@@ -184,9 +184,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			if (d != null) {
 				Collection<StoredValue> c = Collections.singleton(new StoredValue(d));
 				object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name,
-					StoredDataType.TIME, false, c));
+					StoredDataType.DATETIME, false, c));
 				object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
-					StoredDataType.TIME, false, c));
+					StoredDataType.DATETIME, false, c));
 			}
 		}
 
