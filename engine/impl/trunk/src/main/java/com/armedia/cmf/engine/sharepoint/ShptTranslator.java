@@ -114,8 +114,8 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENT_ID);
 		am.put(ShptAttributes.PATHS.name, IntermediateAttribute.PATH);
 		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
-		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
+		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.PATH);
+		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.PARENT_ID);
 		pm.put(ShptProperties.USERS_WITH_DEFAULT_FOLDER.name, IntermediateProperty.USERS_WITH_DEFAULT_FOLDER);
 		pm.put(ShptProperties.USERS_DEFAULT_FOLDER_PATHS.name, IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS);
 		propertyMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
@@ -139,9 +139,9 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am.put(ShptAttributes.VERSION_TREE.name, IntermediateAttribute.VERSION_SERIES_ID);
 		am.put(ShptAttributes.VERSION_PRIOR.name, IntermediateAttribute.VERSION_ANTECEDENT_ID);
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
-		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
-		pm.put(ShptProperties.CONTENTS.name, IntermediateProperty.CONTENTS);
+		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.PATH);
+		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.PARENT_ID);
+		pm.put(ShptProperties.CONTENTS.name, IntermediateProperty.CONTENT_STREAM_ID);
 		pm.put(ShptProperties.VERSION_PATCHES.name, IntermediateProperty.VERSION_PATCHES);
 		pm.put(ShptProperties.PATCH_ANTECEDENT.name, IntermediateProperty.PATCH_ANTECEDENT);
 		propertyMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
@@ -155,9 +155,9 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am.put(ShptAttributes.CONTENT_SIZE.name, IntermediateAttribute.CONTENT_STREAM_LENGTH);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.TARGET_PATHS);
-		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.TARGET_PARENTS);
-		pm.put(ShptProperties.CONTENTS.name, IntermediateProperty.CONTENTS);
+		pm.put(ShptProperties.TARGET_PATHS.name, IntermediateProperty.PATH);
+		pm.put(ShptProperties.TARGET_PARENTS.name, IntermediateProperty.PARENT_ID);
+		pm.put(ShptProperties.CONTENTS.name, IntermediateProperty.CONTENT_STREAM_ID);
 		pm.put(ShptProperties.VERSION_PATCHES.name, IntermediateProperty.VERSION_PATCHES);
 		pm.put(ShptProperties.PATCH_ANTECEDENT.name, IntermediateProperty.PATCH_ANTECEDENT);
 		propertyMappings.put(StoredObjectType.CONTENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
