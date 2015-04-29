@@ -3,11 +3,11 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 	<changeSet author="cmf" id="1001">
-    	<preConditions onFail="MARK_RAN">
-    		<not>
-	    		<changeSetExecuted id="1" author="master" changeLogFile="com/delta/cmsmf/datastore/changelog/db.changelog-1.0.xml"/>
-    		</not>
-	    </preConditions>
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<changeSetExecuted id="1" author="master" changeLogFile="com/delta/cmsmf/datastore/changelog/db.changelog-1.0.xml"/>
+			</not>
+		</preConditions>
 
 		<!-- The CMSMF info table -->
 		<createTable tableName="cmf_info">
@@ -213,17 +213,17 @@
 
 	<!-- migrate metadata from CMSMF -->
 	<changeSet author="cmf" id="1002">
-    	<preConditions onFail="MARK_RAN">
-    		<changeSetExecuted id="1" author="master" changeLogFile="com/delta/cmsmf/datastore/changelog/db.changelog-1.0.xml"/>
-	    </preConditions>
-	    <renameTable oldTableName="cmsmf_info" newTableName="cmf_info"/>
-	    <renameTable oldTableName="dctm_export_plan" newTableName="cmf_export_plan"/>
-	    <renameTable oldTableName="dctm_object" newTableName="cmf_object"/>
-	    <renameTable oldTableName="dctm_attribute" newTableName="cmf_attribute"/>
-	    <renameTable oldTableName="dctm_attribute_value" newTableName="cmf_attribute_value"/>
-	    <renameTable oldTableName="dctm_property" newTableName="cmf_property"/>
-	    <renameTable oldTableName="dctm_property_value" newTableName="cmf_property_value"/>
-	    <renameTable oldTableName="dctm_mapper" newTableName="cmf_mapper"/>
+		<preConditions onFail="MARK_RAN">
+			<changeSetExecuted id="1" author="master" changeLogFile="com/delta/cmsmf/datastore/changelog/db.changelog-1.0.xml"/>
+		</preConditions>
+		<renameTable oldTableName="cmsmf_info" newTableName="cmf_info"/>
+		<renameTable oldTableName="dctm_export_plan" newTableName="cmf_export_plan"/>
+		<renameTable oldTableName="dctm_object" newTableName="cmf_object"/>
+		<renameTable oldTableName="dctm_attribute" newTableName="cmf_attribute"/>
+		<renameTable oldTableName="dctm_attribute_value" newTableName="cmf_attribute_value"/>
+		<renameTable oldTableName="dctm_property" newTableName="cmf_property"/>
+		<renameTable oldTableName="dctm_property_value" newTableName="cmf_property_value"/>
+		<renameTable oldTableName="dctm_mapper" newTableName="cmf_mapper"/>
 
 		<!-- Create the qualifier records for any content that's already there from CMSMF -->
 		<sql><![CDATA[
@@ -258,34 +258,34 @@
 				delete from cmf_property where name = '${CONTENT_QUALIFIER}$'
 			]]></sql>
 
-		    <renameTable oldTableName="cmf_mapper" newTableName="dctm_mapper"/>
-		    <renameTable oldTableName="cmf_property_value" newTableName="dctm_property_value"/>
-		    <renameTable oldTableName="cmf_property" newTableName="dctm_property"/>
-		    <renameTable oldTableName="cmf_attribute_value" newTableName="dctm_attribute_value"/>
-		    <renameTable oldTableName="cmf_attribute" newTableName="dctm_attribute"/>
-		    <renameTable oldTableName="cmf_object" newTableName="dctm_object"/>
-		    <renameTable oldTableName="cmf_export_plan" newTableName="dctm_export_plan"/>
-		    <renameTable oldTableName="cmf_info" newTableName="cmsmf_info"/>
+			<renameTable oldTableName="cmf_mapper" newTableName="dctm_mapper"/>
+			<renameTable oldTableName="cmf_property_value" newTableName="dctm_property_value"/>
+			<renameTable oldTableName="cmf_property" newTableName="dctm_property"/>
+			<renameTable oldTableName="cmf_attribute_value" newTableName="dctm_attribute_value"/>
+			<renameTable oldTableName="cmf_attribute" newTableName="dctm_attribute"/>
+			<renameTable oldTableName="cmf_object" newTableName="dctm_object"/>
+			<renameTable oldTableName="cmf_export_plan" newTableName="dctm_export_plan"/>
+			<renameTable oldTableName="cmf_info" newTableName="cmsmf_info"/>
 		</rollback>
 	</changeSet>
 
 	<!-- make sure one of the above was executed (they're negated, so either-or) -->
 	<changeSet author="cmf" id="1003">
-    	<preConditions>
-    		<or>
-	    		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
-	    		<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
-    		</or>
-	    </preConditions>
+		<preConditions>
+			<or>
+				<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml" />
+				<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml" />
+			</or>
+		</preConditions>
 	</changeSet>
 
 	<changeSet author="cmf" id="1004">
-    	<preConditions>
-    		<or>
-	    		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
-	    		<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
-    		</or>
-	    </preConditions>
+		<preConditions>
+			<or>
+				<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml" />
+				<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml" />
+			</or>
+		</preConditions>
 		<sql dbms="mysql, oracle, h2"><![CDATA[
 			alter table cmf_export_plan modify column object_id varchar(96);
 			alter table cmf_object modify column object_id varchar(96);
@@ -347,6 +347,30 @@
 				alter table cmf_property alter column name type varchar(32);
 				alter table cmf_property_value alter column object_id type varchar(32);
 				alter table cmf_property_value alter column name type varchar(32);
+			]]></sql>
+		</rollback>
+	</changeSet>
+	<changeSet author="cmf" id="1005">
+		<preConditions>
+			<changeSetExecuted id="1005" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml" />
+		</preConditions>
+		<sql dbms="mysql, oracle, h2"><![CDATA[
+			alter table cmf_mapper modify column source_value varchar(96);
+			alter table cmf_mapper modify column target_value varchar(96);
+		]]></sql>
+		<sql dbms="postgresql"><![CDATA[
+			alter table cmf_mapper alter column source_value type varchar(96);
+			alter table cmf_mapper alter column target_value type varchar(96);
+		]]></sql>
+
+		<rollback>
+			<sql dbms="mysql, oracle, h2"><![CDATA[
+				alter table cmf_mapper modify column source_value varchar(32);
+				alter table cmf_mapper modify column target_value varchar(32);
+			]]></sql>
+			<sql dbms="postgresql"><![CDATA[
+				alter table cmf_mapper alter column source_value type varchar(32);
+				alter table cmf_mapper alter column target_value type varchar(32);
 			]]></sql>
 		</rollback>
 	</changeSet>
