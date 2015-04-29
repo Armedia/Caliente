@@ -35,7 +35,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			ret = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
 		}
 		String version = calculateVersion(obj);
-		return String.format("%s%s%s", ret, StringUtils.isBlank(version) ? "" : "#", version);
+		if (StringUtils.isBlank(version)) { return ret; }
+		return String.format("%s#%s", ret, version);
 	}
 
 	protected String calculateVersion(T obj) throws Exception {
@@ -53,8 +54,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			object.setProperty(path);
 		}
 		 */
-		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(
-			IntermediateProperty.PARENT_ID.encode(), StoredDataType.ID, true);
+		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(IntermediateProperty.PARENT_ID.encode(),
+			StoredDataType.ID, true);
 		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
 			StoredDataType.STRING, true);
 
@@ -92,6 +93,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
 		throw new Exception(String.format(
 			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
-			.getClass().getCanonicalName(), object.getType().getId()));
+				.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }
