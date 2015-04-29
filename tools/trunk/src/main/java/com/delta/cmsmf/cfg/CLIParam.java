@@ -22,6 +22,7 @@ public enum CLIParam {
 	mode(null, true, true, "The mode of operation, either 'import', 'export', 'encrypt', 'decrypt' or 'counter'"),
 	engine(null, true, true, "The engine to use for the operation (either dctm or shpt)"),
 	server(null, true, "The server URL to connect to (Documentum docbase spec, or the sharepoint server URL)"),
+	repository(null, true, "The repostory name to connect to within the target server (optional)"),
 	user(null, true, "The username to connect with"),
 	password(null, true, "The password to connect with"),
 	domain(null, true, "The domain the user belongs to"),

@@ -81,6 +81,13 @@
 
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-engine-cmis</artifactId>
+			<version>0.0.1</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-storage-local</artifactId>
 			<version>1.2.0</version>
 			<scope>compile</scope>
