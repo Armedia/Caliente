@@ -352,7 +352,7 @@
 	</changeSet>
 	<changeSet author="cmf" id="1005">
 		<preConditions>
-			<changeSetExecuted id="1005" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml" />
+			<changeSetExecuted id="1004" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml" />
 		</preConditions>
 		<sql dbms="mysql, oracle, h2"><![CDATA[
 			alter table cmf_mapper modify column source_value varchar(96);
