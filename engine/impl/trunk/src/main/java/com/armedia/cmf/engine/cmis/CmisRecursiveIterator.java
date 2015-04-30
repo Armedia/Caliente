@@ -8,6 +8,8 @@ import java.util.Stack;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
+import org.apache.chemistry.opencmis.client.api.ItemIterable;
+import org.apache.chemistry.opencmis.client.api.OperationContext;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,12 +32,18 @@ public class CmisRecursiveIterator implements Iterator<CmisObject> {
 	}
 
 	private final boolean excludeEmptyFolders;
+	private final OperationContext ctx;
 
 	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
 
 	public CmisRecursiveIterator(Session session, Folder root, boolean excludeEmptyFolders) {
+		this(session, root, excludeEmptyFolders, null);
+	}
+
+	public CmisRecursiveIterator(Session session, Folder root, boolean excludeEmptyFolders, OperationContext ctx) {
 		this.stateStack.push(new RecursiveState(root));
 		this.excludeEmptyFolders = excludeEmptyFolders;
+		this.ctx = ctx;
 
 	}
 
@@ -53,7 +61,9 @@ public class CmisRecursiveIterator implements Iterator<CmisObject> {
 			// No next yet, go looking for it...
 			final Folder current = state.base;
 			if (state.childIterator == null) {
-				state.childIterator = new CmisPagingIterator<CmisObject>(current.getChildren());
+				ItemIterable<CmisObject> children = (this.ctx != null ? current.getChildren(this.ctx) : current
+					.getChildren());
+				state.childIterator = new CmisPagingIterator<CmisObject>(children);
 			}
 			while (state.childIterator.hasNext()) {
 				CmisObject f = state.childIterator.next();

@@ -2,7 +2,9 @@ package com.armedia.cmf.engine.cmis.exporter;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.Document;
@@ -18,11 +20,40 @@ import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
+	private final List<Document> previous;
+	private final List<Document> successors;
+
+	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Document object) throws Exception {
+		super(rootElement.engine, Document.class, object);
+		this.previous = Collections.emptyList();
+		this.successors = Collections.emptyList();
+	}
+
 	protected CmisDocumentDelegate(CmisExportEngine engine, Document object) throws Exception {
 		super(engine, Document.class, object);
+		List<Document> all = object.getAllVersions();
+		List<Document> prev = new ArrayList<Document>(all.size());
+		List<Document> succ = new ArrayList<Document>(all.size());
+
+		Document first = all.get(0);
+		if ((first.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", first.getVersionLabel())) {
+			all.remove(0);
+		}
+		Collections.reverse(all);
+		List<Document> tgt = prev;
+		for (Document d : all) {
+			if (Tools.equals(object.getId(), d.getId())) {
+				tgt = succ;
+				continue;
+			}
+			tgt.add(d);
+		}
+		this.previous = Tools.freezeList(prev);
+		this.successors = Tools.freezeList(succ);
 	}
 
 	@Override
@@ -38,7 +69,11 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return super.identifyRequirements(marshalled, ctx);
+		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
+		for (Document d : this.previous) {
+			ret.add(new CmisDocumentDelegate(this, d));
+		}
+		return ret;
 	}
 
 	@Override
@@ -92,6 +127,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return super.identifyDependents(marshalled, ctx);
+		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
+		for (Document d : this.successors) {
+			ret.add(new CmisDocumentDelegate(this, d));
+		}
+		return ret;
 	}
 }

@@ -57,7 +57,8 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		// We will only include the folder's contents if the referencing object is NOT one of our
 		// children
 		ExportTarget referrent = ctx.getReferrent();
-		CmisPagingIterator<CmisObject> it = new CmisPagingIterator<CmisObject>(this.object.getChildren());
+		CmisPagingIterator<CmisObject> it = new CmisPagingIterator<CmisObject>(this.object.getChildren(ctx
+			.getDefaultOperationContext()));
 		Collection<CmisFolderDelegate> childFolders = new ArrayList<CmisFolderDelegate>();
 		Collection<CmisDocumentDelegate> childDocs = new ArrayList<CmisDocumentDelegate>();
 		while (it.hasNext()) {

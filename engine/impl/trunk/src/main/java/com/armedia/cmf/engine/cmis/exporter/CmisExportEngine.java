@@ -79,17 +79,22 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	protected Iterator<ExportTarget> findExportResults(final Session session, Map<String, ?> settings) throws Exception {
 		CfgTools cfg = new CfgTools(settings);
 		String path = cfg.getString(CmisSetting.EXPORT_PATH);
+		final int itemsPerPage = Math.max(10, cfg.getInteger(CmisSetting.EXPORT_PAGE_SIZE));
+		final OperationContext ctx = session.createOperationContext();
+		ctx.setLoadSecondaryTypeProperties(true);
+		ctx.setFilterString("*");
+		ctx.setMaxItemsPerPage(itemsPerPage);
 		if (path != null) {
 			final CmisObject obj;
 			try {
-				obj = session.getObjectByPath(path);
+				obj = session.getObjectByPath(path, ctx);
 			} catch (CmisObjectNotFoundException e) {
 				return null;
 			}
 			if (obj instanceof Folder) {
 				return new Iterator<ExportTarget>() {
 					private final Iterator<CmisObject> it = new CmisRecursiveIterator(session, Folder.class.cast(obj),
-						true);
+						true, ctx);
 
 					@Override
 					public boolean hasNext() {
@@ -125,9 +130,6 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 
 		final String query = cfg.getString(CmisSetting.EXPORT_QUERY);
 		if (query != null) {
-			final int itemsPerPage = Math.max(10, cfg.getInteger(CmisSetting.EXPORT_QUERY_PAGE_SIZE));
-			final OperationContext ctx = session.createOperationContext();
-			ctx.setMaxItemsPerPage(itemsPerPage);
 			final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 				.isAllVersionsSearchableSupported();
 			return new CmisPagingTransformerIterator<QueryResult, ExportTarget>(session.query(query, searchAllVersions,
@@ -192,7 +194,16 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Folder-type",
 					searchKey, obj.getClass().getCanonicalName()));
 			case DOCUMENT:
-				if (obj instanceof Document) { return new CmisDocumentDelegate(this, Document.class.cast(obj)); }
+				if (obj instanceof Document) {
+					// Is this the PWC? If so, then don't include it...
+					Document doc = Document.class.cast(obj);
+					if ((doc.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", doc.getVersionLabel())) {
+						// We will not include the PWC in an export
+						doc = doc.getObjectOfLatestVersion(false);
+						if (doc == null) { return null; }
+					}
+					return new CmisDocumentDelegate(this, doc);
+				}
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Document-type",
 					searchKey, obj.getClass().getCanonicalName()));
 			case USER:

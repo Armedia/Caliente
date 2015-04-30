@@ -11,7 +11,7 @@
 	<logger name="com.armedia.cmf.engine" level="DEBUG"/>
 	<logger name="console" level="INFO"/>
 
-	<root level="INFO">
+	<root level="DEBUG">
 		<appender-ref ref="default"/>
 	</root>
 </configuration>

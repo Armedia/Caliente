@@ -6,7 +6,7 @@ public enum CmisSetting implements ConfigurationSetting {
 	//
 	EXPORT_PATH(),
 	EXPORT_QUERY(),
-	EXPORT_QUERY_PAGE_SIZE(100),
+	EXPORT_PAGE_SIZE(100),
 	//
 	;
 
