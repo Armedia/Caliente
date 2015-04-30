@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.Session;
+import org.apache.chemistry.opencmis.commons.PropertyIds;
 
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.cmis.CmisAcl;
@@ -31,10 +32,14 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		StoredAttribute<StoredValue> ownerAtt = new StoredAttribute<StoredValue>(CmisCustomAttributes.ACL_OWNER.name,
+		StoredAttribute<StoredValue> att = new StoredAttribute<StoredValue>(CmisCustomAttributes.ACL_OWNER.name,
 			StoredDataType.STRING, false);
-		object.setAttribute(ownerAtt);
-		ownerAtt.setValue(new StoredValue(this.object.getSourceOwner()));
+		att.setValue(new StoredValue(this.object.getSourceOwner()));
+		object.setAttribute(att);
+		att = new StoredAttribute<StoredValue>(PropertyIds.NAME, StoredDataType.STRING, false);
+		att.setValue(new StoredValue(this.object.getSourceId()));
+		object.setAttribute(att);
+
 	}
 
 	@Override
