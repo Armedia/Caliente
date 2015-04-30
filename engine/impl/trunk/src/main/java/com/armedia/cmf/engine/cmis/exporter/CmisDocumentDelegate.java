@@ -115,6 +115,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			CmisCustomProperties.CURRENT_VERSION.name, StoredDataType.BOOLEAN, false);
 		current.setValue(new StoredValue(this.object.isLatestVersion()));
 		object.setProperty(current);
+
+		if (!this.object.isLatestVersion()) {
+			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));
+		}
 	}
 
 	@Override
