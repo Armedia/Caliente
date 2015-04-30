@@ -141,11 +141,7 @@ public class LocalContentStore extends ContentStore {
 	@Override
 	protected void doClearAllStreams() {
 		for (File f : this.baseDir.listFiles()) {
-			try {
-				FileUtils.deleteDirectory(f);
-			} catch (IOException e) {
-				// Ignore it, keep going
-			}
+			FileUtils.deleteQuietly(f);
 		}
 	}
 
