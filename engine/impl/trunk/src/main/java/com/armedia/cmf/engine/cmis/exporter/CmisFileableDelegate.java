@@ -44,9 +44,32 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		return null;
 	}
 
+	protected void marshalParentsAndPaths(CmisExportContext ctx, StoredObject<StoredValue> marshaled, T object)
+		throws ExportException {
+		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(IntermediateProperty.PARENT_ID.encode(),
+			StoredDataType.ID, true);
+		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
+			StoredDataType.STRING, true);
+		for (Folder f : object.getParents()) {
+			try {
+				parents.addValue(new StoredValue(StoredDataType.ID, f.getId()));
+			} catch (ParseException e) {
+				// Will not happen...but still
+				throw new ExportException(String.format("Failed to store the parent ID [%s] for %s [%s]", f.getId(),
+					this.object.getType(), this.object.getId()), e);
+			}
+			for (String p : f.getPaths()) {
+				paths.addValue(new StoredValue(p));
+			}
+		}
+		marshaled.setProperty(paths);
+		marshaled.setProperty(parents);
+	}
+
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		super.marshal(ctx, object);
+		marshalParentsAndPaths(ctx, object, this.object);
 		/*
 		List<String> l = this.object.getPaths();
 		if ((l != null) && !l.isEmpty()) {
@@ -55,25 +78,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			object.setProperty(path);
 		}
 		 */
-		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(IntermediateProperty.PARENT_ID.encode(),
-			StoredDataType.ID, true);
-		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
-			StoredDataType.STRING, true);
-
-		for (Folder f : this.object.getParents()) {
-			try {
-				parents.addValue(new StoredValue(StoredDataType.ID, f.getId()));
-			} catch (ParseException e) {
-				// Will not happen...but still
-				throw new ExportException(String.format("Failed to store the parent ID [%s] for %s [%s]", f.getId(),
-					object.getType(), object.getId()), e);
-			}
-			for (String p : f.getPaths()) {
-				paths.addValue(new StoredValue(p));
-			}
-		}
-		object.setProperty(paths);
-		object.setProperty(parents);
 	}
 
 	@Override
