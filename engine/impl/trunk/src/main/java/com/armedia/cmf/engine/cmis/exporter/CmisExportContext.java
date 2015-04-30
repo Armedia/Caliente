@@ -24,6 +24,7 @@ public class CmisExportContext extends ExportContext<Session, StoredValue> {
 		ctx.setLoadSecondaryTypeProperties(true);
 		ctx.setFilterString("*");
 		ctx.setMaxItemsPerPage(itemsPerPage <= 0 ? Integer.MAX_VALUE : itemsPerPage);
+		ctx.setIncludePathSegments(true);
 		return ctx;
 	}
 }
