@@ -427,21 +427,14 @@ TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, ExportEngineListene
 										(nextType != null ? nextType.name() : "globally unique"), nextKey));
 									continue;
 								}
-
+								// This allows for object substitutions to take place
+								next = exportDelegate.getExportTarget();
+								nextType = next.getType();
 								if (nextType == null) {
-									// We have a source object, but don't know its type, so we
-									// recalculate the export target (which means getting the
-									// type)
-									next = exportDelegate.getExportTarget();
-									nextType = next.getType();
-									if (nextType == null) {
-										this.log
-										.error(String
-											.format(
-												"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
-												nextId, nextKey));
-										continue;
-									}
+									this.log.error(String.format(
+										"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
+										nextId, nextKey));
+									continue;
 								}
 
 								if (this.log.isDebugEnabled()) {
