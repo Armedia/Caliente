@@ -144,6 +144,7 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		pm.put(ShptProperties.CONTENTS.name, IntermediateProperty.CONTENT_STREAM_ID);
 		pm.put(ShptProperties.VERSION_PATCHES.name, IntermediateProperty.VERSION_PATCHES);
 		pm.put(ShptProperties.PATCH_ANTECEDENT.name, IntermediateProperty.PATCH_ANTECEDENT);
+		pm.put(ShptProperties.CURRENT_VERSION.name, IntermediateProperty.CURRENT_VERSION);
 		propertyMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();

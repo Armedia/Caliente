@@ -21,6 +21,7 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
+import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
@@ -32,6 +33,7 @@ import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
@@ -191,9 +193,12 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		}
 
 		versionNames.add(new StoredValue(this.versionNumber.toString()));
-		if ((this.version == null) || this.version.isCurrentVersion()) {
-			versionNames.add(new StoredValue("CURRENT"));
-		}
+
+		StoredProperty<StoredValue> current = new StoredProperty<StoredValue>(ShptProperties.CURRENT_VERSION.name,
+			StoredDataType.BOOLEAN, false);
+		current.setValue(new StoredValue((this.version == null) || this.version.isCurrentVersion()));
+		object.setProperty(current);
+
 		if (this.version != null) {
 			this.predecessors = Collections.emptyList();
 			this.successors = Collections.emptyList();
