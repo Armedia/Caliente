@@ -7,7 +7,7 @@ import java.util.List;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Property;
 
-import com.armedia.cmf.engine.cmis.CmisObjectStorageTranslator;
+import com.armedia.cmf.engine.cmis.CmisTranslator;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
@@ -22,9 +22,9 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		CmisObjectStorageTranslator translator = this.engine.getTranslator();
+		CmisTranslator translator = this.engine.getTranslator();
 		for (Property<?> prop : this.object.getProperties()) {
-			StoredDataType t = CmisObjectStorageTranslator.decodePropertyType(prop.getType());
+			StoredDataType t = CmisTranslator.decodePropertyType(prop.getType());
 			StoredAttribute<StoredValue> att = new StoredAttribute<StoredValue>(prop.getId(), t, prop.isMultiValued());
 			List<?> values = prop.getValues();
 			List<StoredValue> l = new ArrayList<StoredValue>(values.size());

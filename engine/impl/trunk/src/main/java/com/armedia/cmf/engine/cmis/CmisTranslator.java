@@ -19,7 +19,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueCodec;
 import com.armedia.commons.utilities.Tools;
 
-public class CmisObjectStorageTranslator extends ObjectStorageTranslator<StoredValue> {
+public class CmisTranslator extends ObjectStorageTranslator<StoredValue> {
 
 	private static final Map<PropertyType, StoredDataType> DATA_TYPES;
 	private static final Map<StoredDataType, PropertyType> DATA_TYPES_REV;
@@ -73,6 +73,7 @@ public class CmisObjectStorageTranslator extends ObjectStorageTranslator<StoredV
 		pm.put(CmisCustomProperties.TARGET_PATHS.name, IntermediateProperty.PATH);
 		pm.put(CmisCustomProperties.TARGET_PARENTS.name, IntermediateProperty.PARENT_ID);
 		pm.put(CmisCustomProperties.CONTENTS.name, IntermediateProperty.CONTENT_STREAM_ID);
+		pm.put(CmisCustomProperties.CURRENT_VERSION.name, IntermediateProperty.CURRENT_VERSION);
 		propertyMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
@@ -80,11 +81,11 @@ public class CmisObjectStorageTranslator extends ObjectStorageTranslator<StoredV
 	}
 
 	public static StoredDataType decodePropertyType(PropertyType t) {
-		return CmisObjectStorageTranslator.DATA_TYPES.get(t);
+		return CmisTranslator.DATA_TYPES.get(t);
 	}
 
 	public static PropertyType decodePropertyType(StoredObjectType t) {
-		return CmisObjectStorageTranslator.DATA_TYPES_REV.get(t);
+		return CmisTranslator.DATA_TYPES_REV.get(t);
 	}
 
 	@Override
@@ -98,11 +99,11 @@ public class CmisObjectStorageTranslator extends ObjectStorageTranslator<StoredV
 	}
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {
-		return CmisObjectStorageTranslator.ATTRIBUTE_MAPPINGS.get(type);
+		return CmisTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
 	private BidiMap<String, IntermediateProperty> getPropertyMappings(StoredObjectType type) {
-		return CmisObjectStorageTranslator.PROPERTY_MAPPINGS.get(type);
+		return CmisTranslator.PROPERTY_MAPPINGS.get(type);
 	}
 
 	@Override

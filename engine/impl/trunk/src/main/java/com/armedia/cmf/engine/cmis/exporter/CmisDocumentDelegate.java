@@ -16,6 +16,7 @@ import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
+import com.armedia.cmf.engine.cmis.CmisCustomProperties;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
@@ -23,6 +24,7 @@ import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -109,6 +111,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			}
 			object.setAttribute(antecedentId);
 		}
+		StoredProperty<StoredValue> current = new StoredProperty<StoredValue>(
+			CmisCustomProperties.CURRENT_VERSION.name, StoredDataType.BOOLEAN, false);
+		current.setValue(new StoredValue(this.object.isLatestVersion()));
+		object.setProperty(current);
 	}
 
 	@Override

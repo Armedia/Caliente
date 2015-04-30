@@ -18,7 +18,7 @@ import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
 import com.armedia.cmf.engine.cmis.CmisCommon;
-import com.armedia.cmf.engine.cmis.CmisObjectStorageTranslator;
+import com.armedia.cmf.engine.cmis.CmisTranslator;
 import com.armedia.cmf.engine.cmis.CmisPagingTransformerIterator;
 import com.armedia.cmf.engine.cmis.CmisRecursiveIterator;
 import com.armedia.cmf.engine.cmis.CmisResultTransformer;
@@ -177,8 +177,8 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	}
 
 	@Override
-	protected CmisObjectStorageTranslator getTranslator() {
-		return new CmisObjectStorageTranslator();
+	protected CmisTranslator getTranslator() {
+		return new CmisTranslator();
 	}
 
 	@Override
