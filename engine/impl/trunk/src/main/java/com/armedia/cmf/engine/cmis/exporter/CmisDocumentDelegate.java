@@ -57,6 +57,15 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
+	protected String calculatePath(Document d) throws Exception {
+		String path = super.calculatePath(d);
+		if ((path == null) && !d.isLatestVersion()) {
+			path = calculatePath(d.getObjectOfLatestVersion(false));
+		}
+		return path;
+	}
+
+	@Override
 	protected String calculateBatchId(Document object) throws Exception {
 		return object.getVersionSeriesId();
 	}

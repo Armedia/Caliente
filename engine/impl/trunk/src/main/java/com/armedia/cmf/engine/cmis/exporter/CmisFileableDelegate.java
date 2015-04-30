@@ -24,18 +24,21 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		super(engine, objectClass, object);
 	}
 
+	protected String calculatePath(T f) throws Exception {
+		List<String> paths = f.getPaths();
+		if (paths.isEmpty()) { return null; }
+		return paths.get(0);
+	}
+
 	@Override
 	protected final String calculateLabel(T f) throws Exception {
-		List<String> paths = f.getPaths();
-		String ret = null;
-		if (!paths.isEmpty()) {
-			ret = paths.get(0);
-		} else {
-			ret = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
+		String path = calculatePath(f);
+		if (path == null) {
+			path = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
 		}
 		String version = calculateVersion(f);
-		if (StringUtils.isBlank(version)) { return ret; }
-		return String.format("%s#%s", ret, version);
+		if (StringUtils.isBlank(version)) { return path; }
+		return String.format("%s#%s", path, version);
 	}
 
 	protected String calculateVersion(T obj) throws Exception {
@@ -92,6 +95,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
 		throw new Exception(String.format(
 			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
-				.getClass().getCanonicalName(), object.getType().getId()));
+			.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }
