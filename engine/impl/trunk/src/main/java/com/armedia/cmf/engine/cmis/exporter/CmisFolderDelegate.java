@@ -2,6 +2,9 @@ package com.armedia.cmf.engine.cmis.exporter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
@@ -23,6 +26,28 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		super.marshal(ctx, object);
+	}
+
+	protected int calculateDepth(Folder f, final Set<String> visited) throws Exception {
+		if (f == null) { throw new IllegalArgumentException("Must provide a folder whose depth to calculate"); }
+		if (!visited.add(f.getId())) { throw new IllegalStateException(String.format(
+			"Folder [%s] was visited twice - visited set: %s", f.getId(), visited)); }
+		try {
+			if (f.isRootFolder()) { return 0; }
+			List<Folder> parents = f.getParents();
+			int maxDepth = -1;
+			for (Folder p : parents) {
+				maxDepth = Math.max(maxDepth, calculateDepth(p, visited));
+			}
+			return maxDepth + 1;
+		} finally {
+			visited.remove(f.getId());
+		}
+	}
+
+	@Override
+	protected String calculateBatchId(Folder object) throws Exception {
+		return String.format("%016x", calculateDepth(object, new LinkedHashSet<String>()));
 	}
 
 	@Override
