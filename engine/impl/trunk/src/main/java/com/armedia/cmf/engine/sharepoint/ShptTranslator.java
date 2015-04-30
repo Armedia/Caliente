@@ -123,7 +123,7 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// BASE_TYPE_ID (FOLDER)
+		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (DM_DOCUMENT|...)
 		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.TITLE.name, IntermediateAttribute.DESCRIPTION);
