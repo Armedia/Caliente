@@ -1,5 +1,6 @@
 package com.armedia.cmf.engine.cmis;
 
+import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 
 import com.armedia.cmf.storage.StoredObjectType;
@@ -9,12 +10,14 @@ public final class CmisAcl {
 
 	private final StoredObjectType sourceType;
 	private final String sourceId;
+	private final String sourceOwner;
 	private final Acl acl;
 
-	public CmisAcl(StoredObjectType sourceType, String sourceId, Acl acl) {
-		this.sourceId = sourceId;
+	public CmisAcl(StoredObjectType sourceType, CmisObject object) {
 		this.sourceType = sourceType;
-		this.acl = acl;
+		this.sourceId = object.getId();
+		this.sourceOwner = object.getCreatedBy();
+		this.acl = object.getAcl();
 	}
 
 	public StoredObjectType getSourceType() {
@@ -23,6 +26,10 @@ public final class CmisAcl {
 
 	public String getSourceId() {
 		return this.sourceId;
+	}
+
+	public String getSourceOwner() {
+		return this.sourceOwner;
 	}
 
 	public Acl getAcl() {

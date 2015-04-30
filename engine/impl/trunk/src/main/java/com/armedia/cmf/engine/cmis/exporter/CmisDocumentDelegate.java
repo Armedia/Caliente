@@ -2,6 +2,7 @@ package com.armedia.cmf.engine.cmis.exporter;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,23 +15,29 @@ import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
+import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
+import com.armedia.cmf.storage.StoredAttribute;
+import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
+	private final String antecedentId;
 	private final List<Document> previous;
 	private final List<Document> successors;
 
-	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Document object) throws Exception {
+	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Document object, String antecedentId)
+		throws Exception {
 		super(rootElement.engine, Document.class, object);
 		this.previous = Collections.emptyList();
 		this.successors = Collections.emptyList();
+		this.antecedentId = antecedentId;
 	}
 
 	protected CmisDocumentDelegate(CmisExportEngine engine, Document object) throws Exception {
@@ -54,6 +61,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		}
 		this.previous = Tools.freezeList(prev);
 		this.successors = Tools.freezeList(succ);
+		this.antecedentId = (prev.isEmpty() ? null : prev.get(prev.size() - 1).getId());
 	}
 
 	@Override
@@ -79,8 +87,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
+		String prev = null;
 		for (Document d : this.previous) {
-			ret.add(new CmisDocumentDelegate(this, d));
+			ret.add(new CmisDocumentDelegate(this, d, prev));
+			prev = d.getId();
 		}
 		return ret;
 	}
@@ -88,6 +98,17 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		super.marshal(ctx, object);
+		if (this.antecedentId != null) {
+			StoredAttribute<StoredValue> antecedentId = new StoredAttribute<StoredValue>(
+				CmisCustomAttributes.VERSION_ANTECEDENT_ID.name, StoredDataType.ID, false);
+			try {
+				antecedentId.setValue(new StoredValue(StoredDataType.ID, Object.class.cast(this.antecedentId)));
+			} catch (ParseException e) {
+				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s [%s](%s)",
+					this.antecedentId, getType(), getLabel(), getObjectId()));
+			}
+			object.setAttribute(antecedentId);
+		}
 	}
 
 	@Override
@@ -137,8 +158,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected Collection<CmisExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
+		String prev = this.object.getId();
 		for (Document d : this.successors) {
-			ret.add(new CmisDocumentDelegate(this, d));
+			ret.add(new CmisDocumentDelegate(this, d, prev));
+			prev = d.getId();
 		}
 		return ret;
 	}

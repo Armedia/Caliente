@@ -84,8 +84,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		for (Folder f : this.object.getParents()) {
 			ret.add(new CmisFolderDelegate(this.engine, f));
 		}
-		ret.add(new CmisAclDelegate(this.engine, new CmisAcl(this.engine.decodeType(this.object.getType()), this.object
-			.getId(), this.object.getAcl())));
+		ret.add(new CmisAclDelegate(this.engine,
+			new CmisAcl(this.engine.decodeType(this.object.getType()), this.object)));
 		return ret;
 	}
 
