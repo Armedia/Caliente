@@ -25,8 +25,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final String calculateLabel(T obj) throws Exception {
-		FileableCmisObject f = FileableCmisObject.class.cast(obj);
+	protected final String calculateLabel(T f) throws Exception {
 		List<String> paths = f.getPaths();
 		String ret = null;
 		if (!paths.isEmpty()) {
@@ -34,7 +33,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		} else {
 			ret = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
 		}
-		String version = calculateVersion(obj);
+		String version = calculateVersion(f);
 		if (StringUtils.isBlank(version)) { return ret; }
 		return String.format("%s#%s", ret, version);
 	}
