@@ -129,7 +129,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		pm = new DualHashBidiMap<String, IntermediateProperty>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// BASE_TYPE_ID (FOLDER)
+		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (DM_DOCUMENT|...)
 		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.TITLE, IntermediateAttribute.DESCRIPTION);
@@ -156,6 +156,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		pm.put(DctmDocument.LEGACY_CONTENTS_PROPERTY, IntermediateProperty.CONTENT_STREAM_ID);
 		pm.put(DctmSysObject.VERSION_PATCHES, IntermediateProperty.VERSION_PATCHES);
 		pm.put(DctmSysObject.PATCH_ANTECEDENT, IntermediateProperty.PATCH_ANTECEDENT);
+		pm.put(DctmSysObject.CURRENT_VERSION, IntermediateProperty.CURRENT_VERSION);
 		propertyMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(pm));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();

@@ -81,6 +81,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				properties.add(new StoredProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID
 					.getStoredType(), false, patchAntecedent));
 			}
+
+			properties.add(new StoredProperty<IDfValue>(DctmSysObject.CURRENT_VERSION, DctmDataType.DF_BOOLEAN
+				.getStoredType(), false, DfValueFactory.newBooleanValue(document.getHasFolder())));
 			return;
 		}
 

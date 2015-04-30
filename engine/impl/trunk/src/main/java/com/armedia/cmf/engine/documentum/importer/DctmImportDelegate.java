@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
@@ -21,6 +23,7 @@ import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
+import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
@@ -29,6 +32,7 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -49,6 +53,7 @@ import com.documentum.fc.common.admin.DfAdminException;
  */
 public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends DctmDelegateBase<T, DctmImportEngine> {
 
+	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory.newStringValue("CURRENT");
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
 	protected final StoredObject<IDfValue> storedObject;
@@ -253,6 +258,23 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 			}
 
 			if (updateVersionLabels) {
+				StoredAttribute<IDfValue> versionLabel = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
+				StoredProperty<IDfValue> current = this.storedObject.getProperty(DctmSysObject.CURRENT_VERSION);
+				if ((current != null) && current.getValue().asBoolean()) {
+					// This is the current version...so double-check that it's not already in the
+					// attribute. If it isn't there, add it
+					boolean add = true;
+					for (IDfValue v : versionLabel) {
+						if (StringUtils.equalsIgnoreCase(v.asString(),
+							DctmImportDelegate.CURRENT_VERSION_LABEL.asString())) {
+							add = false;
+							break;
+						}
+					}
+					if (add) {
+						versionLabel.addValue(DctmImportDelegate.CURRENT_VERSION_LABEL);
+					}
+				}
 				copyAttributeToObject(DctmAttributes.R_VERSION_LABEL, object);
 			}
 
@@ -292,11 +314,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							this.storedObject.getLabel(), this.storedObject.getId()), e);
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
@@ -369,7 +391,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	/**
@@ -383,16 +405,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
