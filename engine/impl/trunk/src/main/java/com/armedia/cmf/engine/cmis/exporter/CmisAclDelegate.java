@@ -3,6 +3,7 @@ package com.armedia.cmf.engine.cmis.exporter;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
@@ -20,8 +21,8 @@ import com.armedia.cmf.storage.StoredValue;
 
 public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 
-	public CmisAclDelegate(CmisExportEngine engine, CmisAcl object) throws Exception {
-		super(engine, CmisAcl.class, object);
+	public CmisAclDelegate(CmisExportEngine engine, CmisObject object) throws Exception {
+		super(engine, CmisAcl.class, new CmisAcl(engine.decodeType(object.getType()), object));
 	}
 
 	@Override

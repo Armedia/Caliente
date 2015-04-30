@@ -9,7 +9,6 @@ import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.cmf.engine.cmis.CmisAcl;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredDataType;
@@ -84,8 +83,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		for (Folder f : this.object.getParents()) {
 			ret.add(new CmisFolderDelegate(this.engine, f));
 		}
-		ret.add(new CmisAclDelegate(this.engine,
-			new CmisAcl(this.engine.decodeType(this.object.getType()), this.object)));
+		// ret.add(new CmisAclDelegate(this.engine, this.object));
 		return ret;
 	}
 
@@ -95,6 +93,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
 		throw new Exception(String.format(
 			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
-			.getClass().getCanonicalName(), object.getType().getId()));
+				.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }
