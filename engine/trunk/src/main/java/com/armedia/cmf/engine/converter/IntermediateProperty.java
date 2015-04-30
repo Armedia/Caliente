@@ -28,6 +28,7 @@ public enum IntermediateProperty implements Mappable {
 	PATCH_ANTECEDENT(StoredDataType.STRING),
 	USERS_WITH_DEFAULT_FOLDER(StoredDataType.STRING),
 	USERS_DEFAULT_FOLDER_PATHS(StoredDataType.STRING),
+	CURRENT_VERSION(StoredDataType.BOOLEAN),
 	//
 	;
 
