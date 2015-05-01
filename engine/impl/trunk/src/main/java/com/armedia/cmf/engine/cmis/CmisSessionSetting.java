@@ -34,18 +34,19 @@ public enum CmisSessionSetting implements ConfigurationSetting {
 	LOCALE_ISO639_LANGUAGE(SessionParameter.LOCALE_ISO639_LANGUAGE),
 	LOCALE_ISO3166_COUNTRY(SessionParameter.LOCALE_ISO3166_COUNTRY),
 	LOCALE_VARIANT(SessionParameter.LOCALE_VARIANT),
+	DEFAULT_PAGE_SIZE(null, 0),
 	//
 	;
 
 	private final String label;
 	private final String sessionParameter;
-	private final String defaultValue;
+	private final Object defaultValue;
 
 	private CmisSessionSetting(String sessionParameter) {
 		this(sessionParameter, null);
 	}
 
-	private CmisSessionSetting(String sessionParameter, String defaultValue) {
+	private CmisSessionSetting(String sessionParameter, Object defaultValue) {
 		this.label = name().toLowerCase().replace('_', '.');
 		this.sessionParameter = sessionParameter;
 		this.defaultValue = defaultValue;

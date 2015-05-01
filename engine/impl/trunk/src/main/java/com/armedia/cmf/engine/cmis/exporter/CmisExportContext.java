@@ -15,16 +15,22 @@ public class CmisExportContext extends ExportContext<Session, StoredValue> {
 		super(factory, factory.getSettings(), rootId, rootType, session, output);
 	}
 
-	public OperationContext getDefaultOperationContext() {
-		return getDefaultOperationContext(0);
-	}
-
-	public OperationContext getDefaultOperationContext(int itemsPerPage) {
+	public OperationContext newOperationContext() {
+		OperationContext parent = getSession().getDefaultContext();
 		OperationContext ctx = getSession().createOperationContext();
-		ctx.setLoadSecondaryTypeProperties(true);
-		ctx.setFilterString("*");
-		ctx.setMaxItemsPerPage(itemsPerPage <= 0 ? Integer.MAX_VALUE : itemsPerPage);
-		ctx.setIncludePathSegments(true);
+		ctx.setCacheEnabled(parent.isCacheEnabled());
+		ctx.setFilter(parent.getFilter());
+		ctx.setFilterString(parent.getFilterString());
+		ctx.setIncludeAcls(parent.isIncludeAcls());
+		ctx.setIncludeAllowableActions(parent.isIncludeAllowableActions());
+		ctx.setIncludePathSegments(parent.isIncludePathSegments());
+		ctx.setIncludePolicies(parent.isIncludePolicies());
+		ctx.setIncludeRelationships(parent.getIncludeRelationships());
+		ctx.setLoadSecondaryTypeProperties(parent.loadSecondaryTypeProperties());
+		ctx.setMaxItemsPerPage(parent.getMaxItemsPerPage());
+		ctx.setOrderBy(parent.getOrderBy());
+		ctx.setRenditionFilter(parent.getRenditionFilter());
+		ctx.setRenditionFilterString(parent.getRenditionFilterString());
 		return ctx;
 	}
 }
