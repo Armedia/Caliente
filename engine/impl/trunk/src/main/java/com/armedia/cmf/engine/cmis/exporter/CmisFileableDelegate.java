@@ -50,6 +50,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			StoredDataType.ID, true);
 		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
 			StoredDataType.STRING, true);
+		final String rootPath = ctx.getSession().getRootFolder().getName();
 		for (Folder f : object.getParents()) {
 			try {
 				parents.addValue(new StoredValue(StoredDataType.ID, f.getId()));
@@ -59,7 +60,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 					this.object.getType(), this.object.getId()), e);
 			}
 			for (String p : f.getPaths()) {
-				paths.addValue(new StoredValue(p));
+				paths.addValue(new StoredValue(String.format("/%s%s", rootPath, p)));
 			}
 		}
 		marshaled.setProperty(paths);
