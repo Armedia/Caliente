@@ -32,7 +32,8 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, StoredValue, CmisExportContext> {
+public class CmisExportEngine extends
+	ExportEngine<Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportDelegateFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -73,7 +74,8 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(final Session session, CfgTools cfg) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(final Session session, CfgTools cfg,
+		CmisExportDelegateFactory factory) throws Exception {
 		String path = cfg.getString(CmisSetting.EXPORT_PATH);
 		final int itemsPerPage = Math.max(10, cfg.getInteger(CmisSetting.EXPORT_PAGE_SIZE));
 		final OperationContext ctx = session.createOperationContext();
@@ -174,7 +176,7 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 		return CmisCommon.TARGETS;
 	}
 
-	public static ExportEngine<?, ?, ?, ?> getExportEngine() {
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(CmisCommon.TARGET_NAME);
 	}
 
