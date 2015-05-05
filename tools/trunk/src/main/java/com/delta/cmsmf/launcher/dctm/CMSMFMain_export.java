@@ -22,6 +22,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
@@ -35,7 +36,7 @@ import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfTime;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?>> implements
-	ExportEngineListener {
+ExportEngineListener {
 
 	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
@@ -244,8 +245,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 	}
 
 	@Override
-	public void exportStarted(Map<String, ?> exportSettings) {
-		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportSettings));
+	public void exportStarted(CfgTools config) {
+		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", config));
 	}
 
 	@Override

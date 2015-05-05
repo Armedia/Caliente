@@ -15,6 +15,7 @@ import com.armedia.cmf.engine.exporter.DefaultExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -121,7 +122,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void exportStarted(Map<String, ?> exportSettings) {
+	public void exportStarted(CfgTools config) {
 		this.openBatches.clear();
 		this.manifestLog.info(String.format(ExportManifest.RECORD_FORMAT, "DATE", "TYPE", "RESULT", "BATCH_ID",
 			"SOURCE_ID", "LABEL", "ERROR_DATA"));

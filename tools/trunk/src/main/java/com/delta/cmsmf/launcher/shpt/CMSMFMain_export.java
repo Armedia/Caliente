@@ -26,6 +26,7 @@ import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
@@ -199,8 +200,8 @@ ExportEngineListener {
 	}
 
 	@Override
-	public void exportStarted(Map<String, ?> exportSettings) {
-		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportSettings));
+	public void exportStarted(CfgTools config) {
+		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", config));
 	}
 
 	@Override

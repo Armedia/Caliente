@@ -26,6 +26,7 @@ import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
@@ -36,7 +37,7 @@ import com.delta.cmsmf.launcher.ExportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?>> implements
-	ExportEngineListener {
+ExportEngineListener {
 
 	public CMSMFMain_export() throws Throwable {
 		super(CmisExportEngine.getExportEngine());
@@ -179,8 +180,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 	}
 
 	@Override
-	public void exportStarted(Map<String, ?> exportSettings) {
-		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportSettings));
+	public void exportStarted(CfgTools config) {
+		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", config));
 	}
 
 	@Override
