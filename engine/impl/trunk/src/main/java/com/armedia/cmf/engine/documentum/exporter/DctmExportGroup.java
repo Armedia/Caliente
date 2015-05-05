@@ -16,7 +16,6 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -38,16 +37,16 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_GROUP = "SELECT u.user_name FROM dm_user u, dm_group g WHERE u.user_group_name = g.group_name AND g.r_object_id = '%s'";
 
-	protected DctmExportGroup(DctmExportEngine engine, IDfGroup group, CfgTools configuration) throws Exception {
-		super(engine, IDfGroup.class, group, configuration);
+	protected DctmExportGroup(DctmExportDelegateFactory factory, IDfGroup group) throws Exception {
+		super(factory, IDfGroup.class, group);
 	}
 
-	DctmExportGroup(DctmExportEngine engine, IDfPersistentObject group, CfgTools configuration) throws Exception {
-		this(engine, DctmExportDelegate.staticCast(IDfGroup.class, group), configuration);
+	DctmExportGroup(DctmExportDelegateFactory factory, IDfPersistentObject group) throws Exception {
+		this(factory, DctmExportDelegate.staticCast(IDfGroup.class, group));
 	}
 
 	@Override
-	protected String calculateLabel(IDfGroup group, CfgTools configuration) throws Exception {
+	protected String calculateLabel(IDfGroup group) throws Exception {
 		return group.getGroupName();
 	}
 
@@ -87,7 +86,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 			if (owner == null) { throw new Exception(String.format(
 				"Missing dependency for group [%s] - user [%s] not found (as group owner)", group.getGroupName(),
 				groupOwner)); }
-			ret.add(this.engine.newDelegate(owner, this.configuration));
+			ret.add(this.factory.newExportDelegate(owner));
 		} else {
 			this.log.warn(String.format("Skipping export of special user [%s] as the owner of group [%s]", groupOwner,
 				group.getGroupName()));
@@ -99,7 +98,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 			if (admin == null) { throw new Exception(String.format(
 				"Missing dependency for group [%s] - user [%s] not found (as group admin)", group.getGroupName(),
 				groupAdmin)); }
-			ret.add(this.engine.newDelegate(admin, this.configuration));
+			ret.add(this.factory.newExportDelegate(admin));
 		} else {
 			this.log.warn(String.format("Skipping export of special user [%s] as the admin of group [%s]", groupAdmin,
 				group.getGroupName()));
@@ -132,7 +131,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					this.log.warn(msg);
 					ctx.printf(msg);
 				}
-				ret.add(this.engine.newDelegate(member, this.configuration));
+				ret.add(this.factory.newExportDelegate(member));
 			}
 		}
 
@@ -150,7 +149,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 				if (member == null) { throw new Exception(String.format(
 					"Missing dependency for group [%s] - group [%s] not found (as group member)", group.getGroupName(),
 					groupName)); }
-				ret.add(this.engine.newDelegate(member, this.configuration));
+				ret.add(this.factory.newExportDelegate(member));
 			}
 		}
 		return ret;
@@ -176,7 +175,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					"Missing dependent for group [%s] - user [%s] not found (as default group)", group.getGroupName(),
 					v.asString()));
 			}
-			ret.add(this.engine.newDelegate(user, this.configuration));
+			ret.add(this.factory.newExportDelegate(user));
 		}
 		return ret;
 	}

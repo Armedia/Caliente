@@ -15,7 +15,6 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmACL;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPermit;
@@ -39,16 +38,16 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
-	protected DctmExportACL(DctmExportEngine engine, IDfACL acl, CfgTools configuration) throws Exception {
-		super(engine, IDfACL.class, acl, configuration);
+	protected DctmExportACL(DctmExportDelegateFactory factory, IDfACL acl) throws Exception {
+		super(factory, IDfACL.class, acl);
 	}
 
-	DctmExportACL(DctmExportEngine engine, IDfPersistentObject acl, CfgTools configuration) throws Exception {
-		this(engine, DctmExportDelegate.staticCast(IDfACL.class, acl), configuration);
+	DctmExportACL(DctmExportDelegateFactory factory, IDfPersistentObject acl) throws Exception {
+		this(factory, DctmExportDelegate.staticCast(IDfACL.class, acl));
 	}
 
 	@Override
-	protected String calculateLabel(IDfACL acl, CfgTools configuration) throws Exception {
+	protected String calculateLabel(IDfACL acl) throws Exception {
 		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
 	}
 
@@ -150,7 +149,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 					acl.getObjectName(), (group ? "group" : "user"), name));
 				continue;
 			}
-			ret.add(this.engine.newDelegate(obj, this.configuration));
+			ret.add(this.factory.newExportDelegate(obj));
 		}
 
 		// Do the owner
@@ -162,7 +161,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			if (user == null) { throw new Exception(String.format(
 				"Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner, acl.getObjectName(),
 				owner)); }
-			ret.add(this.engine.newDelegate(user, this.configuration));
+			ret.add(this.factory.newExportDelegate(user));
 		}
 		return ret;
 	}

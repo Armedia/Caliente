@@ -18,21 +18,20 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
-public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
-	ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
+public abstract class DctmExportDelegate<T extends IDfPersistentObject>
+	extends
+	ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory, DctmExportEngine> {
 
 	private final DctmObjectType dctmType;
 
-	protected DctmExportDelegate(DctmExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
-		throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected DctmExportDelegate(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 		this.dctmType = DctmObjectType.decodeType(object);
 	}
 
@@ -41,27 +40,27 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object, CfgTools configuration) throws Exception {
+	protected final StoredObjectType calculateType(T object) throws Exception {
 		return DctmObjectType.decodeType(object).getStoredObjectType();
 	}
 
 	@Override
-	protected final String calculateObjectId(T object, CfgTools configuration) throws Exception {
+	protected final String calculateObjectId(T object) throws Exception {
 		return object.getObjectId().getId();
 	}
 
 	@Override
-	protected String calculateLabel(T object, CfgTools configuration) throws Exception {
+	protected String calculateLabel(T object) throws Exception {
 		return String.format("%s[%s]", getDctmType().name(), getObjectId());
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object, CfgTools configuration) throws Exception {
-		return calculateObjectId(object, configuration);
+	protected final String calculateSearchKey(T object) throws Exception {
+		return calculateObjectId(object);
 	}
 
 	@Override
-	protected String calculateBatchId(T object, CfgTools configuration) throws Exception {
+	protected String calculateBatchId(T object) throws Exception {
 		return null;
 	}
 

@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import com.armedia.cmf.engine.SessionFactory;
-import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionFactory;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
@@ -18,16 +17,12 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmCommon;
 import com.armedia.cmf.engine.documentum.common.Setting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
-import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -68,6 +63,11 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 	}
 
 	@Override
+	protected DctmExportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+		return new DctmExportDelegateFactory(this, cfg);
+	}
+
+	@Override
 	protected Set<String> getTargetNames() {
 		return DctmExportEngine.TARGETS;
 	}
@@ -79,66 +79,5 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 
 	public static ExportEngine<?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(DctmCommon.TARGET_NAME);
-	}
-
-	protected DctmExportDelegate<?> newDelegate(IDfPersistentObject object, StoredObjectType type,
-		CfgTools configuration) throws Exception {
-		final String searchKey = object.getObjectId().getId();
-		// For Documentum, the type is not used for the search. We do, however, use it to validate
-		// the returned object...
-		final DctmObjectType dctmType = (type != null ? DctmObjectType.decodeType(type) : DctmObjectType
-			.decodeType(object));
-		if (dctmType == null) { throw new ExportException(String.format(
-			"Unsupported object type [%s] (search key = [%s])", type, searchKey)); }
-
-		Class<? extends IDfPersistentObject> requiredClass = dctmType.getDfClass();
-		if (requiredClass.isInstance(object)) {
-			DctmExportDelegate<?> delegate = null;
-			switch (dctmType) {
-				case STORE:
-					delegate = new DctmExportStore(this, object, configuration);
-					break;
-				case USER:
-					delegate = new DctmExportUser(this, object, configuration);
-					break;
-				case GROUP:
-					delegate = new DctmExportGroup(this, object, configuration);
-					break;
-				case ACL:
-					delegate = new DctmExportACL(this, object, configuration);
-					break;
-				case TYPE:
-					delegate = new DctmExportType(this, object, configuration);
-					break;
-				case FORMAT:
-					delegate = new DctmExportFormat(this, object, configuration);
-					break;
-				case FOLDER:
-					delegate = new DctmExportFolder(this, object, configuration);
-					break;
-				case DOCUMENT:
-					delegate = new DctmExportDocument(this, object, configuration);
-					break;
-				default:
-					break;
-			}
-			return delegate;
-		}
-		this.log.warn(String.format("Type [%s] is not supported - no delegate created for search key [%s]", type,
-			searchKey));
-		return null;
-	}
-
-	protected DctmExportDelegate<?> newDelegate(IDfPersistentObject object, CfgTools configuration) throws Exception {
-		return newDelegate(object, null, configuration);
-	}
-
-	@Override
-	protected DctmExportDelegate<?> getExportDelegate(IDfSession session, StoredObjectType type, String searchKey,
-		CfgTools configuration) throws Exception {
-		if (session == null) { throw new IllegalArgumentException(
-			"Must provide a session through which to retrieve the object"); }
-		if (searchKey == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
-		return newDelegate(session.getObject(new DfId(searchKey)), type, configuration);
 	}
 }

@@ -30,7 +30,6 @@ import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -55,13 +54,12 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	private static final String QUALIFIER_FMT = "[%08x]%s.%s";
 
-	protected DctmExportDocument(DctmExportEngine engine, IDfDocument document, CfgTools configuration)
-		throws Exception {
-		super(engine, IDfDocument.class, document, configuration);
+	protected DctmExportDocument(DctmExportDelegateFactory factory, IDfDocument document) throws Exception {
+		super(factory, IDfDocument.class, document);
 	}
 
-	DctmExportDocument(DctmExportEngine engine, IDfPersistentObject document, CfgTools configuration) throws Exception {
-		this(engine, DctmExportDelegate.staticCast(IDfDocument.class, document), configuration);
+	DctmExportDocument(DctmExportDelegateFactory factory, IDfPersistentObject document) throws Exception {
+		this(factory, DctmExportDelegate.staticCast(IDfDocument.class, document));
 	}
 
 	@Override
@@ -144,18 +142,18 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, document, ctx);
 
 		// Export the ACL
-		req.add(this.engine.newDelegate(document.getACL(), this.configuration));
+		req.add(this.factory.newExportDelegate(document.getACL()));
 
 		// We do nothing else for references, as we need nothing else
 		if (isDfReference(document)) { return req; }
 
 		// Export the object type
-		req.add(this.engine.newDelegate(document.getType(), this.configuration));
+		req.add(this.factory.newExportDelegate(document.getType()));
 
 		// Export the format
 		IDfFormat format = document.getFormat();
 		if (format != null) {
-			req.add(this.engine.newDelegate(format, this.configuration));
+			req.add(this.factory.newExportDelegate(format));
 		}
 
 		// Export the owner
@@ -163,14 +161,14 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner)) {
 			IDfUser user = session.getUser(document.getOwnerName());
 			if (user != null) {
-				req.add(this.engine.newDelegate(user, this.configuration));
+				req.add(this.factory.newExportDelegate(user));
 			}
 		}
 
 		// Export the group
 		IDfGroup group = session.getGroup(document.getGroupName());
 		if (group != null) {
-			req.add(this.engine.newDelegate(group, this.configuration));
+			req.add(this.factory.newExportDelegate(group));
 		}
 
 		// We only export versions if we're the root object of the context operation
@@ -184,7 +182,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					this.log.debug(String
 						.format("Adding prior version [%s]", calculateVersionString(versionDoc, false)));
 				}
-				req.add(this.engine.newDelegate(versionDoc, this.configuration));
+				req.add(this.factory.newExportDelegate(versionDoc));
 			}
 		}
 
@@ -211,7 +209,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					this.log.debug(String.format("Adding subsequent version [%s]",
 						calculateVersionString(versionDoc, false)));
 				}
-				ret.add(this.engine.newDelegate(versionDoc, this.configuration));
+				ret.add(this.factory.newExportDelegate(versionDoc));
 			}
 		}
 		return ret;

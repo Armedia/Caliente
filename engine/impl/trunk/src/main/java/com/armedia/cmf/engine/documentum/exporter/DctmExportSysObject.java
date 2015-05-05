@@ -22,7 +22,6 @@ import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfFolder;
@@ -44,9 +43,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
 	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
 
-	protected DctmExportSysObject(DctmExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
-		throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected DctmExportSysObject(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 	}
 
 	@Override
@@ -190,7 +188,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected String calculateLabel(T sysObject, CfgTools configuration) throws Exception {
+	protected String calculateLabel(T sysObject) throws Exception {
 		final IDfSession session = sysObject.getSession();
 		final int folderCount = sysObject.getFolderIdCount();
 		final String objectName = sysObject.getObjectName();
@@ -208,7 +206,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected String calculateBatchId(T object, CfgTools configuration) throws Exception {
+	protected String calculateBatchId(T object) throws Exception {
 		return object.getChronicleId().getId();
 	}
 
@@ -229,7 +227,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		for (int i = 0; i < pathCount; i++) {
 			IDfId folderId = sysObject.getFolderId(i);
 			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
-			req.add(this.engine.newDelegate(parent, this.configuration));
+			req.add(this.factory.newExportDelegate(parent));
 		}
 
 		// We export our filestore
@@ -237,7 +235,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (StringUtils.isNotBlank(storeName)) {
 			IDfStore store = DfUtils.getStore(session, storeName);
 			if (store != null) {
-				req.add(this.engine.newDelegate(store, this.configuration));
+				req.add(this.factory.newExportDelegate(store));
 			} else {
 				this.log.warn("SysObject {} refers to missing store [{}]", marshaled.getLabel(), storeName);
 			}

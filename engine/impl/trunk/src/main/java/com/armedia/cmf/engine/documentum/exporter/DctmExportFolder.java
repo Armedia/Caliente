@@ -16,7 +16,6 @@ import com.armedia.cmf.engine.documentum.common.DctmFolder;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -39,16 +38,16 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = '%s'";
 
-	protected DctmExportFolder(DctmExportEngine engine, IDfFolder folder, CfgTools configuration) throws Exception {
-		super(engine, IDfFolder.class, folder, configuration);
+	protected DctmExportFolder(DctmExportDelegateFactory factory, IDfFolder folder) throws Exception {
+		super(factory, IDfFolder.class, folder);
 	}
 
-	DctmExportFolder(DctmExportEngine engine, IDfPersistentObject folder, CfgTools configuration) throws Exception {
-		this(engine, DctmExportDelegate.staticCast(IDfFolder.class, folder), configuration);
+	DctmExportFolder(DctmExportDelegateFactory factory, IDfPersistentObject folder) throws Exception {
+		this(factory, DctmExportDelegate.staticCast(IDfFolder.class, folder));
 	}
 
 	@Override
-	protected String calculateLabel(IDfFolder folder, CfgTools configuration) throws Exception {
+	protected String calculateLabel(IDfFolder folder) throws Exception {
 		return folder.getFolderPath(0);
 	}
 
@@ -81,7 +80,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected String calculateBatchId(IDfFolder folder, CfgTools configuration) throws Exception {
+	protected String calculateBatchId(IDfFolder folder) throws Exception {
 		// Calculate the maximum depth that this folder resides in, from its parents.
 		// Keep track of visited nodes, and explode on a loop.
 		Set<String> visited = new LinkedHashSet<String>();
@@ -132,7 +131,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
 			IDfUser user = session.getUser(owner);
 			if (user != null) {
-				ret.add(this.engine.newDelegate(user, this.configuration));
+				ret.add(this.factory.newExportDelegate(user));
 			}
 		}
 
@@ -150,7 +149,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			if (obj == null) {
 				continue;
 			}
-			ret.add(this.engine.newDelegate(obj, this.configuration));
+			ret.add(this.factory.newExportDelegate(obj));
 		}
 
 		StoredProperty<IDfValue> usersWithDefaultFolder = marshaled.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
@@ -166,7 +165,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 					"Missing dependent for folder [%s] - user [%s] not found (as default folder)",
 					marshaled.getLabel(), v.asString()));
 			}
-			ret.add(this.engine.newDelegate(user, this.configuration));
+			ret.add(this.factory.newExportDelegate(user));
 		}
 
 		// Export the object type

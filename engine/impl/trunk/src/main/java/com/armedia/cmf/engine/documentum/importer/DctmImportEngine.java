@@ -111,6 +111,11 @@ public class DctmImportEngine extends ImportEngine<IDfSession, DctmSessionWrappe
 	}
 
 	@Override
+	protected DctmImportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+		return new DctmImportDelegateFactory(this, cfg);
+	}
+
+	@Override
 	protected Set<String> getTargetNames() {
 		return DctmImportEngine.TARGETS;
 	}

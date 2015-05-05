@@ -7,7 +7,6 @@ package com.armedia.cmf.engine.documentum.exporter;
 import java.util.Collection;
 
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
@@ -19,16 +18,16 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 
-	protected DctmExportUser(DctmExportEngine engine, IDfUser user, CfgTools configuration) throws Exception {
-		super(engine, IDfUser.class, user, configuration);
+	protected DctmExportUser(DctmExportDelegateFactory factory, IDfUser user) throws Exception {
+		super(factory, IDfUser.class, user);
 	}
 
-	DctmExportUser(DctmExportEngine engine, IDfPersistentObject user, CfgTools configuration) throws Exception {
-		this(engine, DctmExportDelegate.staticCast(IDfUser.class, user), configuration);
+	DctmExportUser(DctmExportDelegateFactory factory, IDfPersistentObject user) throws Exception {
+		this(factory, DctmExportDelegate.staticCast(IDfUser.class, user));
 	}
 
 	@Override
-	protected String calculateLabel(IDfUser user, CfgTools configuration) throws Exception {
+	protected String calculateLabel(IDfUser user) throws Exception {
 		return user.getUserName();
 	}
 
@@ -50,7 +49,7 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 			if (dep == null) {
 				continue;
 			}
-			ret.add(this.engine.newDelegate(dep, this.configuration));
+			ret.add(this.factory.newExportDelegate(dep));
 		}
 		return ret;
 	}
