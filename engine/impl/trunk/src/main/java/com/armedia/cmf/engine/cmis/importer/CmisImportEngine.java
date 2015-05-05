@@ -2,7 +2,6 @@ package com.armedia.cmf.engine.cmis.importer;
 
 import java.util.Set;
 
-import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.cmf.engine.cmis.CmisCommon;
@@ -17,10 +16,11 @@ import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public class CmisImportEngine extends ImportEngine<Session, CmisSessionWrapper, Property<?>, CmisImportContext> {
+public class CmisImportEngine extends ImportEngine<Session, CmisSessionWrapper, StoredValue, CmisImportContext> {
 
 	public CmisImportEngine() {
 	}
@@ -31,18 +31,18 @@ public class CmisImportEngine extends ImportEngine<Session, CmisSessionWrapper, 
 	}
 
 	@Override
-	protected ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<Property<?>> translator,
+	protected ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<StoredValue> translator,
 		CmisImportContext ctx) throws ImportException, StorageException, StoredValueDecoderException {
 		return null;
 	}
 
 	@Override
-	protected Property<?> getValue(StoredDataType type, Object value) {
+	protected StoredValue getValue(StoredDataType type, Object value) {
 		return null;
 	}
 
 	@Override
-	protected ObjectStorageTranslator<Property<?>> getTranslator() {
+	protected ObjectStorageTranslator<StoredValue> getTranslator() {
 		return null;
 	}
 
@@ -54,6 +54,11 @@ public class CmisImportEngine extends ImportEngine<Session, CmisSessionWrapper, 
 	@Override
 	protected CmisImportContextFactory newContextFactory(CfgTools cfg) throws Exception {
 		return new CmisImportContextFactory(this, cfg);
+	}
+
+	@Override
+	protected CmisImportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+		return new CmisImportDelegateFactory(this, cfg);
 	}
 
 	@Override

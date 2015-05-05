@@ -1,7 +1,6 @@
 package com.armedia.cmf.engine.cmis.importer;
 
 import org.apache.chemistry.opencmis.client.api.Folder;
-import org.apache.chemistry.opencmis.client.api.Property;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
 
@@ -10,10 +9,11 @@ import com.armedia.cmf.engine.importer.ImportContextFactory;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportContextFactory extends
-	ImportContextFactory<Session, CmisSessionWrapper, Property<?>, CmisImportContext, CmisImportEngine, Folder> {
+ImportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisImportContext, CmisImportEngine, Folder> {
 
 	CmisImportContextFactory(CmisImportEngine engine, CfgTools settings) {
 		super(engine, settings);

@@ -13,13 +13,11 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.CfgTools;
 
 public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExportDelegate<T> {
 
-	protected CmisObjectDelegate(CmisExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
-		throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected CmisObjectDelegate(CmisExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 	}
 
 	@Override
@@ -47,18 +45,18 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 	}
 
 	@Override
-	protected String calculateLabel(T obj, CfgTools configuration) throws Exception {
+	protected String calculateLabel(T obj) throws Exception {
 		CmisObject o = CmisObject.class.cast(obj);
 		return String.format("[%s|%s]", o.getType().getId(), o.getName());
 	}
 
 	@Override
-	protected final String calculateObjectId(T object, CfgTools configuration) throws Exception {
+	protected final String calculateObjectId(T object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object, CfgTools configuration) throws Exception {
+	protected final String calculateSearchKey(T object) throws Exception {
 		return object.getId();
 	}
 }

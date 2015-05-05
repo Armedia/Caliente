@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
-import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.OperationContext;
@@ -166,6 +165,11 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	}
 
 	@Override
+	protected CmisExportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+		return new CmisExportDelegateFactory(this, cfg);
+	}
+
+	@Override
 	protected Set<String> getTargetNames() {
 		return CmisCommon.TARGETS;
 	}
@@ -177,37 +181,5 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	@Override
 	protected CmisTranslator getTranslator() {
 		return new CmisTranslator();
-	}
-
-	@Override
-	protected CmisExportDelegate<?> getExportDelegate(Session session, StoredObjectType type, String searchKey,
-		CfgTools configuration) throws Exception {
-		CmisObject obj = session.getObject(searchKey);
-		switch (type) {
-			case ACL:
-				return new CmisAclDelegate(this, obj, configuration);
-			case FOLDER:
-				if (obj instanceof Folder) { return new CmisFolderDelegate(this, Folder.class.cast(obj), configuration); }
-				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Folder-type",
-					searchKey, obj.getClass().getCanonicalName()));
-			case DOCUMENT:
-				if (obj instanceof Document) {
-					// Is this the PWC? If so, then don't include it...
-					Document doc = Document.class.cast(obj);
-					if ((doc.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", doc.getVersionLabel())) {
-						// We will not include the PWC in an export
-						doc = doc.getObjectOfLatestVersion(false);
-						if (doc == null) { return null; }
-					}
-					return new CmisDocumentDelegate(this, doc, configuration);
-				}
-				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Document-type",
-					searchKey, obj.getClass().getCanonicalName()));
-			case USER:
-			case GROUP:
-			default:
-				break;
-		}
-		return null;
 	}
 }

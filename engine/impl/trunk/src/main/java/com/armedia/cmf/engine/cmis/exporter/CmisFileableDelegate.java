@@ -16,13 +16,11 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.CfgTools;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
 
-	protected CmisFileableDelegate(CmisExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
-		throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected CmisFileableDelegate(CmisExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 	}
 
 	protected String calculatePath(T f) throws Exception {
@@ -32,7 +30,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final String calculateLabel(T f, CfgTools configuration) throws Exception {
+	protected final String calculateLabel(T f) throws Exception {
 		String path = calculatePath(f);
 		if (path == null) {
 			path = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
@@ -88,14 +86,14 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		for (Folder f : this.object.getParents()) {
-			ret.add(new CmisFolderDelegate(this.engine, f, this.configuration));
+			ret.add(new CmisFolderDelegate(this.factory, f));
 		}
 		// ret.add(new CmisAclDelegate(this.engine, this.object));
 		return ret;
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object, CfgTools configuration) throws Exception {
+	protected final StoredObjectType calculateType(T object) throws Exception {
 		if (Document.class.isInstance(object)) { return StoredObjectType.DOCUMENT; }
 		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
 		throw new Exception(String.format(
