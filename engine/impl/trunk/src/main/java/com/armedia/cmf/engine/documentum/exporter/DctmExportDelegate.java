@@ -18,6 +18,7 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -25,12 +26,13 @@ import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
-ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
+	ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
 
 	private final DctmObjectType dctmType;
 
-	protected DctmExportDelegate(DctmExportEngine engine, Class<T> objectClass, T object) throws Exception {
-		super(engine, objectClass, object);
+	protected DctmExportDelegate(DctmExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
+		throws Exception {
+		super(engine, objectClass, object, configuration);
 		this.dctmType = DctmObjectType.decodeType(object);
 	}
 
@@ -98,7 +100,7 @@ ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, D
 				if (handler.includeInExport(this.object, attr)) {
 					StoredAttribute<IDfValue> attribute = new StoredAttribute<IDfValue>(attr.getName(), DctmDataType
 						.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(
-							this.object, attr));
+						this.object, attr));
 					object.setAttribute(attribute);
 				}
 			}

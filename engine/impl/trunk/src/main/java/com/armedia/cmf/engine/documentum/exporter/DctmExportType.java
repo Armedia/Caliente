@@ -7,6 +7,7 @@ package com.armedia.cmf.engine.documentum.exporter;
 import java.util.Collection;
 
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
@@ -19,12 +20,12 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportType extends DctmExportDelegate<IDfType> {
 
-	protected DctmExportType(DctmExportEngine engine, IDfType type) throws Exception {
-		super(engine, IDfType.class, type);
+	protected DctmExportType(DctmExportEngine engine, IDfType type, CfgTools configuration) throws Exception {
+		super(engine, IDfType.class, type, configuration);
 	}
 
-	DctmExportType(DctmExportEngine engine, IDfPersistentObject type) throws Exception {
-		this(engine, DctmExportDelegate.staticCast(IDfType.class, type));
+	DctmExportType(DctmExportEngine engine, IDfPersistentObject type, CfgTools configuration) throws Exception {
+		this(engine, DctmExportDelegate.staticCast(IDfType.class, type), configuration);
 	}
 
 	@Override
@@ -62,7 +63,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 				this.log.warn(String.format("Will not export special type [%s] (supertype of [%s])",
 					superType.getName(), type.getName()));
 			} else {
-				ret.add(this.engine.newDelegate(superType));
+				ret.add(this.engine.newDelegate(superType, this.configuration));
 			}
 		}
 		return ret;

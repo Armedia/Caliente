@@ -4,6 +4,7 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
+import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
 
@@ -13,12 +14,12 @@ import com.documentum.fc.client.IDfPersistentObject;
  */
 public class DctmExportFormat extends DctmExportDelegate<IDfFormat> {
 
-	protected DctmExportFormat(DctmExportEngine engine, IDfFormat format) throws Exception {
-		super(engine, IDfFormat.class, format);
+	protected DctmExportFormat(DctmExportEngine engine, IDfFormat format, CfgTools configuration) throws Exception {
+		super(engine, IDfFormat.class, format, configuration);
 	}
 
-	DctmExportFormat(DctmExportEngine engine, IDfPersistentObject format) throws Exception {
-		this(engine, DctmExportDelegate.staticCast(IDfFormat.class, format));
+	DctmExportFormat(DctmExportEngine engine, IDfPersistentObject format, CfgTools configuration) throws Exception {
+		this(engine, DctmExportDelegate.staticCast(IDfFormat.class, format), configuration);
 	}
 
 	@Override

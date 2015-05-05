@@ -6,7 +6,6 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import com.armedia.cmf.engine.SessionFactory;
@@ -43,15 +42,12 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(IDfSession session, Map<String, ?> settings) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(IDfSession session, CfgTools configuration) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
-		if (settings == null) {
-			settings = Collections.emptyMap();
-		}
-		Object dql = settings.get(Setting.DQL.getLabel());
+		String dql = configuration.getString(Setting.DQL);
 		if (dql == null) { throw new Exception(String.format("Must provide the DQL to query with", dql)); }
-		final int batchSize = CfgTools.decodeInteger(Setting.EXPORT_BATCH_SIZE.getLabel(), settings, 0);
+		final int batchSize = configuration.getInteger(Setting.EXPORT_BATCH_SIZE);
 		return new DctmExportTargetIterator(DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_EXECREAD_QUERY,
 			batchSize));
 	}
@@ -85,7 +81,8 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 		return ExportEngine.getExportEngine(DctmCommon.TARGET_NAME);
 	}
 
-	protected DctmExportDelegate<?> newDelegate(IDfPersistentObject object, StoredObjectType type) throws Exception {
+	protected DctmExportDelegate<?> newDelegate(IDfPersistentObject object, StoredObjectType type,
+		CfgTools configuration) throws Exception {
 		final String searchKey = object.getObjectId().getId();
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
@@ -99,28 +96,28 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 			DctmExportDelegate<?> delegate = null;
 			switch (dctmType) {
 				case STORE:
-					delegate = new DctmExportStore(this, object);
+					delegate = new DctmExportStore(this, object, configuration);
 					break;
 				case USER:
-					delegate = new DctmExportUser(this, object);
+					delegate = new DctmExportUser(this, object, configuration);
 					break;
 				case GROUP:
-					delegate = new DctmExportGroup(this, object);
+					delegate = new DctmExportGroup(this, object, configuration);
 					break;
 				case ACL:
-					delegate = new DctmExportACL(this, object);
+					delegate = new DctmExportACL(this, object, configuration);
 					break;
 				case TYPE:
-					delegate = new DctmExportType(this, object);
+					delegate = new DctmExportType(this, object, configuration);
 					break;
 				case FORMAT:
-					delegate = new DctmExportFormat(this, object);
+					delegate = new DctmExportFormat(this, object, configuration);
 					break;
 				case FOLDER:
-					delegate = new DctmExportFolder(this, object);
+					delegate = new DctmExportFolder(this, object, configuration);
 					break;
 				case DOCUMENT:
-					delegate = new DctmExportDocument(this, object);
+					delegate = new DctmExportDocument(this, object, configuration);
 					break;
 				default:
 					break;
@@ -132,16 +129,16 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 		return null;
 	}
 
-	protected DctmExportDelegate<?> newDelegate(IDfPersistentObject object) throws Exception {
-		return newDelegate(object, null);
+	protected DctmExportDelegate<?> newDelegate(IDfPersistentObject object, CfgTools configuration) throws Exception {
+		return newDelegate(object, null, configuration);
 	}
 
 	@Override
-	protected DctmExportDelegate<?> getExportDelegate(IDfSession session, StoredObjectType type, String searchKey)
-		throws Exception {
+	protected DctmExportDelegate<?> getExportDelegate(IDfSession session, StoredObjectType type, String searchKey,
+		CfgTools configuration) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the object"); }
 		if (searchKey == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
-		return newDelegate(session.getObject(new DfId(searchKey)), type);
+		return newDelegate(session.getObject(new DfId(searchKey)), type, configuration);
 	}
 }

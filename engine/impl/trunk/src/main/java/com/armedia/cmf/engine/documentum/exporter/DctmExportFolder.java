@@ -16,6 +16,7 @@ import com.armedia.cmf.engine.documentum.common.DctmFolder;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -38,12 +39,12 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = '%s'";
 
-	protected DctmExportFolder(DctmExportEngine engine, IDfFolder folder) throws Exception {
-		super(engine, IDfFolder.class, folder);
+	protected DctmExportFolder(DctmExportEngine engine, IDfFolder folder, CfgTools configuration) throws Exception {
+		super(engine, IDfFolder.class, folder, configuration);
 	}
 
-	DctmExportFolder(DctmExportEngine engine, IDfPersistentObject folder) throws Exception {
-		this(engine, DctmExportDelegate.staticCast(IDfFolder.class, folder));
+	DctmExportFolder(DctmExportEngine engine, IDfPersistentObject folder, CfgTools configuration) throws Exception {
+		this(engine, DctmExportDelegate.staticCast(IDfFolder.class, folder), configuration);
 	}
 
 	@Override
@@ -131,7 +132,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
 			IDfUser user = session.getUser(owner);
 			if (user != null) {
-				ret.add(this.engine.newDelegate(user));
+				ret.add(this.engine.newDelegate(user, this.configuration));
 			}
 		}
 
@@ -149,7 +150,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			if (obj == null) {
 				continue;
 			}
-			ret.add(this.engine.newDelegate(obj));
+			ret.add(this.engine.newDelegate(obj, this.configuration));
 		}
 
 		StoredProperty<IDfValue> usersWithDefaultFolder = marshaled.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
@@ -165,7 +166,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 					"Missing dependent for folder [%s] - user [%s] not found (as default folder)",
 					marshaled.getLabel(), v.asString()));
 			}
-			ret.add(this.engine.newDelegate(user));
+			ret.add(this.engine.newDelegate(user, this.configuration));
 		}
 
 		// Export the object type
