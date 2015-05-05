@@ -47,7 +47,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected String calculateLabel(IDfGroup group) throws Exception {
+	protected String calculateLabel(IDfGroup group, CfgTools configuration) throws Exception {
 		return group.getGroupName();
 	}
 

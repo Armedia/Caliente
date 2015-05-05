@@ -29,7 +29,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected String calculateLabel(IDfType type) throws Exception {
+	protected String calculateLabel(IDfType type, CfgTools configuration) throws Exception {
 		String superName = type.getSuperName();
 		if ((superName != null) && (superName.length() > 0)) {
 			superName = String.format(" (extends %s)", superName);
@@ -40,7 +40,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected String calculateBatchId(IDfType type) throws DfException {
+	protected String calculateBatchId(IDfType type, CfgTools configuration) throws DfException {
 		// Calculate the maximum depth that this folder resides in, from its parents.
 		// Keep track of visited nodes, and explode on a loop.
 		// We return it in zero-padded hex to allow for large numbers (up to 2^64

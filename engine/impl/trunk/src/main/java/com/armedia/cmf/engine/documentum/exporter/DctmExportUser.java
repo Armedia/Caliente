@@ -28,7 +28,7 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected String calculateLabel(IDfUser user) throws Exception {
+	protected String calculateLabel(IDfUser user, CfgTools configuration) throws Exception {
 		return user.getUserName();
 	}
 

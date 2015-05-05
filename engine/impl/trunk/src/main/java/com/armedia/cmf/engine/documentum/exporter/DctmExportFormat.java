@@ -23,7 +23,7 @@ public class DctmExportFormat extends DctmExportDelegate<IDfFormat> {
 	}
 
 	@Override
-	protected String calculateLabel(IDfFormat format) throws Exception {
+	protected String calculateLabel(IDfFormat format, CfgTools configuration) throws Exception {
 		return format.getName();
 	}
 }

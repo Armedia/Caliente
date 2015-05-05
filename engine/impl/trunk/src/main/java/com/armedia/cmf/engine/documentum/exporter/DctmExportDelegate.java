@@ -41,27 +41,27 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object) throws Exception {
+	protected final StoredObjectType calculateType(T object, CfgTools configuration) throws Exception {
 		return DctmObjectType.decodeType(object).getStoredObjectType();
 	}
 
 	@Override
-	protected final String calculateObjectId(T object) throws Exception {
+	protected final String calculateObjectId(T object, CfgTools configuration) throws Exception {
 		return object.getObjectId().getId();
 	}
 
 	@Override
-	protected String calculateLabel(T object) throws Exception {
+	protected String calculateLabel(T object, CfgTools configuration) throws Exception {
 		return String.format("%s[%s]", getDctmType().name(), getObjectId());
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) throws Exception {
-		return calculateObjectId(object);
+	protected final String calculateSearchKey(T object, CfgTools configuration) throws Exception {
+		return calculateObjectId(object, configuration);
 	}
 
 	@Override
-	protected String calculateBatchId(T object) throws Exception {
+	protected String calculateBatchId(T object, CfgTools configuration) throws Exception {
 		return null;
 	}
 

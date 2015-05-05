@@ -48,7 +48,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected String calculateLabel(IDfACL acl) throws Exception {
+	protected String calculateLabel(IDfACL acl, CfgTools configuration) throws Exception {
 		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
 	}
 

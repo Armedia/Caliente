@@ -190,7 +190,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected String calculateLabel(T sysObject) throws Exception {
+	protected String calculateLabel(T sysObject, CfgTools configuration) throws Exception {
 		final IDfSession session = sysObject.getSession();
 		final int folderCount = sysObject.getFolderIdCount();
 		final String objectName = sysObject.getObjectName();
@@ -208,7 +208,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected String calculateBatchId(T object) throws Exception {
+	protected String calculateBatchId(T object, CfgTools configuration) throws Exception {
 		return object.getChronicleId().getId();
 	}
 

@@ -48,7 +48,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected String calculateLabel(IDfFolder folder) throws Exception {
+	protected String calculateLabel(IDfFolder folder, CfgTools configuration) throws Exception {
 		return folder.getFolderPath(0);
 	}
 
@@ -81,7 +81,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected String calculateBatchId(IDfFolder folder) throws Exception {
+	protected String calculateBatchId(IDfFolder folder, CfgTools configuration) throws Exception {
 		// Calculate the maximum depth that this folder resides in, from its parents.
 		// Keep track of visited nodes, and explode on a loop.
 		Set<String> visited = new LinkedHashSet<String>();
