@@ -20,6 +20,7 @@ import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 
 /**
  * @author diego
@@ -37,8 +38,9 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	 * @param object
 	 * @throws Exception
 	 */
-	protected ShptObject(ShptExportEngine engine, Class<T> objectClass, T object) throws Exception {
-		super(engine, objectClass, object);
+	protected ShptObject(ShptExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
+		throws Exception {
+		super(engine, objectClass, object, configuration);
 	}
 
 	public abstract String getName();

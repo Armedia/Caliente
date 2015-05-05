@@ -18,6 +18,7 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.Role;
@@ -30,8 +31,8 @@ public class ShptUser extends ShptSecurityObject<User> {
 	private final String userName;
 	private final String userDomain;
 
-	public ShptUser(ShptExportEngine engine, User user) throws Exception {
-		super(engine, User.class, user);
+	public ShptUser(ShptExportEngine engine, User user, CfgTools configuration) throws Exception {
+		super(engine, User.class, user, configuration);
 		/*
 		List<Integer> roles = this.service.getRoleAssignments(this.object.getId());
 		if ((roles == null) || roles.isEmpty()) {
@@ -197,7 +198,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 		List<Group> l = service.getUserGroups(this.object.getId());
 		if ((l != null) && !l.isEmpty()) {
 			for (Group g : l) {
-				ret.add(new ShptGroup(getEngine(), g));
+				ret.add(new ShptGroup(getEngine(), g, this.configuration));
 			}
 		}
 

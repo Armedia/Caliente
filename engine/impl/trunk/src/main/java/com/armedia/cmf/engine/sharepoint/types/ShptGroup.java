@@ -15,14 +15,15 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.PrincipalType;
 import com.independentsoft.share.User;
 
 public class ShptGroup extends ShptSecurityObject<Group> {
 
-	public ShptGroup(ShptExportEngine engine, Group object) throws Exception {
-		super(engine, Group.class, object);
+	public ShptGroup(ShptExportEngine engine, Group object, CfgTools configuration) throws Exception {
+		super(engine, Group.class, object, configuration);
 	}
 
 	@Override
@@ -120,13 +121,13 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			for (User u : l) {
 				if (u.getType() == PrincipalType.USER) {
 					try {
-						ret.add(new ShptUser(getEngine(), u));
+						ret.add(new ShptUser(getEngine(), u, this.configuration));
 					} catch (IncompleteDataException e) {
 						this.log.warn(e.getMessage());
 					}
 				} else {
 					try {
-						ret.add(new ShptGroup(getEngine(), service.getGroup(u.getId())));
+						ret.add(new ShptGroup(getEngine(), service.getGroup(u.getId()), this.configuration));
 					} catch (ShptSessionException e) {
 						this.log.warn(String.format("Failed to locate group with ID [%d]", u.getId()));
 					}
@@ -141,7 +142,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 				switch (u.getType()) {
 					case USER:
 						try {
-							owner = new ShptUser(getEngine(), u);
+							owner = new ShptUser(getEngine(), u, this.configuration);
 						} catch (IncompleteDataException e) {
 							this.log.warn(e.getMessage());
 						}
@@ -150,7 +151,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 					case SECURITY_GROUP:
 						if (this.object.getId() != u.getId()) {
 							try {
-								owner = new ShptGroup(getEngine(), service.getGroup(u.getId()));
+								owner = new ShptGroup(getEngine(), service.getGroup(u.getId()), this.configuration);
 							} catch (ShptSessionException e) {
 								// Did not find an owner group
 								if (this.log.isDebugEnabled()) {

@@ -36,6 +36,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.CheckOutType;
 import com.independentsoft.share.CustomizedPageStatus;
@@ -54,20 +55,22 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	private List<ShptFile> predecessors = Collections.emptyList();
 	private List<ShptFile> successors = Collections.emptyList();
 
-	public ShptFile(ShptExportEngine engine, File file) throws Exception {
-		this(engine, new ShptVersion(file), null);
+	public ShptFile(ShptExportEngine engine, File file, CfgTools configuration) throws Exception {
+		this(engine, new ShptVersion(file), null, configuration);
 	}
 
-	protected ShptFile(ShptExportEngine engine, File file, FileVersion version) throws Exception {
-		this(engine, new ShptVersion(file, version), null);
+	protected ShptFile(ShptExportEngine engine, File file, FileVersion version, CfgTools configuration)
+		throws Exception {
+		this(engine, new ShptVersion(file, version), null, configuration);
 	}
 
-	protected ShptFile(ShptExportEngine engine, ShptVersion object) throws Exception {
-		this(engine, object, null);
+	protected ShptFile(ShptExportEngine engine, ShptVersion object, CfgTools configuration) throws Exception {
+		this(engine, object, null, configuration);
 	}
 
-	protected ShptFile(ShptExportEngine engine, ShptVersion object, ShptFile antecedent) throws Exception {
-		super(engine, ShptVersion.class, object);
+	protected ShptFile(ShptExportEngine engine, ShptVersion object, ShptFile antecedent, CfgTools configuration)
+		throws Exception {
+		super(engine, ShptVersion.class, object, configuration);
 		this.version = object.getVersion();
 		this.versionNumber = object.getVersionNumber();
 		this.antecedentId = (antecedent != null ? antecedent.getObjectId() : null);
@@ -247,7 +250,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 					}
 					ShptFile f;
 					try {
-						f = new ShptFile(getEngine(), new ShptVersion(this.object.getFile(), v), antecedent);
+						f = new ShptFile(getEngine(), new ShptVersion(this.object.getFile(), v), antecedent,
+							this.configuration);
 					} catch (Exception ex) {
 						throw new ExportException(String.format(
 							"Failed to construct a new ShptVersion instance for [%s](%s)", getLabel(), v.getId()), ex);
@@ -290,7 +294,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 		ShptUser author = null;
 		try {
-			author = new ShptUser(getEngine(), service.getFileAuthor(this.object.getServerRelativeUrl()));
+			author = new ShptUser(getEngine(), service.getFileAuthor(this.object.getServerRelativeUrl()),
+				this.configuration);
 			ret.add(author);
 			marshaled.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OWNER.name, StoredDataType.STRING,
 				false, Collections.singleton(new StoredValue(author.getName()))));
@@ -302,10 +307,12 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		ShptUser creator = author;
 		try {
 			if (this.version == null) {
-				modifier = new ShptUser(getEngine(), service.getModifiedByUser(this.object.getServerRelativeUrl()));
+				modifier = new ShptUser(getEngine(), service.getModifiedByUser(this.object.getServerRelativeUrl()),
+					this.configuration);
 			} else {
 				// TODO: How in the hell can we get the version's creator via JShare?
-				modifier = new ShptUser(getEngine(), service.getModifiedByUser(this.object.getServerRelativeUrl()));
+				modifier = new ShptUser(getEngine(), service.getModifiedByUser(this.object.getServerRelativeUrl()),
+					this.configuration);
 				// creator = modifier;
 			}
 		} catch (IncompleteDataException e) {
@@ -344,11 +351,12 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		return ret;
 	}
 
-	public static ShptFile locateFile(ShptExportEngine engine, ShptSession service, String searchKey) throws Exception {
+	public static ShptFile locateFile(ShptExportEngine engine, ShptSession service, String searchKey,
+		CfgTools configuration) throws Exception {
 		Matcher m = ShptFile.SEARCH_KEY_PARSER.matcher(searchKey);
 		if (!m.matches()) {
 			File f = service.getFile(searchKey);
-			if (f != null) { return new ShptFile(engine, f); }
+			if (f != null) { return new ShptFile(engine, f, configuration); }
 			return null;
 		}
 		final String url = m.group(1);
@@ -356,9 +364,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		if (f == null) { return null; }
 		String version = m.group(2);
 		if (Tools.equals(version, String.format("%d.%d", f.getMajorVersion(), f.getMinorVersion()))) { return new ShptFile(
-			engine, f); }
+			engine, f, configuration); }
 		for (FileVersion v : service.getFileVersions(url)) {
-			if (Tools.equals(version, v.getLabel())) { return new ShptFile(engine, f, v); }
+			if (Tools.equals(version, v.getLabel())) { return new ShptFile(engine, f, v, configuration); }
 		}
 		// Nothing found...
 		return null;

@@ -21,6 +21,7 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -32,8 +33,9 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 	private final String url;
 
-	protected ShptFSObject(ShptExportEngine engine, Class<T> objectClass, T object) throws Exception {
-		super(engine, objectClass, object);
+	protected ShptFSObject(ShptExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
+		throws Exception {
+		super(engine, objectClass, object, configuration);
 		this.url = calculateServerRelativeUrl(object);
 	}
 
@@ -73,8 +75,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 		Date d = getCreatedTime();
 		if (d != null) {
-			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name, StoredDataType.DATETIME,
-				false, Collections.singleton(new StoredValue(d))));
+			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.CREATE_DATE.name,
+				StoredDataType.DATETIME, false, Collections.singleton(new StoredValue(d))));
 		}
 
 		d = getLastModifiedTime();
@@ -106,7 +108,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		if (!StringUtils.isEmpty(getName())) {
 			String parentPath = getServerRelativeUrl();
 			parentPath = FileNameTools.dirname(parentPath, '/');
-			ShptFolder parent = new ShptFolder(getEngine(), session.getFolder(parentPath));
+			ShptFolder parent = new ShptFolder(getEngine(), session.getFolder(parentPath), this.configuration);
 			marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PARENTS.name,
 				StoredDataType.ID, true,
 				Collections.singleton(new StoredValue(StoredDataType.ID, parent.getObjectId()))));

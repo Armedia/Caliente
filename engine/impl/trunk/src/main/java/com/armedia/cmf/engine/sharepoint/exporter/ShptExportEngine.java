@@ -7,7 +7,6 @@ package com.armedia.cmf.engine.sharepoint.exporter;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import com.armedia.cmf.engine.TransferEngine;
@@ -41,37 +40,34 @@ public class ShptExportEngine extends ExportEngine<ShptSession, ShptSessionWrapp
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(ShptSession service, Map<String, ?> settings) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(ShptSession service, CfgTools configuration) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
-		if (settings == null) {
-			settings = Collections.emptyMap();
-		}
-		final String path = CfgTools.decodeString(Setting.PATH, settings);
+		final String path = configuration.getString(Setting.PATH);
 		if (path == null) { throw new ShptException("Must provide the name of the site to export"); }
-		final boolean excludeEmptyFolders = CfgTools.decodeBoolean(Setting.EXCLUDE_EMPTY_FOLDERS, settings);
+		final boolean excludeEmptyFolders = configuration.getBoolean(Setting.EXCLUDE_EMPTY_FOLDERS);
 
 		try {
-			return new ShptRecursiveIterator(this, service, service.getFolder(path), excludeEmptyFolders);
+			return new ShptRecursiveIterator(this, service, service.getFolder(path), configuration, excludeEmptyFolders);
 		} catch (ShptSessionException e) {
 			throw new ShptException("Export target search failed", e);
 		}
 	}
 
 	@Override
-	protected ShptExportDelegate<?> getExportDelegate(ShptSession session, StoredObjectType type, String searchKey)
-		throws Exception {
+	protected ShptExportDelegate<?> getExportDelegate(ShptSession session, StoredObjectType type, String searchKey,
+		CfgTools configuration) throws Exception {
 		switch (type) {
 			case USER:
-				return new ShptUser(this, session.getUser(Tools.decodeInteger(searchKey)));
+				return new ShptUser(this, session.getUser(Tools.decodeInteger(searchKey)), configuration);
 			case GROUP:
-				return new ShptGroup(this, session.getGroup(Tools.decodeInteger(searchKey)));
+				return new ShptGroup(this, session.getGroup(Tools.decodeInteger(searchKey)), configuration);
 			case FOLDER:
-				return new ShptFolder(this, session.getFolder(searchKey));
+				return new ShptFolder(this, session.getFolder(searchKey), configuration);
 			case DOCUMENT:
-				return ShptFile.locateFile(this, session, searchKey);
+				return ShptFile.locateFile(this, session, searchKey, configuration);
 			default:
 				throw new Exception(String.format("Unsupported object type [%s]", type));
 		}

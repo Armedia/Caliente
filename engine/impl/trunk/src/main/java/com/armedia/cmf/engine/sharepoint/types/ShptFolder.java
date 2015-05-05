@@ -16,14 +16,15 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
 
 public class ShptFolder extends ShptFSObject<Folder> {
 
-	public ShptFolder(ShptExportEngine engine, Folder object) throws Exception {
-		super(engine, Folder.class, object);
+	public ShptFolder(ShptExportEngine engine, Folder object, CfgTools configuration) throws Exception {
+		super(engine, Folder.class, object, configuration);
 	}
 
 	public List<String> getContentTypeOrders() {
@@ -107,7 +108,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			files = Collections.emptyList();
 		}
 		for (File f : files) {
-			ret.add(new ShptFile(getEngine(), f));
+			ret.add(new ShptFile(getEngine(), f, this.configuration));
 		}
 		List<Folder> folders = Collections.emptyList();
 		try {
@@ -116,7 +117,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			folders = Collections.emptyList();
 		}
 		for (Folder f : folders) {
-			ret.add(new ShptFolder(getEngine(), f));
+			ret.add(new ShptFolder(getEngine(), f, this.configuration));
 		}
 		return ret;
 	}

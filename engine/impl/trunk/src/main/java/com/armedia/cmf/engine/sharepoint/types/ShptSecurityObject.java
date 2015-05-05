@@ -5,6 +5,7 @@
 package com.armedia.cmf.engine.sharepoint.types;
 
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.commons.utilities.CfgTools;
 
 /**
  * @author diego
@@ -12,8 +13,9 @@ import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
  */
 public abstract class ShptSecurityObject<T> extends ShptObject<T> {
 
-	protected ShptSecurityObject(ShptExportEngine engine, Class<T> objectClass, T object) throws Exception {
-		super(engine, objectClass, object);
+	protected ShptSecurityObject(ShptExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
+		throws Exception {
+		super(engine, objectClass, object, configuration);
 	}
 
 	@Override

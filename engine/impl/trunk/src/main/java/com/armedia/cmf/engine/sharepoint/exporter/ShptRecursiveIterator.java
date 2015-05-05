@@ -14,6 +14,7 @@ import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.types.ShptFile;
 import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
 
@@ -58,14 +59,17 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 
 	private final ShptExportEngine engine;
 	private final ShptSession service;
+	private final CfgTools configuration;
 	private final boolean excludeEmptyFolders;
 
 	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
 
-	public ShptRecursiveIterator(ShptExportEngine engine, ShptSession service, Folder root, boolean excludeEmptyFolders) {
+	public ShptRecursiveIterator(ShptExportEngine engine, ShptSession service, Folder root, CfgTools configuration,
+		boolean excludeEmptyFolders) {
 		this.engine = engine;
 		this.service = service;
 		this.stateStack.push(new RecursiveState(root));
+		this.configuration = configuration;
 		this.excludeEmptyFolders = excludeEmptyFolders;
 		this.log.debug("Starting recursive search of [{}]...", root.getServerRelativeUrl());
 	}
@@ -102,7 +106,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 				File f = state.fileIterator.next();
 				ShptFile F;
 				try {
-					F = new ShptFile(this.engine, f);
+					F = new ShptFile(this.engine, f, this.configuration);
 				} catch (Exception e) {
 					throw new RuntimeException(String.format("Failed to create a new ShptFile instance for file [%s]",
 						f.getServerRelativeUrl()));
@@ -147,7 +151,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 					Folder f = state.base;
 					ShptFolder F;
 					try {
-						F = new ShptFolder(this.engine, f);
+						F = new ShptFolder(this.engine, f, this.configuration);
 					} catch (Exception e) {
 						throw new RuntimeException(String.format(
 							"Failed to create a new ShptFolder instance for folder [%s]", f.getServerRelativeUrl()));
@@ -159,7 +163,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 			}
 			this.stateStack.pop();
 		}
-		return false;
+	return false;
 	}
 
 	@Override
