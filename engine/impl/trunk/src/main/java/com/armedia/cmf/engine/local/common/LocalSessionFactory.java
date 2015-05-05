@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.local.common;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
@@ -14,13 +15,13 @@ public class LocalSessionFactory extends SessionFactory<File> {
 
 	private final File rootFile;
 
-	public LocalSessionFactory(CfgTools settings) {
+	public LocalSessionFactory(CfgTools settings) throws IOException {
 		super(settings);
-		String root = settings.getString(LocalSessionFactory.ROOT);
+		File root = LocalCommon.getRootDirectory(settings);
 		if (root == null) { throw new IllegalArgumentException(
 			"Must provide a root directory to base the local engine off of"); }
-		this.rootFile = new File(root);
-		FileUtils.createDirectories(root);
+		this.rootFile = root.getCanonicalFile();
+		FileUtils.createDirectories(this.rootFile.getCanonicalPath());
 		if (!this.rootFile.isDirectory()) { throw new IllegalArgumentException(String.format(
 			"Root directory [%s] could not be found, nor could it be created", root)); }
 	}

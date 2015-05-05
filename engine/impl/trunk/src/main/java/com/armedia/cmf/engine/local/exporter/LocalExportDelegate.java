@@ -8,6 +8,7 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.engine.local.common.LocalCommon;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
@@ -22,7 +23,10 @@ ExportDelegate<File, File, LocalSessionWrapper, StoredValue, LocalExportContext,
 
 	protected LocalExportDelegate(LocalExportEngine engine, File object, CfgTools configuration) throws Exception {
 		super(engine, File.class, object.getCanonicalFile(), configuration);
-		this.root = null;
+		File root = LocalCommon.getRootDirectory(configuration);
+		if (root == null) { throw new ExportException(
+			"Must provide a root directory to base the local delegates off of"); }
+		this.root = root.getCanonicalFile();
 	}
 
 	@Override
@@ -48,7 +52,7 @@ ExportDelegate<File, File, LocalSessionWrapper, StoredValue, LocalExportContext,
 	}
 
 	@Override
-	protected StoredObjectType calculateType(File object) throws Exception {
+	protected StoredObjectType calculateType(File object, CfgTools configuration) throws Exception {
 		if (object.isFile()) { return StoredObjectType.DOCUMENT; }
 		if (object.isDirectory()) { return StoredObjectType.FOLDER; }
 		throw new ExportException(String.format("Filesystem object [%s] is of an unknown type",
@@ -56,19 +60,19 @@ ExportDelegate<File, File, LocalSessionWrapper, StoredValue, LocalExportContext,
 	}
 
 	@Override
-	protected String calculateLabel(File object) throws Exception {
+	protected String calculateLabel(File object, CfgTools configuration) throws Exception {
 		// TODO: Calculate the path relative to the root folder
 		return object.getAbsolutePath();
 	}
 
 	@Override
-	protected String calculateObjectId(File object) throws Exception {
+	protected String calculateObjectId(File object, CfgTools configuration) throws Exception {
 		// TODO: Calculate the path relative to the root folder
 		return null;
 	}
 
 	@Override
-	protected String calculateSearchKey(File object) throws Exception {
+	protected String calculateSearchKey(File object, CfgTools configuration) throws Exception {
 		final String fullPath = object.getCanonicalPath();
 		final String fullRoot = this.root.getCanonicalPath();
 		return null;
