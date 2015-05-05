@@ -10,24 +10,23 @@ import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.PrincipalType;
 import com.independentsoft.share.User;
 
 public class ShptGroup extends ShptSecurityObject<Group> {
 
-	public ShptGroup(ShptExportEngine engine, Group object, CfgTools configuration) throws Exception {
-		super(engine, Group.class, object, configuration);
+	public ShptGroup(ShptExportDelegateFactory factory, Group object) throws Exception {
+		super(factory, Group.class, object);
 	}
 
 	@Override
-	protected String calculateLabel(Group object, CfgTools configuration) throws Exception {
+	protected String calculateLabel(Group object) throws Exception {
 		return object.getLoginName();
 	}
 
@@ -37,8 +36,8 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected String calculateBatchId(Group object, CfgTools configuration) throws Exception {
-		return calculateObjectId(object, configuration);
+	protected String calculateBatchId(Group object) throws Exception {
+		return calculateObjectId(object);
 	}
 
 	@Override
@@ -121,13 +120,13 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			for (User u : l) {
 				if (u.getType() == PrincipalType.USER) {
 					try {
-						ret.add(new ShptUser(getEngine(), u, this.configuration));
+						ret.add(new ShptUser(this.factory, u));
 					} catch (IncompleteDataException e) {
 						this.log.warn(e.getMessage());
 					}
 				} else {
 					try {
-						ret.add(new ShptGroup(getEngine(), service.getGroup(u.getId()), this.configuration));
+						ret.add(new ShptGroup(this.factory, service.getGroup(u.getId())));
 					} catch (ShptSessionException e) {
 						this.log.warn(String.format("Failed to locate group with ID [%d]", u.getId()));
 					}
@@ -142,7 +141,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 				switch (u.getType()) {
 					case USER:
 						try {
-							owner = new ShptUser(getEngine(), u, this.configuration);
+							owner = new ShptUser(this.factory, u);
 						} catch (IncompleteDataException e) {
 							this.log.warn(e.getMessage());
 						}
@@ -151,7 +150,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 					case SECURITY_GROUP:
 						if (this.object.getId() != u.getId()) {
 							try {
-								owner = new ShptGroup(getEngine(), service.getGroup(u.getId()), this.configuration);
+								owner = new ShptGroup(this.factory, service.getGroup(u.getId()));
 							} catch (ShptSessionException e) {
 								// Did not find an owner group
 								if (this.log.isDebugEnabled()) {

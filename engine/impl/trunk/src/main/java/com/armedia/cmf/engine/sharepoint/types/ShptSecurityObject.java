@@ -4,8 +4,7 @@
 
 package com.armedia.cmf.engine.sharepoint.types;
 
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
-import com.armedia.commons.utilities.CfgTools;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 
 /**
  * @author diego
@@ -13,18 +12,17 @@ import com.armedia.commons.utilities.CfgTools;
  */
 public abstract class ShptSecurityObject<T> extends ShptObject<T> {
 
-	protected ShptSecurityObject(ShptExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
-		throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected ShptSecurityObject(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object, CfgTools configuration) {
+	protected final String calculateSearchKey(T object) {
 		return String.valueOf(calculateNumericId(object));
 	}
 
 	@Override
-	public String calculateObjectId(T object, CfgTools configuration) throws Exception {
+	public String calculateObjectId(T object) throws Exception {
 		return String.format("%04x", calculateNumericId(object));
 	}
 

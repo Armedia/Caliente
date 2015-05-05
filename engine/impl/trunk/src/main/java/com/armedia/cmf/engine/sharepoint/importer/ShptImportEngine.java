@@ -64,6 +64,11 @@ public class ShptImportEngine extends ImportEngine<ShptSession, ShptSessionWrapp
 	}
 
 	@Override
+	protected ShptImportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+		return new ShptImportDelegateFactory(this, cfg);
+	}
+
+	@Override
 	protected Set<String> getTargetNames() {
 		// TODO Auto-generated method stub
 		return null;

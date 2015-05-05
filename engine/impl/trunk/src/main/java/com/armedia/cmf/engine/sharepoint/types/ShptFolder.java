@@ -11,20 +11,19 @@ import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
 
 public class ShptFolder extends ShptFSObject<Folder> {
 
-	public ShptFolder(ShptExportEngine engine, Folder object, CfgTools configuration) throws Exception {
-		super(engine, Folder.class, object, configuration);
+	public ShptFolder(ShptExportDelegateFactory factory, Folder object) throws Exception {
+		super(factory, Folder.class, object);
 	}
 
 	public List<String> getContentTypeOrders() {
@@ -68,14 +67,14 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	public String calculateBatchId(Folder f, CfgTools configuration) {
+	public String calculateBatchId(Folder f) {
 		// Count the number of levels down this path is
 		Collection<String> ret = FileNameTools.tokenize(f.getServerRelativeUrl(), '/');
 		return String.format("%016x", ret.size());
 	}
 
 	@Override
-	public String calculateLabel(Folder f, CfgTools configuration) {
+	public String calculateLabel(Folder f) {
 		return f.getServerRelativeUrl();
 	}
 
@@ -108,7 +107,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			files = Collections.emptyList();
 		}
 		for (File f : files) {
-			ret.add(new ShptFile(getEngine(), f, this.configuration));
+			ret.add(new ShptFile(this.factory, f));
 		}
 		List<Folder> folders = Collections.emptyList();
 		try {
@@ -117,7 +116,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			folders = Collections.emptyList();
 		}
 		for (Folder f : folders) {
-			ret.add(new ShptFolder(getEngine(), f, this.configuration));
+			ret.add(new ShptFolder(this.factory, f));
 		}
 		return ret;
 	}

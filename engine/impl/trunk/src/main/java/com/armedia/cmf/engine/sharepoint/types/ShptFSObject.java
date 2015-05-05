@@ -15,13 +15,12 @@ import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -33,20 +32,19 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 	private final String url;
 
-	protected ShptFSObject(ShptExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
-		throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected ShptFSObject(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 		this.url = calculateServerRelativeUrl(object);
 	}
 
 	@Override
-	protected String calculateObjectId(T object, CfgTools configuration) {
+	protected String calculateObjectId(T object) {
 		String searchKey = calculateServerRelativeUrl(object);
 		return String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
 	}
 
 	@Override
-	protected String calculateSearchKey(T object, CfgTools configuration) {
+	protected String calculateSearchKey(T object) {
 		return calculateServerRelativeUrl(object);
 	}
 
@@ -108,7 +106,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		if (!StringUtils.isEmpty(getName())) {
 			String parentPath = getServerRelativeUrl();
 			parentPath = FileNameTools.dirname(parentPath, '/');
-			ShptFolder parent = new ShptFolder(getEngine(), session.getFolder(parentPath), this.configuration);
+			ShptFolder parent = new ShptFolder(this.factory, session.getFolder(parentPath));
 			marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PARENTS.name,
 				StoredDataType.ID, true,
 				Collections.singleton(new StoredValue(StoredDataType.ID, parent.getObjectId()))));

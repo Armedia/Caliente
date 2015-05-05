@@ -13,12 +13,11 @@ import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.Role;
@@ -31,8 +30,8 @@ public class ShptUser extends ShptSecurityObject<User> {
 	private final String userName;
 	private final String userDomain;
 
-	public ShptUser(ShptExportEngine engine, User user, CfgTools configuration) throws Exception {
-		super(engine, User.class, user, configuration);
+	public ShptUser(ShptExportDelegateFactory factory, User user) throws Exception {
+		super(factory, User.class, user);
 		/*
 		List<Integer> roles = this.service.getRoleAssignments(this.object.getId());
 		if ((roles == null) || roles.isEmpty()) {
@@ -69,7 +68,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	public String calculateObjectId(User user, CfgTools configuration) throws Exception {
+	public String calculateObjectId(User user) throws Exception {
 		UserId uid = user.getUserId();
 		if (uid == null) { throw new IncompleteDataException(String.format(
 			"No userId information available for user [%s\\%s]", this.userDomain, this.userName)); }
@@ -83,7 +82,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	protected String calculateLabel(User object, CfgTools configuration) throws Exception {
+	protected String calculateLabel(User object) throws Exception {
 		String loginName = object.getLoginName();
 		if (loginName == null) { throw new IncompleteDataException(String.format(
 			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }
@@ -198,7 +197,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 		List<Group> l = service.getUserGroups(this.object.getId());
 		if ((l != null) && !l.isEmpty()) {
 			for (Group g : l) {
-				ret.add(new ShptGroup(getEngine(), g, this.configuration));
+				ret.add(new ShptGroup(this.factory, g));
 			}
 		}
 

@@ -16,14 +16,14 @@ import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Folder;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.User;
 
-public abstract class ShptExportDelegate<T> extends
-ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportEngine> {
+public abstract class ShptExportDelegate<T>
+	extends
+	ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
 
 	private static final Map<Class<?>, StoredObjectType> TYPE_MAP;
 
@@ -36,9 +36,8 @@ ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContex
 		TYPE_MAP = Tools.freezeMap(m);
 	}
 
-	protected ShptExportDelegate(ShptExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
-		throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected ShptExportDelegate(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 	}
 
 	@Override
@@ -64,7 +63,7 @@ ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContex
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object, CfgTools configuration) throws Exception {
+	protected final StoredObjectType calculateType(T object) throws Exception {
 		for (Map.Entry<Class<?>, StoredObjectType> e : ShptExportDelegate.TYPE_MAP.entrySet()) {
 			if (e.getKey().isInstance(object)) { return e.getValue(); }
 		}

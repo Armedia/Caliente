@@ -16,11 +16,10 @@ import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegate;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.commons.utilities.CfgTools;
 
 /**
  * @author diego
@@ -33,21 +32,20 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	/**
-	 * @param engine
+	 * @param factory
 	 * @param objectClass
 	 * @param object
 	 * @throws Exception
 	 */
-	protected ShptObject(ShptExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
-		throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected ShptObject(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 	}
 
 	public abstract String getName();
 
 	@Override
-	protected String calculateSearchKey(T object, CfgTools configuration) throws Exception {
-		return calculateObjectId(object, configuration);
+	protected String calculateSearchKey(T object) throws Exception {
+		return calculateObjectId(object);
 	}
 
 	@Override

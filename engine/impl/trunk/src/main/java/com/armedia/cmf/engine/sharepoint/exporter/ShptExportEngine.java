@@ -19,28 +19,24 @@ import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.ShptTranslator;
-import com.armedia.cmf.engine.sharepoint.types.ShptFile;
-import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
-import com.armedia.cmf.engine.sharepoint.types.ShptGroup;
 import com.armedia.cmf.engine.sharepoint.types.ShptObject;
-import com.armedia.cmf.engine.sharepoint.types.ShptUser;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
  *
  */
-public class ShptExportEngine extends ExportEngine<ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext> {
+public class ShptExportEngine extends
+ExportEngine<ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(ShptSession service, CfgTools configuration) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(ShptSession service, CfgTools configuration,
+		ShptExportDelegateFactory factory) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) { throw new IllegalArgumentException(
@@ -50,26 +46,10 @@ public class ShptExportEngine extends ExportEngine<ShptSession, ShptSessionWrapp
 		final boolean excludeEmptyFolders = configuration.getBoolean(Setting.EXCLUDE_EMPTY_FOLDERS);
 
 		try {
-			return new ShptRecursiveIterator(this, service, service.getFolder(path), configuration, excludeEmptyFolders);
+			return new ShptRecursiveIterator(factory, service, service.getFolder(path), configuration,
+				excludeEmptyFolders);
 		} catch (ShptSessionException e) {
 			throw new ShptException("Export target search failed", e);
-		}
-	}
-
-	@Override
-	protected ShptExportDelegate<?> getExportDelegate(ShptSession session, StoredObjectType type, String searchKey,
-		CfgTools configuration) throws Exception {
-		switch (type) {
-			case USER:
-				return new ShptUser(this, session.getUser(Tools.decodeInteger(searchKey)), configuration);
-			case GROUP:
-				return new ShptGroup(this, session.getGroup(Tools.decodeInteger(searchKey)), configuration);
-			case FOLDER:
-				return new ShptFolder(this, session.getFolder(searchKey), configuration);
-			case DOCUMENT:
-				return ShptFile.locateFile(this, session, searchKey, configuration);
-			default:
-				throw new Exception(String.format("Unsupported object type [%s]", type));
 		}
 	}
 
@@ -98,11 +78,16 @@ public class ShptExportEngine extends ExportEngine<ShptSession, ShptSessionWrapp
 	}
 
 	@Override
+	protected ShptExportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+		return new ShptExportDelegateFactory(this, cfg);
+	}
+
+	@Override
 	protected Set<String> getTargetNames() {
 		return ShptExportEngine.TARGETS;
 	}
 
-	public static ExportEngine<?, ?, ?, ?> getExportEngine() {
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
 		return TransferEngine.getTransferEngine(ExportEngine.class, ShptExportEngine.TARGETS.iterator().next());
 	}
 }
