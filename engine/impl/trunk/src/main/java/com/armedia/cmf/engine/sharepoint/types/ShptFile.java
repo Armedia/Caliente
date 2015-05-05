@@ -77,8 +77,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	public String calculateObjectId(ShptVersion object) {
-		return String.format("%s-%s", super.calculateObjectId(object), object.getVersionNumber().toString());
+	public String calculateObjectId(ShptVersion object, CfgTools configuration) {
+		return String.format("%s-%s", super.calculateObjectId(object, configuration), object.getVersionNumber()
+			.toString());
 	}
 
 	public ShptVersionNumber getVersionNumber() {
@@ -86,7 +87,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	public String calculateSearchKey(ShptVersion object) {
+	public String calculateSearchKey(ShptVersion object, CfgTools configuration) {
 		return String.format(String.format("%s#%s", object.getFile().getServerRelativeUrl(), object.getVersionNumber()
 			.toString()));
 	}
@@ -168,13 +169,13 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	public String calculateBatchId(ShptVersion file) {
+	public String calculateBatchId(ShptVersion file, CfgTools configuration) {
 		// This only takes into account the path, so it'll be shared by all versions of the file
-		return super.calculateObjectId(file);
+		return super.calculateObjectId(file, configuration);
 	}
 
 	@Override
-	public String calculateLabel(ShptVersion file) {
+	public String calculateLabel(ShptVersion file, CfgTools configuration) {
 		return String.format("%s#%s", file.getName(), file.getVersionNumber().toString());
 	}
 

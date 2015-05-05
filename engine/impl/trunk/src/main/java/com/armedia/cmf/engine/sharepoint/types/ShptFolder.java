@@ -68,14 +68,14 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	public String calculateBatchId(Folder f) {
+	public String calculateBatchId(Folder f, CfgTools configuration) {
 		// Count the number of levels down this path is
 		Collection<String> ret = FileNameTools.tokenize(f.getServerRelativeUrl(), '/');
 		return String.format("%016x", ret.size());
 	}
 
 	@Override
-	public String calculateLabel(Folder f) {
+	public String calculateLabel(Folder f, CfgTools configuration) {
 		return f.getServerRelativeUrl();
 	}
 

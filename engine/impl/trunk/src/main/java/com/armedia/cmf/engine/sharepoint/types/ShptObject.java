@@ -46,8 +46,8 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	public abstract String getName();
 
 	@Override
-	protected String calculateSearchKey(T object) throws Exception {
-		return calculateObjectId(object);
+	protected String calculateSearchKey(T object, CfgTools configuration) throws Exception {
+		return calculateObjectId(object, configuration);
 	}
 
 	@Override

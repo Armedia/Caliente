@@ -69,7 +69,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	public String calculateObjectId(User user) throws Exception {
+	public String calculateObjectId(User user, CfgTools configuration) throws Exception {
 		UserId uid = user.getUserId();
 		if (uid == null) { throw new IncompleteDataException(String.format(
 			"No userId information available for user [%s\\%s]", this.userDomain, this.userName)); }
@@ -83,7 +83,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	protected String calculateLabel(User object) throws Exception {
+	protected String calculateLabel(User object, CfgTools configuration) throws Exception {
 		String loginName = object.getLoginName();
 		if (loginName == null) { throw new IncompleteDataException(String.format(
 			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }

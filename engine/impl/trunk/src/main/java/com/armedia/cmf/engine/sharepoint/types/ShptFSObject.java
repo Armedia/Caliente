@@ -40,13 +40,13 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 	}
 
 	@Override
-	protected String calculateObjectId(T object) {
+	protected String calculateObjectId(T object, CfgTools configuration) {
 		String searchKey = calculateServerRelativeUrl(object);
 		return String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
 	}
 
 	@Override
-	protected String calculateSearchKey(T object) {
+	protected String calculateSearchKey(T object, CfgTools configuration) {
 		return calculateServerRelativeUrl(object);
 	}
 

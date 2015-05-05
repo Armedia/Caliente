@@ -19,12 +19,12 @@ public abstract class ShptSecurityObject<T> extends ShptObject<T> {
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) {
+	protected final String calculateSearchKey(T object, CfgTools configuration) {
 		return String.valueOf(calculateNumericId(object));
 	}
 
 	@Override
-	public String calculateObjectId(T object) throws Exception {
+	public String calculateObjectId(T object, CfgTools configuration) throws Exception {
 		return String.format("%04x", calculateNumericId(object));
 	}
 

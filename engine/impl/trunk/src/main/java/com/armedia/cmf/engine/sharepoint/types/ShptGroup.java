@@ -27,7 +27,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected String calculateLabel(Group object) throws Exception {
+	protected String calculateLabel(Group object, CfgTools configuration) throws Exception {
 		return object.getLoginName();
 	}
 
@@ -37,8 +37,8 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected String calculateBatchId(Group object) throws Exception {
-		return calculateObjectId(object);
+	protected String calculateBatchId(Group object, CfgTools configuration) throws Exception {
+		return calculateObjectId(object, configuration);
 	}
 
 	@Override

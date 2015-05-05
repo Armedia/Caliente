@@ -23,7 +23,7 @@ import com.independentsoft.share.Group;
 import com.independentsoft.share.User;
 
 public abstract class ShptExportDelegate<T> extends
-	ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportEngine> {
+ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportEngine> {
 
 	private static final Map<Class<?>, StoredObjectType> TYPE_MAP;
 
@@ -64,7 +64,7 @@ public abstract class ShptExportDelegate<T> extends
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object) throws Exception {
+	protected final StoredObjectType calculateType(T object, CfgTools configuration) throws Exception {
 		for (Map.Entry<Class<?>, StoredObjectType> e : ShptExportDelegate.TYPE_MAP.entrySet()) {
 			if (e.getKey().isInstance(object)) { return e.getValue(); }
 		}
