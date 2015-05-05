@@ -15,7 +15,7 @@ import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cfg.SettingManager;
 
-public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, L>> implements CMSMFMain {
+public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CMSMFMain {
 
 	protected static final String ALL = "ALL";
 

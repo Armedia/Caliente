@@ -35,8 +35,8 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfTime;
 
-public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?>> implements
-ExportEngineListener {
+public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
+	ExportEngineListener {
 
 	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
