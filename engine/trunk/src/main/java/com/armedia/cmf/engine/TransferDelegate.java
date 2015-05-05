@@ -25,10 +25,10 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 		this.engine = engine;
 		this.objectClass = objectClass;
 		this.object = object;
-		this.exportTarget = new ExportTarget(calculateType(object), calculateObjectId(object),
-			calculateSearchKey(object));
-		this.label = calculateLabel(object);
-		this.batchId = calculateBatchId(object);
+		this.exportTarget = new ExportTarget(calculateType(object, configuration), calculateObjectId(object,
+			configuration), calculateSearchKey(object, configuration));
+		this.label = calculateLabel(object, configuration);
+		this.batchId = calculateBatchId(object, configuration);
 		this.configuration = configuration;
 	}
 
@@ -50,31 +50,31 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 		return this.exportTarget;
 	}
 
-	protected abstract StoredObjectType calculateType(T object) throws Exception;
+	protected abstract StoredObjectType calculateType(T object, CfgTools configuration) throws Exception;
 
 	public final StoredObjectType getType() {
 		return this.exportTarget.getType();
 	}
 
-	protected abstract String calculateLabel(T object) throws Exception;
+	protected abstract String calculateLabel(T object, CfgTools configuration) throws Exception;
 
 	public final String getLabel() {
 		return this.label;
 	}
 
-	protected abstract String calculateObjectId(T object) throws Exception;
+	protected abstract String calculateObjectId(T object, CfgTools configuration) throws Exception;
 
 	public final String getObjectId() {
 		return this.exportTarget.getId();
 	}
 
-	protected abstract String calculateSearchKey(T object) throws Exception;
+	protected abstract String calculateSearchKey(T object, CfgTools configuration) throws Exception;
 
 	public final String getSearchKey() {
 		return this.exportTarget.getSearchKey();
 	}
 
-	protected String calculateBatchId(T object) throws Exception {
+	protected String calculateBatchId(T object, CfgTools configuration) throws Exception {
 		return null;
 	}
 
