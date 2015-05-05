@@ -15,12 +15,13 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
-	protected CmisFolderDelegate(CmisExportEngine engine, Folder folder) throws Exception {
-		super(engine, Folder.class, folder);
+	protected CmisFolderDelegate(CmisExportEngine engine, Folder folder, CfgTools configuration) throws Exception {
+		super(engine, Folder.class, folder, configuration);
 	}
 
 	@Override
@@ -65,9 +66,9 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 			// Don't continue if the referrent object is one of this object's children
 			if ((referrent != null) && Tools.equals(referrent.getId(), o.getId())) { return ret; }
 			if (o instanceof Folder) {
-				childFolders.add(new CmisFolderDelegate(this.engine, Folder.class.cast(o)));
+				childFolders.add(new CmisFolderDelegate(this.engine, Folder.class.cast(o), this.configuration));
 			} else if (o instanceof Document) {
-				childDocs.add(new CmisDocumentDelegate(this.engine, Document.class.cast(o)));
+				childDocs.add(new CmisDocumentDelegate(this.engine, Document.class.cast(o), this.configuration));
 			}
 		}
 

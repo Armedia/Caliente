@@ -16,11 +16,13 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
 
-	protected CmisFileableDelegate(CmisExportEngine engine, Class<T> objectClass, T object) throws Exception {
-		super(engine, objectClass, object);
+	protected CmisFileableDelegate(CmisExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
+		throws Exception {
+		super(engine, objectClass, object, configuration);
 	}
 
 	protected String calculatePath(T f) throws Exception {
@@ -86,7 +88,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		for (Folder f : this.object.getParents()) {
-			ret.add(new CmisFolderDelegate(this.engine, f));
+			ret.add(new CmisFolderDelegate(this.engine, f, this.configuration));
 		}
 		// ret.add(new CmisAclDelegate(this.engine, this.object));
 		return ret;

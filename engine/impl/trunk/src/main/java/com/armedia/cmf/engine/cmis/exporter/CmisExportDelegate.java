@@ -13,12 +13,14 @@ import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 
 public abstract class CmisExportDelegate<T> extends
-	ExportDelegate<T, Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportEngine> {
+ExportDelegate<T, Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportEngine> {
 
-	protected CmisExportDelegate(CmisExportEngine engine, Class<T> objectClass, T object) throws Exception {
-		super(engine, objectClass, object);
+	protected CmisExportDelegate(CmisExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
+		throws Exception {
+		super(engine, objectClass, object, configuration);
 	}
 
 	@Override

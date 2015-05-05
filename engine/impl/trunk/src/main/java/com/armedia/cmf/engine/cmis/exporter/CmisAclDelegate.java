@@ -18,11 +18,12 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 
 public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 
-	public CmisAclDelegate(CmisExportEngine engine, CmisObject object) throws Exception {
-		super(engine, CmisAcl.class, new CmisAcl(engine.decodeType(object.getType()), object));
+	public CmisAclDelegate(CmisExportEngine engine, CmisObject object, CfgTools configuration) throws Exception {
+		super(engine, CmisAcl.class, new CmisAcl(engine.decodeType(object.getType()), object), configuration);
 	}
 
 	@Override

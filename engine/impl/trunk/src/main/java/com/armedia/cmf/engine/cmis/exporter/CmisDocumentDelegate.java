@@ -26,6 +26,7 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
@@ -34,16 +35,16 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	private final List<Document> previous;
 	private final List<Document> successors;
 
-	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Document object, String antecedentId)
-		throws Exception {
-		super(rootElement.engine, Document.class, object);
+	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Document object, String antecedentId,
+		CfgTools configuration) throws Exception {
+		super(rootElement.engine, Document.class, object, configuration);
 		this.previous = Collections.emptyList();
 		this.successors = Collections.emptyList();
 		this.antecedentId = antecedentId;
 	}
 
-	protected CmisDocumentDelegate(CmisExportEngine engine, Document object) throws Exception {
-		super(engine, Document.class, object);
+	protected CmisDocumentDelegate(CmisExportEngine engine, Document object, CfgTools configuration) throws Exception {
+		super(engine, Document.class, object, configuration);
 		List<Document> all = object.getAllVersions();
 		List<Document> prev = new ArrayList<Document>(all.size());
 		List<Document> succ = new ArrayList<Document>(all.size());
@@ -91,7 +92,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		String prev = null;
 		for (Document d : this.previous) {
-			ret.add(new CmisDocumentDelegate(this, d, prev));
+			ret.add(new CmisDocumentDelegate(this, d, prev, this.configuration));
 			prev = d.getId();
 		}
 		return ret;
@@ -170,7 +171,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
 		String prev = this.object.getId();
 		for (Document d : this.successors) {
-			ret.add(new CmisDocumentDelegate(this, d, prev));
+			ret.add(new CmisDocumentDelegate(this, d, prev, this.configuration));
 			prev = d.getId();
 		}
 		return ret;

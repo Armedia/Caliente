@@ -3,7 +3,6 @@ package com.armedia.cmf.engine.cmis.exporter;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
@@ -18,13 +17,13 @@ import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
 import com.armedia.cmf.engine.cmis.CmisCommon;
-import com.armedia.cmf.engine.cmis.CmisTranslator;
 import com.armedia.cmf.engine.cmis.CmisPagingTransformerIterator;
 import com.armedia.cmf.engine.cmis.CmisRecursiveIterator;
 import com.armedia.cmf.engine.cmis.CmisResultTransformer;
 import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.cmis.CmisSetting;
+import com.armedia.cmf.engine.cmis.CmisTranslator;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -75,8 +74,7 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(final Session session, Map<String, ?> settings) throws Exception {
-		CfgTools cfg = new CfgTools(settings);
+	protected Iterator<ExportTarget> findExportResults(final Session session, CfgTools cfg) throws Exception {
 		String path = cfg.getString(CmisSetting.EXPORT_PATH);
 		final int itemsPerPage = Math.max(10, cfg.getInteger(CmisSetting.EXPORT_PAGE_SIZE));
 		final OperationContext ctx = session.createOperationContext();
@@ -182,14 +180,14 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 	}
 
 	@Override
-	protected CmisExportDelegate<?> getExportDelegate(Session session, StoredObjectType type, String searchKey)
-		throws Exception {
+	protected CmisExportDelegate<?> getExportDelegate(Session session, StoredObjectType type, String searchKey,
+		CfgTools configuration) throws Exception {
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {
 			case ACL:
-				return new CmisAclDelegate(this, obj);
+				return new CmisAclDelegate(this, obj, configuration);
 			case FOLDER:
-				if (obj instanceof Folder) { return new CmisFolderDelegate(this, Folder.class.cast(obj)); }
+				if (obj instanceof Folder) { return new CmisFolderDelegate(this, Folder.class.cast(obj), configuration); }
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Folder-type",
 					searchKey, obj.getClass().getCanonicalName()));
 			case DOCUMENT:
@@ -201,7 +199,7 @@ public class CmisExportEngine extends ExportEngine<Session, CmisSessionWrapper, 
 						doc = doc.getObjectOfLatestVersion(false);
 						if (doc == null) { return null; }
 					}
-					return new CmisDocumentDelegate(this, doc);
+					return new CmisDocumentDelegate(this, doc, configuration);
 				}
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Document-type",
 					searchKey, obj.getClass().getCanonicalName()));

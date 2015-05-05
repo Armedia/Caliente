@@ -13,11 +13,13 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.commons.utilities.CfgTools;
 
 public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExportDelegate<T> {
 
-	protected CmisObjectDelegate(CmisExportEngine engine, Class<T> objectClass, T object) throws Exception {
-		super(engine, objectClass, object);
+	protected CmisObjectDelegate(CmisExportEngine engine, Class<T> objectClass, T object, CfgTools configuration)
+		throws Exception {
+		super(engine, objectClass, object, configuration);
 	}
 
 	@Override
