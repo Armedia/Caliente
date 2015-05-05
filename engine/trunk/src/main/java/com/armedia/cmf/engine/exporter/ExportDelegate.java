@@ -9,16 +9,15 @@ import com.armedia.cmf.engine.TransferDelegate;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, E extends ExportEngine<S, W, V, C>>
-	extends TransferDelegate<T, S, V, E> {
+public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C>>
+	extends TransferDelegate<T, S, V, C, F, E> {
 
-	protected ExportDelegate(E engine, Class<T> objectClass, T object, CfgTools configuration) throws Exception {
-		super(engine, objectClass, object, configuration);
+	protected ExportDelegate(F factory, Class<T> objectClass, T object) throws Exception {
+		super(factory, objectClass, object);
 	}
 
-	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, ?>> identifyRequirements(
+	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyRequirements(
 		StoredObject<V> marshalled, C ctx) throws Exception;
 
 	final StoredObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
@@ -32,7 +31,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	protected abstract void marshal(C ctx, StoredObject<V> object) throws ExportException;
 
-	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, ?>> identifyDependents(
+	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyDependents(
 		StoredObject<V> marshalled, C ctx) throws Exception;
 
 	protected abstract List<ContentInfo> storeContent(S session, StoredObject<V> marshalled, ExportTarget referrent,

@@ -23,8 +23,8 @@ public abstract class TransferContext<S, V> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final ContextFactory<S, V, ? extends TransferContext<S, V>, ? extends TransferEngine<S, V, ?, ?, ?>> factory;
-	private final TransferEngine<S, V, ?, ?, ?> engine;
+	private final ContextFactory<S, V, ? extends TransferContext<S, V>, ? extends TransferEngine<S, V, ?, ?, ?, ?>> factory;
+	private final TransferEngine<S, V, ?, ?, ?, ?> engine;
 	private final String rootId;
 	private final StoredObjectType rootType;
 	private final S session;
@@ -33,7 +33,7 @@ public abstract class TransferContext<S, V> {
 	private final CfgTools settings;
 	private final Logger output;
 
-	protected <C extends TransferContext<S, V>, E extends TransferEngine<S, V, C, ?, ?>, F extends ContextFactory<S, V, C, E>> TransferContext(
+	protected <C extends TransferContext<S, V>, E extends TransferEngine<S, V, C, ?, ?, ?>, F extends ContextFactory<S, V, C, E>> TransferContext(
 		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output) {
 		this.factory = factory;
 		this.engine = factory.getEngine();
@@ -44,7 +44,7 @@ public abstract class TransferContext<S, V> {
 		this.output = output;
 	}
 
-	protected ContextFactory<S, V, ? extends TransferContext<S, V>, ? extends TransferEngine<S, V, ?, ?, ?>> getFactory() {
+	protected ContextFactory<S, V, ? extends TransferContext<S, V>, ? extends TransferEngine<S, V, ?, ?, ?, ?>> getFactory() {
 		return this.factory;
 	}
 
