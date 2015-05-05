@@ -3,6 +3,7 @@ package com.armedia.cmf.engine.local.importer;
 import java.io.File;
 import java.util.Set;
 
+import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -61,6 +62,12 @@ public class LocalImportEngine extends ImportEngine<File, LocalSessionWrapper, S
 	@Override
 	protected LocalImportContextFactory newContextFactory(CfgTools cfg) throws Exception {
 		return new LocalImportContextFactory(this, cfg);
+	}
+
+	@Override
+	protected ImportDelegateFactory<File, LocalSessionWrapper, StoredValue, LocalImportContext, ?> newDelegateFactory(
+		CfgTools cfg) throws Exception {
+		return new LocalImportDelegateFactory(this, cfg);
 	}
 
 	@Override

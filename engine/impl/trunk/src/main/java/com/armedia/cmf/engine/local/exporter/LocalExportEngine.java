@@ -11,20 +11,15 @@ import com.armedia.cmf.engine.local.common.LocalSessionFactory;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalExportEngine extends ExportEngine<File, LocalSessionWrapper, StoredValue, LocalExportContext> {
+public class LocalExportEngine extends
+	ExportEngine<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory> {
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(File session, CfgTools configuration) throws Exception {
-		return null;
-	}
-
-	@Override
-	protected LocalExportDelegate getExportDelegate(File session, StoredObjectType type, String searchKey,
-		CfgTools configuration) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(File session, CfgTools configuration,
+		LocalExportDelegateFactory factory) throws Exception {
 		return null;
 	}
 
@@ -46,6 +41,11 @@ public class LocalExportEngine extends ExportEngine<File, LocalSessionWrapper, S
 	@Override
 	protected LocalExportContextFactory newContextFactory(CfgTools cfg) throws Exception {
 		return new LocalExportContextFactory(this, cfg);
+	}
+
+	@Override
+	protected LocalExportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+		return new LocalExportDelegateFactory(this, cfg);
 	}
 
 	@Override
