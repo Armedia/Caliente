@@ -29,7 +29,8 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext> {
+public class DctmExportEngine extends
+	ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
@@ -37,7 +38,8 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(IDfSession session, CfgTools configuration) throws Exception {
+	protected Iterator<ExportTarget> findExportResults(IDfSession session, CfgTools configuration,
+		DctmExportDelegateFactory factory) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
 		String dql = configuration.getString(Setting.DQL);
@@ -77,7 +79,7 @@ public class DctmExportEngine extends ExportEngine<IDfSession, DctmSessionWrappe
 		return DfValueFactory.newValue(type, value);
 	}
 
-	public static ExportEngine<?, ?, ?, ?> getExportEngine() {
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(DctmCommon.TARGET_NAME);
 	}
 }
