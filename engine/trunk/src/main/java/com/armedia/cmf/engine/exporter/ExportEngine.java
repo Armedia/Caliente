@@ -40,9 +40,8 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>>
-extends
-	TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, ExportDelegateFactory<S, W, V, C, ?>, ExportEngineListener> {
+public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, ?>>
+	extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEngineListener> {
 
 	private class Result {
 		private final Long objectNumber;
@@ -256,7 +255,7 @@ extends
 
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+				.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
 			for (ExportDelegate<?, S, W, V, C, ?, ?> requirement : referenced) {
 				exportObject(objectStore, streamStore, target, requirement.getExportTarget(), requirement, ctx,
@@ -323,7 +322,7 @@ extends
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-		throws ExportException, StorageException {
+			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -335,7 +334,7 @@ extends
 		}
 
 		final ContextFactory<S, V, C, ?> contextFactory;
-		final ExportDelegateFactory<S, W, V, C, ?> delegateFactory;
+		final F delegateFactory;
 		try {
 			try {
 				contextFactory = newContextFactory(configuration);
@@ -490,7 +489,7 @@ extends
 			final Iterator<ExportTarget> results;
 			this.log.debug("Locating export results...");
 			try {
-				results = findExportResults(baseSession.getWrapped(), configuration);
+				results = findExportResults(baseSession.getWrapped(), configuration, delegateFactory);
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to obtain the export results with settings: %s",
 					settings), e);
@@ -522,7 +521,7 @@ extends
 							Thread.currentThread().interrupt();
 							if (this.log.isDebugEnabled()) {
 								this.log
-									.warn(String.format("Thread interrupted after reading %d object targets", c), e);
+								.warn(String.format("Thread interrupted after reading %d object targets", c), e);
 							} else {
 								this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
 							}
@@ -557,9 +556,9 @@ extends
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-									.warn(
-										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-										e);
+								.warn(
+									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+									e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -613,10 +612,10 @@ extends
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -632,14 +631,15 @@ extends
 	protected void initContext(C ctx) {
 	}
 
-	protected abstract Iterator<ExportTarget> findExportResults(S session, CfgTools configuration) throws Exception;
+	protected abstract Iterator<ExportTarget> findExportResults(S session, CfgTools configuration, F factory)
+		throws Exception;
 
 	/*
 	protected abstract ExportDelegate<?, S, W, V, C, ?> getExportDelegate(S session, StoredObjectType type,
 		String searchKey, CfgTools configuration) throws Exception;
 	 */
 
-	public static ExportEngine<?, ?, ?, ?> getExportEngine(String targetName) {
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
 	}
 }

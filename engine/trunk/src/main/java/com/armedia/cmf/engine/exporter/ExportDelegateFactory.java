@@ -5,7 +5,7 @@ import com.armedia.cmf.engine.TransferDelegateFactory;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ExportDelegateFactory<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, E extends ExportEngine<S, W, V, C>>
+public abstract class ExportDelegateFactory<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, E extends ExportEngine<S, W, V, C, ?>>
 	extends TransferDelegateFactory<S, V, C, E> {
 
 	protected ExportDelegateFactory(E engine, CfgTools configuration) {
