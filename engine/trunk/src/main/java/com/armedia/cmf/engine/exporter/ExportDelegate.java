@@ -9,12 +9,13 @@ import com.armedia.cmf.engine.TransferDelegate;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, E extends ExportEngine<S, W, V, C>>
-extends TransferDelegate<T, S, V, E> {
+	extends TransferDelegate<T, S, V, E> {
 
-	protected ExportDelegate(E engine, Class<T> objectClass, T object) throws Exception {
-		super(engine, objectClass, object);
+	protected ExportDelegate(E engine, Class<T> objectClass, T object, CfgTools configuration) throws Exception {
+		super(engine, objectClass, object, configuration);
 	}
 
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, ?>> identifyRequirements(

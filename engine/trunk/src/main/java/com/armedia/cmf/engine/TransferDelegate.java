@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.commons.utilities.CfgTools;
 
 public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?, ?, ?>> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -15,8 +16,9 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 	protected final ExportTarget exportTarget;
 	protected final String label;
 	protected final String batchId;
+	protected final CfgTools configuration;
 
-	protected TransferDelegate(E engine, Class<T> objectClass, T object) throws Exception {
+	protected TransferDelegate(E engine, Class<T> objectClass, T object, CfgTools configuration) throws Exception {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to process with"); }
 		if (objectClass == null) { throw new IllegalArgumentException("Must provide an object class to work with"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to process"); }
@@ -27,6 +29,7 @@ public abstract class TransferDelegate<T, S, V, E extends TransferEngine<S, V, ?
 			calculateSearchKey(object));
 		this.label = calculateLabel(object);
 		this.batchId = calculateBatchId(object);
+		this.configuration = configuration;
 	}
 
 	protected final T castObject(Object o) {

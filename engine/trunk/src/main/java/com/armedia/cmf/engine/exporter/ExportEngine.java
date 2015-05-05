@@ -62,11 +62,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void exportStarted(Map<String, ?> exportSettings) {
+		public void exportStarted(CfgTools configuration) {
 			getStoredObjectCounter().reset();
 			for (ExportEngineListener l : this.listeners) {
 				try {
-					l.exportStarted(exportSettings);
+					l.exportStarted(configuration);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -420,7 +420,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								// Begin transaction
 								tx = session.begin();
 								final ExportDelegate<?, S, W, V, C, ?> exportDelegate = getExportDelegate(s, nextType,
-									nextKey);
+									nextKey, configuration);
 								if (exportDelegate == null) {
 									// No object found with that ID...
 									this.log.warn(String.format("No %s object found with searchKey[%s]",
@@ -482,7 +482,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			final Iterator<ExportTarget> results;
 			this.log.debug("Locating export results...");
 			try {
-				results = findExportResults(baseSession.getWrapped(), settings);
+				results = findExportResults(baseSession.getWrapped(), configuration);
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to obtain the export results with settings: %s",
 					settings), e);
@@ -498,7 +498,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 				int c = 0;
 				// 1: run the query for the given predicate
-				listenerDelegator.exportStarted(settings);
+				listenerDelegator.exportStarted(configuration);
 				// 2: iterate over the results, gathering up the object IDs
 				boolean waitCleanly = true;
 				try {
@@ -624,10 +624,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void initContext(C ctx) {
 	}
 
-	protected abstract Iterator<ExportTarget> findExportResults(S session, Map<String, ?> settings) throws Exception;
+	protected abstract Iterator<ExportTarget> findExportResults(S session, CfgTools configuration) throws Exception;
 
 	protected abstract ExportDelegate<?, S, W, V, C, ?> getExportDelegate(S session, StoredObjectType type,
-		String searchKey) throws Exception;
+		String searchKey, CfgTools configuration) throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
