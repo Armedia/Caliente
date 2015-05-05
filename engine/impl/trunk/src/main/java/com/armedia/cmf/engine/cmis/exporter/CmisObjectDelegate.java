@@ -47,18 +47,18 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 	}
 
 	@Override
-	protected String calculateLabel(T obj) throws Exception {
+	protected String calculateLabel(T obj, CfgTools configuration) throws Exception {
 		CmisObject o = CmisObject.class.cast(obj);
 		return String.format("[%s|%s]", o.getType().getId(), o.getName());
 	}
 
 	@Override
-	protected final String calculateObjectId(T object) throws Exception {
+	protected final String calculateObjectId(T object, CfgTools configuration) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) throws Exception {
+	protected final String calculateSearchKey(T object, CfgTools configuration) throws Exception {
 		return object.getId();
 	}
 }

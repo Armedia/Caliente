@@ -77,7 +77,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected String calculateBatchId(Document object) throws Exception {
+	protected String calculateBatchId(Document object, CfgTools configuration) throws Exception {
 		return object.getVersionSeriesId();
 	}
 

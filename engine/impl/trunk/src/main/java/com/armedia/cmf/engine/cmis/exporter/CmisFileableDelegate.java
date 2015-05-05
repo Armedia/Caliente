@@ -32,7 +32,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final String calculateLabel(T f) throws Exception {
+	protected final String calculateLabel(T f, CfgTools configuration) throws Exception {
 		String path = calculatePath(f);
 		if (path == null) {
 			path = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
@@ -95,7 +95,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object) throws Exception {
+	protected final StoredObjectType calculateType(T object, CfgTools configuration) throws Exception {
 		if (Document.class.isInstance(object)) { return StoredObjectType.DOCUMENT; }
 		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
 		throw new Exception(String.format(

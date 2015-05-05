@@ -47,7 +47,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected String calculateBatchId(Folder object) throws Exception {
+	protected String calculateBatchId(Folder object, CfgTools configuration) throws Exception {
 		return String.format("%016x", calculateDepth(object, new LinkedHashSet<String>()));
 	}
 

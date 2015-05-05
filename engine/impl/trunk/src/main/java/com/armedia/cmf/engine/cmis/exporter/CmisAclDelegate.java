@@ -57,22 +57,22 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(CmisAcl object) throws Exception {
+	protected final StoredObjectType calculateType(CmisAcl object, CfgTools configuration) throws Exception {
 		return StoredObjectType.ACL;
 	}
 
 	@Override
-	protected String calculateLabel(CmisAcl object) throws Exception {
+	protected String calculateLabel(CmisAcl object, CfgTools configuration) throws Exception {
 		return String.format("ACL::[%s:%s]", object.getSourceType(), object.getSourceId());
 	}
 
 	@Override
-	protected String calculateObjectId(CmisAcl object) throws Exception {
+	protected String calculateObjectId(CmisAcl object, CfgTools configuration) throws Exception {
 		return object.getSourceId();
 	}
 
 	@Override
-	protected String calculateSearchKey(CmisAcl object) throws Exception {
+	protected String calculateSearchKey(CmisAcl object, CfgTools configuration) throws Exception {
 		return object.getSourceId();
 	}
 }
