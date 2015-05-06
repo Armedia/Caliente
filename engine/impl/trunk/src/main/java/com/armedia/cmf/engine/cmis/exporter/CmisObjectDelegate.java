@@ -22,7 +22,7 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 
 	@Override
 	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		CmisTranslator translator = this.engine.getTranslator();
+		CmisTranslator translator = this.factory.getEngine().getTranslator();
 		for (Property<?> prop : this.object.getProperties()) {
 			StoredDataType t = CmisTranslator.decodePropertyType(prop.getType());
 			StoredAttribute<StoredValue> att = new StoredAttribute<StoredValue>(prop.getId(), t, prop.isMultiValued());
