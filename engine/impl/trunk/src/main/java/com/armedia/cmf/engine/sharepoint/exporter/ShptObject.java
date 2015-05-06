@@ -2,7 +2,7 @@
  *
  */
 
-package com.armedia.cmf.engine.sharepoint.types;
+package com.armedia.cmf.engine.sharepoint.exporter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,9 +14,6 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegate;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;

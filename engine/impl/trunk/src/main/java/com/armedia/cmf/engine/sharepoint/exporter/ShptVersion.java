@@ -1,4 +1,4 @@
-package com.armedia.cmf.engine.sharepoint.types;
+package com.armedia.cmf.engine.sharepoint.exporter;
 
 import java.util.Date;
 

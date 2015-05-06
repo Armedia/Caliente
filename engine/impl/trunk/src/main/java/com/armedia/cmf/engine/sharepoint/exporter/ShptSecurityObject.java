@@ -2,9 +2,8 @@
  *
  */
 
-package com.armedia.cmf.engine.sharepoint.types;
+package com.armedia.cmf.engine.sharepoint.exporter;
 
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 
 /**
  * @author diego

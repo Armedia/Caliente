@@ -1,4 +1,4 @@
-package com.armedia.cmf.engine.sharepoint.types;
+package com.armedia.cmf.engine.sharepoint.exporter;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,8 +26,6 @@ import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
 import com.armedia.cmf.engine.sharepoint.common.MimeTools;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportContext;
-import com.armedia.cmf.engine.sharepoint.exporter.ShptExportDelegateFactory;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredAttribute;

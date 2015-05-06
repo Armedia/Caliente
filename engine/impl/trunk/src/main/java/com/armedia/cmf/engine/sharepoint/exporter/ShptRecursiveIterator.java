@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
-import com.armedia.cmf.engine.sharepoint.types.ShptFile;
-import com.armedia.cmf.engine.sharepoint.types.ShptFolder;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.File;
