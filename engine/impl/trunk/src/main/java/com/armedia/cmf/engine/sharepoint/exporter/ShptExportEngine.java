@@ -29,7 +29,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public class ShptExportEngine extends
-ExportEngine<ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportDelegateFactory> {
+	ExportEngine<ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -45,8 +45,7 @@ ExportEngine<ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, Sh
 		final boolean excludeEmptyFolders = configuration.getBoolean(Setting.EXCLUDE_EMPTY_FOLDERS);
 
 		try {
-			return new ShptRecursiveIterator(factory, service, service.getFolder(path), configuration,
-				excludeEmptyFolders);
+			return new ShptRecursiveIterator(service, service.getFolder(path), configuration, excludeEmptyFolders);
 		} catch (ShptSessionException e) {
 			throw new ShptException("Export target search failed", e);
 		}

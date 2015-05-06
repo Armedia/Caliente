@@ -399,4 +399,13 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		ret.add(new ContentInfo(h.getQualifier()));
 		return ret;
 	}
+
+	static String doCalculateObjectId(File object) {
+		String searchKey = object.getServerRelativeUrl();
+		return String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
+	}
+
+	static String doCalculateSearchKey(File object) {
+		return object.getServerRelativeUrl();
+	}
 }

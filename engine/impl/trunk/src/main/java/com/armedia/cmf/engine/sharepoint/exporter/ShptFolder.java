@@ -15,6 +15,7 @@ import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
 
@@ -117,5 +118,14 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			ret.add(new ShptFolder(this.factory, f));
 		}
 		return ret;
+	}
+
+	static String doCalculateObjectId(Folder object) {
+		String searchKey = object.getServerRelativeUrl();
+		return String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
+	}
+
+	static String doCalculateSearchKey(Folder object) {
+		return object.getServerRelativeUrl();
 	}
 }
