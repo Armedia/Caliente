@@ -10,7 +10,6 @@ public abstract class TransferDelegate<T, S, V, C extends TransferContext<S, V>,
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	protected final F factory;
-	protected final E engine;
 	protected final Class<T> objectClass;
 	protected final T object;
 	protected final ExportTarget exportTarget;
@@ -22,7 +21,6 @@ public abstract class TransferDelegate<T, S, V, C extends TransferContext<S, V>,
 		if (objectClass == null) { throw new IllegalArgumentException("Must provide an object class to work with"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to process"); }
 		this.factory = factory;
-		this.engine = factory.getEngine();
 		this.objectClass = objectClass;
 		this.object = object;
 
