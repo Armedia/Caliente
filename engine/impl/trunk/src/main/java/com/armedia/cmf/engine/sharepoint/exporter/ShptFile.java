@@ -25,7 +25,7 @@ import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
-import com.armedia.cmf.engine.sharepoint.common.MimeTools;
+import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StoredAttribute;
