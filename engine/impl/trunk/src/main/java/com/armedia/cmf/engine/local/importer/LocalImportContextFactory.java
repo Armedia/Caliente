@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.local.importer;
 
-import java.net.URL;
+import java.io.File;
 
 import org.slf4j.Logger;
 
@@ -13,27 +13,27 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportContextFactory extends
-ImportContextFactory<URL, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine, URL> {
+	ImportContextFactory<File, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine, File> {
 
 	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings) {
 		super(engine, settings);
 	}
 
 	@Override
-	protected URL locateFolder(URL session, String path) throws Exception {
+	protected File locateFolder(File session, String path) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected URL createFolder(URL session, URL parent, String name) throws Exception {
+	protected File createFolder(File session, File parent, String name) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected LocalImportContext constructContext(String rootId, StoredObjectType rootType, URL session, Logger output,
-		ObjectStore<?, ?> objectStore, ContentStore contentStore) {
+	protected LocalImportContext constructContext(String rootId, StoredObjectType rootType, File session,
+		Logger output, ObjectStore<?, ?> objectStore, ContentStore contentStore) {
 		// TODO Auto-generated method stub
 		return null;
 	}

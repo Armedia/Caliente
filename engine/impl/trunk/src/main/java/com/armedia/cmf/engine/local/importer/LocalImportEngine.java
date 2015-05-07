@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.local.importer;
 
-import java.net.URL;
+import java.io.File;
 import java.util.Set;
 
 import com.armedia.cmf.engine.importer.ImportEngine;
@@ -19,7 +19,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalImportEngine extends ImportEngine<URL, LocalSessionWrapper, StoredValue, LocalImportContext> {
+public class LocalImportEngine extends ImportEngine<File, LocalSessionWrapper, StoredValue, LocalImportContext> {
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {

@@ -1,59 +1,56 @@
 package com.armedia.cmf.engine.local.common;
 
-import java.net.URL;
+import java.io.File;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.armedia.cmf.engine.SessionWrapper;
 
-public class LocalSessionWrapper extends SessionWrapper<URL> {
+public class LocalSessionWrapper extends SessionWrapper<File> {
 
-	protected LocalSessionWrapper(LocalSessionFactory factory, URL wrapped) {
+	private static final AtomicLong ID_COUNTER = new AtomicLong(0);
+
+	private final String id;
+
+	protected LocalSessionWrapper(LocalSessionFactory factory, File wrapped) {
 		super(factory, wrapped);
+		this.id = String.format("%16X", LocalSessionWrapper.ID_COUNTER.getAndIncrement());
 	}
 
 	@Override
 	public String getId() {
-		return null;
+		return this.id;
 	}
 
 	@Override
 	protected boolean isSupportsTransactions() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	protected boolean isSupportsNestedTransactions() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	protected boolean isTransactionActive() throws Exception {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	protected boolean beginTransaction() throws Exception {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	protected boolean beginNestedTransaction() throws Exception {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	protected void commitTransaction() throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	protected void rollbackTransaction() throws Exception {
-		// TODO Auto-generated method stub
-
 	}
 }

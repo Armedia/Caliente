@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.local.exporter;
 
-import java.net.URL;
+import java.io.File;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -15,10 +15,10 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalExportEngine extends
-ExportEngine<URL, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory> {
+ExportEngine<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory> {
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(URL session, CfgTools configuration,
+	protected Iterator<ExportTarget> findExportResults(File session, CfgTools configuration,
 		LocalExportDelegateFactory factory) throws Exception {
 		return null;
 	}

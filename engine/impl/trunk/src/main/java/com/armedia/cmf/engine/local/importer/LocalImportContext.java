@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.local.importer;
 
-import java.net.URL;
+import java.io.File;
 
 import org.slf4j.Logger;
 
@@ -12,10 +12,10 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalImportContext extends ImportContext<URL, StoredValue> {
+public class LocalImportContext extends ImportContext<File, StoredValue> {
 
 	public LocalImportContext(LocalImportContextFactory factory, CfgTools settings, String rootId,
-		StoredObjectType rootType, URL session, Logger output, ObjectStorageTranslator<StoredValue> translator,
+		StoredObjectType rootType, File session, Logger output, ObjectStorageTranslator<StoredValue> translator,
 		ObjectStore<?, ?> objectStore, ContentStore streamStore) {
 		super(factory, settings, rootId, rootType, session, output, translator, objectStore, streamStore);
 	}
