@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.local.exporter;
 
 import java.io.File;
+import java.text.ParseException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.local.common.LocalCommon;
 import com.armedia.cmf.engine.local.common.LocalSessionFactory;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
+import com.armedia.cmf.engine.local.common.LocalTranslator;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredValue;
@@ -25,12 +27,16 @@ ExportEngine<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalEx
 
 	@Override
 	protected StoredValue getValue(StoredDataType type, Object value) {
-		return null;
+		try {
+			return new StoredValue(type, value);
+		} catch (ParseException e) {
+			throw new RuntimeException(String.format("Can't convert [%s] as a %s", value, type), e);
+		}
 	}
 
 	@Override
 	protected ObjectStorageTranslator<StoredValue> getTranslator() {
-		return null;
+		return new LocalTranslator();
 	}
 
 	@Override
