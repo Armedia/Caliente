@@ -8,7 +8,6 @@ import java.util.Set;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
-import org.apache.chemistry.opencmis.client.api.OperationContext;
 import org.apache.chemistry.opencmis.client.api.QueryResult;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
@@ -77,22 +76,17 @@ public class CmisExportEngine extends
 	protected Iterator<ExportTarget> findExportResults(final Session session, CfgTools cfg,
 		CmisExportDelegateFactory factory) throws Exception {
 		String path = cfg.getString(CmisSetting.EXPORT_PATH);
-		final int itemsPerPage = Math.max(10, cfg.getInteger(CmisSetting.EXPORT_PAGE_SIZE));
-		final OperationContext ctx = session.createOperationContext();
-		ctx.setLoadSecondaryTypeProperties(true);
-		ctx.setFilterString("*");
-		ctx.setMaxItemsPerPage(itemsPerPage);
 		if (path != null) {
 			final CmisObject obj;
 			try {
-				obj = session.getObjectByPath(path, ctx);
+				obj = session.getObjectByPath(path);
 			} catch (CmisObjectNotFoundException e) {
 				return null;
 			}
 			if (obj instanceof Folder) {
 				return new Iterator<ExportTarget>() {
 					private final Iterator<CmisObject> it = new CmisRecursiveIterator(session, Folder.class.cast(obj),
-						true, ctx);
+						true);
 
 					@Override
 					public boolean hasNext() {
@@ -130,8 +124,8 @@ public class CmisExportEngine extends
 		if (query != null) {
 			final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 				.isAllVersionsSearchableSupported();
-			return new CmisPagingTransformerIterator<QueryResult, ExportTarget>(session.query(query, searchAllVersions,
-				ctx), this.transformer);
+			return new CmisPagingTransformerIterator<QueryResult, ExportTarget>(
+				session.query(query, searchAllVersions), this.transformer);
 		}
 		return null;
 	}
