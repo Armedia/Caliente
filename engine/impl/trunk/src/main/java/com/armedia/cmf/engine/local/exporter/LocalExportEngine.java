@@ -20,7 +20,7 @@ ExportEngine<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalEx
 	@Override
 	protected Iterator<ExportTarget> findExportResults(File session, CfgTools configuration,
 		LocalExportDelegateFactory factory) throws Exception {
-		return null;
+		return new LocalRecursiveIterator(session, true);
 	}
 
 	@Override

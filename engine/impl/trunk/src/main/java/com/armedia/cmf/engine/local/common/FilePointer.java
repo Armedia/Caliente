@@ -47,12 +47,12 @@ public class FilePointer implements Comparable<FilePointer> {
 				throw new IOException("UTF-8 encoding not supported in this JVM", e);
 			}
 		}
-		this.file = file.getCanonicalFile();
 		if (parent != null) {
 			this.path = String.format("%s/%s", parent.path, this.name);
 		} else {
 			this.path = this.name;
 		}
+		this.file = file.getCanonicalFile();
 	}
 
 	public FilePointer getParent() {
@@ -69,6 +69,10 @@ public class FilePointer implements Comparable<FilePointer> {
 
 	public File getFile() {
 		return this.file;
+	}
+
+	public String getId() {
+		return String.format("$/%s", this.path);
 	}
 
 	@Override
