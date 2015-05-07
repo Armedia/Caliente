@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.local.common;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -16,9 +17,9 @@ public final class LocalCommon {
 
 	}
 
-	public static File getRootDirectory(CfgTools cfg) {
+	public static File getRootDirectory(CfgTools cfg) throws IOException {
 		String root = cfg.getString(LocalCommon.ROOT);
 		if (root == null) { return null; }
-		return new File(root);
+		return new File(root).getCanonicalFile();
 	}
 }

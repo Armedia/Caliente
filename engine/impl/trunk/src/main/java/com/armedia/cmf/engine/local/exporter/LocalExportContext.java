@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.local.exporter;
 
-import java.io.File;
+import java.net.URL;
 
 import org.slf4j.Logger;
 
@@ -9,10 +9,10 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalExportContext extends ExportContext<File, StoredValue> {
+public class LocalExportContext extends ExportContext<URL, StoredValue> {
 
 	public LocalExportContext(LocalExportContextFactory factory, CfgTools settings, String rootId,
-		StoredObjectType rootType, File session, Logger output) {
+		StoredObjectType rootType, URL session, Logger output) {
 		super(factory, settings, rootId, rootType, session, output);
 	}
 }

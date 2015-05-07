@@ -1,12 +1,12 @@
 package com.armedia.cmf.engine.local.common;
 
-import java.io.File;
+import java.net.URL;
 
 import com.armedia.cmf.engine.SessionWrapper;
 
-public class LocalSessionWrapper extends SessionWrapper<File> {
+public class LocalSessionWrapper extends SessionWrapper<URL> {
 
-	protected LocalSessionWrapper(LocalSessionFactory factory, File wrapped) {
+	protected LocalSessionWrapper(LocalSessionFactory factory, URL wrapped) {
 		super(factory, wrapped);
 	}
 

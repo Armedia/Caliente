@@ -1,6 +1,9 @@
 package com.armedia.cmf.engine.local.exporter;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 
@@ -16,12 +19,17 @@ import com.armedia.cmf.storage.StoredValue;
 
 public class LocalExportDelegate
 extends
-	ExportDelegate<File, File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+ExportDelegate<URL, URL, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
-	protected final File root;
+	private static final Charset CHARSET = Charset.forName("UTF-8");
 
-	protected LocalExportDelegate(LocalExportDelegateFactory factory, File object) throws Exception {
-		super(factory, File.class, object.getCanonicalFile());
+	/**
+	 * The root path - this will be canonicalized
+	 */
+	protected final URL root;
+
+	protected LocalExportDelegate(LocalExportDelegateFactory factory, URL object) throws Exception {
+		super(factory, URL.class, object);
 		this.root = factory.getRoot();
 	}
 
@@ -42,35 +50,33 @@ extends
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(File session, StoredObject<StoredValue> marshalled,
-		ExportTarget referrent, ContentStore streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(URL session, StoredObject<StoredValue> marshalled, ExportTarget referrent,
+		ContentStore streamStore) throws Exception {
 		return null;
 	}
 
 	@Override
-	protected StoredObjectType calculateType(File object) throws Exception {
-		if (object.isFile()) { return StoredObjectType.DOCUMENT; }
-		if (object.isDirectory()) { return StoredObjectType.FOLDER; }
-		throw new ExportException(String.format("Filesystem object [%s] is of an unknown type",
-			this.object.getAbsolutePath()));
+	protected StoredObjectType calculateType(URL object) throws Exception {
+		File f = new File(object.toURI());
+		if (f.isFile()) { return StoredObjectType.DOCUMENT; }
+		if (f.isDirectory()) { return StoredObjectType.FOLDER; }
+		throw new ExportException(String.format("Filesystem object [%s] is of an unknown type", object));
 	}
 
 	@Override
-	protected String calculateLabel(File object) throws Exception {
+	protected String calculateLabel(URL object) throws Exception {
 		// TODO: Calculate the path relative to the root folder
-		return object.getAbsolutePath();
+		return object.toString();
 	}
 
 	@Override
-	protected String calculateObjectId(File object) throws Exception {
-		// TODO: Calculate the path relative to the root folder
+	protected String calculateObjectId(URL object) throws Exception {
 		return null;
 	}
 
 	@Override
-	protected String calculateSearchKey(File object) throws Exception {
-		final String fullPath = object.getCanonicalPath();
-		final String fullRoot = this.root.getCanonicalPath();
-		return null;
+	protected String calculateSearchKey(URL object) throws Exception {
+		URI relative = this.root.toURI().relativize(object.toURI());
+		return relative.toURL().toString();
 	}
 }

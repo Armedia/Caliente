@@ -1,9 +1,8 @@
 package com.armedia.cmf.engine.local.importer;
 
-import java.io.File;
+import java.net.URL;
 import java.util.Set;
 
-import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -20,7 +19,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalImportEngine extends ImportEngine<File, LocalSessionWrapper, StoredValue, LocalImportContext> {
+public class LocalImportEngine extends ImportEngine<URL, LocalSessionWrapper, StoredValue, LocalImportContext> {
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {
@@ -65,8 +64,7 @@ public class LocalImportEngine extends ImportEngine<File, LocalSessionWrapper, S
 	}
 
 	@Override
-	protected ImportDelegateFactory<File, LocalSessionWrapper, StoredValue, LocalImportContext, ?> newDelegateFactory(
-		CfgTools cfg) throws Exception {
+	protected LocalImportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
 		return new LocalImportDelegateFactory(this, cfg);
 	}
 

@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.local.exporter;
 
-import java.io.File;
+import java.net.URL;
 
 import org.slf4j.Logger;
 
@@ -13,15 +13,15 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalExportContextFactory extends
-ExportContextFactory<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportEngine> {
+ExportContextFactory<URL, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportEngine> {
 
 	protected LocalExportContextFactory(LocalExportEngine engine, CfgTools settings) {
 		super(engine, settings);
 	}
 
 	@Override
-	protected LocalExportContext constructContext(String rootId, StoredObjectType rootType, File session,
-		Logger output, ObjectStore<?, ?> objectStore, ContentStore contentStore) {
+	protected LocalExportContext constructContext(String rootId, StoredObjectType rootType, URL session, Logger output,
+		ObjectStore<?, ?> objectStore, ContentStore contentStore) {
 		return new LocalExportContext(this, getSettings(), rootId, rootType, session, output);
 	}
 }
