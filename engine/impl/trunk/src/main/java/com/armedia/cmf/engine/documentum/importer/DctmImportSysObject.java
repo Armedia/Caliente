@@ -16,11 +16,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
@@ -599,7 +601,7 @@ DctmSysObject {
 	}
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(PropertyIds.PATH);
 		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String.format(
 			"No target paths specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
 		return p.getValues();
@@ -682,8 +684,8 @@ DctmSysObject {
 
 	protected IDfId getMappedParentId(DctmImportContext context, int pos) throws DfException, ImportException {
 		final IDfSession session = context.getSession();
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
-		StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(PropertyIds.PARENT_ID);
+		StoredProperty<IDfValue> paths = this.storedObject.getProperty(PropertyIds.PATH);
 		IDfId mainFolderId = parents.getValue(pos).asId();
 		if (mainFolderId.isNull()) {
 			// This is only valid if pos is 0, and it's the only parent value, and there's only one
@@ -704,7 +706,7 @@ DctmSysObject {
 	}
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(PropertyIds.PARENT_ID);
 		if ((parents == null) || (parents.getValueCount() == 0)) { throw new ImportException(String.format(
 			"No target parents specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
@@ -781,10 +783,6 @@ DctmSysObject {
 			action.apply(sysObject);
 			this.log.debug(String.format("Applied %s", action));
 			this.parentLinkActions.add(action);
-		}
-
-		if (!isTransitoryObject(sysObject)) {
-			sysObject.save();
 		}
 
 		return true;
@@ -905,20 +903,20 @@ DctmSysObject {
 	@Override
 	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
 		// First things first: fix the parent paths in the incoming object
-		StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
+		StoredProperty<IDfValue> paths = this.storedObject.getProperty(PropertyIds.PATH);
 		if (paths == null) {
-			paths = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PATHS, StoredDataType.STRING, true);
+			paths = new StoredProperty<IDfValue>(IntermediateProperty.PATH.encode(), StoredDataType.STRING, true);
 			this.storedObject.setProperty(paths);
-			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
-				DctmSysObject.TARGET_PATHS, this.storedObject.getLabel(), this.storedObject.getId()));
+			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)", PropertyIds.PATH,
+				this.storedObject.getLabel(), this.storedObject.getId()));
 		}
 
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(PropertyIds.PARENT_ID);
 		if (parents == null) {
-			parents = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PARENTS, StoredDataType.ID, true);
+			parents = new StoredProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(), StoredDataType.ID, true);
 			this.storedObject.setProperty(parents);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
-				DctmSysObject.TARGET_PARENTS, this.storedObject.getLabel(), this.storedObject.getId()));
+				PropertyIds.PARENT_ID, this.storedObject.getLabel(), this.storedObject.getId()));
 		}
 
 		if (context.isPathAltering()) {

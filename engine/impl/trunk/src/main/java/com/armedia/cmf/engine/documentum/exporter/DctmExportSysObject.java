@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.documentum.DctmAttributes;
@@ -51,10 +52,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
 		IDfSession session = object.getSession();
-		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PATHS,
+		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(PropertyIds.PATH,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		properties.add(paths);
-		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(DctmSysObject.TARGET_PARENTS,
+		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(PropertyIds.PARENT_ID,
 			DctmDataType.DF_ID.getStoredType(), true);
 		properties.add(parents);
 

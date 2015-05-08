@@ -7,13 +7,14 @@ package com.armedia.cmf.engine.documentum.importer;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.chemistry.opencmis.commons.PropertyIds;
+
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmFolder;
-import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -74,7 +75,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		}
 
 		// Only do the linking/unlinking for non-cabinets
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(PropertyIds.PARENT_ID);
 		if ((p != null) && p.hasValues()) {
 			linkToParents(folder, context);
 		}
@@ -168,11 +169,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-								actualUser, this.storedObject.getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+						actualUser, this.storedObject.getLabel()), e);
 			}
 		}
 	}
@@ -182,7 +183,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
 		// Easier way: determine if we have parent folders...if not, then we're a cabinet
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(PropertyIds.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
 			return session.getFolderByPath(String.format("/%s",
@@ -193,7 +194,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS);
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(PropertyIds.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			IDfFolder newObject = castObject(ctx.getSession().newObject("dm_cabinet"));
 			setOwnerGroupACLData(newObject, ctx);

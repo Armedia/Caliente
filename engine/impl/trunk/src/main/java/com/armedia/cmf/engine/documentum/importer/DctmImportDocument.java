@@ -5,12 +5,9 @@
 package com.armedia.cmf.engine.documentum.importer;
 
 import java.io.File;
-import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
@@ -25,13 +22,10 @@ import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
-import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectHandler;
-import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
@@ -57,8 +51,6 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportDocument extends DctmImportSysObject<IDfDocument> implements DctmDocument {
 
-	private static final String LEGACY_CONTENTS_PROPERTY = "contents";
-	private static final String LEGACY_CONTENT_QUALIFIER = "${CONTENT_QUALIFIER}$";
 	private static final String DEFAULT_BINARY_MIME = "application/octet-stream";
 	private static final String DEFAULT_BINARY_FORMAT = "binary";
 
@@ -194,7 +186,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
 		IDfId mainFolderId = getMappedParentId(context);
 		if (mainFolderId == null) {
-			mainFolderId = this.storedObject.getProperty(DctmSysObject.TARGET_PARENTS).getValue().asId();
+			mainFolderId = this.storedObject.getProperty(PropertyIds.PARENT_ID).getValue().asId();
 			throw new ImportException(String.format(
 				"Reference [%s] mapping for its parent folder [%s->???] could not be found",
 				this.storedObject.getLabel(), mainFolderId.getId()));
@@ -599,138 +591,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		return false;
 	}
 
-	protected boolean loadContentLegacy(final IDfDocument document, boolean newObject, final DctmImportContext context)
-		throws DfException, ImportException {
-		// Now, create the content the contents
-		StoredProperty<IDfValue> contentProperty = this.storedObject
-			.getProperty(DctmImportDocument.LEGACY_CONTENTS_PROPERTY);
-		if ((contentProperty == null) || !contentProperty.hasValues()) { return false; }
-
-		final IDfSession session = document.getSession();
-
-		Set<String> contentIds = new HashSet<String>();
-		for (IDfValue contentId : contentProperty) {
-			contentIds.add(contentId.asString());
-		}
-
-		final StoredAttribute<IDfValue> contentTypeAtt = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
-		// TODO: Default the content type?
-		final String contentType = (contentTypeAtt != null ? contentTypeAtt.getValue().toString() : null);
-		final int contentCount = contentIds.size();
-		final StoredObjectHandler<IDfValue> handler = new StoredObjectHandler<IDfValue>() {
-
-			private final AtomicInteger current = new AtomicInteger(0);
-
-			@Override
-			public boolean newBatch(String batchId) throws StorageException {
-				this.current.set(0);
-				String msg = String.format("Content addition started for document [%s](%s)",
-					DctmImportDocument.this.storedObject.getLabel(), DctmImportDocument.this.storedObject.getId());
-				DctmImportDocument.this.log.info(msg);
-				context.printf("\t%s (%d items)", msg, contentCount);
-				return true;
-			}
-
-			@Override
-			public boolean handleObject(StoredObject<IDfValue> storedObject) throws StorageException {
-				// Step one: what's the content's path in the filesystem?
-				if (storedObject.getType() != StoredObjectType.CONTENT) { return true; }
-
-				StoredProperty<IDfValue> p = storedObject.getProperty(DctmImportDocument.LEGACY_CONTENT_QUALIFIER);
-				if (p == null) { return true; }
-				String qualifier = null;
-				if (!p.isRepeating() || p.hasValues()) {
-					qualifier = p.getValue().asString();
-				}
-
-				final Handle contentHandle = context.getContentStore().getHandle(storedObject, qualifier);
-				final StoredAttribute<IDfValue> pageAtt = storedObject.getAttribute(DctmAttributes.PAGE);
-				final int pageNumber = (pageAtt != null ? pageAtt.getValue().asInteger() : 0);
-				final StoredAttribute<IDfValue> renditionNumber = storedObject.getAttribute(DctmAttributes.RENDITION);
-				final StoredAttribute<IDfValue> pageModifierAtt = storedObject
-					.getAttribute(DctmAttributes.PAGE_MODIFIER);
-				final StoredAttribute<IDfValue> fullFormatAtt = storedObject.getAttribute(DctmAttributes.FULL_FORMAT);
-				final String pageModifier = ((pageModifierAtt != null) && pageModifierAtt.hasValues() ? pageModifierAtt
-					.getValue() : DctmDataType.DF_STRING.getNull()).asString();
-
-				String aContentType;
-				try {
-					aContentType = determineFormat(session, contentType);
-				} catch (DfException e) {
-					throw new StorageException(String.format(
-						"Failed to determine the format for %s [%s](%s) (contentType was [%s])",
-						storedObject.getType(), storedObject.getLabel(), storedObject.getId(), contentType), e);
-				}
-				String fullFormat = (fullFormatAtt != null ? fullFormatAtt.getValue().asString() : aContentType);
-				ContentInfo info = new ContentInfo(contentHandle.getQualifier());
-				StoredAttribute<IDfValue> setFileAtt = storedObject.getAttribute(DctmAttributes.SET_FILE);
-				StoredAttribute<IDfValue> setClientAtt = storedObject.getAttribute(DctmAttributes.SET_CLIENT);
-				StoredAttribute<IDfValue> setTimeAtt = storedObject.getAttribute(DctmAttributes.SET_TIME);
-
-				@SuppressWarnings("unchecked")
-				final int firstNull = Tools.firstNull(setFileAtt, setClientAtt, setTimeAtt);
-				if (firstNull == -1) {
-					String setFile = setFileAtt.getValue().asString();
-					if (StringUtils.isBlank(setFile)) {
-						setFile = " ";
-					}
-
-					// If setFile contains single quote in its contents, to escape it, replace it
-					// with 4 single quotes.
-					setFile = setFile.replaceAll("'", "''''");
-					info.setProperty(DctmAttributes.SET_FILE, setFile);
-
-					String setClient = setClientAtt.getValue().asString();
-					if (StringUtils.isBlank(setClient)) {
-						setClient = " ";
-					}
-					info.setProperty(DctmAttributes.SET_CLIENT, setClient);
-
-					IDfTime setTime = setTimeAtt.getValue().asTime();
-					info.setProperty(DctmAttributes.SET_TIME, setTime.asString(DctmDocument.CONTENT_SET_TIME_PATTERN));
-				}
-
-				try {
-					int rendition = ((renditionNumber != null) && renditionNumber.hasValues() ? renditionNumber
-						.getValue().asInteger() : 0);
-					return saveContentStream(context, document, info, contentHandle, aContentType, fullFormat,
-						pageNumber, rendition, pageModifier, this.current.incrementAndGet(), contentCount);
-				} catch (Exception e) {
-					throw new StorageException(String.format(
-						"Failed to save the content data for [%s](%s) from content with ID [%s]",
-						DctmImportDocument.this.storedObject.getLabel(), DctmImportDocument.this.storedObject.getId(),
-						storedObject.getId()), e);
-				}
-			}
-
-			@Override
-			public boolean closeBatch(boolean ok) throws StorageException {
-				String msg = String.format("Content addition finished for document [%s](%s)",
-					DctmImportDocument.this.storedObject.getLabel(), DctmImportDocument.this.storedObject.getId());
-				DctmImportDocument.this.log.info(msg);
-				context.printf("\t%s (%d items)", msg, contentCount);
-				return true;
-			}
-
-			@Override
-			public boolean handleException(SQLException e) {
-				String msg = String.format("SQLException caught processing content for [%s](%s)",
-					DctmImportDocument.this.storedObject.getLabel(), DctmImportDocument.this.storedObject.getId());
-				DctmImportDocument.this.log.error(msg, e);
-				context.printf("\t%s: %s", msg, e.getMessage());
-				return true;
-			}
-
-		};
-		try {
-			context.loadObjects(StoredObjectType.CONTENT, contentIds, handler);
-		} catch (Exception e) {
-			throw new ImportException(String.format("Exception caught loading content for document [%s](%s)",
-				this.storedObject.getLabel(), this.storedObject.getId()), e);
-		}
-		return true;
-	}
-
 	@Override
 	protected void finalizeConstruction(final IDfDocument document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
@@ -738,9 +598,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// References don't require any of this being done
 		if (isReference()) { return; }
 
-		if (!loadContentLegacy(document, newObject, context)) {
-			loadContent(document, newObject, context);
-		}
+		loadContent(document, newObject, context);
 
 		// Now, link to the parent folders
 		linkToParents(document, context);
