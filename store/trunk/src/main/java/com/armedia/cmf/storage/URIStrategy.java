@@ -38,16 +38,16 @@ public abstract class URIStrategy {
 			if (name == null) {
 				URIStrategy.LOG.warn(String.format(
 					"Path Strategy [%s] did not provide a name, so it won't be registered", s.getClass()
-						.getCanonicalName()));
+					.getCanonicalName()));
 				continue;
 			}
 			URIStrategy old = strategies.get(name);
 			if (old != null) {
 				URIStrategy.LOG
-					.warn(String
-						.format(
-							"URIStrategy [%s] provides the name [%s], but this collides with already-registered strategy [%s]. The newcomer will be ignored.",
-							s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
+				.warn(String
+					.format(
+						"URIStrategy [%s] provides the name [%s], but this collides with already-registered strategy [%s]. The newcomer will be ignored.",
+						s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
 				continue;
 			}
 			URIStrategy.LOG.debug("Registering URIStrategy [{}] as [{}]", s.getClass().getCanonicalName(), name);
@@ -60,6 +60,8 @@ public abstract class URIStrategy {
 		if (name == null) { return URIStrategy.DEFAULT_STRATEGY; }
 		return Tools.coalesce(URIStrategy.STRATEGIES.get(name), URIStrategy.DEFAULT_STRATEGY);
 	}
+
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final String name;
 
