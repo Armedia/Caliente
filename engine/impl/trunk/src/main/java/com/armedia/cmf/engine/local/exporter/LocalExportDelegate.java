@@ -32,8 +32,8 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 
 public class LocalExportDelegate
-	extends
-	ExportDelegate<File, File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+extends
+ExportDelegate<File, File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, File object) throws Exception {
 		super(factory, File.class, new File(LocalExportDelegate.calculateRelativePath(factory.getRoot(), object)));
@@ -64,6 +64,10 @@ public class LocalExportDelegate
 
 		att = new StoredAttribute<StoredValue>(PropertyIds.LAST_MODIFICATION_DATE, StoredDataType.DATETIME, false);
 		att.setValue(new StoredValue(new Date(this.object.lastModified())));
+		object.setAttribute(att);
+
+		att = new StoredAttribute<StoredValue>(PropertyIds.PATH, StoredDataType.STRING, true);
+		att.setValue(new StoredValue(this.object.getPath()));
 		object.setAttribute(att);
 
 		if (getType() == StoredObjectType.DOCUMENT) {

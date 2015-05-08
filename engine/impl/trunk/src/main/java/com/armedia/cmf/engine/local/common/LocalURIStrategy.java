@@ -5,6 +5,9 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.chemistry.opencmis.commons.PropertyIds;
+
+import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.URIStrategy;
 import com.armedia.commons.utilities.FileNameTools;
@@ -27,7 +30,11 @@ public class LocalURIStrategy extends URIStrategy {
 	protected String calculateSSP(StoredObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		String path = object.getLabel();
+		StoredAttribute<?> att = object.getAttribute(PropertyIds.PATH);
+		if (att == null) {
+			// now what?
+		}
+		String path = att.getValue(0).toString();
 		List<String> pathItems = new ArrayList<String>();
 		for (String s : FileNameTools.tokenize(path, '/')) {
 			pathItems.add(encodeSafePathComponent(s));
