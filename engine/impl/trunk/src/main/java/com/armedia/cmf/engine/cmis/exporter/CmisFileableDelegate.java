@@ -98,6 +98,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
 		throw new Exception(String.format(
 			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
-				.getClass().getCanonicalName(), object.getType().getId()));
+			.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }
