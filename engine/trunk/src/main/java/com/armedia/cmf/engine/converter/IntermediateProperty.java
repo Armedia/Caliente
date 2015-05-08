@@ -21,6 +21,7 @@ public enum IntermediateProperty implements Mappable {
 	PATH(PropertyIds.PATH, StoredDataType.STRING),
 	PARENT_ID(PropertyIds.PARENT_ID, StoredDataType.STRING),
 	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, StoredDataType.STRING),
+	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, StoredDataType.BOOLEAN),
 
 	// Non-CMIS properties
 	USERS_WITH_DEFAULT_GROUP(StoredDataType.ID),
@@ -28,7 +29,6 @@ public enum IntermediateProperty implements Mappable {
 	PATCH_ANTECEDENT(StoredDataType.STRING),
 	USERS_WITH_DEFAULT_FOLDER(StoredDataType.STRING),
 	USERS_DEFAULT_FOLDER_PATHS(StoredDataType.STRING),
-	CURRENT_VERSION(StoredDataType.BOOLEAN),
 	//
 	;
 
