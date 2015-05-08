@@ -78,7 +78,7 @@ public class LocalFile {
 	public String getPortablePath() {
 		String path = getPath();
 		if (path == null) { return null; }
-		return FileNameTools.reconstitute(FileNameTools.tokenize(path), false, false, '/');
+		return FileNameTools.reconstitute(FileNameTools.tokenize(path), true, false, '/');
 	}
 
 	/**

@@ -9,15 +9,14 @@ import org.apache.chemistry.opencmis.commons.PropertyIds;
 
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.URIStrategy;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalURIStrategy extends URIStrategy {
+public class LocalURIDirectStrategy extends URIStrategy {
 
-	public LocalURIStrategy() {
-		super("local");
+	public LocalURIDirectStrategy() {
+		super("localdirect");
 	}
 
 	protected String encodeSafePathComponent(String pathComponent) {
@@ -32,7 +31,7 @@ public class LocalURIStrategy extends URIStrategy {
 	protected String calculateSSP(StoredObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		StoredProperty<?> pathAtt = object.getProperty(PropertyIds.PATH);
+		StoredAttribute<?> pathAtt = object.getAttribute(PropertyIds.PATH);
 		StoredAttribute<?> nameAtt = object.getAttribute(PropertyIds.NAME);
 		List<String> pathItems = new ArrayList<String>();
 		if (pathAtt != null) {

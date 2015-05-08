@@ -34,8 +34,8 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 
 public class LocalExportDelegate
-	extends
-	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+extends
+ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
 		super(factory, LocalFile.class, object);
@@ -80,7 +80,6 @@ public class LocalExportDelegate
 			true);
 		if (this.object.getPathCount() > 1) {
 			paths.setValue(new StoredValue(this.object.getPortablePath()));
-
 		}
 		object.setProperty(paths);
 		object.setProperty(parents);
