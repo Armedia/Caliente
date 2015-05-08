@@ -84,13 +84,5 @@ public abstract class ObjectStorageTranslator<V> {
 		return attributeName;
 	}
 
-	public String encodePropertyName(StoredObjectType type, String propertyName) {
-		return propertyName;
-	}
-
-	public String decodePropertyName(StoredObjectType type, String propertyName) {
-		return propertyName;
-	}
-
 	public abstract V getValue(StoredDataType type, Object value) throws ParseException;
 }

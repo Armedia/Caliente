@@ -10,7 +10,6 @@ public enum StoredObjectType {
 	FORMAT,
 	FOLDER,
 	DOCUMENT,
-	CONTENT, // Only exists for backward compatibility, and should not be used for anything else
 	WORKFLOW;
 
 	public static StoredObjectType decodeString(String str) {
