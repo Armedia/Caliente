@@ -10,10 +10,10 @@ import org.h2.store.fs.FileUtils;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalSessionFactory extends SessionFactory<File> {
+public class LocalSessionFactory extends SessionFactory<RootPath> {
 	public static final String ROOT = "root";
 
-	private final File root;
+	private final RootPath root;
 
 	public LocalSessionFactory(CfgTools settings) throws IOException {
 		super(settings);
@@ -21,40 +21,40 @@ public class LocalSessionFactory extends SessionFactory<File> {
 		if (root == null) { throw new IllegalArgumentException(
 			"Must provide a root directory to base the local engine off of"); }
 		root = root.getCanonicalFile();
-		FileUtils.createDirectories(root.getCanonicalPath());
+		FileUtils.createDirectories(root.getPath());
 		if (!root.isDirectory()) { throw new IllegalArgumentException(String.format(
 			"Root directory [%s] could not be found, nor could it be created", root)); }
-		this.root = root;
+		this.root = new RootPath(root);
 	}
 
-	protected File getRoot() {
+	protected RootPath getRoot() {
 		return this.root;
 	}
 
 	@Override
-	public PooledObject<File> makeObject() throws Exception {
-		return new DefaultPooledObject<File>(this.root);
+	public PooledObject<RootPath> makeObject() throws Exception {
+		return new DefaultPooledObject<RootPath>(this.root);
 	}
 
 	@Override
-	public void destroyObject(PooledObject<File> p) throws Exception {
+	public void destroyObject(PooledObject<RootPath> p) throws Exception {
 	}
 
 	@Override
-	public boolean validateObject(PooledObject<File> p) {
+	public boolean validateObject(PooledObject<RootPath> p) {
 		return true;
 	}
 
 	@Override
-	public void activateObject(PooledObject<File> p) throws Exception {
+	public void activateObject(PooledObject<RootPath> p) throws Exception {
 	}
 
 	@Override
-	public void passivateObject(PooledObject<File> p) throws Exception {
+	public void passivateObject(PooledObject<RootPath> p) throws Exception {
 	}
 
 	@Override
-	protected LocalSessionWrapper newWrapper(File session) {
+	protected LocalSessionWrapper newWrapper(RootPath session) {
 		return new LocalSessionWrapper(this, session);
 	}
 }

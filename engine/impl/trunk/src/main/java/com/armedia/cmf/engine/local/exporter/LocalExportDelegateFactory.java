@@ -5,32 +5,30 @@ import java.io.File;
 import com.armedia.cmf.engine.exporter.ExportDelegateFactory;
 import com.armedia.cmf.engine.local.common.LocalCommon;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
+import com.armedia.cmf.engine.local.common.RootPath;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalExportDelegateFactory extends
-	ExportDelegateFactory<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportEngine> {
+	ExportDelegateFactory<RootPath, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportEngine> {
 
-	private final File root;
+	private final RootPath root;
 
 	protected LocalExportDelegateFactory(LocalExportEngine engine, CfgTools configuration) throws Exception {
 		super(engine, configuration);
 		File root = LocalCommon.getRootDirectory(configuration);
 		if (root == null) { throw new IllegalArgumentException("Must provide a root directory to work from"); }
-		this.root = root;
+		this.root = new RootPath(root);
 	}
 
-	public final File getRoot() {
+	public final RootPath getRoot() {
 		return this.root;
 	}
 
 	@Override
-	protected LocalExportDelegate newExportDelegate(File session, StoredObjectType type, String searchKey)
+	protected LocalExportDelegate newExportDelegate(RootPath session, StoredObjectType type, String searchKey)
 		throws Exception {
-		File f = new File(searchKey);
-		File F = new File(session, searchKey).getCanonicalFile();
-		if (!F.exists()) { return null; }
-		return new LocalExportDelegate(this, f);
+		return null;
 	}
 }

@@ -1,17 +1,16 @@
 package com.armedia.cmf.engine.local.common;
 
-import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.armedia.cmf.engine.SessionWrapper;
 
-public class LocalSessionWrapper extends SessionWrapper<File> {
+public class LocalSessionWrapper extends SessionWrapper<RootPath> {
 
 	private static final AtomicLong ID_COUNTER = new AtomicLong(0);
 
 	private final String id;
 
-	protected LocalSessionWrapper(LocalSessionFactory factory, File wrapped) {
+	protected LocalSessionWrapper(LocalSessionFactory factory, RootPath wrapped) {
 		super(factory, wrapped);
 		this.id = String.format("%16X", LocalSessionWrapper.ID_COUNTER.getAndIncrement());
 	}

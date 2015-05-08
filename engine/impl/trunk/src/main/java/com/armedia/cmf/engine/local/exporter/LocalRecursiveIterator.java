@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.engine.local.common.RelativeFile;
+import com.armedia.cmf.engine.local.common.RootPath;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.ArrayIterator;
 
@@ -20,7 +22,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 	private class RecursiveState {
 		private final File base;
 		private Iterator<File> childIterator = null;
-		private File next = null;
+		private RelativeFile next = null;
 		private int fileCount = 0;
 		private int folderCount = 0;
 		private boolean completed = false;
@@ -31,13 +33,13 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 	}
 
 	private final boolean excludeEmptyFolders;
-	private final File root;
+	private final RootPath root;
 
 	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
 
-	public LocalRecursiveIterator(File root, boolean excludeEmptyFolders) throws IOException {
-		this.root = root.getCanonicalFile();
-		this.stateStack.push(new RecursiveState(this.root));
+	public LocalRecursiveIterator(RootPath root, boolean excludeEmptyFolders) throws IOException {
+		this.root = root;
+		this.stateStack.push(new RecursiveState(this.root.getFile()));
 		this.excludeEmptyFolders = excludeEmptyFolders;
 	}
 
@@ -84,7 +86,12 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 						continue recursion;
 					}
 
-					state.next = f;
+					try {
+						state.next = new RelativeFile(this.root, f.getPath());
+					} catch (IOException e) {
+						throw new RuntimeException(String.format("Failed to relativize the path [%s] from [%s]", f,
+							this.root), e);
+					}
 					state.fileCount++;
 					return true;
 				}
@@ -96,31 +103,28 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 				state.completed = true;
 				if (!this.excludeEmptyFolders && ((state.fileCount | state.folderCount) == 0)) {
 					File f = state.base;
-					state.next = f;
+					try {
+						state.next = new RelativeFile(this.root, f.getPath());
+					} catch (IOException e) {
+						throw new RuntimeException(String.format("Failed to relativize the path [%s] from [%s]", f,
+							this.root), e);
+					}
 					return true;
 				}
 			}
 			this.stateStack.pop();
 		}
-	return false;
+		return false;
 	}
 
 	@Override
 	public ExportTarget next() {
 		if (!hasNext()) { throw new NoSuchElementException(); }
 		RecursiveState state = this.stateStack.peek();
-		File ret = state.next;
+		RelativeFile ret = state.next;
 		state.next = null;
-		String path;
-		String id;
-		try {
-			path = LocalExportDelegate.calculateRelativePath(this.root, ret);
-			id = LocalExportDelegate.calculateCanonicalPathHash(this.root, ret);
-		} catch (IOException e) {
-			throw new RuntimeException(String.format(
-				"Failed to calculate the path ID or relative path for [%s] from [%s]", ret, this.root), e);
-		}
-		return new ExportTarget(ret.isFile() ? StoredObjectType.DOCUMENT : StoredObjectType.FOLDER, id, path);
+		return new ExportTarget(ret.getAbsolute().isFile() ? StoredObjectType.DOCUMENT : StoredObjectType.FOLDER,
+			ret.getPathHash(), ret.getSafePath());
 	}
 
 	@Override
