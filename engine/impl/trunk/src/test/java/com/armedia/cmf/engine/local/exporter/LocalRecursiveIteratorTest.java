@@ -10,7 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.engine.local.common.RootPath;
+import com.armedia.cmf.engine.local.common.LocalRoot;
 
 public class LocalRecursiveIteratorTest {
 
@@ -40,7 +40,7 @@ public class LocalRecursiveIteratorTest {
 		};
 		for (File f : files) {
 			System.out.printf("Running on [%s]%n", f);
-			Iterator<ExportTarget> it = new LocalRecursiveIterator(new RootPath(f), false);
+			Iterator<ExportTarget> it = new LocalRecursiveIterator(new LocalRoot(f), false);
 			while (it.hasNext()) {
 				System.out.printf("\t%s%n", it.next());
 			}

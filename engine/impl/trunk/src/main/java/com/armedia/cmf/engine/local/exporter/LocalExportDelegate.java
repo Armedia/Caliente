@@ -20,9 +20,9 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.engine.local.common.LocalFile;
+import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
-import com.armedia.cmf.engine.local.common.RelativeFile;
-import com.armedia.cmf.engine.local.common.RootPath;
 import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
@@ -30,14 +30,15 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 
 public class LocalExportDelegate
 	extends
-	ExportDelegate<RelativeFile, RootPath, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
-	protected LocalExportDelegate(LocalExportDelegateFactory factory, RelativeFile object) throws Exception {
-		super(factory, RelativeFile.class, object);
+	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
+		super(factory, LocalFile.class, object);
 	}
 
 	@Override
@@ -45,13 +46,13 @@ public class LocalExportDelegate
 		LocalExportContext ctx) throws Exception {
 		Collection<LocalExportDelegate> ret = new ArrayList<LocalExportDelegate>();
 
-		RelativeFile abs = this.object;
+		LocalFile abs = this.object;
 		File f = abs.getAbsolute();
 		String p = f.getParent();
 		if (p != null) {
 			File parent = new File(f.getParent());
 			if (!parent.equals(this.factory.getRoot().getFile())) {
-				ret.add(new LocalExportDelegate(this.factory, new RelativeFile(this.factory.getRoot(), p)));
+				ret.add(new LocalExportDelegate(this.factory, new LocalFile(this.factory.getRoot(), p)));
 			}
 		}
 		return ret;
@@ -73,8 +74,19 @@ public class LocalExportDelegate
 		att.setValue(new StoredValue(new Date(file.lastModified())));
 		object.setAttribute(att);
 
+		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(PropertyIds.PARENT_ID, StoredDataType.ID,
+			true);
+		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(PropertyIds.PATH, StoredDataType.STRING,
+			true);
+		if (this.object.getPathCount() > 1) {
+			paths.setValue(new StoredValue(this.object.getPortablePath()));
+
+		}
+		object.setProperty(paths);
+		object.setProperty(parents);
+
 		att = new StoredAttribute<StoredValue>(PropertyIds.PATH, StoredDataType.STRING, true);
-		att.setValue(new StoredValue(this.object.getPath()));
+		att.setValue(new StoredValue(this.object.getPortablePath()));
 		object.setAttribute(att);
 
 		if (getType() == StoredObjectType.DOCUMENT) {
@@ -91,7 +103,7 @@ public class LocalExportDelegate
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(RootPath session, StoredObject<StoredValue> marshalled,
+	protected List<ContentInfo> storeContent(LocalRoot session, StoredObject<StoredValue> marshalled,
 		ExportTarget referrent, ContentStore streamStore) throws Exception {
 		if (getType() != StoredObjectType.DOCUMENT) { return null; }
 
@@ -112,6 +124,9 @@ public class LocalExportDelegate
 		Handle h = streamStore.getHandle(marshalled, info.getQualifier());
 		File tgt = h.getFile();
 		if (tgt != null) {
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Copying %d bytes from [%s] into [%s]", src.length(), src, tgt));
+			}
 			FileUtils.copyFile(src, tgt);
 		} else {
 			InputStream in = new FileInputStream(src);
@@ -128,7 +143,7 @@ public class LocalExportDelegate
 	}
 
 	@Override
-	protected StoredObjectType calculateType(RelativeFile f) throws Exception {
+	protected StoredObjectType calculateType(LocalFile f) throws Exception {
 		File F = f.getAbsolute();
 		if (F.isFile()) { return StoredObjectType.DOCUMENT; }
 		if (F.isDirectory()) { return StoredObjectType.FOLDER; }
@@ -136,17 +151,19 @@ public class LocalExportDelegate
 	}
 
 	@Override
-	protected String calculateLabel(RelativeFile object) throws Exception {
-		return object.getPath();
+	protected String calculateLabel(LocalFile object) throws Exception {
+		String path = object.getPortablePath();
+		if (path != null) { return String.format("%s/%s", path, object.getName()); }
+		return object.getName();
 	}
 
 	@Override
-	protected String calculateObjectId(RelativeFile object) throws Exception {
+	protected String calculateObjectId(LocalFile object) throws Exception {
 		return object.getPathHash();
 	}
 
 	@Override
-	protected String calculateSearchKey(RelativeFile object) throws Exception {
-		return object.getPath();
+	protected String calculateSearchKey(LocalFile object) throws Exception {
+		return object.getSafePath();
 	}
 }

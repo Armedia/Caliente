@@ -9,7 +9,7 @@ import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.local.common.LocalCommon;
 import com.armedia.cmf.engine.local.common.LocalSessionFactory;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
-import com.armedia.cmf.engine.local.common.RootPath;
+import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
@@ -19,7 +19,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalImportEngine extends ImportEngine<RootPath, LocalSessionWrapper, StoredValue, LocalImportContext> {
+public class LocalImportEngine extends ImportEngine<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext> {
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {

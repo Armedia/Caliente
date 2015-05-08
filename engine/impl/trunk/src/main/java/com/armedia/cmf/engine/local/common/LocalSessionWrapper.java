@@ -4,13 +4,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.armedia.cmf.engine.SessionWrapper;
 
-public class LocalSessionWrapper extends SessionWrapper<RootPath> {
+public class LocalSessionWrapper extends SessionWrapper<LocalRoot> {
 
 	private static final AtomicLong ID_COUNTER = new AtomicLong(0);
 
 	private final String id;
 
-	protected LocalSessionWrapper(LocalSessionFactory factory, RootPath wrapped) {
+	protected LocalSessionWrapper(LocalSessionFactory factory, LocalRoot wrapped) {
 		super(factory, wrapped);
 		this.id = String.format("%16X", LocalSessionWrapper.ID_COUNTER.getAndIncrement());
 	}

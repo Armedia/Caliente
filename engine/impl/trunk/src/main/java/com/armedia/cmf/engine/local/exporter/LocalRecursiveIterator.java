@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.engine.local.common.RelativeFile;
-import com.armedia.cmf.engine.local.common.RootPath;
+import com.armedia.cmf.engine.local.common.LocalFile;
+import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.ArrayIterator;
 
@@ -22,7 +22,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 	private class RecursiveState {
 		private final File base;
 		private Iterator<File> childIterator = null;
-		private RelativeFile next = null;
+		private LocalFile next = null;
 		private int fileCount = 0;
 		private int folderCount = 0;
 		private boolean completed = false;
@@ -33,11 +33,11 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 	}
 
 	private final boolean excludeEmptyFolders;
-	private final RootPath root;
+	private final LocalRoot root;
 
 	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
 
-	public LocalRecursiveIterator(RootPath root, boolean excludeEmptyFolders) throws IOException {
+	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders) throws IOException {
 		this.root = root;
 		this.stateStack.push(new RecursiveState(this.root.getFile()));
 		this.excludeEmptyFolders = excludeEmptyFolders;
@@ -87,7 +87,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 					}
 
 					try {
-						state.next = new RelativeFile(this.root, f.getPath());
+						state.next = new LocalFile(this.root, f.getPath());
 					} catch (IOException e) {
 						throw new RuntimeException(String.format("Failed to relativize the path [%s] from [%s]", f,
 							this.root), e);
@@ -104,7 +104,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 				if (!this.excludeEmptyFolders && ((state.fileCount | state.folderCount) == 0)) {
 					File f = state.base;
 					try {
-						state.next = new RelativeFile(this.root, f.getPath());
+						state.next = new LocalFile(this.root, f.getPath());
 					} catch (IOException e) {
 						throw new RuntimeException(String.format("Failed to relativize the path [%s] from [%s]", f,
 							this.root), e);
@@ -121,7 +121,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 	public ExportTarget next() {
 		if (!hasNext()) { throw new NoSuchElementException(); }
 		RecursiveState state = this.stateStack.peek();
-		RelativeFile ret = state.next;
+		LocalFile ret = state.next;
 		state.next = null;
 		return new ExportTarget(ret.getAbsolute().isFile() ? StoredObjectType.DOCUMENT : StoredObjectType.FOLDER,
 			ret.getPathHash(), ret.getSafePath());

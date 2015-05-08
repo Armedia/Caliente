@@ -10,17 +10,17 @@ import com.armedia.cmf.engine.local.common.LocalCommon;
 import com.armedia.cmf.engine.local.common.LocalSessionFactory;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.local.common.LocalTranslator;
-import com.armedia.cmf.engine.local.common.RootPath;
+import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalExportEngine extends
-	ExportEngine<RootPath, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory> {
+	ExportEngine<LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory> {
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(RootPath session, CfgTools configuration,
+	protected Iterator<ExportTarget> findExportResults(LocalRoot session, CfgTools configuration,
 		LocalExportDelegateFactory factory) throws Exception {
 		return new LocalRecursiveIterator(session, true);
 	}

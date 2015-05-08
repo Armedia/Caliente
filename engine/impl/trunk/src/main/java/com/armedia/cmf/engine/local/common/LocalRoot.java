@@ -7,7 +7,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class RootPath implements Comparable<RootPath> {
+public final class LocalRoot implements Comparable<LocalRoot> {
 
 	private final String path;
 	private final File file;
@@ -18,12 +18,12 @@ public final class RootPath implements Comparable<RootPath> {
 		return p2;
 	}
 
-	public RootPath(File path) throws IOException {
+	public LocalRoot(File path) throws IOException {
 		this(path.getCanonicalPath());
 	}
 
-	public RootPath(String path) throws IOException {
-		this.file = new File(RootPath.normalize(path)).getCanonicalFile();
+	public LocalRoot(String path) throws IOException {
+		this.file = new File(LocalRoot.normalize(path)).getCanonicalFile();
 		this.path = this.file.getPath();
 	}
 
@@ -36,7 +36,7 @@ public final class RootPath implements Comparable<RootPath> {
 	}
 
 	public String relativize(String path) throws IOException {
-		File f = new File(RootPath.normalize(path));
+		File f = new File(LocalRoot.normalize(path));
 		if (!f.isAbsolute()) {
 			f = new File(this.file, path);
 		}
@@ -54,7 +54,7 @@ public final class RootPath implements Comparable<RootPath> {
 	}
 
 	public File makeAbsolute(String path) throws IOException {
-		return new File(this.file, RootPath.normalize(path)).getAbsoluteFile();
+		return new File(this.file, LocalRoot.normalize(path)).getAbsoluteFile();
 	}
 
 	@Override
@@ -65,19 +65,19 @@ public final class RootPath implements Comparable<RootPath> {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		RootPath other = RootPath.class.cast(obj);
+		LocalRoot other = LocalRoot.class.cast(obj);
 		if (!Tools.equals(this.file, other.file)) { return false; }
 		return true;
 	}
 
 	@Override
-	public int compareTo(RootPath o) {
+	public int compareTo(LocalRoot o) {
 		if (o == null) { return 1; }
 		return this.file.compareTo(o.file);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("RootPath [%s]", this.file);
+		return String.format("LocalRoot [%s]", this.file);
 	}
 }

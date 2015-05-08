@@ -10,47 +10,53 @@ import java.util.List;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
-public class RelativeFile {
+public class LocalFile {
 
 	private static final String ENCODING = "UTF-8";
 
 	private static String makeSafe(String s) throws IOException {
-		return URLEncoder.encode(s, RelativeFile.ENCODING);
+		return URLEncoder.encode(s, LocalFile.ENCODING);
 	}
 
 	private static String makeUnsafe(String s) throws IOException {
-		return URLDecoder.decode(s, RelativeFile.ENCODING);
+		return URLDecoder.decode(s, LocalFile.ENCODING);
 	}
 
 	public static String decodeSafePath(String safePath) throws IOException {
 		List<String> r = new ArrayList<String>();
 		for (String s : FileNameTools.tokenize(safePath, '/')) {
-			r.add(RelativeFile.makeUnsafe(s));
+			r.add(LocalFile.makeUnsafe(s));
 		}
-		return RootPath.normalize(FileNameTools.reconstitute(r, false, false));
+		return LocalRoot.normalize(FileNameTools.reconstitute(r, false, false));
 	}
 
-	public static RelativeFile newFromSafePath(RootPath root, String safePath) throws IOException {
-		return new RelativeFile(root, RelativeFile.decodeSafePath(safePath));
+	public static LocalFile newFromSafePath(LocalRoot root, String safePath) throws IOException {
+		return new LocalFile(root, LocalFile.decodeSafePath(safePath));
 	}
 
-	private final RootPath root;
-	private final String path;
+	private final LocalRoot root;
 	private final File absoluteFile;
 	private final File relativeFile;
 	private final String safePath;
+	private final String path;
+	private final String name;
+	private final int pathCount;
 
-	public RelativeFile(RootPath root, String path) throws IOException {
+	public LocalFile(LocalRoot root, String path) throws IOException {
 		this.root = root;
 		File f = root.relativize(new File(path));
 		this.relativeFile = f;
-		this.path = f.getPath();
-		this.absoluteFile = root.makeAbsolute(this.path);
+		this.absoluteFile = root.makeAbsolute(f);
+
 		List<String> r = new ArrayList<String>();
-		for (String s : FileNameTools.tokenize(this.path)) {
-			r.add(RelativeFile.makeSafe(s));
+		for (String s : FileNameTools.tokenize(this.relativeFile.getPath())) {
+			r.add(LocalFile.makeSafe(s));
 		}
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
+		this.pathCount = r.size();
+		this.path = f.getParent();
+		this.name = f.getName();
+
 	}
 
 	public String getPathHash() {
@@ -59,6 +65,20 @@ public class RelativeFile {
 
 	public String getPath() {
 		return this.path;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public int getPathCount() {
+		return this.pathCount;
+	}
+
+	public String getPortablePath() {
+		String path = getPath();
+		if (path == null) { return null; }
+		return FileNameTools.reconstitute(FileNameTools.tokenize(path), false, false, '/');
 	}
 
 	/**
@@ -84,7 +104,7 @@ public class RelativeFile {
 		return this.absoluteFile;
 	}
 
-	public RootPath getRootPath() {
+	public LocalRoot getRootPath() {
 		return this.root;
 	}
 
@@ -96,9 +116,16 @@ public class RelativeFile {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		RelativeFile other = RelativeFile.class.cast(obj);
+		LocalFile other = LocalFile.class.cast(obj);
 		if (!Tools.equals(this.root, other.root)) { return false; }
 		if (!Tools.equals(this.absoluteFile, other.absoluteFile)) { return false; }
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, safePath=%s, path=%s, name=%s, pathCount=%s]",
+			this.root, this.absoluteFile, this.relativeFile, this.safePath, this.path, this.name, this.pathCount);
 	}
 }
