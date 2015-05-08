@@ -17,7 +17,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalExportEngine extends
-ExportEngine<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory> {
+	ExportEngine<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory> {
 
 	@Override
 	protected Iterator<ExportTarget> findExportResults(File session, CfgTools configuration,
@@ -57,5 +57,9 @@ ExportEngine<File, LocalSessionWrapper, StoredValue, LocalExportContext, LocalEx
 	@Override
 	protected Set<String> getTargetNames() {
 		return LocalCommon.TARGETS;
+	}
+
+	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
+		return ExportEngine.getExportEngine(LocalCommon.TARGET_NAME);
 	}
 }

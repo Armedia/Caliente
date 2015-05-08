@@ -28,6 +28,9 @@ public class LocalExportDelegateFactory extends
 	@Override
 	protected LocalExportDelegate newExportDelegate(File session, StoredObjectType type, String searchKey)
 		throws Exception {
-		return null;
+		File f = new File(searchKey);
+		File F = new File(session, searchKey).getCanonicalFile();
+		if (!F.exists()) { return null; }
+		return new LocalExportDelegate(this, f);
 	}
 }

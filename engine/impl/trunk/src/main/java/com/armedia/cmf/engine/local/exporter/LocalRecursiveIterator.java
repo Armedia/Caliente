@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.engine.local.common.FilePointer;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.ArrayIterator;
 
@@ -20,7 +19,6 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 
 	private class RecursiveState {
 		private final File base;
-		private final FilePointer basePtr;
 		private Iterator<File> childIterator = null;
 		private File next = null;
 		private int fileCount = 0;
@@ -29,12 +27,6 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 
 		private RecursiveState(File base) {
 			this.base = base;
-			this.basePtr = null;
-		}
-
-		private RecursiveState(FilePointer parent, File base) throws IOException {
-			this.base = base;
-			this.basePtr = new FilePointer(parent, base);
 		}
 	}
 
@@ -88,11 +80,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 							this.log.trace(String.format("Recursing into [%s]", f.getAbsolutePath()));
 						}
 						state.folderCount++;
-						try {
-							this.stateStack.push(new RecursiveState(state.basePtr, f));
-						} catch (IOException e) {
-							throw new RuntimeException(String.format("Failed to create a file pointer for [%s]", f), e);
-						}
+						this.stateStack.push(new RecursiveState(f));
 						continue recursion;
 					}
 
@@ -123,18 +111,16 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 		RecursiveState state = this.stateStack.peek();
 		File ret = state.next;
 		state.next = null;
-		FilePointer ptr;
-		FilePointer parent = state.basePtr;
-		if (state.base == ret) {
-			parent = parent.getParent();
-		}
+		String path;
+		String id;
 		try {
-			ptr = new FilePointer(parent, ret);
+			path = LocalExportDelegate.calculateRelativePath(this.root, ret);
+			id = LocalExportDelegate.calculateCanonicalPathHash(this.root, ret);
 		} catch (IOException e) {
-			throw new RuntimeException(String.format("Failed to create a file pointer for [%s]", ret), e);
+			throw new RuntimeException(String.format(
+				"Failed to calculate the path ID or relative path for [%s] from [%s]", ret, this.root), e);
 		}
-		return new ExportTarget(ret.isFile() ? StoredObjectType.DOCUMENT : StoredObjectType.FOLDER, ptr.getId(),
-			ptr.getPath());
+		return new ExportTarget(ret.isFile() ? StoredObjectType.DOCUMENT : StoredObjectType.FOLDER, id, path);
 	}
 
 	@Override
