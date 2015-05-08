@@ -17,11 +17,11 @@ import javax.activation.MimeType;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
-import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
@@ -192,8 +192,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 		versionNames.add(new StoredValue(this.versionNumber.toString()));
 
-		StoredProperty<StoredValue> current = new StoredProperty<StoredValue>(ShptProperties.CURRENT_VERSION.name,
-			StoredDataType.BOOLEAN, false);
+		StoredProperty<StoredValue> current = new StoredProperty<StoredValue>(
+			IntermediateProperty.IS_LATEST_VERSION.encode(), StoredDataType.BOOLEAN, false);
 		current.setValue(new StoredValue((this.version == null) || this.version.isCurrentVersion()));
 		object.setProperty(current);
 

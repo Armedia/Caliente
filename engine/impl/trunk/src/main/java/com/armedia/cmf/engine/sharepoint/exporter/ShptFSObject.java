@@ -10,9 +10,9 @@ import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
-import com.armedia.cmf.engine.sharepoint.ShptProperties;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
@@ -92,8 +92,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]",
 					path, getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
 			}
-			object.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PATHS.name, StoredDataType.STRING,
-				true, Collections.singleton(new StoredValue(path))));
+			object.setProperty(new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
+				StoredDataType.STRING, true, Collections.singleton(new StoredValue(path))));
 		}
 	}
 
@@ -105,7 +105,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			String parentPath = getServerRelativeUrl();
 			parentPath = FileNameTools.dirname(parentPath, '/');
 			ShptFolder parent = new ShptFolder(this.factory, session.getFolder(parentPath));
-			marshaled.setProperty(new StoredProperty<StoredValue>(ShptProperties.TARGET_PARENTS.name,
+			marshaled.setProperty(new StoredProperty<StoredValue>(IntermediateProperty.PARENT_ID.encode(),
 				StoredDataType.ID, true,
 				Collections.singleton(new StoredValue(StoredDataType.ID, parent.getObjectId()))));
 			ret.add(parent);
