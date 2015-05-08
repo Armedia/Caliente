@@ -17,6 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -34,8 +35,8 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 
 public class LocalExportDelegate
-extends
-ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+	extends
+	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
 		super(factory, LocalFile.class, object);
@@ -74,10 +75,10 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 		att.setValue(new StoredValue(new Date(file.lastModified())));
 		object.setAttribute(att);
 
-		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(PropertyIds.PARENT_ID, StoredDataType.ID,
-			true);
-		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(PropertyIds.PATH, StoredDataType.STRING,
-			true);
+		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(IntermediateProperty.PARENT_ID.encode(),
+			StoredDataType.ID, true);
+		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
+			StoredDataType.STRING, true);
 		if (this.object.getPathCount() > 1) {
 			paths.setValue(new StoredValue(this.object.getPortablePath()));
 		}
