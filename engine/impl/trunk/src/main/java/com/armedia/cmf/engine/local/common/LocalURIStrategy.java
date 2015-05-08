@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -32,7 +33,7 @@ public class LocalURIStrategy extends URIStrategy {
 	protected String calculateSSP(StoredObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		StoredProperty<?> pathAtt = object.getProperty(PropertyIds.PATH);
+		StoredProperty<?> pathAtt = object.getProperty(IntermediateProperty.PATH.encode());
 		StoredAttribute<?> nameAtt = object.getAttribute(PropertyIds.NAME);
 		List<String> pathItems = new ArrayList<String>();
 		if (pathAtt != null) {
