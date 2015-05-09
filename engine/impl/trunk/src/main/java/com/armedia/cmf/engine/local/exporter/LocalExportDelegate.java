@@ -81,6 +81,13 @@ public class LocalExportDelegate
 			StoredDataType.STRING, true);
 		if (this.object.getPathCount() > 1) {
 			paths.setValue(new StoredValue(this.object.getPortablePath()));
+			String parentPath = this.object.getPath();
+			try {
+				parents.setValue(new StoredValue(new LocalFile(this.object.getRootPath(), parentPath).getPathHash()));
+			} catch (IOException e) {
+				throw new ExportException(String.format("Failed to calculate the parent's ID for [%s] (parent = [%s])",
+					this.object.getRelative(), parentPath));
+			}
 		}
 		object.setProperty(paths);
 		object.setProperty(parents);
@@ -160,6 +167,12 @@ public class LocalExportDelegate
 	@Override
 	protected String calculateObjectId(LocalFile object) throws Exception {
 		return object.getPathHash();
+	}
+
+	@Override
+	protected String calculateBatchId(LocalFile object) throws Exception {
+		if (object.getAbsolute().isDirectory()) { return String.format("%08X", object.getPathCount()); }
+		return super.calculateBatchId(object);
 	}
 
 	@Override
