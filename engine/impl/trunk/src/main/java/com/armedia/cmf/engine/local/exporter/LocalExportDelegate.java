@@ -17,6 +17,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
+import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -35,8 +36,8 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 
 public class LocalExportDelegate
-	extends
-	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+extends
+ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
 		super(factory, LocalFile.class, object);
@@ -123,6 +124,12 @@ public class LocalExportDelegate
 		} catch (IOException e) {
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
+
+		StoredAttribute<StoredValue> typeAtt = new StoredAttribute<StoredValue>(
+			IntermediateAttribute.CONTENT_STREAM_MIME_TYPE.encode(), StoredDataType.STRING, false);
+		typeAtt.setValue(new StoredValue(type.getBaseType()));
+		marshalled.setAttribute(typeAtt);
+
 		// TODO: add the attributes...
 		info.setProperty("mimeType", type.getBaseType());
 		info.setProperty("size", String.valueOf(src.length()));
