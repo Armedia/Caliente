@@ -101,7 +101,7 @@ public class MimeTools {
 	public static MimeType determineMimeType(File data) throws IOException {
 		FileInputStream in = new FileInputStream(data);
 		try {
-			return MimeTools.determineMimeType(in);
+			return MimeTools.determineMimeType(data.getName(), in);
 		} finally {
 			IOUtils.closeQuietly(in);
 		}
