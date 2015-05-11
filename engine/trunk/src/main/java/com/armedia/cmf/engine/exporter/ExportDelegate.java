@@ -11,10 +11,56 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, F>>
-extends TransferDelegate<T, S, V, C, F, E> {
+	extends TransferDelegate<T, S, V, C, F, E> {
+	protected final T object;
+	protected final ExportTarget exportTarget;
+	protected final String label;
+	protected final String batchId;
 
 	protected ExportDelegate(F factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+		super(factory, objectClass);
+		if (object == null) { throw new IllegalArgumentException("Must provide a source object to export"); }
+		this.object = object;
+
+		// Now we invoke everything that needs to be calculated
+		this.exportTarget = new ExportTarget(calculateType(object), calculateObjectId(object),
+			calculateSearchKey(object));
+		this.label = calculateLabel(object);
+		this.batchId = calculateBatchId(object);
+	}
+
+	public final ExportTarget getExportTarget() {
+		return this.exportTarget;
+	}
+
+	protected abstract StoredObjectType calculateType(T object) throws Exception;
+
+	public final StoredObjectType getType() {
+		return this.exportTarget.getType();
+	}
+
+	public final String getLabel() {
+		return this.label;
+	}
+
+	protected abstract String calculateObjectId(T object) throws Exception;
+
+	public final String getObjectId() {
+		return this.exportTarget.getId();
+	}
+
+	protected abstract String calculateSearchKey(T object) throws Exception;
+
+	public final String getSearchKey() {
+		return this.exportTarget.getSearchKey();
+	}
+
+	protected String calculateBatchId(T object) throws Exception {
+		return null;
+	}
+
+	public final String getBatchId() {
+		return this.batchId;
 	}
 
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyRequirements(

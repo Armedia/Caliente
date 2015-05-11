@@ -37,15 +37,14 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectCounter;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
  * @author diego
  *
  */
-public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V>>
-	extends
+public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V>, F extends ImportDelegateFactory<S, W, V, C, ?>>
+extends
 TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFactory<S, W, V, C, ?>, ImportEngineListener> {
 
 	private static enum BatchStatus {
@@ -239,9 +238,6 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 
 	protected abstract ImportStrategy getImportStrategy(StoredObjectType type);
 
-	protected abstract ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<V> translator,
-		C ctx) throws ImportException, StorageException, StoredValueDecoderException;
-
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore streamStore, Map<String, ?> settings) throws ImportException, StorageException {
 		return runImport(output, objectStore, streamStore, settings, null);
@@ -267,11 +263,17 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 		}
 
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory;
+		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory;
 		try {
 			try {
 				contextFactory = newContextFactory(configuration);
 			} catch (Exception e) {
 				throw new ImportException("Failed to configure the context factory to carry out the import", e);
+			}
+			try {
+				delegateFactory = newDelegateFactory(configuration);
+			} catch (Exception e) {
+				throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
 			}
 
 			final int threadCount;
@@ -372,7 +374,9 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 											listenerDelegator.objectImportStarted(next);
 											// TODO: Transform the loaded object from the
 											// intermediate format into the target format
-											final ImportOutcome outcome = importObject(next, getTranslator(), ctx);
+											ImportDelegate<?, S, W, V, C, ?, ?> delegate = delegateFactory
+												.newImportDelegate(next);
+											final ImportOutcome outcome = delegate.importObject(getTranslator(), ctx);
 											listenerDelegator.objectImportCompleted(next, outcome);
 											outcomes.put(next.getId(), outcome);
 											if (this.log.isDebugEnabled()) {
@@ -783,7 +787,7 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 		return false;
 	}
 
-	public static ImportEngine<?, ?, ?, ?> getImportEngine(String targetName) {
+	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ImportEngine.class, targetName);
 	}
 
