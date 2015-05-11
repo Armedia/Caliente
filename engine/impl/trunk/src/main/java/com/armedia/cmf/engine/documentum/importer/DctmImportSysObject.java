@@ -306,8 +306,9 @@ DctmSysObject {
 	private TemporaryPermission existingTemporaryPermission = null;
 	private Collection<ParentFolderAction> parentLinkActions = null;
 
-	public DctmImportSysObject(DctmImportEngine engine, DctmObjectType expectedType, StoredObject<IDfValue> storedObject) {
-		super(engine, expectedType, storedObject);
+	public DctmImportSysObject(DctmImportDelegateFactory factory, Class<T> objectClass, DctmObjectType type,
+		StoredObject<IDfValue> storedObject) throws Exception {
+		super(factory, objectClass, type, storedObject);
 	}
 
 	@Override
@@ -622,7 +623,7 @@ DctmSysObject {
 		final boolean seeksReference = isReference();
 		String existingPath = null;
 		T existing = null;
-		final Class<T> dfClass = getDfClass();
+		final Class<T> dfClass = getObjectClass();
 		for (IDfValue p : getTargetPaths()) {
 			final String dql = String.format(dqlBase, DfUtils.quoteString(p.asString()));
 			final String currentPath = String.format("%s/%s", p.asString(), documentName);

@@ -57,8 +57,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	private TemporaryPermission antecedentTemporaryPermission = null;
 	private TemporaryPermission branchTemporaryPermission = null;
 
-	protected DctmImportDocument(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
-		super(engine, DctmObjectType.DOCUMENT, storedObject);
+	protected DctmImportDocument(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject)
+		throws Exception {
+		super(factory, IDfDocument.class, DctmObjectType.DOCUMENT, storedObject);
 	}
 
 	private String calculateVersionString(IDfDocument document, boolean full) throws DfException {
@@ -90,11 +91,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 		throw new ImportException(String.format("None of the parent paths for object [%s] were found", document
 			.getObjectId().getId()));
-	}
-
-	@Override
-	protected String calculateBatchId(IDfDocument document) throws DfException {
-		return document.getChronicleId().getId();
 	}
 
 	@Override

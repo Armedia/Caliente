@@ -17,22 +17,25 @@ import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
-import com.armedia.cmf.engine.documentum.DctmDelegateBase;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
+import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -51,30 +54,39 @@ import com.documentum.fc.common.admin.DfAdminException;
  *
  * @param <T>
  */
-public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends DctmDelegateBase<T, DctmImportEngine> {
+public abstract class DctmImportDelegate<T extends IDfPersistentObject>
+	extends
+	ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
 
 	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory.newStringValue("CURRENT");
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
-	protected final StoredObject<IDfValue> storedObject;
+	private final DctmObjectType dctmType;
 
-	protected DctmImportDelegate(DctmImportEngine engine, DctmObjectType expectedType,
-		StoredObject<IDfValue> storedObject) {
-		super(engine, storedObject.getType());
+	protected DctmImportDelegate(DctmImportDelegateFactory factory, Class<T> objectClass, DctmObjectType expectedType,
+		StoredObject<IDfValue> storedObject) throws Exception {
+		super(factory, objectClass, storedObject);
 		if (expectedType != getDctmType()) { throw new IllegalArgumentException(String.format(
 			"This delegate is meant for [%s], but the given object is of type [%s] (%s)", expectedType, getDctmType(),
 			storedObject.getType())); }
-		this.storedObject = storedObject;
+		this.dctmType = expectedType;
 	}
 
+	protected final T castObject(IDfPersistentObject object) throws DfException {
+		if (object == null) { return null; }
+		Class<T> dfClass = getObjectClass();
+		if (!dfClass.isInstance(object)) { throw new DfException(String.format(
+			"Expected an object of class %s, but got one of class %s", dfClass.getCanonicalName(), object.getClass()
+				.getCanonicalName())); }
+		return dfClass.cast(object);
+	}
+
+	public final DctmObjectType getDctmType() {
+		return this.dctmType;
+	}
+
+	@Override
 	protected abstract String calculateLabel(T object) throws DfException, ImportException;
-
-	protected String calculateBatchId(T object) throws DfException {
-		// We use this trick to avoid requiring subclasses to implement this method, but also
-		// because we've structured our code to ensure that it's only called for subclasses
-		// that really should implement it
-		throw new AbstractMethodError("calculateBatchId() must be overridden by subclasses that support batching");
-	}
 
 	protected final StoredAttribute<IDfValue> newStoredAttribute(IDfAttr attr, IDfValue... values) {
 		if (values == null) {
@@ -109,46 +121,54 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		return false;
 	}
 
-	public final ImportOutcome importObject(DctmImportContext context) throws DfException, ImportException {
+	@Override
+	protected final ImportOutcome importObject(ObjectStorageTranslator<IDfValue> translator, DctmImportContext context)
+		throws ImportException, StorageException, StoredValueDecoderException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		final IDfSession session = context.getSession();
 		boolean ok = false;
 		final IDfLocalTransaction localTx;
-		if (session.isTransactionActive()) {
-			localTx = session.beginTransEx();
-		} else {
-			localTx = null;
-			session.beginTrans();
-		}
 		try {
-			ImportOutcome ret = doImportObject(context);
-			this.log.debug(String.format("Committing the transaction for [%s](%s)", this.storedObject.getLabel(),
-				this.storedObject.getId()));
-			if (localTx != null) {
-				session.commitTransEx(localTx);
+			if (session.isTransactionActive()) {
+				localTx = session.beginTransEx();
 			} else {
-				session.commitTrans();
+				localTx = null;
+				session.beginTrans();
 			}
-			ok = true;
-			return ret;
-		} finally {
-			if (!ok) {
-				this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
+			try {
+				ImportOutcome ret = doImportObject(context);
+				this.log.debug(String.format("Committing the transaction for [%s](%s)", this.storedObject.getLabel(),
 					this.storedObject.getId()));
-				try {
-					if (localTx != null) {
-						session.abortTransEx(localTx);
-					} else {
-						session.abortTrans();
+				if (localTx != null) {
+					session.commitTransEx(localTx);
+				} else {
+					session.commitTrans();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (!ok) {
+					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
+						this.storedObject.getId()));
+					try {
+						if (localTx != null) {
+							session.abortTransEx(localTx);
+						} else {
+							session.abortTrans();
+						}
+					} catch (DfException e) {
+						// We log this here and don't raise it because if we're aborting, it means
+						// that there's another exception already bubbling up, so we don't want
+						// to intercept that
+						this.log.error(
+							String.format("Failed to roll back the transaction for [%s](%s)",
+								this.storedObject.getLabel(), this.storedObject.getId()), e);
 					}
-				} catch (DfException e) {
-					// We log this here and don't raise it because if we're aborting, it means
-					// that there's another exception already bubbling up, so we don't want
-					// to intercept that
-					this.log.error(String.format("Failed to roll back the transaction for [%s](%s)",
-						this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			}
+		} catch (DfException e) {
+			throw new ImportException(String.format("Documentum Exception caught while processing [%s](%s)",
+				this.storedObject.getLabel(), this.storedObject.getId()), e);
 		}
 	}
 
@@ -321,11 +341,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							this.storedObject.getLabel(), this.storedObject.getId()), e);
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
@@ -398,7 +418,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	/**
@@ -412,16 +432,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
@@ -746,7 +766,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	@Override
 	public String toString() {
 		return String.format("CmsObject [type=%s, subtype=%s, dfClass=%s, id=%s, label=%s]", getDctmType(),
-			this.storedObject.getSubtype(), getDfClass().getSimpleName(), this.storedObject.getId(),
+			this.storedObject.getSubtype(), getObjectClass().getSimpleName(), this.storedObject.getId(),
 			this.storedObject.getLabel());
 	}
 }

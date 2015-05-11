@@ -41,8 +41,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	private static final String FIND_USER_BY_LOGIN_DQL = "select distinct user_name, user_login_domain from dm_user where user_login_name = %s order by user_login_domain";
 	private static final String USERNAME_MAPPING_NAME = "userName";
 
-	public DctmImportUser(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
-		super(engine, DctmObjectType.USER, storedObject);
+	public DctmImportUser(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+		super(factory, IDfUser.class, DctmObjectType.USER, storedObject);
 	}
 
 	@Override

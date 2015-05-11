@@ -34,7 +34,8 @@ public class DctmImportContextFactory extends
 	@Override
 	protected DctmImportContext constructContext(String rootId, StoredObjectType rootType, IDfSession session,
 		Logger output, ObjectStore<?, ?> objectStore, ContentStore contentStore) {
-		return new DctmImportContext(this, rootId, rootType, session, output, objectStore, contentStore);
+		return new DctmImportContext(this, getSettings(), rootId, rootType, session, output, getEngine()
+			.getTranslator(), objectStore, contentStore);
 	}
 
 	public final DctmSpecialValues getSpecialValues() {

@@ -4,11 +4,6 @@
 
 package com.armedia.cmf.engine.documentum.importer;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
@@ -31,8 +26,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportType extends DctmImportDelegate<IDfType> {
 
-	DctmImportType(DctmImportEngine engine, StoredObject<IDfValue> object) {
-		super(engine, DctmObjectType.TYPE, object);
+	DctmImportType(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+		super(factory, IDfType.class, DctmObjectType.TYPE, storedObject);
 	}
 
 	@Override
@@ -44,44 +39,6 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			superName = "";
 		}
 		return String.format("%s%s", type.getName(), superName);
-	}
-
-	private int calculateDepth(IDfSession session, String typeName, Set<String> visited) throws DfException {
-		// If the folder has already been visited, we have a loop...so let's explode loudly
-		if (visited.contains(typeName)) { throw new DfException(String.format(
-			"Type loop detected, element [%s] exists twice: %s", typeName, visited.toString())); }
-		visited.add(typeName);
-		try {
-			int depth = 0;
-			String dql = String.format("select super_name from dm_type where name = '%s'", typeName);
-			IDfCollection results = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
-			try {
-				while (results.next()) {
-					// My depth is the maximum depth from any of my parents, plus one
-					String superName = results.getString(DctmAttributes.SUPER_NAME);
-					if (results.isNull(DctmAttributes.SUPER_NAME) || StringUtils.isBlank(superName)) {
-						continue;
-					}
-					depth = Math.max(depth, calculateDepth(session, superName, visited) + 1);
-				}
-			} finally {
-				DfUtils.closeQuietly(results);
-			}
-			return depth;
-		} finally {
-			visited.remove(typeName);
-		}
-	}
-
-	@Override
-	protected String calculateBatchId(IDfType type) throws DfException {
-		// Calculate the maximum depth that this folder resides in, from its parents.
-		// Keep track of visited nodes, and explode on a loop.
-		Set<String> visited = new LinkedHashSet<String>();
-		int depth = calculateDepth(type.getSession(), type.getName(), visited);
-		// We return it in zero-padded hex to allow for large numbers (up to 2^64
-		// depth), and also maintain consistent sorting
-		return String.format("%016x", depth);
 	}
 
 	@Override

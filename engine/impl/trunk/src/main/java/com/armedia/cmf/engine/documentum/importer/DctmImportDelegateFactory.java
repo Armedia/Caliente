@@ -11,33 +11,35 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
 public class DctmImportDelegateFactory extends
-ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
+	ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
 
 	protected DctmImportDelegateFactory(DctmImportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
-	public static DctmImportDelegate<?> newDelegate(DctmImportEngine engine, StoredObject<IDfValue> marshaled)
-		throws UnsupportedObjectTypeException, UnsupportedDctmObjectTypeException {
+	@Override
+	protected DctmImportDelegate<?> newImportDelegate(StoredObject<?> marshaled) throws Exception {
 		DctmObjectType type = DctmObjectType.decodeType(marshaled.getType());
 		if (type == null) { throw new UnsupportedObjectTypeException(marshaled.getType()); }
+		@SuppressWarnings("unchecked")
+		final StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		switch (type) {
 			case ACL:
-				return new DctmImportACL(engine, marshaled);
+				return new DctmImportACL(this, castedMarshaled);
 			case DOCUMENT:
-				return new DctmImportDocument(engine, marshaled);
+				return new DctmImportDocument(this, castedMarshaled);
 			case STORE:
-				return new DctmImportStore(engine, marshaled);
+				return new DctmImportStore(this, castedMarshaled);
 			case FOLDER:
-				return new DctmImportFolder(engine, marshaled);
+				return new DctmImportFolder(this, castedMarshaled);
 			case FORMAT:
-				return new DctmImportFormat(engine, marshaled);
+				return new DctmImportFormat(this, castedMarshaled);
 			case GROUP:
-				return new DctmImportGroup(engine, marshaled);
+				return new DctmImportGroup(this, castedMarshaled);
 			case TYPE:
-				return new DctmImportType(engine, marshaled);
+				return new DctmImportType(this, castedMarshaled);
 			case USER:
-				return new DctmImportUser(engine, marshaled);
+				return new DctmImportUser(this, castedMarshaled);
 			default:
 				break;
 		}

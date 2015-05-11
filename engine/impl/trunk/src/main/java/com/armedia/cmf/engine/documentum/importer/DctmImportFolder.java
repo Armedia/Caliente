@@ -33,8 +33,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements DctmFolder {
 
-	public DctmImportFolder(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
-		super(engine, DctmObjectType.FOLDER, storedObject);
+	public DctmImportFolder(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+		super(factory, IDfFolder.class, DctmObjectType.FOLDER, storedObject);
 	}
 
 	@Override
@@ -169,11 +169,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-				.warn(
-					String
-					.format(
-						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-						actualUser, this.storedObject.getLabel()), e);
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+								actualUser, this.storedObject.getLabel()), e);
 			}
 		}
 	}

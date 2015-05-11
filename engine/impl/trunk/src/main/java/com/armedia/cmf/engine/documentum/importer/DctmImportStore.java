@@ -21,8 +21,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportStore extends DctmImportDelegate<IDfStore> {
 
-	public DctmImportStore(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
-		super(engine, DctmObjectType.STORE, storedObject);
+	public DctmImportStore(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+		super(factory, IDfStore.class, DctmObjectType.STORE, storedObject);
 	}
 
 	@Override

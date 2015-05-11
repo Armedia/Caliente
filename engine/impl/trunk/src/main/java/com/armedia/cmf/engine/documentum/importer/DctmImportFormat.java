@@ -18,8 +18,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportFormat extends DctmImportDelegate<IDfFormat> {
 
-	public DctmImportFormat(DctmImportEngine engine, StoredObject<IDfValue> storedObject) {
-		super(engine, DctmObjectType.FORMAT, storedObject);
+	public DctmImportFormat(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+		super(factory, IDfFormat.class, DctmObjectType.FORMAT, storedObject);
 	}
 
 	@Override
