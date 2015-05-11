@@ -25,6 +25,4 @@ public abstract class TransferDelegate<T, S, V, C extends TransferContext<S, V>,
 	public final Class<T> getObjectClass() {
 		return this.objectClass;
 	}
-
-	protected abstract String calculateLabel(T object) throws Exception;
 }
