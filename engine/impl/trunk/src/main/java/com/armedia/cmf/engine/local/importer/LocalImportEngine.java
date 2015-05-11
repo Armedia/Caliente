@@ -1,56 +1,132 @@
 package com.armedia.cmf.engine.local.importer;
 
+import java.text.ParseException;
 import java.util.Set;
 
 import com.armedia.cmf.engine.importer.ImportEngine;
-import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.local.common.LocalCommon;
+import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionFactory;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
-import com.armedia.cmf.engine.local.common.LocalRoot;
+import com.armedia.cmf.engine.local.common.LocalTranslator;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
-import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
-import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalImportEngine extends ImportEngine<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext> {
+public class LocalImportEngine extends
+ImportEngine<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory> {
+
+	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return false;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return true;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+	};
+
+	private static final ImportStrategy DOCUMENT_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return true;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return true;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+	};
+
+	private static final ImportStrategy FOLDER_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return true;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_CONCURRENT;
+		}
+	};
 
 	@Override
 	protected ImportStrategy getImportStrategy(StoredObjectType type) {
 		switch (type) {
-			case ACL:
 			case DOCUMENT:
+				return LocalImportEngine.DOCUMENT_STRATEGY;
 			case FOLDER:
-				break;
+				return LocalImportEngine.FOLDER_STRATEGY;
 			default:
-				return null;
+				return LocalImportEngine.IGNORE_STRATEGY;
 		}
-		return null;
-	}
-
-	@Override
-	protected ImportOutcome importObject(StoredObject<?> marshaled, ObjectStorageTranslator<StoredValue> translator,
-		LocalImportContext ctx) throws ImportException, StorageException, StoredValueDecoderException {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
 	protected StoredValue getValue(StoredDataType type, Object value) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			return new StoredValue(type, value);
+		} catch (ParseException e) {
+			throw new RuntimeException(String.format("Can't convert [%s] as a %s", value, type), e);
+		}
 	}
 
 	@Override
 	protected ObjectStorageTranslator<StoredValue> getTranslator() {
-		// TODO Auto-generated method stub
-		return null;
+		return new LocalTranslator();
 	}
 
 	@Override
