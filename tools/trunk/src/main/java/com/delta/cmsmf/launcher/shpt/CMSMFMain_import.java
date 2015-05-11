@@ -11,8 +11,8 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain;
 
-public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?>> implements
-ImportEngineListener {
+public class CMSMFMain_import extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements
+	ImportEngineListener {
 
 	public CMSMFMain_import() throws Throwable {
 		super(ImportEngine.getImportEngine("dctm"));
