@@ -23,6 +23,7 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
@@ -117,7 +118,10 @@ public class LocalContentStore extends ContentStore<URI> {
 	protected final File doGetFile(URI locator) {
 		String ssp = locator.getSchemeSpecificPart();
 		String frag = locator.getFragment();
-		String path = (frag != null ? String.format("%s%s", ssp, frag) : ssp);
+		String path = ssp;
+		if (!StringUtils.isBlank(frag)) {
+			path = (frag != null ? String.format("%s#%s", ssp, frag) : ssp);
+		}
 		return new File(this.baseDir, path);
 	}
 
