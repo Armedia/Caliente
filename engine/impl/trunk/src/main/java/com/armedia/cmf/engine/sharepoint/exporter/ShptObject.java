@@ -15,6 +15,7 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
 
@@ -68,8 +69,8 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(ShptSession session, StoredObject<StoredValue> marshalled,
-		ExportTarget referrent, ContentStore streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(ShptSession session, ObjectStorageTranslator<StoredValue> translator,
+		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
