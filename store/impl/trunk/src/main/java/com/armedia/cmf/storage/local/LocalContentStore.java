@@ -25,6 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
@@ -91,10 +92,10 @@ public class LocalContentStore extends ContentStore {
 	}
 
 	@Override
-	protected URI doAllocateHandleId(StoredObject<?> object, String qualifier) {
+	protected URI doAllocateHandleId(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		try {
-			return new URI(LocalContentStore.SCHEME, this.strategy.getSSP(object), this.strategy.calculateFragment(
-				object, qualifier));
+			return new URI(LocalContentStore.SCHEME, this.strategy.getSSP(translator, object),
+				this.strategy.calculateFragment(translator, object, qualifier));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(String.format("Failed to allocate a handle ID for %s[%s]", object.getType(),
 				object.getId()), e);
