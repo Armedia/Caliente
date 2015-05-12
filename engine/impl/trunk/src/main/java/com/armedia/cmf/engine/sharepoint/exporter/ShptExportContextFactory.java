@@ -28,7 +28,7 @@ ExportContextFactory<ShptSession, ShptSessionWrapper, StoredValue, ShptExportCon
 
 	@Override
 	protected ShptExportContext constructContext(String rootId, StoredObjectType rootType, ShptSession session,
-		Logger output, ObjectStore<?, ?> objectStore, ContentStore contentStore) {
+		Logger output, ObjectStore<?, ?> objectStore, ContentStore<?> contentStore) {
 		return new ShptExportContext(this, getSettings(), rootId, rootType, session, output);
 	}
 }

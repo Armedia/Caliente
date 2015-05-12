@@ -70,7 +70,7 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 
 	@Override
 	protected List<ContentInfo> storeContent(ShptSession session, ObjectStorageTranslator<StoredValue> translator,
-		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception {
+		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
