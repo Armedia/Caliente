@@ -28,6 +28,7 @@ import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -111,8 +112,8 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(LocalRoot session, StoredObject<StoredValue> marshalled,
-		ExportTarget referrent, ContentStore streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(LocalRoot session, ObjectStorageTranslator<StoredValue> translator,
+		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception {
 		if (getType() != StoredObjectType.DOCUMENT) { return null; }
 
 		List<ContentInfo> ret = new ArrayList<ContentInfo>(1);
@@ -135,7 +136,7 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 		info.setProperty("size", String.valueOf(src.length()));
 		info.setProperty("fileName", src.getName());
 
-		Handle h = streamStore.getHandle(marshalled, info.getQualifier());
+		Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
 		File tgt = h.getFile();
 		if (tgt != null) {
 			if (this.log.isDebugEnabled()) {
