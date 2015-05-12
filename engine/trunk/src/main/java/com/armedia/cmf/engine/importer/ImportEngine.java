@@ -239,12 +239,12 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 	protected abstract ImportStrategy getImportStrategy(StoredObjectType type);
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore streamStore, Map<String, ?> settings) throws ImportException, StorageException {
+		final ContentStore<?> streamStore, Map<String, ?> settings) throws ImportException, StorageException {
 		return runImport(output, objectStore, streamStore, settings, null);
 	}
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
+		final ContentStore<?> streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
 			throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
@@ -796,7 +796,7 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 	protected void initContext(C ctx) {
 	}
 
-	protected void prepareImport(Map<String, ?> settings, ObjectStore<?, ?> objectStore, ContentStore contentStore)
+	protected void prepareImport(Map<String, ?> settings, ObjectStore<?, ?> objectStore, ContentStore<?> contentStore)
 		throws StorageException, ImportException {
 		// In case we wish to do something before the import process runs...
 	}

@@ -12,7 +12,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, F>>
-	extends TransferDelegate<T, S, V, C, F, E> {
+extends TransferDelegate<T, S, V, C, F, E> {
 	protected final T object;
 	protected final ExportTarget exportTarget;
 	protected final String label;
@@ -84,5 +84,5 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		StoredObject<V> marshalled, C ctx) throws Exception;
 
 	protected abstract List<ContentInfo> storeContent(S session, ObjectStorageTranslator<V> translator,
-		StoredObject<V> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception;
+		StoredObject<V> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception;
 }

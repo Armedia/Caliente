@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, ?>>
-	extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEngineListener> {
+extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEngineListener> {
 
 	private class Result {
 		private final Long objectNumber;
@@ -144,7 +144,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore,
+	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStore<?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
 		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
 		StoredValueEncoderException, UnsupportedObjectTypeException {
@@ -171,7 +171,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private Result doExportObject(final ObjectStore<?, ?> objectStore, final ContentStore streamStore,
+	private Result doExportObject(final ObjectStore<?, ?> objectStore, final ContentStore<?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
 		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
 		StoredValueEncoderException, UnsupportedObjectTypeException {
@@ -317,12 +317,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore contentStore, Map<String, ?> settings) throws ExportException, StorageException {
+		final ContentStore<?> contentStore, Map<String, ?> settings) throws ExportException, StorageException {
 		return runExport(output, objectStore, contentStore, settings, null);
 	}
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
+		final ContentStore<?> contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
 			throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 

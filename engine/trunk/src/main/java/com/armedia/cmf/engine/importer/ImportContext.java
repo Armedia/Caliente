@@ -21,11 +21,11 @@ public abstract class ImportContext<S, V> extends TransferContext<S, V> {
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final ObjectStore<?, ?> objectStore;
 	private final ObjectStorageTranslator<V> translator;
-	private final ContentStore streamStore;
+	private final ContentStore<?> streamStore;
 
 	public <C extends ImportContext<S, V>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output,
-		ObjectStorageTranslator<V> translator, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		ObjectStorageTranslator<V> translator, ObjectStore<?, ?> objectStore, ContentStore<?> streamStore) {
 		super(factory, settings, rootId, rootType, session, output);
 		this.factory = factory;
 		this.translator = translator;
@@ -42,7 +42,7 @@ public abstract class ImportContext<S, V> extends TransferContext<S, V> {
 		return this.objectStore.loadObjects(this.translator, type, ids, handler);
 	}
 
-	public final ContentStore getContentStore() {
+	public final ContentStore<?> getContentStore() {
 		return this.streamStore;
 	}
 
