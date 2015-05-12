@@ -14,6 +14,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.cmf.engine.TransferSetting;
+import com.armedia.cmf.engine.documentum.DocumentumURIStrategy;
 import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
@@ -286,6 +287,6 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 
 	@Override
 	protected String getContentStrategyName() {
-		return "cmsmf";
+		return DocumentumURIStrategy.NAME;
 	}
 }

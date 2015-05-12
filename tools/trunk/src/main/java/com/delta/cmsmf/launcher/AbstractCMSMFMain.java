@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.tools.LocalURIStrategy;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StoreFactory;
@@ -117,6 +118,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	}
 
 	protected String getContentStrategyName() {
-		return null;
+		return LocalURIStrategy.NAME;
 	}
 }

@@ -31,7 +31,7 @@ import com.delta.cmsmf.launcher.ExportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
-ExportEngineListener {
+	ExportEngineListener {
 
 	public CMSMFMain_export() throws Throwable {
 		super(LocalExportEngine.getExportEngine());
@@ -186,10 +186,5 @@ ExportEngineListener {
 			}
 			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
 		}
-	}
-
-	@Override
-	protected String getContentStrategyName() {
-		return "local";
 	}
 }
