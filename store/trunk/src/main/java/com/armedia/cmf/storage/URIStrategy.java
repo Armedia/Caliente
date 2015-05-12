@@ -16,7 +16,7 @@ public abstract class URIStrategy {
 
 	private static final URIStrategy DEFAULT_STRATEGY = new URIStrategy() {
 		@Override
-		protected String calculateSSP(StoredObject<?> object) {
+		protected String calculateSSP(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
 			return null;
 		}
 	};
@@ -38,16 +38,16 @@ public abstract class URIStrategy {
 			if (name == null) {
 				URIStrategy.LOG.warn(String.format(
 					"Path Strategy [%s] did not provide a name, so it won't be registered", s.getClass()
-					.getCanonicalName()));
+						.getCanonicalName()));
 				continue;
 			}
 			URIStrategy old = strategies.get(name);
 			if (old != null) {
 				URIStrategy.LOG
-				.warn(String
-					.format(
-						"URIStrategy [%s] provides the name [%s], but this collides with already-registered strategy [%s]. The newcomer will be ignored.",
-						s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
+					.warn(String
+						.format(
+							"URIStrategy [%s] provides the name [%s], but this collides with already-registered strategy [%s]. The newcomer will be ignored.",
+							s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
 				continue;
 			}
 			URIStrategy.LOG.debug("Registering URIStrategy [{}] as [{}]", s.getClass().getCanonicalName(), name);
@@ -79,7 +79,7 @@ public abstract class URIStrategy {
 		return this.name;
 	}
 
-	public String calculateFragment(StoredObject<?> object, String qualifier) {
+	public String calculateFragment(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		return qualifier;
 	}
 
@@ -87,10 +87,10 @@ public abstract class URIStrategy {
 		return String.format("%s/%s", object.getType(), object.getId());
 	}
 
-	protected abstract String calculateSSP(StoredObject<?> object);
+	protected abstract String calculateSSP(ObjectStorageTranslator<?> translator, StoredObject<?> object);
 
-	public final String getSSP(StoredObject<?> object) {
-		String ssp = calculateSSP(object);
+	public final String getSSP(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
+		String ssp = calculateSSP(translator, object);
 		if (ssp == null) {
 			ssp = getDefaultSSP(object);
 		}

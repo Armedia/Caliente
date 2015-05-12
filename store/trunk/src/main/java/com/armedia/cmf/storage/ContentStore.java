@@ -268,19 +268,19 @@ public abstract class ContentStore extends Store {
 		return handle.uri;
 	}
 
-	public final Handle getHandle(StoredObject<?> object, String qualifier) {
+	public final Handle getHandle(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
-		return constructHandle(object, qualifier, allocateHandleId(object, qualifier));
+		return constructHandle(object, qualifier, allocateHandleId(translator, object, qualifier));
 	}
 
-	protected final URI allocateHandleId(StoredObject<?> object, String qualifier) {
+	protected final URI allocateHandleId(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doAllocateHandleId(object, qualifier);
+			return doAllocateHandleId(translator, object, qualifier);
 		} finally {
 			getReadLock().unlock();
 		}
@@ -368,7 +368,8 @@ public abstract class ContentStore extends Store {
 		}
 	}
 
-	protected abstract URI doAllocateHandleId(StoredObject<?> object, String qualifier);
+	protected abstract URI doAllocateHandleId(ObjectStorageTranslator<?> translator, StoredObject<?> object,
+		String qualifier);
 
 	protected abstract File doGetFile(URI uri);
 
