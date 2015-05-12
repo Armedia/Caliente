@@ -6,13 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
+import java.io.Serializable;
 
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class ContentStore extends Store {
+public abstract class ContentStore<L extends Serializable> extends Store {
 
 	protected static final int MIN_BUFFER_SIZE = 4096;
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
@@ -20,25 +20,22 @@ public abstract class ContentStore extends Store {
 
 	public static final String DEFAULT_QUALIFIER = "content";
 
-	public static final class Handle {
-		private final ContentStore sourceStore;
+	public abstract class Handle {
 		private final StoredObjectType objectType;
 		private final String objectId;
 		private final String qualifier;
-		private final URI uri;
+		private final L locator;
 
-		private Handle(ContentStore sourceStore, StoredObjectType objectType, String objectId, String qualifier, URI uri) {
-			if (sourceStore == null) { throw new IllegalArgumentException("Must provide a source ContentStore"); }
+		protected Handle(StoredObjectType objectType, String objectId, String qualifier, L locator) {
 			if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 			if (objectId == null) { throw new IllegalArgumentException("Must provide an object id"); }
 			if (qualifier == null) { throw new IllegalArgumentException("Must provide a content qualifier"); }
-			if (uri == null) { throw new IllegalArgumentException(
-				"Must provide a URI to identify the content within the store"); }
-			this.sourceStore = sourceStore;
+			if (locator == null) { throw new IllegalArgumentException(
+				"Must provide a locator string to identify the content within the store"); }
 			this.objectType = objectType;
 			this.objectId = objectId;
 			this.qualifier = qualifier;
-			this.uri = uri;
+			this.locator = locator;
 		}
 
 		/**
@@ -48,7 +45,7 @@ public abstract class ContentStore extends Store {
 		 *
 		 * @return the type of object whose content this handle points to.
 		 */
-		public StoredObjectType getObjectType() {
+		public final StoredObjectType getObjectType() {
 			return this.objectType;
 		}
 
@@ -59,7 +56,7 @@ public abstract class ContentStore extends Store {
 		 *
 		 * @return the ID for the object whose content this handle points to.
 		 */
-		public String getObjectId() {
+		public final String getObjectId() {
 			return this.objectId;
 		}
 
@@ -70,7 +67,7 @@ public abstract class ContentStore extends Store {
 		 *
 		 * @return the qualifier for this content stream
 		 */
-		public String getQualifier() {
+		public final String getQualifier() {
 			return this.qualifier;
 		}
 
@@ -81,8 +78,8 @@ public abstract class ContentStore extends Store {
 		 *
 		 * @return the {@link ContentStore} from which this handle was obtained.
 		 */
-		public ContentStore getSourceStore() {
-			return this.sourceStore;
+		public final ContentStore<L> getSourceStore() {
+			return ContentStore.this;
 		}
 
 		/**
@@ -100,8 +97,8 @@ public abstract class ContentStore extends Store {
 		 * @return a {@link File} object that leads to the actual content file (existent or not), or
 		 *         {@code null} if this functionality is not supported.
 		 */
-		public File getFile() {
-			return this.sourceStore.getFile(this.uri);
+		public final File getFile() {
+			return ContentStore.this.getFile(this.locator);
 		}
 
 		/**
@@ -117,8 +114,8 @@ public abstract class ContentStore extends Store {
 		 *         {@code null} if this handle refers to an as-yet non-existent content stream
 		 * @throws IOException
 		 */
-		public InputStream openInput() throws IOException {
-			return this.sourceStore.openInput(this.uri);
+		public final InputStream openInput() throws IOException {
+			return ContentStore.this.openInput(this.locator);
 		}
 
 		/**
@@ -219,8 +216,8 @@ public abstract class ContentStore extends Store {
 		 * @return an {@link OutputStream} that can be used to write to the actual content file
 		 * @throws IOException
 		 */
-		public OutputStream openOutput() throws IOException {
-			return this.sourceStore.openOutput(this.uri);
+		public final OutputStream openOutput() throws IOException {
+			return ContentStore.this.openOutput(this.locator);
 		}
 
 		/**
@@ -232,8 +229,8 @@ public abstract class ContentStore extends Store {
 		 * @return {@code true} if this content stream already exists, or {@code false} if this
 		 *         handle is simply a placeholder
 		 */
-		public boolean isExists() {
-			return this.sourceStore.isExists(this.uri);
+		public final boolean isExists() {
+			return ContentStore.this.isExists(this.locator);
 		}
 
 		/**
@@ -244,64 +241,62 @@ public abstract class ContentStore extends Store {
 		 *
 		 * @return the length in bytes for the underlying content stream, or -1 if it doesn't exist
 		 */
-		public long getStreamSize() {
-			return this.sourceStore.getStreamSize(this.uri);
+		public final long getStreamSize() {
+			return ContentStore.this.getStreamSize(this.locator);
 		}
 	}
 
-	protected abstract boolean isSupportedURI(URI uri);
+	protected abstract boolean isSupported(L locator);
 
 	protected abstract boolean isSupportsFileAccess();
 
-	protected final void validateURI(URI uri) {
-		if (uri == null) { throw new IllegalArgumentException("Must provide a URI to validate"); }
-		if (!isSupportedURI(uri)) { throw new IllegalArgumentException(String.format(
-			"The URI [%s] is not supported by ContentStore class [%s]", uri, getClass().getCanonicalName())); }
+	protected final void validateLocator(L locator) {
+		if (locator == null) { throw new IllegalArgumentException("Must provide a non-null locator"); }
+		if (!isSupported(locator)) { throw new IllegalArgumentException(String.format(
+			"The locator [%s] is not supported by ContentStore class [%s]", locator, getClass().getCanonicalName())); }
 	}
 
-	protected final Handle constructHandle(StoredObject<?> object, String qualifier, URI uri) {
-		return new Handle(this, object.getType(), object.getId(), qualifier, uri);
-	}
+	protected abstract Handle constructHandle(StoredObject<?> object, String qualifier, L locator);
 
-	protected final URI extractURI(Handle handle) {
-		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose URI to extract"); }
-		return handle.uri;
+	protected final L extractLocator(Handle handle) {
+		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose locator to extract"); }
+		return handle.locator;
 	}
 
 	public final Handle getHandle(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
-		return constructHandle(object, qualifier, allocateHandleId(translator, object, qualifier));
+		return constructHandle(object, qualifier, calculateLocator(translator, object, qualifier));
 	}
 
-	protected final URI allocateHandleId(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	protected final L calculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doAllocateHandleId(translator, object, qualifier);
+			return doCalculateLocator(translator, object, qualifier);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected final File getFile(URI uri) {
-		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+	protected final File getFile(L locator) {
+		if (locator == null) { throw new IllegalArgumentException("Must provide a locator string"); }
 		// Short-cut, no need to luck if we won't do anything
 		if (!isSupportsFileAccess()) { return null; }
-		validateURI(uri);
+		validateLocator(locator);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			File ret = doGetFile(uri);
+			File ret = doGetFile(locator);
 			try {
 				return ret.getCanonicalFile();
 			} catch (IOException e) {
 				// Can't canonicalize
 				if (this.log.isTraceEnabled()) {
 					this.log.error(String.format("Error canonicalizing file [%s] obtained from URI [%s]",
-						ret.getAbsolutePath(), uri.toString()), e);
+						ret.getAbsolutePath(), locator), e);
 				}
 				return ret;
 			}
@@ -310,49 +305,48 @@ public abstract class ContentStore extends Store {
 		}
 	}
 
-	protected final InputStream openInput(URI uri) throws IOException {
-		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(uri);
+	protected final InputStream openInput(L locator) throws IOException {
+		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateLocator(locator);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doOpenInput(uri);
+			return doOpenInput(locator);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected final OutputStream openOutput(URI uri) throws IOException {
-		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(uri);
+	protected final OutputStream openOutput(L locator) throws IOException {
+		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateLocator(locator);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doOpenOutput(uri);
+			return doOpenOutput(locator);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected final boolean isExists(URI uri) {
-		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(uri);
+	protected final boolean isExists(L locator) {
+		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
+		validateLocator(locator);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doIsExists(uri);
+			return doIsExists(locator);
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	protected final long getStreamSize(URI uri) {
-		if (uri == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
-		validateURI(uri);
+	protected final long getStreamSize(L locator) {
+		validateLocator(locator);
 		getReadLock().lock();
 		try {
 			assertOpen();
-			return doGetStreamSize(uri);
+			return doGetStreamSize(locator);
 		} finally {
 			getReadLock().unlock();
 		}
@@ -368,18 +362,18 @@ public abstract class ContentStore extends Store {
 		}
 	}
 
-	protected abstract URI doAllocateHandleId(ObjectStorageTranslator<?> translator, StoredObject<?> object,
+	protected abstract L doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object,
 		String qualifier);
 
-	protected abstract File doGetFile(URI uri);
+	protected abstract File doGetFile(L locator);
 
-	protected abstract InputStream doOpenInput(URI uri) throws IOException;
+	protected abstract InputStream doOpenInput(L locator) throws IOException;
 
-	protected abstract OutputStream doOpenOutput(URI uri) throws IOException;
+	protected abstract OutputStream doOpenOutput(L locator) throws IOException;
 
-	protected abstract boolean doIsExists(URI uri);
+	protected abstract boolean doIsExists(L locator);
 
-	protected abstract long doGetStreamSize(URI uri);
+	protected abstract long doGetStreamSize(L locator);
 
 	protected abstract void doClearAllStreams();
 }

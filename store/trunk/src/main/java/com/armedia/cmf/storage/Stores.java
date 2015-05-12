@@ -332,7 +332,7 @@ public final class Stores {
 		}
 	}
 
-	public static ContentStore createContentStore(StoreConfiguration configuration) throws StorageException,
+	public static ContentStore<?> createContentStore(StoreConfiguration configuration) throws StorageException,
 		DuplicateStoreException {
 		Stores.initialize();
 		Stores.LOCK.readLock().lock();
@@ -373,7 +373,7 @@ public final class Stores {
 		}
 	}
 
-	public static ContentStore getContentStore(String name) {
+	public static ContentStore<?> getContentStore(String name) {
 		Stores.initialize();
 		Stores.LOCK.readLock().lock();
 		try {
