@@ -13,6 +13,7 @@ import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -50,9 +51,9 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 	}
 
 	@Override
-	protected final List<ContentInfo> storeContent(Session session, StoredObject<StoredValue> marshalled,
-		ExportTarget referrent, ContentStore streamStore) throws Exception {
-		return super.storeContent(session, marshalled, referrent, streamStore);
+	protected final List<ContentInfo> storeContent(Session session, ObjectStorageTranslator<StoredValue> translator,
+		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception {
+		return super.storeContent(session, translator, marshalled, referrent, streamStore);
 	}
 
 	@Override

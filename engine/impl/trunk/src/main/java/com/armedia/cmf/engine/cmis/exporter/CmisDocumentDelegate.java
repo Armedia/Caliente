@@ -21,6 +21,7 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -122,11 +123,11 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(Session session, StoredObject<StoredValue> marshalled,
-		ExportTarget referrent, ContentStore streamStore) throws Exception {
-		List<ContentInfo> ret = super.storeContent(session, marshalled, referrent, streamStore);
+	protected List<ContentInfo> storeContent(Session session, ObjectStorageTranslator<StoredValue> translator,
+		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception {
+		List<ContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
-		Handle mainHandle = storeContentStream(marshalled, null, main, streamStore);
+		Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
 		ContentInfo mainInfo = new ContentInfo(mainHandle.getQualifier());
 		mainInfo.setProperty("mimeType", main.getMimeType());
 		mainInfo.setProperty("size", String.valueOf(main.getLength()));
@@ -134,7 +135,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
 			ContentStream cs = r.getContentStream();
-			Handle handle = storeContentStream(marshalled, r, cs, streamStore);
+			Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
 			ContentInfo info = new ContentInfo(handle.getQualifier());
 			info.setProperty("kind", r.getKind());
 			info.setProperty("mimeType", r.getMimeType());
@@ -150,9 +151,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		return ret;
 	}
 
-	protected Handle storeContentStream(StoredObject<StoredValue> marshalled, Rendition r, ContentStream cs,
-		ContentStore streamStore) throws Exception {
-		Handle h = streamStore.getHandle(marshalled, r != null ? r.getKind() : "");
+	protected Handle storeContentStream(StoredObject<StoredValue> marshalled,
+		ObjectStorageTranslator<StoredValue> translator, Rendition r, ContentStream cs, ContentStore streamStore)
+			throws Exception {
+		Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
 		InputStream src = cs.getStream();
 		OutputStream tgt = h.openOutput();
 		try {

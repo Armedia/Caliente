@@ -11,12 +11,13 @@ import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
 
 public abstract class CmisExportDelegate<T>
-	extends
-	ExportDelegate<T, Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportDelegateFactory, CmisExportEngine> {
+extends
+ExportDelegate<T, Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportDelegateFactory, CmisExportEngine> {
 
 	protected CmisExportDelegate(CmisExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass, object);
@@ -35,8 +36,8 @@ public abstract class CmisExportDelegate<T>
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(Session session, StoredObject<StoredValue> marshalled,
-		ExportTarget referrent, ContentStore streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(Session session, ObjectStorageTranslator<StoredValue> translator,
+		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception {
 		return new ArrayList<ContentInfo>();
 	}
 }
