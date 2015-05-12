@@ -9,8 +9,10 @@ import com.armedia.commons.utilities.FileNameTools;
 
 public class DocumentumURIStrategy extends URIStrategy {
 
+	public static final String NAME = "documentum";
+
 	public DocumentumURIStrategy() {
-		super("documentum");
+		super(DocumentumURIStrategy.NAME);
 	}
 
 	@Override
