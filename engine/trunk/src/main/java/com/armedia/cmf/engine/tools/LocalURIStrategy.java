@@ -1,10 +1,5 @@
 package com.armedia.cmf.engine.tools;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
@@ -23,14 +18,6 @@ public class LocalURIStrategy extends URIStrategy {
 
 	public LocalURIStrategy() {
 		super(LocalURIStrategy.NAME);
-	}
-
-	protected String encodeSafePathComponent(String pathComponent) {
-		try {
-			return URLEncoder.encode(pathComponent, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException("UTF-8 encoding not supported in this JVM", e);
-		}
 	}
 
 	@Override
@@ -56,15 +43,8 @@ public class LocalURIStrategy extends URIStrategy {
 		final StoredProperty<?> paths = object.getProperty(IntermediateProperty.PATH.encode());
 		final StoredAttribute<?> name = object.getAttribute(translator.decodeAttributeName(type,
 			IntermediateAttribute.NAME.encode()));
-
 		String basePath = ((paths == null) || !paths.hasValues() ? "" : paths.getValue().toString());
 		String finalPath = String.format("%s/%s", basePath, name.getValue().toString());
-
-		List<String> pathItems = new ArrayList<String>();
-		for (String s : FileNameTools.tokenize(finalPath, '/')) {
-			// TODO: Only fix the path if it needs fixing (i.e. for Windows)
-			pathItems.add(encodeSafePathComponent(s));
-		}
-		return FileNameTools.reconstitute(pathItems, true, false, '/');
+		return FileNameTools.reconstitute(FileNameTools.tokenize(finalPath, '/'), true, false, '/');
 	}
 }
