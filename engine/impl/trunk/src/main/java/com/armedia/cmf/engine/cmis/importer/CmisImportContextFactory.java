@@ -13,7 +13,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportContextFactory extends
-ImportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisImportContext, CmisImportEngine, Folder> {
+	ImportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisImportContext, CmisImportEngine, Folder> {
 
 	CmisImportContextFactory(CmisImportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -21,7 +21,7 @@ ImportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisImportContext
 
 	@Override
 	protected CmisImportContext constructContext(String rootId, StoredObjectType rootType, Session session,
-		Logger output, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		Logger output, ObjectStore<?, ?> objectStore, ContentStore<?> streamStore) {
 		return new CmisImportContext(this, rootId, rootType, session, output, getEngine().getTranslator(), objectStore,
 			streamStore);
 	}

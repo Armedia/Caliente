@@ -14,7 +14,7 @@ public class CmisImportContext extends ImportContext<Session, StoredValue> {
 
 	CmisImportContext(CmisImportContextFactory factory, String rootId, StoredObjectType rootType, Session session,
 		Logger output, ObjectStorageTranslator<StoredValue> translator, ObjectStore<?, ?> objectStore,
-		ContentStore streamStore) {
+		ContentStore<?> streamStore) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output, translator, objectStore, streamStore);
 	}
 }

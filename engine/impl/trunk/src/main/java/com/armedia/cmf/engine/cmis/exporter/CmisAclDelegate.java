@@ -52,7 +52,7 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 
 	@Override
 	protected final List<ContentInfo> storeContent(Session session, ObjectStorageTranslator<StoredValue> translator,
-		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception {
+		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
 		return super.storeContent(session, translator, marshalled, referrent, streamStore);
 	}
 

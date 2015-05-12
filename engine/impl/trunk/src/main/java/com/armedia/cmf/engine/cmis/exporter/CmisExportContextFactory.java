@@ -12,7 +12,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisExportContextFactory extends
-ExportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportEngine> {
+	ExportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportEngine> {
 
 	CmisExportContextFactory(CmisExportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -20,7 +20,7 @@ ExportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisExportContext
 
 	@Override
 	protected CmisExportContext constructContext(String rootId, StoredObjectType rootType, Session session,
-		Logger output, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		Logger output, ObjectStore<?, ?> objectStore, ContentStore<?> streamStore) {
 		return new CmisExportContext(this, rootId, rootType, session, output);
 	}
 }

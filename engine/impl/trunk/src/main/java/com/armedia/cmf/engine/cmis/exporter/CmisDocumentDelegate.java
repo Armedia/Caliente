@@ -20,7 +20,6 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
@@ -124,10 +123,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 	@Override
 	protected List<ContentInfo> storeContent(Session session, ObjectStorageTranslator<StoredValue> translator,
-		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore streamStore) throws Exception {
+		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
 		List<ContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
-		Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
+		ContentStore<?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
 		ContentInfo mainInfo = new ContentInfo(mainHandle.getQualifier());
 		mainInfo.setProperty("mimeType", main.getMimeType());
 		mainInfo.setProperty("size", String.valueOf(main.getLength()));
@@ -135,7 +134,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
 			ContentStream cs = r.getContentStream();
-			Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
+			ContentStore<?>.Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
 			ContentInfo info = new ContentInfo(handle.getQualifier());
 			info.setProperty("kind", r.getKind());
 			info.setProperty("mimeType", r.getMimeType());
@@ -151,10 +150,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		return ret;
 	}
 
-	protected Handle storeContentStream(StoredObject<StoredValue> marshalled,
-		ObjectStorageTranslator<StoredValue> translator, Rendition r, ContentStream cs, ContentStore streamStore)
-			throws Exception {
-		Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
+	protected ContentStore<?>.Handle storeContentStream(StoredObject<StoredValue> marshalled,
+		ObjectStorageTranslator<StoredValue> translator, Rendition r, ContentStream cs, ContentStore<?> streamStore)
+		throws Exception {
+		ContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
 		InputStream src = cs.getStream();
 		OutputStream tgt = h.openOutput();
 		try {
