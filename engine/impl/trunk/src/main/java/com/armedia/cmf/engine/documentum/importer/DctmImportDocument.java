@@ -22,6 +22,7 @@ import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
+import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
 import com.armedia.cmf.storage.StoredDataType;
@@ -570,8 +571,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final StoredAttribute<IDfValue> contentTypeAtt = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
 		final String contentType = determineFormat(context.getSession(), (contentTypeAtt != null ? contentTypeAtt
 			.getValue().toString() : null));
+		final ObjectStorageTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		for (ContentInfo info : infoList) {
-			Handle h = contentStore.getHandle(this.storedObject, info.getQualifier());
+			Handle h = contentStore.getHandle(translator, this.storedObject, info.getQualifier());
 
 			CfgTools cfg = info.getCfgTools();
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);
