@@ -255,6 +255,8 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 
 		final CfgTools configuration = new CfgTools(settings);
 
+		prepareImport(settings, objectStore, streamStore);
+
 		final SessionFactory<S> sessionFactory;
 		try {
 			sessionFactory = newSessionFactory(configuration);
@@ -794,4 +796,8 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 	protected void initContext(C ctx) {
 	}
 
+	protected void prepareImport(Map<String, ?> settings, ObjectStore<?, ?> objectStore, ContentStore contentStore)
+		throws StorageException, ImportException {
+		// In case we wish to do something before the import process runs...
+	}
 }
