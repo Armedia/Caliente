@@ -34,29 +34,31 @@ public class LocalURIStrategy extends URIStrategy {
 	}
 
 	@Override
+	public String calculateFragment(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+		final String attName = translator.decodeAttributeName(object.getType(),
+			IntermediateAttribute.VERSION_LABEL.encode());
+		final StoredAttribute<?> versionLabelAtt = object.getAttribute(attName);
+		String oldFrag = super.calculateFragment(translator, object, qualifier);
+		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {
+			final String versionLabel = versionLabelAtt.getValue().toString();
+			if (StringUtils.isBlank(versionLabel)) { return oldFrag; }
+			if (StringUtils.isBlank(oldFrag)) { return versionLabel; }
+			return String.format("%s_%s", oldFrag, versionLabel);
+		}
+		return oldFrag;
+	}
+
+	@Override
 	protected String calculateSSP(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
 		final StoredObjectType type = object.getType();
 		final StoredProperty<?> paths = object.getProperty(IntermediateProperty.PATH.encode());
-		String attName = translator.decodeAttributeName(type, IntermediateAttribute.NAME.encode());
-		final StoredAttribute<?> name = object.getAttribute(attName);
-		attName = translator.decodeAttributeName(type, IntermediateAttribute.VERSION_LABEL.encode());
-		final StoredAttribute<?> versionLabelAtt = object.getAttribute(attName);
-		final String versionLabel;
-		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {
-			versionLabel = versionLabelAtt.getValue().toString();
-		} else {
-			versionLabel = "";
-		}
+		final StoredAttribute<?> name = object.getAttribute(translator.decodeAttributeName(type,
+			IntermediateAttribute.NAME.encode()));
 
 		String basePath = ((paths == null) || !paths.hasValues() ? "" : paths.getValue().toString());
-		String baseName = name.getValue().toString();
-		if (!StringUtils.isBlank(versionLabel)) {
-			baseName = String.format("%s_%s", baseName, versionLabel);
-		}
-
-		String finalPath = String.format("%s/%s", basePath, baseName);
+		String finalPath = String.format("%s/%s", basePath, name.getValue().toString());
 
 		List<String> pathItems = new ArrayList<String>();
 		for (String s : FileNameTools.tokenize(finalPath, '/')) {
