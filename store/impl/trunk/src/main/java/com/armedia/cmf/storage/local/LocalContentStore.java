@@ -28,6 +28,7 @@ import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueSerializer;
 import com.armedia.cmf.storage.URIStrategy;
@@ -39,7 +40,17 @@ import com.armedia.commons.utilities.XmlTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class LocalContentStore extends ContentStore {
+public class LocalContentStore extends ContentStore<URI> {
+
+	// local:[/relative/path/to/file/within/the/target/directory]#fragment
+
+	private class LocalHandle extends Handle {
+
+		protected LocalHandle(StoredObjectType objectType, String objectId, String qualifier, URI locator) {
+			super(objectType, objectId, qualifier, locator);
+		}
+
+	}
 
 	private static final String SCHEME = "local";
 	private static final String XML_SCHEMA = "store-properties.xsd";
@@ -87,12 +98,12 @@ public class LocalContentStore extends ContentStore {
 	}
 
 	@Override
-	protected boolean isSupportedURI(URI uri) {
-		return LocalContentStore.SCHEME.equals(uri.getScheme());
+	protected boolean isSupported(URI locator) {
+		return LocalContentStore.SCHEME.equals(locator.getScheme());
 	}
 
 	@Override
-	protected URI doAllocateHandleId(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	protected URI doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		try {
 			return new URI(LocalContentStore.SCHEME, this.strategy.getSSP(translator, object),
 				this.strategy.calculateFragment(translator, object, qualifier));
@@ -103,34 +114,34 @@ public class LocalContentStore extends ContentStore {
 	}
 
 	@Override
-	protected final File doGetFile(URI handleId) {
-		String ssp = handleId.getSchemeSpecificPart();
-		String frag = handleId.getFragment();
+	protected final File doGetFile(URI locator) {
+		String ssp = locator.getSchemeSpecificPart();
+		String frag = locator.getFragment();
 		String path = (frag != null ? String.format("%s%s", ssp, frag) : ssp);
 		return new File(this.baseDir, path);
 	}
 
 	@Override
-	protected InputStream doOpenInput(URI handleId) throws IOException {
-		return new FileInputStream(getFile(handleId));
+	protected InputStream doOpenInput(URI locator) throws IOException {
+		return new FileInputStream(getFile(locator));
 	}
 
 	@Override
-	protected OutputStream doOpenOutput(URI handleId) throws IOException {
-		File f = getFile(handleId);
+	protected OutputStream doOpenOutput(URI locator) throws IOException {
+		File f = getFile(locator);
 		f.getParentFile().mkdirs(); // Create the parents, if needed
 		if (f.createNewFile() || f.exists()) { return new FileOutputStream(f); }
 		throw new IOException(String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath()));
 	}
 
 	@Override
-	protected boolean doIsExists(URI handleId) {
-		return getFile(handleId).exists();
+	protected boolean doIsExists(URI locator) {
+		return getFile(locator).exists();
 	}
 
 	@Override
-	protected long doGetStreamSize(URI handleId) {
-		File f = getFile(handleId);
+	protected long doGetStreamSize(URI locator) {
+		File f = getFile(locator);
 		return (f.exists() ? f.length() : -1);
 	}
 
@@ -260,5 +271,10 @@ public class LocalContentStore extends ContentStore {
 		this.properties.clear();
 		this.propertiesFile.delete();
 		this.modified.set(false);
+	}
+
+	@Override
+	protected LocalHandle constructHandle(StoredObject<?> object, String qualifier, URI locator) {
+		return new LocalHandle(object.getType(), object.getId(), qualifier, locator);
 	}
 }
