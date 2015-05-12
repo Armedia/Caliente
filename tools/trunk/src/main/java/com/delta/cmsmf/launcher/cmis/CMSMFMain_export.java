@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
@@ -27,7 +28,6 @@ import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
@@ -80,7 +80,7 @@ ExportEngineListener {
 		if (srcPath == null) { throw new CMSMFException("Must provide the CMIS source path or query"); }
 
 		if (srcPath.startsWith("/")) {
-			settings.put(CmisSetting.EXPORT_PATH.getLabel(), FileNameTools.normalizePath(srcPath, '/'));
+			settings.put(CmisSetting.EXPORT_PATH.getLabel(), FilenameUtils.normalize(srcPath, true));
 		} else {
 			settings.put(CmisSetting.EXPORT_QUERY.getLabel(), srcPath);
 		}
