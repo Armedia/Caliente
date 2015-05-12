@@ -10,7 +10,7 @@ import com.armedia.cmf.storage.Stores;
 public class DctmEngineTest {
 
 	protected final ObjectStore<?, ?> objectStore = Stores.getObjectStore("dctmTest");
-	protected final ContentStore streamStore = Stores.getContentStore("dctmTest");
+	protected final ContentStore<?> streamStore = Stores.getContentStore("dctmTest");
 	protected final Logger output = LoggerFactory.getLogger("console");
 
 }

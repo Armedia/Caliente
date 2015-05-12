@@ -21,7 +21,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportContextFactory extends
-	ExportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
+ExportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
 
 	private final DctmSpecialValues specialValues;
 
@@ -32,7 +32,7 @@ public class DctmExportContextFactory extends
 
 	@Override
 	protected DctmExportContext constructContext(String rootId, StoredObjectType rootType, IDfSession session,
-		Logger output, ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		Logger output, ObjectStore<?, ?> objectStore, ContentStore<?> streamStore) {
 		return new DctmExportContext(this, rootId, rootType, session, output);
 	}
 

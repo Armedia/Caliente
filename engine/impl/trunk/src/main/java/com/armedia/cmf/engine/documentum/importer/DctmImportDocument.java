@@ -21,7 +21,6 @@ import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
@@ -407,8 +406,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, ContentInfo info,
-		Handle contentHandle, String contentType, String fullFormat, int pageNumber, int renditionNumber,
-		String pageModifier, int currentContent, int totalContentCount) throws DfException, ImportException {
+		ContentStore<?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
+		int renditionNumber, String pageModifier, int currentContent, int totalContentCount) throws DfException,
+		ImportException {
 		// Step one: what's the content's path in the filesystem?
 		final IDfSession session = context.getSession();
 		final File path = contentHandle.getFile();
@@ -566,14 +566,14 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)",
 				this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()), e);
 		}
-		ContentStore contentStore = context.getContentStore();
+		ContentStore<?> contentStore = context.getContentStore();
 		int i = 0;
 		final StoredAttribute<IDfValue> contentTypeAtt = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
 		final String contentType = determineFormat(context.getSession(), (contentTypeAtt != null ? contentTypeAtt
 			.getValue().toString() : null));
 		final ObjectStorageTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		for (ContentInfo info : infoList) {
-			Handle h = contentStore.getHandle(translator, this.storedObject, info.getQualifier());
+			ContentStore<?>.Handle h = contentStore.getHandle(translator, this.storedObject, info.getQualifier());
 
 			CfgTools cfg = info.getCfgTools();
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);

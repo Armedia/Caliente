@@ -26,8 +26,8 @@ import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmExportDelegate<T extends IDfPersistentObject>
-	extends
-	ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory, DctmExportEngine> {
+extends
+ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory, DctmExportEngine> {
 
 	private final DctmObjectType dctmType;
 
@@ -100,7 +100,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 				if (handler.includeInExport(this.object, attr)) {
 					StoredAttribute<IDfValue> attribute = new StoredAttribute<IDfValue>(attr.getName(), DctmDataType
 						.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(
-						this.object, attr));
+							this.object, attr));
 					object.setAttribute(attribute);
 				}
 			}
@@ -126,12 +126,13 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 
 	@Override
 	protected final List<ContentInfo> storeContent(IDfSession session, ObjectStorageTranslator<IDfValue> translator,
-		StoredObject<IDfValue> marshaled, ExportTarget referrent, ContentStore streamStore) throws Exception {
+		StoredObject<IDfValue> marshaled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
 		return doStoreContent(session, translator, marshaled, referrent, castObject(this.object), streamStore);
 	}
 
 	protected List<ContentInfo> doStoreContent(IDfSession session, ObjectStorageTranslator<IDfValue> translator,
-		StoredObject<IDfValue> marshaled, ExportTarget referrent, T object, ContentStore streamStore) throws Exception {
+		StoredObject<IDfValue> marshaled, ExportTarget referrent, T object, ContentStore<?> streamStore)
+		throws Exception {
 		return null;
 	}
 

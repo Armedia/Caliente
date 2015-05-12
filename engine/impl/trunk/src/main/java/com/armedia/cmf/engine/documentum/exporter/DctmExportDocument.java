@@ -27,7 +27,6 @@ import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
@@ -218,8 +217,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected List<ContentInfo> doStoreContent(IDfSession session, ObjectStorageTranslator<IDfValue> translator,
-		StoredObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, ContentStore streamStore)
-		throws Exception {
+		StoredObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, ContentStore<?> streamStore)
+			throws Exception {
 		if (isDfReference(document)) { return super.doStoreContent(session, translator, marshaled, referrent, document,
 			streamStore); }
 
@@ -241,7 +240,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				while (results.next()) {
 					final IDfContent content = IDfContent.class.cast(session.getObject(results
 						.getId(DctmAttributes.R_OBJECT_ID)));
-					Handle handle = storeContentStream(session, translator, marshaled, document, content, streamStore);
+					ContentStore<?>.Handle handle = storeContentStream(session, translator, marshaled, document,
+						content, streamStore);
 					ContentInfo info = new ContentInfo(handle.getQualifier());
 					info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
 					info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
@@ -260,9 +260,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		return contentInfo;
 	}
 
-	protected Handle storeContentStream(IDfSession session, ObjectStorageTranslator<IDfValue> translator,
-		StoredObject<IDfValue> marshaled, IDfDocument document, IDfContent content, ContentStore streamStore)
-			throws Exception {
+	protected ContentStore<?>.Handle storeContentStream(IDfSession session,
+		ObjectStorageTranslator<IDfValue> translator, StoredObject<IDfValue> marshaled, IDfDocument document,
+		IDfContent content, ContentStore<?> streamStore) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (document == null) { throw new Exception(String.format(
 			"Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
@@ -276,7 +276,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		String qualifier = String.format(DctmExportDocument.QUALIFIER_FMT, pageNumber, pageModifier, format);
 
 		// Store the content in the filesystem
-		Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
+		ContentStore<?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
 		final File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
 			final File parent = targetFile.getParentFile();
