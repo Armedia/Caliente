@@ -18,6 +18,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
+import com.armedia.cmf.engine.local.common.DirectURIStrategy;
 import com.armedia.cmf.engine.local.exporter.LocalExportEngine;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -31,7 +32,7 @@ import com.delta.cmsmf.launcher.ExportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> implements
-	ExportEngineListener {
+ExportEngineListener {
 
 	public CMSMFMain_export() throws Throwable {
 		super(LocalExportEngine.getExportEngine());
@@ -186,5 +187,10 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 			}
 			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
 		}
+	}
+
+	@Override
+	protected String getContentStrategyName() {
+		return DirectURIStrategy.NAME;
 	}
 }
