@@ -14,7 +14,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportContextFactory extends
-	ImportContextFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine, File> {
+ImportContextFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine, File> {
 
 	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -34,7 +34,7 @@ public class LocalImportContextFactory extends
 
 	@Override
 	protected LocalImportContext constructContext(String rootId, StoredObjectType rootType, LocalRoot session,
-		Logger output, ObjectStore<?, ?> objectStore, ContentStore contentStore) {
+		Logger output, ObjectStore<?, ?> objectStore, ContentStore<?> contentStore) {
 		// TODO Auto-generated method stub
 		return null;
 	}

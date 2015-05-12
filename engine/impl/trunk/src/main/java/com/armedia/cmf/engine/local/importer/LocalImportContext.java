@@ -15,7 +15,7 @@ public class LocalImportContext extends ImportContext<LocalRoot, StoredValue> {
 
 	public LocalImportContext(LocalImportContextFactory factory, CfgTools settings, String rootId,
 		StoredObjectType rootType, LocalRoot session, Logger output, ObjectStorageTranslator<StoredValue> translator,
-		ObjectStore<?, ?> objectStore, ContentStore streamStore) {
+		ObjectStore<?, ?> objectStore, ContentStore<?> streamStore) {
 		super(factory, settings, rootId, rootType, session, output, translator, objectStore, streamStore);
 	}
 }
