@@ -9,9 +9,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmException;
@@ -48,16 +48,31 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		super(factory, objectClass, object);
 	}
 
+	protected List<String> calculateFullPath(IDfFolder f) throws DfException {
+		IDfSession session = f.getSession();
+		LinkedList<String> ret = new LinkedList<String>();
+		while (f != null) {
+			ret.addFirst(f.getObjectName());
+			if (f.getValueCount(DctmAttributes.I_FOLDER_ID) < 1) {
+				break;
+			}
+			f = session.getFolderBySpecification(f.getString(DctmAttributes.I_FOLDER_ID));
+		}
+		return ret;
+	}
+
 	@Override
 	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
 		IDfSession session = object.getSession();
-		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(PropertyIds.PATH,
+		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(IntermediateProperty.PATH.encode(),
 			DctmDataType.DF_STRING.getStoredType(), true);
 		properties.add(paths);
-		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(PropertyIds.PARENT_ID,
+		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(),
 			DctmDataType.DF_ID.getStoredType(), true);
 		properties.add(parents);
+
+		List<String> fullPath = null;
 
 		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
 		for (int i = 0; i < parentCount; i++) {
@@ -70,12 +85,26 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 					.getName(), object.getObjectName(), object.getObjectId().getId(), folderId.asString()));
 				continue;
 			}
+			if (fullPath == null) {
+				fullPath = calculateFullPath(parent);
+			}
 			parents.addValue(folderId);
 			final int pathCount = parent.getFolderPathCount();
 			for (int p = 0; p < pathCount; p++) {
 				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(p)));
 			}
 		}
+
+		StoredProperty<IDfValue> pathProp = new StoredProperty<IDfValue>(IntermediateProperty.DEFAULT_PATH.encode(),
+			DctmDataType.DF_STRING.getStoredType(), true);
+		if (fullPath == null) {
+			fullPath = new ArrayList<String>();
+		}
+		fullPath.add(object.getObjectName());
+		for (String s : fullPath) {
+			pathProp.addValue(DfValueFactory.newStringValue(s));
+		}
+		properties.add(pathProp);
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
