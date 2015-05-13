@@ -214,7 +214,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new StoredValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
 			this.properties
-			.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
+				.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
 		}
 		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new StoredValue(fixFilenames));
 		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new StoredValue(failOnCollisions));
@@ -248,9 +248,6 @@ public class LocalContentStore extends ContentStore<URI> {
 				throw new RuntimeException(String.format("Encoding [%s] is not supported in this JVM",
 					this.safeFilenameEncoding.name()), e);
 			}
-		}
-		if (str.startsWith("File With") || str.startsWith("Filename")) {
-			str.hashCode();
 		}
 		if (this.fixFilenames) {
 			StringBuilder b = new StringBuilder(str.length());
