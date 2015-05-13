@@ -1,6 +1,8 @@
 package com.armedia.cmf.storage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -15,8 +17,9 @@ public abstract class URIStrategy {
 	private static final Logger LOG = LoggerFactory.getLogger(URIStrategy.class);
 
 	private static final URIStrategy DEFAULT_STRATEGY = new URIStrategy() {
+
 		@Override
-		protected String calculateSSP(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
+		public List<String> calculatePath(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
 			return null;
 		}
 	};
@@ -79,20 +82,23 @@ public abstract class URIStrategy {
 		return this.name;
 	}
 
-	public String calculateFragment(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	public String calculateAddendum(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		return qualifier;
 	}
 
-	protected final String getDefaultSSP(StoredObject<?> object) {
-		return String.format("%s/%s", object.getType(), object.getId());
+	protected abstract List<String> calculatePath(ObjectStorageTranslator<?> translator, StoredObject<?> object);
+
+	protected final List<String> getDefaultPath(StoredObject<?> object) {
+		List<String> ret = new ArrayList<String>(2);
+		ret.add(object.getType().name());
+		ret.add(object.getId());
+		return ret;
 	}
 
-	protected abstract String calculateSSP(ObjectStorageTranslator<?> translator, StoredObject<?> object);
-
-	public final String getSSP(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
-		String ssp = calculateSSP(translator, object);
-		if (ssp == null) {
-			ssp = getDefaultSSP(object);
+	public final List<String> getPath(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
+		List<String> ssp = calculatePath(translator, object);
+		if ((ssp == null) || ssp.isEmpty()) {
+			ssp = getDefaultPath(object);
 		}
 		return ssp;
 	}
