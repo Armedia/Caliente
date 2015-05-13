@@ -134,25 +134,27 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 		info.setProperty("mimeType", type.getBaseType());
 		info.setProperty("size", String.valueOf(src.length()));
 		info.setProperty("fileName", src.getName());
+		ret.add(info);
 
-		ContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
-		File tgt = h.getFile();
-		if (tgt != null) {
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Copying %d bytes from [%s] into [%s]", src.length(), src, tgt));
-			}
-			FileUtils.copyFile(src, tgt);
-		} else {
-			InputStream in = new FileInputStream(src);
-			OutputStream out = h.openOutput();
-			try {
-				IOUtils.copy(in, out);
-			} finally {
-				IOUtils.closeQuietly(in);
-				IOUtils.closeQuietly(out);
+		if (this.factory.isCopyContent()) {
+			ContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
+			File tgt = h.getFile();
+			if (tgt != null) {
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Copying %d bytes from [%s] into [%s]", src.length(), src, tgt));
+				}
+				FileUtils.copyFile(src, tgt);
+			} else {
+				InputStream in = new FileInputStream(src);
+				OutputStream out = h.openOutput();
+				try {
+					IOUtils.copy(in, out);
+				} finally {
+					IOUtils.closeQuietly(in);
+					IOUtils.closeQuietly(out);
+				}
 			}
 		}
-		ret.add(info);
 		return ret;
 	}
 
