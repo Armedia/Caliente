@@ -161,7 +161,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		this.ignoreFragment = ((v != null) && v.asBoolean());
 
 		v = this.properties.get(Setting.USE_WINDOWS_FIX.getLabel());
-		this.useWindowsFix = ((v != null) && v.asBoolean()) || SystemUtils.IS_OS_WINDOWS;
+		this.useWindowsFix = ((v != null) && v.asBoolean());
 		// This helps make sure the actual used value is stored
 		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new StoredValue(this.useWindowsFix));
 	}
@@ -184,6 +184,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		}
 		final boolean failOnCollisions = this.settings.getBoolean(Setting.FAIL_ON_COLLISIONS);
 		final boolean ignoreFragment = this.settings.getBoolean(Setting.IGNORE_EXTRA_FILENAME_INFO);
+		final boolean useWindowsFix = this.settings.getBoolean(Setting.USE_WINDOWS_FIX);
 
 		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new StoredValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
@@ -193,7 +194,8 @@ public class LocalContentStore extends ContentStore<URI> {
 		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new StoredValue(fixFilenames));
 		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new StoredValue(failOnCollisions));
 		this.properties.put(Setting.IGNORE_EXTRA_FILENAME_INFO.getLabel(), new StoredValue(ignoreFragment));
-		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new StoredValue(SystemUtils.IS_OS_WINDOWS));
+		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new StoredValue(useWindowsFix
+			|| SystemUtils.IS_OS_WINDOWS));
 	}
 
 	@Override
@@ -211,6 +213,9 @@ public class LocalContentStore extends ContentStore<URI> {
 				throw new RuntimeException(String.format("Encoding [%s] is not supported in this JVM",
 					this.safeFilenameEncoding.name()), e);
 			}
+		}
+		if (str.startsWith("File With") || str.startsWith("Filename")) {
+			str.hashCode();
 		}
 		if (this.fixFilenames) {
 			// This covers Unix...
@@ -230,6 +235,10 @@ public class LocalContentStore extends ContentStore<URI> {
 					str = str.replace((char) i, '_');
 				}
 
+				str = str.replaceAll("(\\.+)$", "$1_"); // Can't end with a dot
+				str = str.replaceAll("(\\\\s+)$", "$1_"); // Can't end with a space
+				str = str.replaceAll("^(\\\\s+)", "_$1"); // Can't begin with a space
+
 				// Also invalid are CON, PRN, AUX, NUL, COM[1-9], LPT[1-9], CLOCK$, but we can't
 				// fix those so we just leave them alone and let the OS failure take its course
 			}
@@ -239,10 +248,10 @@ public class LocalContentStore extends ContentStore<URI> {
 
 	@Override
 	protected URI doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
-		final String rawSSP = this.strategy.getSSP(translator, object);
+		final List<String> rawPath = this.strategy.getPath(translator, object);
 		final String rawFragment;
 		if (!this.ignoreFragment) {
-			rawFragment = this.strategy.calculateFragment(translator, object, qualifier);
+			rawFragment = this.strategy.calculateAddendum(translator, object, qualifier);
 		} else {
 			rawFragment = "";
 		}
@@ -252,7 +261,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		if (this.forceSafeFilenames || this.fixFilenames) {
 			boolean fixed = false;
 			List<String> sspParts = new ArrayList<String>();
-			for (String s : FileNameTools.tokenize(rawSSP, '/')) {
+			for (String s : rawPath) {
 				String S = safeEncode(s);
 				fixed = fixed || !Tools.equals(s, S);
 				sspParts.add(S);
@@ -271,7 +280,7 @@ public class LocalContentStore extends ContentStore<URI> {
 			}
 		} else {
 			scheme = LocalContentStore.SCHEME_RAW;
-			ssp = FileNameTools.reconstitute(FileNameTools.tokenize(rawSSP, '/'), false, false, '/');
+			ssp = FileNameTools.reconstitute(rawPath, false, false, '/');
 			fragment = rawFragment;
 		}
 
