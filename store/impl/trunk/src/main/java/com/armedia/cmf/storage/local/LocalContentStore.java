@@ -127,27 +127,35 @@ public class LocalContentStore extends ContentStore<URI> {
 		return LocalContentStore.SCHEME.equals(locator.getScheme());
 	}
 
+	protected String safeEncode(String str) {
+		if (this.safeFilenameEncoding == null) { return str; }
+		try {
+			return URLEncoder.encode(str, this.safeFilenameEncoding.name());
+		} catch (UnsupportedEncodingException e) {
+			// Not gonna happen...but still...better safe than sorry
+			throw new RuntimeException(String.format("Encoding [%s] is not supported in this JVM",
+				this.safeFilenameEncoding.name()), e);
+		}
+	}
+
 	@Override
 	protected URI doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		final String rawSSP = this.strategy.getSSP(translator, object);
+		final String rawFragment = this.strategy.calculateFragment(translator, object, qualifier);
 		final String ssp;
+		final String fragment;
 		if (this.forceSafeFilenames) {
 			List<String> sspParts = new ArrayList<String>();
 			for (String s : FileNameTools.tokenize(rawSSP, '/')) {
-				try {
-					sspParts.add(URLEncoder.encode(s, this.safeFilenameEncoding.name()));
-				} catch (UnsupportedEncodingException e) {
-					// Not gonna happen...but still...better safe than sorry
-					throw new RuntimeException(String.format("Encoding [%s] is not supported in this JVM",
-						this.safeFilenameEncoding.name()), e);
-				}
+				sspParts.add(safeEncode(s));
 			}
 			ssp = FileNameTools.reconstitute(sspParts, false, false, '/');
+			fragment = safeEncode(rawFragment);
 		} else {
 			ssp = FileNameTools.reconstitute(FileNameTools.tokenize(rawSSP, '/'), false, false, '/');
+			fragment = rawFragment;
 		}
 
-		final String fragment = this.strategy.calculateFragment(translator, object, qualifier);
 		try {
 			return new URI(LocalContentStore.SCHEME, ssp, fragment);
 		} catch (URISyntaxException e) {
