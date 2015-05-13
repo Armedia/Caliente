@@ -76,14 +76,19 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 		this.objectStore = Stores.createObjectStore(cfg);
 
-		cfg = Stores.getContentStoreConfiguration("cmsmf");
+		final boolean directFsExport = CLIParam.direct_fs.isPresent();
+
+		final String contentStoreName = (directFsExport ? "direct" : "cmsmf");
+		cfg = Stores.getContentStoreConfiguration(contentStoreName);
+		if (!directFsExport) {
+			String strategy = getContentStrategyName();
+			if (strategy != null) {
+				cfg.getSettings().put("dir.content.strategy", strategy);
+			}
+		}
 		cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 		cfg.getSettings().put(StoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
 
-		String strategy = getContentStrategyName();
-		if (strategy != null) {
-			cfg.getSettings().put("dir.content.strategy", strategy);
-		}
 		this.contentStore = Stores.createContentStore(cfg);
 
 		this.server = CLIParam.server.getString();

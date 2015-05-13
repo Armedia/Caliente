@@ -30,6 +30,26 @@
 		<settings>
 			<setting name="base.dir">${dir.content}</setting>
 			<setting name="uri.strategy">${dir.content.strategy}</setting>
+			<setting name="force.safe.filenames">false</setting>
+			<setting name="safe.filename.encoding">UTF-8</setting>
+			<setting name="fix.filenames">true</setting>
+			<setting name="fail.on.collisions">false</setting>
+			<setting name="ignore.extra.filename.info">true</setting>
+			<setting name="use.windows.fix">true</setting>
+		</settings>
+	</contentstore>
+
+	<contentstore id="direct">
+		<name>local</name>
+		<settings>
+			<setting name="base.dir">${dir.content}</setting>
+			<setting name="uri.strategy">localfs</setting>
+			<setting name="force.safe.filenames">false</setting>
+			<setting name="safe.filename.encoding">UTF-8</setting>
+			<setting name="fix.filenames">true</setting>
+			<setting name="use.windows.fix">true</setting>
+			<setting name="fail.on.collisions">false</setting>
+			<setting name="ignore.extra.filename.info">true</setting>
 		</settings>
 	</contentstore>
 </stores>

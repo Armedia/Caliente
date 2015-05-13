@@ -65,6 +65,7 @@ public enum CLIParam {
 	skip_users(Setting.SKIP_USERS, false, "Skip exporting users"),
 	skip_groups(Setting.SKIP_GROUPS, false, "Skip exporting groups"),
 	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls"),
+	direct_fs(null, false, "Export files to local FS duplicating the CMS's path"),
 
 	//
 	;
