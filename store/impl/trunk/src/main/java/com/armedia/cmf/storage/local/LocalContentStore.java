@@ -17,6 +17,7 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,30 @@ import com.armedia.commons.utilities.XmlTools;
  *
  */
 public class LocalContentStore extends ContentStore<URI> {
+
+	private static final String LIN_INVALID_CHARS = "/\0";
+	private static final Map<Character, String> LIN_ENCODER;
+	private static final String WIN_INVALID_CHARS = "<>:\\|?*";
+	private static final Map<Character, String> WIN_ENCODER;
+	static {
+		Map<Character, String> m = new HashMap<Character, String>();
+		for (int i = 0; i < LocalContentStore.LIN_INVALID_CHARS.length(); i++) {
+			final char c = LocalContentStore.LIN_INVALID_CHARS.charAt(i);
+			m.put(Character.valueOf(c), String.format("%%%02X", (int) c));
+		}
+		LIN_ENCODER = Tools.freezeMap(m);
+
+		m = new HashMap<Character, String>();
+		for (int i = 0; i < LocalContentStore.WIN_INVALID_CHARS.length(); i++) {
+			final char c = LocalContentStore.WIN_INVALID_CHARS.charAt(i);
+			m.put(Character.valueOf(c), String.format("%%%02X", (int) c));
+		}
+		// 0x01, 0x02, ... 0x1F
+		for (int i = 0; i < 32; i++) {
+			m.put(Character.valueOf((char) i), String.format("%%%02X", i));
+		}
+		WIN_ENCODER = Tools.freezeMap(m);
+	}
 
 	private static final String SCHEME_RAW = "raw";
 	private static final String SCHEME_FIXED = "fixed";
@@ -189,7 +214,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new StoredValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
 			this.properties
-				.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
+			.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
 		}
 		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new StoredValue(fixFilenames));
 		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new StoredValue(failOnCollisions));
@@ -201,6 +226,16 @@ public class LocalContentStore extends ContentStore<URI> {
 	@Override
 	protected boolean isSupported(URI locator) {
 		return LocalContentStore.SUPPORTED.contains(locator.getScheme());
+	}
+
+	protected String safeEncodeChar(Character c) {
+		String str = LocalContentStore.LIN_ENCODER.get(c);
+		if (str != null) { return str; }
+		if (this.useWindowsFix) {
+			str = LocalContentStore.WIN_ENCODER.get(c);
+			if (str != null) { return str; }
+		}
+		return c.toString();
 	}
 
 	protected String safeEncode(String str) {
@@ -218,26 +253,15 @@ public class LocalContentStore extends ContentStore<URI> {
 			str.hashCode();
 		}
 		if (this.fixFilenames) {
-			// This covers Unix...
-			str = str.replace('\0', '_');
-			str = str.replace('/', '_');
+			StringBuilder b = new StringBuilder(str.length());
+			for (int i = 0; i < str.length(); i++) {
+				b.append(safeEncodeChar(str.charAt(i)));
+			}
+			str = b.toString();
 
 			if (this.useWindowsFix) {
-				// Now comes the fun part - Windows...only do this for windows!!
-				str = str.replace('<', '_');
-				str = str.replace('>', '_');
-				str = str.replace(':', '_');
-				str = str.replace('\\', '_');
-				str = str.replace('|', '_');
-				str = str.replace('?', '_');
-				str = str.replace('*', '_');
-				for (int i = 1; i <= 31; i++) {
-					str = str.replace((char) i, '_');
-				}
-
-				str = str.replaceAll("(\\.+)$", "$1_"); // Can't end with a dot
-				str = str.replaceAll("(\\\\s+)$", "$1_"); // Can't end with a space
-				str = str.replaceAll("^(\\\\s+)", "_$1"); // Can't begin with a space
+				str = str.replaceAll("([\\.\\s])$", "$1_"); // Can't end with a dot or a space
+				str = str.replaceAll("^(\\\\s)", "_$1"); // Can't begin with a space
 
 				// Also invalid are CON, PRN, AUX, NUL, COM[1-9], LPT[1-9], CLOCK$, but we can't
 				// fix those so we just leave them alone and let the OS failure take its course
