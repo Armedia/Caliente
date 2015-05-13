@@ -5,9 +5,13 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 public enum Setting implements ConfigurationSetting {
 	//
 	BASE_DIR,
-	FORCE_SAFE_FILENAMES(Boolean.TRUE),
-	SAFE_FILENAME_ENCODING("UTF-8"),
 	URI_STRATEGY,
+	FORCE_SAFE_FILENAMES(true),
+	SAFE_FILENAME_ENCODING("UTF-8"),
+	FIX_FILENAMES(false),
+	FAIL_ON_COLLISIONS(false),
+	IGNORE_EXTRA_FILENAME_INFO(false),
+	USE_WINDOWS_FIX(false),
 	//
 	;
 
