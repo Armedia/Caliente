@@ -1,5 +1,8 @@
 package com.armedia.cmf.engine.tools;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
@@ -21,11 +24,11 @@ public class LocalURIStrategy extends URIStrategy {
 	}
 
 	@Override
-	public String calculateFragment(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	public String calculateAddendum(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		final String attName = translator.decodeAttributeName(object.getType(),
 			IntermediateAttribute.VERSION_LABEL.encode());
 		final StoredAttribute<?> versionLabelAtt = object.getAttribute(attName);
-		String oldFrag = super.calculateFragment(translator, object, qualifier);
+		String oldFrag = super.calculateAddendum(translator, object, qualifier);
 		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {
 			final String versionLabel = versionLabelAtt.getValue().toString();
 			if (StringUtils.isBlank(versionLabel)) { return oldFrag; }
@@ -36,15 +39,24 @@ public class LocalURIStrategy extends URIStrategy {
 	}
 
 	@Override
-	protected String calculateSSP(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
+	protected List<String> calculatePath(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		final StoredObjectType type = object.getType();
-		final StoredProperty<?> paths = object.getProperty(IntermediateProperty.PATH.encode());
-		final StoredAttribute<?> name = object.getAttribute(translator.decodeAttributeName(type,
+		StoredProperty<?> paths = object.getProperty(IntermediateProperty.DEFAULT_PATH.encode());
+		if (paths != null) {
+			List<String> ret = new ArrayList<String>(paths.getValueCount());
+			for (Object o : paths) {
+				ret.add(o.toString());
+			}
+			return ret;
+		}
+
+		paths = object.getProperty(IntermediateProperty.PATH.encode());
+		StoredObjectType type = object.getType();
+		StoredAttribute<?> name = object.getAttribute(translator.decodeAttributeName(type,
 			IntermediateAttribute.NAME.encode()));
 		String basePath = ((paths == null) || !paths.hasValues() ? "" : paths.getValue().toString());
 		String finalPath = String.format("%s/%s", basePath, name.getValue().toString());
-		return FileNameTools.reconstitute(FileNameTools.tokenize(finalPath, '/'), true, false, '/');
+		return FileNameTools.tokenize(finalPath, '/');
 	}
 }
