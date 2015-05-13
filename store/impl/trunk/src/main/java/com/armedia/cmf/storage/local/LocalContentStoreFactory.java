@@ -29,6 +29,6 @@ public class LocalContentStoreFactory extends ContentStoreFactory<LocalContentSt
 			this.log.debug(String.format("Creating a new local file store with base path [%s], and strategy [%s]",
 				basePath, strategy.getName()));
 		}
-		return new LocalContentStore(new File(basePath), strategy, cleanData);
+		return new LocalContentStore(cfg, new File(basePath), strategy, cleanData);
 	}
 }

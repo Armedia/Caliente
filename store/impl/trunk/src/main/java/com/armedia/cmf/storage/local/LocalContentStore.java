@@ -11,8 +11,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -35,6 +40,8 @@ import com.armedia.cmf.storage.StoredValueSerializer;
 import com.armedia.cmf.storage.URIStrategy;
 import com.armedia.cmf.storage.local.xml.PropertyT;
 import com.armedia.cmf.storage.local.xml.StorePropertiesT;
+import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.XmlTools;
 
 /**
@@ -60,14 +67,20 @@ public class LocalContentStore extends ContentStore<URI> {
 	private final URIStrategy strategy;
 	private final File propertiesFile;
 	private final AtomicBoolean modified = new AtomicBoolean(false);
+	private final CfgTools settings;
 	private final Map<String, StoredValue> properties = new TreeMap<String, StoredValue>();
+	private final boolean forceSafeFilenames;
+	private final Charset safeFilenameEncoding;
 
-	public LocalContentStore(File baseDir, URIStrategy strategy, boolean cleanData) throws StorageException {
+	public LocalContentStore(CfgTools settings, File baseDir, URIStrategy strategy, boolean cleanData)
+		throws StorageException {
+		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
 		if (baseDir.exists() && !baseDir.isDirectory()) { throw new IllegalArgumentException(String.format(
 			"The file at [%s] is not a directory", baseDir.getAbsolutePath())); }
 		if (!baseDir.exists() && !baseDir.mkdirs()) { throw new IllegalArgumentException(String.format(
 			"Failed to create the full path at [%s] ", baseDir.getAbsolutePath())); }
+		this.settings = settings;
 		File f = baseDir;
 		try {
 			f = baseDir.getCanonicalFile();
@@ -96,6 +109,17 @@ public class LocalContentStore extends ContentStore<URI> {
 		if (storeStrategyName) {
 			setProperty("strategy", new StoredValue(strategy.getName()));
 		}
+		this.forceSafeFilenames = this.settings.getBoolean(Setting.FORCE_SAFE_FILENAMES);
+		if (this.forceSafeFilenames) {
+			String encoding = this.settings.getString(Setting.SAFE_FILENAME_ENCODING);
+			try {
+				this.safeFilenameEncoding = Charset.forName(encoding);
+			} catch (Exception e) {
+				throw new StorageException(String.format("Encoding [%s] is not supported", encoding), e);
+			}
+		} else {
+			this.safeFilenameEncoding = null;
+		}
 	}
 
 	@Override
@@ -105,9 +129,27 @@ public class LocalContentStore extends ContentStore<URI> {
 
 	@Override
 	protected URI doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+		final String rawSSP = this.strategy.getSSP(translator, object);
+		final String ssp;
+		if (this.forceSafeFilenames) {
+			List<String> sspParts = new ArrayList<String>();
+			for (String s : FileNameTools.tokenize(rawSSP, '/')) {
+				try {
+					sspParts.add(URLEncoder.encode(s, this.safeFilenameEncoding.name()));
+				} catch (UnsupportedEncodingException e) {
+					// Not gonna happen...but still...better safe than sorry
+					throw new RuntimeException(String.format("Encoding [%s] is not supported in this JVM",
+						this.safeFilenameEncoding.name()), e);
+				}
+			}
+			ssp = FileNameTools.reconstitute(sspParts, false, false, '/');
+		} else {
+			ssp = FileNameTools.reconstitute(FileNameTools.tokenize(rawSSP, '/'), false, false, '/');
+		}
+
+		final String fragment = this.strategy.calculateFragment(translator, object, qualifier);
 		try {
-			return new URI(LocalContentStore.SCHEME, this.strategy.getSSP(translator, object),
-				this.strategy.calculateFragment(translator, object, qualifier));
+			return new URI(LocalContentStore.SCHEME, ssp, fragment);
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(String.format("Failed to allocate a handle ID for %s[%s]", object.getType(),
 				object.getId()), e);
