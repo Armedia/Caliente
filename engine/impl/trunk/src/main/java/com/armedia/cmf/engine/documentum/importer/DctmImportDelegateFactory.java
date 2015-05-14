@@ -11,35 +11,33 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
 public class DctmImportDelegateFactory extends
-	ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
+ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
 
 	protected DctmImportDelegateFactory(DctmImportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
 	@Override
-	protected DctmImportDelegate<?> newImportDelegate(StoredObject<?> marshaled) throws Exception {
+	protected DctmImportDelegate<?> newImportDelegate(StoredObject<IDfValue> marshaled) throws Exception {
 		DctmObjectType type = DctmObjectType.decodeType(marshaled.getType());
 		if (type == null) { throw new UnsupportedObjectTypeException(marshaled.getType()); }
-		@SuppressWarnings("unchecked")
-		final StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		switch (type) {
 			case ACL:
-				return new DctmImportACL(this, castedMarshaled);
+				return new DctmImportACL(this, marshaled);
 			case DOCUMENT:
-				return new DctmImportDocument(this, castedMarshaled);
+				return new DctmImportDocument(this, marshaled);
 			case STORE:
-				return new DctmImportStore(this, castedMarshaled);
+				return new DctmImportStore(this, marshaled);
 			case FOLDER:
-				return new DctmImportFolder(this, castedMarshaled);
+				return new DctmImportFolder(this, marshaled);
 			case FORMAT:
-				return new DctmImportFormat(this, castedMarshaled);
+				return new DctmImportFormat(this, marshaled);
 			case GROUP:
-				return new DctmImportGroup(this, castedMarshaled);
+				return new DctmImportGroup(this, marshaled);
 			case TYPE:
-				return new DctmImportType(this, castedMarshaled);
+				return new DctmImportType(this, marshaled);
 			case USER:
-				return new DctmImportUser(this, castedMarshaled);
+				return new DctmImportUser(this, marshaled);
 			default:
 				break;
 		}
