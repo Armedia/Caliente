@@ -15,7 +15,7 @@ final class MappingManager {
 	static String generateMapping(String mapping, String name) {
 		if (mapping != null) { return mapping; }
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to generate a mapping for"); }
-		return String.format(":%s", name.toLowerCase());
+		return String.format("cmf:%s", name.toLowerCase());
 	}
 
 	static <E extends Mappable> Map<String, E> createMappings(Class<E> mappableClass, E... mappables) {
