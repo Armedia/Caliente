@@ -12,15 +12,15 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.URIStrategy;
+import com.armedia.cmf.storage.OrganizationStrategy;
 import com.armedia.commons.utilities.FileNameTools;
 
-public class LocalURIStrategy extends URIStrategy {
+public class LocalOrganizationStrategy extends OrganizationStrategy {
 
 	public static final String NAME = "localfs";
 
-	public LocalURIStrategy() {
-		super(LocalURIStrategy.NAME);
+	public LocalOrganizationStrategy() {
+		super(LocalOrganizationStrategy.NAME);
 	}
 
 	@Override
