@@ -40,7 +40,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueSerializer;
-import com.armedia.cmf.storage.URIStrategy;
+import com.armedia.cmf.storage.OrganizationStrategy;
 import com.armedia.cmf.storage.local.xml.PropertyT;
 import com.armedia.cmf.storage.local.xml.StorePropertiesT;
 import com.armedia.commons.utilities.CfgTools;
@@ -102,7 +102,7 @@ public class LocalContentStore extends ContentStore<URI> {
 	private static final String XML_SCHEMA = "store-properties.xsd";
 
 	private final File baseDir;
-	private final URIStrategy strategy;
+	private final OrganizationStrategy strategy;
 	private final File propertiesFile;
 	private final AtomicBoolean modified = new AtomicBoolean(false);
 	private final CfgTools settings;
@@ -115,7 +115,7 @@ public class LocalContentStore extends ContentStore<URI> {
 	protected final boolean propertiesLoaded;
 	private final boolean useWindowsFix;
 
-	public LocalContentStore(CfgTools settings, File baseDir, URIStrategy strategy, boolean cleanData)
+	public LocalContentStore(CfgTools settings, File baseDir, OrganizationStrategy strategy, boolean cleanData)
 		throws StorageException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
@@ -141,7 +141,7 @@ public class LocalContentStore extends ContentStore<URI> {
 			this.propertiesLoaded = loadProperties();
 			StoredValue currentStrategyName = getProperty("strategy");
 			if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
-				URIStrategy currentStrategy = URIStrategy.getStrategy(currentStrategyName.asString());
+				OrganizationStrategy currentStrategy = OrganizationStrategy.getStrategy(currentStrategyName.asString());
 				if (currentStrategy != null) {
 					strategy = currentStrategy;
 					storeStrategyName = false;
