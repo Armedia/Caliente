@@ -52,7 +52,7 @@ import com.armedia.commons.utilities.XmlTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class LocalContentStore extends ContentStore<ContentLocator> {
+public class LocalContentStore extends ContentStore<URI> {
 
 	private static final String LIN_INVALID_CHARS = "/\0";
 	private static final Map<Character, String> LIN_ENCODER;
@@ -93,7 +93,7 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 
 	private class LocalHandle extends Handle {
 
-		protected LocalHandle(StoredObjectType objectType, String objectId, String qualifier, ContentLocator locator) {
+		protected LocalHandle(StoredObjectType objectType, String objectId, String qualifier, URI locator) {
 			super(objectType, objectId, qualifier, locator);
 		}
 
@@ -214,7 +214,7 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new StoredValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
 			this.properties
-			.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
+				.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
 		}
 		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new StoredValue(fixFilenames));
 		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new StoredValue(failOnCollisions));
@@ -224,8 +224,8 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 	}
 
 	@Override
-	protected boolean isSupported(ContentLocator locator) {
-		return LocalContentStore.SUPPORTED.contains(locator.uri.getScheme());
+	protected boolean isSupported(URI locator) {
+		return LocalContentStore.SUPPORTED.contains(locator.getScheme());
 	}
 
 	protected String safeEncodeChar(Character c) {
@@ -268,8 +268,7 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 	}
 
 	@Override
-	protected ContentLocator doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object,
-		String qualifier) {
+	protected URI doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		final List<String> rawPath = this.strategy.getPath(translator, object);
 		final String rawFragment;
 		if (!this.ignoreFragment) {
@@ -307,7 +306,7 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 		}
 
 		try {
-			return new ContentLocator(object, new URI(scheme, ssp, fragment));
+			return new URI(scheme, ssp, fragment);
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(String.format("Failed to allocate a handle ID for %s[%s]", object.getType(),
 				object.getId()), e);
@@ -315,9 +314,9 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 	}
 
 	@Override
-	protected final File doGetFile(ContentLocator locator) {
-		String ssp = locator.uri.getSchemeSpecificPart();
-		String frag = (!this.ignoreFragment ? locator.uri.getFragment() : "");
+	protected final File doGetFile(URI locator) {
+		String ssp = locator.getSchemeSpecificPart();
+		String frag = (!this.ignoreFragment ? locator.getFragment() : "");
 		String path = ssp;
 		if (!this.ignoreFragment && !StringUtils.isBlank(frag)) {
 			path = (frag != null ? String.format("%s#%s", ssp, frag) : ssp);
@@ -326,12 +325,12 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 	}
 
 	@Override
-	protected InputStream doOpenInput(ContentLocator locator) throws IOException {
+	protected InputStream doOpenInput(URI locator) throws IOException {
 		return new FileInputStream(getFile(locator));
 	}
 
 	@Override
-	protected OutputStream doOpenOutput(ContentLocator locator) throws IOException {
+	protected OutputStream doOpenOutput(URI locator) throws IOException {
 		File f = getFile(locator);
 		f.getParentFile().mkdirs(); // Create the parents, if needed
 
@@ -347,12 +346,12 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 	}
 
 	@Override
-	protected boolean doIsExists(ContentLocator locator) {
+	protected boolean doIsExists(URI locator) {
 		return getFile(locator).exists();
 	}
 
 	@Override
-	protected long doGetStreamSize(ContentLocator locator) {
+	protected long doGetStreamSize(URI locator) {
 		File f = getFile(locator);
 		return (f.exists() ? f.length() : -1);
 	}
@@ -488,7 +487,7 @@ public class LocalContentStore extends ContentStore<ContentLocator> {
 	}
 
 	@Override
-	protected LocalHandle constructHandle(StoredObject<?> object, String qualifier, ContentLocator locator) {
+	protected LocalHandle constructHandle(StoredObject<?> object, String qualifier, URI locator) {
 		return new LocalHandle(object.getType(), object.getId(), qualifier, locator);
 	}
 }
