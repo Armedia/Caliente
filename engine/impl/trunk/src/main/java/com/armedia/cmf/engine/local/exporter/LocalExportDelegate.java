@@ -5,6 +5,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.AclFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileOwnerAttributeView;
+import java.nio.file.attribute.GroupPrincipal;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -12,7 +22,6 @@ import java.util.List;
 
 import javax.activation.MimeType;
 
-import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -64,17 +73,73 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 	protected void marshal(LocalExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		final File file = this.object.getAbsolute();
 		StoredAttribute<StoredValue> att = null;
-		att = new StoredAttribute<StoredValue>(PropertyIds.NAME, StoredDataType.STRING, false);
+		att = new StoredAttribute<StoredValue>(IntermediateAttribute.NAME.encode(), StoredDataType.STRING, false);
 		att.setValue(new StoredValue(file.getName()));
 		object.setAttribute(att);
 
-		att = new StoredAttribute<StoredValue>(PropertyIds.OBJECT_ID, StoredDataType.ID, false);
+		att = new StoredAttribute<StoredValue>(IntermediateAttribute.OBJECT_ID.encode(), StoredDataType.ID, false);
 		att.setValue(new StoredValue(getObjectId()));
 		object.setAttribute(att);
 
-		att = new StoredAttribute<StoredValue>(PropertyIds.LAST_MODIFICATION_DATE, StoredDataType.DATETIME, false);
-		att.setValue(new StoredValue(new Date(file.lastModified())));
-		object.setAttribute(att);
+		Path path = file.toPath();
+		BasicFileAttributeView basic = Files.getFileAttributeView(path, BasicFileAttributeView.class);
+		AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class);
+		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
+		FileOwnerAttributeView owner = posix;
+		if (owner == null) {
+			owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
+		}
+
+		// Ok... we have the attribute views, export the information
+		try {
+			BasicFileAttributes basicAtts = basic.readAttributes();
+
+			att = new StoredAttribute<StoredValue>(IntermediateAttribute.CREATION_DATE.encode(),
+				StoredDataType.DATETIME, false);
+			att.setValue(new StoredValue(new Date(basicAtts.creationTime().toMillis())));
+			object.setAttribute(att);
+
+			att = new StoredAttribute<StoredValue>(IntermediateAttribute.LAST_MODIFICATION_DATE.encode(),
+				StoredDataType.DATETIME, false);
+			att.setValue(new StoredValue(new Date(basicAtts.lastModifiedTime().toMillis())));
+			object.setAttribute(att);
+
+			att = new StoredAttribute<StoredValue>(IntermediateAttribute.LAST_ACCESS_DATE.encode(),
+				StoredDataType.DATETIME, false);
+			att.setValue(new StoredValue(new Date(basicAtts.lastAccessTime().toMillis())));
+			object.setAttribute(att);
+
+			if (getType() == StoredObjectType.DOCUMENT) {
+				att = new StoredAttribute<StoredValue>(IntermediateAttribute.CONTENT_STREAM_LENGTH.encode(),
+					StoredDataType.DOUBLE, false);
+				att.setValue(new StoredValue(basicAtts.size()));
+				object.setAttribute(att);
+			}
+
+			if (owner != null) {
+				UserPrincipal ownerUser = owner.getOwner();
+				att = new StoredAttribute<StoredValue>(IntermediateAttribute.CREATED_BY.encode(),
+					StoredDataType.STRING, false);
+				att.setValue(new StoredValue(ownerUser.getName()));
+				object.setAttribute(att);
+			}
+
+			if (posix != null) {
+				PosixFileAttributes posixAtts = posix.readAttributes();
+				GroupPrincipal ownerGroup = posixAtts.group();
+				att = new StoredAttribute<StoredValue>(IntermediateAttribute.GROUP.encode(), StoredDataType.STRING,
+					false);
+				att.setValue(new StoredValue(ownerGroup.getName()));
+				object.setAttribute(att);
+			}
+
+			if (acl != null) {
+				// TODO: Marshal the ACL
+			}
+
+		} catch (IOException e) {
+			throw new ExportException(String.format("Failed to collect the attribute information for [%s]", file), e);
+		}
 
 		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(IntermediateProperty.PARENT_ID.encode(),
 			StoredDataType.ID, true);
@@ -93,15 +158,9 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 		object.setProperty(paths);
 		object.setProperty(parents);
 
-		att = new StoredAttribute<StoredValue>(PropertyIds.PATH, StoredDataType.STRING, true);
+		att = new StoredAttribute<StoredValue>(IntermediateAttribute.PATH.encode(), StoredDataType.STRING, true);
 		att.setValue(new StoredValue(this.object.getPortablePath()));
 		object.setAttribute(att);
-
-		if (getType() == StoredObjectType.DOCUMENT) {
-			att = new StoredAttribute<StoredValue>(PropertyIds.CONTENT_STREAM_LENGTH, StoredDataType.DOUBLE, false);
-			att.setValue(new StoredValue(file.length()));
-			object.setAttribute(att);
-		}
 	}
 
 	@Override
