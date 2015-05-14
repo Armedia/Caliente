@@ -44,8 +44,8 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V>, F extends ImportDelegateFactory<S, W, V, C, ?>>
-extends
-TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFactory<S, W, V, C, ?>, ImportEngineListener> {
+	extends
+	TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFactory<S, W, V, C, ?>, ImportEngineListener> {
 
 	private static enum BatchStatus {
 		//
@@ -57,7 +57,7 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 	private class Batch {
 		private final StoredObjectType type;
 		private final String id;
-		private final Collection<StoredObject<?>> contents;
+		private final Collection<StoredObject<V>> contents;
 		private final ImportStrategy strategy;
 		private BatchStatus status = BatchStatus.PENDING;
 		private Throwable thrown = null;
@@ -66,7 +66,7 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 			this(null, null, null, null);
 		}
 
-		private Batch(StoredObjectType type, String id, Collection<StoredObject<?>> contents, ImportStrategy strategy) {
+		private Batch(StoredObjectType type, String id, Collection<StoredObject<V>> contents, ImportStrategy strategy) {
 			this.type = type;
 			this.id = id;
 			this.contents = contents;
@@ -245,7 +245,7 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore<?> streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
-			throws ImportException, StorageException {
+		throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -341,7 +341,7 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -356,7 +356,7 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 								}
 
 								listenerDelegator.objectBatchImportStarted(batch.type, batch.id, batch.contents.size());
-								for (StoredObject<?> next : batch.contents) {
+								for (StoredObject<V> next : batch.contents) {
 									if (failBatch) {
 										final ImportResult result = ImportResult.SKIPPED;
 										this.log.error(String.format(
@@ -414,10 +414,10 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 												// the other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -471,11 +471,11 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 					private final Logger log = ImportEngine.this.log;
 
 					private String batchId = null;
-					private List<StoredObject<?>> contents = null;
+					private List<StoredObject<V>> contents = null;
 
 					@Override
 					public boolean newBatch(String batchId) throws StorageException {
-						this.contents = new LinkedList<StoredObject<?>>();
+						this.contents = new LinkedList<StoredObject<V>>();
 						this.batchId = batchId;
 						return true;
 					}
@@ -526,8 +526,8 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 							batchCounter.set(0);
 							final int contentSize = this.contents.size();
 							List<Batch> batches = new ArrayList<Batch>(this.contents.size());
-							for (StoredObject<?> o : this.contents) {
-								List<StoredObject<?>> l = new ArrayList<StoredObject<?>>(1);
+							for (StoredObject<V> o : this.contents) {
+								List<StoredObject<V>> l = new ArrayList<StoredObject<V>>(1);
 								l.add(o);
 								try {
 									Batch batch = new Batch(o.getType(), this.batchId, l, strategy);
@@ -679,7 +679,7 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 					}
 
 					this.log
-					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(translator, type, handler);
 					} catch (Exception e) {
@@ -768,10 +768,10 @@ TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFa
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
