@@ -19,7 +19,7 @@ import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.engine.local.exporter.LocalExportEngine;
-import com.armedia.cmf.engine.tools.LocalURIStrategy;
+import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
@@ -191,6 +191,6 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 
 	@Override
 	protected String getContentStrategyName() {
-		return LocalURIStrategy.NAME;
+		return LocalOrganizationStrategy.NAME;
 	}
 }
