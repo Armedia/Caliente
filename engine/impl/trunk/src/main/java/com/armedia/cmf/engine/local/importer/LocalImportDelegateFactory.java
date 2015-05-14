@@ -1,6 +1,10 @@
 package com.armedia.cmf.engine.local.importer;
 
+import java.io.File;
+import java.io.IOException;
+
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
+import com.armedia.cmf.engine.local.common.LocalCommon;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.storage.StoredObject;
@@ -8,10 +12,19 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportDelegateFactory extends
-ImportDelegateFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine> {
+	ImportDelegateFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine> {
 
-	public LocalImportDelegateFactory(LocalImportEngine engine, CfgTools configuration) {
+	private LocalRoot root;
+
+	public LocalImportDelegateFactory(LocalImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
+		File root = LocalCommon.getRootDirectory(configuration);
+		if (root == null) { throw new IllegalArgumentException("Must provide a root directory to work from"); }
+		this.root = new LocalRoot(root);
+	}
+
+	public LocalRoot getRoot() {
+		return this.root;
 	}
 
 	@Override

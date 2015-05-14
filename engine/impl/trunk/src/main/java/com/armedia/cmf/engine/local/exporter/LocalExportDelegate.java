@@ -122,6 +122,11 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 					StoredDataType.STRING, false);
 				att.setValue(new StoredValue(ownerUser.getName()));
 				object.setAttribute(att);
+
+				att = new StoredAttribute<StoredValue>(IntermediateAttribute.OWNER.encode(), StoredDataType.STRING,
+					false);
+				att.setValue(new StoredValue(ownerUser.getName()));
+				object.setAttribute(att);
 			}
 
 			if (posix != null) {
