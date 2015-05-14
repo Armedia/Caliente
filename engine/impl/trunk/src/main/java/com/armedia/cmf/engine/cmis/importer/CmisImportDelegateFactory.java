@@ -10,7 +10,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportDelegateFactory extends
-ImportDelegateFactory<Session, CmisSessionWrapper, StoredValue, CmisImportContext, CmisImportEngine> {
+	ImportDelegateFactory<Session, CmisSessionWrapper, StoredValue, CmisImportContext, CmisImportEngine> {
 
 	CmisImportDelegateFactory(CmisImportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
@@ -18,7 +18,7 @@ ImportDelegateFactory<Session, CmisSessionWrapper, StoredValue, CmisImportContex
 
 	@Override
 	protected ImportDelegate<?, Session, CmisSessionWrapper, StoredValue, CmisImportContext, ?, CmisImportEngine> newImportDelegate(
-		StoredObject<?> storedObject) throws Exception {
+		StoredObject<StoredValue> storedObject) throws Exception {
 		return null;
 	}
 }
