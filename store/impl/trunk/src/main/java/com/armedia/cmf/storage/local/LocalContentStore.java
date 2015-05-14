@@ -35,12 +35,12 @@ import org.apache.commons.lang3.SystemUtils;
 
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.OrganizationStrategy;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueSerializer;
-import com.armedia.cmf.storage.OrganizationStrategy;
 import com.armedia.cmf.storage.local.xml.PropertyT;
 import com.armedia.cmf.storage.local.xml.StorePropertiesT;
 import com.armedia.commons.utilities.CfgTools;
@@ -52,7 +52,7 @@ import com.armedia.commons.utilities.XmlTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class LocalContentStore extends ContentStore<URI> {
+public class LocalContentStore extends ContentStore<ContentLocator> {
 
 	private static final String LIN_INVALID_CHARS = "/\0";
 	private static final Map<Character, String> LIN_ENCODER;
@@ -93,7 +93,7 @@ public class LocalContentStore extends ContentStore<URI> {
 
 	private class LocalHandle extends Handle {
 
-		protected LocalHandle(StoredObjectType objectType, String objectId, String qualifier, URI locator) {
+		protected LocalHandle(StoredObjectType objectType, String objectId, String qualifier, ContentLocator locator) {
 			super(objectType, objectId, qualifier, locator);
 		}
 
@@ -214,7 +214,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new StoredValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
 			this.properties
-				.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
+			.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
 		}
 		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new StoredValue(fixFilenames));
 		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new StoredValue(failOnCollisions));
@@ -224,8 +224,8 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected boolean isSupported(URI locator) {
-		return LocalContentStore.SUPPORTED.contains(locator.getScheme());
+	protected boolean isSupported(ContentLocator locator) {
+		return LocalContentStore.SUPPORTED.contains(locator.uri.getScheme());
 	}
 
 	protected String safeEncodeChar(Character c) {
@@ -268,7 +268,8 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected URI doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	protected ContentLocator doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object,
+		String qualifier) {
 		final List<String> rawPath = this.strategy.getPath(translator, object);
 		final String rawFragment;
 		if (!this.ignoreFragment) {
@@ -306,7 +307,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		}
 
 		try {
-			return new URI(scheme, ssp, fragment);
+			return new ContentLocator(object, new URI(scheme, ssp, fragment));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(String.format("Failed to allocate a handle ID for %s[%s]", object.getType(),
 				object.getId()), e);
@@ -314,9 +315,9 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected final File doGetFile(URI locator) {
-		String ssp = locator.getSchemeSpecificPart();
-		String frag = (!this.ignoreFragment ? locator.getFragment() : "");
+	protected final File doGetFile(ContentLocator locator) {
+		String ssp = locator.uri.getSchemeSpecificPart();
+		String frag = (!this.ignoreFragment ? locator.uri.getFragment() : "");
 		String path = ssp;
 		if (!this.ignoreFragment && !StringUtils.isBlank(frag)) {
 			path = (frag != null ? String.format("%s#%s", ssp, frag) : ssp);
@@ -325,12 +326,12 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected InputStream doOpenInput(URI locator) throws IOException {
+	protected InputStream doOpenInput(ContentLocator locator) throws IOException {
 		return new FileInputStream(getFile(locator));
 	}
 
 	@Override
-	protected OutputStream doOpenOutput(URI locator) throws IOException {
+	protected OutputStream doOpenOutput(ContentLocator locator) throws IOException {
 		File f = getFile(locator);
 		f.getParentFile().mkdirs(); // Create the parents, if needed
 
@@ -346,12 +347,12 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected boolean doIsExists(URI locator) {
+	protected boolean doIsExists(ContentLocator locator) {
 		return getFile(locator).exists();
 	}
 
 	@Override
-	protected long doGetStreamSize(URI locator) {
+	protected long doGetStreamSize(ContentLocator locator) {
 		File f = getFile(locator);
 		return (f.exists() ? f.length() : -1);
 	}
@@ -487,7 +488,7 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected LocalHandle constructHandle(StoredObject<?> object, String qualifier, URI locator) {
+	protected LocalHandle constructHandle(StoredObject<?> object, String qualifier, ContentLocator locator) {
 		return new LocalHandle(object.getType(), object.getId(), qualifier, locator);
 	}
 }
