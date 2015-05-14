@@ -6,14 +6,14 @@ import java.util.List;
 
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.URIStrategy;
+import com.armedia.cmf.storage.OrganizationStrategy;
 
-public class DocumentumURIStrategy extends URIStrategy {
+public class DocumentumOrganizationStrategy extends OrganizationStrategy {
 
 	public static final String NAME = "documentum";
 
-	public DocumentumURIStrategy() {
-		super(DocumentumURIStrategy.NAME);
+	public DocumentumOrganizationStrategy() {
+		super(DocumentumOrganizationStrategy.NAME);
 	}
 
 	@Override
