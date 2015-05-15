@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.armedia.cmf.engine.documentum.importer.DctmImportEngine;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
+import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_import;
 
 /**
@@ -18,7 +19,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 	}
 
 	@Override
-	protected void customizeSettings(Map<String, Object> settings) {
+	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
 		if (this.server != null) {
 			settings.put(DfcSessionFactory.DOCBASE, this.server);
 		}
