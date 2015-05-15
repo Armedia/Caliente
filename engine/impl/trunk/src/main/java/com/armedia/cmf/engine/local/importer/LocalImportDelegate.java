@@ -18,6 +18,8 @@ import java.text.ParseException;
 import java.util.EnumMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.SystemUtils;
+
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportDelegate;
@@ -28,11 +30,12 @@ import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.tools.FilenameFixer;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-extends
-ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+	extends
+	ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected final File targetFile;
 	protected final Path targetPath;
@@ -46,9 +49,12 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 		File root = this.factory.getRoot().getFile();
 		File tgt = root;
 		if (pathProp != null) {
+			// TODO: We must also determine if the target FS requires "windows mode".. for instance
+			// for NTFS on Linux, windows restrictions must be observed... but there's no "clean"
+			// way to figure that out from Java...
+			boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
 			for (StoredValue v : pathProp) {
-				// TODO: potentially fix the target path
-				tgt = new File(tgt, v.asString());
+				tgt = new File(tgt, FilenameFixer.safeEncode(v.asString(), windowsMode));
 			}
 		} else {
 			pathProp = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
@@ -60,7 +66,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 	}
 
 	protected boolean isSameDatesAndOwners(ObjectStorageTranslator<StoredValue> translator) throws IOException,
-	ParseException {
+		ParseException {
 		final UserPrincipalLookupService userSvc = this.targetPath.getFileSystem().getUserPrincipalLookupService();
 		final BasicFileAttributeView basicView = Files.getFileAttributeView(this.targetPath,
 			BasicFileAttributeView.class);

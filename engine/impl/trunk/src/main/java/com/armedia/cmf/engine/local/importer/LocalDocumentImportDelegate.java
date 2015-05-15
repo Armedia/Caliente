@@ -31,7 +31,10 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 	protected ImportOutcome importObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
 		throws ImportException, StorageException, StoredValueDecoderException {
 
-		this.targetFile.mkdirs();
+		File parent = this.targetFile.getParentFile();
+		if (parent != null) {
+			parent.mkdirs();
+		}
 
 		final boolean created;
 		try {

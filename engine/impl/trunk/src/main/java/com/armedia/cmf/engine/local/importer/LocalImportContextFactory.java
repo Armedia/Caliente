@@ -14,7 +14,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportContextFactory extends
-ImportContextFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine, File> {
+	ImportContextFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine, File> {
 
 	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -22,20 +22,22 @@ ImportContextFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 
 	@Override
 	protected File locateFolder(LocalRoot session, String path) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		return new File(session.getFile(), path).getCanonicalFile();
 	}
 
 	@Override
 	protected File createFolder(LocalRoot session, File parent, String name) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		File f = new File(parent, name);
+		f.mkdirs();
+		if (!f.exists()) { throw new Exception(String.format("Could not create the directory at [%s]", name)); }
+		if (!f.isDirectory()) { throw new Exception(String.format("A non-directory already exists at [%s]", name)); }
+		return f;
 	}
 
 	@Override
 	protected LocalImportContext constructContext(String rootId, StoredObjectType rootType, LocalRoot session,
 		Logger output, ObjectStore<?, ?> objectStore, ContentStore<?> contentStore) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LocalImportContext(this, getSettings(), rootId, rootType, session, output, getEngine()
+			.getTranslator(), objectStore, contentStore);
 	}
 }
