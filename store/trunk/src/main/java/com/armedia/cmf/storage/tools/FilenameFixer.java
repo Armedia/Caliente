@@ -1,11 +1,16 @@
 package com.armedia.cmf.storage.tools;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.armedia.commons.utilities.Tools;
 
 public final class FilenameFixer {
+
+	private static final String ENCODING = "UTF-8";
 
 	private static final String LIN_INVALID_CHARS = "/\0";
 	private static final Map<Character, String> LIN_ENCODER;
@@ -57,6 +62,24 @@ public final class FilenameFixer {
 			// Also invalid are CON, PRN, AUX, NUL, COM[1-9], LPT[1-9], CLOCK$
 		}
 		return str;
+	}
+
+	public static String urlEncode(String str) {
+		try {
+			return URLEncoder.encode(str, FilenameFixer.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(
+				String.format("%s encoding isn't supported in this JVM", FilenameFixer.ENCODING), e);
+		}
+	}
+
+	public static String urlDecode(String str) {
+		try {
+			return URLDecoder.decode(str, FilenameFixer.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(
+				String.format("%s encoding isn't supported in this JVM", FilenameFixer.ENCODING), e);
+		}
 	}
 
 	private FilenameFixer() {
