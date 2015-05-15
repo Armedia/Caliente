@@ -35,8 +35,8 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-extends
-ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+	extends
+	ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected final File targetFile;
 	protected final Path targetPath;
@@ -72,6 +72,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 		StoredAttribute<StoredValue> nameAtt = storedObject.getAttribute(translator.decodeAttributeName(
 			storedObject.getType(), IntermediateAttribute.NAME.encode()));
 
+		// We always fix the file's name, since it's not part of the path and may also need fixing.
+		// Same dilemma as above, though - need to know "when" to use windows mode...
 		String name = FilenameFixer.safeEncode(nameAtt.getValue().toString(), windowsMode);
 		tgt = new File(tgt, name);
 
@@ -81,7 +83,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 	}
 
 	protected boolean isSameDatesAndOwners(ObjectStorageTranslator<StoredValue> translator) throws IOException,
-	ParseException {
+		ParseException {
 		final UserPrincipalLookupService userSvc = this.targetPath.getFileSystem().getUserPrincipalLookupService();
 		final BasicFileAttributeView basicView = Files.getFileAttributeView(this.targetPath,
 			BasicFileAttributeView.class);
