@@ -12,7 +12,6 @@ import com.armedia.cmf.storage.OrganizationStrategy;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.tools.FilenameFixer;
 import com.armedia.commons.utilities.FileNameTools;
 
 public class LocalOrganizationStrategy extends OrganizationStrategy {
@@ -44,17 +43,8 @@ public class LocalOrganizationStrategy extends OrganizationStrategy {
 		// of a "universally-valid" format.
 		StoredProperty<?> paths = object.getProperty(IntermediateProperty.PATH.encode());
 
-		boolean encoded = false;
-		StoredProperty<?> pathsEncoded = object.getProperty(IntermediateProperty.PATH_ENCODED.encode());
-		if ((pathsEncoded != null) && pathsEncoded.hasValues()) {
-			encoded = Boolean.valueOf(pathsEncoded.getValue().toString());
-		}
-
 		List<String> ret = new ArrayList<String>();
 		for (String p : FileNameTools.tokenize(paths.getValue().toString(), '/')) {
-			if (encoded) {
-				p = FilenameFixer.urlDecode(p);
-			}
 			ret.add(p);
 		}
 
