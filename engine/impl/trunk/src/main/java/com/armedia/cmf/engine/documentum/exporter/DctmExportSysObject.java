@@ -6,8 +6,10 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -48,7 +50,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		super(factory, objectClass, object);
 	}
 
-	protected List<String> calculateFullPath(IDfFolder f) throws DfException {
+	protected List<String> calculateFullPath(IDfSysObject f) throws DfException {
 		IDfSession session = f.getSession();
 		LinkedList<String> ret = new LinkedList<String>();
 		while (f != null) {
@@ -56,9 +58,41 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			if (f.getValueCount(DctmAttributes.I_FOLDER_ID) < 1) {
 				break;
 			}
-			f = session.getFolderBySpecification(f.getString(DctmAttributes.I_FOLDER_ID));
+			f = IDfSysObject.class.cast(session.getFolderBySpecification(f.getString(DctmAttributes.I_FOLDER_ID)));
 		}
 		return ret;
+	}
+
+	protected final List<List<String>> calculateAllPaths(final IDfSysObject f, final Set<String> visited)
+		throws DfException {
+		final String oid = f.getObjectId().getId();
+		if ((visited != null) && !visited.add(oid)) { throw new DfException(String.format(
+			"Visited node [%s] twice (history = %s)", oid, visited)); }
+		IDfSession session = f.getSession();
+		final int parentCount = f.getFolderIdCount();
+		List<List<String>> all = new ArrayList<List<String>>(parentCount);
+		for (int i = 0; i < parentCount; i++) {
+			final IDfId parentId = f.getFolderId(i);
+			final IDfSysObject parent = IDfSysObject.class.cast(session.getObject(parentId));
+			for (List<String> l : calculateAllPaths(parent, visited)) {
+				l.add(f.getObjectName());
+				all.add(l);
+			}
+		}
+		if (all.isEmpty()) {
+			// No parents...so we need to add a single path with ${object_name}
+			List<String> r = new ArrayList<String>(1);
+			r.add(f.getObjectName());
+			all.add(r);
+		}
+		if (visited != null) {
+			visited.remove(oid);
+		}
+		return all;
+	}
+
+	protected final List<List<String>> calculateAllPaths(IDfSysObject f) throws DfException {
+		return calculateAllPaths(f, new LinkedHashSet<String>());
 	}
 
 	@Override
