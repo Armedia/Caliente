@@ -19,6 +19,8 @@ public class LocalFolderImportDelegate extends LocalImportDelegate {
 	@Override
 	protected ImportOutcome importObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
 		throws ImportException, StorageException, StoredValueDecoderException {
+		String tgtPath = ctx.getTargetPath(this.targetFile.getPath());
+		tgtPath.hashCode();
 
 		if (this.targetFile.isDirectory()) { return new ImportOutcome(ImportResult.DUPLICATE, this.newId,
 			this.targetFile.getAbsolutePath()); }

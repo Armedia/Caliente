@@ -30,6 +30,8 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 	@Override
 	protected ImportOutcome importObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
 		throws ImportException, StorageException, StoredValueDecoderException {
+		String tgtPath = ctx.getTargetPath(this.targetFile.getPath());
+		tgtPath.hashCode();
 
 		File parent = this.targetFile.getParentFile();
 		if (parent != null) {

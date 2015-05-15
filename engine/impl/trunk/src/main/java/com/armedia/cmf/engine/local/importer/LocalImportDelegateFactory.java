@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
+import com.armedia.cmf.engine.importer.ImportSetting;
 import com.armedia.cmf.engine.local.common.LocalCommon;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
@@ -20,7 +21,8 @@ public class LocalImportDelegateFactory extends
 		super(engine, configuration);
 		File root = LocalCommon.getRootDirectory(configuration);
 		if (root == null) { throw new IllegalArgumentException("Must provide a root directory to work from"); }
-		this.root = new LocalRoot(root);
+		String tgtPath = configuration.getString(ImportSetting.TARGET_LOCATION);
+		this.root = new LocalRoot(new File(root, tgtPath).getCanonicalFile());
 	}
 
 	public LocalRoot getRoot() {

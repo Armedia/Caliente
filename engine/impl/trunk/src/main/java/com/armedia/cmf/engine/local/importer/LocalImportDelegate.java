@@ -34,8 +34,8 @@ import com.armedia.cmf.storage.tools.FilenameFixer;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-	extends
-	ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+extends
+ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected final File targetFile;
 	protected final Path targetPath;
@@ -47,6 +47,8 @@ public abstract class LocalImportDelegate
 		StoredProperty<StoredValue> pathProp = this.storedObject
 			.getProperty(IntermediateProperty.DEFAULT_PATH.encode());
 		File root = this.factory.getRoot().getFile();
+		// We must also apply the target location to the path
+
 		File tgt = root;
 		if (pathProp != null) {
 			// TODO: We must also determine if the target FS requires "windows mode".. for instance
@@ -60,13 +62,13 @@ public abstract class LocalImportDelegate
 			pathProp = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
 			tgt = new File(root, pathProp.getValue().asString());
 		}
-		this.targetFile = tgt.getCanonicalFile();
+		this.targetFile = tgt;
 		this.targetPath = this.targetFile.toPath();
 		this.newId = String.format("%08X", this.targetFile.hashCode());
 	}
 
 	protected boolean isSameDatesAndOwners(ObjectStorageTranslator<StoredValue> translator) throws IOException,
-		ParseException {
+	ParseException {
 		final UserPrincipalLookupService userSvc = this.targetPath.getFileSystem().getUserPrincipalLookupService();
 		final BasicFileAttributeView basicView = Files.getFileAttributeView(this.targetPath,
 			BasicFileAttributeView.class);
