@@ -24,7 +24,6 @@
 		<url>http://www.armedia.com</url>
 	</organization>
 
-
 	<distributionManagement>
 		<repository>
 			<id>armedia-nexus</id>
@@ -70,7 +69,7 @@
 		<dependency>
 			<groupId>com.armedia.commons</groupId>
 			<artifactId>dfc-session-pool</artifactId>
-			<version>1.0.4</version>
+			<version>1.0.6</version>
 			<scope>compile</scope>
 		</dependency>
 
