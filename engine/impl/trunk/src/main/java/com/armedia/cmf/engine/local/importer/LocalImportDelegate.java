@@ -31,6 +31,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.tools.FilenameFixer;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
@@ -44,25 +45,37 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 	protected LocalImportDelegate(LocalImportDelegateFactory factory, StoredObject<StoredValue> storedObject)
 		throws Exception {
 		super(factory, File.class, storedObject);
-		StoredProperty<StoredValue> pathProp = this.storedObject
-			.getProperty(IntermediateProperty.DEFAULT_PATH.encode());
+		ObjectStorageTranslator<StoredValue> translator = factory.getEngine().getTranslator();
+		StoredProperty<StoredValue> pathProp = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
+		StoredProperty<StoredValue> pathEncProp = this.storedObject.getProperty(IntermediateProperty.PATH_ENCODED
+			.encode());
 		File root = this.factory.getRoot().getFile();
 		// We must also apply the target location to the path
 
-		File tgt = root;
-		if (pathProp != null) {
-			// TODO: We must also determine if the target FS requires "windows mode".. for instance
-			// for NTFS on Linux, windows restrictions must be observed... but there's no "clean"
-			// way to figure that out from Java...
-			boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
-			for (StoredValue v : pathProp) {
-				tgt = new File(tgt, FilenameFixer.safeEncode(v.asString(), windowsMode));
-			}
-		} else {
-			pathProp = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
-			tgt = new File(root, pathProp.getValue().asString());
+		Object basePath = pathProp.getValue();
+		boolean encoded = false;
+		if ((pathEncProp != null) && pathEncProp.hasValues()) {
+			encoded = Boolean.valueOf(pathEncProp.getValue().toString());
 		}
-		this.targetFile = tgt;
+		File tgt = root;
+		// TODO: We must also determine if the target FS requires "windows mode".. for instance
+		// for NTFS on Linux, windows restrictions must be observed... but there's no "clean"
+		// way to figure that out from Java...
+		boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
+		for (String s : FileNameTools.tokenize(basePath.toString(), '/')) {
+			if (encoded) {
+				s = FilenameFixer.urlDecode(s);
+			}
+			tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
+		}
+
+		StoredAttribute<StoredValue> nameAtt = storedObject.getAttribute(translator.decodeAttributeName(
+			storedObject.getType(), IntermediateAttribute.NAME.encode()));
+
+		String name = FilenameFixer.safeEncode(nameAtt.getValue().toString(), windowsMode);
+		tgt = new File(tgt, name);
+
+		this.targetFile = tgt.getCanonicalFile();
 		this.targetPath = this.targetFile.toPath();
 		this.newId = String.format("%08X", this.targetFile.hashCode());
 	}
