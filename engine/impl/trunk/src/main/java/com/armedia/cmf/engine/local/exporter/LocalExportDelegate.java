@@ -1,12 +1,11 @@
 package com.armedia.cmf.engine.local.exporter;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -22,7 +21,6 @@ import java.util.List;
 
 import javax.activation.MimeType;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
@@ -207,14 +205,13 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Copying %d bytes from [%s] into [%s]", src.length(), src, tgt));
 				}
-				FileUtils.copyFile(src, tgt);
+				Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			} else {
-				InputStream in = new FileInputStream(src);
-				OutputStream out = h.openOutput();
+				OutputStream out = null;
 				try {
-					IOUtils.copy(in, out);
+					out = h.openOutput();
+					Files.copy(src.toPath(), out);
 				} finally {
-					IOUtils.closeQuietly(in);
 					IOUtils.closeQuietly(out);
 				}
 			}
