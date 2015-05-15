@@ -3,12 +3,12 @@ package com.armedia.cmf.engine.documentum;
 import java.util.EnumMap;
 import java.util.Map;
 
-import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -157,7 +157,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		IDfType type = session.getType(subType);
 		if (type != null) {
 			// TODO: Fix this kludge for something cleaner
-			StoredProperty<IDfValue> targetPaths = object.getProperty(PropertyIds.PATH);
+			StoredProperty<IDfValue> targetPaths = object.getProperty(IntermediateProperty.PATH.encode());
 			if (Tools.equals("dm_cabinet", type.getName()) && targetPaths.hasValues()) {
 				type = type.getSuperType();
 			}

@@ -602,7 +602,7 @@ DctmSysObject {
 	}
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(PropertyIds.PATH);
+		StoredProperty<IDfValue> p = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
 		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String.format(
 			"No target paths specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
 		return p.getValues();
@@ -685,8 +685,8 @@ DctmSysObject {
 
 	protected IDfId getMappedParentId(DctmImportContext context, int pos) throws DfException, ImportException {
 		final IDfSession session = context.getSession();
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(PropertyIds.PARENT_ID);
-		StoredProperty<IDfValue> paths = this.storedObject.getProperty(PropertyIds.PATH);
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(IntermediateProperty.PARENT_ID.encode());
+		StoredProperty<IDfValue> paths = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
 		IDfId mainFolderId = parents.getValue(pos).asId();
 		if (mainFolderId.isNull()) {
 			// This is only valid if pos is 0, and it's the only parent value, and there's only one
@@ -707,7 +707,7 @@ DctmSysObject {
 	}
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(PropertyIds.PARENT_ID);
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(IntermediateProperty.PARENT_ID.encode());
 		if ((parents == null) || (parents.getValueCount() == 0)) { throw new ImportException(String.format(
 			"No target parents specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
@@ -904,15 +904,15 @@ DctmSysObject {
 	@Override
 	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
 		// First things first: fix the parent paths in the incoming object
-		StoredProperty<IDfValue> paths = this.storedObject.getProperty(PropertyIds.PATH);
+		StoredProperty<IDfValue> paths = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
 		if (paths == null) {
 			paths = new StoredProperty<IDfValue>(IntermediateProperty.PATH.encode(), StoredDataType.STRING, true);
 			this.storedObject.setProperty(paths);
-			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)", PropertyIds.PATH,
-				this.storedObject.getLabel(), this.storedObject.getId()));
+			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
+				IntermediateProperty.PATH.encode(), this.storedObject.getLabel(), this.storedObject.getId()));
 		}
 
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(PropertyIds.PARENT_ID);
+		StoredProperty<IDfValue> parents = this.storedObject.getProperty(IntermediateProperty.PARENT_ID.encode());
 		if (parents == null) {
 			parents = new StoredProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(), StoredDataType.ID, true);
 			this.storedObject.setProperty(parents);
