@@ -95,7 +95,11 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 			if ((v == null) || !v.hasValues()) {
 				continue;
 			}
-			FileTime remote = FileTime.fromMillis(v.getValue().asTime().getTime());
+			StoredValue sv = v.getValue();
+			if (sv.isNull()) {
+				continue;
+			}
+			FileTime remote = FileTime.fromMillis(sv.asTime().getTime());
 			if (!Tools.equals(local, remote)) { return false; }
 		}
 
@@ -105,11 +109,14 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 				StoredAttribute<StoredValue> v = this.storedObject.getAttribute(translator.decodeAttributeName(
 					this.storedObject.getType(), IntermediateAttribute.GROUP.encode()));
 				if ((v != null) && v.hasValues()) {
-					try {
-						UserPrincipal remote = userSvc.lookupPrincipalByName(v.getValue().asString());
-						if (!Tools.equals(local, remote)) { return false; }
-					} catch (UserPrincipalNotFoundException e) {
-						// Ignore...
+					StoredValue sv = v.getValue();
+					if (!sv.isNull()) {
+						try {
+							UserPrincipal remote = userSvc.lookupPrincipalByName(v.getValue().asString());
+							if (!Tools.equals(local, remote)) { return false; }
+						} catch (UserPrincipalNotFoundException e) {
+							// Ignore...
+						}
 					}
 				}
 			}
@@ -121,11 +128,14 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 				StoredAttribute<StoredValue> v = this.storedObject.getAttribute(translator.decodeAttributeName(
 					this.storedObject.getType(), IntermediateAttribute.GROUP.encode()));
 				if ((v != null) && v.hasValues()) {
-					try {
-						GroupPrincipal remote = userSvc.lookupPrincipalByGroupName(v.getValue().asString());
-						if (!Tools.equals(local, remote)) { return false; }
-					} catch (UserPrincipalNotFoundException e) {
-						// Ignore...
+					StoredValue sv = v.getValue();
+					if (!sv.isNull()) {
+						try {
+							GroupPrincipal remote = userSvc.lookupPrincipalByGroupName(v.getValue().asString());
+							if (!Tools.equals(local, remote)) { return false; }
+						} catch (UserPrincipalNotFoundException e) {
+							// Ignore...
+						}
 					}
 				}
 			}
@@ -168,22 +178,31 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 		v = this.storedObject.getAttribute(translator.decodeAttributeName(this.storedObject.getType(),
 			IntermediateAttribute.LAST_ACCESS_DATE.encode()));
 		if ((v != null) && v.hasValues()) {
-			accessed = FileTime.fromMillis(v.getValue().asTime().getTime());
-			accessedChanged = true;
+			StoredValue sv = v.getValue();
+			if (!sv.isNull()) {
+				accessed = FileTime.fromMillis(sv.asTime().getTime());
+				accessedChanged = true;
+			}
 		}
 
 		v = this.storedObject.getAttribute(translator.decodeAttributeName(this.storedObject.getType(),
 			IntermediateAttribute.LAST_MODIFICATION_DATE.encode()));
 		if ((v != null) && v.hasValues()) {
-			modified = FileTime.fromMillis(v.getValue().asTime().getTime());
-			modifiedChanged = true;
+			StoredValue sv = v.getValue();
+			if (!sv.isNull()) {
+				modified = FileTime.fromMillis(sv.asTime().getTime());
+				modifiedChanged = true;
+			}
 		}
 
 		v = this.storedObject.getAttribute(translator.decodeAttributeName(this.storedObject.getType(),
 			IntermediateAttribute.CREATION_DATE.encode()));
 		if ((v != null) && v.hasValues()) {
-			created = FileTime.fromMillis(v.getValue().asTime().getTime());
-			createdChanged = true;
+			StoredValue sv = v.getValue();
+			if (!sv.isNull()) {
+				created = FileTime.fromMillis(sv.asTime().getTime());
+				createdChanged = true;
+			}
 		}
 
 		int changes = 0;
@@ -197,14 +216,12 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 				break;
 
 			case 1: // only accessed was set
-				created = accessed;
 				modified = accessed;
+				created = accessed;
 				break;
 
-			case 6: // Only accessed was unchanged
-				accessed = modified;
-				// Fall-through
 			case 2: // only modified was set
+				accessed = modified;
 				created = modified;
 				break;
 
@@ -214,9 +231,15 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 
 			case 5: // only modified was unchanged
 				modified = created;
-				// fall-through
+				break;
+
+			case 6: // Only accessed was unchanged
+				accessed = modified;
+				break;
+
 			case 4: // only created was set
 				accessed = created;
+				modified = created;
 				break;
 
 		}
@@ -228,11 +251,14 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 			v = this.storedObject.getAttribute(translator.decodeAttributeName(this.storedObject.getType(),
 				IntermediateAttribute.GROUP.encode()));
 			if ((v != null) && v.hasValues()) {
-				try {
-					GroupPrincipal group = userSvc.lookupPrincipalByGroupName(v.getValue().asString());
-					posixView.setGroup(group);
-				} catch (UserPrincipalNotFoundException e) {
-					// No such group...
+				StoredValue sv = v.getValue();
+				if (!sv.isNull()) {
+					try {
+						GroupPrincipal group = userSvc.lookupPrincipalByGroupName(sv.asString());
+						posixView.setGroup(group);
+					} catch (UserPrincipalNotFoundException e) {
+						// No such group...
+					}
 				}
 			}
 		}
@@ -242,11 +268,14 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 			v = this.storedObject.getAttribute(translator.decodeAttributeName(this.storedObject.getType(),
 				IntermediateAttribute.OWNER.encode()));
 			if ((v != null) && v.hasValues()) {
-				try {
-					UserPrincipal owner = userSvc.lookupPrincipalByGroupName(v.getValue().asString());
-					ownerView.setOwner(owner);
-				} catch (UserPrincipalNotFoundException e) {
-					// No such user...
+				StoredValue sv = v.getValue();
+				if (!sv.isNull()) {
+					try {
+						UserPrincipal owner = userSvc.lookupPrincipalByGroupName(sv.asString());
+						ownerView.setOwner(owner);
+					} catch (UserPrincipalNotFoundException e) {
+						// No such user...
+					}
 				}
 			}
 		}
