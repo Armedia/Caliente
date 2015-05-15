@@ -48,16 +48,20 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 		ObjectStorageTranslator<StoredValue> translator = factory.getEngine().getTranslator();
 		StoredProperty<StoredValue> pathProp = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
 		File root = this.factory.getRoot().getFile();
+
 		// We must also apply the target location to the path
 
-		Object basePath = pathProp.getValue();
-		File tgt = root;
 		// TODO: We must also determine if the target FS requires "windows mode".. for instance
 		// for NTFS on Linux, windows restrictions must be observed... but there's no "clean"
 		// way to figure that out from Java...
-		boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
-		for (String s : FileNameTools.tokenize(basePath.toString(), '/')) {
-			tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
+		final boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
+
+		File tgt = root;
+
+		if (pathProp.hasValues()) {
+			for (String s : FileNameTools.tokenize(pathProp.getValue().toString(), '/')) {
+				tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
+			}
 		}
 
 		StoredAttribute<StoredValue> nameAtt = storedObject.getAttribute(translator.decodeAttributeName(
