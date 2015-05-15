@@ -17,7 +17,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportEngine extends
-ImportEngine<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory> {
+	ImportEngine<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -142,6 +142,10 @@ ImportEngine<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, Lo
 	@Override
 	protected LocalImportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
 		return new LocalImportDelegateFactory(this, cfg);
+	}
+
+	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine() {
+		return ImportEngine.getImportEngine(LocalCommon.TARGET_NAME);
 	}
 
 	@Override
