@@ -25,8 +25,8 @@ import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.tools.FilenameFixer;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
@@ -96,33 +96,31 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	@Override
 	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
+		IDfSession session = object.getSession();
 		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(IntermediateProperty.PATH.encode(),
 			DctmDataType.DF_STRING.getStoredType(), true);
-		StoredProperty<IDfValue> pathsEncoded = new StoredProperty<IDfValue>(
-			IntermediateProperty.PATH_ENCODED.encode(), DctmDataType.DF_BOOLEAN.getStoredType(), true);
-		StringBuilder sb = new StringBuilder();
-		for (List<String> l : calculateAllPaths(object)) {
-			sb.setLength(0);
-			boolean encoded = false;
-			for (String s : l) {
-				String str = FilenameFixer.urlEncode(s);
-				sb.append('/').append(str);
-				encoded |= !Tools.equals(str, s);
-			}
-			paths.addValue(DfValueFactory.newStringValue(sb.toString()));
-			pathsEncoded.addValue(DfValueFactory.newBooleanValue(encoded));
-		}
 		properties.add(paths);
-		properties.add(pathsEncoded);
-
 		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(),
 			DctmDataType.DF_ID.getStoredType(), true);
+		properties.add(parents);
+
 		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
 		for (int i = 0; i < parentCount; i++) {
 			final IDfValue folderId = object.getRepeatingValue(DctmAttributes.I_FOLDER_ID, i);
+			final IDfFolder parent;
+			try {
+				parent = session.getFolderBySpecification(folderId.asId().getId());
+			} catch (DfIdNotFoundException e) {
+				this.log.warn(String.format("%s [%s](%s) references non-existent folder [%s]", object.getType()
+					.getName(), object.getObjectName(), object.getObjectId().getId(), folderId.asString()));
+				continue;
+			}
 			parents.addValue(folderId);
+			final int pathCount = parent.getFolderPathCount();
+			for (int p = 0; p < pathCount; p++) {
+				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(p)));
+			}
 		}
-		properties.add(parents);
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {

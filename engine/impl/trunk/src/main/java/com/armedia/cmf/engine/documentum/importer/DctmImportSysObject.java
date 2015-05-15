@@ -56,7 +56,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-DctmSysObject {
+	DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -412,7 +412,7 @@ DctmSysObject {
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -668,7 +668,7 @@ DctmSysObject {
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
 				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-				.getId(), currentPath));
+					.getId(), currentPath));
 		}
 
 		return existing;
@@ -686,11 +686,11 @@ DctmSysObject {
 	protected IDfId getMappedParentId(DctmImportContext context, int pos) throws DfException, ImportException {
 		final IDfSession session = context.getSession();
 		StoredProperty<IDfValue> parents = this.storedObject.getProperty(IntermediateProperty.PARENT_ID.encode());
-		StoredProperty<IDfValue> paths = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
 		IDfId mainFolderId = parents.getValue(pos).asId();
 		if (mainFolderId.isNull()) {
 			// This is only valid if pos is 0, and it's the only parent value, and there's only one
 			// path value. If it's used under any other circumstance, it's an error.
+			StoredProperty<IDfValue> paths = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
 			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.getValueCount() == 1)) {
 				// This is a "fixup" from the path repairs, so we look up by path
 				IDfValue path = paths.getValue();
@@ -888,7 +888,7 @@ DctmSysObject {
 						.format(
 							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
 							aclDomain, this.storedObject.getType(), this.storedObject.getLabel(), sysObject
-							.getObjectId().getId());
+								.getObjectId().getId());
 					if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 				}
