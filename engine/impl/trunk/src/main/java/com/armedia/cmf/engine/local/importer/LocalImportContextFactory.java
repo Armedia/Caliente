@@ -22,7 +22,9 @@ public class LocalImportContextFactory extends
 
 	@Override
 	protected File locateFolder(LocalRoot session, String path) throws Exception {
-		return new File(session.getFile(), path).getCanonicalFile();
+		File f = new File(session.getFile(), path).getCanonicalFile();
+		if (f.exists() && f.isDirectory()) { return f; }
+		return null;
 	}
 
 	@Override
