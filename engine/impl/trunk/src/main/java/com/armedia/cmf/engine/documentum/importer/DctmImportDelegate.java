@@ -55,8 +55,8 @@ import com.documentum.fc.common.admin.DfAdminException;
  * @param <T>
  */
 public abstract class DctmImportDelegate<T extends IDfPersistentObject>
-extends
-ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
+	extends
+	ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
 
 	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory.newStringValue("CURRENT");
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
@@ -66,10 +66,10 @@ ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, D
 	protected DctmImportDelegate(DctmImportDelegateFactory factory, Class<T> objectClass, DctmObjectType expectedType,
 		StoredObject<IDfValue> storedObject) throws Exception {
 		super(factory, objectClass, storedObject);
-		if (expectedType != getDctmType()) { throw new IllegalArgumentException(String.format(
-			"This delegate is meant for [%s], but the given object is of type [%s] (%s)", expectedType, getDctmType(),
-			storedObject.getType())); }
 		this.dctmType = expectedType;
+		if (expectedType.getStoredObjectType() != storedObject.getType()) { throw new IllegalArgumentException(
+			String.format("This delegate is meant for [%s], but the given object is of type [%s]",
+				expectedType.getStoredObjectType(), storedObject.getType())); }
 	}
 
 	protected final T castObject(IDfPersistentObject object) throws DfException {
@@ -77,7 +77,7 @@ ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, D
 		Class<T> dfClass = getObjectClass();
 		if (!dfClass.isInstance(object)) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", dfClass.getCanonicalName(), object.getClass()
-			.getCanonicalName())); }
+				.getCanonicalName())); }
 		return dfClass.cast(object);
 	}
 
@@ -340,11 +340,11 @@ ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, D
 				} catch (DfException e) {
 					ok = false;
 					this.log
-					.error(
-						String
-						.format(
-							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-							this.storedObject.getLabel(), this.storedObject.getId()), e);
+						.error(
+							String
+								.format(
+									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+									this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
@@ -417,7 +417,7 @@ ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, D
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	/**
@@ -431,16 +431,16 @@ ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, D
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		return false;
 	}
 
