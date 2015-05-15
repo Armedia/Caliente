@@ -35,8 +35,8 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-	extends
-	ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+extends
+ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected final File targetFile;
 	protected final Path targetPath;
@@ -47,25 +47,16 @@ public abstract class LocalImportDelegate
 		super(factory, File.class, storedObject);
 		ObjectStorageTranslator<StoredValue> translator = factory.getEngine().getTranslator();
 		StoredProperty<StoredValue> pathProp = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
-		StoredProperty<StoredValue> pathEncProp = this.storedObject.getProperty(IntermediateProperty.PATH_ENCODED
-			.encode());
 		File root = this.factory.getRoot().getFile();
 		// We must also apply the target location to the path
 
 		Object basePath = pathProp.getValue();
-		boolean encoded = false;
-		if ((pathEncProp != null) && pathEncProp.hasValues()) {
-			encoded = Boolean.valueOf(pathEncProp.getValue().toString());
-		}
 		File tgt = root;
 		// TODO: We must also determine if the target FS requires "windows mode".. for instance
 		// for NTFS on Linux, windows restrictions must be observed... but there's no "clean"
 		// way to figure that out from Java...
 		boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
 		for (String s : FileNameTools.tokenize(basePath.toString(), '/')) {
-			if (encoded) {
-				s = FilenameFixer.urlDecode(s);
-			}
 			tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
 		}
 
@@ -83,7 +74,7 @@ public abstract class LocalImportDelegate
 	}
 
 	protected boolean isSameDatesAndOwners(ObjectStorageTranslator<StoredValue> translator) throws IOException,
-		ParseException {
+	ParseException {
 		final UserPrincipalLookupService userSvc = this.targetPath.getFileSystem().getUserPrincipalLookupService();
 		final BasicFileAttributeView basicView = Files.getFileAttributeView(this.targetPath,
 			BasicFileAttributeView.class);
