@@ -23,6 +23,7 @@ import org.apache.commons.lang3.SystemUtils;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportDelegate;
+import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
@@ -35,60 +36,60 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-extends
-ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
-
-	protected final File targetFile;
-	protected final Path targetPath;
-	protected final String newId;
+	extends
+	ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected LocalImportDelegate(LocalImportDelegateFactory factory, StoredObject<StoredValue> storedObject)
 		throws Exception {
 		super(factory, File.class, storedObject);
-		ObjectStorageTranslator<StoredValue> translator = factory.getEngine().getTranslator();
-		StoredProperty<StoredValue> pathProp = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
-		File root = this.factory.getRoot().getFile();
+	}
 
-		// We must also apply the target location to the path
+	protected final String getNewId(File f) {
+		return String.format("%08X", f.hashCode());
+	}
+
+	protected final File getTargetFile(LocalImportContext ctx) throws ImportException, IOException {
+		final ObjectStorageTranslator<StoredValue> translator = this.factory.getEngine().getTranslator();
 
 		// TODO: We must also determine if the target FS requires "windows mode".. for instance
 		// for NTFS on Linux, windows restrictions must be observed... but there's no "clean"
 		// way to figure that out from Java...
 		final boolean windowsMode = SystemUtils.IS_OS_WINDOWS;
 
-		File tgt = root;
+		File tgt = ctx.getSession().getFile();
 
-		if (pathProp.hasValues()) {
-			for (String s : FileNameTools.tokenize(pathProp.getValue().toString(), '/')) {
-				tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
-			}
+		StoredProperty<StoredValue> pathProp = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
+		String p = "/";
+		if ((pathProp != null) && pathProp.hasValues()) {
+			p = ctx.getTargetPath(pathProp.getValue().toString());
+		} else {
+			p = ctx.getTargetPath(p);
 		}
 
-		StoredAttribute<StoredValue> nameAtt = storedObject.getAttribute(translator.decodeAttributeName(
-			storedObject.getType(), IntermediateAttribute.NAME.encode()));
+		for (String s : FileNameTools.tokenize(p, '/')) {
+			tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
+		}
+
+		StoredAttribute<StoredValue> nameAtt = this.storedObject.getAttribute(translator.decodeAttributeName(
+			this.storedObject.getType(), IntermediateAttribute.NAME.encode()));
 
 		// We always fix the file's name, since it's not part of the path and may also need fixing.
 		// Same dilemma as above, though - need to know "when" to use windows mode...
 		String name = FilenameFixer.safeEncode(nameAtt.getValue().toString(), windowsMode);
-		tgt = new File(tgt, name);
-
-		this.targetFile = tgt.getCanonicalFile();
-		this.targetPath = this.targetFile.toPath();
-		this.newId = String.format("%08X", this.targetFile.hashCode());
+		return new File(tgt, name).getCanonicalFile();
 	}
 
-	protected boolean isSameDatesAndOwners(ObjectStorageTranslator<StoredValue> translator) throws IOException,
-	ParseException {
-		final UserPrincipalLookupService userSvc = this.targetPath.getFileSystem().getUserPrincipalLookupService();
-		final BasicFileAttributeView basicView = Files.getFileAttributeView(this.targetPath,
-			BasicFileAttributeView.class);
-		final PosixFileAttributeView posixView = Files.getFileAttributeView(this.targetPath,
-			PosixFileAttributeView.class);
+	protected boolean isSameDatesAndOwners(File targetFile, ObjectStorageTranslator<StoredValue> translator)
+		throws IOException, ParseException {
+		Path targetPath = targetFile.toPath();
+		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
+		final BasicFileAttributeView basicView = Files.getFileAttributeView(targetPath, BasicFileAttributeView.class);
+		final PosixFileAttributeView posixView = Files.getFileAttributeView(targetPath, PosixFileAttributeView.class);
 		final FileOwnerAttributeView ownerView;
 		if (posixView != null) {
 			ownerView = posixView;
 		} else {
-			ownerView = Files.getFileAttributeView(this.targetPath, FileOwnerAttributeView.class);
+			ownerView = Files.getFileAttributeView(targetPath, FileOwnerAttributeView.class);
 		}
 
 		final BasicFileAttributes basic = basicView.readAttributes();
@@ -162,19 +163,19 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 		return true;
 	}
 
-	protected void applyAttributes(ObjectStorageTranslator<StoredValue> translator) throws IOException, ParseException {
-		final UserPrincipalLookupService userSvc = this.targetPath.getFileSystem().getUserPrincipalLookupService();
+	protected void applyAttributes(File targetFile, ObjectStorageTranslator<StoredValue> translator)
+		throws IOException, ParseException {
+		Path targetPath = targetFile.toPath();
+		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
 
-		final BasicFileAttributeView basicView = Files.getFileAttributeView(this.targetPath,
-			BasicFileAttributeView.class);
-		final PosixFileAttributeView posixView = Files.getFileAttributeView(this.targetPath,
-			PosixFileAttributeView.class);
-		final AclFileAttributeView aclView = Files.getFileAttributeView(this.targetPath, AclFileAttributeView.class);
+		final BasicFileAttributeView basicView = Files.getFileAttributeView(targetPath, BasicFileAttributeView.class);
+		final PosixFileAttributeView posixView = Files.getFileAttributeView(targetPath, PosixFileAttributeView.class);
+		final AclFileAttributeView aclView = Files.getFileAttributeView(targetPath, AclFileAttributeView.class);
 		final FileOwnerAttributeView ownerView;
 		if (posixView != null) {
 			ownerView = posixView;
 		} else {
-			ownerView = Files.getFileAttributeView(this.targetPath, FileOwnerAttributeView.class);
+			ownerView = Files.getFileAttributeView(targetPath, FileOwnerAttributeView.class);
 		}
 
 		final BasicFileAttributes basic = basicView.readAttributes();

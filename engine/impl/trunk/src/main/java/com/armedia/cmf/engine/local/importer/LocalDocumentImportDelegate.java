@@ -30,36 +30,41 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 	@Override
 	protected ImportOutcome importObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
 		throws ImportException, StorageException, StoredValueDecoderException {
-		String tgtPath = ctx.getTargetPath(this.targetFile.getPath());
-		tgtPath.hashCode();
+		File targetFile;
+		try {
+			targetFile = getTargetFile(ctx);
+		} catch (IOException e) {
+			throw new ImportException(String.format("Failed to calculate the target file for document [%s](%s)",
+				this.storedObject.getLabel(), this.storedObject.getId()), e);
+		}
 
-		File parent = this.targetFile.getParentFile();
+		File parent = targetFile.getParentFile();
 		if (parent != null) {
 			parent.mkdirs();
 		}
 
 		final boolean created;
 		try {
-			created = this.targetFile.createNewFile();
+			created = targetFile.createNewFile();
 		} catch (IOException e) {
 			throw new ImportException(String.format("Failed to create the new file [%s] for DOCUMENT [%s](%s)",
-				this.targetFile.getAbsolutePath(), this.storedObject.getLabel(), this.storedObject.getId()), e);
+				targetFile.getAbsolutePath(), this.storedObject.getLabel(), this.storedObject.getId()), e);
 		}
 
 		if (!created) {
-			if (!this.targetFile.isFile()) { throw new ImportException(String.format(
-				"Failed to create the file (and parents) at [%s] for document [%s](%s)", this.targetFile,
+			if (!targetFile.isFile()) { throw new ImportException(String.format(
+				"Failed to create the file (and parents) at [%s] for document [%s](%s)", targetFile,
 				this.storedObject.getLabel(), this.storedObject.getId())); }
-			if (!this.targetFile.exists()) { throw new ImportException(String.format(
-				"A non-file object already exists at [%s] for document [%s](%s)", this.targetFile,
+			if (!targetFile.exists()) { throw new ImportException(String.format(
+				"A non-file object already exists at [%s] for document [%s](%s)", targetFile,
 				this.storedObject.getLabel(), this.storedObject.getId())); }
 
 			try {
-				if (isSameDatesAndOwners(translator)) { return new ImportOutcome(ImportResult.DUPLICATE, this.newId,
-					this.targetFile.getAbsolutePath()); }
+				if (isSameDatesAndOwners(targetFile, translator)) { return new ImportOutcome(ImportResult.DUPLICATE,
+					getNewId(targetFile), targetFile.getAbsolutePath()); }
 			} catch (Exception e) {
 				throw new ImportException(String.format(
-					"Failed to validate the dates and owners at [%s] for document [%s](%s)", this.targetFile,
+					"Failed to validate the dates and owners at [%s] for document [%s](%s)", targetFile,
 					this.storedObject.getLabel(), this.storedObject.getId()), e);
 			}
 		}
@@ -81,20 +86,20 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 			File src = h.getFile();
 			if (src != null) {
 				try {
-					Files.copy(src.toPath(), this.targetPath, StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(src.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException e) {
 					throw new ImportException(String.format(
-						"Failed to copy the contents from [%s] to [%s] for document [%s](%s)", src, this.targetFile,
+						"Failed to copy the contents from [%s] to [%s] for document [%s](%s)", src, targetFile,
 						this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 			} else {
 				InputStream in = null;
 				try {
 					in = h.openInput();
-					Files.copy(in, this.targetPath, StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException e) {
 					throw new ImportException(String.format(
-						"Failed to copy the default content object into [%s] for document [%s](%s)", this.targetFile,
+						"Failed to copy the default content object into [%s] for document [%s](%s)", targetFile,
 						this.storedObject.getLabel(), this.storedObject.getId()), e);
 				} finally {
 					IOUtils.closeQuietly(in);
@@ -103,13 +108,13 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		}
 
 		try {
-			applyAttributes(translator);
+			applyAttributes(targetFile, translator);
 		} catch (Exception e) {
 			throw new ImportException(String.format(
-				"Failed to apply attributes to the target file [%s] for %s [%s](%s)", this.targetFile,
+				"Failed to apply attributes to the target file [%s] for %s [%s](%s)", targetFile,
 				this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()), e);
 		}
-		return new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED, this.newId,
-			this.targetFile.getAbsolutePath());
+		return new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED, getNewId(targetFile),
+			targetFile.getAbsolutePath());
 	}
 }

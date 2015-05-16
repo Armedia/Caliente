@@ -1,5 +1,8 @@
 package com.armedia.cmf.engine.local.importer;
 
+import java.io.File;
+import java.io.IOException;
+
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
@@ -19,28 +22,33 @@ public class LocalFolderImportDelegate extends LocalImportDelegate {
 	@Override
 	protected ImportOutcome importObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
 		throws ImportException, StorageException, StoredValueDecoderException {
-		String tgtPath = ctx.getTargetPath(this.targetFile.getPath());
-		tgtPath.hashCode();
+		File targetFile;
+		try {
+			targetFile = getTargetFile(ctx);
+		} catch (IOException e) {
+			throw new ImportException(String.format("Failed to calculate the target file for folder [%s](%s)",
+				this.storedObject.getLabel(), this.storedObject.getId()), e);
+		}
 
-		if (this.targetFile.isDirectory()) { return new ImportOutcome(ImportResult.DUPLICATE, this.newId,
-			this.targetFile.getAbsolutePath()); }
+		if (targetFile.isDirectory()) { return new ImportOutcome(ImportResult.DUPLICATE, getNewId(targetFile),
+			targetFile.getAbsolutePath()); }
 
-		final boolean created = this.targetFile.mkdirs();
-		if (!this.targetFile.isDirectory()) { throw new ImportException(String.format(
-			"Failed to create the directory (and parents) at [%s] for folder [%s](%s)", this.targetFile,
+		final boolean created = targetFile.mkdirs();
+		if (!targetFile.isDirectory()) { throw new ImportException(String.format(
+			"Failed to create the directory (and parents) at [%s] for folder [%s](%s)", targetFile,
 			this.storedObject.getLabel(), this.storedObject.getId())); }
-		if (!this.targetFile.exists()) { throw new ImportException(String.format(
-			"A non-folder object already exists at [%s] for folder [%s](%s)", this.targetFile,
-			this.storedObject.getLabel(), this.storedObject.getId())); }
+		if (!targetFile.exists()) { throw new ImportException(String.format(
+			"A non-folder object already exists at [%s] for folder [%s](%s)", targetFile, this.storedObject.getLabel(),
+			this.storedObject.getId())); }
 
 		try {
-			applyAttributes(translator);
+			applyAttributes(targetFile, translator);
 		} catch (Exception e) {
 			throw new ImportException(String.format(
-				"Failed to apply attributes to the target file [%s] for %s [%s](%s)", this.targetFile,
-				this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()), e);
+				"Failed to apply attributes to the target file [%s] for folder [%s](%s)", targetFile,
+				this.storedObject.getLabel(), this.storedObject.getId()), e);
 		}
-		return new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED, this.newId,
-			this.targetFile.getAbsolutePath());
+		return new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED, getNewId(targetFile),
+			targetFile.getAbsolutePath());
 	}
 }
