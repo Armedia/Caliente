@@ -43,8 +43,8 @@ import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
 
 public class LocalExportDelegate
-extends
-ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+	extends
+	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
 		super(factory, LocalFile.class, object);
@@ -68,7 +68,7 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 	}
 
 	@Override
-	protected void marshal(LocalExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(LocalExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		final File file = this.object.getAbsolute();
 		StoredAttribute<StoredValue> att = null;
 		att = new StoredAttribute<StoredValue>(IntermediateAttribute.NAME.encode(), StoredDataType.STRING, false);
@@ -164,6 +164,7 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExpo
 		att = new StoredAttribute<StoredValue>(IntermediateAttribute.PATH.encode(), StoredDataType.STRING, true);
 		att.setValue(new StoredValue(this.object.getPortablePath()));
 		object.setAttribute(att);
+		return true;
 	}
 
 	@Override

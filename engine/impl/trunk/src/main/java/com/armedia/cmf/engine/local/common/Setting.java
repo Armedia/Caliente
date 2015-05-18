@@ -5,6 +5,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 public enum Setting implements ConfigurationSetting {
 	//
 	COPY_CONTENT,
+	INCLUDE_ALL_VERSIONS,
 	//
 	;
 
