@@ -108,7 +108,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.TITLE, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.A_CONTENT_TYPE, IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
-		am.put(DctmAttributes.R_CONTENT_SIZE, IntermediateAttribute.CONTENT_STREAM_LENGTH);
+		am.put(DctmAttributes.R_FULL_CONTENT_SIZE, IntermediateAttribute.CONTENT_STREAM_LENGTH);
 		am.put(DctmAttributes.I_CHRONICLE_ID, IntermediateAttribute.VERSION_SERIES_ID);
 		am.put(DctmAttributes.I_ANTECEDENT_ID, IntermediateAttribute.VERSION_ANTECEDENT_ID);
 		am.put(DctmAttributes.R_VERSION_LABEL, IntermediateAttribute.VERSION_LABEL);
@@ -124,6 +124,11 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		am.put(DctmAttributes.I_FOLDER_ID, IntermediateAttribute.PARENT_ID);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
+		am.put(DctmAttributes.I_HAS_FOLDER, IntermediateAttribute.IS_LAST_VERSION);
+		am.put(DctmAttributes.R_LOCK_OWNER, IntermediateAttribute.VERSION_SERIES_CHECKED_OUT_BY);
+		am.put(DctmAttributes.LOG_ENTRY, IntermediateAttribute.CHECKIN_COMMENT);
+		am.put(DctmAttributes.I_VSTAMP, IntermediateAttribute.CHANGE_TOKEN);
+		am.put(DctmAttributes.R_IMMUTABLE_FLAG, IntermediateAttribute.IS_IMMUTABLE);
 		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);

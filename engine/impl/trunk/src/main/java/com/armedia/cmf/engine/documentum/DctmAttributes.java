@@ -99,6 +99,15 @@ public class DctmAttributes {
 	/** The i_folder_id attribute of dm_sysobject. */
 	public static final String I_FOLDER_ID = "i_folder_id";
 
+	/** The i_has_folder attribute of dm_sysobject. */
+	public static final String I_HAS_FOLDER = "i_has_folder";
+
+	/** The r_lock_owner attribute of dm_sysobject. */
+	public static final String R_LOCK_OWNER = "r_lock_owner";
+
+	/** The log_entry attribute of dm_sysobject. */
+	public static final String LOG_ENTRY = "log_entry";
+
 	/** The a_content_type attribute of dm_sysobject. */
 	public static final String A_CONTENT_TYPE = "a_content_type";
 
@@ -292,6 +301,9 @@ public class DctmAttributes {
 	// dm_document Attributes
 	/** The r_content_size attribute of dm_document. */
 	public static final String R_CONTENT_SIZE = "r_content_size";
+
+	/** The r_full_content_size attribute of dm_document. */
+	public static final String R_FULL_CONTENT_SIZE = "r_full_content_size";
 
 	// Connection config Attributes
 	/** The r_docbase_name attribute of connection config. */
