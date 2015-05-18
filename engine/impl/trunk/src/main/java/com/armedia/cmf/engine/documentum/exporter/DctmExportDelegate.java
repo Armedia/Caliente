@@ -26,8 +26,8 @@ import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmExportDelegate<T extends IDfPersistentObject>
-extends
-ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory, DctmExportEngine> {
+	extends
+	ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory, DctmExportEngine> {
 
 	private final DctmObjectType dctmType;
 
@@ -88,7 +88,7 @@ ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, D
 	}
 
 	@Override
-	protected final void marshal(DctmExportContext ctx, StoredObject<IDfValue> object) throws ExportException {
+	protected final boolean marshal(DctmExportContext ctx, StoredObject<IDfValue> object) throws ExportException {
 		try {
 			final T typedObject = castObject(this.object);
 			// First, the attributes
@@ -100,7 +100,7 @@ ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, D
 				if (handler.includeInExport(this.object, attr)) {
 					StoredAttribute<IDfValue> attribute = new StoredAttribute<IDfValue>(attr.getName(), DctmDataType
 						.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(
-							this.object, attr));
+						this.object, attr));
 					object.setAttribute(attribute);
 				}
 			}
@@ -115,6 +115,7 @@ ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, D
 				// This mechanism overwrites properties, and intentionally so
 				object.setProperty(property);
 			}
+			return true;
 		} catch (DfException e) {
 			throw new ExportException(String.format("Failed to export %s %s", getType(), getObjectId()), e);
 		}
