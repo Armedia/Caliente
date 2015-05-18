@@ -27,7 +27,7 @@ import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
 import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -364,7 +364,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(ShptSession session, ObjectStorageTranslator<StoredValue> translator,
+	protected List<ContentInfo> storeContent(ShptSession session, AttributeTranslator<StoredValue> translator,
 		StoredObject<StoredValue> marshaled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
 		// TODO: We NEED to use something other than the object ID here...
 		ContentStore<?>.Handle h = streamStore.getHandle(translator, marshaled, "");

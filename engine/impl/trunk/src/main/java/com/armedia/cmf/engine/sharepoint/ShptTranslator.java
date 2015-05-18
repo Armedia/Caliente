@@ -13,7 +13,7 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
@@ -24,7 +24,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
+public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 
 	private static final Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
@@ -129,7 +129,7 @@ public final class ShptTranslator extends ObjectStorageTranslator<StoredValue> {
 
 	@Override
 	public StoredValueCodec<StoredValue> getCodec(StoredDataType type) {
-		return ObjectStorageTranslator.getStoredValueCodec(type);
+		return AttributeTranslator.getStoredValueCodec(type);
 	}
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {

@@ -19,7 +19,7 @@ import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.ShptTranslator;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -61,7 +61,7 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected ObjectStorageTranslator<StoredValue> getTranslator() {
+	protected AttributeTranslator<StoredValue> getTranslator() {
 		return ShptTranslator.INSTANCE;
 	}
 
