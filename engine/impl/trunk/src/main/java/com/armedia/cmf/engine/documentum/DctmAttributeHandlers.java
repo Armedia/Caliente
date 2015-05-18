@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 
-import com.armedia.cmf.storage.StoredAttribute;
+import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.common.DfException;
@@ -31,7 +31,7 @@ public class DctmAttributeHandlers {
 		 *         possibly modified)
 		 * @throws DfException
 		 */
-		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
 			throws DfException {
 			return attribute.getValues();
 		}
@@ -48,7 +48,7 @@ public class DctmAttributeHandlers {
 		 *         {@code false})
 		 * @throws DfException
 		 */
-		public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
 			throws DfException {
 			return true;
 		}
@@ -91,7 +91,7 @@ public class DctmAttributeHandlers {
 		}
 
 		@Override
-		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
 			throws DfException {
 			return DctmMappingUtils.resolveMappableUsers(object, attribute);
 		}
@@ -100,7 +100,7 @@ public class DctmAttributeHandlers {
 	public static final AttributeHandler DEFAULT_HANDLER = new AttributeHandler();
 	public static final AttributeHandler NO_IMPORT_HANDLER = new AttributeHandler() {
 		@Override
-		public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
 			throws DfException {
 			return false;
 		}
@@ -113,13 +113,13 @@ public class DctmAttributeHandlers {
 		}
 
 		@Override
-		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+		public Collection<IDfValue> getImportableValues(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
 			throws DfException {
 			return DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER.getImportableValues(object, attribute);
 		}
 
 		@Override
-		public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
 			throws DfException {
 			return false;
 		}
@@ -257,7 +257,7 @@ public class DctmAttributeHandlers {
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
 			@Override
-			public boolean includeInImport(IDfPersistentObject object, StoredAttribute<IDfValue> attribute)
+			public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
 				throws DfException {
 				return false;
 			}
@@ -374,7 +374,7 @@ public class DctmAttributeHandlers {
 		return (interceptor != null ? m.put(attributeName, interceptor) : m.remove(attributeName));
 	}
 
-	public static AttributeHandler getAttributeHandler(DctmObjectType objectType, StoredAttribute<IDfValue> attribute) {
+	public static AttributeHandler getAttributeHandler(DctmObjectType objectType, CmfAttribute<IDfValue> attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to intercept"); }
 		return DctmAttributeHandlers.getAttributeHandler(objectType, DctmTranslator.translateType(attribute.getType()),
 			attribute.getName());

@@ -14,7 +14,7 @@ public class DctmImportEngineTest extends DctmEngineTest {
 
 	@Before
 	public void setUp() throws Exception {
-		this.objectStore.clearAttributeMappings();
+		this.cmfObjectStore.clearAttributeMappings();
 	}
 
 	@Test
@@ -26,7 +26,7 @@ public class DctmImportEngineTest extends DctmEngineTest {
 		settings.put(DctmSessionFactory.USERNAME, "dctmadmin");
 		settings.put(DctmSessionFactory.PASSWORD, "123");
 
-		importer.runImport(this.output, this.objectStore, this.streamStore, settings);
+		importer.runImport(this.output, this.cmfObjectStore, this.streamStore, settings);
 	}
 
 }

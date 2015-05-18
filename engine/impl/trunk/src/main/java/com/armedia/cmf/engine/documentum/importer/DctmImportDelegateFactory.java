@@ -4,8 +4,8 @@ import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.UnsupportedObjectTypeException;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.UnsupportedCmfTypeException;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -18,9 +18,9 @@ ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContex
 	}
 
 	@Override
-	protected DctmImportDelegate<?> newImportDelegate(StoredObject<IDfValue> marshaled) throws Exception {
+	protected DctmImportDelegate<?> newImportDelegate(CmfObject<IDfValue> marshaled) throws Exception {
 		DctmObjectType type = DctmObjectType.decodeType(marshaled.getType());
-		if (type == null) { throw new UnsupportedObjectTypeException(marshaled.getType()); }
+		if (type == null) { throw new UnsupportedCmfTypeException(marshaled.getType()); }
 		switch (type) {
 			case ACL:
 				return new DctmImportACL(this, marshaled);

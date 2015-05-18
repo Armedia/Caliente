@@ -9,24 +9,24 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.StoredValueCodec;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
-public final class DctmTranslator extends AttributeTranslator<IDfValue> {
-	private static final Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
+public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
+	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<StoredObjectType, BidiMap<String, IntermediateAttribute>>(
-			StoredObjectType.class);
+		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
+			CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
@@ -41,7 +41,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.DEFAULT_FOLDER, IntermediateAttribute.DEFAULT_FOLDER);
 		am.put(DctmAttributes.USER_LOGIN_NAME, IntermediateAttribute.LOGIN_NAME);
 		am.put(DctmAttributes.USER_LOGIN_DOMAIN, IntermediateAttribute.LOGIN_REALM);
-		attributeMappings.put(StoredObjectType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
@@ -51,7 +51,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
-		attributeMappings.put(StoredObjectType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
@@ -60,7 +60,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
-		attributeMappings.put(StoredObjectType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
@@ -69,7 +69,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(DctmAttributes.OWNER, IntermediateAttribute.OWNER);
-		attributeMappings.put(StoredObjectType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
@@ -77,7 +77,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		// OBJECT_TYPE_ID (DM_FORMAT)
 		am.put(DctmAttributes.NAME, IntermediateAttribute.NAME);
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
-		attributeMappings.put(StoredObjectType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
@@ -99,7 +99,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.R_FOLDER_PATH, IntermediateAttribute.PATH);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
-		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
@@ -129,7 +129,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.LOG_ENTRY, IntermediateAttribute.CHECKIN_COMMENT);
 		am.put(DctmAttributes.I_VSTAMP, IntermediateAttribute.CHANGE_TOKEN);
 		am.put(DctmAttributes.R_IMMUTABLE_FLAG, IntermediateAttribute.IS_IMMUTABLE);
-		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
@@ -138,7 +138,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		// Nobody can instantiate
 	}
 
-	public static DctmDataType translateType(StoredDataType type) {
+	public static DctmDataType translateType(CmfDataType type) {
 		switch (type) {
 			case BOOLEAN:
 				return DctmDataType.DF_BOOLEAN;
@@ -157,12 +157,12 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 		}
 	}
 
-	public static IDfType translateType(IDfSession session, StoredObject<IDfValue> object) throws DfException {
+	public static IDfType translateType(IDfSession session, CmfObject<IDfValue> object) throws DfException {
 		String subType = object.getSubtype();
 		IDfType type = session.getType(subType);
 		if (type != null) {
 			// TODO: Fix this kludge for something cleaner
-			StoredProperty<IDfValue> targetPaths = object.getProperty(IntermediateProperty.PATH.encode());
+			CmfProperty<IDfValue> targetPaths = object.getProperty(IntermediateProperty.PATH.encode());
 			if (Tools.equals("dm_cabinet", type.getName()) && targetPaths.hasValues()) {
 				type = type.getSuperType();
 			}
@@ -174,18 +174,18 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 	}
 
 	@Override
-	public StoredValueCodec<IDfValue> getCodec(StoredDataType type) {
+	public CmfValueCodec<IDfValue> getCodec(CmfDataType type) {
 		return DctmTranslator.translateType(type);
 	}
 
-	public static final AttributeTranslator<IDfValue> INSTANCE = new DctmTranslator();
+	public static final CmfAttributeTranslator<IDfValue> INSTANCE = new DctmTranslator();
 
-	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {
+	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
 		return DctmTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
 	@Override
-	public String encodeAttributeName(StoredObjectType type, String attributeName) {
+	public String encodeAttributeName(CmfType type, String attributeName) {
 		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
 		if (mappings != null) {
 			// TODO: normalize the CMS attribute name
@@ -196,7 +196,7 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 	}
 
 	@Override
-	public String decodeAttributeName(StoredObjectType type, String attributeName) {
+	public String decodeAttributeName(CmfType type, String attributeName) {
 		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
 		if (mappings != null) {
 			String att = null;
@@ -212,19 +212,19 @@ public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 	}
 
 	@Override
-	public StoredObject<IDfValue> decodeObject(StoredObject<IDfValue> rawObject) {
+	public CmfObject<IDfValue> decodeObject(CmfObject<IDfValue> rawObject) {
 		// TODO: Perhaps perform specific attribute and property processing here?
 		return super.decodeObject(rawObject);
 	}
 
 	@Override
-	public StoredObject<IDfValue> encodeObject(StoredObject<IDfValue> rawObject) {
+	public CmfObject<IDfValue> encodeObject(CmfObject<IDfValue> rawObject) {
 		// TODO: Perhaps perform specific attribute and property processing here?
 		return super.encodeObject(rawObject);
 	}
 
 	@Override
-	public IDfValue getValue(StoredDataType type, Object value) {
+	public IDfValue getValue(CmfDataType type, Object value) {
 		return DfValueFactory.newValue(type, value);
 	}
 }

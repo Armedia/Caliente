@@ -16,9 +16,9 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmCommon;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -60,7 +60,7 @@ public class DctmImportEngine extends
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
 	@Override
-	protected ImportStrategy getImportStrategy(StoredObjectType type) {
+	protected ImportStrategy getImportStrategy(CmfType type) {
 		DctmObjectType dctmType = DctmObjectType.decodeType(type);
 		if (dctmType == null) { return DctmImportEngine.NOT_SUPPORTED; }
 		return dctmType.importStrategy;
@@ -72,12 +72,12 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected IDfValue getValue(StoredDataType type, Object value) {
+	protected IDfValue getValue(CmfDataType type, Object value) {
 		return DfValueFactory.newValue(type, value);
 	}
 
 	@Override
-	protected AttributeTranslator<IDfValue> getTranslator() {
+	protected CmfAttributeTranslator<IDfValue> getTranslator() {
 		return DctmTranslator.INSTANCE;
 	}
 
@@ -97,8 +97,8 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected boolean abortImport(StoredObjectType type, int errors) {
-		if (type == StoredObjectType.DATASTORE) {
+	protected boolean abortImport(CmfType type, int errors) {
+		if (type == CmfType.DATASTORE) {
 			// We MUST have all datastores present
 			return (errors > 0);
 		}
@@ -110,9 +110,9 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected boolean checkSupported(Set<StoredObjectType> excludes, StoredObjectType type) {
-		if (type == StoredObjectType.ACL) { return !excludes.contains(StoredObjectType.USER)
-			&& !excludes.contains(StoredObjectType.GROUP); }
+	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
+		if (type == CmfType.ACL) { return !excludes.contains(CmfType.USER)
+			&& !excludes.contains(CmfType.GROUP); }
 		return super.checkSupported(excludes, type);
 	}
 }

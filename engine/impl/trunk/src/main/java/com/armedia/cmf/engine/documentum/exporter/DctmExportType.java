@@ -6,7 +6,7 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collection;
 
-import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.CmfObject;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
@@ -53,7 +53,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfType type, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, type, ctx);
 		IDfType superType = type.getSuperType();

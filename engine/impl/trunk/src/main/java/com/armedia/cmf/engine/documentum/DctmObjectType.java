@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
@@ -25,18 +25,18 @@ public enum DctmObjectType {
 	// IMPORTANT: The object types must be declared in the proper import order
 	// otherwise that operation will fail.
 
-	STORE(StoredObjectType.DATASTORE, IDfStore.class),
-	USER(StoredObjectType.USER, IDfUser.class),
-	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
-	ACL(StoredObjectType.ACL, IDfACL.class),
-	TYPE(StoredObjectType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
-	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
-	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
-	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
+	STORE(CmfType.DATASTORE, IDfStore.class),
+	USER(CmfType.USER, IDfUser.class),
+	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
+	ACL(CmfType.ACL, IDfACL.class),
+	TYPE(CmfType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
+	FORMAT(CmfType.FORMAT, IDfFormat.class),
+	FOLDER(CmfType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
+	DOCUMENT(CmfType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
 	//
 	;
 
-	private final StoredObjectType cmsType;
+	private final CmfType cmsType;
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
 	private final BatchItemStrategy batchingStrategy;
@@ -73,25 +73,25 @@ public enum DctmObjectType {
 		}
 	};
 
-	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass) {
+	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass) {
 		this(cmsType, dfClass, null, null);
 	}
 
-	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass, String dmType) {
+	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass, String dmType) {
 		this(cmsType, dfClass, null, dmType);
 	}
 
-	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
+	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy) {
 		this(cmsType, dfClass, batchingStrategy, null);
 	}
 
-	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
+	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType) {
 		this(cmsType, dfClass, batchingStrategy, dmType, false, false);
 	}
 
-	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
+	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
@@ -105,7 +105,7 @@ public enum DctmObjectType {
 		this.failureInterruptsBatch = failureInterruptsBatch;
 	}
 
-	public final StoredObjectType getStoredObjectType() {
+	public final CmfType getStoredObjectType() {
 		return this.cmsType;
 	}
 
@@ -123,7 +123,7 @@ public enum DctmObjectType {
 	}
 
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
-	private static Map<StoredObjectType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
+	private static Map<CmfType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
 		UnsupportedDctmObjectTypeException {
@@ -172,11 +172,11 @@ public enum DctmObjectType {
 		return ret;
 	}
 
-	public static DctmObjectType decodeType(StoredObjectType type) {
+	public static DctmObjectType decodeType(CmfType type) {
 		synchronized (DctmObjectType.class) {
 			if (DctmObjectType.OBJECT_TYPE_TRANSLATOR == null) {
-				Map<StoredObjectType, DctmObjectType> m = new EnumMap<StoredObjectType, DctmObjectType>(
-					StoredObjectType.class);
+				Map<CmfType, DctmObjectType> m = new EnumMap<CmfType, DctmObjectType>(
+					CmfType.class);
 				for (DctmObjectType t : DctmObjectType.values()) {
 					m.put(t.getStoredObjectType(), t);
 				}

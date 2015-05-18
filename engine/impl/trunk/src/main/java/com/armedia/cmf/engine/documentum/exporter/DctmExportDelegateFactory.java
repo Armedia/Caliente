@@ -4,7 +4,7 @@ import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.exporter.ExportDelegateFactory;
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -19,7 +19,7 @@ ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContex
 	}
 
 	@Override
-	protected DctmExportDelegate<?> newExportDelegate(IDfSession session, StoredObjectType type, String searchKey)
+	protected DctmExportDelegate<?> newExportDelegate(IDfSession session, CmfType type, String searchKey)
 		throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the object"); }
@@ -31,7 +31,7 @@ ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContex
 		return newExportDelegate(object, null);
 	}
 
-	DctmExportDelegate<?> newExportDelegate(IDfPersistentObject object, StoredObjectType type) throws Exception {
+	DctmExportDelegate<?> newExportDelegate(IDfPersistentObject object, CmfType type) throws Exception {
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
 		final DctmObjectType dctmType = (type != null ? DctmObjectType.decodeType(type) : DctmObjectType

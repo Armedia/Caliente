@@ -20,13 +20,13 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -57,7 +57,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	private TemporaryPermission antecedentTemporaryPermission = null;
 	private TemporaryPermission branchTemporaryPermission = null;
 
-	protected DctmImportDocument(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject)
+	protected DctmImportDocument(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject)
 		throws Exception {
 		super(factory, IDfDocument.class, DctmObjectType.DOCUMENT, storedObject);
 	}
@@ -100,14 +100,14 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		if (isReference()) { return locateExistingByPath(ctx); }
 
 		// First things first: are we the root of the version hierarchy?
-		StoredAttribute<IDfValue> chronicleAtt = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
+		CmfAttribute<IDfValue> chronicleAtt = this.cmfObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
 		final Mapping chronicleMapping;
-		StoredAttribute<IDfValue> implicitLabelAtt = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
+		CmfAttribute<IDfValue> implicitLabelAtt = this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
 		final String implicitLabel = (implicitLabelAtt != null ? implicitLabelAtt.getValue().asString() : null);
 		if (chronicleAtt != null) {
 			String sourceChronicleId = chronicleAtt.getValue().asId().getId();
 			// Map to the new chronicle ID, from the old one...try for the quick win
-			chronicleMapping = ctx.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
+			chronicleMapping = ctx.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
 				DctmAttributes.R_OBJECT_ID, sourceChronicleId);
 		} else {
 			chronicleMapping = null;
@@ -170,22 +170,22 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	protected IDfDocument newReference(DctmImportContext context) throws DfException, ImportException {
 		IDfPersistentObject target = null;
 		IDfSession session = context.getSession();
-		IDfValue bindingCondition = this.storedObject.getProperty(DctmAttributes.BINDING_CONDITION).getValue();
-		IDfValue bindingLabel = this.storedObject.getProperty(DctmAttributes.BINDING_LABEL).getValue();
-		IDfValue referenceById = this.storedObject.getProperty(DctmAttributes.REFERENCE_BY_ID).getValue();
+		IDfValue bindingCondition = this.cmfObject.getProperty(DctmAttributes.BINDING_CONDITION).getValue();
+		IDfValue bindingLabel = this.cmfObject.getProperty(DctmAttributes.BINDING_LABEL).getValue();
+		IDfValue referenceById = this.cmfObject.getProperty(DctmAttributes.REFERENCE_BY_ID).getValue();
 
 		target = session.getObject(referenceById.asId());
 		if (!(target instanceof IDfSysObject)) { throw new ImportException(String.format(
-			"Reference [%s] target object [%s] is not an IDfSysObject instance", this.storedObject.getLabel(),
+			"Reference [%s] target object [%s] is not an IDfSysObject instance", this.cmfObject.getLabel(),
 			referenceById.asString())); }
 
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
 		IDfId mainFolderId = getMappedParentId(context);
 		if (mainFolderId == null) {
-			mainFolderId = this.storedObject.getProperty(PropertyIds.PARENT_ID).getValue().asId();
+			mainFolderId = this.cmfObject.getProperty(PropertyIds.PARENT_ID).getValue().asId();
 			throw new ImportException(String.format(
 				"Reference [%s] mapping for its parent folder [%s->???] could not be found",
-				this.storedObject.getLabel(), mainFolderId.getId()));
+				this.cmfObject.getLabel(), mainFolderId.getId()));
 		}
 		// TODO: Can a reference be *linked* to other folders?
 		IDfId newId = targetSysObj.addReference(mainFolderId, bindingCondition.asString(), bindingLabel.asString());
@@ -197,21 +197,21 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (isReference()) { return newReference(context); }
 
-		final StoredAttribute<IDfValue> sourceChronicleAtt = this.storedObject
+		final CmfAttribute<IDfValue> sourceChronicleAtt = this.cmfObject
 			.getAttribute(DctmAttributes.I_CHRONICLE_ID);
-		final StoredAttribute<IDfValue> antecedentAtt = this.storedObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
+		final CmfAttribute<IDfValue> antecedentAtt = this.cmfObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
 		final String sourceChronicleId = (sourceChronicleAtt != null ? sourceChronicleAtt.getValue().asString() : null);
 
 		// If we have no chronicle info to look for, we don't try to...
 		final boolean root = ((sourceChronicleId == null) || (antecedentAtt == null) || Tools.equals(
-			this.storedObject.getId(), sourceChronicleId));
+			this.cmfObject.getId(), sourceChronicleId));
 		if (root) { return super.newObject(context); }
 
 		final IDfSession session = context.getSession();
 
 		final IDfId antecedentId;
 		IDfDocument antecedentVersion = null;
-		final StoredProperty<IDfValue> antecedentProperty = this.storedObject
+		final CmfProperty<IDfValue> antecedentProperty = this.cmfObject
 			.getProperty(DctmSysObject.PATCH_ANTECEDENT);
 		if (antecedentProperty == null) {
 			antecedentId = (antecedentAtt != null ? antecedentAtt.getValue().asId() : DfId.DF_NULLID);
@@ -221,7 +221,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				antecedentId = aid;
 			} else {
 				antecedentId = null;
-				Mapping mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
+				Mapping mapping = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
 					DctmAttributes.R_OBJECT_ID, sourceChronicleId);
 				if (mapping != null) {
 					// Find the antecedent using the expected antecedent version number, which
@@ -237,7 +237,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		if (antecedentVersion == null) {
 			Mapping mapping = null;
 			if (antecedentId != null) {
-				mapping = context.getAttributeMapper().getTargetMapping(this.storedObject.getType(),
+				mapping = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
 					DctmAttributes.R_OBJECT_ID, antecedentId.getId());
 			}
 			if (mapping == null) {
@@ -246,7 +246,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				antecedentVersion = super.newObject(context);
 
 				// Set the name
-				antecedentVersion.setObjectName(this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
+				antecedentVersion.setObjectName(this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
 					.asString());
 
 				// Link to prospective parents
@@ -255,7 +255,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 				// Create the chronicle mapping
 				// TODO: How do we revert this if the transaction fails later on?
-				context.getAttributeMapper().setMapping(this.storedObject.getType(), DctmAttributes.R_OBJECT_ID,
+				context.getAttributeMapper().setMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
 					sourceChronicleId, antecedentVersion.getChronicleId().getId());
 
 				// And...finally...
@@ -268,7 +268,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			}
 		}
 
-		StoredProperty<IDfValue> patches = this.storedObject.getProperty(DctmSysObject.VERSION_PATCHES);
+		CmfProperty<IDfValue> patches = this.cmfObject.getProperty(DctmSysObject.VERSION_PATCHES);
 		if ((patches != null) && (patches.getValueCount() > 0)) {
 			// Patches are required...so let's carry them out!
 			// At the end of patching, antecedentVersion should point to the actual
@@ -279,8 +279,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			for (IDfValue p : patches) {
 				// Now we checkout and checkin and branch and whatnot as necessary until we can
 				// actually proceed with the rest of the algorithm...
-				final StoredProperty<IDfValue> prop = new StoredProperty<IDfValue>(DctmAttributes.R_VERSION_LABEL,
-					StoredDataType.STRING, false, DfValueFactory.newStringValue(p.toString()));
+				final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(DctmAttributes.R_VERSION_LABEL,
+					CmfDataType.STRING, false, DfValueFactory.newStringValue(p.toString()));
 				IDfDocument patchDocument = createSuccessorVersion(antecedentVersion, prop, context);
 				IDfId checkinId = persistNewVersion(patchDocument, p.asString(), context);
 				cleanUpTemporaryPermissions(session);
@@ -298,7 +298,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			// same except the last number), then we go ahead and assign it to antecedentVersion. If
 			// it's a sibling (same-level branch), or a descendant (sub-branch), then we leave the
 			// antecedent where it is
-			DctmVersionNumber newVersion = new DctmVersionNumber(this.storedObject
+			DctmVersionNumber newVersion = new DctmVersionNumber(this.cmfObject
 				.getAttribute(DctmAttributes.R_VERSION_LABEL).getValue().asString());
 			DctmVersionNumber lastVersion = new DctmVersionNumber(lastAntecedentVersion.asString());
 			if (newVersion.isSuccessorOf(lastVersion)) {
@@ -309,7 +309,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		return createSuccessorVersion(antecedentVersion, null, context);
 	}
 
-	private IDfDocument createSuccessorVersion(IDfDocument antecedentVersion, StoredProperty<IDfValue> rVersionLabel,
+	private IDfDocument createSuccessorVersion(IDfDocument antecedentVersion, CmfProperty<IDfValue> rVersionLabel,
 		DctmImportContext context) throws ImportException, DfException {
 		final IDfSession session = antecedentVersion.getSession();
 		antecedentVersion.fetch(null);
@@ -320,13 +320,13 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		// This is so later on we can decide whether we should set or clear the immutable flag,
 		// but only if we're a leaf node
-		StoredAttribute<IDfValue> descendantCount = this.storedObject.getAttribute(DctmAttributes.I_DIRECT_DSC);
+		CmfAttribute<IDfValue> descendantCount = this.cmfObject.getAttribute(DctmAttributes.I_DIRECT_DSC);
 		if ((descendantCount != null) && (descendantCount.getValue().asInteger() == 0)) {
 			detectIncomingMutability();
 		}
 
 		if (rVersionLabel == null) {
-			rVersionLabel = this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
+			rVersionLabel = this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
 		}
 		String antecedentVersionImplicitVersionLabel = antecedentVersion.getImplicitVersionLabel();
 		String documentImplicitVersionLabel = rVersionLabel.getValue().asString();
@@ -391,9 +391,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		throws DfException {
 
 		// Is root?
-		StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
+		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
 		String sourceChronicleId = (att != null ? att.getValue().asId().getId() : null);
-		final boolean root = ((sourceChronicleId == null) || Tools.equals(this.storedObject.getId(), sourceChronicleId));
+		final boolean root = ((sourceChronicleId == null) || Tools.equals(this.cmfObject.getId(), sourceChronicleId));
 		if (!root && !newObject) {
 			this.antecedentTemporaryPermission = new TemporaryPermission(document, IDfACL.DF_PERMIT_VERSION);
 			if (this.antecedentTemporaryPermission.grant(document)) {
@@ -406,7 +406,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, ContentInfo info,
-		ContentStore<?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
+		CmfContentStore<?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount) throws DfException,
 		ImportException {
 		// Step one: what's the content's path in the filesystem?
@@ -423,13 +423,13 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			try {
 				document.setFileEx(absolutePath, fullFormat, pageNumber, null);
 				final String msg = String.format("Added the primary content to document [%s](%s) -> {%s/%s/%s}",
-					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber);
+					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber);
 				DctmImportDocument.this.log.info(msg);
 				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
 			} catch (DfException e) {
 				final String msg = String.format(
 					"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}",
-					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber);
+					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber);
 				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
 					.getCanonicalName(), e.getMessage());
 				throw new ImportException(msg, e);
@@ -438,14 +438,14 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			try {
 				document.addRenditionEx2(absolutePath, fullFormat, pageNumber, pageModifier, null, false, false, false);
 				final String msg = String.format("Added rendition content to document [%s](%s) -> {%s/%s/%s/%s}",
-					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber,
+					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber,
 					pageModifier);
 				DctmImportDocument.this.log.info(msg);
 				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
 			} catch (DfException e) {
 				final String msg = String.format(
 					"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}",
-					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber,
+					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber,
 					pageModifier);
 				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
 					.getCanonicalName(), e.getMessage());
@@ -508,7 +508,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				final String msg = String
 					.format(
 						"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
-						this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber,
+						this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber,
 						pageModifier, sql);
 				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
 				throw new ImportException(msg);
@@ -518,7 +518,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			final String msg = String
 				.format(
 					"Exception caught generating updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-					this.storedObject.getLabel(), this.storedObject.getId(), absolutePath, fullFormat, pageNumber,
+					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber,
 					pageModifier);
 			context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
 				.getCanonicalName(), e.getMessage());
@@ -529,7 +529,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	protected String determineFormat(IDfSession session, String contentType) throws DfException {
 		String aContentType = contentType;
 		if (aContentType == null) {
-			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
+			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
 			if (att == null) { return DctmImportDocument.DEFAULT_BINARY_FORMAT; }
 			aContentType = att.getValue().asString();
 		}
@@ -561,19 +561,19 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		throws DfException, ImportException {
 		List<ContentInfo> infoList;
 		try {
-			infoList = context.getContentInfo(this.storedObject);
+			infoList = context.getContentInfo(this.cmfObject);
 		} catch (Exception e) {
 			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)",
-				this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()), e);
+				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
-		ContentStore<?> contentStore = context.getContentStore();
+		CmfContentStore<?> contentStore = context.getContentStore();
 		int i = 0;
-		final StoredAttribute<IDfValue> contentTypeAtt = this.storedObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
+		final CmfAttribute<IDfValue> contentTypeAtt = this.cmfObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
 		final String contentType = determineFormat(context.getSession(), (contentTypeAtt != null ? contentTypeAtt
 			.getValue().toString() : null));
-		final AttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
+		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		for (ContentInfo info : infoList) {
-			ContentStore<?>.Handle h = contentStore.getHandle(translator, this.storedObject, info.getQualifier());
+			CmfContentStore<?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info.getQualifier());
 
 			CfgTools cfg = info.getCfgTools();
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);

@@ -6,7 +6,7 @@ package com.armedia.cmf.engine.documentum.importer;
 
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
-import com.armedia.cmf.storage.StoredObject;
+import com.armedia.cmf.storage.CmfObject;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -18,7 +18,7 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportFormat extends DctmImportDelegate<IDfFormat> {
 
-	public DctmImportFormat(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+	public DctmImportFormat(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfFormat.class, DctmObjectType.FORMAT, storedObject);
 	}
 
@@ -38,7 +38,7 @@ public class DctmImportFormat extends DctmImportDelegate<IDfFormat> {
 	@Override
 	protected IDfFormat locateInCms(DctmImportContext ctx) throws DfException {
 		IDfSession session = ctx.getSession();
-		IDfValue formatName = this.storedObject.getAttribute(DctmAttributes.NAME).getValue();
+		IDfValue formatName = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
 		return session.getFormat(formatName.asString());
 	}
 }

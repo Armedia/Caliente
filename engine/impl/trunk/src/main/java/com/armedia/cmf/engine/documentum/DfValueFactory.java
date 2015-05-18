@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -20,7 +20,7 @@ public final class DfValueFactory {
 	private DfValueFactory() {
 	}
 
-	public static IDfValue newValue(StoredDataType type, Object v) {
+	public static IDfValue newValue(CmfDataType type, Object v) {
 		return DfValueFactory.newValue(DctmTranslator.translateType(type), v);
 	}
 
@@ -116,7 +116,7 @@ public final class DfValueFactory {
 		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
 	}
 
-	public static List<IDfValue> getAllRepeatingValues(StoredAttribute<IDfValue> attr, IDfTypedObject object)
+	public static List<IDfValue> getAllRepeatingValues(CmfAttribute<IDfValue> attr, IDfTypedObject object)
 		throws DfException {
 		return DfValueFactory.getAllRepeatingValues(attr.getName(), object);
 	}

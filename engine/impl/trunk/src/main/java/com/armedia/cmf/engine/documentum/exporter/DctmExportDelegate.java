@@ -13,12 +13,12 @@ import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -41,7 +41,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object) throws Exception {
+	protected final CmfType calculateType(T object) throws Exception {
 		return DctmObjectType.decodeType(object).getStoredObjectType();
 	}
 
@@ -66,29 +66,29 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 	}
 
 	@Override
-	protected final Collection<DctmExportDelegate<?>> identifyRequirements(StoredObject<IDfValue> marshaled,
+	protected final Collection<DctmExportDelegate<?>> identifyRequirements(CmfObject<IDfValue> marshaled,
 		DctmExportContext ctx) throws Exception {
 		return findRequirements(ctx.getSession(), marshaled, castObject(this.object), ctx);
 	}
 
-	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
 		return new ArrayList<DctmExportDelegate<?>>();
 	}
 
 	@Override
-	protected final Collection<DctmExportDelegate<?>> identifyDependents(StoredObject<IDfValue> marshaled,
+	protected final Collection<DctmExportDelegate<?>> identifyDependents(CmfObject<IDfValue> marshaled,
 		DctmExportContext ctx) throws Exception {
 		return findDependents(ctx.getSession(), marshaled, castObject(this.object), ctx);
 	}
 
-	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
 		return new ArrayList<DctmExportDelegate<?>>();
 	}
 
 	@Override
-	protected final boolean marshal(DctmExportContext ctx, StoredObject<IDfValue> object) throws ExportException {
+	protected final boolean marshal(DctmExportContext ctx, CmfObject<IDfValue> object) throws ExportException {
 		try {
 			final T typedObject = castObject(this.object);
 			// First, the attributes
@@ -98,7 +98,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 				final AttributeHandler handler = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
 				// Get the attribute handler
 				if (handler.includeInExport(this.object, attr)) {
-					StoredAttribute<IDfValue> attribute = new StoredAttribute<IDfValue>(attr.getName(), DctmDataType
+					CmfAttribute<IDfValue> attribute = new CmfAttribute<IDfValue>(attr.getName(), DctmDataType
 						.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(
 						this.object, attr));
 					object.setAttribute(attribute);
@@ -109,9 +109,9 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 			// instance, a property would only be settable via direct SQL, or via an explicit method
 			// call, etc., because setting it directly as an attribute would cmsImportResult in an
 			// error from DFC, and therefore specialized code is required to handle it
-			List<StoredProperty<IDfValue>> properties = new ArrayList<StoredProperty<IDfValue>>();
+			List<CmfProperty<IDfValue>> properties = new ArrayList<CmfProperty<IDfValue>>();
 			getDataProperties(ctx, properties, typedObject);
-			for (StoredProperty<IDfValue> property : properties) {
+			for (CmfProperty<IDfValue> property : properties) {
 				// This mechanism overwrites properties, and intentionally so
 				object.setProperty(property);
 			}
@@ -121,18 +121,18 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 		}
 	}
 
-	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, T object)
+	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
 	}
 
 	@Override
-	protected final List<ContentInfo> storeContent(IDfSession session, AttributeTranslator<IDfValue> translator,
-		StoredObject<IDfValue> marshaled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
+	protected final List<ContentInfo> storeContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		return doStoreContent(session, translator, marshaled, referrent, castObject(this.object), streamStore);
 	}
 
-	protected List<ContentInfo> doStoreContent(IDfSession session, AttributeTranslator<IDfValue> translator,
-		StoredObject<IDfValue> marshaled, ExportTarget referrent, T object, ContentStore<?> streamStore)
+	protected List<ContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?> streamStore)
 		throws Exception {
 		return null;
 	}

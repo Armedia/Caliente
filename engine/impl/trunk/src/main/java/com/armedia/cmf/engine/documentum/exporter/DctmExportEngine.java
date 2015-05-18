@@ -18,8 +18,8 @@ import com.armedia.cmf.engine.documentum.common.DctmCommon;
 import com.armedia.cmf.engine.documentum.common.Setting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -50,7 +50,7 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	public AttributeTranslator<IDfValue> getTranslator() {
+	public CmfAttributeTranslator<IDfValue> getTranslator() {
 		return DctmTranslator.INSTANCE;
 	}
 
@@ -75,7 +75,7 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected IDfValue getValue(StoredDataType type, Object value) {
+	protected IDfValue getValue(CmfDataType type, Object value) {
 		return DfValueFactory.newValue(type, value);
 	}
 

@@ -32,12 +32,12 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
@@ -307,7 +307,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	private Collection<ParentFolderAction> parentLinkActions = null;
 
 	public DctmImportSysObject(DctmImportDelegateFactory factory, Class<T> objectClass, DctmObjectType type,
-		StoredObject<IDfValue> storedObject) throws Exception {
+		CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, objectClass, type, storedObject);
 	}
 
@@ -318,7 +318,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected final void detectIncomingMutability() {
 		if (!this.mustFreeze) {
-			StoredAttribute<IDfValue> frozen = this.storedObject.getAttribute(DctmAttributes.R_FROZEN_FLAG);
+			CmfAttribute<IDfValue> frozen = this.cmfObject.getAttribute(DctmAttributes.R_FROZEN_FLAG);
 			if (frozen != null) {
 				// We only copy over the "true" values - we don't override local frozen status
 				// if it's set to true, and the incoming value is false
@@ -326,7 +326,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 		}
 		if (!this.mustFreeze) {
-			StoredAttribute<IDfValue> immutable = this.storedObject.getAttribute(DctmAttributes.R_IMMUTABLE_FLAG);
+			CmfAttribute<IDfValue> immutable = this.cmfObject.getAttribute(DctmAttributes.R_IMMUTABLE_FLAG);
 			if (immutable != null) {
 				// We only copy over the "true" values - we don't override local immutable
 				// status if it's set to true, and the incoming value is false
@@ -342,8 +342,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			// An object being frozen implies immutability
 			this.mustFreeze = true;
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Clearing frozen status from [%s](%s){%s}", this.storedObject.getLabel(),
-					this.storedObject.getId(), newId));
+				this.log.debug(String.format("Clearing frozen status from [%s](%s){%s}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), newId));
 			}
 			// TODO: How to determine if we use false or true here? Stick to false, for now...
 			sysObject.unfreeze(false);
@@ -358,7 +358,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			this.mustImmute = true;
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Clearing immutable status from [%s](%s){%s}",
-					this.storedObject.getLabel(), this.storedObject.getId(), newId));
+					this.cmfObject.getLabel(), this.cmfObject.getId(), newId));
 			}
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, false);
 			if (!sysObject.isCheckedOut()) {
@@ -375,8 +375,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final String newId = sysObject.getObjectId().getId();
 		if (this.mustFreeze && !sysObject.isFrozen()) {
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", this.storedObject.getLabel(),
-					this.storedObject.getId(), newId));
+				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), newId));
 			}
 			// TODO: assembly support?
 			// TODO: How to determine if we use false or true here? Stick to false, for now...
@@ -385,7 +385,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		} else if (this.mustImmute && !sysObject.isImmutable()) {
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Setting immutability status to [%s](%s){%s}",
-					this.storedObject.getLabel(), this.storedObject.getId(), newId));
+					this.cmfObject.getLabel(), this.cmfObject.getId(), newId));
 			}
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
@@ -422,14 +422,14 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected IDfId persistChanges(T sysObject, DctmImportContext context) throws DfException, ImportException {
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
 		IDfId newId = persistNewVersion(sysObject, null, context);
-		context.getAttributeMapper().setMapping(this.storedObject.getType(), DctmAttributes.R_OBJECT_ID,
-			this.storedObject.getId(), newId.getId());
+		context.getAttributeMapper().setMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
+			this.cmfObject.getId(), newId.getId());
 		return newId;
 	}
 
 	protected IDfId persistNewVersion(T sysObject, String versionLabel, DctmImportContext context) throws DfException {
 		String vl = (versionLabel != null ? versionLabel : DfUtils.concatenateStrings(
-			this.storedObject.getAttribute(DctmAttributes.R_VERSION_LABEL), ','));
+			this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL), ','));
 		IDfValue branchMarker = context.getValue(DctmImportSysObject.BRANCH_MARKER);
 		final IDfId newId;
 		final String action;
@@ -446,7 +446,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			sysObject.save();
 		}
 		this.log.info(String.format("%s %s [%s](%s) to CMS as version [%s] (newId=%s)", action,
-			this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId(), vl, newId.getId()));
+			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId(), vl, newId.getId()));
 		return newId;
 	}
 
@@ -455,7 +455,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	@Override
-	protected String generateSystemAttributesSQL(StoredObject<IDfValue> stored, IDfPersistentObject sysObject,
+	protected String generateSystemAttributesSQL(CmfObject<IDfValue> stored, IDfPersistentObject sysObject,
 		DctmImportContext ctx) throws DfException {
 		if (!(sysObject instanceof IDfSysObject)) {
 			// how, exactly, did we get here?
@@ -467,7 +467,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		// prepare sql to be executed
 		// Important: REPLACE QUOTES!!
 
-		StoredAttribute<IDfValue> modifyDateAtt = stored.getAttribute(DctmAttributes.R_MODIFY_DATE);
+		CmfAttribute<IDfValue> modifyDateAtt = stored.getAttribute(DctmAttributes.R_MODIFY_DATE);
 		final String modifyDate;
 		if (modifyDateAtt != null) {
 			modifyDate = DfUtils.generateSqlDateClause(modifyDateAtt.getValue().asTime().getDate(), session);
@@ -475,7 +475,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			modifyDate = "r_modify_date";
 		}
 
-		StoredAttribute<IDfValue> modifierNameAtt = stored.getAttribute(DctmAttributes.R_MODIFIER);
+		CmfAttribute<IDfValue> modifierNameAtt = stored.getAttribute(DctmAttributes.R_MODIFIER);
 		String modifierName = "";
 		if (modifierNameAtt != null) {
 			modifierName = modifierNameAtt.getValue().asString();
@@ -493,7 +493,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 		modifierName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, modifierName));
 
-		StoredAttribute<IDfValue> creationDateAtt = stored.getAttribute(DctmAttributes.R_CREATION_DATE);
+		CmfAttribute<IDfValue> creationDateAtt = stored.getAttribute(DctmAttributes.R_CREATION_DATE);
 		final String creationDate;
 		if (creationDateAtt != null) {
 			creationDate = DfUtils.generateSqlDateClause(creationDateAtt.getValue().asTime().getDate(), session);
@@ -501,7 +501,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			creationDate = "r_creation_date";
 		}
 
-		StoredAttribute<IDfValue> creatorNameAtt = stored.getAttribute(DctmAttributes.R_CREATOR_NAME);
+		CmfAttribute<IDfValue> creatorNameAtt = stored.getAttribute(DctmAttributes.R_CREATOR_NAME);
 		String creatorName = "";
 		if (creatorNameAtt != null) {
 			try {
@@ -518,11 +518,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 		creatorName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, creatorName));
 
-		StoredAttribute<IDfValue> aclNameAtt = stored.getAttribute(DctmAttributes.ACL_NAME);
-		StoredAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
+		CmfAttribute<IDfValue> aclNameAtt = stored.getAttribute(DctmAttributes.ACL_NAME);
+		CmfAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
 		String aclName = "acl_name";
 		String aclDomain = "acl_domain";
-		if (ctx.isSupported(StoredObjectType.ACL) && (aclNameAtt != null) && (aclDomainAtt != null)) {
+		if (ctx.isSupported(CmfType.ACL) && (aclNameAtt != null) && (aclDomainAtt != null)) {
 			aclName = DfUtils.sqlQuoteString(aclNameAtt.getValue().asString());
 			aclDomain = "";
 			if (aclDomainAtt != null) {
@@ -534,7 +534,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			aclDomain = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, aclDomain));
 		}
 
-		StoredAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
+		CmfAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
 		final boolean deletedFlag = (deletedAtt != null) && deletedAtt.getValue().asBoolean();
 
 		String sql = "" //
@@ -602,20 +602,20 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
 		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String.format(
-			"No target paths specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
+			"No target paths specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
 		return p.getValues();
 	}
 
 	protected T locateExistingByPath(DctmImportContext ctx) throws ImportException, DfException {
 		final IDfSession session = ctx.getSession();
-		final String documentName = this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
+		final String documentName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 
-		IDfType type = DctmTranslator.translateType(session, this.storedObject);
+		IDfType type = DctmTranslator.translateType(session, this.cmfObject);
 		if (type == null) { throw new ImportException(String.format(
-			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.storedObject.getSubtype(),
-			this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId())); }
+			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.cmfObject.getSubtype(),
+			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
 
 		final String dqlBase = String.format("%s (ALL) where object_name = %s and folder(%%s)", type.getName(),
 			DfUtils.quoteString(documentName));
@@ -638,7 +638,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// Not a document...we have a problem
 				throw new ImportException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
-					this.storedObject.getSubtype(), this.storedObject.getLabel(), this.storedObject.getSubtype(),
+					this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getSubtype(),
 					currentPath, current.getType().getName(), current.getObjectId().getId()));
 			}
 
@@ -647,7 +647,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// The target document's reference flag is different from ours...problem!
 				throw new ImportException(String.format(
 					"Reference flag mismatch between objects. The [%s] %s collides with a %sreference at [%s] (%s:%s)",
-					this.storedObject.getLabel(), this.storedObject.getSubtype(), (seeksReference ? "non-" : ""),
+					this.cmfObject.getLabel(), this.cmfObject.getSubtype(), (seeksReference ? "non-" : ""),
 					currentPath, current.getType().getName(), current.getObjectId().getId()));
 			}
 
@@ -667,7 +667,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			// Not the same, this is a problem
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
-				this.storedObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
+				this.cmfObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
 					.getId(), currentPath));
 		}
 
@@ -685,19 +685,19 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected IDfId getMappedParentId(DctmImportContext context, int pos) throws DfException, ImportException {
 		final IDfSession session = context.getSession();
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(IntermediateProperty.PARENT_ID.encode());
+		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
 		IDfId mainFolderId = parents.getValue(pos).asId();
 		if (mainFolderId.isNull()) {
 			// This is only valid if pos is 0, and it's the only parent value, and there's only one
 			// path value. If it's used under any other circumstance, it's an error.
-			StoredProperty<IDfValue> paths = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
+			CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
 			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.getValueCount() == 1)) {
 				// This is a "fixup" from the path repairs, so we look up by path
 				IDfValue path = paths.getValue();
 				IDfFolder f = session.getFolderByPath(path.asString());
 				if (f != null) { return f.getObjectId(); }
 				this.log.warn(String.format("Fixup path [%s] for %s [%s](%s) was not found", path.asString(),
-					this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()));
+					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()));
 			}
 		}
 		Mapping m = context.getAttributeMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
@@ -707,9 +707,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(IntermediateProperty.PARENT_ID.encode());
+		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
 		if ((parents == null) || (parents.getValueCount() == 0)) { throw new ImportException(String.format(
-			"No target parents specified for [%s](%s)", this.storedObject.getLabel(), this.storedObject.getId())); }
+			"No target parents specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
 		for (int i = 0; i < parents.getValueCount(); i++) {
 			IDfId parentId = getMappedParentId(context, i);
@@ -802,8 +802,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected T newObject(DctmImportContext ctx) throws DfException, ImportException {
 		T newObj = super.newObject(ctx);
 		setOwnerGroupACLData(newObj, ctx);
-		if (ctx.isSupported(StoredObjectType.DATASTORE)) {
-			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.A_STORAGE_TYPE);
+		if (ctx.isSupported(CmfType.DATASTORE)) {
+			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.A_STORAGE_TYPE);
 			String dataStore = "";
 			if ((att != null) && att.hasValues()) {
 				dataStore = att.getValue().asString();
@@ -818,7 +818,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected void setOwnerGroupACLData(T sysObject, DctmImportContext ctx) throws ImportException, DfException {
 		// Set the owner and group
 		final IDfSession session = ctx.getSession();
-		StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
+		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
 		if (att != null) {
 			final String actualUser = DctmMappingUtils.resolveMappableUser(session, att.getValue().asString());
 			try {
@@ -829,21 +829,21 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					String msg = String
 						.format(
 							"Failed to set the owner for %s [%s](%s) to user [%s] - the user wasn't found - probably didn't need to be copied over",
-							this.storedObject.getType(), this.storedObject.getLabel(), sysObject.getObjectId().getId(),
+							this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
 							actualUser);
-					if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 				}
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to set the owner for %s [%s](%s) to user [%s] - %s",
-					this.storedObject.getType(), this.storedObject.getLabel(), sysObject.getObjectId().getId(),
+					this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
 					actualUser, e.getMessage());
-				if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 			}
 		}
 
-		att = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME);
+		att = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME);
 		if (att != null) {
 			String group = att.getValue().asString();
 			IDfGroup g = session.getGroup(group);
@@ -853,16 +853,16 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				String msg = String
 					.format(
 						"Failed to set the group for %s [%s](%s) to group [%s] - the group wasn't found - probably didn't need to be copied over",
-						this.storedObject.getType(), this.storedObject.getLabel(), sysObject.getObjectId().getId(),
+						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
 						group);
-				if (ctx.isSupported(StoredObjectType.GROUP)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfType.GROUP)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 			}
 		}
 
 		// Set the ACL
-		StoredAttribute<IDfValue> aclDomainAtt = this.storedObject.getAttribute(DctmAttributes.ACL_DOMAIN);
-		StoredAttribute<IDfValue> aclNameAtt = this.storedObject.getAttribute(DctmAttributes.ACL_NAME);
+		CmfAttribute<IDfValue> aclDomainAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_DOMAIN);
+		CmfAttribute<IDfValue> aclNameAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_NAME);
 		@SuppressWarnings("unchecked")
 		int firstNull = Tools.firstNull(aclDomainAtt, aclNameAtt);
 		if (firstNull == -1) {
@@ -878,24 +878,24 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 						String msg = String
 							.format(
 								"Failed to set the ACL [%s:%s] for %s [%s](%s) - the ACL wasn't found - probably didn't need to be copied over",
-								aclDomain, aclNameAtt.getValue().asString(), this.storedObject.getType(),
-								this.storedObject.getLabel(), sysObject.getObjectId().getId());
-						if (ctx.isSupported(StoredObjectType.ACL)) { throw new ImportException(msg); }
+								aclDomain, aclNameAtt.getValue().asString(), this.cmfObject.getType(),
+								this.cmfObject.getLabel(), sysObject.getObjectId().getId());
+						if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
 						this.log.warn(msg);
 					}
 				} else {
 					String msg = String
 						.format(
 							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
-							aclDomain, this.storedObject.getType(), this.storedObject.getLabel(), sysObject
+							aclDomain, this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject
 								.getObjectId().getId());
-					if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 				}
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to find the user [%s] who owns the ACL for folder [%s](%s) - %s",
-					aclDomain, this.storedObject.getLabel(), sysObject.getObjectId().getId(), e.getMessage());
-				if (ctx.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					aclDomain, this.cmfObject.getLabel(), sysObject.getObjectId().getId(), e.getMessage());
+				if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 			}
 		}
@@ -904,20 +904,20 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	@Override
 	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
 		// First things first: fix the parent paths in the incoming object
-		StoredProperty<IDfValue> paths = this.storedObject.getProperty(IntermediateProperty.PATH.encode());
+		CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
 		if (paths == null) {
-			paths = new StoredProperty<IDfValue>(IntermediateProperty.PATH.encode(), StoredDataType.STRING, true);
-			this.storedObject.setProperty(paths);
+			paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH.encode(), CmfDataType.STRING, true);
+			this.cmfObject.setProperty(paths);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
-				IntermediateProperty.PATH.encode(), this.storedObject.getLabel(), this.storedObject.getId()));
+				IntermediateProperty.PATH.encode(), this.cmfObject.getLabel(), this.cmfObject.getId()));
 		}
 
-		StoredProperty<IDfValue> parents = this.storedObject.getProperty(IntermediateProperty.PARENT_ID.encode());
+		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
 		if (parents == null) {
-			parents = new StoredProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(), StoredDataType.ID, true);
-			this.storedObject.setProperty(parents);
+			parents = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(), CmfDataType.ID, true);
+			this.cmfObject.setProperty(parents);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
-				PropertyIds.PARENT_ID, this.storedObject.getLabel(), this.storedObject.getId()));
+				PropertyIds.PARENT_ID, this.cmfObject.getLabel(), this.cmfObject.getId()));
 		}
 
 		if (context.isPathAltering()) {

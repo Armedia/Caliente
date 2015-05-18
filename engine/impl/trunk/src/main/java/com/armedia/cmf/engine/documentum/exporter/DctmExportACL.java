@@ -13,8 +13,8 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmACL;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPermit;
@@ -52,14 +52,14 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, IDfACL acl)
+	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, IDfACL acl)
 		throws DfException {
 		final String aclId = acl.getObjectId().getId();
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
-		StoredProperty<IDfValue> property = null;
+		CmfProperty<IDfValue> property = null;
 		try {
-			property = new StoredProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL,
+			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL,
 				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				property.addValue(resultCol.getValueAt(0));
@@ -69,11 +69,11 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			DfUtils.closeQuietly(resultCol);
 		}
 
-		StoredProperty<IDfValue> accessors = new StoredProperty<IDfValue>(DctmACL.ACCESSORS,
+		CmfProperty<IDfValue> accessors = new CmfProperty<IDfValue>(DctmACL.ACCESSORS,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		StoredProperty<IDfValue> permitTypes = new StoredProperty<IDfValue>(DctmACL.PERMIT_TYPE,
+		CmfProperty<IDfValue> permitTypes = new CmfProperty<IDfValue>(DctmACL.PERMIT_TYPE,
 			DctmDataType.DF_INTEGER.getStoredType(), true);
-		StoredProperty<IDfValue> permitValues = new StoredProperty<IDfValue>(DctmACL.PERMIT_VALUE,
+		CmfProperty<IDfValue> permitValues = new CmfProperty<IDfValue>(DctmACL.PERMIT_VALUE,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		IDfList permits = acl.getPermissions();
 		final int permitCount = permits.getCount();
@@ -117,7 +117,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfACL acl, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, acl, ctx);
 		final int count = acl.getAccessorCount();

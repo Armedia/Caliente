@@ -23,8 +23,8 @@ import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfFolder;
@@ -94,13 +94,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties, T object)
+	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
 		IDfSession session = object.getSession();
-		StoredProperty<IDfValue> paths = new StoredProperty<IDfValue>(IntermediateProperty.PATH.encode(),
+		CmfProperty<IDfValue> paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH.encode(),
 			DctmDataType.DF_STRING.getStoredType(), true);
 		properties.add(paths);
-		StoredProperty<IDfValue> parents = new StoredProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(),
+		CmfProperty<IDfValue> parents = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(),
 			DctmDataType.DF_ID.getStoredType(), true);
 		properties.add(parents);
 
@@ -264,7 +264,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		T sysObject, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, sysObject, ctx);
 

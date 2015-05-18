@@ -16,10 +16,10 @@ import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmFolder;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -33,7 +33,7 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements DctmFolder {
 
-	public DctmImportFolder(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+	public DctmImportFolder(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfFolder.class, DctmObjectType.FOLDER, storedObject);
 	}
 
@@ -66,7 +66,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 		final String folderName;
 		if (newObject) {
-			StoredAttribute<IDfValue> objectName = this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME);
+			CmfAttribute<IDfValue> objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
 			IDfValue newValue = objectName.getValue();
 			folderName = newValue.toString().trim();
 			setAttributeOnObject(DctmAttributes.OBJECT_NAME, DfValueFactory.newStringValue(folderName), folder);
@@ -75,7 +75,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		}
 
 		// Only do the linking/unlinking for non-cabinets
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(PropertyIds.PARENT_ID);
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(PropertyIds.PARENT_ID);
 		if ((p != null) && p.hasValues()) {
 			linkToParents(folder, context);
 		}
@@ -106,9 +106,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	@Override
 	protected void updateReferenced(IDfFolder folder, DctmImportContext context) throws DfException, ImportException {
 		final IDfSession session = context.getSession();
-		final StoredProperty<IDfValue> usersWithDefaultFolder = this.storedObject
+		final CmfProperty<IDfValue> usersWithDefaultFolder = this.cmfObject
 			.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
-		final StoredProperty<IDfValue> usersDefaultFolderPaths = this.storedObject
+		final CmfProperty<IDfValue> usersDefaultFolderPaths = this.cmfObject
 			.getProperty(DctmFolder.USERS_DEFAULT_FOLDER_PATHS);
 
 		if ((usersWithDefaultFolder == null) || (usersDefaultFolderPaths == null)
@@ -139,8 +139,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				user = DctmImportUser.locateExistingUser(context, actualUser);
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to link folder [%s](%s) to user [%s] as its default folder - %s",
-					this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser, e.getMessage());
-				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					this.cmfObject.getLabel(), folder.getObjectId().getId(), actualUser, e.getMessage());
+				if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
 			}
@@ -148,8 +148,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				String msg = String
 					.format(
 						"Failed to link folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-						this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser);
-				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+						this.cmfObject.getLabel(), folder.getObjectId().getId(), actualUser);
+				if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
 			}
@@ -173,7 +173,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 						String
 							.format(
 								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-								actualUser, this.storedObject.getLabel()), e);
+								actualUser, this.cmfObject.getLabel()), e);
 			}
 		}
 	}
@@ -183,18 +183,18 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
 		// Easier way: determine if we have parent folders...if not, then we're a cabinet
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(PropertyIds.PARENT_ID);
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(PropertyIds.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
 			return session.getFolderByPath(String.format("/%s",
-				this.storedObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()));
+				this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()));
 		}
 		return super.locateInCms(ctx);
 	}
 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
-		StoredProperty<IDfValue> p = this.storedObject.getProperty(PropertyIds.PARENT_ID);
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(PropertyIds.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			IDfFolder newObject = castObject(ctx.getSession().newObject("dm_cabinet"));
 			setOwnerGroupACLData(newObject, ctx);

@@ -12,10 +12,10 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmGroup;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -51,10 +51,10 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties,
+	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfGroup group) throws DfException {
-		// Store all the users that have this group as their default group
-		StoredProperty<IDfValue> property = new StoredProperty<IDfValue>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
+		// CmfStore all the users that have this group as their default group
+		CmfProperty<IDfValue> property = new CmfProperty<IDfValue>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
 		IDfCollection resultCol = DfUtils.executeQuery(group.getSession(),
 			String.format(DctmExportGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()),
@@ -76,7 +76,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfGroup group, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, group, ctx);
 
@@ -104,7 +104,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 				group.getGroupName()));
 		}
 
-		StoredAttribute<IDfValue> usersNames = marshaled.getAttribute(DctmAttributes.USERS_NAMES);
+		CmfAttribute<IDfValue> usersNames = marshaled.getAttribute(DctmAttributes.USERS_NAMES);
 		if (usersNames != null) {
 			for (IDfValue v : usersNames) {
 				String userName = v.asString();
@@ -127,7 +127,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					String msg = String.format(
 						"Missing dependency for group [%s] - user [%s] not found (as group member)",
 						group.getGroupName(), userName);
-					if (ctx.isSupported(StoredObjectType.USER)) { throw new Exception(msg); }
+					if (ctx.isSupported(CmfType.USER)) { throw new Exception(msg); }
 					this.log.warn(msg);
 					ctx.printf(msg);
 				}
@@ -135,7 +135,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 			}
 		}
 
-		StoredAttribute<IDfValue> groupsNames = marshaled.getAttribute(DctmAttributes.GROUPS_NAMES);
+		CmfAttribute<IDfValue> groupsNames = marshaled.getAttribute(DctmAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
 			for (IDfValue v : groupsNames) {
 				String groupName = v.asString();
@@ -156,12 +156,12 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfGroup group, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, group, ctx);
 
 		// Avoid calling DQL twice
-		StoredProperty<IDfValue> property = marshaled.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
+		CmfProperty<IDfValue> property = marshaled.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
 		if (property == null) { throw new Exception(String.format(
 			"The export for group [%s] does not contain the critical property [%s]", marshaled.getLabel(),
 			DctmGroup.USERS_WITH_DEFAULT_GROUP)); }

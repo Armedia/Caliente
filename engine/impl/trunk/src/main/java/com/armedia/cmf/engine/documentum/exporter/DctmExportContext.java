@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.documentum.common.DctmSpecialValues;
 import com.armedia.cmf.engine.exporter.ExportContext;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfType;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
@@ -20,7 +20,7 @@ class DctmExportContext extends ExportContext<IDfSession, IDfValue> {
 
 	private final DctmSpecialValues specialValues;
 
-	DctmExportContext(DctmExportContextFactory factory, String rootId, StoredObjectType rootType, IDfSession session,
+	DctmExportContext(DctmExportContextFactory factory, String rootId, CmfType rootType, IDfSession session,
 		Logger output) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output);
 		this.specialValues = factory.getSpecialValues();

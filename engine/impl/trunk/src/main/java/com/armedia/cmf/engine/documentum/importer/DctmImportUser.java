@@ -18,10 +18,10 @@ import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.Setting;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
@@ -41,7 +41,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	private static final String FIND_USER_BY_LOGIN_DQL = "select distinct user_name, user_login_domain from dm_user where user_login_name = %s order by user_login_domain";
 	private static final String USERNAME_MAPPING_NAME = "userName";
 
-	public DctmImportUser(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+	public DctmImportUser(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfUser.class, DctmObjectType.USER, storedObject);
 	}
 
@@ -53,22 +53,22 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	@Override
 	protected IDfUser locateInCms(DctmImportContext ctx) throws ImportException, DfException {
 		// If that search failed, go by username
-		final String userName = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
-		final String loginName = this.storedObject.getAttribute(DctmAttributes.USER_LOGIN_NAME).getValue().asString();
-		final StoredAttribute<IDfValue> domainAtt = this.storedObject.getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
+		final String userName = this.cmfObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
+		final String loginName = this.cmfObject.getAttribute(DctmAttributes.USER_LOGIN_NAME).getValue().asString();
+		final CmfAttribute<IDfValue> domainAtt = this.cmfObject.getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
 		return DctmImportUser.locateExistingUser(ctx, userName, loginName, (domainAtt != null ? domainAtt.getValue()
 			.asString() : null));
 	}
 
 	protected static IDfUser getUserMapping(DctmImportContext ctx, String userName) throws DfException {
-		Mapping m = ctx.getAttributeMapper().getTargetMapping(StoredObjectType.USER,
+		Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.USER,
 			DctmImportUser.USERNAME_MAPPING_NAME, userName);
 		if (m == null) { return null; }
 		return ctx.getSession().getUser(m.getTargetValue());
 	}
 
 	protected static void setUserMapping(DctmImportContext ctx, String userName, IDfUser user) throws DfException {
-		ctx.getAttributeMapper().setMapping(StoredObjectType.USER, DctmImportUser.USERNAME_MAPPING_NAME, userName,
+		ctx.getAttributeMapper().setMapping(CmfType.USER, DctmImportUser.USERNAME_MAPPING_NAME, userName,
 			user.getUserName());
 	}
 
@@ -146,7 +146,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 
 	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException {
-		IDfValue userNameValue = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue();
+		IDfValue userNameValue = this.cmfObject.getAttribute(DctmAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
 		return ctx.isUntouchableUser(userName) || super.skipImport(ctx);
 	}
@@ -155,10 +155,10 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	protected void prepareForConstruction(IDfUser user, boolean newObject, DctmImportContext context)
 		throws DfException {
 
-		StoredAttribute<IDfValue> loginDomain = this.storedObject.getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
+		CmfAttribute<IDfValue> loginDomain = this.cmfObject.getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
 		IDfTypedObject serverConfig = user.getSession().getServerConfig();
 		String serverVersion = serverConfig.getString(DctmAttributes.R_SERVER_VERSION);
-		StoredAttribute<IDfValue> userSourceAtt = this.storedObject.getAttribute(DctmAttributes.USER_SOURCE);
+		CmfAttribute<IDfValue> userSourceAtt = this.cmfObject.getAttribute(DctmAttributes.USER_SOURCE);
 		String userSource = (userSourceAtt != null ? userSourceAtt.getValue().asString() : null);
 
 		// NOTE for some reason, 6.5 sp2 with ldap requires that user_login_domain be set
@@ -167,7 +167,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		if ((loginDomain == null) && serverVersion.startsWith("6.5") && "LDAP".equalsIgnoreCase(userSource)) {
 			IDfAttr attr = user.getAttr(user.findAttrIndex(DctmAttributes.USER_LOGIN_DOMAIN));
 			loginDomain = newStoredAttribute(attr, DfValueFactory.newStringValue(""));
-			this.storedObject.setAttribute(loginDomain);
+			this.cmfObject.setAttribute(loginDomain);
 		}
 	}
 
@@ -176,20 +176,20 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		// First, set the username - only do this for new objects!!
 		if (newObject) {
 			copyAttributeToObject(DctmAttributes.USER_NAME, user);
-			final String userName = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
+			final String userName = this.cmfObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
 
 			// Login name + domain
-			if (this.storedObject.getAttributeNames().contains(DctmAttributes.USER_LOGIN_DOMAIN)) {
+			if (this.cmfObject.getAttributeNames().contains(DctmAttributes.USER_LOGIN_DOMAIN)) {
 				copyAttributeToObject(DctmAttributes.USER_LOGIN_DOMAIN, user);
 			}
-			if (this.storedObject.getAttributeNames().contains(DctmAttributes.USER_LOGIN_NAME)) {
+			if (this.cmfObject.getAttributeNames().contains(DctmAttributes.USER_LOGIN_NAME)) {
 				copyAttributeToObject(DctmAttributes.USER_LOGIN_NAME, user);
 			} else {
 				setAttributeOnObject(DctmAttributes.USER_LOGIN_NAME, user.getValue(DctmAttributes.USER_NAME), user);
 			}
 
 			// Next, set the password
-			StoredAttribute<IDfValue> att = this.storedObject.getAttribute(DctmAttributes.USER_SOURCE);
+			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.USER_SOURCE);
 			final IDfValue userSource = (att != null ? att.getValue() : null);
 			if ((att == null) || Tools.equals(DctmConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been

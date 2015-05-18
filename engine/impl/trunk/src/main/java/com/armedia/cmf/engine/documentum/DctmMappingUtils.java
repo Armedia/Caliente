@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
@@ -152,7 +152,7 @@ public class DctmMappingUtils {
 		return ret;
 	}
 
-	public static List<IDfValue> resolveMappableUsers(IDfTypedObject object, StoredProperty<IDfValue> property)
+	public static List<IDfValue> resolveMappableUsers(IDfTypedObject object, CmfProperty<IDfValue> property)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to expand"); }

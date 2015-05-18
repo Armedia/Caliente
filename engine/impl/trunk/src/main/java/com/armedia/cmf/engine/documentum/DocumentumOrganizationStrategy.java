@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.OrganizationStrategy;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfOrganizationStrategy;
 
-public class DocumentumOrganizationStrategy extends OrganizationStrategy {
+public class DocumentumOrganizationStrategy extends CmfOrganizationStrategy {
 
 	public static final String NAME = "documentum";
 
@@ -17,7 +17,7 @@ public class DocumentumOrganizationStrategy extends OrganizationStrategy {
 	}
 
 	@Override
-	protected List<String> calculatePath(AttributeTranslator<?> translator, StoredObject<?> object) {
+	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object) {
 		final String objectId = object.getId();
 		if (objectId.length() != 16) { return null; }
 

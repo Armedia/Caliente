@@ -14,8 +14,8 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmFolder;
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -91,19 +91,19 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties,
+	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfFolder folder) throws DfException, ExportException {
 		super.getDataProperties(ctx, properties, folder);
 		final String folderId = folder.getObjectId().getId();
 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
 			String.format(DctmExportFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
-		StoredProperty<IDfValue> usersWithDefaultFolder = null;
-		StoredProperty<IDfValue> usersDefaultFolderPaths = null;
+		CmfProperty<IDfValue> usersWithDefaultFolder = null;
+		CmfProperty<IDfValue> usersDefaultFolderPaths = null;
 		try {
-			usersWithDefaultFolder = new StoredProperty<IDfValue>(DctmFolder.USERS_WITH_DEFAULT_FOLDER,
+			usersWithDefaultFolder = new CmfProperty<IDfValue>(DctmFolder.USERS_WITH_DEFAULT_FOLDER,
 				DctmDataType.DF_STRING.getStoredType());
-			usersDefaultFolderPaths = new StoredProperty<IDfValue>(DctmFolder.USERS_DEFAULT_FOLDER_PATHS,
+			usersDefaultFolderPaths = new CmfProperty<IDfValue>(DctmFolder.USERS_DEFAULT_FOLDER_PATHS,
 				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				IDfValue v = resultCol.getValueAt(0);
@@ -123,7 +123,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfFolder folder, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, folder, ctx);
 
@@ -152,7 +152,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			ret.add(this.factory.newExportDelegate(obj));
 		}
 
-		StoredProperty<IDfValue> usersWithDefaultFolder = marshaled.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
+		CmfProperty<IDfValue> usersWithDefaultFolder = marshaled.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
 		if (usersWithDefaultFolder == null) { throw new Exception(String.format(
 			"The export for folder [%s] does not contain the critical property [%s]", marshaled.getLabel(),
 			DctmFolder.USERS_WITH_DEFAULT_FOLDER)); }

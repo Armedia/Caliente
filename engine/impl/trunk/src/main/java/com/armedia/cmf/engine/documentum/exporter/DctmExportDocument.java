@@ -26,10 +26,10 @@ import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -63,7 +63,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<StoredProperty<IDfValue>> properties,
+	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfDocument document) throws DfException, ExportException {
 		super.getDataProperties(ctx, properties, document);
 
@@ -73,35 +73,35 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			getVersionHistory(ctx, document);
 			List<IDfValue> patches = getVersionPatches(document, ctx);
 			if ((patches != null) && !patches.isEmpty()) {
-				properties.add(new StoredProperty<IDfValue>(DctmSysObject.VERSION_PATCHES, DctmDataType.DF_STRING
+				properties.add(new CmfProperty<IDfValue>(DctmSysObject.VERSION_PATCHES, DctmDataType.DF_STRING
 					.getStoredType(), true, patches));
 			}
 			IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
 			if (patchAntecedent != null) {
-				properties.add(new StoredProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID
+				properties.add(new CmfProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID
 					.getStoredType(), false, patchAntecedent));
 			}
 
-			properties.add(new StoredProperty<IDfValue>(DctmSysObject.CURRENT_VERSION, DctmDataType.DF_BOOLEAN
+			properties.add(new CmfProperty<IDfValue>(DctmSysObject.CURRENT_VERSION, DctmDataType.DF_BOOLEAN
 				.getStoredType(), false, DfValueFactory.newBooleanValue(document.getHasFolder())));
 			return;
 		}
 
 		// TODO: this is untidy - using an undocumented API??
 		IDfReference ref = ReferenceFinder.getForMirrorId(document.getObjectId(), session);
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING
 			.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingCondition())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING
 			.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingLabel())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING
 			.getStoredType(), false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING
 			.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(),
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(),
 			false, DfValueFactory.newIdValue(ref.getReferenceById())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME, DctmDataType.DF_STRING
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME, DctmDataType.DF_STRING
 			.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceByName())));
-		properties.add(new StoredProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL, DctmDataType.DF_INTEGER
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL, DctmDataType.DF_INTEGER
 			.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
 	}
 
@@ -137,7 +137,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfDocument document, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, document, ctx);
 
@@ -190,7 +190,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, StoredObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfDocument document, DctmExportContext ctx) throws Exception {
 		// TODO Auto-generated method stub
 		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, document, ctx);
@@ -216,8 +216,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected List<ContentInfo> doStoreContent(IDfSession session, AttributeTranslator<IDfValue> translator,
-		StoredObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, ContentStore<?> streamStore)
+	protected List<ContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, CmfContentStore<?> streamStore)
 			throws Exception {
 		if (isDfReference(document)) { return super.doStoreContent(session, translator, marshaled, referrent, document,
 			streamStore); }
@@ -240,7 +240,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				while (results.next()) {
 					final IDfContent content = IDfContent.class.cast(session.getObject(results
 						.getId(DctmAttributes.R_OBJECT_ID)));
-					ContentStore<?>.Handle handle = storeContentStream(session, translator, marshaled, document,
+					CmfContentStore<?>.Handle handle = storeContentStream(session, translator, marshaled, document,
 						content, streamStore);
 					ContentInfo info = new ContentInfo(handle.getQualifier());
 					info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
@@ -260,9 +260,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		return contentInfo;
 	}
 
-	protected ContentStore<?>.Handle storeContentStream(IDfSession session,
-		AttributeTranslator<IDfValue> translator, StoredObject<IDfValue> marshaled, IDfDocument document,
-		IDfContent content, ContentStore<?> streamStore) throws Exception {
+	protected CmfContentStore<?>.Handle storeContentStream(IDfSession session,
+		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, IDfDocument document,
+		IDfContent content, CmfContentStore<?> streamStore) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (document == null) { throw new Exception(String.format(
 			"Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
@@ -275,8 +275,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		}
 		String qualifier = String.format(DctmExportDocument.QUALIFIER_FMT, pageNumber, pageModifier, format);
 
-		// Store the content in the filesystem
-		ContentStore<?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
+		// CmfStore the content in the filesystem
+		CmfContentStore<?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
 		final File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
 			final File parent = targetFile.getParentFile();

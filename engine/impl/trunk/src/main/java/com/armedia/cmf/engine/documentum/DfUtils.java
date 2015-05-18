@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -305,7 +305,7 @@ public class DfUtils {
 		final IDfId id = source.getId(idAttribute);
 
 		typeAttribute = Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE);
-		final StoredObjectType objectType;
+		final CmfType objectType;
 		if (source.hasAttr(typeAttribute)) {
 			objectType = DctmObjectType.decodeType(source.getSession(), source.getString(typeAttribute))
 				.getStoredObjectType();
@@ -375,7 +375,7 @@ public class DfUtils {
 		return String.format("''%s''", str.replace("'", "''''"));
 	}
 
-	public static String concatenateStrings(StoredProperty<IDfValue> p, char sep) {
+	public static String concatenateStrings(CmfProperty<IDfValue> p, char sep) {
 		if (p == null) { return null; }
 		if (p.getValueCount() < 1) { return ""; }
 		if (!p.isRepeating() || (p.getValueCount() == 1)) { return p.getValue().asString(); }

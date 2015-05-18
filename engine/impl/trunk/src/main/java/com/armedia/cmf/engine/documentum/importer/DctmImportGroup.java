@@ -16,10 +16,10 @@ import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmGroup;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
@@ -33,7 +33,7 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements DctmGroup {
 
-	public DctmImportGroup(DctmImportDelegateFactory factory, StoredObject<IDfValue> storedObject) throws Exception {
+	public DctmImportGroup(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfGroup.class, DctmObjectType.GROUP, storedObject);
 	}
 
@@ -45,12 +45,12 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 	@Override
 	protected void finalizeConstruction(IDfGroup group, boolean newObject, DctmImportContext context)
 		throws ImportException, DfException {
-		final IDfValue groupName = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
+		final IDfValue groupName = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
 		if (newObject) {
 			group.setGroupName(groupName.asString().toLowerCase());
 		}
 		final IDfSession session = group.getSession();
-		StoredAttribute<IDfValue> usersNames = this.storedObject.getAttribute(DctmAttributes.USERS_NAMES);
+		CmfAttribute<IDfValue> usersNames = this.cmfObject.getAttribute(DctmAttributes.USERS_NAMES);
 		// Keep track of missing users so we don't look for them again.
 		Set<String> missingUsers = new HashSet<String>();
 		if (usersNames != null) {
@@ -63,7 +63,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				} catch (MultipleUserMatchesException e) {
 					String msg = String.format("Failed to add user [%s] as a member of [%s] - %s", actualUser,
 						groupName.asString(), e.getMessage());
-					if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 					continue;
 				}
@@ -73,7 +73,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 						.format(
 							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
 							actualUser, groupName.asString());
-					if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 					continue;
 				}
@@ -81,7 +81,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			}
 		}
 
-		StoredAttribute<IDfValue> specialUser = this.storedObject.getAttribute(DctmAttributes.OWNER_NAME);
+		CmfAttribute<IDfValue> specialUser = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
 		if (specialUser != null) {
 			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
 			if (!StringUtils.isBlank(actualUser)) {
@@ -102,7 +102,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			}
 		}
 
-		specialUser = this.storedObject.getAttribute(DctmAttributes.GROUP_ADMIN);
+		specialUser = this.cmfObject.getAttribute(DctmAttributes.GROUP_ADMIN);
 		if (specialUser != null) {
 			final String actualUser = DctmMappingUtils.resolveMappableUser(session, specialUser.getValue().asString());
 			if (!StringUtils.isBlank(actualUser)) {
@@ -123,7 +123,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			}
 		}
 
-		StoredAttribute<IDfValue> groupsNames = this.storedObject.getAttribute(DctmAttributes.GROUPS_NAMES);
+		CmfAttribute<IDfValue> groupsNames = this.cmfObject.getAttribute(DctmAttributes.GROUPS_NAMES);
 		if (groupsNames != null) {
 			group.removeAllGroups();
 			for (IDfValue v : groupsNames) {
@@ -148,7 +148,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		final String groupName = group.getGroupName();
 
 		// Set this group as users' default group
-		StoredProperty<IDfValue> property = this.storedObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
+		CmfProperty<IDfValue> property = this.cmfObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
 		if ((property == null) || (property.getValueCount() == 0)) { return; }
 		Set<String> users = new TreeSet<String>();
 		for (IDfValue v : property) {
@@ -168,7 +168,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to set group [%s] as the default group for the user [%s] - %s",
 					groupName, actualUser, e.getMessage());
-				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
 			}
@@ -177,7 +177,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 					.format(
 						"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
 						groupName, actualUser);
-				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+				if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
 			}
@@ -206,7 +206,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 
 	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException {
-		IDfValue groupNameValue = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
+		IDfValue groupNameValue = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
 		final String groupName = groupNameValue.asString();
 		if (ctx.isSpecialGroup(groupName)) { return true; }
 		return super.skipImport(ctx);
@@ -214,7 +214,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 
 	@Override
 	protected IDfGroup locateInCms(DctmImportContext ctx) throws DfException {
-		String groupName = this.storedObject.getAttribute(DctmAttributes.GROUP_NAME).getValue().asString();
+		String groupName = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME).getValue().asString();
 		groupName = groupName.toLowerCase();
 		return ctx.getSession().getGroup(groupName);
 	}
