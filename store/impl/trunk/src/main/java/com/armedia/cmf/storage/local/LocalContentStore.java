@@ -32,14 +32,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.OrganizationStrategy;
-import com.armedia.cmf.storage.StorageException;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
-import com.armedia.cmf.storage.StoredValueSerializer;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfOrganizationStrategy;
+import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.CmfValueSerializer;
 import com.armedia.cmf.storage.local.xml.PropertyT;
 import com.armedia.cmf.storage.local.xml.StorePropertiesT;
 import com.armedia.cmf.storage.tools.FilenameFixer;
@@ -52,7 +52,7 @@ import com.armedia.commons.utilities.XmlTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class LocalContentStore extends ContentStore<URI> {
+public class LocalContentStore extends CmfContentStore<URI> {
 
 	private static final String SCHEME_RAW = "raw";
 	private static final String SCHEME_FIXED = "fixed";
@@ -69,7 +69,7 @@ public class LocalContentStore extends ContentStore<URI> {
 
 	private class LocalHandle extends Handle {
 
-		protected LocalHandle(StoredObjectType objectType, String objectId, String qualifier, URI locator) {
+		protected LocalHandle(CmfType objectType, String objectId, String qualifier, URI locator) {
 			super(objectType, objectId, qualifier, locator);
 		}
 
@@ -78,11 +78,11 @@ public class LocalContentStore extends ContentStore<URI> {
 	private static final String XML_SCHEMA = "store-properties.xsd";
 
 	private final File baseDir;
-	private final OrganizationStrategy strategy;
+	private final CmfOrganizationStrategy strategy;
 	private final File propertiesFile;
 	private final AtomicBoolean modified = new AtomicBoolean(false);
 	private final CfgTools settings;
-	private final Map<String, StoredValue> properties = new TreeMap<String, StoredValue>();
+	private final Map<String, CmfValue> properties = new TreeMap<String, CmfValue>();
 	private final boolean forceSafeFilenames;
 	private final Charset safeFilenameEncoding;
 	private final boolean fixFilenames;
@@ -91,8 +91,8 @@ public class LocalContentStore extends ContentStore<URI> {
 	protected final boolean propertiesLoaded;
 	private final boolean useWindowsFix;
 
-	public LocalContentStore(CfgTools settings, File baseDir, OrganizationStrategy strategy, boolean cleanData)
-		throws StorageException {
+	public LocalContentStore(CfgTools settings, File baseDir, CmfOrganizationStrategy strategy, boolean cleanData)
+		throws CmfStorageException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
 		if (baseDir.exists() && !baseDir.isDirectory()) { throw new IllegalArgumentException(String.format(
@@ -115,9 +115,9 @@ public class LocalContentStore extends ContentStore<URI> {
 			clearAllStreams();
 		} else {
 			this.propertiesLoaded = loadProperties();
-			StoredValue currentStrategyName = getProperty("strategy");
+			CmfValue currentStrategyName = getProperty("strategy");
 			if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
-				OrganizationStrategy currentStrategy = OrganizationStrategy.getStrategy(currentStrategyName.asString());
+				CmfOrganizationStrategy currentStrategy = CmfOrganizationStrategy.getStrategy(currentStrategyName.asString());
 				if (currentStrategy != null) {
 					strategy = currentStrategy;
 					storeStrategyName = false;
@@ -127,7 +127,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		this.strategy = strategy;
 		if (this.strategy == null) { throw new IllegalArgumentException("Must provide a path strategy"); }
 		if (storeStrategyName) {
-			setProperty("strategy", new StoredValue(strategy.getName()));
+			setProperty("strategy", new CmfValue(strategy.getName()));
 		}
 
 		// This seems clunky but it's actually very useful - it allows us to load properties
@@ -136,7 +136,7 @@ public class LocalContentStore extends ContentStore<URI> {
 			initProperties();
 		}
 
-		StoredValue v = null;
+		CmfValue v = null;
 		v = this.properties.get(Setting.FORCE_SAFE_FILENAMES.getLabel());
 		this.forceSafeFilenames = ((v != null) && v.asBoolean());
 
@@ -145,7 +145,7 @@ public class LocalContentStore extends ContentStore<URI> {
 			try {
 				this.safeFilenameEncoding = Charset.forName(v.asString());
 			} catch (Exception e) {
-				throw new StorageException(String.format("Encoding [%s] is not supported", v.asString()), e);
+				throw new CmfStorageException(String.format("Encoding [%s] is not supported", v.asString()), e);
 			}
 			this.fixFilenames = false;
 		} else {
@@ -164,10 +164,10 @@ public class LocalContentStore extends ContentStore<URI> {
 		v = this.properties.get(Setting.USE_WINDOWS_FIX.getLabel());
 		this.useWindowsFix = ((v != null) && v.asBoolean());
 		// This helps make sure the actual used value is stored
-		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new StoredValue(this.useWindowsFix));
+		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new CmfValue(this.useWindowsFix));
 	}
 
-	protected void initProperties() throws StorageException {
+	protected void initProperties() throws CmfStorageException {
 		final boolean forceSafeFilenames = this.settings.getBoolean(Setting.FORCE_SAFE_FILENAMES);
 		final Charset safeFilenameEncoding;
 		final boolean fixFilenames;
@@ -176,7 +176,7 @@ public class LocalContentStore extends ContentStore<URI> {
 			try {
 				safeFilenameEncoding = Charset.forName(encoding);
 			} catch (Exception e) {
-				throw new StorageException(String.format("Encoding [%s] is not supported", encoding), e);
+				throw new CmfStorageException(String.format("Encoding [%s] is not supported", encoding), e);
 			}
 			fixFilenames = false;
 		} else {
@@ -187,15 +187,15 @@ public class LocalContentStore extends ContentStore<URI> {
 		final boolean ignoreFragment = this.settings.getBoolean(Setting.IGNORE_EXTRA_FILENAME_INFO);
 		final boolean useWindowsFix = this.settings.getBoolean(Setting.USE_WINDOWS_FIX);
 
-		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new StoredValue(forceSafeFilenames));
+		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
 			this.properties
-				.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new StoredValue(safeFilenameEncoding.name()));
+				.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new CmfValue(safeFilenameEncoding.name()));
 		}
-		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new StoredValue(fixFilenames));
-		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new StoredValue(failOnCollisions));
-		this.properties.put(Setting.IGNORE_EXTRA_FILENAME_INFO.getLabel(), new StoredValue(ignoreFragment));
-		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new StoredValue(useWindowsFix
+		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
+		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));
+		this.properties.put(Setting.IGNORE_EXTRA_FILENAME_INFO.getLabel(), new CmfValue(ignoreFragment));
+		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new CmfValue(useWindowsFix
 			|| SystemUtils.IS_OS_WINDOWS));
 	}
 
@@ -222,7 +222,7 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected URI doCalculateLocator(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	protected URI doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
 		final List<String> rawPath = this.strategy.getPath(translator, object);
 		final String rawFragment;
 		if (!this.ignoreFragment) {
@@ -322,7 +322,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		}
 	}
 
-	protected synchronized boolean loadProperties() throws StorageException {
+	protected synchronized boolean loadProperties() throws CmfStorageException {
 		InputStream in = null;
 		this.properties.clear();
 		if (!this.propertiesFile.exists()) { return false; }
@@ -332,11 +332,11 @@ public class LocalContentStore extends ContentStore<URI> {
 			in = new FileInputStream(this.propertiesFile);
 			StorePropertiesT p = XmlTools.unmarshal(StorePropertiesT.class, LocalContentStore.XML_SCHEMA, in);
 			for (PropertyT property : p.getProperty()) {
-				StoredValueSerializer deserializer = StoredValueSerializer.get(property.getType());
+				CmfValueSerializer deserializer = CmfValueSerializer.get(property.getType());
 				if (deserializer == null) {
 					continue;
 				}
-				final StoredValue v;
+				final CmfValue v;
 				try {
 					v = deserializer.deserialize(property.getValue());
 				} catch (Exception e) {
@@ -353,21 +353,21 @@ public class LocalContentStore extends ContentStore<URI> {
 		} catch (FileNotFoundException e) {
 			return false;
 		} catch (JAXBException e) {
-			throw new StorageException("Failed to parse the stored properties", e);
+			throw new CmfStorageException("Failed to parse the stored properties", e);
 		} finally {
 			IOUtils.closeQuietly(in);
 		}
 	}
 
-	protected synchronized void storeProperties() throws StorageException {
+	protected synchronized void storeProperties() throws CmfStorageException {
 		OutputStream out = null;
 		try {
 			out = new FileOutputStream(this.propertiesFile);
 			StorePropertiesT p = new StorePropertiesT();
-			for (Map.Entry<String, StoredValue> e : this.properties.entrySet()) {
+			for (Map.Entry<String, CmfValue> e : this.properties.entrySet()) {
 				final String n = e.getKey();
-				final StoredValue v = e.getValue();
-				StoredValueSerializer serializer = StoredValueSerializer.get(v.getDataType());
+				final CmfValue v = e.getValue();
+				CmfValueSerializer serializer = CmfValueSerializer.get(v.getDataType());
 				if (serializer == null) {
 					continue;
 				}
@@ -387,34 +387,34 @@ public class LocalContentStore extends ContentStore<URI> {
 		} catch (FileNotFoundException e) {
 			return;
 		} catch (JAXBException e) {
-			throw new StorageException("Failed to parse the store properties", e);
+			throw new CmfStorageException("Failed to parse the store properties", e);
 		} catch (IOException e) {
-			throw new StorageException("Failed to write the store properties", e);
+			throw new CmfStorageException("Failed to write the store properties", e);
 		} finally {
 			IOUtils.closeQuietly(out);
 		}
 	}
 
 	@Override
-	protected StoredValue doGetProperty(String property) throws StorageException {
+	protected CmfValue doGetProperty(String property) throws CmfStorageException {
 		return this.properties.get(property);
 	}
 
 	@Override
-	protected StoredValue doSetProperty(String property, StoredValue value) throws StorageException {
-		StoredValue ret = this.properties.put(property, value);
+	protected CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
+		CmfValue ret = this.properties.put(property, value);
 		this.modified.set(true);
 		return ret;
 	}
 
 	@Override
-	public Set<String> getPropertyNames() throws StorageException {
+	public Set<String> getPropertyNames() throws CmfStorageException {
 		return new TreeSet<String>(this.properties.keySet());
 	}
 
 	@Override
-	protected StoredValue doClearProperty(String property) throws StorageException {
-		StoredValue ret = this.properties.remove(property);
+	protected CmfValue doClearProperty(String property) throws CmfStorageException {
+		CmfValue ret = this.properties.remove(property);
 		this.modified.set(true);
 		return ret;
 	}
@@ -424,7 +424,7 @@ public class LocalContentStore extends ContentStore<URI> {
 		if (this.modified.get()) {
 			try {
 				storeProperties();
-			} catch (StorageException e) {
+			} catch (CmfStorageException e) {
 				this.log.error(String.format("Failed to write the store properties to [%s]",
 					this.propertiesFile.getAbsolutePath()), e);
 			}
@@ -433,7 +433,7 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	public void clearProperties() throws StorageException {
+	public void clearProperties() throws CmfStorageException {
 		this.modified.set(true);
 		this.properties.clear();
 		this.propertiesFile.delete();
@@ -441,7 +441,7 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected LocalHandle constructHandle(StoredObject<?> object, String qualifier, URI locator) {
+	protected LocalHandle constructHandle(CmfObject<?> object, String qualifier, URI locator) {
 		return new LocalHandle(object.getType(), object.getId(), qualifier, locator);
 	}
 }

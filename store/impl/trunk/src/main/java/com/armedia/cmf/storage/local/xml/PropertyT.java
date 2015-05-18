@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
-import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.CmfDataType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "property.t", propOrder = {
@@ -35,14 +35,14 @@ public class PropertyT {
 	protected String type;
 
 	@XmlTransient
-	private StoredDataType dataType;
+	private CmfDataType dataType;
 
 	protected void beforeMarshal(Marshaller m) {
 		this.type = this.dataType.name();
 	}
 
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
-		this.dataType = StoredDataType.valueOf(this.type);
+		this.dataType = CmfDataType.valueOf(this.type);
 	}
 
 	/**
@@ -90,10 +90,10 @@ public class PropertyT {
 	/**
 	 * Gets the value of the type property.
 	 *
-	 * @return possible object is {@link StoredDataType }
+	 * @return possible object is {@link CmfDataType }
 	 *
 	 */
-	public StoredDataType getType() {
+	public CmfDataType getType() {
 		return this.dataType;
 	}
 
@@ -101,10 +101,10 @@ public class PropertyT {
 	 * Sets the value of the type property.
 	 *
 	 * @param value
-	 *            allowed object is {@link StoredDataType }
+	 *            allowed object is {@link CmfDataType }
 	 *
 	 */
-	public void setType(StoredDataType value) {
+	public void setType(CmfDataType value) {
 		this.dataType = value;
 	}
 
