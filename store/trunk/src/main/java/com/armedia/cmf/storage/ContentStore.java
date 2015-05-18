@@ -262,13 +262,13 @@ public abstract class ContentStore<L> extends Store {
 		return handle.locator;
 	}
 
-	public final Handle getHandle(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	public final Handle getHandle(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		return constructHandle(object, qualifier, calculateLocator(translator, object, qualifier));
 	}
 
-	protected final L calculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	protected final L calculateLocator(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		getReadLock().lock();
@@ -361,7 +361,7 @@ public abstract class ContentStore<L> extends Store {
 		}
 	}
 
-	protected abstract L doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object,
+	protected abstract L doCalculateLocator(AttributeTranslator<?> translator, StoredObject<?> object,
 		String qualifier);
 
 	protected abstract File doGetFile(L locator);

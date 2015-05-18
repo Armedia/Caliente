@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class ObjectStorageTranslator<V> {
+public abstract class AttributeTranslator<V> {
 	private static class Codec implements StoredValueCodec<StoredValue> {
 
 		private final StoredDataType type;
@@ -53,7 +53,7 @@ public abstract class ObjectStorageTranslator<V> {
 	}
 
 	public static StoredValueCodec<StoredValue> getStoredValueCodec(StoredDataType type) {
-		return ObjectStorageTranslator.CODECS.get(type);
+		return AttributeTranslator.CODECS.get(type);
 	}
 
 	public final String encodeValue(StoredDataType value) {

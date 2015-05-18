@@ -19,7 +19,7 @@ public abstract class OrganizationStrategy {
 	private static final OrganizationStrategy DEFAULT_STRATEGY = new OrganizationStrategy() {
 
 		@Override
-		public List<String> calculatePath(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
+		public List<String> calculatePath(AttributeTranslator<?> translator, StoredObject<?> object) {
 			return null;
 		}
 	};
@@ -82,11 +82,11 @@ public abstract class OrganizationStrategy {
 		return this.name;
 	}
 
-	public String calculateAddendum(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	public String calculateAddendum(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		return qualifier;
 	}
 
-	protected abstract List<String> calculatePath(ObjectStorageTranslator<?> translator, StoredObject<?> object);
+	protected abstract List<String> calculatePath(AttributeTranslator<?> translator, StoredObject<?> object);
 
 	protected final List<String> getDefaultPath(StoredObject<?> object) {
 		List<String> ret = new ArrayList<String>(2);
@@ -95,7 +95,7 @@ public abstract class OrganizationStrategy {
 		return ret;
 	}
 
-	public final List<String> getPath(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
+	public final List<String> getPath(AttributeTranslator<?> translator, StoredObject<?> object) {
 		List<String> ssp = calculatePath(translator, object);
 		if ((ssp == null) || ssp.isEmpty()) {
 			ssp = getDefaultPath(object);
