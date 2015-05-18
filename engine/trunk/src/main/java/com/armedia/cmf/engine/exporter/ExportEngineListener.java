@@ -2,7 +2,7 @@ package com.armedia.cmf.engine.exporter;
 
 import java.util.Map;
 
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
 public interface ExportEngineListener extends ExportListener {
@@ -21,5 +21,5 @@ public interface ExportEngineListener extends ExportListener {
 	 * </p>
 	 *
 	 */
-	public void exportFinished(Map<StoredObjectType, Integer> summary);
+	public void exportFinished(Map<CmfType, Integer> summary);
 }

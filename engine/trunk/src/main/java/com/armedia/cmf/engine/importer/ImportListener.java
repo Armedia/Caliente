@@ -2,8 +2,8 @@ package com.armedia.cmf.engine.importer;
 
 import java.util.Map;
 
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
 
 public interface ImportListener {
 
@@ -17,7 +17,7 @@ public interface ImportListener {
 	 * @param batchId
 	 * @param count
 	 */
-	public void objectBatchImportStarted(StoredObjectType objectType, String batchId, int count);
+	public void objectBatchImportStarted(CmfType objectType, String batchId, int count);
 
 	/**
 	 * <p>
@@ -26,7 +26,7 @@ public interface ImportListener {
 	 *
 	 * @param object
 	 */
-	public void objectImportStarted(StoredObject<?> object);
+	public void objectImportStarted(CmfObject<?> object);
 
 	/**
 	 * <p>
@@ -37,7 +37,7 @@ public interface ImportListener {
 	 * @param object
 	 * @param outcome
 	 */
-	public void objectImportCompleted(StoredObject<?> object, ImportOutcome outcome);
+	public void objectImportCompleted(CmfObject<?> object, ImportOutcome outcome);
 
 	/**
 	 * <p>
@@ -48,7 +48,7 @@ public interface ImportListener {
 	 * @param object
 	 * @param thrown
 	 */
-	public void objectImportFailed(StoredObject<?> object, Throwable thrown);
+	public void objectImportFailed(CmfObject<?> object, Throwable thrown);
 
 	/**
 	 * <p>
@@ -60,6 +60,6 @@ public interface ImportListener {
 	 * @param outcomes
 	 * @param failed
 	 */
-	public void objectBatchImportFinished(StoredObjectType objectType, String batchId,
+	public void objectBatchImportFinished(CmfType objectType, String batchId,
 		Map<String, ImportOutcome> outcomes, boolean failed);
 }

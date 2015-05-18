@@ -11,21 +11,21 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class ContextFactory<S, V, C extends TransferContext<S, V>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
 
-	private static StoredObjectType decodeObjectType(Object o) {
+	private static CmfType decodeObjectType(Object o) {
 		if (o == null) { return null; }
-		if (o instanceof StoredObjectType) { return StoredObjectType.class.cast(o); }
+		if (o instanceof CmfType) { return CmfType.class.cast(o); }
 		if (o instanceof String) {
 			try {
-				return StoredObjectType.decodeString(String.valueOf(o));
+				return CmfType.decodeString(String.valueOf(o));
 			} catch (IllegalArgumentException e) {
 				// Do nothing...
 			}
@@ -59,15 +59,15 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V>, E ex
 
 	private CfgTools settings = CfgTools.EMPTY;
 	private final E engine;
-	private final Set<StoredObjectType> excludes;
+	private final Set<CmfType> excludes;
 
 	protected ContextFactory(E engine, CfgTools settings) {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to which this factory is tied"); }
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
-		Set<StoredObjectType> excludes = EnumSet.noneOf(StoredObjectType.class);
+		Set<CmfType> excludes = EnumSet.noneOf(CmfType.class);
 		for (Object o : ContextFactory.getAsIterable(settings.getObject(TransferSetting.EXCLUDE_TYPES))) {
-			StoredObjectType t = ContextFactory.decodeObjectType(o);
+			CmfType t = ContextFactory.decodeObjectType(o);
 			if (t != null) {
 				excludes.add(t);
 			}
@@ -79,7 +79,7 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V>, E ex
 		this.excludes = Tools.freezeSet(excludes);
 	}
 
-	public final boolean isSupported(StoredObjectType type) {
+	public final boolean isSupported(CmfType type) {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		return !this.excludes.contains(type) && this.engine.checkSupported(this.excludes, type);
 	}
@@ -112,8 +112,8 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V>, E ex
 		}
 	}
 
-	public final C newContext(String rootId, StoredObjectType rootType, S session, Logger output,
-		ObjectStore<?, ?> objectStore, ContentStore<?> contentStore) {
+	public final C newContext(String rootId, CmfType rootType, S session, Logger output,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore) {
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
@@ -123,7 +123,7 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V>, E ex
 		}
 	}
 
-	protected abstract C constructContext(String rootId, StoredObjectType rootType, S session, Logger output,
-		ObjectStore<?, ?> objectStore, ContentStore<?> contentStore);
+	protected abstract C constructContext(String rootId, CmfType rootType, S session, Logger output,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore);
 
 }

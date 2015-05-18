@@ -7,14 +7,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.OrganizationStrategy;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfOrganizationStrategy;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.FileNameTools;
 
-public class LocalOrganizationStrategy extends OrganizationStrategy {
+public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 
 	public static final String NAME = "localfs";
 
@@ -23,10 +23,10 @@ public class LocalOrganizationStrategy extends OrganizationStrategy {
 	}
 
 	@Override
-	public String calculateAddendum(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	public String calculateAddendum(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
 		final String attName = translator.decodeAttributeName(object.getType(),
 			IntermediateAttribute.VERSION_LABEL.encode());
-		final StoredAttribute<?> versionLabelAtt = object.getAttribute(attName);
+		final CmfAttribute<?> versionLabelAtt = object.getAttribute(attName);
 		String oldFrag = super.calculateAddendum(translator, object, qualifier);
 		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {
 			final String versionLabel = versionLabelAtt.getValue().toString();
@@ -38,17 +38,17 @@ public class LocalOrganizationStrategy extends OrganizationStrategy {
 	}
 
 	@Override
-	protected List<String> calculatePath(AttributeTranslator<?> translator, StoredObject<?> object) {
+	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		StoredProperty<?> paths = object.getProperty(IntermediateProperty.PATH.encode());
+		CmfProperty<?> paths = object.getProperty(IntermediateProperty.PATH.encode());
 
 		List<String> ret = new ArrayList<String>();
 		for (String p : FileNameTools.tokenize(paths.getValue().toString(), '/')) {
 			ret.add(p);
 		}
 
-		StoredAttribute<?> name = object.getAttribute(translator.decodeAttributeName(object.getType(),
+		CmfAttribute<?> name = object.getAttribute(translator.decodeAttributeName(object.getType(),
 			IntermediateAttribute.NAME.encode()));
 		ret.add(name.getValue().toString());
 		return ret;

@@ -29,14 +29,14 @@ import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.StorageException;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectCounter;
-import com.armedia.cmf.storage.StoredObjectHandler;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectCounter;
+import com.armedia.cmf.storage.CmfObjectHandler;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -55,9 +55,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	private class Batch {
-		private final StoredObjectType type;
+		private final CmfType type;
 		private final String id;
-		private final Collection<StoredObject<V>> contents;
+		private final Collection<CmfObject<V>> contents;
 		private final ImportStrategy strategy;
 		private BatchStatus status = BatchStatus.PENDING;
 		private Throwable thrown = null;
@@ -66,7 +66,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			this(null, null, null, null);
 		}
 
-		private Batch(StoredObjectType type, String id, Collection<StoredObject<V>> contents, ImportStrategy strategy) {
+		private Batch(CmfType type, String id, Collection<CmfObject<V>> contents, ImportStrategy strategy) {
 			this.type = type;
 			this.id = id;
 			this.contents = contents;
@@ -102,12 +102,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		private final Collection<ImportEngineListener> listeners = getListeners();
 
-		private ImportListenerDelegator(StoredObjectCounter<ImportResult> counter) {
+		private ImportListenerDelegator(CmfObjectCounter<ImportResult> counter) {
 			super(counter);
 		}
 
 		@Override
-		public void importStarted(Map<StoredObjectType, Integer> summary) {
+		public void importStarted(Map<CmfType, Integer> summary) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.importStarted(summary);
@@ -120,7 +120,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectTypeImportStarted(StoredObjectType objectType, int totalObjects) {
+		public void objectTypeImportStarted(CmfType objectType, int totalObjects) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectTypeImportStarted(objectType, totalObjects);
@@ -133,7 +133,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectImportStarted(StoredObject<?> object) {
+		public void objectImportStarted(CmfObject<?> object) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectImportStarted(object);
@@ -146,7 +146,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectImportCompleted(StoredObject<?> object, ImportOutcome outcome) {
+		public void objectImportCompleted(CmfObject<?> object, ImportOutcome outcome) {
 			getStoredObjectCounter().increment(object.getType(), outcome.getResult());
 			for (ImportEngineListener l : this.listeners) {
 				try {
@@ -160,7 +160,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectImportFailed(StoredObject<?> object, Throwable thrown) {
+		public void objectImportFailed(CmfObject<?> object, Throwable thrown) {
 			getStoredObjectCounter().increment(object.getType(), ImportResult.FAILED);
 			for (ImportEngineListener l : this.listeners) {
 				try {
@@ -174,7 +174,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectTypeImportFinished(StoredObjectType objectType, Map<ImportResult, Integer> counters) {
+		public void objectTypeImportFinished(CmfType objectType, Map<ImportResult, Integer> counters) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectTypeImportFinished(objectType, counters);
@@ -199,7 +199,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 		}
 
-		private void objectTypeImportFinished(StoredObjectType objectType) {
+		private void objectTypeImportFinished(CmfType objectType) {
 			objectTypeImportFinished(objectType, getStoredObjectCounter().getCounters(objectType));
 		}
 
@@ -208,7 +208,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectBatchImportStarted(StoredObjectType objectType, String batchId, int count) {
+		public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectBatchImportStarted(objectType, batchId, count);
@@ -221,8 +221,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectBatchImportFinished(StoredObjectType objectType, String batchId,
-			Map<String, ImportOutcome> outcomes, boolean failed) {
+		public void objectBatchImportFinished(CmfType objectType, String batchId, Map<String, ImportOutcome> outcomes,
+			boolean failed) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectBatchImportFinished(objectType, batchId, outcomes, failed);
@@ -236,16 +236,16 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	}
 
-	protected abstract ImportStrategy getImportStrategy(StoredObjectType type);
+	protected abstract ImportStrategy getImportStrategy(CmfType type);
 
-	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore<?> streamStore, Map<String, ?> settings) throws ImportException, StorageException {
+	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
+		final CmfContentStore<?> streamStore, Map<String, ?> settings) throws ImportException, CmfStorageException {
 		return runImport(output, objectStore, streamStore, settings, null);
 	}
 
-	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore<?> streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
-		throws ImportException, StorageException {
+	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
+		final CmfContentStore<?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
+		throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -292,7 +292,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			final BlockingQueue<Batch> workQueue = new ArrayBlockingQueue<Batch>(backlogSize);
 			final ExecutorService executor = newExecutor(threadCount);
 			if (counter == null) {
-				counter = new StoredObjectCounter<ImportResult>(ImportResult.class);
+				counter = new CmfObjectCounter<ImportResult>(ImportResult.class);
 			}
 			final ImportListenerDelegator listenerDelegator = new ImportListenerDelegator(counter);
 
@@ -356,7 +356,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								}
 
 								listenerDelegator.objectBatchImportStarted(batch.type, batch.id, batch.contents.size());
-								for (StoredObject<V> next : batch.contents) {
+								for (CmfObject<V> next : batch.contents) {
 									if (failBatch) {
 										final ImportResult result = ImportResult.SKIPPED;
 										this.log.error(String.format(
@@ -370,7 +370,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 										session.getWrapped(), output, objectStore, streamStore);
 									try {
 										initContext(ctx);
-										final StoredObjectType storedType = next.getType();
+										final CmfType storedType = next.getType();
 										session.begin();
 										try {
 											listenerDelegator.objectImportStarted(next);
@@ -454,43 +454,43 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			};
 
 			try {
-				Map<StoredObjectType, Integer> containedTypes;
+				Map<CmfType, Integer> containedTypes;
 				try {
 					containedTypes = objectStore.getStoredObjectTypes();
-				} catch (StorageException e) {
+				} catch (CmfStorageException e) {
 					throw new ImportException("Exception raised getting the stored object counts", e);
 				}
 
 				// Make sure we have a valid import strategy for every item
-				for (StoredObjectType t : containedTypes.keySet()) {
+				for (CmfType t : containedTypes.keySet()) {
 					if (getImportStrategy(t) == null) { throw new ImportException(String.format(
 						"No import strategy provided for available object type [%s]", t.name())); }
 				}
 
-				final StoredObjectHandler<V> handler = new StoredObjectHandler<V>() {
+				final CmfObjectHandler<V> handler = new CmfObjectHandler<V>() {
 					private final Logger log = ImportEngine.this.log;
 
 					private String batchId = null;
-					private List<StoredObject<V>> contents = null;
+					private List<CmfObject<V>> contents = null;
 
 					@Override
-					public boolean newBatch(String batchId) throws StorageException {
-						this.contents = new LinkedList<StoredObject<V>>();
+					public boolean newBatch(String batchId) throws CmfStorageException {
+						this.contents = new LinkedList<CmfObject<V>>();
 						this.batchId = batchId;
 						return true;
 					}
 
 					@Override
-					public boolean handleObject(StoredObject<V> dataObject) {
+					public boolean handleObject(CmfObject<V> dataObject) {
 						this.contents.add(dataObject);
 						return true;
 					}
 
 					@Override
-					public boolean closeBatch(boolean ok) throws StorageException {
+					public boolean closeBatch(boolean ok) throws CmfStorageException {
 						if ((this.contents == null) || this.contents.isEmpty()) { return true; }
-						StoredObject<?> sample = this.contents.get(0);
-						StoredObjectType storedType = sample.getType();
+						CmfObject<?> sample = this.contents.get(0);
+						CmfType storedType = sample.getType();
 						ImportStrategy strategy = getImportStrategy(storedType);
 						// We will have already validated that a valid strategy is provided for
 						// all stored types
@@ -526,8 +526,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							batchCounter.set(0);
 							final int contentSize = this.contents.size();
 							List<Batch> batches = new ArrayList<Batch>(this.contents.size());
-							for (StoredObject<V> o : this.contents) {
-								List<StoredObject<V>> l = new ArrayList<StoredObject<V>>(1);
+							for (CmfObject<V> o : this.contents) {
+								List<CmfObject<V>> l = new ArrayList<CmfObject<V>>(1);
 								l.add(o);
 								try {
 									Batch batch = new Batch(o.getType(), this.batchId, l, strategy);
@@ -636,8 +636,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 				}
 
-				final AttributeTranslator<V> translator = getTranslator();
-				for (final StoredObjectType type : StoredObjectType.values()) {
+				final CmfAttributeTranslator<V> translator = getTranslator();
+				for (final CmfType type : CmfType.values()) {
+					// Only go over independent types
+					if (!type.isIndependent()) {
+						continue;
+					}
 					final Integer total = containedTypes.get(type);
 					if (total == null) {
 						this.log.warn(String.format("No %s objects are contained in the export", type.name()));
@@ -785,7 +789,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	protected boolean abortImport(StoredObjectType type, int errors) {
+	protected boolean abortImport(CmfType type, int errors) {
 		return false;
 	}
 
@@ -796,8 +800,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void initContext(C ctx) {
 	}
 
-	protected void prepareImport(Map<String, ?> settings, ObjectStore<?, ?> objectStore, ContentStore<?> contentStore)
-		throws StorageException, ImportException {
+	protected void prepareImport(Map<String, ?> settings, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?> contentStore) throws CmfStorageException, ImportException {
 		// In case we wish to do something before the import process runs...
 	}
 }

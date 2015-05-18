@@ -2,22 +2,22 @@ package com.armedia.cmf.engine.importer;
 
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferDelegate;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StorageException;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredValueDecoderException;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public abstract class ImportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V>, F extends ImportDelegateFactory<S, W, V, C, E>, E extends ImportEngine<S, W, V, C, F>>
 	extends TransferDelegate<T, S, V, C, F, E> {
 
-	protected final StoredObject<V> storedObject;
+	protected final CmfObject<V> cmfObject;
 
-	protected ImportDelegate(F factory, Class<T> objectClass, StoredObject<V> storedObject) throws Exception {
+	protected ImportDelegate(F factory, Class<T> objectClass, CmfObject<V> storedObject) throws Exception {
 		super(factory, objectClass);
-		this.storedObject = storedObject;
+		this.cmfObject = storedObject;
 	}
 
-	protected abstract ImportOutcome importObject(AttributeTranslator<V> translator, C ctx) throws ImportException,
-		StorageException, StoredValueDecoderException;
+	protected abstract ImportOutcome importObject(CmfAttributeTranslator<V> translator, C ctx) throws ImportException,
+		CmfStorageException, CmfValueDecoderException;
 
 }

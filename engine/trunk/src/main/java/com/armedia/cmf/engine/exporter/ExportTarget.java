@@ -1,10 +1,10 @@
 package com.armedia.cmf.engine.exporter;
 
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 
 public final class ExportTarget implements Comparable<ExportTarget> {
-	private final StoredObjectType type;
+	private final CmfType type;
 	private final String id;
 	private final String searchKey;
 	private final Long number;
@@ -16,11 +16,11 @@ public final class ExportTarget implements Comparable<ExportTarget> {
 		this.number = null;
 	}
 
-	public ExportTarget(StoredObjectType type, String id, String searchKey) {
+	public ExportTarget(CmfType type, String id, String searchKey) {
 		this(type, id, searchKey, null);
 	}
 
-	public ExportTarget(StoredObjectType type, String id, String searchKey, Long number) {
+	public ExportTarget(CmfType type, String id, String searchKey, Long number) {
 		if (id == null) { throw new IllegalArgumentException("Must provide an object id"); }
 		this.type = type;
 		this.id = id;
@@ -28,7 +28,7 @@ public final class ExportTarget implements Comparable<ExportTarget> {
 		this.number = number;
 	}
 
-	public StoredObjectType getType() {
+	public CmfType getType() {
 		return this.type;
 	}
 

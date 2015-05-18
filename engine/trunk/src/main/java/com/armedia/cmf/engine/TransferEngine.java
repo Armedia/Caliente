@@ -18,12 +18,12 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectCounter;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectCounter;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
@@ -80,14 +80,14 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 	protected class ListenerDelegator<R extends Enum<R>> {
 		protected final Logger log = TransferEngine.this.log;
 
-		private final StoredObjectCounter<R> counter;
+		private final CmfObjectCounter<R> counter;
 
-		protected ListenerDelegator(StoredObjectCounter<R> counter) {
+		protected ListenerDelegator(CmfObjectCounter<R> counter) {
 			if (counter == null) { throw new IllegalArgumentException("Must provide a counter"); }
 			this.counter = counter;
 		}
 
-		public final StoredObjectCounter<R> getStoredObjectCounter() {
+		public final CmfObjectCounter<R> getStoredObjectCounter() {
 			return this.counter;
 		}
 
@@ -95,11 +95,11 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 			return this.counter.getCummulative();
 		}
 
-		public final Map<StoredObjectType, Map<R, Integer>> getCounters() {
+		public final Map<CmfType, Map<R, Integer>> getCounters() {
 			return this.counter.getCounters();
 		}
 
-		public final Map<R, Integer> getCounters(StoredObjectType type) {
+		public final Map<R, Integer> getCounters(CmfType type) {
 			return this.counter.getCounters(type);
 		}
 	}
@@ -134,7 +134,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 			TransferEngine.MAX_THREAD_COUNT);
 	}
 
-	protected boolean checkSupported(Set<StoredObjectType> excludes, StoredObjectType type) {
+	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
 		return !excludes.contains(type);
 	}
 
@@ -174,10 +174,10 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 		return old;
 	}
 
-	protected final List<ContentInfo> getContentInfo(StoredObject<V> marshaled) throws Exception {
+	protected final List<ContentInfo> getContentInfo(CmfObject<V> marshaled) throws Exception {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		StoredProperty<V> qualifiers = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIERS);
-		StoredProperty<V> properties = marshaled.getProperty(TransferEngine.CONTENT_PROPERTIES);
+		CmfProperty<V> qualifiers = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIERS);
+		CmfProperty<V> properties = marshaled.getProperty(TransferEngine.CONTENT_PROPERTIES);
 		List<ContentInfo> info = new ArrayList<ContentInfo>();
 		if ((qualifiers != null) && (properties != null)) {
 			if (qualifiers.getValueCount() != properties.getValueCount()) { throw new Exception(String.format(
@@ -193,16 +193,16 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 		return info;
 	}
 
-	protected final void setContentInfo(StoredObject<V> marshaled, List<ContentInfo> contents) {
+	protected final void setContentInfo(CmfObject<V> marshaled, List<ContentInfo> contents) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
 		if (contents == null) { return; }
-		StoredProperty<V> q = new StoredProperty<V>(TransferEngine.CONTENT_QUALIFIERS, StoredDataType.STRING, true);
+		CmfProperty<V> q = new CmfProperty<V>(TransferEngine.CONTENT_QUALIFIERS, CmfDataType.STRING, true);
 		marshaled.setProperty(q);
-		StoredProperty<V> p = new StoredProperty<V>(TransferEngine.CONTENT_PROPERTIES, StoredDataType.STRING, true);
+		CmfProperty<V> p = new CmfProperty<V>(TransferEngine.CONTENT_PROPERTIES, CmfDataType.STRING, true);
 		marshaled.setProperty(p);
 		for (ContentInfo d : contents) {
-			q.addValue(getValue(StoredDataType.STRING, d.getQualifier()));
-			p.addValue(getValue(StoredDataType.STRING, d.encodeProperties()));
+			q.addValue(getValue(CmfDataType.STRING, d.getQualifier()));
+			p.addValue(getValue(CmfDataType.STRING, d.encodeProperties()));
 		}
 	}
 
@@ -211,9 +211,9 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 			new LinkedBlockingQueue<Runnable>());
 	}
 
-	protected abstract V getValue(StoredDataType type, Object value);
+	protected abstract V getValue(CmfDataType type, Object value);
 
-	protected abstract AttributeTranslator<V> getTranslator();
+	protected abstract CmfAttributeTranslator<V> getTranslator();
 
 	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg) throws Exception;
 
@@ -223,35 +223,35 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 
 	protected abstract Set<String> getTargetNames();
 
-	public final ExportTarget getReferrent(StoredObject<V> marshaled) {
+	public final ExportTarget getReferrent(CmfObject<V> marshaled) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		StoredProperty<V> referrentType = marshaled.getProperty(TransferEngine.REFERRENT_TYPE);
-		StoredProperty<V> referrentId = marshaled.getProperty(TransferEngine.REFERRENT_ID);
-		StoredProperty<V> referrentKey = marshaled.getProperty(TransferEngine.REFERRENT_KEY);
+		CmfProperty<V> referrentType = marshaled.getProperty(TransferEngine.REFERRENT_TYPE);
+		CmfProperty<V> referrentId = marshaled.getProperty(TransferEngine.REFERRENT_ID);
+		CmfProperty<V> referrentKey = marshaled.getProperty(TransferEngine.REFERRENT_KEY);
 		if ((referrentType == null) || (referrentId == null) || (referrentKey == null)) { return null; }
 		String type = Tools.toString(referrentType.getValue(), true);
 		String id = Tools.toString(referrentId.getValue(), true);
 		String key = Tools.toString(referrentKey.getValue(), true);
 		if ((type == null) || (id == null) || (key == null)) { return null; }
-		return new ExportTarget(StoredObjectType.decodeString(type), id, key);
+		return new ExportTarget(CmfType.decodeString(type), id, key);
 	}
 
-	public final void setReferrent(StoredObject<V> marshaled, ExportTarget referrent) throws ExportException {
+	public final void setReferrent(CmfObject<V> marshaled, ExportTarget referrent) throws ExportException {
 		// Now, add the properties to reference the referrent object
 		if (referrent != null) {
-			final AttributeTranslator<V> translator = getTranslator();
-			StoredProperty<V> referrentType = new StoredProperty<V>(TransferEngine.REFERRENT_TYPE,
-				StoredDataType.STRING, false);
+			final CmfAttributeTranslator<V> translator = getTranslator();
+			CmfProperty<V> referrentType = new CmfProperty<V>(TransferEngine.REFERRENT_TYPE,
+				CmfDataType.STRING, false);
 			try {
-				referrentType.setValue(translator.getValue(StoredDataType.STRING, referrent.getType().name()));
+				referrentType.setValue(translator.getValue(CmfDataType.STRING, referrent.getType().name()));
 				marshaled.setProperty(referrentType);
-				StoredProperty<V> referrentId = new StoredProperty<V>(TransferEngine.REFERRENT_ID,
-					StoredDataType.STRING, false);
-				referrentId.setValue(translator.getValue(StoredDataType.STRING, referrent.getId()));
+				CmfProperty<V> referrentId = new CmfProperty<V>(TransferEngine.REFERRENT_ID,
+					CmfDataType.STRING, false);
+				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getId()));
 				marshaled.setProperty(referrentId);
-				StoredProperty<V> referrentKey = new StoredProperty<V>(TransferEngine.REFERRENT_KEY,
-					StoredDataType.STRING, false);
-				referrentId.setValue(translator.getValue(StoredDataType.STRING, referrent.getSearchKey()));
+				CmfProperty<V> referrentKey = new CmfProperty<V>(TransferEngine.REFERRENT_KEY,
+					CmfDataType.STRING, false);
+				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
 				marshaled.setProperty(referrentKey);
 			} catch (ParseException e) {
 				// This should never happen...

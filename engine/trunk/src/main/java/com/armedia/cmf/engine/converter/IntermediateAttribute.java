@@ -9,7 +9,7 @@ import java.util.Map;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
 import com.armedia.cmf.engine.converter.MappingManager.Mappable;
-import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -18,62 +18,62 @@ import com.armedia.commons.utilities.Tools;
  */
 public enum IntermediateAttribute implements Mappable {
 	// CMIS attributes
-	OBJECT_ID(PropertyIds.OBJECT_ID, StoredDataType.ID),
-	BASE_TYPE_ID(PropertyIds.BASE_TYPE_ID, StoredDataType.STRING),
-	OBJECT_TYPE_ID(PropertyIds.OBJECT_TYPE_ID, StoredDataType.STRING),
-	NAME(PropertyIds.NAME, StoredDataType.STRING),
-	DESCRIPTION(PropertyIds.DESCRIPTION, StoredDataType.STRING),
-	CONTENT_STREAM_MIME_TYPE(PropertyIds.CONTENT_STREAM_MIME_TYPE, StoredDataType.STRING),
-	CONTENT_STREAM_LENGTH(PropertyIds.CONTENT_STREAM_LENGTH, StoredDataType.INTEGER),
-	CONTENT_STREAM_HASH(PropertyIds.CONTENT_STREAM_HASH, StoredDataType.STRING),
-	CREATED_BY(PropertyIds.CREATED_BY, StoredDataType.STRING),
-	CREATION_DATE(PropertyIds.CREATION_DATE, StoredDataType.DATETIME),
-	LAST_MODIFIED_BY(PropertyIds.LAST_MODIFIED_BY, StoredDataType.STRING),
-	LAST_MODIFICATION_DATE(PropertyIds.LAST_MODIFICATION_DATE, StoredDataType.DATETIME),
-	IS_IMMUTABLE(PropertyIds.IS_IMMUTABLE, StoredDataType.BOOLEAN),
-	IS_LAST_VERSION(PropertyIds.IS_LATEST_VERSION, StoredDataType.BOOLEAN),
-	PARENT_ID(PropertyIds.PARENT_ID, StoredDataType.ID, true),
-	PATH(PropertyIds.PATH, StoredDataType.STRING, true),
-	SOURCE_ID(PropertyIds.SOURCE_ID, StoredDataType.ID),
-	TARGET_ID(PropertyIds.TARGET_ID, StoredDataType.ID),
-	CHANGE_TOKEN(PropertyIds.CHANGE_TOKEN, StoredDataType.INTEGER),
-	VERSION_LABEL(PropertyIds.VERSION_LABEL, StoredDataType.STRING),
-	VERSION_SERIES_ID(PropertyIds.VERSION_SERIES_ID, StoredDataType.ID),
-	VERSION_SERIES_CHECKED_OUT_BY(PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, StoredDataType.STRING),
-	CHECKIN_COMMENT(PropertyIds.CHECKIN_COMMENT, StoredDataType.STRING),
+	OBJECT_ID(PropertyIds.OBJECT_ID, CmfDataType.ID),
+	BASE_TYPE_ID(PropertyIds.BASE_TYPE_ID, CmfDataType.STRING),
+	OBJECT_TYPE_ID(PropertyIds.OBJECT_TYPE_ID, CmfDataType.STRING),
+	NAME(PropertyIds.NAME, CmfDataType.STRING),
+	DESCRIPTION(PropertyIds.DESCRIPTION, CmfDataType.STRING),
+	CONTENT_STREAM_MIME_TYPE(PropertyIds.CONTENT_STREAM_MIME_TYPE, CmfDataType.STRING),
+	CONTENT_STREAM_LENGTH(PropertyIds.CONTENT_STREAM_LENGTH, CmfDataType.INTEGER),
+	CONTENT_STREAM_HASH(PropertyIds.CONTENT_STREAM_HASH, CmfDataType.STRING),
+	CREATED_BY(PropertyIds.CREATED_BY, CmfDataType.STRING),
+	CREATION_DATE(PropertyIds.CREATION_DATE, CmfDataType.DATETIME),
+	LAST_MODIFIED_BY(PropertyIds.LAST_MODIFIED_BY, CmfDataType.STRING),
+	LAST_MODIFICATION_DATE(PropertyIds.LAST_MODIFICATION_DATE, CmfDataType.DATETIME),
+	IS_IMMUTABLE(PropertyIds.IS_IMMUTABLE, CmfDataType.BOOLEAN),
+	IS_LAST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfDataType.BOOLEAN),
+	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.ID, true),
+	PATH(PropertyIds.PATH, CmfDataType.STRING, true),
+	SOURCE_ID(PropertyIds.SOURCE_ID, CmfDataType.ID),
+	TARGET_ID(PropertyIds.TARGET_ID, CmfDataType.ID),
+	CHANGE_TOKEN(PropertyIds.CHANGE_TOKEN, CmfDataType.INTEGER),
+	VERSION_LABEL(PropertyIds.VERSION_LABEL, CmfDataType.STRING),
+	VERSION_SERIES_ID(PropertyIds.VERSION_SERIES_ID, CmfDataType.ID),
+	VERSION_SERIES_CHECKED_OUT_BY(PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, CmfDataType.STRING),
+	CHECKIN_COMMENT(PropertyIds.CHECKIN_COMMENT, CmfDataType.STRING),
 
 	// Non-CMIS attributes
-	OWNER(StoredDataType.STRING),
-	OWNER_PERMISSION(StoredDataType.STRING),
-	GROUP(StoredDataType.STRING),
-	GROUP_PERMISSION(StoredDataType.STRING),
-	LAST_ACCESSED_BY(StoredDataType.STRING),
-	LAST_ACCESS_DATE(StoredDataType.DATETIME),
-	LOGIN_NAME(StoredDataType.STRING),
-	LOGIN_REALM(StoredDataType.STRING),
-	ACL_NAME(StoredDataType.STRING),
-	DEFAULT_FOLDER(StoredDataType.STRING),
-	VERSION_ANTECEDENT_ID(StoredDataType.ID),
+	OWNER(CmfDataType.STRING),
+	OWNER_PERMISSION(CmfDataType.STRING),
+	GROUP(CmfDataType.STRING),
+	GROUP_PERMISSION(CmfDataType.STRING),
+	LAST_ACCESSED_BY(CmfDataType.STRING),
+	LAST_ACCESS_DATE(CmfDataType.DATETIME),
+	LOGIN_NAME(CmfDataType.STRING),
+	LOGIN_REALM(CmfDataType.STRING),
+	ACL_NAME(CmfDataType.STRING),
+	DEFAULT_FOLDER(CmfDataType.STRING),
+	VERSION_ANTECEDENT_ID(CmfDataType.ID),
 	//
 	;
 
 	private final String name;
-	public final StoredDataType type;
+	public final CmfDataType type;
 	public final boolean repeating;
 
-	private IntermediateAttribute(String propertyId, StoredDataType type) {
+	private IntermediateAttribute(String propertyId, CmfDataType type) {
 		this(propertyId, type, false);
 	}
 
-	private IntermediateAttribute(StoredDataType type) {
+	private IntermediateAttribute(CmfDataType type) {
 		this(null, type, false);
 	}
 
-	private IntermediateAttribute(StoredDataType type, boolean repeating) {
+	private IntermediateAttribute(CmfDataType type, boolean repeating) {
 		this(null, type, repeating);
 	}
 
-	private IntermediateAttribute(String propertyId, StoredDataType type, boolean repeating) {
+	private IntermediateAttribute(String propertyId, CmfDataType type, boolean repeating) {
 		this.name = MappingManager.generateMapping(propertyId, name());
 		this.type = type;
 		this.repeating = repeating;

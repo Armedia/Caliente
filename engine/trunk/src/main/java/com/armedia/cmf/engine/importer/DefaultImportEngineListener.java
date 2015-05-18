@@ -2,20 +2,20 @@ package com.armedia.cmf.engine.importer;
 
 import java.util.Map;
 
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfType;
 
 public class DefaultImportEngineListener extends DefaultImportListener implements ImportEngineListener {
 
 	@Override
-	public void importStarted(Map<StoredObjectType, Integer> summary) {
+	public void importStarted(Map<CmfType, Integer> summary) {
 	}
 
 	@Override
-	public void objectTypeImportStarted(StoredObjectType objectType, int totalObjects) {
+	public void objectTypeImportStarted(CmfType objectType, int totalObjects) {
 	}
 
 	@Override
-	public void objectTypeImportFinished(StoredObjectType objectType, Map<ImportResult, Integer> counters) {
+	public void objectTypeImportFinished(CmfType objectType, Map<ImportResult, Integer> counters) {
 	}
 
 	@Override

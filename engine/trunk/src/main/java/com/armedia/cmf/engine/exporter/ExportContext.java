@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferContext;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -28,7 +28,7 @@ public class ExportContext<S, V> extends TransferContext<S, V> {
 	 * @param output
 	 */
 	public <C extends ExportContext<S, V>, W extends SessionWrapper<S>, E extends ExportEngine<S, W, V, C, ?>, F extends ExportContextFactory<S, W, V, C, E>> ExportContext(
-		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output) {
+		F factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output) {
 		super(factory, settings, rootId, rootType, session, output);
 	}
 

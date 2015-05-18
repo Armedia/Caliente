@@ -26,14 +26,14 @@ import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.StorageException;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectCounter;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValueEncoderException;
-import com.armedia.cmf.storage.UnsupportedObjectTypeException;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectCounter;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValueEncoderException;
+import com.armedia.cmf.storage.UnsupportedCmfTypeException;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -45,9 +45,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private class Result {
 		private final Long objectNumber;
-		private final StoredObject<V> marshaled;
+		private final CmfObject<V> marshaled;
 
-		public Result(Long objectNumber, StoredObject<V> marshaled) {
+		public Result(Long objectNumber, CmfObject<V> marshaled) {
 			this.objectNumber = objectNumber;
 			this.marshaled = marshaled;
 		}
@@ -57,7 +57,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		private final Collection<ExportEngineListener> listeners = getListeners();
 
-		private ExportListenerDelegator(StoredObjectCounter<ExportResult> counter) {
+		private ExportListenerDelegator(CmfObjectCounter<ExportResult> counter) {
 			super(counter);
 		}
 
@@ -76,7 +76,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectExportStarted(StoredObjectType objectType, String objectId) {
+		public void objectExportStarted(CmfType objectType, String objectId) {
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.objectExportStarted(objectType, objectId);
@@ -89,7 +89,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
+		public void objectExportCompleted(CmfObject<?> object, Long objectNumber) {
 			getStoredObjectCounter().increment(object.getType(), ExportResult.EXPORTED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
@@ -103,7 +103,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectSkipped(StoredObjectType objectType, String objectId) {
+		public void objectSkipped(CmfType objectType, String objectId) {
 			getStoredObjectCounter().increment(objectType, ExportResult.SKIPPED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
@@ -117,7 +117,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
+		public void objectExportFailed(CmfType objectType, String objectId, Throwable thrown) {
 			getStoredObjectCounter().increment(objectType, ExportResult.FAILED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
@@ -131,7 +131,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void exportFinished(Map<StoredObjectType, Integer> summary) {
+		public void exportFinished(Map<CmfType, Integer> summary) {
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.exportFinished(summary);
@@ -144,10 +144,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private Result exportObject(final ObjectStore<?, ?> objectStore, final ContentStore<?> streamStore,
+	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
-		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
-		StoredValueEncoderException, UnsupportedObjectTypeException {
+		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException,
+		CmfValueEncoderException, UnsupportedCmfTypeException {
 		try {
 			listenerDelegator.objectExportStarted(target.getType(), target.getId());
 			Result result = null;
@@ -164,21 +164,21 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		} catch (Exception e) {
 			listenerDelegator.objectExportFailed(target.getType(), target.getId(), e);
 			if (e instanceof ExportException) { throw ExportException.class.cast(e); }
-			if (e instanceof StorageException) { throw StorageException.class.cast(e); }
-			if (e instanceof StoredValueEncoderException) { throw StoredValueEncoderException.class.cast(e); }
-			if (e instanceof UnsupportedObjectTypeException) { throw UnsupportedObjectTypeException.class.cast(e); }
+			if (e instanceof CmfStorageException) { throw CmfStorageException.class.cast(e); }
+			if (e instanceof CmfValueEncoderException) { throw CmfValueEncoderException.class.cast(e); }
+			if (e instanceof UnsupportedCmfTypeException) { throw UnsupportedCmfTypeException.class.cast(e); }
 			throw RuntimeException.class.cast(e);
 		}
 	}
 
-	private Result doExportObject(final ObjectStore<?, ?> objectStore, final ContentStore<?> streamStore,
+	private Result doExportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
-		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, StorageException,
-		StoredValueEncoderException, UnsupportedObjectTypeException {
+		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException,
+		CmfValueEncoderException, UnsupportedCmfTypeException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
-		final StoredObjectType type = target.getType();
+		final CmfType type = target.getType();
 		final String id = target.getId();
 		String objectLabel = null;
 		try {
@@ -197,13 +197,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		boolean locked = false;
 		try {
 			locked = objectStore.lockForStorage(type, id);
-		} catch (StorageException e) {
+		} catch (CmfStorageException e) {
 			if (this.log.isTraceEnabled()) {
 				this.log.warn(String.format("Exception caught attempting to lock an object for storage: %s", label), e);
 			}
 			try {
 				locked = objectStore.lockForStorage(type, id);
-			} catch (StorageException e2) {
+			} catch (CmfStorageException e2) {
 				// There may be some circumstances where this is necessary
 				throw new ExportException(String.format("Failed to obtain or check the lock on %s", label), e2);
 			}
@@ -242,7 +242,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			}
 
-			final StoredObject<V> marshaled = sourceObject.marshal(ctx, referrent);
+			final CmfObject<V> marshaled = sourceObject.marshal(ctx, referrent);
 			if (marshaled == null) { return null; }
 
 			Collection<? extends ExportDelegate<?, S, W, V, C, ?, ?>> referenced;
@@ -318,14 +318,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore<?> contentStore, Map<String, ?> settings) throws ExportException, StorageException {
+	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
+		final CmfContentStore<?> contentStore, Map<String, ?> settings) throws ExportException, CmfStorageException {
 		return runExport(output, objectStore, contentStore, settings, null);
 	}
 
-	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
-		final ContentStore<?> contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-		throws ExportException, StorageException {
+	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
+		final CmfContentStore<?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter)
+		throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -371,7 +371,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			final BlockingQueue<ExportTarget> workQueue = new ArrayBlockingQueue<ExportTarget>(backlogSize);
 			final ExecutorService executor = newExecutor(threadCount);
 			if (counter == null) {
-				counter = new StoredObjectCounter<ExportResult>(ExportResult.class);
+				counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
 			}
 			final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
 
@@ -416,7 +416,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								return;
 							}
 
-							StoredObjectType nextType = next.getType();
+							CmfType nextType = next.getType();
 							final String nextId = next.getId();
 							final String nextKey = next.getSearchKey();
 
@@ -603,10 +603,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			} finally {
 				baseSession.close(false);
 
-				Map<StoredObjectType, Integer> summary = Collections.emptyMap();
+				Map<CmfType, Integer> summary = Collections.emptyMap();
 				try {
 					summary = objectStore.getStoredObjectTypes();
-				} catch (StorageException e) {
+				} catch (CmfStorageException e) {
 					this.log.warn("Exception caught attempting to get the work summary", e);
 				}
 				listenerDelegator.exportFinished(summary);
@@ -635,14 +635,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void initContext(C ctx) {
 	}
 
-	protected void setExportProperties(ObjectStore<?, ?> store) {
+	protected void setExportProperties(CmfObjectStore<?, ?> store) {
 	}
 
 	protected abstract Iterator<ExportTarget> findExportResults(S session, CfgTools configuration, F factory)
 		throws Exception;
 
 	/*
-	protected abstract ExportDelegate<?, S, W, V, C, ?> getExportDelegate(S session, StoredObjectType type,
+	protected abstract ExportDelegate<?, S, W, V, C, ?> getExportDelegate(S session, CmfType type,
 		String searchKey, CfgTools configuration) throws Exception;
 	 */
 

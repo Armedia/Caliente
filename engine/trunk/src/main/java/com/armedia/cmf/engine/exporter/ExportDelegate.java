@@ -6,10 +6,10 @@ import java.util.List;
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferDelegate;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, F>>
 	extends TransferDelegate<T, S, V, C, F, E> {
@@ -34,9 +34,9 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.exportTarget;
 	}
 
-	protected abstract StoredObjectType calculateType(T object) throws Exception;
+	protected abstract CmfType calculateType(T object) throws Exception;
 
-	public final StoredObjectType getType() {
+	public final CmfType getType() {
 		return this.exportTarget.getType();
 	}
 
@@ -67,22 +67,22 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	}
 
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyRequirements(
-		StoredObject<V> marshalled, C ctx) throws Exception;
+		CmfObject<V> marshalled, C ctx) throws Exception;
 
-	final StoredObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
-		StoredObjectType type = getType();
-		StoredObject<V> marshaled = new StoredObject<V>(type, getObjectId(), getSearchKey(), getBatchId(), getLabel(),
+	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
+		CmfType type = getType();
+		CmfObject<V> marshaled = new CmfObject<V>(type, getObjectId(), getSearchKey(), getBatchId(), getLabel(),
 			type.name());
 		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);
 		return marshaled;
 	}
 
-	protected abstract boolean marshal(C ctx, StoredObject<V> object) throws ExportException;
+	protected abstract boolean marshal(C ctx, CmfObject<V> object) throws ExportException;
 
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyDependents(
-		StoredObject<V> marshalled, C ctx) throws Exception;
+		CmfObject<V> marshalled, C ctx) throws Exception;
 
-	protected abstract List<ContentInfo> storeContent(S session, AttributeTranslator<V> translator,
-		StoredObject<V> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception;
+	protected abstract List<ContentInfo> storeContent(S session, CmfAttributeTranslator<V> translator,
+		CmfObject<V> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception;
 }

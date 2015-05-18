@@ -9,7 +9,7 @@ import java.util.Map;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
 import com.armedia.cmf.engine.converter.MappingManager.Mappable;
-import com.armedia.cmf.storage.StoredDataType;
+import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -18,37 +18,37 @@ import com.armedia.commons.utilities.Tools;
  */
 public enum IntermediateProperty implements Mappable {
 	// CMIS-inspired properties
-	PATH(PropertyIds.PATH, StoredDataType.STRING),
-	PARENT_ID(PropertyIds.PARENT_ID, StoredDataType.STRING),
-	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, StoredDataType.STRING),
-	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, StoredDataType.BOOLEAN),
+	PATH(PropertyIds.PATH, CmfDataType.STRING),
+	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.STRING),
+	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, CmfDataType.STRING),
+	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfDataType.BOOLEAN),
 
 	// Non-CMIS properties
-	USERS_WITH_DEFAULT_GROUP(StoredDataType.ID),
-	VERSION_PATCHES(StoredDataType.STRING),
-	PATCH_ANTECEDENT(StoredDataType.STRING),
-	USERS_WITH_DEFAULT_FOLDER(StoredDataType.STRING),
-	USERS_DEFAULT_FOLDER_PATHS(StoredDataType.STRING),
+	USERS_WITH_DEFAULT_GROUP(CmfDataType.ID),
+	VERSION_PATCHES(CmfDataType.STRING),
+	PATCH_ANTECEDENT(CmfDataType.STRING),
+	USERS_WITH_DEFAULT_FOLDER(CmfDataType.STRING),
+	USERS_DEFAULT_FOLDER_PATHS(CmfDataType.STRING),
 	//
 	;
 
 	private final String name;
-	public final StoredDataType type;
+	public final CmfDataType type;
 	public final boolean repeating;
 
-	private IntermediateProperty(StoredDataType type) {
+	private IntermediateProperty(CmfDataType type) {
 		this(null, type, false);
 	}
 
-	private IntermediateProperty(String propertyId, StoredDataType type) {
+	private IntermediateProperty(String propertyId, CmfDataType type) {
 		this(propertyId, type, false);
 	}
 
-	private IntermediateProperty(StoredDataType type, boolean repeating) {
+	private IntermediateProperty(CmfDataType type, boolean repeating) {
 		this(null, type, repeating);
 	}
 
-	private IntermediateProperty(String propertyId, StoredDataType type, boolean repeating) {
+	private IntermediateProperty(String propertyId, CmfDataType type, boolean repeating) {
 		this.name = MappingManager.generateMapping(propertyId, name());
 		this.type = type;
 		this.repeating = repeating;

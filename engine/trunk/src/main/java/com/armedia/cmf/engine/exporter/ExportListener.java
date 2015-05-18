@@ -1,7 +1,7 @@
 package com.armedia.cmf.engine.exporter;
 
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
 
 public interface ExportListener {
 
@@ -13,7 +13,7 @@ public interface ExportListener {
 	 * @param objectType
 	 * @param objectId
 	 */
-	public void objectExportStarted(StoredObjectType objectType, String objectId);
+	public void objectExportStarted(CmfType objectType, String objectId);
 
 	/**
 	 * <p>
@@ -22,7 +22,7 @@ public interface ExportListener {
 	 *
 	 * @param object
 	 */
-	public void objectExportCompleted(StoredObject<?> object, Long objectNumber);
+	public void objectExportCompleted(CmfObject<?> object, Long objectNumber);
 
 	/**
 	 * <p>
@@ -32,7 +32,7 @@ public interface ExportListener {
 	 * @param objectType
 	 * @param objectId
 	 */
-	public void objectSkipped(StoredObjectType objectType, String objectId);
+	public void objectSkipped(CmfType objectType, String objectId);
 
 	/**
 	 * <p>
@@ -42,6 +42,6 @@ public interface ExportListener {
 	 * @param objectType
 	 * @param thrown
 	 */
-	public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown);
+	public void objectExportFailed(CmfType objectType, String objectId, Throwable thrown);
 
 }

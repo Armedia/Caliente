@@ -11,8 +11,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -26,7 +26,7 @@ public abstract class TransferContext<S, V> {
 	private final ContextFactory<S, V, ? extends TransferContext<S, V>, ? extends TransferEngine<S, V, ?, ?, ?, ?>> factory;
 	private final TransferEngine<S, V, ?, ?, ?, ?> engine;
 	private final String rootId;
-	private final StoredObjectType rootType;
+	private final CmfType rootType;
 	private final S session;
 	private final Map<String, V> values = new HashMap<String, V>();
 	private final Map<String, Object> objects = new HashMap<String, Object>();
@@ -34,7 +34,7 @@ public abstract class TransferContext<S, V> {
 	private final Logger output;
 
 	protected <C extends TransferContext<S, V>, E extends TransferEngine<S, V, C, ?, ?, ?>, F extends ContextFactory<S, V, C, E>> TransferContext(
-		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output) {
+		F factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output) {
 		this.factory = factory;
 		this.engine = factory.getEngine();
 		this.settings = settings;
@@ -56,7 +56,7 @@ public abstract class TransferContext<S, V> {
 		return this.rootId;
 	}
 
-	public final StoredObjectType getRootObjectType() {
+	public final CmfType getRootObjectType() {
 		return this.rootType;
 	}
 
@@ -116,11 +116,11 @@ public abstract class TransferContext<S, V> {
 		}
 	}
 
-	public final List<ContentInfo> getContentInfo(StoredObject<V> marshaled) throws Exception {
+	public final List<ContentInfo> getContentInfo(CmfObject<V> marshaled) throws Exception {
 		return this.engine.getContentInfo(marshaled);
 	}
 
-	public final boolean isSupported(StoredObjectType type) {
+	public final boolean isSupported(CmfType type) {
 		return this.factory.isSupported(type);
 	}
 
