@@ -13,8 +13,8 @@ import org.apache.log4j.Logger;
 
 import com.armedia.cmf.engine.exporter.DefaultExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -30,22 +30,22 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 	private static final class Record {
 		private final String date;
-		private final StoredObjectType type;
+		private final CmfType type;
 		private final String batchId;
 		private final String sourceId;
 		private final String label;
 		private final ExportResult result;
 		private final Throwable thrown;
 
-		private Record(StoredObject<?> object, Throwable thrown) {
+		private Record(CmfObject<?> object, Throwable thrown) {
 			this(object, ExportResult.FAILED, thrown);
 		}
 
-		private Record(StoredObject<?> object, ExportResult result) {
+		private Record(CmfObject<?> object, ExportResult result) {
 			this(object, result, null);
 		}
 
-		private Record(StoredObject<?> object, ExportResult result, Throwable thrown) {
+		private Record(CmfObject<?> object, ExportResult result, Throwable thrown) {
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = object.getType();
 			this.batchId = StringEscapeUtils.escapeCsv(object.getBatchId());
@@ -60,16 +60,16 @@ public class ExportManifest extends DefaultExportEngineListener {
 			}
 		}
 
-		private Record(StoredObjectType type, String objectId, Throwable thrown) {
+		private Record(CmfType type, String objectId, Throwable thrown) {
 			this(type, objectId, ExportResult.FAILED, thrown);
 
 		}
 
-		private Record(StoredObjectType type, String objectId, ExportResult result) {
+		private Record(CmfType type, String objectId, ExportResult result) {
 			this(type, objectId, result, null);
 		}
 
-		private Record(StoredObjectType type, String objectId, ExportResult result, Throwable thrown) {
+		private Record(CmfType type, String objectId, ExportResult result, Throwable thrown) {
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = type;
 			this.batchId = "";
@@ -114,9 +114,9 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<String, List<Record>>();
 	private final Set<ExportResult> results;
-	private final Set<StoredObjectType> types;
+	private final Set<CmfType> types;
 
-	public ExportManifest(Set<ExportResult> results, Set<StoredObjectType> types) {
+	public ExportManifest(Set<ExportResult> results, Set<CmfType> types) {
 		this.results = Tools.freezeCopy(results, true);
 		this.types = Tools.freezeCopy(types, true);
 	}
@@ -129,14 +129,14 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
+	public void objectExportCompleted(CmfObject<?> object, Long objectNumber) {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(ExportResult.EXPORTED)) { return; }
 		new Record(object, ExportResult.EXPORTED).log(this.manifestLog);
 	}
 
 	@Override
-	public void objectSkipped(StoredObjectType objectType, String objectId) {
+	public void objectSkipped(CmfType objectType, String objectId) {
 		// For the manifest, we're not really interested in Skipped objects, since
 		// they'll always be the result of duplicate serializations, so there's no
 		// problem to be reported or deduced from it
@@ -146,7 +146,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
+	public void objectExportFailed(CmfType objectType, String objectId, Throwable thrown) {
 		if (!this.types.contains(objectType)) { return; }
 		if (!this.results.contains(ExportResult.FAILED)) { return; }
 		new Record(objectType, objectId, thrown).log(this.manifestLog);

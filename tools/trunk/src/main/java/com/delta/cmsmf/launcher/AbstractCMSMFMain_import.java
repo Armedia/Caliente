@@ -21,9 +21,9 @@ import com.armedia.cmf.engine.importer.ImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.importer.ImportSetting;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectCounter;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectCounter;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
@@ -37,8 +37,8 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
 	private final AtomicInteger aggregateCurrent = new AtomicInteger(0);
 
-	private final Map<StoredObjectType, Integer> total = new HashMap<StoredObjectType, Integer>();
-	private final Map<StoredObjectType, AtomicInteger> current = new HashMap<StoredObjectType, AtomicInteger>();
+	private final Map<CmfType, Integer> total = new HashMap<CmfType, Integer>();
+	private final Map<CmfType, AtomicInteger> current = new HashMap<CmfType, AtomicInteger>();
 
 	public AbstractCMSMFMain_import(ImportEngine<?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine);
@@ -52,7 +52,7 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 	public final void run() throws CMSMFException {
 		Set<ImportResult> outcomes = Tools.parseEnumCSV(ImportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
 			AbstractCMSMFMain.ALL, false);
-		Set<StoredObjectType> types = Tools.parseEnumCSV(StoredObjectType.class, Setting.MANIFEST_TYPES.getString(),
+		Set<CmfType> types = Tools.parseEnumCSV(CmfType.class, Setting.MANIFEST_TYPES.getString(),
 			AbstractCMSMFMain.ALL, false);
 		this.engine.addListener(this);
 		this.engine.addListener(new ImportManifest(outcomes, types));
@@ -68,10 +68,10 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 		Date start = new Date();
 		Date end = null;
 		String exceptionReport = null;
-		final StoredObjectCounter<ImportResult> results = new StoredObjectCounter<ImportResult>(ImportResult.class);
+		final CmfObjectCounter<ImportResult> results = new CmfObjectCounter<ImportResult>(ImportResult.class);
 		try {
 			this.log.info("##### Import Process Started #####");
-			this.engine.runImport(this.console, this.objectStore, this.contentStore, settings, results);
+			this.engine.runImport(this.console, this.cmfObjectStore, this.cmfContentStore, settings, results);
 			// TODO: run the post-process if necessary
 			// importer.doImport(this.sessionManager, Setting.POST_PROCESS_IMPORT.getBoolean());
 			this.log.info("##### Import Process Completed #####");
@@ -113,7 +113,7 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 		}
 
 		report.append(String.format("%n%nAction Summary:%n%s%n", StringUtils.repeat("=", 30)));
-		for (StoredObjectType t : StoredObjectType.values()) {
+		for (CmfType t : CmfType.values()) {
 			report.append(String.format("%n%n%n"));
 			report.append(results.generateReport(t, 1));
 		}
@@ -135,7 +135,7 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 		}
 	}
 
-	private final void showProgress(StoredObjectType objectType) {
+	private final void showProgress(CmfType objectType) {
 		final Double aggregateTotal = this.aggregateTotal.doubleValue();
 		final Double aggregateCurrent = this.aggregateCurrent.doubleValue();
 		final Double aggregatePct = (aggregateCurrent / aggregateTotal) * 100.0;
@@ -165,12 +165,12 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 	}
 
 	@Override
-	public final void importStarted(Map<StoredObjectType, Integer> summary) {
+	public final void importStarted(Map<CmfType, Integer> summary) {
 		this.aggregateCurrent.set(0);
 		this.total.clear();
 		this.current.clear();
 		this.console.info("Import process started");
-		for (StoredObjectType t : StoredObjectType.values()) {
+		for (CmfType t : CmfType.values()) {
 			Integer v = summary.get(t);
 			if ((v == null) || (v.intValue() == 0)) {
 				continue;
@@ -183,20 +183,20 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 	}
 
 	@Override
-	public final void objectTypeImportStarted(StoredObjectType objectType, int totalObjects) {
+	public final void objectTypeImportStarted(CmfType objectType, int totalObjects) {
 		showProgress(objectType);
 		this.console.info(String.format("Object import started for %d %s objects", totalObjects, objectType.name()));
 	}
 
 	@Override
-	public final void objectImportStarted(StoredObject<?> object) {
+	public final void objectImportStarted(CmfObject<?> object) {
 		showProgress(object.getType());
 		this.console.info(String.format("Import started for %s [%s](%s)", object.getType().name(), object.getLabel(),
 			object.getId()));
 	}
 
 	@Override
-	public final void objectImportCompleted(StoredObject<?> object, ImportOutcome outcome) {
+	public final void objectImportCompleted(CmfObject<?> object, ImportOutcome outcome) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
 		String suffix = null;
@@ -216,7 +216,7 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 	}
 
 	@Override
-	public final void objectImportFailed(StoredObject<?> object, Throwable thrown) {
+	public final void objectImportFailed(CmfObject<?> object, Throwable thrown) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
 		this.console.info(
@@ -226,7 +226,7 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 	}
 
 	@Override
-	public final void objectTypeImportFinished(StoredObjectType objectType, Map<ImportResult, Integer> counters) {
+	public final void objectTypeImportFinished(CmfType objectType, Map<ImportResult, Integer> counters) {
 		this.console.info(String.format("Finished importing %s objects", objectType.name()));
 		for (ImportResult r : ImportResult.values()) {
 			Integer v = counters.get(r);
@@ -252,12 +252,12 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 	}
 
 	@Override
-	public final void objectBatchImportStarted(StoredObjectType objectType, String batchId, int count) {
+	public final void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
 		showProgress(objectType);
 	}
 
 	@Override
-	public final void objectBatchImportFinished(StoredObjectType objectType, String batchId,
+	public final void objectBatchImportFinished(CmfType objectType, String batchId,
 		Map<String, ImportOutcome> outcomes, boolean failed) {
 		showProgress(objectType);
 	}

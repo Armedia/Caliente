@@ -18,8 +18,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
@@ -170,24 +170,24 @@ public class CMSMFLauncher extends AbstractLauncher {
 		}
 
 		// Lock for single execution
-		ObjectStore<?, ?> store = main.getObjectStore();
+		CmfObjectStore<?, ?> store = main.getObjectStore();
 		final boolean writeProperties = (store != null);
 		final String pfx = String.format("cmsmf.%s.%s", engine, mode);
 		try {
 			if (writeProperties) {
-				store.setProperty(String.format("%s.version", pfx), new StoredValue(CMSMFLauncher.VERSION));
-				store.setProperty(String.format("%s.start", pfx), new StoredValue(new Date()));
+				store.setProperty(String.format("%s.version", pfx), new CmfValue(CMSMFLauncher.VERSION));
+				store.setProperty(String.format("%s.start", pfx), new CmfValue(new Date()));
 			}
 			main.run();
 		} catch (Throwable t) {
 			if (writeProperties) {
-				store.setProperty(String.format("%s.error", pfx), new StoredValue(Tools.dumpStackTrace(t)));
+				store.setProperty(String.format("%s.error", pfx), new CmfValue(Tools.dumpStackTrace(t)));
 			}
 			throw new RuntimeException("Execution failed", t);
 		} finally {
 			// Unlock from single execution
 			if (writeProperties) {
-				store.setProperty(String.format("%s.end", pfx), new StoredValue(new Date()));
+				store.setProperty(String.format("%s.end", pfx), new CmfValue(new Date()));
 			}
 		}
 	}

@@ -24,8 +24,8 @@ import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -53,7 +53,7 @@ ExportEngineListener {
 	public void run() throws CMSMFException {
 		Set<ExportResult> outcomes = Tools.parseEnumCSV(ExportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
 			AbstractCMSMFMain.ALL, false);
-		Set<StoredObjectType> types = Tools.parseEnumCSV(StoredObjectType.class, Setting.MANIFEST_TYPES.getString(),
+		Set<CmfType> types = Tools.parseEnumCSV(CmfType.class, Setting.MANIFEST_TYPES.getString(),
 			AbstractCMSMFMain.ALL, false);
 		this.engine.addListener(this);
 		this.engine.addListener(new ExportManifest(outcomes, types));
@@ -118,7 +118,7 @@ ExportEngineListener {
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(null));
 
 		Date end = null;
-		Map<StoredObjectType, Integer> summary = null;
+		Map<CmfType, Integer> summary = null;
 		String exceptionReport = null;
 		StringBuilder report = new StringBuilder();
 		Date start = null;
@@ -126,10 +126,10 @@ ExportEngineListener {
 		start = new Date();
 		try {
 			this.log.info("##### Export Process Started #####");
-			this.engine.runExport(this.console, this.objectStore, this.contentStore, settings);
+			this.engine.runExport(this.console, this.cmfObjectStore, this.cmfContentStore, settings);
 			this.log.info("##### Export Process Finished #####");
 
-			summary = this.objectStore.getStoredObjectTypes();
+			summary = this.cmfObjectStore.getStoredObjectTypes();
 		} catch (Throwable t) {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
@@ -170,7 +170,7 @@ ExportEngineListener {
 		if (summary != null) {
 			report.append(String.format("%n%n%nExported Object Summary:%n")).append(StringUtils.repeat("=", 30));
 			int total = 0;
-			for (StoredObjectType t : summary.keySet()) {
+			for (CmfType t : summary.keySet()) {
 				Integer count = summary.get(t);
 				if ((count == null) || (count == 0)) {
 					continue;
@@ -205,12 +205,12 @@ ExportEngineListener {
 	}
 
 	@Override
-	public void objectExportStarted(StoredObjectType objectType, String objectId) {
+	public void objectExportStarted(CmfType objectType, String objectId) {
 		this.console.info(String.format("Object export started for %s[%s]", objectType.name(), objectId));
 	}
 
 	@Override
-	public void objectExportCompleted(StoredObject<?> object, Long objectNumber) {
+	public void objectExportCompleted(CmfObject<?> object, Long objectNumber) {
 		if (objectNumber != null) {
 			this.console.info(String.format("%s export completed for [%s](%s) as object #%d", object.getType().name(),
 				object.getLabel(), object.getId(), objectNumber));
@@ -218,19 +218,19 @@ ExportEngineListener {
 	}
 
 	@Override
-	public void objectSkipped(StoredObjectType objectType, String objectId) {
+	public void objectSkipped(CmfType objectType, String objectId) {
 		this.console.info(String.format("%s object [%s] was skipped", objectType.name(), objectId));
 	}
 
 	@Override
-	public void objectExportFailed(StoredObjectType objectType, String objectId, Throwable thrown) {
+	public void objectExportFailed(CmfType objectType, String objectId, Throwable thrown) {
 		this.console.warn(String.format("Object export failed for %s[%s]", objectType.name(), objectId), thrown);
 	}
 
 	@Override
-	public void exportFinished(Map<StoredObjectType, Integer> summary) {
+	public void exportFinished(Map<CmfType, Integer> summary) {
 		this.console.info("Export process finished");
-		for (StoredObjectType t : StoredObjectType.values()) {
+		for (CmfType t : CmfType.values()) {
 			Integer v = summary.get(t);
 			if ((v == null) || (v.intValue() == 0)) {
 				continue;

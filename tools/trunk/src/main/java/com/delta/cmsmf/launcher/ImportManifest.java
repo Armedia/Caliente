@@ -16,8 +16,8 @@ import org.apache.log4j.Logger;
 import com.armedia.cmf.engine.importer.DefaultImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -32,7 +32,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 	private static final class Record {
 		private final String date;
-		private final StoredObjectType type;
+		private final CmfType type;
 		private final String batchId;
 		private final String sourceId;
 		private final String label;
@@ -40,15 +40,15 @@ public class ImportManifest extends DefaultImportEngineListener {
 		private final ImportResult result;
 		private final Throwable thrown;
 
-		private Record(StoredObject<?> object, Throwable thrown) {
+		private Record(CmfObject<?> object, Throwable thrown) {
 			this(object, null, ImportResult.FAILED, thrown);
 		}
 
-		private Record(StoredObject<?> object, String targetId, ImportResult result) {
+		private Record(CmfObject<?> object, String targetId, ImportResult result) {
 			this(object, targetId, result, null);
 		}
 
-		private Record(StoredObject<?> object, String targetId, ImportResult result, Throwable thrown) {
+		private Record(CmfObject<?> object, String targetId, ImportResult result, Throwable thrown) {
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = object.getType();
 			this.batchId = StringEscapeUtils.escapeCsv(object.getBatchId());
@@ -95,15 +95,15 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<String, List<Record>>();
 	private final Set<ImportResult> results;
-	private final Set<StoredObjectType> types;
+	private final Set<CmfType> types;
 
-	public ImportManifest(Set<ImportResult> results, Set<StoredObjectType> types) {
+	public ImportManifest(Set<ImportResult> results, Set<CmfType> types) {
 		this.results = Tools.freezeCopy(results, true);
 		this.types = Tools.freezeCopy(types, true);
 	}
 
 	@Override
-	public void importStarted(Map<StoredObjectType, Integer> summary) {
+	public void importStarted(Map<CmfType, Integer> summary) {
 		// Clear manifest
 		this.openBatches.clear();
 		this.manifestLog.info(String.format(ImportManifest.RECORD_FORMAT, "DATE", "TYPE", "RESULT", "BATCH_ID",
@@ -111,13 +111,13 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectImportStarted(StoredObject<?> object) {
+	public void objectImportStarted(CmfObject<?> object) {
 		// TODO Auto-generated method stub
 		super.objectImportStarted(object);
 	}
 
 	@Override
-	public void objectBatchImportStarted(StoredObjectType objectType, String batchId, int count) {
+	public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
 		if (!this.types.contains(objectType)) { return; }
 		if (count <= 1) {
 			// We don't track batches with a single item because it's not worth the trouble
@@ -129,7 +129,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectImportCompleted(StoredObject<?> object, ImportOutcome outcome) {
+	public void objectImportCompleted(CmfObject<?> object, ImportOutcome outcome) {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(outcome.getResult())) { return; }
 		Record record = new Record(object, outcome.getNewId(), outcome.getResult());
@@ -143,7 +143,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectImportFailed(StoredObject<?> object, Throwable thrown) {
+	public void objectImportFailed(CmfObject<?> object, Throwable thrown) {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(ImportResult.FAILED)) { return; }
 		Record record = new Record(object, thrown);
@@ -157,7 +157,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectBatchImportFinished(StoredObjectType objectType, String batchId,
+	public void objectBatchImportFinished(CmfType objectType, String batchId,
 		Map<String, ImportOutcome> outcomes, boolean failed) {
 		if (!this.types.contains(objectType)) { return; }
 		List<Record> batch = this.openBatches.get(batchId);

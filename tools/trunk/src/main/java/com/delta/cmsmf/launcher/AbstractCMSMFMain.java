@@ -7,10 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.StoreFactory;
-import com.armedia.cmf.storage.Stores;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfStoreFactory;
+import com.armedia.cmf.storage.CmfStores;
 import com.armedia.cmf.storage.xml.StoreConfiguration;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
@@ -29,8 +29,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 	private static AbstractCMSMFMain<?, ?> instance = null;
 
-	protected final ObjectStore<?, ?> objectStore;
-	protected final ContentStore<?> contentStore;
+	protected final CmfObjectStore<?, ?> cmfObjectStore;
+	protected final CmfContentStore<?> cmfContentStore;
 	protected final E engine;
 
 	protected final String server;
@@ -69,17 +69,17 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 		this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
 
-		Stores.initializeConfigurations();
+		CmfStores.initializeConfigurations();
 
-		StoreConfiguration cfg = Stores.getObjectStoreConfiguration("cmsmf");
-		cfg.getSettings().put(StoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
+		StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("cmsmf");
+		cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
 		cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
-		this.objectStore = Stores.createObjectStore(cfg);
+		this.cmfObjectStore = CmfStores.createObjectStore(cfg);
 
 		final boolean directFsExport = CLIParam.direct_fs.isPresent();
 
 		final String contentStoreName = (directFsExport ? "direct" : "cmsmf");
-		cfg = Stores.getContentStoreConfiguration(contentStoreName);
+		cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 		if (!directFsExport) {
 			String strategy = getContentStrategyName();
 			if (strategy != null) {
@@ -87,9 +87,9 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			}
 		}
 		cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
-		cfg.getSettings().put(StoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
+		cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
 
-		this.contentStore = Stores.createContentStore(cfg);
+		this.cmfContentStore = CmfStores.createContentStore(cfg);
 
 		this.server = CLIParam.server.getString();
 		this.user = CLIParam.user.getString();
@@ -108,8 +108,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	}
 
 	@Override
-	public ObjectStore<?, ?> getObjectStore() {
-		return this.objectStore;
+	public CmfObjectStore<?, ?> getObjectStore() {
+		return this.cmfObjectStore;
 	}
 
 	@Override
