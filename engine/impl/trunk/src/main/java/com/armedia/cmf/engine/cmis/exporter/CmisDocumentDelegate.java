@@ -20,7 +20,7 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -123,7 +123,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(Session session, ObjectStorageTranslator<StoredValue> translator,
+	protected List<ContentInfo> storeContent(Session session, AttributeTranslator<StoredValue> translator,
 		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
 		List<ContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
@@ -152,7 +152,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	protected ContentStore<?>.Handle storeContentStream(StoredObject<StoredValue> marshalled,
-		ObjectStorageTranslator<StoredValue> translator, Rendition r, ContentStream cs, ContentStore<?> streamStore)
+		AttributeTranslator<StoredValue> translator, Rendition r, ContentStream cs, ContentStore<?> streamStore)
 			throws Exception {
 		ContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
 		InputStream src = cs.getStream();

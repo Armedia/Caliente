@@ -9,7 +9,7 @@ import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
@@ -32,7 +32,7 @@ public class CmisImportEngine extends
 	}
 
 	@Override
-	protected ObjectStorageTranslator<StoredValue> getTranslator() {
+	protected AttributeTranslator<StoredValue> getTranslator() {
 		return null;
 	}
 
