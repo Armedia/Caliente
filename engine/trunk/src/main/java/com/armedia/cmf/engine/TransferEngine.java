@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectCounter;
@@ -213,7 +213,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 
 	protected abstract V getValue(StoredDataType type, Object value);
 
-	protected abstract ObjectStorageTranslator<V> getTranslator();
+	protected abstract AttributeTranslator<V> getTranslator();
 
 	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg) throws Exception;
 
@@ -239,7 +239,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 	public final void setReferrent(StoredObject<V> marshaled, ExportTarget referrent) throws ExportException {
 		// Now, add the properties to reference the referrent object
 		if (referrent != null) {
-			final ObjectStorageTranslator<V> translator = getTranslator();
+			final AttributeTranslator<V> translator = getTranslator();
 			StoredProperty<V> referrentType = new StoredProperty<V>(TransferEngine.REFERRENT_TYPE,
 				StoredDataType.STRING, false);
 			try {

@@ -2,7 +2,7 @@ package com.armedia.cmf.engine.importer;
 
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferDelegate;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValueDecoderException;
@@ -17,7 +17,7 @@ public abstract class ImportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.storedObject = storedObject;
 	}
 
-	protected abstract ImportOutcome importObject(ObjectStorageTranslator<V> translator, C ctx) throws ImportException,
+	protected abstract ImportOutcome importObject(AttributeTranslator<V> translator, C ctx) throws ImportException,
 		StorageException, StoredValueDecoderException;
 
 }

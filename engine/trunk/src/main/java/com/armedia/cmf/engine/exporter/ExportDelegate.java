@@ -7,7 +7,7 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferDelegate;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 
@@ -83,6 +83,6 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyDependents(
 		StoredObject<V> marshalled, C ctx) throws Exception;
 
-	protected abstract List<ContentInfo> storeContent(S session, ObjectStorageTranslator<V> translator,
+	protected abstract List<ContentInfo> storeContent(S session, AttributeTranslator<V> translator,
 		StoredObject<V> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception;
 }

@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.OrganizationStrategy;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -23,7 +23,7 @@ public class LocalOrganizationStrategy extends OrganizationStrategy {
 	}
 
 	@Override
-	public String calculateAddendum(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	public String calculateAddendum(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		final String attName = translator.decodeAttributeName(object.getType(),
 			IntermediateAttribute.VERSION_LABEL.encode());
 		final StoredAttribute<?> versionLabelAtt = object.getAttribute(attName);
@@ -38,7 +38,7 @@ public class LocalOrganizationStrategy extends OrganizationStrategy {
 	}
 
 	@Override
-	protected List<String> calculatePath(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
+	protected List<String> calculatePath(AttributeTranslator<?> translator, StoredObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
 		StoredProperty<?> paths = object.getProperty(IntermediateProperty.PATH.encode());

@@ -30,7 +30,7 @@ import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
@@ -636,7 +636,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 				}
 
-				final ObjectStorageTranslator<V> translator = getTranslator();
+				final AttributeTranslator<V> translator = getTranslator();
 				for (final StoredObjectType type : StoredObjectType.values()) {
 					final Integer total = containedTypes.get(type);
 					if (total == null) {

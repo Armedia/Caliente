@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferContext;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttributeMapper;
@@ -20,12 +20,12 @@ public abstract class ImportContext<S, V> extends TransferContext<S, V> {
 
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final ObjectStore<?, ?> objectStore;
-	private final ObjectStorageTranslator<V> translator;
+	private final AttributeTranslator<V> translator;
 	private final ContentStore<?> streamStore;
 
 	public <C extends ImportContext<S, V>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		F factory, CfgTools settings, String rootId, StoredObjectType rootType, S session, Logger output,
-		ObjectStorageTranslator<V> translator, ObjectStore<?, ?> objectStore, ContentStore<?> streamStore) {
+		AttributeTranslator<V> translator, ObjectStore<?, ?> objectStore, ContentStore<?> streamStore) {
 		super(factory, settings, rootId, rootType, session, output);
 		this.factory = factory;
 		this.translator = translator;
