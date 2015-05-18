@@ -37,7 +37,7 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.ObjectStore;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
@@ -303,7 +303,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <V> Long doStoreObject(JdbcOperation operation, StoredObject<V> object,
-		ObjectStorageTranslator<V> translator) throws StorageException, StoredValueEncoderException {
+		AttributeTranslator<V> translator) throws StorageException, StoredValueEncoderException {
 		final Connection c = operation.getConnection();
 		final StoredObjectType objectType = object.getType();
 		final String objectId = composeDatabaseId(object);
@@ -466,7 +466,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> int doLoadObjects(JdbcOperation operation, ObjectStorageTranslator<V> translator,
+	protected <V> int doLoadObjects(JdbcOperation operation, AttributeTranslator<V> translator,
 		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException,
 		StoredValueDecoderException {
 		Connection connection = null;
@@ -956,7 +956,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return new StoredObject<V>(type, id, searchKey, batchId, label, subtype);
 	}
 
-	private <V> StoredProperty<V> loadProperty(StoredObjectType objectType, ObjectStorageTranslator<V> translator,
+	private <V> StoredProperty<V> loadProperty(StoredObjectType objectType, AttributeTranslator<V> translator,
 		ResultSet rs) throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
@@ -965,7 +965,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return new StoredProperty<V>(name, type, repeating);
 	}
 
-	private <V> StoredAttribute<V> loadAttribute(StoredObjectType objectType, ObjectStorageTranslator<V> translator,
+	private <V> StoredAttribute<V> loadAttribute(StoredObjectType objectType, AttributeTranslator<V> translator,
 		ResultSet rs) throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = translator.decodeAttributeName(objectType, rs.getString("name"));
@@ -1000,7 +1000,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		property.setValues(values);
 	}
 
-	private <V> void loadAttributes(ObjectStorageTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
+	private <V> void loadAttributes(AttributeTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
 		throws SQLException, StoredValueDecoderException {
 		List<StoredAttribute<V>> attributes = new LinkedList<StoredAttribute<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
@@ -1010,7 +1010,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		obj.setAttributes(attributes);
 	}
 
-	private <V> void loadProperties(ObjectStorageTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
+	private <V> void loadProperties(AttributeTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
 		throws SQLException, StoredValueDecoderException {
 		List<StoredProperty<V>> properties = new LinkedList<StoredProperty<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
