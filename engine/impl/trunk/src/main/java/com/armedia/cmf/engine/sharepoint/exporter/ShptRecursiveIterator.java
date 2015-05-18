@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
-import com.armedia.cmf.storage.StoredObjectType;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.independentsoft.share.File;
 import com.independentsoft.share.Folder;
@@ -100,7 +100,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 				final String objectId = ShptFile.doCalculateObjectId(f);
 				final String searchKey = ShptFile.doCalculateSearchKey(f);
 				this.log.debug("\tFound file: [{}]", f.getServerRelativeUrl());
-				state.next = new ExportTarget(StoredObjectType.DOCUMENT, objectId, searchKey);
+				state.next = new ExportTarget(CmfType.DOCUMENT, objectId, searchKey);
 				state.fileCount++;
 				return true;
 			}
@@ -140,7 +140,7 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 					final String objectId = ShptFolder.doCalculateObjectId(f);
 					final String searchKey = ShptFolder.doCalculateSearchKey(f);
 					this.log.debug("\tExporting the contents of folder: [{}]", f.getServerRelativeUrl());
-					state.next = new ExportTarget(StoredObjectType.FOLDER, objectId, searchKey);
+					state.next = new ExportTarget(CmfType.FOLDER, objectId, searchKey);
 					return true;
 				}
 			}

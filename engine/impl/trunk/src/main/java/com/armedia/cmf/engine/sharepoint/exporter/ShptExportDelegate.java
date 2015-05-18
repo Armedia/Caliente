@@ -11,11 +11,11 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Folder;
 import com.independentsoft.share.Group;
@@ -23,16 +23,16 @@ import com.independentsoft.share.User;
 
 public abstract class ShptExportDelegate<T>
 extends
-ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
+ExportDelegate<T, ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
 
-	private static final Map<Class<?>, StoredObjectType> TYPE_MAP;
+	private static final Map<Class<?>, CmfType> TYPE_MAP;
 
 	static {
-		Map<Class<?>, StoredObjectType> m = new LinkedHashMap<Class<?>, StoredObjectType>();
-		m.put(ShptVersion.class, StoredObjectType.DOCUMENT);
-		m.put(Folder.class, StoredObjectType.FOLDER);
-		m.put(Group.class, StoredObjectType.GROUP);
-		m.put(User.class, StoredObjectType.USER);
+		Map<Class<?>, CmfType> m = new LinkedHashMap<Class<?>, CmfType>();
+		m.put(ShptVersion.class, CmfType.DOCUMENT);
+		m.put(Folder.class, CmfType.FOLDER);
+		m.put(Group.class, CmfType.GROUP);
+		m.put(User.class, CmfType.USER);
 		TYPE_MAP = Tools.freezeMap(m);
 	}
 
@@ -41,31 +41,31 @@ ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContex
 	}
 
 	@Override
-	protected Collection<? extends ShptExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
+	protected Collection<? extends ShptExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
 		ShptExportContext ctx) throws Exception {
 		return null;
 	}
 
 	@Override
-	protected boolean marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		return true;
 	}
 
 	@Override
-	protected Collection<? extends ShptExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshalled,
+	protected Collection<? extends ShptExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
 		ShptExportContext ctx) throws Exception {
 		return null;
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(ShptSession session, AttributeTranslator<StoredValue> translator,
-		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		return null;
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object) throws Exception {
-		for (Map.Entry<Class<?>, StoredObjectType> e : ShptExportDelegate.TYPE_MAP.entrySet()) {
+	protected final CmfType calculateType(T object) throws Exception {
+		for (Map.Entry<Class<?>, CmfType> e : ShptExportDelegate.TYPE_MAP.entrySet()) {
 			if (e.getKey().isInstance(object)) { return e.getValue(); }
 		}
 		return null;

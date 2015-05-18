@@ -12,10 +12,10 @@ import com.armedia.cmf.engine.sharepoint.IncompleteDataException;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.Role;
@@ -118,49 +118,49 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	protected boolean marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		// UserID
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_ID.name, StoredDataType.ID, false,
-			Collections.singleton(new StoredValue(String.format("USER(%s)", getObjectId())))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OBJECT_ID.name, CmfDataType.ID, false,
+			Collections.singleton(new CmfValue(String.format("USER(%s)", getObjectId())))));
 
 		// LoginName
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_NAME.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.userName))));
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.LOGIN_NAME.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.userName))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OBJECT_NAME.name, CmfDataType.STRING,
+			false, Collections.singleton(new CmfValue(this.userName))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.LOGIN_NAME.name, CmfDataType.STRING,
+			false, Collections.singleton(new CmfValue(this.userName))));
 		if (this.userDomain != null) {
-			object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.LOGIN_DOMAIN.name,
-				StoredDataType.STRING, false, Collections.singleton(new StoredValue(this.userDomain))));
+			object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.LOGIN_DOMAIN.name,
+				CmfDataType.STRING, false, Collections.singleton(new CmfValue(this.userDomain))));
 		}
 
 		// SiteAdmin
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.SITE_ADMIN.name, StoredDataType.BOOLEAN,
-			false, Collections.singleton(new StoredValue(this.object.isSiteAdmin()))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.SITE_ADMIN.name, CmfDataType.BOOLEAN,
+			false, Collections.singleton(new CmfValue(this.object.isSiteAdmin()))));
 
 		// PrincipalType
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.PRINCIPAL_TYPE.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.object.getType().name()))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.PRINCIPAL_TYPE.name, CmfDataType.STRING,
+			false, Collections.singleton(new CmfValue(this.object.getType().name()))));
 
 		// UserIdName
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.PRINCIPAL_ID.name, StoredDataType.STRING,
-			false, Collections.singleton(new StoredValue(this.object.getUserId().getNameId()))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.PRINCIPAL_ID.name, CmfDataType.STRING,
+			false, Collections.singleton(new CmfValue(this.object.getUserId().getNameId()))));
 
 		// UserIdIssuer
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.PRINCIPAL_ID_ISSUER.name,
-			StoredDataType.STRING, false, Collections.singleton(new StoredValue(this.object.getUserId()
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.PRINCIPAL_ID_ISSUER.name,
+			CmfDataType.STRING, false, Collections.singleton(new CmfValue(this.object.getUserId()
 				.getNameIdIssuer()))));
 
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.MODIFICATION_DATE.name,
-			StoredDataType.DATETIME, false, Collections.singleton(new StoredValue(new Date()))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.MODIFICATION_DATE.name,
+			CmfDataType.DATETIME, false, Collections.singleton(new CmfValue(new Date()))));
 
 		// Email
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.EMAIL.name, StoredDataType.STRING, false,
-			Collections.singleton(new StoredValue(this.object.getEmail()))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.EMAIL.name, CmfDataType.STRING, false,
+			Collections.singleton(new CmfValue(this.object.getEmail()))));
 
 		// Title
-		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.TITLE.name, StoredDataType.STRING, false,
-			Collections.singleton(new StoredValue(this.object.getTitle()))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.TITLE.name, CmfDataType.STRING, false,
+			Collections.singleton(new CmfValue(this.object.getTitle()))));
 
 		// User Groups
 		final List<Group> l;
@@ -171,26 +171,26 @@ public class ShptUser extends ShptSecurityObject<User> {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
 				this.object.getLoginName(), this.object.getId()), e);
 		}
-		StoredAttribute<StoredValue> groups = new StoredAttribute<StoredValue>(ShptAttributes.USER_GROUPS.name,
-			StoredDataType.STRING, true);
+		CmfAttribute<CmfValue> groups = new CmfAttribute<CmfValue>(ShptAttributes.USER_GROUPS.name,
+			CmfDataType.STRING, true);
 		object.setAttribute(groups);
 		if ((l != null) && !l.isEmpty()) {
 			for (Group g : l) {
-				groups.addValue(new StoredValue(g.getLoginName()));
+				groups.addValue(new CmfValue(g.getLoginName()));
 			}
 		}
 
-		StoredAttribute<StoredValue> roles = new StoredAttribute<StoredValue>(ShptAttributes.USER_ROLES.name,
-			StoredDataType.STRING, true);
+		CmfAttribute<CmfValue> roles = new CmfAttribute<CmfValue>(ShptAttributes.USER_ROLES.name,
+			CmfDataType.STRING, true);
 		object.setAttribute(groups);
 		for (Role r : this.roles) {
-			roles.addValue(new StoredValue(r.getName()));
+			roles.addValue(new CmfValue(r.getName()));
 		}
 		return true;
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findRequirements(ShptSession service, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findRequirements(ShptSession service, CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 		List<Group> l = service.getUserGroups(this.object.getId());

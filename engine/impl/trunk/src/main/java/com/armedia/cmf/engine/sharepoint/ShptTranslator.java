@@ -13,24 +13,24 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
-import com.armedia.cmf.storage.StoredValueCodec;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
  *
  */
-public final class ShptTranslator extends AttributeTranslator<StoredValue> {
+public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 
-	private static final Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
+	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<StoredObjectType, BidiMap<String, IntermediateAttribute>>(
-			StoredObjectType.class);
+		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
+			CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
@@ -43,7 +43,7 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 		am.put(ShptAttributes.LOGIN_DOMAIN.name, IntermediateAttribute.LOGIN_REALM);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
-		attributeMappings.put(StoredObjectType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -53,7 +53,7 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		am.put(ShptAttributes.GROUP_OWNER.name, IntermediateAttribute.OWNER);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
-		attributeMappings.put(StoredObjectType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -62,7 +62,7 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
-		attributeMappings.put(StoredObjectType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -71,7 +71,7 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
-		attributeMappings.put(StoredObjectType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -79,7 +79,7 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 		// OBJECT_TYPE_ID (DM_FORMAT)
 		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
-		attributeMappings.put(StoredObjectType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -97,7 +97,7 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENT_ID);
 		am.put(ShptAttributes.PATHS.name, IntermediateAttribute.PATH);
-		attributeMappings.put(StoredObjectType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -116,7 +116,7 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 		am.put(ShptAttributes.VERSION.name, IntermediateAttribute.VERSION_LABEL);
 		am.put(ShptAttributes.VERSION_TREE.name, IntermediateAttribute.VERSION_SERIES_ID);
 		am.put(ShptAttributes.VERSION_PRIOR.name, IntermediateAttribute.VERSION_ANTECEDENT_ID);
-		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
@@ -128,16 +128,16 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 	}
 
 	@Override
-	public StoredValueCodec<StoredValue> getCodec(StoredDataType type) {
-		return AttributeTranslator.getStoredValueCodec(type);
+	public CmfValueCodec<CmfValue> getCodec(CmfDataType type) {
+		return CmfAttributeTranslator.getStoredValueCodec(type);
 	}
 
-	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {
+	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
 		return ShptTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
 	@Override
-	public String encodeAttributeName(StoredObjectType type, String attributeName) {
+	public String encodeAttributeName(CmfType type, String attributeName) {
 		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
 		if (mappings != null) {
 			// TODO: normalize the CMS attribute name
@@ -148,7 +148,7 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 	}
 
 	@Override
-	public String decodeAttributeName(StoredObjectType type, String attributeName) {
+	public String decodeAttributeName(CmfType type, String attributeName) {
 		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
 		if (mappings != null) {
 			String att = null;
@@ -164,9 +164,9 @@ public final class ShptTranslator extends AttributeTranslator<StoredValue> {
 	}
 
 	@Override
-	public StoredValue getValue(StoredDataType type, Object value) throws ParseException {
+	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
 		try {
-			return new StoredValue(type, value);
+			return new CmfValue(type, value);
 		} catch (ParseException e) {
 			throw new RuntimeException("Exception raised while creating a new value", e);
 		}

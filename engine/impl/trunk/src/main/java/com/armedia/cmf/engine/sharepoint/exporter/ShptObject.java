@@ -14,10 +14,10 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfValue;
 
 /**
  * @author diego
@@ -47,30 +47,30 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	}
 
 	@Override
-	protected Collection<? extends ShptExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshaled,
+	protected Collection<? extends ShptExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return findRequirements(ctx.getSession(), marshaled, ctx);
 	}
 
-	protected Collection<ShptObject<?>> findRequirements(ShptSession session, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findRequirements(ShptSession session, CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return new ArrayList<ShptObject<?>>();
 	}
 
 	@Override
-	protected Collection<? extends ShptExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshaled,
+	protected Collection<? extends ShptExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return findDependents(ctx.getSession(), marshaled, ctx);
 	}
 
-	protected Collection<ShptObject<?>> findDependents(ShptSession service, StoredObject<StoredValue> marshaled,
+	protected Collection<ShptObject<?>> findDependents(ShptSession service, CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return new ArrayList<ShptObject<?>>();
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(ShptSession session, AttributeTranslator<StoredValue> translator,
-		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}

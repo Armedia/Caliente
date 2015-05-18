@@ -19,9 +19,9 @@ import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.engine.sharepoint.ShptTranslator;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -29,7 +29,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public class ShptExportEngine extends
-	ExportEngine<ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportDelegateFactory> {
+	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -52,16 +52,16 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected StoredValue getValue(StoredDataType type, Object value) {
+	protected CmfValue getValue(CmfDataType type, Object value) {
 		try {
-			return new StoredValue(type, value);
+			return new CmfValue(type, value);
 		} catch (ParseException e) {
 			throw new RuntimeException("Exception raised while creating a new value", e);
 		}
 	}
 
 	@Override
-	protected AttributeTranslator<StoredValue> getTranslator() {
+	protected CmfAttributeTranslator<CmfValue> getTranslator() {
 		return ShptTranslator.INSTANCE;
 	}
 
