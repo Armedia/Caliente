@@ -11,11 +11,11 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfValue;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
 
@@ -44,23 +44,23 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		return null;
 	}
 
-	protected void marshalParentsAndPaths(CmisExportContext ctx, StoredObject<StoredValue> marshaled, T object)
+	protected void marshalParentsAndPaths(CmisExportContext ctx, CmfObject<CmfValue> marshaled, T object)
 		throws ExportException {
-		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(IntermediateProperty.PARENT_ID.encode(),
-			StoredDataType.ID, true);
-		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
-			StoredDataType.STRING, true);
+		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID.encode(),
+			CmfDataType.ID, true);
+		CmfProperty<CmfValue> paths = new CmfProperty<CmfValue>(IntermediateProperty.PATH.encode(),
+			CmfDataType.STRING, true);
 		final String rootPath = ctx.getSession().getRootFolder().getName();
 		for (Folder f : object.getParents()) {
 			try {
-				parents.addValue(new StoredValue(StoredDataType.ID, f.getId()));
+				parents.addValue(new CmfValue(CmfDataType.ID, f.getId()));
 			} catch (ParseException e) {
 				// Will not happen...but still
 				throw new ExportException(String.format("Failed to store the parent ID [%s] for %s [%s]", f.getId(),
 					this.object.getType(), this.object.getId()), e);
 			}
 			for (String p : f.getPaths()) {
-				paths.addValue(new StoredValue(String.format("/%s%s", rootPath, p)));
+				paths.addValue(new CmfValue(String.format("/%s%s", rootPath, p)));
 			}
 		}
 		marshaled.setProperty(paths);
@@ -68,14 +68,14 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		marshalParentsAndPaths(ctx, object, this.object);
 		/*
 		List<String> l = this.object.getPaths();
 		if ((l != null) && !l.isEmpty()) {
-			StoredProperty<StoredValue> path = new StoredProperty<StoredValue>(CmisFileableDelegate.MAIN_PATH,
-				StoredDataType.STRING, new StoredValue(l.get(0)));
+			CmfProperty<CmfValue> path = new CmfProperty<CmfValue>(CmisFileableDelegate.MAIN_PATH,
+				CmfDataType.STRING, new CmfValue(l.get(0)));
 			object.setProperty(path);
 		}
 		 */
@@ -83,7 +83,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
+	protected Collection<CmisExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		for (Folder f : this.object.getParents()) {
@@ -94,9 +94,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(T object) throws Exception {
-		if (Document.class.isInstance(object)) { return StoredObjectType.DOCUMENT; }
-		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
+	protected final CmfType calculateType(T object) throws Exception {
+		if (Document.class.isInstance(object)) { return CmfType.DOCUMENT; }
+		if (Folder.class.isInstance(object)) { return CmfType.FOLDER; }
 		throw new Exception(String.format(
 			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
 				.getClass().getCanonicalName(), object.getType().getId()));

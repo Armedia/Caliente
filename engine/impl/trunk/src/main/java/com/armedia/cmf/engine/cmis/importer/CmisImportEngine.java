@@ -9,30 +9,30 @@ import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportEngine extends
-	ImportEngine<Session, CmisSessionWrapper, StoredValue, CmisImportContext, CmisImportDelegateFactory> {
+	ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory> {
 
 	public CmisImportEngine() {
 	}
 
 	@Override
-	protected ImportStrategy getImportStrategy(StoredObjectType type) {
+	protected ImportStrategy getImportStrategy(CmfType type) {
 		return null;
 	}
 
 	@Override
-	protected StoredValue getValue(StoredDataType type, Object value) {
+	protected CmfValue getValue(CmfDataType type, Object value) {
 		return null;
 	}
 
 	@Override
-	protected AttributeTranslator<StoredValue> getTranslator() {
+	protected CmfAttributeTranslator<CmfValue> getTranslator() {
 		return null;
 	}
 

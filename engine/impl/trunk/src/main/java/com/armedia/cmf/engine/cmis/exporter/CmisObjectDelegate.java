@@ -9,10 +9,10 @@ import org.apache.chemistry.opencmis.client.api.Property;
 
 import com.armedia.cmf.engine.cmis.CmisTranslator;
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfValue;
 
 public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExportDelegate<T> {
 
@@ -21,13 +21,13 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 	}
 
 	@Override
-	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		CmisTranslator translator = this.factory.getEngine().getTranslator();
 		for (Property<?> prop : this.object.getProperties()) {
-			StoredDataType t = CmisTranslator.decodePropertyType(prop.getType());
-			StoredAttribute<StoredValue> att = new StoredAttribute<StoredValue>(prop.getId(), t, prop.isMultiValued());
+			CmfDataType t = CmisTranslator.decodePropertyType(prop.getType());
+			CmfAttribute<CmfValue> att = new CmfAttribute<CmfValue>(prop.getId(), t, prop.isMultiValued());
 			List<?> values = prop.getValues();
-			List<StoredValue> l = new ArrayList<StoredValue>(values.size());
+			List<CmfValue> l = new ArrayList<CmfValue>(values.size());
 			int i = 0;
 			for (Object v : prop.getValues()) {
 				try {

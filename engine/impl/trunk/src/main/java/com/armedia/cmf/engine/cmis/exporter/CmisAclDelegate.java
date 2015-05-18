@@ -12,13 +12,13 @@ import com.armedia.cmf.engine.cmis.CmisAcl;
 import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 
 public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 
@@ -27,38 +27,38 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
+	protected Collection<CmisExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		return super.identifyRequirements(marshalled, ctx);
 	}
 
 	@Override
-	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		StoredAttribute<StoredValue> att = new StoredAttribute<StoredValue>(CmisCustomAttributes.ACL_OWNER.name,
-			StoredDataType.STRING, false);
-		att.setValue(new StoredValue(this.object.getSourceOwner()));
+	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
+		CmfAttribute<CmfValue> att = new CmfAttribute<CmfValue>(CmisCustomAttributes.ACL_OWNER.name,
+			CmfDataType.STRING, false);
+		att.setValue(new CmfValue(this.object.getSourceOwner()));
 		object.setAttribute(att);
-		att = new StoredAttribute<StoredValue>(PropertyIds.NAME, StoredDataType.STRING, false);
-		att.setValue(new StoredValue(this.object.getSourceId()));
+		att = new CmfAttribute<CmfValue>(PropertyIds.NAME, CmfDataType.STRING, false);
+		att.setValue(new CmfValue(this.object.getSourceId()));
 		object.setAttribute(att);
 		return true;
 	}
 
 	@Override
-	protected final Collection<CmisExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshalled,
+	protected final Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		return super.identifyDependents(marshalled, ctx);
 	}
 
 	@Override
-	protected final List<ContentInfo> storeContent(Session session, AttributeTranslator<StoredValue> translator,
-		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
+	protected final List<ContentInfo> storeContent(Session session, CmfAttributeTranslator<CmfValue> translator,
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		return super.storeContent(session, translator, marshalled, referrent, streamStore);
 	}
 
 	@Override
-	protected final StoredObjectType calculateType(CmisAcl object) throws Exception {
-		return StoredObjectType.ACL;
+	protected final CmfType calculateType(CmisAcl object) throws Exception {
+		return CmfType.ACL;
 	}
 
 	@Override

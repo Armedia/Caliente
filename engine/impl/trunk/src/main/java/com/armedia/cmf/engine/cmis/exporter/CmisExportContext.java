@@ -5,12 +5,12 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.exporter.ExportContext;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 
-public class CmisExportContext extends ExportContext<Session, StoredValue> {
+public class CmisExportContext extends ExportContext<Session, CmfValue> {
 
-	CmisExportContext(CmisExportContextFactory factory, String rootId, StoredObjectType rootType, Session session,
+	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfType rootType, Session session,
 		Logger output) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output);
 	}

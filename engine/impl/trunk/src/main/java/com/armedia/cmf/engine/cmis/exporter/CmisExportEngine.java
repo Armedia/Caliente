@@ -25,14 +25,14 @@ import com.armedia.cmf.engine.cmis.CmisTranslator;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-	ExportEngine<Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportDelegateFactory> {
+	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportDelegateFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -46,7 +46,7 @@ public class CmisExportEngine extends
 		if (objectId == null) { throw new ExportException(
 			"Failed to find the cmis:objectId property as part of the query result"); }
 
-		StoredObjectType type = null;
+		CmfType type = null;
 		PropertyData<?>[] objectTypes = {
 			r.getPropertyById(PropertyIds.OBJECT_TYPE_ID), r.getPropertyById(PropertyIds.BASE_TYPE_ID)
 		};
@@ -130,21 +130,21 @@ public class CmisExportEngine extends
 		return null;
 	}
 
-	protected StoredObjectType decodeType(ObjectType type) throws ExportException {
+	protected CmfType decodeType(ObjectType type) throws ExportException {
 		if (!type.isBaseType()) { return decodeType(type.getParentType()); }
 		return decodeType(type.getId());
 	}
 
-	protected StoredObjectType decodeType(String type) throws ExportException {
-		if (Tools.equals("cmis:folder", type)) { return StoredObjectType.FOLDER; }
-		if (Tools.equals("cmis:document", type)) { return StoredObjectType.DOCUMENT; }
+	protected CmfType decodeType(String type) throws ExportException {
+		if (Tools.equals("cmis:folder", type)) { return CmfType.FOLDER; }
+		if (Tools.equals("cmis:document", type)) { return CmfType.DOCUMENT; }
 		return null;
 	}
 
 	@Override
-	protected StoredValue getValue(StoredDataType type, Object value) {
+	protected CmfValue getValue(CmfDataType type, Object value) {
 		try {
-			return new StoredValue(type, value);
+			return new CmfValue(type, value);
 		} catch (ParseException e) {
 			throw new RuntimeException(String.format("Can't convert [%s] as a %s", value, type), e);
 		}

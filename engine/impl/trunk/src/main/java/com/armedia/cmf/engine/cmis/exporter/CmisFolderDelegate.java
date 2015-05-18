@@ -13,8 +13,8 @@ import org.apache.chemistry.opencmis.client.api.Folder;
 import com.armedia.cmf.engine.cmis.CmisPagingIterator;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
@@ -24,7 +24,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		return super.marshal(ctx, object);
 	}
 
@@ -51,7 +51,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshalled,
+	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
 		// We will only include the folder's contents if the referencing object is NOT one of our

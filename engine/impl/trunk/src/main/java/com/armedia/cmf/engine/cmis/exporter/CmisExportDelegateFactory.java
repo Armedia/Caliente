@@ -8,20 +8,20 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.exporter.ExportDelegateFactory;
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportDelegateFactory extends
-	ExportDelegateFactory<Session, CmisSessionWrapper, StoredValue, CmisExportContext, CmisExportEngine> {
+	ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
 	CmisExportDelegateFactory(CmisExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
 	@Override
-	protected CmisExportDelegate<?> newExportDelegate(Session session, StoredObjectType type, String searchKey)
+	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfType type, String searchKey)
 		throws Exception {
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {

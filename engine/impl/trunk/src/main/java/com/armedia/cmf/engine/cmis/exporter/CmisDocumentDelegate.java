@@ -19,13 +19,13 @@ import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
@@ -86,7 +86,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyRequirements(StoredObject<StoredValue> marshalled,
+	protected Collection<CmisExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		String prev = null;
@@ -98,22 +98,22 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		if (this.antecedentId != null) {
-			StoredAttribute<StoredValue> antecedentId = new StoredAttribute<StoredValue>(
-				CmisCustomAttributes.VERSION_ANTECEDENT_ID.name, StoredDataType.ID, false);
+			CmfAttribute<CmfValue> antecedentId = new CmfAttribute<CmfValue>(
+				CmisCustomAttributes.VERSION_ANTECEDENT_ID.name, CmfDataType.ID, false);
 			try {
-				antecedentId.setValue(new StoredValue(StoredDataType.ID, Object.class.cast(this.antecedentId)));
+				antecedentId.setValue(new CmfValue(CmfDataType.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
 				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s [%s](%s)",
 					this.antecedentId, getType(), getLabel(), getObjectId()));
 			}
 			object.setAttribute(antecedentId);
 		}
-		StoredProperty<StoredValue> current = new StoredProperty<StoredValue>(
-			IntermediateProperty.IS_LATEST_VERSION.encode(), StoredDataType.BOOLEAN, false);
-		current.setValue(new StoredValue(this.object.isLatestVersion()));
+		CmfProperty<CmfValue> current = new CmfProperty<CmfValue>(
+			IntermediateProperty.IS_LATEST_VERSION.encode(), CmfDataType.BOOLEAN, false);
+		current.setValue(new CmfValue(this.object.isLatestVersion()));
 		object.setProperty(current);
 
 		if (!this.object.isLatestVersion()) {
@@ -123,11 +123,11 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(Session session, AttributeTranslator<StoredValue> translator,
-		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
+	protected List<ContentInfo> storeContent(Session session, CmfAttributeTranslator<CmfValue> translator,
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		List<ContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
-		ContentStore<?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
+		CmfContentStore<?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
 		ContentInfo mainInfo = new ContentInfo(mainHandle.getQualifier());
 		mainInfo.setProperty("mimeType", main.getMimeType());
 		mainInfo.setProperty("size", String.valueOf(main.getLength()));
@@ -135,7 +135,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
 			ContentStream cs = r.getContentStream();
-			ContentStore<?>.Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
+			CmfContentStore<?>.Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
 			ContentInfo info = new ContentInfo(handle.getQualifier());
 			info.setProperty("kind", r.getKind());
 			info.setProperty("mimeType", r.getMimeType());
@@ -151,10 +151,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		return ret;
 	}
 
-	protected ContentStore<?>.Handle storeContentStream(StoredObject<StoredValue> marshalled,
-		AttributeTranslator<StoredValue> translator, Rendition r, ContentStream cs, ContentStore<?> streamStore)
+	protected CmfContentStore<?>.Handle storeContentStream(CmfObject<CmfValue> marshalled,
+		CmfAttributeTranslator<CmfValue> translator, Rendition r, ContentStream cs, CmfContentStore<?> streamStore)
 			throws Exception {
-		ContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
+		CmfContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
 		InputStream src = cs.getStream();
 		OutputStream tgt = h.openOutput();
 		try {
@@ -167,7 +167,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyDependents(StoredObject<StoredValue> marshalled,
+	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
 		String prev = this.object.getId();

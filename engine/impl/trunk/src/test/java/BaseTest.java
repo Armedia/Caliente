@@ -9,20 +9,20 @@ import com.armedia.cmf.engine.cmis.CmisSessionSetting;
 import com.armedia.cmf.engine.cmis.CmisSetting;
 import com.armedia.cmf.engine.cmis.exporter.CmisExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.Stores;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfStores;
 
 public class BaseTest {
 
 	@Test
 	public void test() throws Exception {
 		final ExportEngine<?, ?, ?, ?, ?> engine = CmisExportEngine.getExportEngine();
-		ObjectStore<?, ?> objectStore = Stores.getObjectStore("default");
+		CmfObjectStore<?, ?> objectStore = CmfStores.getObjectStore("default");
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();
 		objectStore.clearAttributeMappings();
-		ContentStore<?> contentStore = Stores.getContentStore("default");
+		CmfContentStore<?> contentStore = CmfStores.getContentStore("default");
 		contentStore.clearProperties();
 		contentStore.clearAllStreams();
 		Logger output = LoggerFactory.getLogger("console");

@@ -6,22 +6,22 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.importer.ImportContextFactory;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportContextFactory extends
-	ImportContextFactory<Session, CmisSessionWrapper, StoredValue, CmisImportContext, CmisImportEngine, Folder> {
+	ImportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportEngine, Folder> {
 
 	CmisImportContextFactory(CmisImportEngine engine, CfgTools settings) {
 		super(engine, settings);
 	}
 
 	@Override
-	protected CmisImportContext constructContext(String rootId, StoredObjectType rootType, Session session,
-		Logger output, ObjectStore<?, ?> objectStore, ContentStore<?> streamStore) {
+	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session,
+		Logger output, CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore) {
 		return new CmisImportContext(this, rootId, rootType, session, output, getEngine().getTranslator(), objectStore,
 			streamStore);
 	}
