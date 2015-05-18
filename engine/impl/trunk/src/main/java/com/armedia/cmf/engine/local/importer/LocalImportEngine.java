@@ -10,7 +10,7 @@ import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionFactory;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.local.common.LocalTranslator;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredValue;
@@ -125,7 +125,7 @@ public class LocalImportEngine extends
 	}
 
 	@Override
-	protected ObjectStorageTranslator<StoredValue> getTranslator() {
+	protected AttributeTranslator<StoredValue> getTranslator() {
 		return new LocalTranslator();
 	}
 

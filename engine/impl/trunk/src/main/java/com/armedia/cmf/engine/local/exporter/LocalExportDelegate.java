@@ -34,7 +34,7 @@ import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
@@ -174,7 +174,7 @@ public class LocalExportDelegate
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(LocalRoot session, ObjectStorageTranslator<StoredValue> translator,
+	protected List<ContentInfo> storeContent(LocalRoot session, AttributeTranslator<StoredValue> translator,
 		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
 		if (getType() != StoredObjectType.DOCUMENT) { return null; }
 

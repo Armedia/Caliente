@@ -28,7 +28,7 @@ import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
@@ -53,7 +53,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 	}
 
 	@Override
-	protected final ImportOutcome importObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
+	protected final ImportOutcome importObject(AttributeTranslator<StoredValue> translator, LocalImportContext ctx)
 		throws ImportException, StorageException, StoredValueDecoderException {
 
 		StoredAttribute<StoredValue> att = this.storedObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION
@@ -70,11 +70,11 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 		return doImportObject(translator, ctx);
 	}
 
-	protected abstract ImportOutcome doImportObject(ObjectStorageTranslator<StoredValue> translator,
+	protected abstract ImportOutcome doImportObject(AttributeTranslator<StoredValue> translator,
 		LocalImportContext ctx) throws ImportException, StorageException, StoredValueDecoderException;
 
 	protected final File getTargetFile(LocalImportContext ctx) throws ImportException, IOException {
-		final ObjectStorageTranslator<StoredValue> translator = this.factory.getEngine().getTranslator();
+		final AttributeTranslator<StoredValue> translator = this.factory.getEngine().getTranslator();
 
 		// TODO: We must also determine if the target FS requires "windows mode".. for instance
 		// for NTFS on Linux, windows restrictions must be observed... but there's no "clean"
@@ -104,7 +104,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 		return new File(tgt, name).getCanonicalFile();
 	}
 
-	protected boolean isSameDatesAndOwners(File targetFile, ObjectStorageTranslator<StoredValue> translator)
+	protected boolean isSameDatesAndOwners(File targetFile, AttributeTranslator<StoredValue> translator)
 		throws IOException, ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
@@ -188,7 +188,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportCon
 		return true;
 	}
 
-	protected void applyAttributes(File targetFile, ObjectStorageTranslator<StoredValue> translator)
+	protected void applyAttributes(File targetFile, AttributeTranslator<StoredValue> translator)
 		throws IOException, ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();

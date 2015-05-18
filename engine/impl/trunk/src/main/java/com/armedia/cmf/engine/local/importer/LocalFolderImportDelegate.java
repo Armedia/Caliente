@@ -6,7 +6,7 @@ import java.io.IOException;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredValue;
@@ -20,7 +20,7 @@ public class LocalFolderImportDelegate extends LocalImportDelegate {
 	}
 
 	@Override
-	protected ImportOutcome doImportObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
+	protected ImportOutcome doImportObject(AttributeTranslator<StoredValue> translator, LocalImportContext ctx)
 		throws ImportException, StorageException, StoredValueDecoderException {
 		File targetFile;
 		try {

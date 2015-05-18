@@ -10,7 +10,7 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -18,7 +18,7 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.cmf.storage.StoredValueCodec;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalTranslator extends ObjectStorageTranslator<StoredValue> {
+public class LocalTranslator extends AttributeTranslator<StoredValue> {
 
 	private static final Map<PropertyType, StoredDataType> DATA_TYPES;
 	private static final Map<StoredDataType, PropertyType> DATA_TYPES_REV;
@@ -118,7 +118,7 @@ public class LocalTranslator extends ObjectStorageTranslator<StoredValue> {
 
 	@Override
 	public StoredValueCodec<StoredValue> getCodec(StoredDataType type) {
-		return ObjectStorageTranslator.getStoredValueCodec(type);
+		return AttributeTranslator.getStoredValueCodec(type);
 	}
 
 	@Override
