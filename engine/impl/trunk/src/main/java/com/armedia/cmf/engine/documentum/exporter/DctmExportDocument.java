@@ -27,7 +27,7 @@ import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.commons.utilities.Tools;
@@ -216,7 +216,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected List<ContentInfo> doStoreContent(IDfSession session, ObjectStorageTranslator<IDfValue> translator,
+	protected List<ContentInfo> doStoreContent(IDfSession session, AttributeTranslator<IDfValue> translator,
 		StoredObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, ContentStore<?> streamStore)
 			throws Exception {
 		if (isDfReference(document)) { return super.doStoreContent(session, translator, marshaled, referrent, document,
@@ -261,7 +261,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	protected ContentStore<?>.Handle storeContentStream(IDfSession session,
-		ObjectStorageTranslator<IDfValue> translator, StoredObject<IDfValue> marshaled, IDfDocument document,
+		AttributeTranslator<IDfValue> translator, StoredObject<IDfValue> marshaled, IDfDocument document,
 		IDfContent content, ContentStore<?> streamStore) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (document == null) { throw new Exception(String.format(

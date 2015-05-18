@@ -28,7 +28,7 @@ import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
@@ -121,7 +121,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 	}
 
 	@Override
-	protected final ImportOutcome importObject(ObjectStorageTranslator<IDfValue> translator, DctmImportContext context)
+	protected final ImportOutcome importObject(AttributeTranslator<IDfValue> translator, DctmImportContext context)
 		throws ImportException, StorageException, StoredValueDecoderException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		final IDfSession session = context.getSession();

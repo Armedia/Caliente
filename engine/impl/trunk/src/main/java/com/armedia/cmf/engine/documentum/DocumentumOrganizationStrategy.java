@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.OrganizationStrategy;
 
@@ -17,7 +17,7 @@ public class DocumentumOrganizationStrategy extends OrganizationStrategy {
 	}
 
 	@Override
-	protected List<String> calculatePath(ObjectStorageTranslator<?> translator, StoredObject<?> object) {
+	protected List<String> calculatePath(AttributeTranslator<?> translator, StoredObject<?> object) {
 		final String objectId = object.getId();
 		if (objectId.length() != 16) { return null; }
 

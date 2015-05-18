@@ -18,7 +18,7 @@ import com.armedia.cmf.engine.documentum.common.DctmCommon;
 import com.armedia.cmf.engine.documentum.common.Setting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfQuery;
@@ -50,7 +50,7 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	public ObjectStorageTranslator<IDfValue> getTranslator() {
+	public AttributeTranslator<IDfValue> getTranslator() {
 		return DctmTranslator.INSTANCE;
 	}
 

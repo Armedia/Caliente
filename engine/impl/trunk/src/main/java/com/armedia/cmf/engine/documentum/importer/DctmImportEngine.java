@@ -16,7 +16,7 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmCommon;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.commons.utilities.CfgTools;
@@ -77,7 +77,7 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected ObjectStorageTranslator<IDfValue> getTranslator() {
+	protected AttributeTranslator<IDfValue> getTranslator() {
 		return DctmTranslator.INSTANCE;
 	}
 

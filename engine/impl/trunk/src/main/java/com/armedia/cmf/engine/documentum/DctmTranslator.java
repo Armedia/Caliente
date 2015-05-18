@@ -9,7 +9,7 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredDataType;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -21,7 +21,7 @@ import com.documentum.fc.client.IDfType;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
-public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
+public final class DctmTranslator extends AttributeTranslator<IDfValue> {
 	private static final Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
@@ -178,7 +178,7 @@ public final class DctmTranslator extends ObjectStorageTranslator<IDfValue> {
 		return DctmTranslator.translateType(type);
 	}
 
-	public static final ObjectStorageTranslator<IDfValue> INSTANCE = new DctmTranslator();
+	public static final AttributeTranslator<IDfValue> INSTANCE = new DctmTranslator();
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {
 		return DctmTranslator.ATTRIBUTE_MAPPINGS.get(type);

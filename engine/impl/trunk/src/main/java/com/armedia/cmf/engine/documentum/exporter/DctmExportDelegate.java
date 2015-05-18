@@ -14,7 +14,7 @@ import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
@@ -126,12 +126,12 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 	}
 
 	@Override
-	protected final List<ContentInfo> storeContent(IDfSession session, ObjectStorageTranslator<IDfValue> translator,
+	protected final List<ContentInfo> storeContent(IDfSession session, AttributeTranslator<IDfValue> translator,
 		StoredObject<IDfValue> marshaled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
 		return doStoreContent(session, translator, marshaled, referrent, castObject(this.object), streamStore);
 	}
 
-	protected List<ContentInfo> doStoreContent(IDfSession session, ObjectStorageTranslator<IDfValue> translator,
+	protected List<ContentInfo> doStoreContent(IDfSession session, AttributeTranslator<IDfValue> translator,
 		StoredObject<IDfValue> marshaled, ExportTarget referrent, T object, ContentStore<?> streamStore)
 		throws Exception {
 		return null;
