@@ -8,12 +8,12 @@ import com.armedia.cmf.engine.local.common.LocalFile;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.local.common.Setting;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalExportDelegateFactory extends
-	ExportDelegateFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportEngine> {
+	ExportDelegateFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportEngine> {
 
 	private final LocalRoot root;
 	private final boolean copyContent;
@@ -41,7 +41,7 @@ public class LocalExportDelegateFactory extends
 	}
 
 	@Override
-	protected LocalExportDelegate newExportDelegate(LocalRoot session, StoredObjectType type, String searchKey)
+	protected LocalExportDelegate newExportDelegate(LocalRoot session, CmfType type, String searchKey)
 		throws Exception {
 		return new LocalExportDelegate(this, LocalFile.newFromSafePath(session, searchKey));
 	}

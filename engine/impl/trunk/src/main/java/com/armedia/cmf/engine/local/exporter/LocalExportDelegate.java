@@ -33,25 +33,25 @@ import com.armedia.cmf.engine.local.common.LocalFile;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.tools.MimeTools;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfValue;
 
 public class LocalExportDelegate
 	extends
-	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, StoredValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
 		super(factory, LocalFile.class, object);
 	}
 
 	@Override
-	protected Collection<LocalExportDelegate> identifyRequirements(StoredObject<StoredValue> marshalled,
+	protected Collection<LocalExportDelegate> identifyRequirements(CmfObject<CmfValue> marshalled,
 		LocalExportContext ctx) throws Exception {
 		Collection<LocalExportDelegate> ret = new ArrayList<LocalExportDelegate>();
 
@@ -68,15 +68,15 @@ public class LocalExportDelegate
 	}
 
 	@Override
-	protected boolean marshal(LocalExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		final File file = this.object.getAbsolute();
-		StoredAttribute<StoredValue> att = null;
-		att = new StoredAttribute<StoredValue>(IntermediateAttribute.NAME.encode(), StoredDataType.STRING, false);
-		att.setValue(new StoredValue(file.getName()));
+		CmfAttribute<CmfValue> att = null;
+		att = new CmfAttribute<CmfValue>(IntermediateAttribute.NAME.encode(), CmfDataType.STRING, false);
+		att.setValue(new CmfValue(file.getName()));
 		object.setAttribute(att);
 
-		att = new StoredAttribute<StoredValue>(IntermediateAttribute.OBJECT_ID.encode(), StoredDataType.ID, false);
-		att.setValue(new StoredValue(getObjectId()));
+		att = new CmfAttribute<CmfValue>(IntermediateAttribute.OBJECT_ID.encode(), CmfDataType.ID, false);
+		att.setValue(new CmfValue(getObjectId()));
 		object.setAttribute(att);
 
 		Path path = file.toPath();
@@ -92,47 +92,47 @@ public class LocalExportDelegate
 		try {
 			BasicFileAttributes basicAtts = basic.readAttributes();
 
-			att = new StoredAttribute<StoredValue>(IntermediateAttribute.CREATION_DATE.encode(),
-				StoredDataType.DATETIME, false);
-			att.setValue(new StoredValue(new Date(basicAtts.creationTime().toMillis())));
+			att = new CmfAttribute<CmfValue>(IntermediateAttribute.CREATION_DATE.encode(),
+				CmfDataType.DATETIME, false);
+			att.setValue(new CmfValue(new Date(basicAtts.creationTime().toMillis())));
 			object.setAttribute(att);
 
-			att = new StoredAttribute<StoredValue>(IntermediateAttribute.LAST_MODIFICATION_DATE.encode(),
-				StoredDataType.DATETIME, false);
-			att.setValue(new StoredValue(new Date(basicAtts.lastModifiedTime().toMillis())));
+			att = new CmfAttribute<CmfValue>(IntermediateAttribute.LAST_MODIFICATION_DATE.encode(),
+				CmfDataType.DATETIME, false);
+			att.setValue(new CmfValue(new Date(basicAtts.lastModifiedTime().toMillis())));
 			object.setAttribute(att);
 
-			att = new StoredAttribute<StoredValue>(IntermediateAttribute.LAST_ACCESS_DATE.encode(),
-				StoredDataType.DATETIME, false);
-			att.setValue(new StoredValue(new Date(basicAtts.lastAccessTime().toMillis())));
+			att = new CmfAttribute<CmfValue>(IntermediateAttribute.LAST_ACCESS_DATE.encode(),
+				CmfDataType.DATETIME, false);
+			att.setValue(new CmfValue(new Date(basicAtts.lastAccessTime().toMillis())));
 			object.setAttribute(att);
 
-			if (getType() == StoredObjectType.DOCUMENT) {
-				att = new StoredAttribute<StoredValue>(IntermediateAttribute.CONTENT_STREAM_LENGTH.encode(),
-					StoredDataType.DOUBLE, false);
-				att.setValue(new StoredValue(basicAtts.size()));
+			if (getType() == CmfType.DOCUMENT) {
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.CONTENT_STREAM_LENGTH.encode(),
+					CmfDataType.DOUBLE, false);
+				att.setValue(new CmfValue(basicAtts.size()));
 				object.setAttribute(att);
 			}
 
 			if (owner != null) {
 				UserPrincipal ownerUser = owner.getOwner();
-				att = new StoredAttribute<StoredValue>(IntermediateAttribute.CREATED_BY.encode(),
-					StoredDataType.STRING, false);
-				att.setValue(new StoredValue(ownerUser.getName()));
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.CREATED_BY.encode(),
+					CmfDataType.STRING, false);
+				att.setValue(new CmfValue(ownerUser.getName()));
 				object.setAttribute(att);
 
-				att = new StoredAttribute<StoredValue>(IntermediateAttribute.OWNER.encode(), StoredDataType.STRING,
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.OWNER.encode(), CmfDataType.STRING,
 					false);
-				att.setValue(new StoredValue(ownerUser.getName()));
+				att.setValue(new CmfValue(ownerUser.getName()));
 				object.setAttribute(att);
 			}
 
 			if (posix != null) {
 				PosixFileAttributes posixAtts = posix.readAttributes();
 				GroupPrincipal ownerGroup = posixAtts.group();
-				att = new StoredAttribute<StoredValue>(IntermediateAttribute.GROUP.encode(), StoredDataType.STRING,
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.GROUP.encode(), CmfDataType.STRING,
 					false);
-				att.setValue(new StoredValue(ownerGroup.getName()));
+				att.setValue(new CmfValue(ownerGroup.getName()));
 				object.setAttribute(att);
 			}
 
@@ -144,15 +144,15 @@ public class LocalExportDelegate
 			throw new ExportException(String.format("Failed to collect the attribute information for [%s]", file), e);
 		}
 
-		StoredProperty<StoredValue> parents = new StoredProperty<StoredValue>(IntermediateProperty.PARENT_ID.encode(),
-			StoredDataType.ID, true);
-		StoredProperty<StoredValue> paths = new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
-			StoredDataType.STRING, true);
+		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID.encode(),
+			CmfDataType.ID, true);
+		CmfProperty<CmfValue> paths = new CmfProperty<CmfValue>(IntermediateProperty.PATH.encode(),
+			CmfDataType.STRING, true);
 		if (this.object.getPathCount() > 1) {
-			paths.setValue(new StoredValue(this.object.getPortablePath()));
+			paths.setValue(new CmfValue(this.object.getPortablePath()));
 			String parentPath = this.object.getPath();
 			try {
-				parents.setValue(new StoredValue(new LocalFile(this.object.getRootPath(), parentPath).getPathHash()));
+				parents.setValue(new CmfValue(new LocalFile(this.object.getRootPath(), parentPath).getPathHash()));
 			} catch (IOException e) {
 				throw new ExportException(String.format("Failed to calculate the parent's ID for [%s] (parent = [%s])",
 					this.object.getRelative(), parentPath));
@@ -161,22 +161,22 @@ public class LocalExportDelegate
 		object.setProperty(paths);
 		object.setProperty(parents);
 
-		att = new StoredAttribute<StoredValue>(IntermediateAttribute.PATH.encode(), StoredDataType.STRING, true);
-		att.setValue(new StoredValue(this.object.getPortablePath()));
+		att = new CmfAttribute<CmfValue>(IntermediateAttribute.PATH.encode(), CmfDataType.STRING, true);
+		att.setValue(new CmfValue(this.object.getPortablePath()));
 		object.setAttribute(att);
 		return true;
 	}
 
 	@Override
-	protected Collection<LocalExportDelegate> identifyDependents(StoredObject<StoredValue> marshalled,
+	protected Collection<LocalExportDelegate> identifyDependents(CmfObject<CmfValue> marshalled,
 		LocalExportContext ctx) throws Exception {
 		return null;
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(LocalRoot session, AttributeTranslator<StoredValue> translator,
-		StoredObject<StoredValue> marshalled, ExportTarget referrent, ContentStore<?> streamStore) throws Exception {
-		if (getType() != StoredObjectType.DOCUMENT) { return null; }
+	protected List<ContentInfo> storeContent(LocalRoot session, CmfAttributeTranslator<CmfValue> translator,
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
+		if (getType() != CmfType.DOCUMENT) { return null; }
 
 		List<ContentInfo> ret = new ArrayList<ContentInfo>(1);
 		ContentInfo info = new ContentInfo("");
@@ -188,9 +188,9 @@ public class LocalExportDelegate
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
 
-		StoredAttribute<StoredValue> typeAtt = new StoredAttribute<StoredValue>(
-			IntermediateAttribute.CONTENT_STREAM_MIME_TYPE.encode(), StoredDataType.STRING, false);
-		typeAtt.setValue(new StoredValue(type.getBaseType()));
+		CmfAttribute<CmfValue> typeAtt = new CmfAttribute<CmfValue>(
+			IntermediateAttribute.CONTENT_STREAM_MIME_TYPE.encode(), CmfDataType.STRING, false);
+		typeAtt.setValue(new CmfValue(type.getBaseType()));
 		marshalled.setAttribute(typeAtt);
 
 		// TODO: add the attributes...
@@ -200,7 +200,7 @@ public class LocalExportDelegate
 		ret.add(info);
 
 		if (this.factory.isCopyContent()) {
-			ContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
+			CmfContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
 			File tgt = h.getFile();
 			if (tgt != null) {
 				if (this.log.isDebugEnabled()) {
@@ -221,10 +221,10 @@ public class LocalExportDelegate
 	}
 
 	@Override
-	protected StoredObjectType calculateType(LocalFile f) throws Exception {
+	protected CmfType calculateType(LocalFile f) throws Exception {
 		File F = f.getAbsolute();
-		if (F.isFile()) { return StoredObjectType.DOCUMENT; }
-		if (F.isDirectory()) { return StoredObjectType.FOLDER; }
+		if (F.isFile()) { return CmfType.DOCUMENT; }
+		if (F.isDirectory()) { return CmfType.FOLDER; }
 		throw new ExportException(String.format("Filesystem object [%s] is of an unknown type or doesn't exist", F));
 	}
 

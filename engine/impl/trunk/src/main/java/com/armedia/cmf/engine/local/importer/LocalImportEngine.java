@@ -10,14 +10,14 @@ import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionFactory;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.local.common.LocalTranslator;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportEngine extends
-	ImportEngine<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory> {
+	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -104,7 +104,7 @@ public class LocalImportEngine extends
 	};
 
 	@Override
-	protected ImportStrategy getImportStrategy(StoredObjectType type) {
+	protected ImportStrategy getImportStrategy(CmfType type) {
 		switch (type) {
 			case DOCUMENT:
 				return LocalImportEngine.DOCUMENT_STRATEGY;
@@ -116,16 +116,16 @@ public class LocalImportEngine extends
 	}
 
 	@Override
-	protected StoredValue getValue(StoredDataType type, Object value) {
+	protected CmfValue getValue(CmfDataType type, Object value) {
 		try {
-			return new StoredValue(type, value);
+			return new CmfValue(type, value);
 		} catch (ParseException e) {
 			throw new RuntimeException(String.format("Can't convert [%s] as a %s", value, type), e);
 		}
 	}
 
 	@Override
-	protected AttributeTranslator<StoredValue> getTranslator() {
+	protected CmfAttributeTranslator<CmfValue> getTranslator() {
 		return new LocalTranslator();
 	}
 

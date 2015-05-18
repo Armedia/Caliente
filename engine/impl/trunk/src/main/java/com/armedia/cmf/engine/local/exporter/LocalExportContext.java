@@ -4,14 +4,14 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.engine.local.common.LocalRoot;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalExportContext extends ExportContext<LocalRoot, StoredValue> {
+public class LocalExportContext extends ExportContext<LocalRoot, CmfValue> {
 
 	public LocalExportContext(LocalExportContextFactory factory, CfgTools settings, String rootId,
-		StoredObjectType rootType, LocalRoot session, Logger output) {
+		CmfType rootType, LocalRoot session, Logger output) {
 		super(factory, settings, rootId, rootType, session, output);
 	}
 }

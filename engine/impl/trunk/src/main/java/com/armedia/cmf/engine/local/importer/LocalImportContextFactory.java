@@ -7,14 +7,14 @@ import org.slf4j.Logger;
 import com.armedia.cmf.engine.importer.ImportContextFactory;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportContextFactory extends
-	ImportContextFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine, File> {
+	ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine, File> {
 
 	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -37,8 +37,8 @@ public class LocalImportContextFactory extends
 	}
 
 	@Override
-	protected LocalImportContext constructContext(String rootId, StoredObjectType rootType, LocalRoot session,
-		Logger output, ObjectStore<?, ?> objectStore, ContentStore<?> contentStore) {
+	protected LocalImportContext constructContext(String rootId, CmfType rootType, LocalRoot session,
+		Logger output, CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore) {
 		return new LocalImportContext(this, getSettings(), rootId, rootType, session, output, getEngine()
 			.getTranslator(), objectStore, contentStore);
 	}

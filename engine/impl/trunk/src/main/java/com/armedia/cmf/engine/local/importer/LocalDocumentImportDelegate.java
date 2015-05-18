@@ -13,29 +13,29 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StorageException;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredValue;
-import com.armedia.cmf.storage.StoredValueDecoderException;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public class LocalDocumentImportDelegate extends LocalImportDelegate {
 
-	protected LocalDocumentImportDelegate(LocalImportDelegateFactory factory, StoredObject<StoredValue> storedObject)
+	protected LocalDocumentImportDelegate(LocalImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(factory, storedObject);
 	}
 
 	@Override
-	protected ImportOutcome doImportObject(AttributeTranslator<StoredValue> translator, LocalImportContext ctx)
-		throws ImportException, StorageException, StoredValueDecoderException {
+	protected ImportOutcome doImportObject(CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
+		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		File targetFile;
 		try {
 			targetFile = getTargetFile(ctx);
 		} catch (IOException e) {
 			throw new ImportException(String.format("Failed to calculate the target file for document [%s](%s)",
-				this.storedObject.getLabel(), this.storedObject.getId()), e);
+				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 
 		File parent = targetFile.getParentFile();
@@ -48,20 +48,20 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 			created = targetFile.createNewFile();
 		} catch (IOException e) {
 			throw new ImportException(String.format("Failed to create the new file [%s] for DOCUMENT [%s](%s)",
-				targetFile.getAbsolutePath(), this.storedObject.getLabel(), this.storedObject.getId()), e);
+				targetFile.getAbsolutePath(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 
 		if (!created) {
 			if (!targetFile.isFile()) { throw new ImportException(String.format(
 				"Failed to create the file (and parents) at [%s] for document [%s](%s)", targetFile,
-				this.storedObject.getLabel(), this.storedObject.getId())); }
+				this.cmfObject.getLabel(), this.cmfObject.getId())); }
 			if (!targetFile.exists()) { throw new ImportException(String.format(
 				"A non-file object already exists at [%s] for document [%s](%s)", targetFile,
-				this.storedObject.getLabel(), this.storedObject.getId())); }
+				this.cmfObject.getLabel(), this.cmfObject.getId())); }
 
 			if (this.factory.isFailOnCollision()) { throw new ImportException(String.format(
-				"A file already exists at [%s] for document [%s](%s)", targetFile, this.storedObject.getLabel(),
-				this.storedObject.getId())); }
+				"A file already exists at [%s] for document [%s](%s)", targetFile, this.cmfObject.getLabel(),
+				this.cmfObject.getId())); }
 
 			try {
 				if (isSameDatesAndOwners(targetFile, translator)) { return new ImportOutcome(ImportResult.DUPLICATE,
@@ -69,23 +69,23 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 			} catch (Exception e) {
 				throw new ImportException(String.format(
 					"Failed to validate the dates and owners at [%s] for document [%s](%s)", targetFile,
-					this.storedObject.getLabel(), this.storedObject.getId()), e);
+					this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 			}
 		}
 
 		// Copy the contents over...
 		List<ContentInfo> contents;
 		try {
-			contents = ctx.getContentInfo(this.storedObject);
+			contents = ctx.getContentInfo(this.cmfObject);
 		} catch (Exception e) {
 			throw new ImportException(String.format(
-				"Failed to obtain the list of content streams for document [%s](%s)", this.storedObject.getLabel(),
-				this.storedObject.getId()), e);
+				"Failed to obtain the list of content streams for document [%s](%s)", this.cmfObject.getLabel(),
+				this.cmfObject.getId()), e);
 		}
 
 		if (!contents.isEmpty()) {
 			ContentInfo info = contents.get(0);
-			ContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.storedObject,
+			CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
 			File src = h.getFile();
 			if (src != null) {
@@ -94,7 +94,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 				} catch (IOException e) {
 					throw new ImportException(String.format(
 						"Failed to copy the contents from [%s] to [%s] for document [%s](%s)", src, targetFile,
-						this.storedObject.getLabel(), this.storedObject.getId()), e);
+						this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 				}
 			} else {
 				InputStream in = null;
@@ -104,7 +104,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 				} catch (IOException e) {
 					throw new ImportException(String.format(
 						"Failed to copy the default content object into [%s] for document [%s](%s)", targetFile,
-						this.storedObject.getLabel(), this.storedObject.getId()), e);
+						this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 				} finally {
 					IOUtils.closeQuietly(in);
 				}
@@ -116,7 +116,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		} catch (Exception e) {
 			throw new ImportException(String.format(
 				"Failed to apply attributes to the target file [%s] for %s [%s](%s)", targetFile,
-				this.storedObject.getType(), this.storedObject.getLabel(), this.storedObject.getId()), e);
+				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 		return new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED, getNewId(targetFile),
 			targetFile.getAbsolutePath());

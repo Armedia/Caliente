@@ -10,44 +10,44 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredValue;
-import com.armedia.cmf.storage.StoredValueCodec;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalTranslator extends AttributeTranslator<StoredValue> {
+public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 
-	private static final Map<PropertyType, StoredDataType> DATA_TYPES;
-	private static final Map<StoredDataType, PropertyType> DATA_TYPES_REV;
+	private static final Map<PropertyType, CmfDataType> DATA_TYPES;
+	private static final Map<CmfDataType, PropertyType> DATA_TYPES_REV;
 
-	private static final Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
+	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<PropertyType, StoredDataType> m = new EnumMap<PropertyType, StoredDataType>(PropertyType.class);
-		m.put(PropertyType.BOOLEAN, StoredDataType.BOOLEAN);
-		m.put(PropertyType.INTEGER, StoredDataType.INTEGER);
-		m.put(PropertyType.DECIMAL, StoredDataType.DOUBLE);
-		m.put(PropertyType.DATETIME, StoredDataType.DATETIME);
-		m.put(PropertyType.ID, StoredDataType.ID);
-		m.put(PropertyType.STRING, StoredDataType.STRING);
-		m.put(PropertyType.URI, StoredDataType.STRING); // TODO: Add this to StoredDataType
-		m.put(PropertyType.HTML, StoredDataType.STRING); // TODO: Add this to StoredDataType
+		Map<PropertyType, CmfDataType> m = new EnumMap<PropertyType, CmfDataType>(PropertyType.class);
+		m.put(PropertyType.BOOLEAN, CmfDataType.BOOLEAN);
+		m.put(PropertyType.INTEGER, CmfDataType.INTEGER);
+		m.put(PropertyType.DECIMAL, CmfDataType.DOUBLE);
+		m.put(PropertyType.DATETIME, CmfDataType.DATETIME);
+		m.put(PropertyType.ID, CmfDataType.ID);
+		m.put(PropertyType.STRING, CmfDataType.STRING);
+		m.put(PropertyType.URI, CmfDataType.STRING); // TODO: Add this to CmfDataType
+		m.put(PropertyType.HTML, CmfDataType.STRING); // TODO: Add this to CmfDataType
 		DATA_TYPES = Tools.freezeMap(m);
 
-		Map<StoredDataType, PropertyType> n = new EnumMap<StoredDataType, PropertyType>(StoredDataType.class);
-		n.put(StoredDataType.BOOLEAN, PropertyType.BOOLEAN);
-		n.put(StoredDataType.INTEGER, PropertyType.INTEGER);
-		n.put(StoredDataType.DOUBLE, PropertyType.DECIMAL);
-		n.put(StoredDataType.DATETIME, PropertyType.DATETIME);
-		n.put(StoredDataType.ID, PropertyType.ID);
-		n.put(StoredDataType.STRING, PropertyType.STRING); // TODO: Need to handle HTML and URI
+		Map<CmfDataType, PropertyType> n = new EnumMap<CmfDataType, PropertyType>(CmfDataType.class);
+		n.put(CmfDataType.BOOLEAN, PropertyType.BOOLEAN);
+		n.put(CmfDataType.INTEGER, PropertyType.INTEGER);
+		n.put(CmfDataType.DOUBLE, PropertyType.DECIMAL);
+		n.put(CmfDataType.DATETIME, PropertyType.DATETIME);
+		n.put(CmfDataType.ID, PropertyType.ID);
+		n.put(CmfDataType.STRING, PropertyType.STRING); // TODO: Need to handle HTML and URI
 		DATA_TYPES_REV = Tools.freezeMap(n);
 
-		Map<StoredObjectType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<StoredObjectType, BidiMap<String, IntermediateAttribute>>(
-			StoredObjectType.class);
+		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
+			CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
@@ -55,42 +55,42 @@ public class LocalTranslator extends AttributeTranslator<StoredValue> {
 		// BASE_TYPE_ID (ACL)
 		// OBJECT_TYPE_ID (DM_ACL)
 		// am.put(LocalAttributes.ACL_OWNER.name, IntermediateAttribute.OWNER);
-		attributeMappings.put(StoredObjectType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (cmis:document|...)
 		// am.put(LocalAttributes.VERSION_ANTECEDENT_ID.name,
 		// IntermediateAttribute.VERSION_ANTECEDENT_ID);
-		attributeMappings.put(StoredObjectType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
 
-	public static StoredDataType decodePropertyType(PropertyType t) {
+	public static CmfDataType decodePropertyType(PropertyType t) {
 		return LocalTranslator.DATA_TYPES.get(t);
 	}
 
-	public static PropertyType decodePropertyType(StoredObjectType t) {
+	public static PropertyType decodePropertyType(CmfType t) {
 		return LocalTranslator.DATA_TYPES_REV.get(t);
 	}
 
 	@Override
-	public StoredObject<StoredValue> decodeObject(StoredObject<StoredValue> rawObject) {
+	public CmfObject<CmfValue> decodeObject(CmfObject<CmfValue> rawObject) {
 		return super.decodeObject(rawObject);
 	}
 
 	@Override
-	public StoredObject<StoredValue> encodeObject(StoredObject<StoredValue> rawObject) {
+	public CmfObject<CmfValue> encodeObject(CmfObject<CmfValue> rawObject) {
 		return super.encodeObject(rawObject);
 	}
 
-	private BidiMap<String, IntermediateAttribute> getAttributeMappings(StoredObjectType type) {
+	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
 		return LocalTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
 	@Override
-	public String encodeAttributeName(StoredObjectType type, String attributeName) {
+	public String encodeAttributeName(CmfType type, String attributeName) {
 		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
 		if (mappings != null) {
 			// TODO: normalize the CMS attribute name
@@ -101,7 +101,7 @@ public class LocalTranslator extends AttributeTranslator<StoredValue> {
 	}
 
 	@Override
-	public String decodeAttributeName(StoredObjectType type, String attributeName) {
+	public String decodeAttributeName(CmfType type, String attributeName) {
 		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
 		if (mappings != null) {
 			String att = null;
@@ -117,12 +117,12 @@ public class LocalTranslator extends AttributeTranslator<StoredValue> {
 	}
 
 	@Override
-	public StoredValueCodec<StoredValue> getCodec(StoredDataType type) {
-		return AttributeTranslator.getStoredValueCodec(type);
+	public CmfValueCodec<CmfValue> getCodec(CmfDataType type) {
+		return CmfAttributeTranslator.getStoredValueCodec(type);
 	}
 
 	@Override
-	public StoredValue getValue(StoredDataType type, Object value) throws ParseException {
-		return new StoredValue(type, value);
+	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
+		return new CmfValue(type, value);
 	}
 }

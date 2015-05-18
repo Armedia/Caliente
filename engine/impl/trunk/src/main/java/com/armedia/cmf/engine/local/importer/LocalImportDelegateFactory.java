@@ -6,12 +6,12 @@ import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.local.common.Setting;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportDelegateFactory extends
-	ImportDelegateFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine> {
+	ImportDelegateFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine> {
 
 	private final boolean includeAllVersions;
 	private final boolean failOnCollision;
@@ -31,7 +31,7 @@ public class LocalImportDelegateFactory extends
 	}
 
 	@Override
-	protected LocalImportDelegate newImportDelegate(StoredObject<StoredValue> storedObject) throws Exception {
+	protected LocalImportDelegate newImportDelegate(CmfObject<CmfValue> storedObject) throws Exception {
 		switch (storedObject.getType()) {
 			case DOCUMENT:
 				return new LocalDocumentImportDelegate(this, storedObject);
