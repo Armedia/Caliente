@@ -12,7 +12,7 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectType;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, F>>
-extends TransferDelegate<T, S, V, C, F, E> {
+	extends TransferDelegate<T, S, V, C, F, E> {
 	protected final T object;
 	protected final ExportTarget exportTarget;
 	protected final String label;
@@ -73,12 +73,12 @@ extends TransferDelegate<T, S, V, C, F, E> {
 		StoredObjectType type = getType();
 		StoredObject<V> marshaled = new StoredObject<V>(type, getObjectId(), getSearchKey(), getBatchId(), getLabel(),
 			type.name());
-		marshal(ctx, marshaled);
+		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);
 		return marshaled;
 	}
 
-	protected abstract void marshal(C ctx, StoredObject<V> object) throws ExportException;
+	protected abstract boolean marshal(C ctx, StoredObject<V> object) throws ExportException;
 
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyDependents(
 		StoredObject<V> marshalled, C ctx) throws Exception;

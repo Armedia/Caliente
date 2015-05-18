@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, ?>>
-extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEngineListener> {
+	extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEngineListener> {
 
 	private class Result {
 		private final Long objectNumber;
@@ -243,6 +243,8 @@ extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEn
 			}
 
 			final StoredObject<V> marshaled = sourceObject.marshal(ctx, referrent);
+			if (marshaled == null) { return null; }
+
 			Collection<? extends ExportDelegate<?, S, W, V, C, ?, ?>> referenced;
 			try {
 				referenced = sourceObject.identifyRequirements(marshaled, ctx);
@@ -255,7 +257,7 @@ extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEn
 
 			if (this.log.isDebugEnabled()) {
 				this.log
-				.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
 			for (ExportDelegate<?, S, W, V, C, ?, ?> requirement : referenced) {
 				exportObject(objectStore, streamStore, target, requirement.getExportTarget(), requirement, ctx,
@@ -323,7 +325,7 @@ extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEn
 
 	public final StoredObjectCounter<ExportResult> runExport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore<?> contentStore, Map<String, ?> settings, StoredObjectCounter<ExportResult> counter)
-			throws ExportException, StorageException {
+		throws ExportException, StorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -522,7 +524,7 @@ extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEn
 							Thread.currentThread().interrupt();
 							if (this.log.isDebugEnabled()) {
 								this.log
-								.warn(String.format("Thread interrupted after reading %d object targets", c), e);
+									.warn(String.format("Thread interrupted after reading %d object targets", c), e);
 							} else {
 								this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
 							}
@@ -557,9 +559,9 @@ extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEn
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-								.warn(
-									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-									e);
+									.warn(
+										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+										e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -614,10 +616,10 @@ extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEn
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
