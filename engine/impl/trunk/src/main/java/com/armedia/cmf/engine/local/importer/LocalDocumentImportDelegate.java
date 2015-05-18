@@ -28,7 +28,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 	}
 
 	@Override
-	protected ImportOutcome importObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
+	protected ImportOutcome doImportObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
 		throws ImportException, StorageException, StoredValueDecoderException {
 		File targetFile;
 		try {

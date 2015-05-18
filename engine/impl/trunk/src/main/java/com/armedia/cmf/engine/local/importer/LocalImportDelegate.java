@@ -24,20 +24,24 @@ import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.importer.ImportException;
+import com.armedia.cmf.engine.importer.ImportOutcome;
+import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredProperty;
 import com.armedia.cmf.storage.StoredValue;
+import com.armedia.cmf.storage.StoredValueDecoderException;
 import com.armedia.cmf.storage.tools.FilenameFixer;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-	extends
-	ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+extends
+ImportDelegate<File, LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected LocalImportDelegate(LocalImportDelegateFactory factory, StoredObject<StoredValue> storedObject)
 		throws Exception {
@@ -47,6 +51,27 @@ public abstract class LocalImportDelegate
 	protected final String getNewId(File f) {
 		return String.format("%08X", f.hashCode());
 	}
+
+	@Override
+	protected final ImportOutcome importObject(ObjectStorageTranslator<StoredValue> translator, LocalImportContext ctx)
+		throws ImportException, StorageException, StoredValueDecoderException {
+
+		StoredAttribute<StoredValue> att = this.storedObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION
+			.encode());
+		if ((att != null) && att.hasValues()) {
+			StoredValue v = att.getValue();
+			if (!v.isNull() && !v.asBoolean() && !this.factory.isIncludeAllVersions()) {
+				// If this isn't the last version, we bork out if we're configured to only deal
+				// with the last version
+				return new ImportOutcome(ImportResult.SKIPPED);
+			}
+		}
+
+		return doImportObject(translator, ctx);
+	}
+
+	protected abstract ImportOutcome doImportObject(ObjectStorageTranslator<StoredValue> translator,
+		LocalImportContext ctx) throws ImportException, StorageException, StoredValueDecoderException;
 
 	protected final File getTargetFile(LocalImportContext ctx) throws ImportException, IOException {
 		final ObjectStorageTranslator<StoredValue> translator = this.factory.getEngine().getTranslator();
