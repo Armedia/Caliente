@@ -11,17 +11,23 @@ import com.armedia.cmf.storage.StoredValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportDelegateFactory extends
-ImportDelegateFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine> {
+	ImportDelegateFactory<LocalRoot, LocalSessionWrapper, StoredValue, LocalImportContext, LocalImportEngine> {
 
 	private final boolean includeAllVersions;
+	private final boolean failOnCollision;
 
 	public LocalImportDelegateFactory(LocalImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
 		this.includeAllVersions = configuration.getBoolean(Setting.INCLUDE_ALL_VERSIONS);
+		this.failOnCollision = configuration.getBoolean(Setting.FAIL_ON_COLLISION);
 	}
 
 	public final boolean isIncludeAllVersions() {
 		return this.includeAllVersions;
+	}
+
+	public final boolean isFailOnCollision() {
+		return this.failOnCollision;
 	}
 
 	@Override

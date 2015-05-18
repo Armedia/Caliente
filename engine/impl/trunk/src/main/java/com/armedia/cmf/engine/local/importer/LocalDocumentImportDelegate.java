@@ -59,6 +59,10 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 				"A non-file object already exists at [%s] for document [%s](%s)", targetFile,
 				this.storedObject.getLabel(), this.storedObject.getId())); }
 
+			if (this.factory.isFailOnCollision()) { throw new ImportException(String.format(
+				"A file already exists at [%s] for document [%s](%s)", targetFile, this.storedObject.getLabel(),
+				this.storedObject.getId())); }
+
 			try {
 				if (isSameDatesAndOwners(targetFile, translator)) { return new ImportOutcome(ImportResult.DUPLICATE,
 					getNewId(targetFile), targetFile.getAbsolutePath()); }
