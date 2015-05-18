@@ -57,7 +57,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 	public abstract Date getLastModifiedTime();
 
 	@Override
-	protected void marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		// Name
 		String name = getName();
 		final boolean root = StringUtils.isEmpty(name);
@@ -95,6 +95,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			object.setProperty(new StoredProperty<StoredValue>(IntermediateProperty.PATH.encode(),
 				StoredDataType.STRING, true, Collections.singleton(new StoredValue(path))));
 		}
+		return true;
 	}
 
 	@Override

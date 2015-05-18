@@ -118,8 +118,8 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	protected void marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		super.marshal(ctx, object);
+	protected boolean marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		if (!super.marshal(ctx, object)) { return false; }
 		// UserID
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.OBJECT_ID.name, StoredDataType.ID, false,
 			Collections.singleton(new StoredValue(String.format("USER(%s)", getObjectId())))));
@@ -186,6 +186,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 		for (Role r : this.roles) {
 			roles.addValue(new StoredValue(r.getName()));
 		}
+		return true;
 	}
 
 	@Override

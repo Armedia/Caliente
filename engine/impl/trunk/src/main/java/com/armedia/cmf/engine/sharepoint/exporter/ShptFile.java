@@ -174,8 +174,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	protected void marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		super.marshal(ctx, object);
+	protected boolean marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		if (!super.marshal(ctx, object)) { return false; }
 		final ShptSession service = ctx.getSession();
 		List<StoredValue> versionNames = new ArrayList<StoredValue>();
 
@@ -279,7 +279,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			versionNames));
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.VERSION_TREE.name, StoredDataType.ID,
 			false, Collections.singleton(new StoredValue(getBatchId()))));
-
+		return true;
 	}
 
 	@Override

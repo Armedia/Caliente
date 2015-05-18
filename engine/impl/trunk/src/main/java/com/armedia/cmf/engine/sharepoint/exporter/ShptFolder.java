@@ -78,11 +78,11 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	protected void marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		// TODO Auto-generated method stub
-		super.marshal(ctx, object);
+	protected boolean marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		if (!super.marshal(ctx, object)) { return false; }
 		object.setAttribute(new StoredAttribute<StoredValue>(ShptAttributes.WELCOME_PAGE.name, StoredDataType.STRING,
 			false, Collections.singleton(new StoredValue(this.object.getWelcomePage()))));
+		return true;
 	}
 
 	@Override

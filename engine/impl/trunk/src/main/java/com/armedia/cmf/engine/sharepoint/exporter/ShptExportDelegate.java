@@ -22,8 +22,8 @@ import com.independentsoft.share.Group;
 import com.independentsoft.share.User;
 
 public abstract class ShptExportDelegate<T>
-	extends
-	ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
+extends
+ExportDelegate<T, ShptSession, ShptSessionWrapper, StoredValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
 
 	private static final Map<Class<?>, StoredObjectType> TYPE_MAP;
 
@@ -47,7 +47,8 @@ public abstract class ShptExportDelegate<T>
 	}
 
 	@Override
-	protected void marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(ShptExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		return true;
 	}
 
 	@Override
