@@ -40,6 +40,7 @@ public enum IntermediateAttribute implements Mappable {
 	VERSION_LABEL(PropertyIds.VERSION_LABEL, StoredDataType.STRING),
 	VERSION_SERIES_ID(PropertyIds.VERSION_SERIES_ID, StoredDataType.ID),
 	VERSION_SERIES_CHECKED_OUT_BY(PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, StoredDataType.STRING),
+	CHECKIN_COMMENT(PropertyIds.CHECKIN_COMMENT, StoredDataType.STRING),
 
 	// Non-CMIS attributes
 	OWNER(StoredDataType.STRING),
