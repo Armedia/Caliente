@@ -2,20 +2,20 @@ package com.armedia.cmf.storage;
 
 import java.sql.SQLException;
 
-public interface StoredObjectHandler<V> {
+public interface CmfObjectHandler<V> {
 
 	/**
 	 * <p>
 	 * Signal the beginning of a new batch, with the given ID. Returns {@code true} if the batch
 	 * should be processed, {@code false} if it should be skipped. If the batch is skipped, Neither
-	 * {@link #closeBatch(boolean)} nor {@link #handleObject(StoredObject)} will be invoked.
+	 * {@link #closeBatch(boolean)} nor {@link #handleObject(CmfObject)} will be invoked.
 	 * </p>
 	 *
 	 * @param batchId
 	 * @return {@code true} if the batch should be processed, {@code false} if it should be skipped
-	 * @throws StorageException
+	 * @throws CmfStorageException
 	 */
-	public boolean newBatch(String batchId) throws StorageException;
+	public boolean newBatch(String batchId) throws CmfStorageException;
 
 	/**
 	 * <p>
@@ -25,11 +25,11 @@ public interface StoredObjectHandler<V> {
 	 * </p>
 	 *
 	 * @param dataObject
-	 * @throws StorageException
+	 * @throws CmfStorageException
 	 * @return {@code true} if more objects should be loaded, or {@code false} if this should be the
 	 *         last object load attempted.
 	 */
-	public boolean handleObject(StoredObject<V> dataObject) throws StorageException;
+	public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException;
 
 	/**
 	 * <p>
@@ -56,7 +56,7 @@ public interface StoredObjectHandler<V> {
 	 *            otherwise
 	 * @return {@code true} if processing should continue with the next batch, or {@code false}
 	 *         otherwise
-	 * @throws StorageException
+	 * @throws CmfStorageException
 	 */
-	public boolean closeBatch(boolean ok) throws StorageException;
+	public boolean closeBatch(boolean ok) throws CmfStorageException;
 }

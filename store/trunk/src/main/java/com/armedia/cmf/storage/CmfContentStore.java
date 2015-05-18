@@ -11,7 +11,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class ContentStore<L> extends Store {
+public abstract class CmfContentStore<L> extends CmfStore {
 
 	protected static final int MIN_BUFFER_SIZE = 4096;
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
@@ -20,12 +20,12 @@ public abstract class ContentStore<L> extends Store {
 	public static final String DEFAULT_QUALIFIER = "content";
 
 	public abstract class Handle {
-		private final StoredObjectType objectType;
+		private final CmfType objectType;
 		private final String objectId;
 		private final String qualifier;
 		private final L locator;
 
-		protected Handle(StoredObjectType objectType, String objectId, String qualifier, L locator) {
+		protected Handle(CmfType objectType, String objectId, String qualifier, L locator) {
 			if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 			if (objectId == null) { throw new IllegalArgumentException("Must provide an object id"); }
 			if (qualifier == null) { throw new IllegalArgumentException("Must provide a content qualifier"); }
@@ -44,7 +44,7 @@ public abstract class ContentStore<L> extends Store {
 		 *
 		 * @return the type of object whose content this handle points to.
 		 */
-		public final StoredObjectType getObjectType() {
+		public final CmfType getObjectType() {
 			return this.objectType;
 		}
 
@@ -72,19 +72,19 @@ public abstract class ContentStore<L> extends Store {
 
 		/**
 		 * <p>
-		 * Returns the {@link ContentStore} from which this handle was obtained.
+		 * Returns the {@link CmfContentStore} from which this handle was obtained.
 		 * </p>
 		 *
-		 * @return the {@link ContentStore} from which this handle was obtained.
+		 * @return the {@link CmfContentStore} from which this handle was obtained.
 		 */
-		public final ContentStore<L> getSourceStore() {
-			return ContentStore.this;
+		public final CmfContentStore<L> getSourceStore() {
+			return CmfContentStore.this;
 		}
 
 		/**
 		 * <p>
 		 * Returns a {@link File} object that leads to the actual content file (existent or not),
-		 * and can be used to read from and write to it. If the underlying {@link ContentStore}
+		 * and can be used to read from and write to it. If the underlying {@link CmfContentStore}
 		 * doesn't support this functionality, {@code null} is returned.
 		 * </p>
 		 * <p>
@@ -97,7 +97,7 @@ public abstract class ContentStore<L> extends Store {
 		 *         {@code null} if this functionality is not supported.
 		 */
 		public final File getFile() {
-			return ContentStore.this.getFile(this.locator);
+			return CmfContentStore.this.getFile(this.locator);
 		}
 
 		/**
@@ -106,7 +106,7 @@ public abstract class ContentStore<L> extends Store {
 		 * {@code null} if this handle refers to an as-yet non-existent content stream.
 		 * </p>
 		 * <p>
-		 * All {@link ContentStore} implementations <b>must</b> support this functionality.
+		 * All {@link CmfContentStore} implementations <b>must</b> support this functionality.
 		 * </p>
 		 *
 		 * @return an {@link InputStream} that can be used to read from the actual content file, or
@@ -114,14 +114,14 @@ public abstract class ContentStore<L> extends Store {
 		 * @throws IOException
 		 */
 		public final InputStream openInput() throws IOException {
-			return ContentStore.this.openInput(this.locator);
+			return CmfContentStore.this.openInput(this.locator);
 		}
 
 		/**
 		 * <p>
-		 * Read the contents of the given file into the underlying {@link ContentStore}, to be
+		 * Read the contents of the given file into the underlying {@link CmfContentStore}, to be
 		 * stored as the content for this handle, using a default read buffer size (from
-		 * {@link ContentStore#DEFAULT_BUFFER_SIZE}). Supports files larger than 2GB.
+		 * {@link CmfContentStore#DEFAULT_BUFFER_SIZE}). Supports files larger than 2GB.
 		 * </p>
 		 *
 		 * @param source
@@ -135,7 +135,7 @@ public abstract class ContentStore<L> extends Store {
 
 		/**
 		 * <p>
-		 * Read the contents of the given file into the underlying {@link ContentStore}, to be
+		 * Read the contents of the given file into the underlying {@link CmfContentStore}, to be
 		 * stored as the content for this handle, using a read buffer of {@code bufferSize} bytes.
 		 * Supports files larger than 2GB. If {@code bufferSize} is less than or equal to 0, a
 		 * default buffer of DEFAULT_BUFFER_SIZE is used.
@@ -153,8 +153,8 @@ public abstract class ContentStore<L> extends Store {
 
 		/**
 		 * <p>
-		 * Write the content from the underlying {@link ContentStore} into the given file, using a
-		 * default read buffer size (from {@link ContentStore#DEFAULT_BUFFER_SIZE}). Supports files
+		 * Write the content from the underlying {@link CmfContentStore} into the given file, using a
+		 * default read buffer size (from {@link CmfContentStore#DEFAULT_BUFFER_SIZE}). Supports files
 		 * larger than 2GB. used.
 		 * </p>
 		 *
@@ -169,7 +169,7 @@ public abstract class ContentStore<L> extends Store {
 
 		/**
 		 * <p>
-		 * Write the content from the underlying {@link ContentStore} into the given file, using a
+		 * Write the content from the underlying {@link CmfContentStore} into the given file, using a
 		 * read buffer of {@code bufferSize} bytes. Supports files larger than 2GB. If
 		 * {@code bufferSize} is less than or equal to 0, a default buffer of DEFAULT_BUFFER_SIZE is
 		 * used.
@@ -187,10 +187,10 @@ public abstract class ContentStore<L> extends Store {
 
 		private long runTransfer(InputStream in, OutputStream out, int bufferSize) throws IOException {
 			if (bufferSize <= 0) {
-				bufferSize = ContentStore.DEFAULT_BUFFER_SIZE;
+				bufferSize = CmfContentStore.DEFAULT_BUFFER_SIZE;
 			} else {
 				bufferSize = Tools
-					.ensureBetween(ContentStore.MIN_BUFFER_SIZE, bufferSize, ContentStore.MAX_BUFFER_SIZE);
+					.ensureBetween(CmfContentStore.MIN_BUFFER_SIZE, bufferSize, CmfContentStore.MAX_BUFFER_SIZE);
 			}
 			try {
 				// We use copyLarge() to support files greater than 2GB
@@ -209,14 +209,14 @@ public abstract class ContentStore<L> extends Store {
 		 * returned.
 		 * </p>
 		 * <p>
-		 * All {@link ContentStore} implementations <b>must</b> support this functionality.
+		 * All {@link CmfContentStore} implementations <b>must</b> support this functionality.
 		 * </p>
 		 *
 		 * @return an {@link OutputStream} that can be used to write to the actual content file
 		 * @throws IOException
 		 */
 		public final OutputStream openOutput() throws IOException {
-			return ContentStore.this.openOutput(this.locator);
+			return CmfContentStore.this.openOutput(this.locator);
 		}
 
 		/**
@@ -229,7 +229,7 @@ public abstract class ContentStore<L> extends Store {
 		 *         handle is simply a placeholder
 		 */
 		public final boolean isExists() {
-			return ContentStore.this.isExists(this.locator);
+			return CmfContentStore.this.isExists(this.locator);
 		}
 
 		/**
@@ -241,7 +241,7 @@ public abstract class ContentStore<L> extends Store {
 		 * @return the length in bytes for the underlying content stream, or -1 if it doesn't exist
 		 */
 		public final long getStreamSize() {
-			return ContentStore.this.getStreamSize(this.locator);
+			return CmfContentStore.this.getStreamSize(this.locator);
 		}
 	}
 
@@ -252,23 +252,23 @@ public abstract class ContentStore<L> extends Store {
 	protected final void validateLocator(L locator) {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a non-null locator"); }
 		if (!isSupported(locator)) { throw new IllegalArgumentException(String.format(
-			"The locator [%s] is not supported by ContentStore class [%s]", locator, getClass().getCanonicalName())); }
+			"The locator [%s] is not supported by CmfContentStore class [%s]", locator, getClass().getCanonicalName())); }
 	}
 
-	protected abstract Handle constructHandle(StoredObject<?> object, String qualifier, L locator);
+	protected abstract Handle constructHandle(CmfObject<?> object, String qualifier, L locator);
 
 	protected final L extractLocator(Handle handle) {
 		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose locator to extract"); }
 		return handle.locator;
 	}
 
-	public final Handle getHandle(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	public final Handle getHandle(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		return constructHandle(object, qualifier, calculateLocator(translator, object, qualifier));
 	}
 
-	protected final L calculateLocator(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	protected final L calculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
 		getReadLock().lock();
@@ -361,7 +361,7 @@ public abstract class ContentStore<L> extends Store {
 		}
 	}
 
-	protected abstract L doCalculateLocator(AttributeTranslator<?> translator, StoredObject<?> object,
+	protected abstract L doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object,
 		String qualifier);
 
 	protected abstract File doGetFile(L locator);

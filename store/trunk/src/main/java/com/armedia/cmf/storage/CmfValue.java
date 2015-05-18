@@ -7,49 +7,49 @@ import java.util.Date;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class StoredValue {
+public final class CmfValue {
 
-	private final StoredDataType type;
+	private final CmfDataType type;
 	private final Object value;
 	private final boolean nullValue;
 
-	public StoredValue(int value) {
-		this.type = StoredDataType.INTEGER;
+	public CmfValue(int value) {
+		this.type = CmfDataType.INTEGER;
 		this.value = value;
 		this.nullValue = false;
 	}
 
-	public StoredValue(boolean value) {
-		this.type = StoredDataType.BOOLEAN;
+	public CmfValue(boolean value) {
+		this.type = CmfDataType.BOOLEAN;
 		this.value = value;
 		this.nullValue = false;
 	}
 
-	public StoredValue(double value) {
-		this.type = StoredDataType.DOUBLE;
+	public CmfValue(double value) {
+		this.type = CmfDataType.DOUBLE;
 		this.value = value;
 		this.nullValue = false;
 	}
 
-	public StoredValue(String value) {
-		this.type = StoredDataType.STRING;
+	public CmfValue(String value) {
+		this.type = CmfDataType.STRING;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
-	public StoredValue(Date value) {
-		this.type = StoredDataType.DATETIME;
+	public CmfValue(Date value) {
+		this.type = CmfDataType.DATETIME;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
-	public StoredValue(Calendar value) {
-		this.type = StoredDataType.DATETIME;
+	public CmfValue(Calendar value) {
+		this.type = CmfDataType.DATETIME;
 		this.value = (value != null ? value.getTime() : null);
 		this.nullValue = (value == null);
 	}
 
-	public StoredValue(StoredDataType type, Object value) throws ParseException {
+	public CmfValue(CmfDataType type, Object value) throws ParseException {
 		this.type = type;
 		this.nullValue = (value == null);
 		if (value != null) {
@@ -128,7 +128,7 @@ public final class StoredValue {
 		return DateFormat.getDateInstance().parse(this.value.toString());
 	}
 
-	public StoredDataType getDataType() {
+	public CmfDataType getDataType() {
 		return this.type;
 	}
 
@@ -139,7 +139,7 @@ public final class StoredValue {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		StoredValue other = StoredValue.class.cast(obj);
+		CmfValue other = CmfValue.class.cast(obj);
 		if (this.type != other.type) { return false; }
 		if (!Tools.equals(this.value, other.value)) { return false; }
 		return true;

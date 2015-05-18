@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class Store {
+public abstract class CmfStore {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -56,29 +56,29 @@ public abstract class Store {
 		return true;
 	}
 
-	public abstract void clearProperties() throws StorageException;
+	public abstract void clearProperties() throws CmfStorageException;
 
-	public final StoredValue getProperty(String property) throws StorageException {
+	public final CmfValue getProperty(String property) throws CmfStorageException {
 		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to retrieve"); }
 		return doGetProperty(property);
 	}
 
-	protected abstract StoredValue doGetProperty(String property) throws StorageException;
+	protected abstract CmfValue doGetProperty(String property) throws CmfStorageException;
 
-	public final StoredValue setProperty(String property, StoredValue value) throws StorageException {
+	public final CmfValue setProperty(String property, CmfValue value) throws CmfStorageException {
 		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to set"); }
 		if (value == null) { return doClearProperty(property); }
 		return doSetProperty(property, value);
 	}
 
-	protected abstract StoredValue doSetProperty(String property, StoredValue value) throws StorageException;
+	protected abstract CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException;
 
-	public abstract Set<String> getPropertyNames() throws StorageException;
+	public abstract Set<String> getPropertyNames() throws CmfStorageException;
 
-	public final StoredValue clearProperty(String property) throws StorageException {
+	public final CmfValue clearProperty(String property) throws CmfStorageException {
 		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to set"); }
 		return doClearProperty(property);
 	}
 
-	protected abstract StoredValue doClearProperty(String property) throws StorageException;
+	protected abstract CmfValue doClearProperty(String property) throws CmfStorageException;
 }

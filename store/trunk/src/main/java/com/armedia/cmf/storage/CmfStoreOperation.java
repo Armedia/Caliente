@@ -3,14 +3,14 @@ package com.armedia.cmf.storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class ObjectStoreOperation<C> {
+public abstract class CmfStoreOperation<C> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	private final C connection;
 	private boolean valid = true;
 	private boolean transactionOpen = false;
 
-	protected ObjectStoreOperation(C wrapped) {
+	protected CmfStoreOperation(C wrapped) {
 		this.connection = wrapped;
 	}
 
@@ -38,7 +38,7 @@ public abstract class ObjectStoreOperation<C> {
 
 	protected abstract boolean beginTransaction() throws Exception;
 
-	public final void commit() throws StorageException {
+	public final void commit() throws CmfStorageException {
 		assertValid();
 		if (!this.transactionOpen) { return; }
 		if (!supportsTransactions()) { throw new UnsupportedOperationException(
@@ -46,7 +46,7 @@ public abstract class ObjectStoreOperation<C> {
 		try {
 			commitTransaction();
 		} catch (Exception e) {
-			throw new StorageException("Exception raised committing an operation", e);
+			throw new CmfStorageException("Exception raised committing an operation", e);
 		} finally {
 			this.transactionOpen = false;
 		}
@@ -54,7 +54,7 @@ public abstract class ObjectStoreOperation<C> {
 
 	protected abstract void commitTransaction() throws Exception;
 
-	public final void rollback() throws StorageException {
+	public final void rollback() throws CmfStorageException {
 		assertValid();
 		if (!this.transactionOpen) { return; }
 		if (!supportsTransactions()) { throw new UnsupportedOperationException(
@@ -62,7 +62,7 @@ public abstract class ObjectStoreOperation<C> {
 		try {
 			rollbackTransaction();
 		} catch (Exception e) {
-			throw new StorageException("Exception raised rolling back an operation", e);
+			throw new CmfStorageException("Exception raised rolling back an operation", e);
 		} finally {
 			this.transactionOpen = false;
 		}
@@ -70,11 +70,11 @@ public abstract class ObjectStoreOperation<C> {
 
 	protected abstract void rollbackTransaction() throws Exception;
 
-	public final void close() throws StorageException {
+	public final void close() throws CmfStorageException {
 		close(false);
 	}
 
-	public final void close(boolean commit) throws StorageException {
+	public final void close(boolean commit) throws CmfStorageException {
 		if (!this.valid) { return; }
 		if (commit) {
 			commit();

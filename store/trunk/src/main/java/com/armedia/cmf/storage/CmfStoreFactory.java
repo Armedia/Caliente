@@ -12,29 +12,29 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.xml.StoreConfiguration;
 
-public abstract class StoreFactory<S extends Store> {
+public abstract class CmfStoreFactory<S extends CmfStore> {
 
 	public static final String CFG_CLEAN_DATA = "clean.data";
 
 	private static final Pattern VALIDATOR = Pattern.compile("^[a-zA-Z_$][a-zA-Z\\d_$]*$");
 
 	private static final boolean isValidAlias(String alias) {
-		return (alias != null) && StoreFactory.VALIDATOR.matcher(alias).matches();
+		return (alias != null) && CmfStoreFactory.VALIDATOR.matcher(alias).matches();
 	}
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final Set<String> aliases;
 
-	StoreFactory(String... aliases) {
+	CmfStoreFactory(String... aliases) {
 		this(aliases != null ? Arrays.asList(aliases) : null);
 	}
 
-	StoreFactory(Collection<String> aliases) {
+	CmfStoreFactory(Collection<String> aliases) {
 		Set<String> a = new TreeSet<String>();
 		if (aliases != null) {
 			for (String alias : aliases) {
-				if (StoreFactory.isValidAlias(alias)) {
+				if (CmfStoreFactory.isValidAlias(alias)) {
 					a.add(alias);
 				}
 			}
@@ -46,7 +46,7 @@ public abstract class StoreFactory<S extends Store> {
 			throw new IllegalArgumentException(msg);
 		}
 		this.aliases = Collections.unmodifiableSet(a);
-		this.log.debug("StoreFactory [{}] will attempt to register for the following aliases: {}", getClass()
+		this.log.debug("CmfStoreFactory [{}] will attempt to register for the following aliases: {}", getClass()
 			.getCanonicalName(), this.aliases);
 	}
 
@@ -54,7 +54,7 @@ public abstract class StoreFactory<S extends Store> {
 		return this.aliases;
 	}
 
-	protected abstract S newInstance(StoreConfiguration cfg, boolean cleanData) throws StorageException;
+	protected abstract S newInstance(StoreConfiguration cfg, boolean cleanData) throws CmfStorageException;
 
 	protected void close() {
 	}

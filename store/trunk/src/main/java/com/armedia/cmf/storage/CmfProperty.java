@@ -9,16 +9,16 @@ import java.util.NoSuchElementException;
 
 import com.armedia.commons.utilities.Tools;
 
-public class StoredProperty<V> implements Iterable<V> {
+public class CmfProperty<V> implements Iterable<V> {
 
 	private final String name;
-	private final StoredDataType type;
+	private final CmfDataType type;
 	private final boolean repeating;
 
 	private V singleValue = null;
 	private final List<V> values;
 
-	public StoredProperty(StoredProperty<V> pattern) {
+	public CmfProperty(CmfProperty<V> pattern) {
 		if (pattern == null) { throw new IllegalArgumentException("Must provide a pattern to construct from"); }
 		this.name = pattern.name;
 		this.type = pattern.type;
@@ -29,27 +29,27 @@ public class StoredProperty<V> implements Iterable<V> {
 		setValues(pattern.values);
 	}
 
-	public StoredProperty(String name, StoredDataType type) {
+	public CmfProperty(String name, CmfDataType type) {
 		this(name, type, true, (V) null);
 	}
 
-	public StoredProperty(String name, StoredDataType type, boolean repeating) {
+	public CmfProperty(String name, CmfDataType type, boolean repeating) {
 		this(name, type, repeating, (V) null);
 	}
 
-	public StoredProperty(String name, StoredDataType type, V value) {
+	public CmfProperty(String name, CmfDataType type, V value) {
 		this(name, type, false, value);
 	}
 
-	public StoredProperty(String name, StoredDataType type, boolean repeating, V value) {
+	public CmfProperty(String name, CmfDataType type, boolean repeating, V value) {
 		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
 	}
 
-	public StoredProperty(String name, StoredDataType type, Collection<V> values) {
+	public CmfProperty(String name, CmfDataType type, Collection<V> values) {
 		this(name, type, true, values);
 	}
 
-	public StoredProperty(String name, StoredDataType type, boolean repeating, Collection<V> values) {
+	public CmfProperty(String name, CmfDataType type, boolean repeating, Collection<V> values) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
 		if (values == null) {
@@ -81,7 +81,7 @@ public class StoredProperty<V> implements Iterable<V> {
 	 *
 	 * @return the type associated to this instance.
 	 */
-	public final StoredDataType getType() {
+	public final CmfDataType getType() {
 		return this.type;
 	}
 
@@ -315,7 +315,7 @@ public class StoredProperty<V> implements Iterable<V> {
 	 * @param other
 	 * @return {@code true} if the basic typing structure matches, {@code false} otherwise
 	 */
-	public boolean isSame(StoredProperty<?> other) {
+	public boolean isSame(CmfProperty<?> other) {
 		if (other == null) { return false; }
 		if (other == this) { return true; }
 		if (!this.name.equals(other.name)) { return false; }
@@ -324,7 +324,7 @@ public class StoredProperty<V> implements Iterable<V> {
 		return true;
 	}
 
-	public boolean isSameValues(StoredProperty<?> other) {
+	public boolean isSameValues(CmfProperty<?> other) {
 		if (!isSame(other)) { return false; }
 		if (!this.repeating) { return Tools.equals(this.singleValue, other.singleValue); }
 		final int valueCount = this.values.size();
@@ -359,14 +359,14 @@ public class StoredProperty<V> implements Iterable<V> {
 			public V next() {
 				if (this.retrieved) { throw new NoSuchElementException(); }
 				this.retrieved = true;
-				return StoredProperty.this.singleValue;
+				return CmfProperty.this.singleValue;
 			}
 
 			@Override
 			public void remove() {
 				if (!this.retrieved) { throw new IllegalStateException("No element to remove()"); }
 				if (this.removed) { throw new IllegalStateException("Element already removed"); }
-				StoredProperty.this.singleValue = null;
+				CmfProperty.this.singleValue = null;
 				this.removed = true;
 			}
 		};

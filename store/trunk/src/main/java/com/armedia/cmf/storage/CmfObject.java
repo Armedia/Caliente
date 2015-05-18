@@ -16,9 +16,9 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class StoredObject<V> {
+public class CmfObject<V> {
 
-	private final StoredObjectType type;
+	private final CmfType type;
 
 	private final String id;
 	private final String searchKey;
@@ -26,29 +26,29 @@ public class StoredObject<V> {
 	private final String label;
 	private final String subtype;
 	private String relativeStreamLocation = null;
-	private final Map<String, StoredAttribute<V>> attributes = new HashMap<String, StoredAttribute<V>>();
-	private final Map<String, StoredProperty<V>> properties = new HashMap<String, StoredProperty<V>>();
+	private final Map<String, CmfAttribute<V>> attributes = new HashMap<String, CmfAttribute<V>>();
+	private final Map<String, CmfProperty<V>> properties = new HashMap<String, CmfProperty<V>>();
 
-	public StoredObject(StoredObject<V> pattern) {
+	public CmfObject(CmfObject<V> pattern) {
 		this.type = pattern.getType();
 		this.id = pattern.getId();
 		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
 		this.label = pattern.getLabel();
 		this.subtype = pattern.getSubtype();
-		for (StoredAttribute<V> attribute : pattern.getAttributes()) {
-			this.attributes.put(attribute.getName(), new StoredAttribute<V>(attribute));
+		for (CmfAttribute<V> attribute : pattern.getAttributes()) {
+			this.attributes.put(attribute.getName(), new CmfAttribute<V>(attribute));
 		}
-		for (StoredProperty<V> property : pattern.getProperties()) {
-			this.properties.put(property.getName(), new StoredProperty<V>(property));
+		for (CmfProperty<V> property : pattern.getProperties()) {
+			this.properties.put(property.getName(), new CmfProperty<V>(property));
 		}
 	}
 
-	public StoredObject(StoredObjectType type, String id, String batchId, String label, String subtype) {
+	public CmfObject(CmfType type, String id, String batchId, String label, String subtype) {
 		this(type, id, id, batchId, label, subtype);
 	}
 
-	public StoredObject(StoredObjectType type, String id, String searchKey, String batchId, String label, String subtype) {
+	public CmfObject(CmfType type, String id, String searchKey, String batchId, String label, String subtype) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }
@@ -69,7 +69,7 @@ public class StoredObject<V> {
 		this.relativeStreamLocation = relativeLocation;
 	}
 
-	public final StoredObjectType getType() {
+	public final CmfType getType() {
 		return this.type;
 	}
 
@@ -101,28 +101,28 @@ public class StoredObject<V> {
 		return Collections.unmodifiableSet(this.attributes.keySet());
 	}
 
-	public final StoredAttribute<V> getAttribute(String name) {
+	public final CmfAttribute<V> getAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
 		return this.attributes.get(name);
 	}
 
-	public final StoredAttribute<V> setAttribute(StoredAttribute<V> attribute) {
+	public final CmfAttribute<V> setAttribute(CmfAttribute<V> attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set"); }
 		return this.attributes.put(attribute.getName(), attribute);
 	}
 
-	public final StoredAttribute<V> removeAttribute(String name) {
+	public final CmfAttribute<V> removeAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to remove"); }
 		return this.attributes.remove(name);
 	}
 
-	public final Collection<StoredAttribute<V>> getAttributes() {
+	public final Collection<CmfAttribute<V>> getAttributes() {
 		return Collections.unmodifiableCollection(this.attributes.values());
 	}
 
-	public final void setAttributes(Collection<StoredAttribute<V>> attributes) {
+	public final void setAttributes(Collection<CmfAttribute<V>> attributes) {
 		this.attributes.clear();
-		for (StoredAttribute<V> att : attributes) {
+		for (CmfAttribute<V> att : attributes) {
 			setAttribute(att);
 		}
 	}
@@ -135,28 +135,28 @@ public class StoredObject<V> {
 		return Collections.unmodifiableSet(this.properties.keySet());
 	}
 
-	public final StoredProperty<V> getProperty(String name) {
+	public final CmfProperty<V> getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return this.properties.get(name);
 	}
 
-	public final StoredProperty<V> setProperty(StoredProperty<V> property) {
+	public final CmfProperty<V> setProperty(CmfProperty<V> property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
 		return this.properties.put(property.getName(), property);
 	}
 
-	public final StoredProperty<V> removeProperty(String name) {
+	public final CmfProperty<V> removeProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to remove"); }
 		return this.properties.remove(name);
 	}
 
-	public final Collection<StoredProperty<V>> getProperties() {
+	public final Collection<CmfProperty<V>> getProperties() {
 		return Collections.unmodifiableCollection(this.properties.values());
 	}
 
-	public final void setProperties(Collection<StoredProperty<V>> properties) {
+	public final void setProperties(Collection<CmfProperty<V>> properties) {
 		this.properties.clear();
-		for (StoredProperty<V> prop : properties) {
+		for (CmfProperty<V> prop : properties) {
 			setProperty(prop);
 		}
 	}

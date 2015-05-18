@@ -1,6 +1,6 @@
 package com.armedia.cmf.storage;
 
-public enum StoredDataType {
+public enum CmfDataType {
 	//
 	BOOLEAN,
 	INTEGER,
@@ -8,19 +8,23 @@ public enum StoredDataType {
 	STRING,
 	ID,
 	DATETIME,
-	OTHER;
+	URI,
+	HTML,
+	OTHER,
+	//
+	;
 
-	public static StoredDataType decodeString(String str) {
+	public static CmfDataType decodeString(String str) {
 		if (str == null) { throw new NullPointerException("Must provide a valid string to decode"); }
 		try {
-			return StoredDataType.valueOf(str);
+			return CmfDataType.valueOf(str);
 		} catch (IllegalArgumentException e) {
-			for (TypeDecoder d : TypeDecoder.DECODERS) {
-				StoredDataType ret = d.translateDataType(str);
+			for (CmfTypeDecoder d : CmfTypeDecoder.DECODERS) {
+				CmfDataType ret = d.translateDataType(str);
 				if (ret != null) { return ret; }
 			}
 			throw new IllegalArgumentException(String.format(
-				"The string [%s] could not be translated to a StoredDataType", str));
+				"The string [%s] could not be translated to a CmfDataType", str));
 		}
 	}
 }

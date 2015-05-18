@@ -29,31 +29,31 @@ import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
-public final class Stores {
+public final class CmfStores {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final AtomicBoolean open = new AtomicBoolean(true);
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
-	private final Map<String, StoreFactory<?>> factories;
-	private final Map<String, Store> stores = new HashMap<String, Store>();
+	private final Map<String, CmfStoreFactory<?>> factories;
+	private final Map<String, CmfStore> cmfStores = new HashMap<String, CmfStore>();
 	private final Map<String, StoreConfiguration> configurations = new HashMap<String, StoreConfiguration>();
 
 	private final String type;
 
-	private <F extends StoreFactory<?>> Stores(String type, Class<F> factoryClass) {
+	private <F extends CmfStoreFactory<?>> CmfStores(String type, Class<F> factoryClass) {
 		this.type = type;
 		PluggableServiceLocator<F> factories = new PluggableServiceLocator<F>(factoryClass);
 		factories.setHideErrors(true);
 		Set<String> registration = new TreeSet<String>();
-		Map<String, StoreFactory<?>> m = new HashMap<String, StoreFactory<?>>();
+		Map<String, CmfStoreFactory<?>> m = new HashMap<String, CmfStoreFactory<?>>();
 		for (F f : factories) {
 			registration.clear();
 			for (String alias : f.getAliases()) {
 				Object existing = m.get(alias);
 				if (existing != null) {
 					this.log.warn(
-						"Duplicate: alias [{}] from {}StoreFactory [{}] is already registered for factory [{}]", alias,
-						this.type, f.getClass().getCanonicalName(), existing.getClass().getCanonicalName());
+						"Duplicate: alias [{}] from {}CmfStoreFactory [{}] is already registered for factory [{}]",
+						alias, this.type, f.getClass().getCanonicalName(), existing.getClass().getCanonicalName());
 				} else {
 					m.put(alias, f);
 					registration.add(alias);
@@ -61,10 +61,10 @@ public final class Stores {
 			}
 			if (registration.isEmpty()) {
 				this.log.warn(
-					"{}StoreFactory [{}] didn't provide a class name or any aliases, so it will not be registered",
+					"{}CmfStoreFactory [{}] didn't provide a class name or any aliases, so it will not be registered",
 					type, f.getClass().getCanonicalName());
 			} else {
-				this.log.debug("{}StoreFactory [{}] registered with the following names: {}", type, f.getClass()
+				this.log.debug("{}CmfStoreFactory [{}] registered with the following names: {}", type, f.getClass()
 					.getCanonicalName(), registration);
 			}
 		}
@@ -72,7 +72,7 @@ public final class Stores {
 	}
 
 	private void assertOpen() {
-		if (!this.open.get()) { throw new IllegalStateException("This Stores manager has already been closed"); }
+		if (!this.open.get()) { throw new IllegalStateException("This CmfStores manager has already been closed"); }
 	}
 
 	private void initConfigurations(URL config, Collection<StoreConfiguration> storeConfigurations) {
@@ -110,7 +110,8 @@ public final class Stores {
 		}
 	}
 
-	private Store createStore(StoreConfiguration configuration) throws StorageException, DuplicateStoreException {
+	private CmfStore createStore(StoreConfiguration configuration) throws CmfStorageException,
+	DuplicateCmfStoreException {
 		assertOpen();
 		if (configuration == null) { throw new IllegalArgumentException(
 			"Must provide a configuration to construct the instance from"); }
@@ -122,16 +123,17 @@ public final class Stores {
 		final Lock l = this.lock.writeLock();
 		l.lock();
 		try {
-			Store dupe = this.stores.get(id);
-			if (dupe != null) { throw new DuplicateStoreException(String.format(
+			CmfStore dupe = this.cmfStores.get(id);
+			if (dupe != null) { throw new DuplicateCmfStoreException(String.format(
 				"Duplicate store requested: [%s] already exists, and is of class [%s]", id, dupe.getClass()
 					.getCanonicalName())); }
-			StoreFactory<?> factory = this.factories.get(name);
-			if (factory == null) { throw new StorageException(String.format(
+			CmfStoreFactory<?> factory = this.factories.get(name);
+			if (factory == null) { throw new CmfStorageException(String.format(
 				"No factory found for object store class [%s]", name)); }
 			CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
-			Store instance = factory.newInstance(configuration, cfg.getBoolean(StoreFactory.CFG_CLEAN_DATA, false));
-			this.stores.put(id, instance);
+			CmfStore instance = factory.newInstance(configuration,
+				cfg.getBoolean(CmfStoreFactory.CFG_CLEAN_DATA, false));
+			this.cmfStores.put(id, instance);
 			this.configurations.put(id, configuration);
 			return instance;
 		} finally {
@@ -139,13 +141,13 @@ public final class Stores {
 		}
 	}
 
-	private Store getStore(String name) {
+	private CmfStore getStore(String name) {
 		assertOpen();
 		if (name == null) { throw new IllegalArgumentException("Must provide the name of the store to retrieve"); }
 		Lock l = this.lock.readLock();
 		l.lock();
 		try {
-			return this.stores.get(name);
+			return this.cmfStores.get(name);
 		} finally {
 			l.unlock();
 		}
@@ -169,7 +171,7 @@ public final class Stores {
 		if (this.open.compareAndSet(true, false)) {
 			this.lock.writeLock().lock();
 			try {
-				for (StoreFactory<?> f : this.factories.values()) {
+				for (CmfStoreFactory<?> f : this.factories.values()) {
 					try {
 						f.close();
 					} catch (Exception e) {
@@ -177,13 +179,13 @@ public final class Stores {
 							String.format("Exception caught closing Factory [%s]", f.getClass().getCanonicalName()), e);
 					}
 				}
-				for (Map.Entry<String, Store> e : this.stores.entrySet()) {
+				for (Map.Entry<String, CmfStore> e : this.cmfStores.entrySet()) {
 					String n = e.getKey();
-					Store s = e.getValue();
+					CmfStore s = e.getValue();
 					try {
 						s.close();
 					} catch (Exception x) {
-						this.log.warn(String.format("Exception caught closing ObjectStore %s[%s]", n, s.getClass()
+						this.log.warn(String.format("Exception caught closing CmfObjectStore %s[%s]", n, s.getClass()
 							.getCanonicalName()), x);
 					}
 				}
@@ -193,57 +195,57 @@ public final class Stores {
 		}
 	}
 
-	private static final Logger LOG = LoggerFactory.getLogger(Stores.class);
+	private static final Logger LOG = LoggerFactory.getLogger(CmfStores.class);
 
 	private static final ReadWriteLock LOCK = new ReentrantReadWriteLock();
-	private static Stores OBJECT_STORES = null;
-	private static Stores CONTENT_STORES = null;
+	private static CmfStores OBJECT_STORES = null;
+	private static CmfStores CONTENT_STORES = null;
 
 	private static final Thread SHUTDOWN_HOOK = new Thread() {
 		@Override
 		public void run() {
-			Stores.doClose();
+			CmfStores.doClose();
 		}
 	};
 
-	protected static StoreDefinitions parseConfiguration(File settings) throws StorageException, IOException,
+	protected static StoreDefinitions parseConfiguration(File settings) throws CmfStorageException, IOException,
 		JAXBException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide a file to read the settings from"); }
-		return Stores.parseConfiguration(settings.toURI().toURL());
+		return CmfStores.parseConfiguration(settings.toURI().toURL());
 	}
 
-	protected static StoreDefinitions parseConfiguration(URL settings) throws StorageException, IOException,
+	protected static StoreDefinitions parseConfiguration(URL settings) throws CmfStorageException, IOException,
 		JAXBException {
 		Reader xml = null;
 		try {
 			xml = new InputStreamReader(settings.openStream());
-			return Stores.parseConfiguration(xml);
+			return CmfStores.parseConfiguration(xml);
 		} finally {
 			IOUtils.closeQuietly(xml);
 		}
 	}
 
-	protected static StoreDefinitions parseConfiguration(Reader xml) throws StorageException, JAXBException {
+	protected static StoreDefinitions parseConfiguration(Reader xml) throws CmfStorageException, JAXBException {
 		return XmlTools.unmarshal(StoreDefinitions.class, "stores.xsd", xml);
 	}
 
 	public static void initialize(boolean configOnly) {
-		Stores.LOCK.writeLock().lock();
+		CmfStores.LOCK.writeLock().lock();
 		try {
 			// If we're already initialized, dump out
-			if ((Stores.OBJECT_STORES != null) || (Stores.CONTENT_STORES != null)) { return; }
+			if ((CmfStores.OBJECT_STORES != null) || (CmfStores.CONTENT_STORES != null)) { return; }
 
-			Stores.OBJECT_STORES = new Stores("Object", ObjectStoreFactory.class);
-			Stores.CONTENT_STORES = new Stores("Content", ContentStoreFactory.class);
+			CmfStores.OBJECT_STORES = new CmfStores("Object", CmfObjectStoreFactory.class);
+			CmfStores.CONTENT_STORES = new CmfStores("Content", CmfContentStoreFactory.class);
 
-			Runtime.getRuntime().addShutdownHook(Stores.SHUTDOWN_HOOK);
+			Runtime.getRuntime().addShutdownHook(CmfStores.SHUTDOWN_HOOK);
 
 			final ClassLoader cl = Thread.currentThread().getContextClassLoader();
 			final Enumeration<URL> configs;
 			try {
 				configs = cl.getResources("META-INF/com/armedia/cmf/stores.xml");
 			} catch (IOException e) {
-				Stores.LOG.error("Failed to load the pre-defined content store configurations", e);
+				CmfStores.LOG.error("Failed to load the pre-defined content store configurations", e);
 				return;
 			}
 
@@ -254,14 +256,14 @@ public final class Stores {
 				final StoreDefinitions cfg;
 				try {
 					r = new InputStreamReader(config.openStream());
-					cfg = Stores.parseConfiguration(r);
+					cfg = CmfStores.parseConfiguration(r);
 				} catch (Exception e) {
 					String msg = String.format("Exception raised attempting to load the StoreDefinitions from [%s]",
 						config);
-					if (Stores.LOG.isDebugEnabled()) {
-						Stores.LOG.warn(msg, e);
+					if (CmfStores.LOG.isDebugEnabled()) {
+						CmfStores.LOG.warn(msg, e);
 					} else {
-						Stores.LOG.warn(msg);
+						CmfStores.LOG.warn(msg);
 					}
 					continue;
 				} finally {
@@ -269,117 +271,118 @@ public final class Stores {
 				}
 
 				if (configOnly) {
-					Stores.OBJECT_STORES.initConfigurations(config, cfg.getObjectStores());
-					Stores.CONTENT_STORES.initConfigurations(config, cfg.getContentStores());
+					CmfStores.OBJECT_STORES.initConfigurations(config, cfg.getObjectStores());
+					CmfStores.CONTENT_STORES.initConfigurations(config, cfg.getContentStores());
 				} else {
-					Stores.OBJECT_STORES.initStores(config, cfg.getObjectStores());
-					Stores.CONTENT_STORES.initStores(config, cfg.getContentStores());
+					CmfStores.OBJECT_STORES.initStores(config, cfg.getObjectStores());
+					CmfStores.CONTENT_STORES.initStores(config, cfg.getContentStores());
 				}
 			}
 		} finally {
-			Stores.LOCK.writeLock().unlock();
+			CmfStores.LOCK.writeLock().unlock();
 		}
 	}
 
 	public static void initializeConfigurations() {
-		Stores.initialize(true);
+		CmfStores.initialize(true);
 	}
 
 	public static void initialize() {
-		Stores.initialize(false);
+		CmfStores.initialize(false);
 	}
 
 	private static boolean doClose() {
-		Stores.LOCK.writeLock().lock();
+		CmfStores.LOCK.writeLock().lock();
 		boolean ret = false;
 		try {
-			if (Stores.OBJECT_STORES != null) {
-				Stores.OBJECT_STORES.closeInstance();
-				Stores.OBJECT_STORES = null;
+			if (CmfStores.OBJECT_STORES != null) {
+				CmfStores.OBJECT_STORES.closeInstance();
+				CmfStores.OBJECT_STORES = null;
 				ret = true;
 			}
-			if (Stores.CONTENT_STORES != null) {
-				Stores.CONTENT_STORES.closeInstance();
-				Stores.CONTENT_STORES = null;
+			if (CmfStores.CONTENT_STORES != null) {
+				CmfStores.CONTENT_STORES.closeInstance();
+				CmfStores.CONTENT_STORES = null;
 				ret = true;
 			}
 			return ret;
 		} finally {
-			Stores.LOCK.writeLock().unlock();
+			CmfStores.LOCK.writeLock().unlock();
 		}
 	}
 
 	public static void close() {
-		if (Stores.doClose()) {
-			Runtime.getRuntime().removeShutdownHook(Stores.SHUTDOWN_HOOK);
+		if (CmfStores.doClose()) {
+			Runtime.getRuntime().removeShutdownHook(CmfStores.SHUTDOWN_HOOK);
 		}
 	}
 
-	private static Stores assertValid(Stores instance) {
-		if (instance == null) { throw new IllegalStateException("The requested Stores instance is no longer valid"); }
+	private static CmfStores assertValid(CmfStores instance) {
+		if (instance == null) { throw new IllegalStateException("The requested CmfStores instance is no longer valid"); }
 		instance.assertOpen();
 		return instance;
 	}
 
-	public static ObjectStore<?, ?> createObjectStore(StoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
-		Stores.initialize();
-		Stores.LOCK.readLock().lock();
+	public static CmfObjectStore<?, ?> createObjectStore(StoreConfiguration configuration) throws CmfStorageException,
+		DuplicateCmfStoreException {
+		CmfStores.initialize();
+		CmfStores.LOCK.readLock().lock();
 		try {
-			return ObjectStore.class.cast(Stores.assertValid(Stores.OBJECT_STORES).createStore(configuration));
+			return CmfObjectStore.class.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).createStore(configuration));
 		} finally {
-			Stores.LOCK.readLock().unlock();
+			CmfStores.LOCK.readLock().unlock();
 		}
 	}
 
-	public static ContentStore<?> createContentStore(StoreConfiguration configuration) throws StorageException,
-		DuplicateStoreException {
-		Stores.initialize();
-		Stores.LOCK.readLock().lock();
+	public static CmfContentStore<?> createContentStore(StoreConfiguration configuration) throws CmfStorageException,
+		DuplicateCmfStoreException {
+		CmfStores.initialize();
+		CmfStores.LOCK.readLock().lock();
 		try {
-			return ContentStore.class.cast(Stores.assertValid(Stores.CONTENT_STORES).createStore(configuration));
+			return CmfContentStore.class.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES)
+				.createStore(configuration));
 		} finally {
-			Stores.LOCK.readLock().unlock();
+			CmfStores.LOCK.readLock().unlock();
 		}
 	}
 
 	public static StoreConfiguration getObjectStoreConfiguration(String name) {
-		Stores.initialize();
-		Stores.LOCK.readLock().lock();
+		CmfStores.initialize();
+		CmfStores.LOCK.readLock().lock();
 		try {
-			return Stores.assertValid(Stores.OBJECT_STORES).getConfiguration(name);
+			return CmfStores.assertValid(CmfStores.OBJECT_STORES).getConfiguration(name);
 		} finally {
-			Stores.LOCK.readLock().unlock();
+			CmfStores.LOCK.readLock().unlock();
 		}
 	}
 
-	public static ObjectStore<?, ?> getObjectStore(String name) {
-		Stores.initialize();
-		Stores.LOCK.readLock().lock();
+	public static CmfObjectStore<?, ?> getObjectStore(String name) {
+		CmfStores.initialize();
+		CmfStores.LOCK.readLock().lock();
 		try {
-			return ObjectStore.class.cast(Stores.assertValid(Stores.OBJECT_STORES).getStore(name));
+			return CmfObjectStore.class.cast(CmfStores.assertValid(CmfStores.OBJECT_STORES).getStore(name));
 		} finally {
-			Stores.LOCK.readLock().unlock();
+			CmfStores.LOCK.readLock().unlock();
 		}
 	}
 
 	public static StoreConfiguration getContentStoreConfiguration(String name) {
-		Stores.initialize();
-		Stores.LOCK.readLock().lock();
+		CmfStores.initialize();
+		CmfStores.LOCK.readLock().lock();
 		try {
-			return Stores.assertValid(Stores.CONTENT_STORES).getConfiguration(name);
+			return CmfStores.assertValid(CmfStores.CONTENT_STORES).getConfiguration(name);
 		} finally {
-			Stores.LOCK.readLock().unlock();
+			CmfStores.LOCK.readLock().unlock();
 		}
 	}
 
-	public static ContentStore<?> getContentStore(String name) {
-		Stores.initialize();
-		Stores.LOCK.readLock().lock();
+	public static CmfContentStore<?> getContentStore(String name) {
+		CmfStores.initialize();
+		CmfStores.LOCK.readLock().lock();
 		try {
-			return ContentStore.class.cast(Stores.assertValid(Stores.CONTENT_STORES).getStore(name));
+			return CmfContentStore.class.cast(CmfStores.assertValid(CmfStores.CONTENT_STORES).getStore(name));
 		} finally {
-			Stores.LOCK.readLock().unlock();
+			CmfStores.LOCK.readLock().unlock();
 		}
 	}
 }
