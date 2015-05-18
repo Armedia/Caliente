@@ -6,13 +6,13 @@ package com.armedia.cmf.storage.jdbc;
 
 import java.sql.Connection;
 
-import com.armedia.cmf.storage.ObjectStoreOperation;
+import com.armedia.cmf.storage.CmfStoreOperation;
 
 /**
  * @author diego
  *
  */
-class JdbcOperation extends ObjectStoreOperation<Connection> {
+class JdbcOperation extends CmfStoreOperation<Connection> {
 
 	private final boolean jtaManaged;
 

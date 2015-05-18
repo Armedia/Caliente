@@ -37,20 +37,20 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
-import com.armedia.cmf.storage.AttributeTranslator;
-import com.armedia.cmf.storage.ObjectStore;
-import com.armedia.cmf.storage.StorageException;
-import com.armedia.cmf.storage.StoredAttribute;
-import com.armedia.cmf.storage.StoredDataType;
-import com.armedia.cmf.storage.StoredObject;
-import com.armedia.cmf.storage.StoredObjectHandler;
-import com.armedia.cmf.storage.StoredObjectType;
-import com.armedia.cmf.storage.StoredProperty;
-import com.armedia.cmf.storage.StoredValue;
-import com.armedia.cmf.storage.StoredValueCodec;
-import com.armedia.cmf.storage.StoredValueDecoderException;
-import com.armedia.cmf.storage.StoredValueEncoderException;
-import com.armedia.cmf.storage.StoredValueSerializer;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectHandler;
+import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.CmfValueCodec;
+import com.armedia.cmf.storage.CmfValueDecoderException;
+import com.armedia.cmf.storage.CmfValueEncoderException;
+import com.armedia.cmf.storage.CmfValueSerializer;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
 
@@ -58,7 +58,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
+public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private static final String NULL = "{NULL-VALUE}";
 
@@ -222,7 +222,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	private final DataSource dataSource;
 
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
-		throws StorageException {
+		throws CmfStorageException {
 		super(JdbcOperation.class, true);
 		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
 			"Must provide a valid DataSource instance"); }
@@ -234,7 +234,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new StorageException("Failed to get a SQL Connection to validate the schema", e);
+			throw new CmfStorageException("Failed to get a SQL Connection to validate the schema", e);
 		}
 
 		boolean ok = false;
@@ -253,15 +253,15 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			}
 			ok = true;
 		} catch (DatabaseException e) {
-			throw new StorageException("Failed to find a supported database for the given connection", e);
+			throw new CmfStorageException("Failed to find a supported database for the given connection", e);
 		} catch (LiquibaseException e) {
 			if (updateSchema) {
-				throw new StorageException("Failed to generate/update the SQL schema", e);
+				throw new CmfStorageException("Failed to generate/update the SQL schema", e);
 			} else {
-				throw new StorageException("The SQL schema is of the wrong version or structure", e);
+				throw new CmfStorageException("The SQL schema is of the wrong version or structure", e);
 			}
 		} catch (SQLException e) {
-			throw new StorageException("Failed to clean out the existing data", e);
+			throw new CmfStorageException("Failed to clean out the existing data", e);
 		} finally {
 			finalizeTransaction(c, ok);
 		}
@@ -293,19 +293,19 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return q;
 	}
 
-	private String composeDatabaseId(StoredObjectType type, String id) {
+	private String composeDatabaseId(CmfType type, String id) {
 		return String.format("{%02x-%s}", type.ordinal(), id);
 	}
 
-	private String composeDatabaseId(StoredObject<?> obj) {
+	private String composeDatabaseId(CmfObject<?> obj) {
 		return composeDatabaseId(obj.getType(), obj.getId());
 	}
 
 	@Override
-	protected <V> Long doStoreObject(JdbcOperation operation, StoredObject<V> object,
-		AttributeTranslator<V> translator) throws StorageException, StoredValueEncoderException {
+	protected <V> Long doStoreObject(JdbcOperation operation, CmfObject<V> object,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException, CmfValueEncoderException {
 		final Connection c = operation.getConnection();
-		final StoredObjectType objectType = object.getType();
+		final CmfType objectType = object.getType();
 		final String objectId = composeDatabaseId(object);
 
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
@@ -325,7 +325,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			attData[5] = false; // Explicitly hardcoded
 			attValue[0] = objectId; // This should never change within the loop
 			final Map<String, String> encodedNames = new HashMap<String, String>();
-			for (final StoredAttribute<V> attribute : object.getAttributes()) {
+			for (final CmfAttribute<V> attribute : object.getAttributes()) {
 				final String name = translator.encodeAttributeName(object.getType(), attribute.getName());
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
@@ -354,18 +354,18 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				attValue[1] = name; // This never changes inside this next loop
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				final StoredValueCodec<V> codec = translator.getCodec(attribute.getType());
-				final StoredValueSerializer serializer = StoredValueSerializer.get(attribute.getType());
+				final CmfValueCodec<V> codec = translator.getCodec(attribute.getType());
+				final CmfValueSerializer serializer = CmfValueSerializer.get(attribute.getType());
 				if (serializer != null) {
 					for (V value : attribute) {
-						StoredValue encoded = codec.encodeValue(value);
+						CmfValue encoded = codec.encodeValue(value);
 						attValue[2] = v;
 						attValue[3] = encoded.isNull();
 						if (!encoded.isNull()) {
 							try {
 								attValue[4] = serializer.serialize(encoded);
 							} catch (ParseException e) {
-								throw new StoredValueEncoderException(String.format(
+								throw new CmfValueEncoderException(String.format(
 									"Failed to encode value #%d for attribute [%s::%s]: %s", v, attValue[0],
 									attValue[1], encoded), e);
 							}
@@ -381,7 +381,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			// Then, the properties
 			encodedNames.clear();
 			propData[0] = objectId; // This should never change within the loop
-			for (final StoredProperty<V> property : object.getProperties()) {
+			for (final CmfProperty<V> property : object.getProperties()) {
 				final String name = property.getName();
 				final String duplicate = encodedNames.put(name, property.getName());
 				if (duplicate != null) {
@@ -404,18 +404,18 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				attValue[1] = name; // This never changes inside this next loop
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				final StoredValueCodec<V> codec = translator.getCodec(property.getType());
-				final StoredValueSerializer serializer = StoredValueSerializer.get(property.getType());
+				final CmfValueCodec<V> codec = translator.getCodec(property.getType());
+				final CmfValueSerializer serializer = CmfValueSerializer.get(property.getType());
 				if (serializer != null) {
 					for (V value : property) {
-						StoredValue encoded = codec.encodeValue(value);
+						CmfValue encoded = codec.encodeValue(value);
 						attValue[2] = v;
 						attValue[3] = encoded.isNull();
 						if (!encoded.isNull()) {
 							try {
 								attValue[4] = serializer.serialize(encoded);
 							} catch (ParseException e) {
-								throw new StoredValueEncoderException(String.format(
+								throw new CmfValueEncoderException(String.format(
 									"Failed to encode value #%d for property [%s::%s]: %s", v, attValue[0],
 									attValue[1], encoded), e);
 							}
@@ -447,7 +447,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			}
 			return ret;
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to serialize %s", object), e);
+			throw new CmfStorageException(String.format("Failed to serialize %s", object), e);
 		} finally {
 			// Help the GC along...not strictly necessary, but should help manage the memory
 			// footprint long-term
@@ -466,9 +466,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> int doLoadObjects(JdbcOperation operation, AttributeTranslator<V> translator,
-		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException,
-		StoredValueDecoderException {
+	protected <V> int doLoadObjects(JdbcOperation operation, CmfAttributeTranslator<V> translator,
+		final CmfType type, Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException,
+		CmfValueDecoderException {
 		Connection connection = null;
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
@@ -529,7 +529,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				int ret = 0;
 				try {
 					while (objectRS.next()) {
-						final StoredObject<V> obj;
+						final CmfObject<V> obj;
 						try {
 							final int objNum = objectRS.getInt("object_number");
 							// If batching is not required, then we simply use the object number
@@ -589,14 +589,14 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 							attributeValuePS.clearParameters();
 							attributeValuePS.setString(1, objId);
-							for (StoredAttribute<V> att : obj.getAttributes()) {
+							for (CmfAttribute<V> att : obj.getAttributes()) {
 								// We need to re-encode, since that's the value that will be
 								// referenced in the DB
 								attributeValuePS.setString(2, translator.encodeAttributeName(type, att.getName()));
 								valueRS = attributeValuePS.executeQuery();
 								try {
 									loadValues(translator.getCodec(att.getType()),
-										StoredValueSerializer.get(att.getType()), valueRS, att);
+										CmfValueSerializer.get(att.getType()), valueRS, att);
 								} finally {
 									DbUtils.closeQuietly(valueRS);
 								}
@@ -613,20 +613,20 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 							propertyValuePS.clearParameters();
 							propertyValuePS.setString(1, objId);
-							for (StoredProperty<V> prop : obj.getProperties()) {
+							for (CmfProperty<V> prop : obj.getProperties()) {
 								// We need to re-encode, since that's the value that will be
 								// referenced in the DB
 								propertyValuePS.setString(2, prop.getName());
 								valueRS = propertyValuePS.executeQuery();
 								try {
 									loadValues(translator.getCodec(prop.getType()),
-										StoredValueSerializer.get(prop.getType()), valueRS, prop);
+										CmfValueSerializer.get(prop.getType()), valueRS, prop);
 								} finally {
 									DbUtils.closeQuietly(valueRS);
 								}
 							}
 						} catch (SQLException e) {
-							if (!handler.handleException(e)) { throw new StorageException(
+							if (!handler.handleException(e)) { throw new CmfStorageException(
 								"Exception raised while loading objects - ObjectHandler did not handle the exception",
 								e); }
 							continue;
@@ -651,7 +651,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					if (currentBatch != null) {
 						try {
 							handler.closeBatch(ok);
-						} catch (StorageException e) {
+						} catch (CmfStorageException e) {
 							this.log.error(String
 								.format("Exception caught attempting to close the pending batch [%s] (ok=%s)",
 									currentBatch, ok), e);
@@ -667,7 +667,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				DbUtils.closeQuietly(objectPS);
 			}
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
+			throw new CmfStorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
 				type), e);
 		} finally {
 			DbUtils.rollbackAndCloseQuietly(connection);
@@ -680,7 +680,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	 * </p>
 	 *
 	 */
-	protected void doCreateMappedValue(Connection c, StoredObjectType type, String name, String sourceValue,
+	protected void doCreateMappedValue(Connection c, CmfType type, String name, String sourceValue,
 		String targetValue) throws SQLException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
@@ -728,7 +728,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void doCreateMappedValue(JdbcOperation operation, StoredObjectType type, String name, String sourceValue,
+	protected void doCreateMappedValue(JdbcOperation operation, CmfType type, String name, String sourceValue,
 		String targetValue) {
 		try {
 			doCreateMappedValue(operation.getConnection(), type, name, sourceValue, targetValue);
@@ -739,8 +739,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected String doGetMappedValue(JdbcOperation operation, boolean source, StoredObjectType type, String name,
-		String value) throws StorageException {
+	protected String doGetMappedValue(JdbcOperation operation, boolean source, CmfType type, String name,
+		String value) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to search against"); }
@@ -756,44 +756,44 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			return qr.query(sql, h, type.name(), name, value);
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to retrieve the %s mapping for [%s::%s(%s)]",
+			throw new CmfStorageException(String.format("Failed to retrieve the %s mapping for [%s::%s(%s)]",
 				source ? "source" : "target", type, name, value), e);
 		}
 	}
 
-	private boolean doIsStored(Connection c, StoredObjectType type, String objectId) throws SQLException {
+	private boolean doIsStored(Connection c, CmfType type, String objectId) throws SQLException {
 		return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.CHECK_IF_OBJECT_EXISTS_SQL,
 			JdbcObjectStore.HANDLER_EXISTS, composeDatabaseId(type, objectId), type.name());
 	}
 
 	@Override
-	protected boolean doIsStored(JdbcOperation operation, StoredObjectType type, String objectId)
-		throws StorageException {
+	protected boolean doIsStored(JdbcOperation operation, CmfType type, String objectId)
+		throws CmfStorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
-			throw new StorageException("Failed to connect to the object store's database", e);
+			throw new CmfStorageException("Failed to connect to the object store's database", e);
 		}
 		try {
 			c.setAutoCommit(false);
 			return doIsStored(c, type, objectId);
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to check whether object [%s] was already serialized",
+			throw new CmfStorageException(String.format("Failed to check whether object [%s] was already serialized",
 				objectId), e);
 		} finally {
 			DbUtils.rollbackAndCloseQuietly(c);
 		}
 	}
 
-	private Map<StoredObjectType, Integer> getStoredObjectTypes(Connection c) throws StorageException {
+	private Map<CmfType, Integer> getStoredObjectTypes(Connection c) throws CmfStorageException {
 		try {
 			return new QueryRunner().query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
-				new ResultSetHandler<Map<StoredObjectType, Integer>>() {
+				new ResultSetHandler<Map<CmfType, Integer>>() {
 					@Override
-					public Map<StoredObjectType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<StoredObjectType, Integer> ret = new EnumMap<StoredObjectType, Integer>(
-							StoredObjectType.class);
+					public Map<CmfType, Integer> handle(ResultSet rs) throws SQLException {
+						Map<CmfType, Integer> ret = new EnumMap<CmfType, Integer>(
+							CmfType.class);
 						while (rs.next()) {
 							String t = rs.getString("object_type");
 							if ((t == null) || rs.wasNull()) {
@@ -801,7 +801,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 								continue;
 							}
 							try {
-								ret.put(StoredObjectType.decodeString(t), rs.getInt("total"));
+								ret.put(CmfType.decodeString(t), rs.getInt("total"));
 							} catch (IllegalArgumentException e) {
 								JdbcObjectStore.this.log.warn(String.format(
 									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
@@ -812,40 +812,40 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					}
 				});
 		} catch (SQLException e) {
-			throw new StorageException("Failed to retrieve the stored object types", e);
+			throw new CmfStorageException("Failed to retrieve the stored object types", e);
 		}
 	}
 
 	@Override
-	protected Map<StoredObjectType, Integer> doGetStoredObjectTypes(JdbcOperation operation) throws StorageException {
+	protected Map<CmfType, Integer> doGetStoredObjectTypes(JdbcOperation operation) throws CmfStorageException {
 		return getStoredObjectTypes(operation.getConnection());
 	}
 
-	private int doClearAttributeMappings(Connection c) throws StorageException {
+	private int doClearAttributeMappings(Connection c) throws CmfStorageException {
 		try {
 			return new QueryRunner().update(c, JdbcObjectStore.CLEAR_ALL_MAPPINGS_SQL);
 		} catch (SQLException e) {
-			throw new StorageException("Failed to clear all the stored mappings", e);
+			throw new CmfStorageException("Failed to clear all the stored mappings", e);
 		}
 	}
 
 	@Override
-	protected int doClearAttributeMappings(JdbcOperation operation) throws StorageException {
+	protected int doClearAttributeMappings(JdbcOperation operation) throws CmfStorageException {
 		return doClearAttributeMappings(operation.getConnection());
 	}
 
 	@Override
-	protected Map<StoredObjectType, Set<String>> doGetAvailableMappings(JdbcOperation operation)
-		throws StorageException {
-		final Map<StoredObjectType, Set<String>> ret = new EnumMap<StoredObjectType, Set<String>>(
-			StoredObjectType.class);
+	protected Map<CmfType, Set<String>> doGetAvailableMappings(JdbcOperation operation)
+		throws CmfStorageException {
+		final Map<CmfType, Set<String>> ret = new EnumMap<CmfType, Set<String>>(
+			CmfType.class);
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {
-				StoredObjectType currentType = null;
+				CmfType currentType = null;
 				Set<String> names = null;
 				while (rs.next()) {
-					final StoredObjectType newType = StoredObjectType.decodeString(rs.getString("object_type"));
+					final CmfType newType = CmfType.decodeString(rs.getString("object_type"));
 					if (newType != currentType) {
 						names = new TreeSet<String>();
 						ret.put(newType, names);
@@ -859,14 +859,14 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			new QueryRunner().query(operation.getConnection(), JdbcObjectStore.LOAD_ALL_MAPPINGS_SQL, h);
 		} catch (SQLException e) {
-			throw new StorageException("Failed to retrieve the declared mapping types and names", e);
+			throw new CmfStorageException("Failed to retrieve the declared mapping types and names", e);
 		}
 		return ret;
 	}
 
 	@Override
-	protected Set<String> doGetAvailableMappings(JdbcOperation operation, StoredObjectType type)
-		throws StorageException {
+	protected Set<String> doGetAvailableMappings(JdbcOperation operation, CmfType type)
+		throws CmfStorageException {
 		final Set<String> ret = new TreeSet<String>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
@@ -880,14 +880,14 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			new QueryRunner().query(operation.getConnection(), JdbcObjectStore.LOAD_TYPE_MAPPINGS_SQL, h, type.name());
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to retrieve the declared mapping names for type [%s]",
+			throw new CmfStorageException(String.format("Failed to retrieve the declared mapping names for type [%s]",
 				type), e);
 		}
 		return ret;
 	}
 
 	@Override
-	protected Map<String, String> doGetMappings(JdbcOperation operation, StoredObjectType type, String name) {
+	protected Map<String, String> doGetMappings(JdbcOperation operation, CmfType type, String name) {
 		final Map<String, String> ret = new HashMap<String, String>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
@@ -909,13 +909,13 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected final void doClearAllObjects(JdbcOperation operation) throws StorageException {
+	protected final void doClearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		// Allow for subclasses to implement optimized clearing operations
 		if (doOptimizedClearAllObjects(operation)) { return; }
 		try {
 			doClearAllObjects(operation.getConnection());
 		} catch (SQLException e) {
-			throw new StorageException("SQLException caught while removing all objects", e);
+			throw new CmfStorageException("SQLException caught while removing all objects", e);
 		}
 	}
 
@@ -937,9 +937,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		doClearTables(c, tableNames);
 	}
 
-	private <V> StoredObject<V> loadObject(ResultSet objRs) throws SQLException {
+	private <V> CmfObject<V> loadObject(ResultSet objRs) throws SQLException {
 		if (objRs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		StoredObjectType type = StoredObjectType.decodeString(objRs.getString("object_type"));
+		CmfType type = CmfType.decodeString(objRs.getString("object_type"));
 		String id = objRs.getString("object_id");
 		Matcher m = JdbcObjectStore.OBJECT_ID_PARSER.matcher(id);
 		if (m.matches()) {
@@ -953,43 +953,43 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		String label = objRs.getString("object_label");
 		String subtype = objRs.getString("object_subtype");
 
-		return new StoredObject<V>(type, id, searchKey, batchId, label, subtype);
+		return new CmfObject<V>(type, id, searchKey, batchId, label, subtype);
 	}
 
-	private <V> StoredProperty<V> loadProperty(StoredObjectType objectType, AttributeTranslator<V> translator,
-		ResultSet rs) throws SQLException, StoredValueDecoderException {
+	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator,
+		ResultSet rs) throws SQLException, CmfValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
-		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
+		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
-		return new StoredProperty<V>(name, type, repeating);
+		return new CmfProperty<V>(name, type, repeating);
 	}
 
-	private <V> StoredAttribute<V> loadAttribute(StoredObjectType objectType, AttributeTranslator<V> translator,
-		ResultSet rs) throws SQLException, StoredValueDecoderException {
+	private <V> CmfAttribute<V> loadAttribute(CmfType objectType, CmfAttributeTranslator<V> translator,
+		ResultSet rs) throws SQLException, CmfValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = translator.decodeAttributeName(objectType, rs.getString("name"));
-		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
+		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
-		return new StoredAttribute<V>(name, type, repeating);
+		return new CmfAttribute<V>(name, type, repeating);
 	}
 
-	private <V> void loadValues(StoredValueCodec<V> codec, StoredValueSerializer deserializer, ResultSet rs,
-		StoredProperty<V> property) throws SQLException, StoredValueDecoderException {
+	private <V> void loadValues(CmfValueCodec<V> codec, CmfValueSerializer deserializer, ResultSet rs,
+		CmfProperty<V> property) throws SQLException, CmfValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		List<V> values = new LinkedList<V>();
 		while (rs.next()) {
 			final boolean nullValue = rs.getBoolean("null_value");
 			final String data = rs.getString("data");
-			final StoredValue v;
+			final CmfValue v;
 			try {
 				if (rs.wasNull() || (nullValue && JdbcObjectStore.NULL.equals(data))) {
-					v = new StoredValue(property.getType(), null);
+					v = new CmfValue(property.getType(), null);
 				} else {
 					v = deserializer.deserialize(data);
 				}
 			} catch (ParseException e) {
-				throw new StoredValueDecoderException(String.format("Failed to deserialize value [%s] as a %s", data,
+				throw new CmfValueDecoderException(String.format("Failed to deserialize value [%s] as a %s", data,
 					property.getType()), e);
 			}
 			values.add(codec.decodeValue(v));
@@ -1000,9 +1000,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		property.setValues(values);
 	}
 
-	private <V> void loadAttributes(AttributeTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
-		throws SQLException, StoredValueDecoderException {
-		List<StoredAttribute<V>> attributes = new LinkedList<StoredAttribute<V>>();
+	private <V> void loadAttributes(CmfAttributeTranslator<V> translator, ResultSet rs, CmfObject<V> obj)
+		throws SQLException, CmfValueDecoderException {
+		List<CmfAttribute<V>> attributes = new LinkedList<CmfAttribute<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
 			attributes.add(loadAttribute(obj.getType(), translator, rs));
@@ -1010,9 +1010,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		obj.setAttributes(attributes);
 	}
 
-	private <V> void loadProperties(AttributeTranslator<V> translator, ResultSet rs, StoredObject<V> obj)
-		throws SQLException, StoredValueDecoderException {
-		List<StoredProperty<V>> properties = new LinkedList<StoredProperty<V>>();
+	private <V> void loadProperties(CmfAttributeTranslator<V> translator, ResultSet rs, CmfObject<V> obj)
+		throws SQLException, CmfValueDecoderException {
+		List<CmfProperty<V>> properties = new LinkedList<CmfProperty<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
 			properties.add(loadProperty(obj.getType(), translator, rs));
@@ -1021,17 +1021,17 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected JdbcOperation newOperation() throws StorageException {
+	protected JdbcOperation newOperation() throws CmfStorageException {
 		try {
 			return new JdbcOperation(this.dataSource.getConnection(), this.managedTransactions);
 		} catch (SQLException e) {
-			throw new StorageException("Failed to obtain a new connection from the datasource", e);
+			throw new CmfStorageException("Failed to obtain a new connection from the datasource", e);
 		}
 	}
 
 	@Override
-	protected boolean doLockForStorage(JdbcOperation operation, StoredObjectType type, String id)
-		throws StorageException {
+	protected boolean doLockForStorage(JdbcOperation operation, CmfType type, String id)
+		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcObjectStore.getQueryRunner();
 		final String dbid = composeDatabaseId(type, id);
@@ -1052,11 +1052,11 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			}
 			return true;
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
+			throw new CmfStorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
 		}
 	}
 
-	protected boolean doOptimizedClearAllObjects(JdbcOperation operation) throws StorageException {
+	protected boolean doOptimizedClearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		// This method exists in case there is a faster way to clear out the database schema
 		return false;
 	}
@@ -1077,24 +1077,24 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected StoredValue doGetProperty(JdbcOperation operation, String property) throws StorageException {
+	protected CmfValue doGetProperty(JdbcOperation operation, String property) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		try {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_SQL,
-				new ResultSetHandler<StoredValue>() {
+				new ResultSetHandler<CmfValue>() {
 					@Override
-					public StoredValue handle(ResultSet rs) throws SQLException {
+					public CmfValue handle(ResultSet rs) throws SQLException {
 						if (!rs.next()) { return null; }
 						String name = rs.getString("name");
 						String type = rs.getString("data_type");
-						final StoredDataType t;
+						final CmfDataType t;
 
 						try {
-							t = StoredDataType.decodeString(type);
+							t = CmfDataType.decodeString(type);
 						} catch (IllegalArgumentException e) {
 							throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
 						}
-						final StoredValueSerializer deserializer = StoredValueSerializer.get(t);
+						final CmfValueSerializer deserializer = CmfValueSerializer.get(t);
 						if (deserializer == null) { throw new SQLException(String.format(
 							"Unsupported data type name for serialization: [%s]", type)); }
 						String value = rs.getString("value");
@@ -1107,43 +1107,43 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					}
 				}, property);
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to retrieve the value of store property [%s]", property),
+			throw new CmfStorageException(String.format("Failed to retrieve the value of store property [%s]", property),
 				e);
 		}
 	}
 
 	@Override
-	protected StoredValue doSetProperty(JdbcOperation operation, String property, final StoredValue newValue)
-		throws StorageException {
-		final StoredValue oldValue = doGetProperty(operation, property);
+	protected CmfValue doSetProperty(JdbcOperation operation, String property, final CmfValue newValue)
+		throws CmfStorageException {
+		final CmfValue oldValue = doGetProperty(operation, property);
 		final Connection c = operation.getConnection();
-		final StoredValueSerializer serializer = StoredValueSerializer.get(newValue.getDataType());
+		final CmfValueSerializer serializer = CmfValueSerializer.get(newValue.getDataType());
 		final String newValueString;
 		try {
 			newValueString = serializer.serialize(newValue);
 		} catch (ParseException e) {
-			throw new StorageException(String.format("Failed to serialize the value [%s] for the store property [%s]",
+			throw new CmfStorageException(String.format("Failed to serialize the value [%s] for the store property [%s]",
 				newValue, property));
 		}
 		try {
 			if (oldValue != null) {
 				int n = JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.UPDATE_STORE_PROPERTY_SQL,
 					newValueString, property);
-				if (n != 1) { throw new StorageException(String.format(
+				if (n != 1) { throw new CmfStorageException(String.format(
 					"Failed to properly update store property [%s] - updated %d values instead of just 1", property, n)); }
 			} else {
 				JdbcObjectStore.getQueryRunner().insert(c, JdbcObjectStore.INSERT_STORE_PROPERTY_SQL,
 					JdbcObjectStore.HANDLER_NULL, property, newValue.getDataType().name(), newValueString);
 			}
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to set the value of store property [%s] to [%s]",
+			throw new CmfStorageException(String.format("Failed to set the value of store property [%s] to [%s]",
 				property, newValueString), e);
 		}
 		return oldValue;
 	}
 
 	@Override
-	protected Set<String> doGetPropertyNames(JdbcOperation operation) throws StorageException {
+	protected Set<String> doGetPropertyNames(JdbcOperation operation) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		try {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_NAMES_SQL,
@@ -1159,28 +1159,28 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					}
 				});
 		} catch (SQLException e) {
-			throw new StorageException("Failed to retrieve the store property names", e);
+			throw new CmfStorageException("Failed to retrieve the store property names", e);
 		}
 	}
 
 	@Override
-	protected StoredValue doClearProperty(JdbcOperation operation, String property) throws StorageException {
-		final StoredValue oldValue = doGetProperty(operation, property);
+	protected CmfValue doClearProperty(JdbcOperation operation, String property) throws CmfStorageException {
+		final CmfValue oldValue = doGetProperty(operation, property);
 		final Connection c = operation.getConnection();
 		try {
 			JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_STORE_PROPERTY_SQL, property);
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to delete the store property [%s]", property), e);
+			throw new CmfStorageException(String.format("Failed to delete the store property [%s]", property), e);
 		}
 		return oldValue;
 	}
 
 	@Override
-	protected void doClearProperties(JdbcOperation operation) throws StorageException {
+	protected void doClearProperties(JdbcOperation operation) throws CmfStorageException {
 		try {
 			doClearProperties(operation.getConnection());
 		} catch (SQLException e) {
-			throw new StorageException("Failed to delete all the store properties", e);
+			throw new CmfStorageException("Failed to delete all the store properties", e);
 		}
 	}
 
