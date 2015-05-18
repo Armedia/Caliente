@@ -98,8 +98,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		super.marshal(ctx, object);
+	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		if (!super.marshal(ctx, object)) { return false; }
 		if (this.antecedentId != null) {
 			StoredAttribute<StoredValue> antecedentId = new StoredAttribute<StoredValue>(
 				CmisCustomAttributes.VERSION_ANTECEDENT_ID.name, StoredDataType.ID, false);
@@ -119,6 +119,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		if (!this.object.isLatestVersion()) {
 			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));
 		}
+		return true;
 	}
 
 	@Override
@@ -152,7 +153,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 	protected ContentStore<?>.Handle storeContentStream(StoredObject<StoredValue> marshalled,
 		ObjectStorageTranslator<StoredValue> translator, Rendition r, ContentStream cs, ContentStore<?> streamStore)
-		throws Exception {
+			throws Exception {
 		ContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
 		InputStream src = cs.getStream();
 		OutputStream tgt = h.openOutput();

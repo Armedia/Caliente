@@ -33,7 +33,7 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 	}
 
 	@Override
-	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		StoredAttribute<StoredValue> att = new StoredAttribute<StoredValue>(CmisCustomAttributes.ACL_OWNER.name,
 			StoredDataType.STRING, false);
 		att.setValue(new StoredValue(this.object.getSourceOwner()));
@@ -41,7 +41,7 @@ public class CmisAclDelegate extends CmisExportDelegate<CmisAcl> {
 		att = new StoredAttribute<StoredValue>(PropertyIds.NAME, StoredDataType.STRING, false);
 		att.setValue(new StoredValue(this.object.getSourceId()));
 		object.setAttribute(att);
-
+		return true;
 	}
 
 	@Override

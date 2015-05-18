@@ -68,8 +68,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
-		super.marshal(ctx, object);
+	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+		if (!super.marshal(ctx, object)) { return false; }
 		marshalParentsAndPaths(ctx, object, this.object);
 		/*
 		List<String> l = this.object.getPaths();
@@ -79,6 +79,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			object.setProperty(path);
 		}
 		 */
+		return true;
 	}
 
 	@Override
@@ -98,6 +99,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (Folder.class.isInstance(object)) { return StoredObjectType.FOLDER; }
 		throw new Exception(String.format(
 			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
-			.getClass().getCanonicalName(), object.getType().getId()));
+				.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }

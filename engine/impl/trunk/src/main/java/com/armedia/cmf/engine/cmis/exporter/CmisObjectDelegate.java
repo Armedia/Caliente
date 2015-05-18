@@ -21,7 +21,7 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 	}
 
 	@Override
-	protected void marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
+	protected boolean marshal(CmisExportContext ctx, StoredObject<StoredValue> object) throws ExportException {
 		CmisTranslator translator = this.factory.getEngine().getTranslator();
 		for (Property<?> prop : this.object.getProperties()) {
 			StoredDataType t = CmisTranslator.decodePropertyType(prop.getType());
@@ -42,6 +42,7 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 			att.setValues(l);
 			object.setAttribute(att);
 		}
+		return true;
 	}
 
 	@Override
