@@ -33,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import com.armedia.cmf.storage.ContentStore;
-import com.armedia.cmf.storage.ObjectStorageTranslator;
+import com.armedia.cmf.storage.AttributeTranslator;
 import com.armedia.cmf.storage.OrganizationStrategy;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredObject;
@@ -222,7 +222,7 @@ public class LocalContentStore extends ContentStore<URI> {
 	}
 
 	@Override
-	protected URI doCalculateLocator(ObjectStorageTranslator<?> translator, StoredObject<?> object, String qualifier) {
+	protected URI doCalculateLocator(AttributeTranslator<?> translator, StoredObject<?> object, String qualifier) {
 		final List<String> rawPath = this.strategy.getPath(translator, object);
 		final String rawFragment;
 		if (!this.ignoreFragment) {
