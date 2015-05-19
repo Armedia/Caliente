@@ -352,11 +352,10 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract boolean doLockForStorage(O operation, CmfType type, String objectId)
-		throws CmfStorageException;
+	protected abstract boolean doLockForStorage(O operation, CmfType type, String objectId) throws CmfStorageException;
 
-	public final <V> Collection<CmfObject<V>> loadObjects(CmfAttributeTranslator<V> translator,
-		final CmfType type, String... ids) throws CmfStorageException, CmfValueDecoderException {
+	public final <V> Collection<CmfObject<V>> loadObjects(CmfAttributeTranslator<V> translator, final CmfType type,
+		String... ids) throws CmfStorageException, CmfValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
 		boolean ok = false;
@@ -381,8 +380,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	public final <V> Collection<CmfObject<V>> loadObjects(CmfAttributeTranslator<V> translator,
-		final CmfType type, Collection<String> ids) throws CmfStorageException, CmfValueDecoderException {
+	public final <V> Collection<CmfObject<V>> loadObjects(CmfAttributeTranslator<V> translator, final CmfType type,
+		Collection<String> ids) throws CmfStorageException, CmfValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
 		boolean ok = false;
@@ -461,13 +460,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	public final <V> int loadObjects(CmfStoreOperation<?> operation, CmfAttributeTranslator<V> translator,
-		final CmfType type, CmfObjectHandler<V> handler) throws CmfStorageException,
-		CmfValueDecoderException {
+		final CmfType type, CmfObjectHandler<V> handler) throws CmfStorageException, CmfValueDecoderException {
 		return loadObjects(operation, translator, type, null, handler);
 	}
 
-	public final <V> int loadObjects(CmfAttributeTranslator<V> translator, final CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException, CmfValueDecoderException {
+	public final <V> int loadObjects(CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids,
+		CmfObjectHandler<V> handler) throws CmfStorageException, CmfValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
 		boolean ok = false;
@@ -499,8 +497,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> int doLoadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
 		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException, CmfValueDecoderException;
 
-	private void createMapping(CmfStoreOperation<?> operation, CmfType type, String name, String source,
-		String target) throws CmfStorageException {
+	private void createMapping(CmfStoreOperation<?> operation, CmfType type, String name, String source, String target)
+		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
 		if ((source == null) && (target == null)) { throw new IllegalArgumentException(
@@ -515,11 +513,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract void doCreateMappedValue(O operation, CmfType type, String name, String source,
-		String target) throws CmfStorageException;
+	protected abstract void doCreateMappedValue(O operation, CmfType type, String name, String source, String target)
+		throws CmfStorageException;
 
-	protected final String getMappedValue(CmfStoreOperation<?> operation, boolean source, CmfType type,
-		String name, String value) throws CmfStorageException {
+	protected final String getMappedValue(CmfStoreOperation<?> operation, boolean source, CmfType type, String name,
+		String value) throws CmfStorageException {
 		O o = castOperation(operation);
 		getReadLock().lock();
 		try {
@@ -530,8 +528,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract String doGetMappedValue(O operation, boolean source, CmfType type, String name,
-		String value) throws CmfStorageException;
+	protected abstract String doGetMappedValue(O operation, boolean source, CmfType type, String name, String value)
+		throws CmfStorageException;
 
 	public final Mapping getTargetMapping(CmfType type, String name, String target) throws CmfStorageException {
 		assertOpen();
@@ -543,8 +541,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	public final Mapping getTargetMapping(CmfStoreOperation<?> operation, CmfType type, String name,
-		String source) throws CmfStorageException {
+	public final Mapping getTargetMapping(CmfStoreOperation<?> operation, CmfType type, String name, String source)
+		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (source == null) { throw new IllegalArgumentException(
@@ -571,8 +569,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	public final Mapping getSourceMapping(CmfStoreOperation<?> operation, CmfType type, String name,
-		String target) throws CmfStorageException {
+	public final Mapping getSourceMapping(CmfStoreOperation<?> operation, CmfType type, String name, String target)
+		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (target == null) { throw new IllegalArgumentException(
@@ -599,8 +597,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	public final Map<CmfType, Integer> getStoredObjectTypes(CmfStoreOperation<?> operation)
-		throws CmfStorageException {
+	public final Map<CmfType, Integer> getStoredObjectTypes(CmfStoreOperation<?> operation) throws CmfStorageException {
 		getReadLock().lock();
 		try {
 			assertOpen();
@@ -814,8 +811,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract CmfValue doSetProperty(O operation, String property, CmfValue value)
-		throws CmfStorageException;
+	protected abstract CmfValue doSetProperty(O operation, String property, CmfValue value) throws CmfStorageException;
 
 	@Override
 	public final Set<String> getPropertyNames() throws CmfStorageException {
