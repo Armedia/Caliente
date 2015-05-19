@@ -302,10 +302,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final boolean isStored(CmfType type, String objectId) throws CmfStorageException {
 		assertOpen();
 		O operation = newOperation();
+		boolean ok = false;
 		try {
-			return isStored(operation, type, objectId);
+			boolean ret = isStored(operation, type, objectId);
+			ok = true;
+			return ret;
 		} finally {
-			operation.close();
+			operation.close(ok);
 		}
 	}
 
@@ -860,4 +863,5 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract CmfValue doClearProperty(O operation, String property) throws CmfStorageException;
+
 }
