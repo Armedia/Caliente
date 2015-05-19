@@ -25,21 +25,21 @@ public final class CmfPermission implements Serializable, Comparable<CmfPermissi
 		this.granted = granted;
 	}
 
-	public boolean isGranted() {
-		return this.granted;
+	public String getType() {
+		return this.type;
 	}
 
 	public String getName() {
 		return this.name;
 	}
 
-	public String getType() {
-		return this.type;
+	public boolean isGranted() {
+		return this.granted;
 	}
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.granted, this.name, this.type);
+		return Tools.hashTool(this, null, this.type, this.name);
 	}
 
 	@Override
@@ -48,8 +48,12 @@ public final class CmfPermission implements Serializable, Comparable<CmfPermissi
 		CmfPermission other = CmfPermission.class.cast(obj);
 		if (!Tools.equals(this.type, other.type)) { return false; }
 		if (!Tools.equals(this.name, other.name)) { return false; }
-		if (this.granted != other.granted) { return false; }
 		return true;
+	}
+
+	public boolean isIdentical(CmfPermission other) {
+		if (!equals(other)) { return false; }
+		return this.granted == other.granted;
 	}
 
 	@Override
@@ -59,8 +63,6 @@ public final class CmfPermission implements Serializable, Comparable<CmfPermissi
 		i = Tools.compare(this.type, o.type);
 		if (i != 0) { return i; }
 		i = Tools.compare(this.name, o.name);
-		if (i != 0) { return i; }
-		i = Tools.compare(this.granted, o.granted);
 		if (i != 0) { return i; }
 		return 0;
 	}

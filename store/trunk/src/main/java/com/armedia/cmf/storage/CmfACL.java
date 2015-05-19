@@ -1,11 +1,9 @@
 package com.armedia.cmf.storage;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -28,36 +26,31 @@ public final class CmfACL implements Serializable {
 	private final Set<CmfAccessor> allAccessors;
 	private final Map<AccessorType, Map<String, CmfAccessor>> accessors;
 
+	public CmfACL() {
+		this(null, null);
+	}
+
+	public CmfACL(Set<CmfAccessor> accessors) {
+		this(null, accessors);
+	}
+
 	public CmfACL(String identifier, Set<CmfAccessor> accessors) {
 		this.identifier = identifier;
-		if ((accessors == null) || accessors.isEmpty()) {
-			this.allAccessors = Collections.emptySet();
-			this.accessors = Collections.emptyMap();
-			return;
-		}
+		this.accessors = new EnumMap<AccessorType, Map<String, CmfAccessor>>(AccessorType.class);
+		this.allAccessors = new TreeSet<CmfAccessor>();
 
-		Set<CmfAccessor> all = new TreeSet<CmfAccessor>();
-		all.addAll(accessors);
-		this.allAccessors = Tools.freezeSet(new LinkedHashSet<CmfAccessor>(all));
+		if ((accessors == null) || accessors.isEmpty()) { return; }
 
-		Map<AccessorType, Map<String, CmfAccessor>> M = new EnumMap<AccessorType, Map<String, CmfAccessor>>(
-			AccessorType.class);
-		for (CmfAccessor a : all) {
-			Map<String, CmfAccessor> m = M.get(a.getAccessorType());
+		this.allAccessors.addAll(accessors);
+
+		for (CmfAccessor a : this.allAccessors) {
+			Map<String, CmfAccessor> m = this.accessors.get(a.getAccessorType());
 			if (m == null) {
 				m = new TreeMap<String, CmfAccessor>();
-				M.put(a.getAccessorType(), m);
+				this.accessors.put(a.getAccessorType(), m);
 			}
 			m.put(a.getName(), a);
 		}
-		for (AccessorType t : AccessorType.values()) {
-			Map<String, CmfAccessor> m = M.get(t);
-			if ((m == null) || m.isEmpty()) {
-				continue;
-			}
-			M.put(t, Tools.freezeMap(new LinkedHashMap<String, CmfAccessor>(m)));
-		}
-		this.accessors = Tools.freezeMap(M);
 	}
 
 	public String getIdentifier() {
@@ -72,8 +65,12 @@ public final class CmfACL implements Serializable {
 		return !this.allAccessors.isEmpty();
 	}
 
+	public Set<CmfAccessor> getAccessors() {
+		return new TreeSet<CmfAccessor>(this.allAccessors);
+	}
+
 	public Set<AccessorType> getAccessorTypes() {
-		return this.accessors.keySet();
+		return EnumSet.copyOf(this.accessors.keySet());
 	}
 
 	public int getAccessorCount(AccessorType type) {
@@ -86,10 +83,10 @@ public final class CmfACL implements Serializable {
 		return (this.accessors.get(type) != null);
 	}
 
-	public Collection<CmfAccessor> getAccessors(AccessorType type) {
+	public Set<CmfAccessor> getAccessors(AccessorType type) {
 		Map<String, CmfAccessor> m = this.accessors.get(type);
-		if (m == null) { return Collections.emptySet(); }
-		return m.values();
+		if (m == null) { return new TreeSet<CmfAccessor>(); }
+		return new TreeSet<CmfAccessor>(m.values());
 	}
 
 	public Set<String> getAccessorNames(AccessorType type) {
@@ -109,6 +106,25 @@ public final class CmfACL implements Serializable {
 		return m.get(name);
 	}
 
+	public CmfAccessor addAccessor(CmfAccessor accessor) {
+		Map<String, CmfAccessor> m = this.accessors.get(accessor.getAccessorType());
+		if (m == null) {
+			m = new TreeMap<String, CmfAccessor>();
+			this.accessors.put(accessor.getAccessorType(), m);
+		}
+		CmfAccessor ret = m.put(accessor.getName(), accessor);
+		this.allAccessors.add(accessor);
+		return ret;
+	}
+
+	public CmfAccessor removeAccessor(AccessorType type, String name) {
+		Map<String, CmfAccessor> m = this.accessors.get(type);
+		if (m == null) { return null; }
+		CmfAccessor ret = m.remove(name);
+		this.allAccessors.remove(ret);
+		return ret;
+	}
+
 	@Override
 	public int hashCode() {
 		return Tools.hashTool(this, null, this.identifier, this.allAccessors);
@@ -119,7 +135,7 @@ public final class CmfACL implements Serializable {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		CmfACL other = CmfACL.class.cast(obj);
 		if (!Tools.equals(this.identifier, other.identifier)) { return false; }
-		if (!Tools.equals(this.accessors, other.accessors)) { return false; }
+		if (!Tools.equals(this.allAccessors, other.allAccessors)) { return false; }
 		return true;
 	}
 }
