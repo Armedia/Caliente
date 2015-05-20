@@ -12,8 +12,8 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
@@ -22,6 +22,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
+	private static final String DCTM_PREFIX = "dctm:";
 	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
@@ -192,7 +193,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 			IntermediateAttribute att = mappings.get(attributeName);
 			if (att != null) { return att.encode(); }
 		}
-		return super.encodeAttributeName(type, attributeName);
+		return String.format("%s%s", DctmTranslator.DCTM_PREFIX, attributeName.toLowerCase());
 	}
 
 	@Override
@@ -208,6 +209,8 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 			}
 			if (att != null) { return att; }
 		}
+		if (attributeName.startsWith(DctmTranslator.DCTM_PREFIX)) { return attributeName
+			.substring(DctmTranslator.DCTM_PREFIX.length()); }
 		return super.decodeAttributeName(type, attributeName);
 	}
 
