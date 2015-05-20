@@ -24,7 +24,7 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 		this.rootPathStr = FileNameTools.reconstitute(this.rootPath, true, false, '/');
 	}
 
-	public final void ensureTargetPath(S session) throws ImportException {
+	final void ensureTargetPath(S session) throws ImportException {
 		try {
 			ensurePath(session, this.rootPathStr);
 		} catch (Exception e) {
