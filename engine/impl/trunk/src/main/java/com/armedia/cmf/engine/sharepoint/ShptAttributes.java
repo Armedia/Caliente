@@ -51,6 +51,6 @@ public enum ShptAttributes {
 	public final String name;
 
 	private ShptAttributes() {
-		this.name = String.format("shpt:%s", name().toLowerCase());
+		this.name = name().toLowerCase();
 	}
 }

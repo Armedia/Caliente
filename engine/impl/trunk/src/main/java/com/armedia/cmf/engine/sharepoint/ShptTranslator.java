@@ -26,6 +26,7 @@ import com.armedia.commons.utilities.Tools;
  */
 public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 
+	private static final String SHPT_PREFIX = "shpt:";
 	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
@@ -144,7 +145,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 			IntermediateAttribute att = mappings.get(attributeName);
 			if (att != null) { return att.encode(); }
 		}
-		return super.encodeAttributeName(type, attributeName);
+		return String.format("%s%s", ShptTranslator.SHPT_PREFIX, attributeName);
 	}
 
 	@Override
@@ -160,6 +161,8 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 			}
 			if (att != null) { return att; }
 		}
+		if (attributeName.startsWith(ShptTranslator.SHPT_PREFIX)) { return attributeName
+			.substring(ShptTranslator.SHPT_PREFIX.length()); }
 		return super.decodeAttributeName(type, attributeName);
 	}
 
