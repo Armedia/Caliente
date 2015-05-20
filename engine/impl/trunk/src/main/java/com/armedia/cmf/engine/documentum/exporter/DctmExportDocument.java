@@ -26,8 +26,8 @@ import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
@@ -91,8 +91,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		IDfReference ref = ReferenceFinder.getForMirrorId(document.getObjectId(), session);
 		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING
 			.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingCondition())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingLabel())));
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING.getStoredType(),
+			false, DfValueFactory.newStringValue(ref.getBindingLabel())));
 		properties.add(new CmfProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING
 			.getStoredType(), false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
 		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING
@@ -140,9 +140,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfDocument document, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, document, ctx);
-
-		// Export the ACL
-		req.add(this.factory.newExportDelegate(document.getACL()));
 
 		// We do nothing else for references, as we need nothing else
 		if (isDfReference(document)) { return req; }

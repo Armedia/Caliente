@@ -286,6 +286,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				this.log.warn("SysObject {} refers to missing store [{}]", marshaled.getLabel(), storeName);
 			}
 		}
+
+		// Export the ACL
+		req.add(this.factory.newExportDelegate(sysObject.getACL()));
 		return req;
 	}
 }
