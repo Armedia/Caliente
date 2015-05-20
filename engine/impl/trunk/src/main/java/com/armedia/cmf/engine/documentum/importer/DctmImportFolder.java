@@ -18,8 +18,8 @@ import com.armedia.cmf.engine.documentum.common.DctmFolder;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -61,7 +61,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfFolder folder, boolean newObject, DctmImportContext context)
+	protected void doFinalizeConstruction(IDfFolder folder, boolean newObject, DctmImportContext context)
 		throws DfException, ImportException {
 
 		final String folderName;
@@ -129,7 +129,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 		for (Map.Entry<String, String> entry : m.entrySet()) {
 			final String actualUser = entry.getKey();
-			final String pathValue = entry.getValue();
+			final String pathValue = context.getTargetPath(entry.getValue());
 
 			// TODO: How do we decide if we should update the default folder for this user? What
 			// if the user's default folder has been modified on the target CMS and we don't
@@ -186,8 +186,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(PropertyIds.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
-			return session.getFolderByPath(String.format("/%s",
-				this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()));
+			return session.getFolderByPath(String.format("/%s", this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME)
+				.getValue().asString()));
 		}
 		return super.locateInCms(ctx);
 	}

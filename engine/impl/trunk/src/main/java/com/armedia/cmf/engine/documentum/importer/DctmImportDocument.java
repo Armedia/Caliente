@@ -20,10 +20,10 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.storage.CmfContentStore;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
@@ -57,8 +57,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	private TemporaryPermission antecedentTemporaryPermission = null;
 	private TemporaryPermission branchTemporaryPermission = null;
 
-	protected DctmImportDocument(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject)
-		throws Exception {
+	protected DctmImportDocument(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfDocument.class, DctmObjectType.DOCUMENT, storedObject);
 	}
 
@@ -184,8 +183,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		if (mainFolderId == null) {
 			mainFolderId = this.cmfObject.getProperty(PropertyIds.PARENT_ID).getValue().asId();
 			throw new ImportException(String.format(
-				"Reference [%s] mapping for its parent folder [%s->???] could not be found",
-				this.cmfObject.getLabel(), mainFolderId.getId()));
+				"Reference [%s] mapping for its parent folder [%s->???] could not be found", this.cmfObject.getLabel(),
+				mainFolderId.getId()));
 		}
 		// TODO: Can a reference be *linked* to other folders?
 		IDfId newId = targetSysObj.addReference(mainFolderId, bindingCondition.asString(), bindingLabel.asString());
@@ -197,8 +196,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (isReference()) { return newReference(context); }
 
-		final CmfAttribute<IDfValue> sourceChronicleAtt = this.cmfObject
-			.getAttribute(DctmAttributes.I_CHRONICLE_ID);
+		final CmfAttribute<IDfValue> sourceChronicleAtt = this.cmfObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
 		final CmfAttribute<IDfValue> antecedentAtt = this.cmfObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
 		final String sourceChronicleId = (sourceChronicleAtt != null ? sourceChronicleAtt.getValue().asString() : null);
 
@@ -211,8 +209,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		final IDfId antecedentId;
 		IDfDocument antecedentVersion = null;
-		final CmfProperty<IDfValue> antecedentProperty = this.cmfObject
-			.getProperty(DctmSysObject.PATCH_ANTECEDENT);
+		final CmfProperty<IDfValue> antecedentProperty = this.cmfObject.getProperty(DctmSysObject.PATCH_ANTECEDENT);
 		if (antecedentProperty == null) {
 			antecedentId = (antecedentAtt != null ? antecedentAtt.getValue().asId() : DfId.DF_NULLID);
 		} else {
@@ -428,8 +425,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
 			} catch (DfException e) {
 				final String msg = String.format(
-					"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber);
+					"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), absolutePath, fullFormat, pageNumber);
 				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
 					.getCanonicalName(), e.getMessage());
 				throw new ImportException(msg, e);
@@ -444,9 +441,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
 			} catch (DfException e) {
 				final String msg = String.format(
-					"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber,
-					pageModifier);
+					"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), absolutePath, fullFormat, pageNumber, pageModifier);
 				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
 					.getCanonicalName(), e.getMessage());
 				throw new ImportException(msg, e);
@@ -590,7 +586,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void finalizeConstruction(final IDfDocument document, boolean newObject, final DctmImportContext context)
+	protected void doFinalizeConstruction(final IDfDocument document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
 
 		// References don't require any of this being done

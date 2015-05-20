@@ -36,8 +36,8 @@ import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
@@ -357,8 +357,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			// An object may be immutable, yet not frozen
 			this.mustImmute = true;
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Clearing immutable status from [%s](%s){%s}",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), newId));
+				this.log.debug(String.format("Clearing immutable status from [%s](%s){%s}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), newId));
 			}
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, false);
 			if (!sysObject.isCheckedOut()) {
@@ -384,8 +384,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			ret |= true;
 		} else if (this.mustImmute && !sysObject.isImmutable()) {
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting immutability status to [%s](%s){%s}",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), newId));
+				this.log.debug(String.format("Setting immutability status to [%s](%s){%s}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), newId));
 			}
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
@@ -408,6 +408,61 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				sysObject.save();
 			}
 		}
+	}
+
+	protected void restoreAcl(T sysObject, DctmImportContext ctx) throws DfException, ImportException {
+		final IDfSession session = ctx.getSession();
+		// Set the ACL
+		CmfAttribute<IDfValue> aclDomainAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_DOMAIN);
+		CmfAttribute<IDfValue> aclNameAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_NAME);
+		@SuppressWarnings("unchecked")
+		int firstNull = Tools.firstNull(aclDomainAtt, aclNameAtt);
+		if (firstNull == -1) {
+			String aclDomain = DctmMappingUtils.resolveMappableUser(session, aclDomainAtt.getValue().asString());
+			try {
+				IDfUser u = DctmImportUser.locateExistingUser(ctx, aclDomain);
+				if (u != null) {
+					aclDomain = u.getUserName();
+					IDfACL acl = session.getACL(aclDomain, aclNameAtt.getValue().asString());
+					if (acl != null) {
+						sysObject.setACL(acl);
+					} else {
+						String msg = String
+							.format(
+								"Failed to set the ACL [%s:%s] for %s [%s](%s) - the ACL wasn't found - probably didn't need to be copied over",
+								aclDomain, aclNameAtt.getValue().asString(), this.cmfObject.getType(),
+								this.cmfObject.getLabel(), sysObject.getObjectId().getId());
+						this.log.warn(msg);
+					}
+				} else {
+					String msg = String
+						.format(
+							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
+							aclDomain, this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId()
+								.getId());
+					if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
+				}
+			} catch (MultipleUserMatchesException e) {
+				String msg = String.format("Failed to find the user [%s] who owns the ACL for folder [%s](%s) - %s",
+					aclDomain, this.cmfObject.getLabel(), sysObject.getObjectId().getId(), e.getMessage());
+				if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
+				this.log.warn(msg);
+			}
+		}
+	}
+
+	@Override
+	protected final void finalizeConstruction(T object, boolean newObject, DctmImportContext context)
+		throws DfException, ImportException {
+		super.finalizeConstruction(object, newObject, context);
+		doFinalizeConstruction(object, newObject, context);
+		restoreAcl(object, context);
+	}
+
+	protected void doFinalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
+		ImportException {
+
 	}
 
 	@Override
@@ -625,8 +680,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		T existing = null;
 		final Class<T> dfClass = getObjectClass();
 		for (IDfValue p : getTargetPaths()) {
-			final String dql = String.format(dqlBase, DfUtils.quoteString(p.asString()));
-			final String currentPath = String.format("%s/%s", p.asString(), documentName);
+			final String targetPath = ctx.getTargetPath(p.asString());
+			final String dql = String.format(dqlBase, DfUtils.quoteString(targetPath));
+			final String currentPath = String.format("%s/%s", targetPath, documentName);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
 				// No match, we're good...
@@ -638,8 +694,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// Not a document...we have a problem
 				throw new ImportException(String.format(
 					"Found an incompatible object in one of the %s [%s] %s's intended paths: [%s] = [%s:%s]",
-					this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getSubtype(),
-					currentPath, current.getType().getName(), current.getObjectId().getId()));
+					this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getSubtype(), currentPath,
+					current.getType().getName(), current.getObjectId().getId()));
 			}
 
 			T currentObj = dfClass.cast(current);
@@ -667,8 +723,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			// Not the same, this is a problem
 			throw new ImportException(String.format(
 				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
-				this.cmfObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId()
-					.getId(), currentPath));
+				this.cmfObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId().getId(),
+				currentPath));
 		}
 
 		return existing;
@@ -693,10 +749,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
 			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.getValueCount() == 1)) {
 				// This is a "fixup" from the path repairs, so we look up by path
-				IDfValue path = paths.getValue();
-				IDfFolder f = session.getFolderByPath(path.asString());
+				String path = context.getTargetPath(paths.getValue().asString());
+				IDfFolder f = session.getFolderByPath(path);
 				if (f != null) { return f.getObjectId(); }
-				this.log.warn(String.format("Fixup path [%s] for %s [%s](%s) was not found", path.asString(),
+				this.log.warn(String.format("Fixup path [%s] for %s [%s](%s) was not found", path,
 					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()));
 			}
 		}
@@ -836,8 +892,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				}
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to set the owner for %s [%s](%s) to user [%s] - %s",
-					this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
-					actualUser, e.getMessage());
+					this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(), actualUser,
+					e.getMessage());
 				if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 			}
@@ -853,49 +909,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				String msg = String
 					.format(
 						"Failed to set the group for %s [%s](%s) to group [%s] - the group wasn't found - probably didn't need to be copied over",
-						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
-						group);
+						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(), group);
 				if (ctx.isSupported(CmfType.GROUP)) { throw new ImportException(msg); }
-				this.log.warn(msg);
-			}
-		}
-
-		// Set the ACL
-		CmfAttribute<IDfValue> aclDomainAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_DOMAIN);
-		CmfAttribute<IDfValue> aclNameAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_NAME);
-		@SuppressWarnings("unchecked")
-		int firstNull = Tools.firstNull(aclDomainAtt, aclNameAtt);
-		if (firstNull == -1) {
-			String aclDomain = DctmMappingUtils.resolveMappableUser(session, aclDomainAtt.getValue().asString());
-			try {
-				IDfUser u = DctmImportUser.locateExistingUser(ctx, aclDomain);
-				if (u != null) {
-					aclDomain = u.getUserName();
-					IDfACL acl = session.getACL(aclDomain, aclNameAtt.getValue().asString());
-					if (acl != null) {
-						sysObject.setACL(acl);
-					} else {
-						String msg = String
-							.format(
-								"Failed to set the ACL [%s:%s] for %s [%s](%s) - the ACL wasn't found - probably didn't need to be copied over",
-								aclDomain, aclNameAtt.getValue().asString(), this.cmfObject.getType(),
-								this.cmfObject.getLabel(), sysObject.getObjectId().getId());
-						if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
-						this.log.warn(msg);
-					}
-				} else {
-					String msg = String
-						.format(
-							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
-							aclDomain, this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject
-								.getObjectId().getId());
-					if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
-					this.log.warn(msg);
-				}
-			} catch (MultipleUserMatchesException e) {
-				String msg = String.format("Failed to find the user [%s] who owns the ACL for folder [%s](%s) - %s",
-					aclDomain, this.cmfObject.getLabel(), sysObject.getObjectId().getId(), e.getMessage());
-				if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 			}
 		}
@@ -925,15 +940,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// If there are no paths, by definition there are also no parents, so
 				// we simply make do by adding a singular path, and a singular "dummy"
 				// parent that can be used later on
-				paths.setValue(DfValueFactory.newStringValue("/"));
+				paths.setValue(DfValueFactory.newStringValue(context.getTargetPath("/")));
 				parents.setValue(DfValueFactory.newIdValue(DfId.DF_NULLID));
 			}
-			List<IDfValue> newPaths = new ArrayList<IDfValue>(paths.getValueCount());
-			final int pathCount = paths.getValueCount();
-			for (int i = 0; i < pathCount; i++) {
-				newPaths.add(DfValueFactory.newStringValue(context.getTargetPath(paths.getValue(i).asString())));
-			}
-			paths.setValues(newPaths);
 		}
 
 		return super.doImportObject(context);
