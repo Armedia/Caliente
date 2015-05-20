@@ -48,10 +48,6 @@ public abstract class ImportContext<S, V> extends TransferContext<S, V> {
 		return this.streamStore;
 	}
 
-	public final void ensureTargetPath() throws ImportException {
-		this.factory.ensureTargetPath(getSession());
-	}
-
 	public final String getTargetPath(String sourcePath) throws ImportException {
 		return this.factory.getTargetPath(sourcePath);
 	}
