@@ -28,7 +28,6 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
-import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -933,16 +932,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			this.cmfObject.setProperty(parents);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
 				PropertyIds.PARENT_ID, this.cmfObject.getLabel(), this.cmfObject.getId()));
-		}
-
-		if (context.isPathAltering()) {
-			if (!paths.hasValues()) {
-				// If there are no paths, by definition there are also no parents, so
-				// we simply make do by adding a singular path, and a singular "dummy"
-				// parent that can be used later on
-				paths.setValue(DfValueFactory.newStringValue(context.getTargetPath("/")));
-				parents.setValue(DfValueFactory.newIdValue(DfId.DF_NULLID));
-			}
 		}
 
 		return super.doImportObject(context);
