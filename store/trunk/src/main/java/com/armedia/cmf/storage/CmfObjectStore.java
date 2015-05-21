@@ -303,8 +303,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected final <V> Collection<CmfObject<V>> loadObjects(O operation, final CmfAttributeTranslator<V> translator,
-		final CmfType type, Collection<String> ids) throws CmfStorageException, CmfValueDecoderException {
+	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation,
+		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
+			throws CmfStorageException, CmfValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
@@ -331,7 +332,14 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 				@Override
 				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
-					ret.add(translator.decodeObject(dataObject));
+					CmfObject<V> obj = translator.decodeObject(dataObject);
+					try {
+						obj.setAcl(loadACL(operation, obj, translator));
+					} catch (CmfValueDecoderException e) {
+						throw new CmfStorageException(String.format("Failed to load the ACL for %s [%s](%s)",
+							obj.getType(), obj.getLabel(), obj.getId()), e);
+					}
+					ret.add(obj);
 					return true;
 				}
 
@@ -597,20 +605,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract CmfValue clearProperty(O operation, String property) throws CmfStorageException;
 
-	public final <V> CmfACL<V> loadACL(String aclId, CmfAttributeTranslator<V> translator) throws CmfStorageException,
-		CmfValueDecoderException {
-		O operation = beginInvocation();
-		try {
-			CmfACL<V> ret = loadACL(operation, aclId, translator);
-			operation.commit();
-			return ret;
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	protected abstract <V> CmfACL<V> loadACL(O operation, String aclId, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException, CmfValueDecoderException;
+	protected abstract <V> CmfACL<V> loadACL(O operation, CmfObject<V> sourceObject,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException, CmfValueDecoderException;
 
 	protected abstract <V> String storeACL(O operation, CmfObject<V> sourceObject, CmfAttributeTranslator<V> translator)
 		throws CmfStorageException, CmfValueEncoderException;
