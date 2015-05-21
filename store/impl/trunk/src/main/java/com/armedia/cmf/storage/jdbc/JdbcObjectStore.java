@@ -37,15 +37,16 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
-import com.armedia.cmf.storage.CmfAttributeTranslator;
-import com.armedia.cmf.storage.CmfObjectStore;
-import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfACL;
 import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
-import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.cmf.storage.CmfValueDecoderException;
@@ -247,9 +248,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				liquibase.validate();
 			}
 			if (cleanData) {
-				doClearProperties(c);
-				doClearAllObjects(c);
-				doClearAttributeMappings(c);
+				clearProperties(c);
+				clearAllObjects(c);
+				clearAttributeMappings(c);
 			}
 			ok = true;
 		} catch (DatabaseException e) {
@@ -302,8 +303,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> Long doStoreObject(JdbcOperation operation, CmfObject<V> object,
-		CmfAttributeTranslator<V> translator) throws CmfStorageException, CmfValueEncoderException {
+	protected <V> Long storeObject(JdbcOperation operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
+		throws CmfStorageException, CmfValueEncoderException {
 		final Connection c = operation.getConnection();
 		final CmfType objectType = object.getType();
 		final String objectId = composeDatabaseId(object);
@@ -466,9 +467,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> int doLoadObjects(JdbcOperation operation, CmfAttributeTranslator<V> translator,
-		final CmfType type, Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException,
-		CmfValueDecoderException {
+	protected <V> int loadObjects(JdbcOperation operation, CmfAttributeTranslator<V> translator, final CmfType type,
+		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException, CmfValueDecoderException {
 		Connection connection = null;
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
@@ -680,8 +680,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	 * </p>
 	 *
 	 */
-	protected void doCreateMappedValue(Connection c, CmfType type, String name, String sourceValue,
-		String targetValue) throws SQLException {
+	protected void createMapping(Connection c, CmfType type, String name, String sourceValue, String targetValue)
+		throws SQLException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		final QueryRunner qr = new QueryRunner();
@@ -728,10 +728,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void doCreateMappedValue(JdbcOperation operation, CmfType type, String name, String sourceValue,
+	protected void createMapping(JdbcOperation operation, CmfType type, String name, String sourceValue,
 		String targetValue) {
 		try {
-			doCreateMappedValue(operation.getConnection(), type, name, sourceValue, targetValue);
+			createMapping(operation.getConnection(), type, name, sourceValue, targetValue);
 		} catch (SQLException e) {
 			throw new RuntimeException(String.format("Failed to create the mapping for [%s/%s/%s->%s]", type, name,
 				sourceValue, targetValue), e);
@@ -739,8 +739,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected String doGetMappedValue(JdbcOperation operation, boolean source, CmfType type, String name,
-		String value) throws CmfStorageException {
+	protected String getMapping(JdbcOperation operation, boolean source, CmfType type, String name, String value)
+		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to search against"); }
@@ -761,14 +761,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	private boolean doIsStored(Connection c, CmfType type, String objectId) throws SQLException {
+	private boolean isStored(Connection c, CmfType type, String objectId) throws SQLException {
 		return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.CHECK_IF_OBJECT_EXISTS_SQL,
 			JdbcObjectStore.HANDLER_EXISTS, composeDatabaseId(type, objectId), type.name());
 	}
 
 	@Override
-	protected boolean doIsStored(JdbcOperation operation, CmfType type, String objectId)
-		throws CmfStorageException {
+	protected boolean isStored(JdbcOperation operation, CmfType type, String objectId) throws CmfStorageException {
 		final Connection c;
 		try {
 			c = this.dataSource.getConnection();
@@ -777,7 +776,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 		try {
 			c.setAutoCommit(false);
-			return doIsStored(c, type, objectId);
+			return isStored(c, type, objectId);
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("Failed to check whether object [%s] was already serialized",
 				objectId), e);
@@ -792,8 +791,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				new ResultSetHandler<Map<CmfType, Integer>>() {
 					@Override
 					public Map<CmfType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<CmfType, Integer> ret = new EnumMap<CmfType, Integer>(
-							CmfType.class);
+						Map<CmfType, Integer> ret = new EnumMap<CmfType, Integer>(CmfType.class);
 						while (rs.next()) {
 							String t = rs.getString("object_type");
 							if ((t == null) || rs.wasNull()) {
@@ -817,11 +815,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<CmfType, Integer> doGetStoredObjectTypes(JdbcOperation operation) throws CmfStorageException {
+	protected Map<CmfType, Integer> getStoredObjectTypes(JdbcOperation operation) throws CmfStorageException {
 		return getStoredObjectTypes(operation.getConnection());
 	}
 
-	private int doClearAttributeMappings(Connection c) throws CmfStorageException {
+	private int clearAttributeMappings(Connection c) throws CmfStorageException {
 		try {
 			return new QueryRunner().update(c, JdbcObjectStore.CLEAR_ALL_MAPPINGS_SQL);
 		} catch (SQLException e) {
@@ -830,15 +828,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected int doClearAttributeMappings(JdbcOperation operation) throws CmfStorageException {
-		return doClearAttributeMappings(operation.getConnection());
+	protected int clearAttributeMappings(JdbcOperation operation) throws CmfStorageException {
+		return clearAttributeMappings(operation.getConnection());
 	}
 
 	@Override
-	protected Map<CmfType, Set<String>> doGetAvailableMappings(JdbcOperation operation)
-		throws CmfStorageException {
-		final Map<CmfType, Set<String>> ret = new EnumMap<CmfType, Set<String>>(
-			CmfType.class);
+	protected Map<CmfType, Set<String>> getAvailableMappings(JdbcOperation operation) throws CmfStorageException {
+		final Map<CmfType, Set<String>> ret = new EnumMap<CmfType, Set<String>>(CmfType.class);
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {
@@ -865,8 +861,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Set<String> doGetAvailableMappings(JdbcOperation operation, CmfType type)
-		throws CmfStorageException {
+	protected Set<String> getAvailableMappings(JdbcOperation operation, CmfType type) throws CmfStorageException {
 		final Set<String> ret = new TreeSet<String>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
@@ -887,7 +882,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<String, String> doGetMappings(JdbcOperation operation, CmfType type, String name) {
+	protected Map<String, String> getMappings(JdbcOperation operation, CmfType type, String name) {
 		final Map<String, String> ret = new HashMap<String, String>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
@@ -909,17 +904,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected final void doClearAllObjects(JdbcOperation operation) throws CmfStorageException {
+	protected final void clearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		// Allow for subclasses to implement optimized clearing operations
-		if (doOptimizedClearAllObjects(operation)) { return; }
+		if (optimizedClearAllObjects(operation)) { return; }
 		try {
-			doClearAllObjects(operation.getConnection());
+			clearAllObjects(operation.getConnection());
 		} catch (SQLException e) {
 			throw new CmfStorageException("SQLException caught while removing all objects", e);
 		}
 	}
 
-	private void doClearAllObjects(Connection c) throws SQLException {
+	private void clearAllObjects(Connection c) throws SQLException {
 		// Allow for subclasses to implement optimized clearing operations
 		DatabaseMetaData dmd = c.getMetaData();
 		ResultSet rs = null;
@@ -934,7 +929,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} finally {
 			DbUtils.closeQuietly(rs);
 		}
-		doClearTables(c, tableNames);
+		clearTables(c, tableNames);
 	}
 
 	private <V> CmfObject<V> loadObject(ResultSet objRs) throws SQLException {
@@ -956,8 +951,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		return new CmfObject<V>(type, id, searchKey, batchId, label, subtype);
 	}
 
-	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator,
-		ResultSet rs) throws SQLException, CmfValueDecoderException {
+	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
+		throws SQLException, CmfValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
 		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
@@ -965,8 +960,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		return new CmfProperty<V>(name, type, repeating);
 	}
 
-	private <V> CmfAttribute<V> loadAttribute(CmfType objectType, CmfAttributeTranslator<V> translator,
-		ResultSet rs) throws SQLException, CmfValueDecoderException {
+	private <V> CmfAttribute<V> loadAttribute(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
+		throws SQLException, CmfValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = translator.decodeAttributeName(objectType, rs.getString("name"));
 		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
@@ -1030,8 +1025,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected boolean doLockForStorage(JdbcOperation operation, CmfType type, String id)
-		throws CmfStorageException {
+	protected boolean lockForStorage(JdbcOperation operation, CmfType type, String id) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcObjectStore.getQueryRunner();
 		final String dbid = composeDatabaseId(type, id);
@@ -1052,16 +1046,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 			return true;
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
+			throw new CmfStorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id),
+				e);
 		}
 	}
 
-	protected boolean doOptimizedClearAllObjects(JdbcOperation operation) throws CmfStorageException {
+	protected boolean optimizedClearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		// This method exists in case there is a faster way to clear out the database schema
 		return false;
 	}
 
-	private void doClearTables(Connection c, Set<String> tableNames) throws SQLException {
+	private void clearTables(Connection c, Set<String> tableNames) throws SQLException {
 		// TODO: We can probably find a way to do this using TRUNCATE TABLE, but there are many
 		// db-specific nuances to account for, so we'll defer that for later...
 		QueryRunner qr = new QueryRunner();
@@ -1077,7 +1072,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected CmfValue doGetProperty(JdbcOperation operation, String property) throws CmfStorageException {
+	protected CmfValue getProperty(JdbcOperation operation, String property) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		try {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_SQL,
@@ -1107,23 +1102,23 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 				}, property);
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to retrieve the value of store property [%s]", property),
-				e);
+			throw new CmfStorageException(
+				String.format("Failed to retrieve the value of store property [%s]", property), e);
 		}
 	}
 
 	@Override
-	protected CmfValue doSetProperty(JdbcOperation operation, String property, final CmfValue newValue)
+	protected CmfValue setProperty(JdbcOperation operation, String property, final CmfValue newValue)
 		throws CmfStorageException {
-		final CmfValue oldValue = doGetProperty(operation, property);
+		final CmfValue oldValue = getProperty(operation, property);
 		final Connection c = operation.getConnection();
 		final CmfValueSerializer serializer = CmfValueSerializer.get(newValue.getDataType());
 		final String newValueString;
 		try {
 			newValueString = serializer.serialize(newValue);
 		} catch (ParseException e) {
-			throw new CmfStorageException(String.format("Failed to serialize the value [%s] for the store property [%s]",
-				newValue, property));
+			throw new CmfStorageException(String.format(
+				"Failed to serialize the value [%s] for the store property [%s]", newValue, property));
 		}
 		try {
 			if (oldValue != null) {
@@ -1143,7 +1138,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Set<String> doGetPropertyNames(JdbcOperation operation) throws CmfStorageException {
+	protected Set<String> getPropertyNames(JdbcOperation operation) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		try {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_NAMES_SQL,
@@ -1164,8 +1159,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected CmfValue doClearProperty(JdbcOperation operation, String property) throws CmfStorageException {
-		final CmfValue oldValue = doGetProperty(operation, property);
+	protected CmfValue clearProperty(JdbcOperation operation, String property) throws CmfStorageException {
+		final CmfValue oldValue = getProperty(operation, property);
 		final Connection c = operation.getConnection();
 		try {
 			JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_STORE_PROPERTY_SQL, property);
@@ -1176,15 +1171,27 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void doClearProperties(JdbcOperation operation) throws CmfStorageException {
+	protected void clearProperties(JdbcOperation operation) throws CmfStorageException {
 		try {
-			doClearProperties(operation.getConnection());
+			clearProperties(operation.getConnection());
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to delete all the store properties", e);
 		}
 	}
 
-	private void doClearProperties(Connection c) throws SQLException {
+	private void clearProperties(Connection c) throws SQLException {
 		JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_ALL_STORE_PROPERTIES_SQL);
+	}
+
+	@Override
+	protected CmfACL loadACL(JdbcOperation operation, String aclId) throws CmfStorageException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected String storeACL(JdbcOperation operation, CmfACL acl) throws CmfStorageException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
