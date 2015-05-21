@@ -38,7 +38,6 @@ import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
-import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
@@ -960,7 +959,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final String propName = IntermediateProperty.ACL_ID.encode();
 		CmfProperty<IDfValue> aclId = this.cmfObject.getProperty(propName);
 		IDfACL acl = null;
-		CmfACL cmfAcl = null;
+		CmfACL<IDfValue> cmfAcl = null;
 		if ((aclId != null) && aclId.hasValues()) {
 			// Is the ID already mapped? If so, the ACL already exists and that's all there is to it
 			Mapping m = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(), propName,
@@ -974,16 +973,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				}
 			}
 
-			// No existing ACL, so we must load the one from storage in order to
+			// No existing ACL, so we must use the one from storage in order to
 			// create the new one
 			if (acl == null) {
-				try {
-					cmfAcl = context.loadACL(aclId.getValue().asString());
-				} catch (CmfStorageException e) {
-					throw new ImportException(String.format(
-						"Failed to load the existing ACL with ID [%s] for %s [%s](%s)", aclId.getValue().asString(),
-						this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
-				}
+				cmfAcl = this.cmfObject.getAcl();
 			}
 		}
 
