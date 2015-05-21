@@ -7,8 +7,7 @@ package com.armedia.cmf.engine.documentum.importer;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.chemistry.opencmis.commons.PropertyIds;
-
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
@@ -20,6 +19,7 @@ import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -72,12 +72,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			setAttributeOnObject(DctmAttributes.OBJECT_NAME, DfValueFactory.newStringValue(folderName), folder);
 		} else {
 			folderName = folder.getObjectName();
-		}
-
-		// Only do the linking/unlinking for non-cabinets
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(PropertyIds.PARENT_ID);
-		if ((p != null) && p.hasValues()) {
-			linkToParents(folder, context);
 		}
 	}
 
@@ -169,11 +163,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-								actualUser, this.cmfObject.getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+						actualUser, this.cmfObject.getLabel()), e);
 			}
 		}
 	}
@@ -183,19 +177,28 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
 		// Easier way: determine if we have parent folders...if not, then we're a cabinet
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(PropertyIds.PARENT_ID);
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
-			return session.getFolderByPath(String.format("/%s", this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME)
-				.getValue().asString()));
+			String path = String.format("/%s", this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
+				.asString());
+			return session.getFolderByPath(ctx.getTargetPath(path));
 		}
 		return super.locateInCms(ctx);
 	}
 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(PropertyIds.PARENT_ID);
-		if ((p == null) || !p.hasValues()) {
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
+		CmfAttribute<IDfValue> a = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
+		String path = "";
+		final String name = a.getValue().asString();
+		if ((p != null) && p.hasValues()) {
+			path = p.getValue().asString();
+		}
+		path = ctx.getTargetPath(String.format("%s/%s", path, name));
+
+		if ("/".equals(FileNameTools.dirname(path))) {
 			IDfFolder newObject = castObject(ctx.getSession().newObject("dm_cabinet"));
 			setOwnerGroupACLData(newObject, ctx);
 			return newObject;

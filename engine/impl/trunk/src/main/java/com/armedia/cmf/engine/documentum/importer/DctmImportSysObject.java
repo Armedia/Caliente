@@ -400,7 +400,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	@Override
-	protected void prepareOperation(T sysObject, boolean newObject) throws DfException, ImportException {
+	protected void prepareOperation(T sysObject, boolean newObject, DctmImportContext context) throws DfException,
+		ImportException {
+
 		if (!isTransitoryObject(sysObject)) {
 			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
 			if (this.existingTemporaryPermission.grant(sysObject)) {
@@ -456,6 +458,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		throws DfException, ImportException {
 		super.finalizeConstruction(object, newObject, context);
 		doFinalizeConstruction(object, newObject, context);
+		// Now, link to the parent folders
+		linkToParents(object, context);
 		restoreAcl(object, context);
 	}
 
@@ -572,11 +576,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 		creatorName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, creatorName));
 
-		CmfAttribute<IDfValue> aclNameAtt = stored.getAttribute(DctmAttributes.ACL_NAME);
-		CmfAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
 		String aclName = "acl_name";
 		String aclDomain = "acl_domain";
-		if (ctx.isSupported(CmfType.ACL) && (aclNameAtt != null) && (aclDomainAtt != null)) {
+		CmfAttribute<IDfValue> aclNameAtt = stored.getAttribute(DctmAttributes.ACL_NAME);
+		CmfAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
+		if ((aclNameAtt != null) && (aclDomainAtt != null)) {
 			aclName = DfUtils.sqlQuoteString(aclNameAtt.getValue().asString());
 			aclDomain = "";
 			if (aclDomainAtt != null) {
@@ -763,15 +767,22 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
 		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
-		if ((parents == null) || (parents.getValueCount() == 0)) { throw new ImportException(String.format(
-			"No target parents specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
-		for (int i = 0; i < parents.getValueCount(); i++) {
-			IDfId parentId = getMappedParentId(context, i);
-			if (parentId == null) {
-				continue;
+		if ((parents == null) || (parents.getValueCount() == 0)) {
+			// This might be a cabinet import, so we try to find the target folder
+			String rootPath = context.getTargetPath("/");
+			IDfFolder root = context.getSession().getFolderByPath(rootPath);
+			if (root != null) {
+				newParents.add(root.getObjectId().getId());
 			}
-			newParents.add(parentId.toString());
+		} else {
+			for (int i = 0; i < parents.getValueCount(); i++) {
+				IDfId parentId = getMappedParentId(context, i);
+				if (parentId == null) {
+					continue;
+				}
+				newParents.add(parentId.toString());
+			}
 		}
 		return newParents;
 	}
