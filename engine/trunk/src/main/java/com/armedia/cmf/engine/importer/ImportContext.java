@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferContext;
-import com.armedia.cmf.storage.CmfACL;
 import com.armedia.cmf.storage.CmfAttributeMapper;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
@@ -41,10 +40,6 @@ public abstract class ImportContext<S, V> extends TransferContext<S, V> {
 	public final int loadObjects(CmfType type, Set<String> ids, CmfObjectHandler<V> handler)
 		throws CmfStorageException, CmfValueDecoderException {
 		return this.cmfObjectStore.loadObjects(this.translator, type, ids, handler);
-	}
-
-	public final CmfACL loadACL(String id) throws CmfStorageException {
-		return this.cmfObjectStore.loadACL(id);
 	}
 
 	public final CmfContentStore<?> getContentStore() {
