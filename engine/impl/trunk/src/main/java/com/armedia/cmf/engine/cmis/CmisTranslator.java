@@ -50,13 +50,6 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 			CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
-
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
-		// BASE_TYPE_ID (ACL)
-		// OBJECT_TYPE_ID (DM_ACL)
-		am.put(CmisCustomAttributes.ACL_OWNER.name, IntermediateAttribute.OWNER);
-		attributeMappings.put(CmfType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (cmis:document|...)

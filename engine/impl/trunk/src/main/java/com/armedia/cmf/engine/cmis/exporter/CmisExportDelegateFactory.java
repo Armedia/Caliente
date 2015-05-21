@@ -14,19 +14,16 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportDelegateFactory extends
-	ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
 	CmisExportDelegateFactory(CmisExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
 	@Override
-	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfType type, String searchKey)
-		throws Exception {
+	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfType type, String searchKey) throws Exception {
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {
-			case ACL:
-				return new CmisAclDelegate(this, obj);
 			case FOLDER:
 				if (obj instanceof Folder) { return new CmisFolderDelegate(this, Folder.class.cast(obj)); }
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Folder-type",
