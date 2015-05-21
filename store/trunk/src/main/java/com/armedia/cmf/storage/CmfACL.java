@@ -23,6 +23,7 @@ public final class CmfACL implements Serializable {
 	}
 
 	private final String identifier;
+	private String storedIdentifier = null;
 	private final Set<CmfAccessor> allAccessors;
 	private final Map<AccessorType, Map<String, CmfAccessor>> accessors;
 	private final Map<String, CmfProperty<CmfValue>> properties;
@@ -57,6 +58,14 @@ public final class CmfACL implements Serializable {
 
 	public String getIdentifier() {
 		return this.identifier;
+	}
+
+	void setStoredIdentifier(String identifier) {
+		this.storedIdentifier = identifier;
+	}
+
+	public String getStoredIdentifier() {
+		return this.storedIdentifier;
 	}
 
 	public int getAccessorCount() {
