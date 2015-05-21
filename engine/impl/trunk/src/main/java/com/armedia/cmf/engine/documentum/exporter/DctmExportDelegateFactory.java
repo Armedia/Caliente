@@ -12,7 +12,7 @@ import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfValue;
 
 public class DctmExportDelegateFactory extends
-ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
+	ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
 
 	DctmExportDelegateFactory(DctmExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
@@ -51,9 +51,6 @@ ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContex
 					break;
 				case GROUP:
 					delegate = new DctmExportGroup(this, object);
-					break;
-				case ACL:
-					delegate = new DctmExportACL(this, object);
 					break;
 				case TYPE:
 					delegate = new DctmExportType(this, object);

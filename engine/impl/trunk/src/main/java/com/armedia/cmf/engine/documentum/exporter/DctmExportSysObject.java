@@ -288,7 +288,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the ACL
-		req.add(this.factory.newExportDelegate(sysObject.getACL()));
+		// req.add(this.factory.newExportDelegate(sysObject.getACL()));
 		return req;
 	}
 }

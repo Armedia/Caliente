@@ -8,7 +8,6 @@ import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
@@ -28,7 +27,6 @@ public enum DctmObjectType {
 	STORE(CmfType.DATASTORE, IDfStore.class),
 	USER(CmfType.USER, IDfUser.class),
 	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
-	ACL(CmfType.ACL, IDfACL.class),
 	TYPE(CmfType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	FORMAT(CmfType.FORMAT, IDfFormat.class),
 	FOLDER(CmfType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
@@ -126,13 +124,13 @@ public enum DctmObjectType {
 	private static Map<CmfType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}
 
 	public static DctmObjectType decodeType(IDfSession session, String typeName) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to find the type in"); }
 		if (typeName == null) { throw new IllegalArgumentException("Must provide a type to find"); }
 		IDfType type = session.getType(typeName);
@@ -175,8 +173,7 @@ public enum DctmObjectType {
 	public static DctmObjectType decodeType(CmfType type) {
 		synchronized (DctmObjectType.class) {
 			if (DctmObjectType.OBJECT_TYPE_TRANSLATOR == null) {
-				Map<CmfType, DctmObjectType> m = new EnumMap<CmfType, DctmObjectType>(
-					CmfType.class);
+				Map<CmfType, DctmObjectType> m = new EnumMap<CmfType, DctmObjectType>(CmfType.class);
 				for (DctmObjectType t : DctmObjectType.values()) {
 					m.put(t.getStoredObjectType(), t);
 				}

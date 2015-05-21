@@ -56,15 +56,6 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
-		// BASE_TYPE_ID (ACL)
-		// OBJECT_TYPE_ID (DM_ACL)
-		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
-		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
-		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
-		attributeMappings.put(CmfType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
-		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (TYPE)
 		// OBJECT_TYPE_ID (DM_TYPE)
 		am.put(DctmAttributes.NAME, IntermediateAttribute.NAME);

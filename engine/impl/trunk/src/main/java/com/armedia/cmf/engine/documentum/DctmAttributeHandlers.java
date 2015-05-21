@@ -48,8 +48,7 @@ public class DctmAttributeHandlers {
 		 *         {@code false})
 		 * @throws DfException
 		 */
-		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
-			throws DfException {
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute) throws DfException {
 			return true;
 		}
 
@@ -100,8 +99,7 @@ public class DctmAttributeHandlers {
 	public static final AttributeHandler DEFAULT_HANDLER = new AttributeHandler();
 	public static final AttributeHandler NO_IMPORT_HANDLER = new AttributeHandler() {
 		@Override
-		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
-			throws DfException {
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute) throws DfException {
 			return false;
 		}
 	};
@@ -119,8 +117,7 @@ public class DctmAttributeHandlers {
 		}
 
 		@Override
-		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
-			throws DfException {
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute) throws DfException {
 			return false;
 		}
 	};
@@ -160,23 +157,6 @@ public class DctmAttributeHandlers {
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		// These are the attributes that require special handling on import
-
-		//
-		// ACL
-		//
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.OBJECT_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_ACCESSOR_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_ACCESSOR_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_IS_GROUP, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_ACCESSOR_XPERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		//
 		// Document
@@ -256,19 +236,19 @@ public class DctmAttributeHandlers {
 			DctmAttributes.GROUP_GLOBAL_UNIQUE_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-			@Override
-			public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
-				throws DfException {
-				return false;
-			}
+				@Override
+				public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
+					throws DfException {
+					return false;
+				}
 
-			@Override
-			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-				throws DfException {
-				return DctmMappingUtils.substituteMappableUsers(object, attr);
-			}
+				@Override
+				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+					throws DfException {
+					return DctmMappingUtils.substituteMappableUsers(object, attr);
+				}
 
-		});
+			});
 
 		//
 		// Type

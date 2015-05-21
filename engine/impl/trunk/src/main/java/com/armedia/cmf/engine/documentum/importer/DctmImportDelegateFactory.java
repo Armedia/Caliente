@@ -11,7 +11,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
 public class DctmImportDelegateFactory extends
-ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
+	ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
 
 	protected DctmImportDelegateFactory(DctmImportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
@@ -22,8 +22,6 @@ ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContex
 		DctmObjectType type = DctmObjectType.decodeType(marshaled.getType());
 		if (type == null) { throw new UnsupportedCmfTypeException(marshaled.getType()); }
 		switch (type) {
-			case ACL:
-				return new DctmImportACL(this, marshaled);
 			case DOCUMENT:
 				return new DctmImportDocument(this, marshaled);
 			case STORE:

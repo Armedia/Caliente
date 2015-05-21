@@ -42,8 +42,8 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 			// The user's home folder
 			session.getFolderByPath(user.getDefaultFolder()),
 
-			// The user's default ACL
-			session.getACL(user.getACLDomain(), user.getACLName())
+		// The user's default ACL
+		// session.getACL(user.getACLDomain(), user.getACLName())
 		};
 		for (IDfPersistentObject dep : deps) {
 			if (dep == null) {

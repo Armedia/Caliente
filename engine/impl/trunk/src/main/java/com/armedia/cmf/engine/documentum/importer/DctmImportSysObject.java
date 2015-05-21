@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
@@ -31,13 +32,16 @@ import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
+import com.armedia.cmf.storage.CmfACL;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -56,6 +60,8 @@ import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
 	DctmSysObject {
+
+	private static final String ACL_MARKER = UUID.randomUUID().toString();
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -403,6 +409,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected void prepareOperation(T sysObject, boolean newObject, DctmImportContext context) throws DfException,
 		ImportException {
 
+		IDfACL acl = IDfACL.class.cast(context.getObject(DctmImportSysObject.ACL_MARKER));
+		sysObject.setACL(acl);
+
 		if (!isTransitoryObject(sysObject)) {
 			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
 			if (this.existingTemporaryPermission.grant(sysObject)) {
@@ -460,7 +469,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		doFinalizeConstruction(object, newObject, context);
 		// Now, link to the parent folders
 		linkToParents(object, context);
-		restoreAcl(object, context);
+		// restoreAcl(object, context);
 	}
 
 	protected void doFinalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
@@ -578,6 +587,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		String aclName = "acl_name";
 		String aclDomain = "acl_domain";
+		/*
 		CmfAttribute<IDfValue> aclNameAtt = stored.getAttribute(DctmAttributes.ACL_NAME);
 		CmfAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
 		if ((aclNameAtt != null) && (aclDomainAtt != null)) {
@@ -591,6 +601,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 			aclDomain = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, aclDomain));
 		}
+		 */
 
 		CmfAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
 		final boolean deletedFlag = (deletedAtt != null) && deletedAtt.getValue().asBoolean();
@@ -944,6 +955,60 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
 				PropertyIds.PARENT_ID, this.cmfObject.getLabel(), this.cmfObject.getId()));
 		}
+
+		// TODO: Restore the object's ACL here
+		final String propName = IntermediateProperty.ACL_ID.encode();
+		CmfProperty<IDfValue> aclId = this.cmfObject.getProperty(propName);
+		IDfACL acl = null;
+		CmfACL cmfAcl = null;
+		if ((aclId != null) && aclId.hasValues()) {
+			// Is the ID already mapped? If so, the ACL already exists and that's all there is to it
+			Mapping m = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(), propName,
+				aclId.getValue().asString());
+			if (m != null) {
+				try {
+					// Try to find the existing ACL by object ID
+					acl = IDfACL.class.cast(context.getSession().getObject(new DfId(m.getTargetValue())));
+				} catch (DfIdNotFoundException e) {
+					// No such ACL...we'll need a new one
+				}
+			}
+
+			// No existing ACL, so we must load the one from storage in order to
+			// create the new one
+			if (acl == null) {
+				try {
+					cmfAcl = context.loadACL(aclId.getValue().asString());
+				} catch (CmfStorageException e) {
+					throw new ImportException(String.format(
+						"Failed to load the existing ACL with ID [%s] for %s [%s](%s)", aclId.getValue().asString(),
+						this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+				}
+			}
+		}
+
+		if (acl == null) {
+			acl = IDfACL.class.cast(context.getSession().newObject("dm_acl"));
+			String user = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME).getValue().asString();
+			user = DctmMappingUtils.resolveMappableUser(context.getSession(), user);
+			IDfUser u = DctmImportUser.locateExistingUser(context, user);
+			if (u == null) { throw new ImportException(String.format(
+				"Failed to locate the owner [%s] for the new ACL for %s [%s](%s)", user, this.cmfObject.getType(),
+				this.cmfObject.getLabel(), this.cmfObject.getId())); }
+			acl.setDomain(u.getUserName());
+
+			// TODO: Set all permissions...
+
+			acl.save();
+		}
+
+		// We only create the mapping if we were forced to load the ACL from storage
+		if (cmfAcl != null) {
+			context.getAttributeMapper().setMapping(this.cmfObject.getType(), propName, cmfAcl.getIdentifier(),
+				acl.getObjectId().getId());
+		}
+
+		context.setObject(DctmImportSysObject.ACL_MARKER, acl);
 
 		return super.doImportObject(context);
 	}
