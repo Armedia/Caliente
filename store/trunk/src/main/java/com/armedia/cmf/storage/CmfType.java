@@ -5,26 +5,11 @@ public enum CmfType {
 	DATASTORE,
 	USER,
 	GROUP,
-	ACL(false),
 	TYPE,
 	FORMAT,
 	FOLDER,
 	DOCUMENT,
 	WORKFLOW;
-
-	private final boolean independent;
-
-	private CmfType() {
-		this(true);
-	}
-
-	private CmfType(boolean independent) {
-		this.independent = independent;
-	}
-
-	public boolean isIndependent() {
-		return this.independent;
-	}
 
 	public static CmfType decodeString(String str) {
 		if (str == null) { throw new NullPointerException("Must provide a valid string to decode"); }
@@ -35,8 +20,8 @@ public enum CmfType {
 				CmfType ret = d.translateObjectType(str);
 				if (ret != null) { return ret; }
 			}
-			throw new IllegalArgumentException(String.format(
-				"The string [%s] could not be translated to a CmfType", str));
+			throw new IllegalArgumentException(String.format("The string [%s] could not be translated to a CmfType",
+				str));
 		}
 	}
 }

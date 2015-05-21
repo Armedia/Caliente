@@ -590,4 +590,30 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract CmfValue clearProperty(O operation, String property) throws CmfStorageException;
 
+	public final CmfACL loadACL(String aclId) throws CmfStorageException {
+		O operation = beginInvocation();
+		try {
+			CmfACL ret = loadACL(operation, aclId);
+			operation.commit();
+			return ret;
+		} finally {
+			endInvocation(operation);
+		}
+	}
+
+	protected abstract CmfACL loadACL(O operation, String aclId) throws CmfStorageException;
+
+	public final String storeACL(CmfACL acl) throws CmfStorageException {
+		O operation = beginInvocation();
+		try {
+			String ret = storeACL(operation, acl);
+			operation.commit();
+			return ret;
+		} finally {
+			endInvocation(operation);
+		}
+	}
+
+	protected abstract String storeACL(O operation, CmfACL acl) throws CmfStorageException;
+
 }
