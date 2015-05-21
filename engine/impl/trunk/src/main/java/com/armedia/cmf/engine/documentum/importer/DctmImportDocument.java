@@ -7,10 +7,10 @@ package com.armedia.cmf.engine.documentum.importer;
 import java.io.File;
 import java.util.List;
 
-import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
@@ -181,7 +181,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
 		IDfId mainFolderId = getMappedParentId(context);
 		if (mainFolderId == null) {
-			mainFolderId = this.cmfObject.getProperty(PropertyIds.PARENT_ID).getValue().asId();
+			mainFolderId = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode()).getValue().asId();
 			throw new ImportException(String.format(
 				"Reference [%s] mapping for its parent folder [%s->???] could not be found", this.cmfObject.getLabel(),
 				mainFolderId.getId()));
@@ -374,8 +374,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void prepareOperation(IDfDocument sysObject, boolean newObject) throws DfException, ImportException {
-		super.prepareOperation(sysObject, newObject);
+	protected void prepareOperation(IDfDocument sysObject, boolean newObject, DctmImportContext context)
+		throws DfException, ImportException {
+		super.prepareOperation(sysObject, newObject, context);
 		if (!newObject) {
 			// We only do this for old objects because new objects will have been
 			// "fixed" in this respect in newObject()
