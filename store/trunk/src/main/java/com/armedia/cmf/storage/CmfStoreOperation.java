@@ -6,11 +6,14 @@ import org.slf4j.LoggerFactory;
 public abstract class CmfStoreOperation<C> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
+
 	private final C connection;
 	private boolean valid = true;
 	private boolean transactionOpen = false;
 
 	protected CmfStoreOperation(C wrapped) {
+		if (wrapped == null) { throw new IllegalArgumentException(
+			"Must provide the connection that this operation is related to"); }
 		this.connection = wrapped;
 	}
 
@@ -45,10 +48,9 @@ public abstract class CmfStoreOperation<C> {
 			"This type of session doesn't support transactions"); }
 		try {
 			commitTransaction();
+			this.transactionOpen = false;
 		} catch (Exception e) {
 			throw new CmfStorageException("Exception raised committing an operation", e);
-		} finally {
-			this.transactionOpen = false;
 		}
 	}
 
@@ -61,10 +63,9 @@ public abstract class CmfStoreOperation<C> {
 			"This type of session doesn't support transactions"); }
 		try {
 			rollbackTransaction();
+			this.transactionOpen = false;
 		} catch (Exception e) {
 			throw new CmfStorageException("Exception raised rolling back an operation", e);
-		} finally {
-			this.transactionOpen = false;
 		}
 	}
 
@@ -76,18 +77,14 @@ public abstract class CmfStoreOperation<C> {
 
 	public final void close(boolean commit) throws CmfStorageException {
 		if (!this.valid) { return; }
-		if (commit) {
-			commit();
-		} else {
-			rollback();
-		}
 		try {
-			closeConnection();
-		} catch (Exception e) {
-			if (this.log.isTraceEnabled()) {
-				this.log.error("Exception raised while closing an operation's connection", e);
+			if (commit) {
+				commit();
+			} else {
+				rollback();
 			}
 		} finally {
+			closeConnectionQuietly();
 			this.valid = false;
 		}
 	}
@@ -95,10 +92,10 @@ public abstract class CmfStoreOperation<C> {
 	protected final void closeConnectionQuietly() {
 		try {
 			closeConnection();
-		} catch (Exception e) {
+		} catch (Throwable t) {
 			// Ignore it...
 			if (this.log.isTraceEnabled()) {
-				this.log.error("Exception caught while closing a connection", e);
+				this.log.error("Exception raised while closing an operation's connection", t);
 			}
 		}
 	}
