@@ -172,10 +172,15 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private static final String DELETE_ALL_STORE_PROPERTIES_SQL = //
 	"    truncate table cmf_info ";
 
+	private static final String CHECK_ACL_SQL = //
+	"    select * " + //
+		"  from cmf_acl " + //
+		" where acl_id = ? ";
+
 	private static final String LOAD_ACL_SQL = //
 	"    select a.* " + //
-		"  from cmf_acl a, cmf_object_acl b" + //
-		" where a.object_id = b.object_id " + //
+		"  from cmf_acl a, cmf_object_acl b " + //
+		" where a.acl_id = b.acl_id " + //
 		"   and b.object_id = ? ";
 
 	private static final String LOAD_ACL_ACCESSOR_SQL = //
@@ -1209,8 +1214,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> CmfACL<V> loadACL(JdbcOperation operation, final String aclId, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException, CmfValueDecoderException {
+	protected <V> CmfACL<V> loadACL(JdbcOperation operation, final CmfObject<V> object,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException, CmfValueDecoderException {
 		Connection c = operation.getConnection();
 		PreparedStatement aclPS = null;
 		PreparedStatement aclAccPS = null;
@@ -1231,10 +1236,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				ResultSet aclPropRS = null;
 				ResultSet aclPropValRS = null;
 				try {
-					aclPS.setString(1, aclId);
+					aclPS.setString(1, object.getId());
 					aclRS = aclPS.executeQuery();
 					if (!aclRS.next()) { return null; }
 
+					final String aclId = aclRS.getString("acl_id");
 					final CmfACL<V> acl = new CmfACL<V>(aclId);
 
 					aclAccPS.setString(1, aclId);
@@ -1292,7 +1298,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				DbUtils.closeQuietly(aclPS);
 			}
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to load the ACL with ID %s ", aclId), e);
+			throw new CmfStorageException(String.format("Failed to load the ACL for %s [%s](%s) ", object.getType(),
+				object.getLabel(), object.getId()), e);
 		}
 	}
 
@@ -1306,9 +1313,28 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			// If we've not been given an ID, we'll re-use the source object's
 			aclId = object.getId();
 		}
+		// We can only share this ACL if the object ID is different from the ACL ID
+		boolean canShare = !Tools.equals(aclId, object.getId());
 
 		final QueryRunner qr = new QueryRunner();
 		try {
+			// We do this on top to avoid wasting time if the ACL has already been stowed.
+			try {
+				qr.insert(c, JdbcObjectStore.INSERT_ACL_SQL, JdbcObjectStore.HANDLER_NULL, aclId, object.getId(),
+					object.getType().name());
+			} catch (SQLException e) {
+				// If the ACL an be shared, then we check to see if someone beat us to the punch,
+				// and avoid storing the ACL data a second time
+				if (canShare) {
+					// Check to see if it's a duplicate key exception (i.e. a race condition storing
+					// ACLs)
+					boolean exists = qr.query(c, JdbcObjectStore.CHECK_ACL_SQL, JdbcObjectStore.HANDLER_EXISTS, aclId);
+					if (exists) { return aclId; }
+				}
+				// If this ACL can't be shared, then any exception is a problem
+				throw new SQLException("Exception cascade", e);
+			}
+
 			Collection<Object[]> accessors = new ArrayList<Object[]>();
 			Collection<Object[]> permissions = new ArrayList<Object[]>();
 			Collection<Object[]> properties = new ArrayList<Object[]>();
@@ -1368,9 +1394,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					propertyValues.add(propertyValueData.clone());
 				}
 			}
-
-			qr.insert(c, JdbcObjectStore.INSERT_ACL_SQL, JdbcObjectStore.HANDLER_NULL, aclId, object.getId(), object
-				.getType().name());
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_ACCESSOR_SQL, JdbcObjectStore.HANDLER_NULL,
 				accessors.toArray(JdbcObjectStore.NO_PARAMS));
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_PERMISSION_SQL, JdbcObjectStore.HANDLER_NULL,
