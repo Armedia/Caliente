@@ -23,7 +23,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportContextFactory extends
-ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine, IDfFolder> {
+	ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine, IDfFolder> {
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg) {
@@ -32,8 +32,8 @@ ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext
 	}
 
 	@Override
-	protected DctmImportContext constructContext(String rootId, CmfType rootType, IDfSession session,
-		Logger output, CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore) {
+	protected DctmImportContext constructContext(String rootId, CmfType rootType, IDfSession session, Logger output,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore) {
 		return new DctmImportContext(this, getSettings(), rootId, rootType, session, output, getEngine()
 			.getTranslator(), objectStore, contentStore);
 	}
@@ -54,7 +54,6 @@ ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext
 		f.setObjectName(name);
 		if (parent != null) {
 			f.link(parent.getObjectId().getId());
-			parent.save();
 		}
 		f.save();
 		return f;
