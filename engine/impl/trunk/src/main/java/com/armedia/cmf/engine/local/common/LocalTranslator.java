@@ -52,12 +52,6 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 		BidiMap<String, IntermediateAttribute> am = null;
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
-		// BASE_TYPE_ID (ACL)
-		// OBJECT_TYPE_ID (DM_ACL)
-		// am.put(LocalAttributes.ACL_OWNER.name, IntermediateAttribute.OWNER);
-		attributeMappings.put(CmfType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (cmis:document|...)
 		// am.put(LocalAttributes.VERSION_ANTECEDENT_ID.name,
