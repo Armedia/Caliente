@@ -24,6 +24,7 @@ public enum IntermediateProperty implements Mappable {
 	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfDataType.BOOLEAN),
 
 	// Non-CMIS properties
+	ACL_ID(CmfDataType.ID),
 	USERS_WITH_DEFAULT_GROUP(CmfDataType.ID),
 	VERSION_PATCHES(CmfDataType.STRING),
 	PATCH_ANTECEDENT(CmfDataType.STRING),

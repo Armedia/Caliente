@@ -44,8 +44,8 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V>, F extends ImportDelegateFactory<S, W, V, C, ?>>
-	extends
-	TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFactory<S, W, V, C, ?>, ImportEngineListener> {
+extends
+TransferEngine<S, V, C, ImportContextFactory<S, W, V, C, ?, ?>, ImportDelegateFactory<S, W, V, C, ?>, ImportEngineListener> {
 
 	private static enum BatchStatus {
 		//
@@ -245,7 +245,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
-		throws ImportException, CmfStorageException {
+			throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -341,7 +341,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -414,10 +414,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 												// the other objects
 												failBatch = true;
 												this.log
-													.debug(String
-														.format(
-															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-															storedType));
+												.debug(String
+													.format(
+														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+														storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -638,10 +638,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 				final CmfAttributeTranslator<V> translator = getTranslator();
 				for (final CmfType type : CmfType.values()) {
-					// Only go over independent types
-					if (!type.isIndependent()) {
-						continue;
-					}
 					final Integer total = containedTypes.get(type);
 					if (total == null) {
 						this.log.warn(String.format("No %s objects are contained in the export", type.name()));
@@ -683,7 +679,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 
 					this.log
-						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(translator, type, handler);
 					} catch (Exception e) {
@@ -772,10 +768,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
