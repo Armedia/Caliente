@@ -28,7 +28,7 @@ public class CmfObject<V> {
 	private String relativeStreamLocation = null;
 	private final Map<String, CmfAttribute<V>> attributes = new HashMap<String, CmfAttribute<V>>();
 	private final Map<String, CmfProperty<V>> properties = new HashMap<String, CmfProperty<V>>();
-	private CmfACL acl = null;
+	private CmfACL<V> acl = null;
 
 	public CmfObject(CmfObject<V> pattern) {
 		this.type = pattern.getType();
@@ -162,11 +162,11 @@ public class CmfObject<V> {
 		}
 	}
 
-	public final CmfACL getAcl() {
+	public final CmfACL<V> getAcl() {
 		return this.acl;
 	}
 
-	public final void setAcl(CmfACL acl) {
+	public final void setAcl(CmfACL<V> acl) {
 		this.acl = acl;
 	}
 

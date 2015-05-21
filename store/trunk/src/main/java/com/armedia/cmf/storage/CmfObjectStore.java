@@ -238,9 +238,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			"Must provide a translator for storing object values"); }
 		O operation = beginInvocation();
 		try {
-			CmfACL acl = object.getAcl();
+			CmfACL<V> acl = object.getAcl();
 			if (acl != null) {
-				acl.setStoredIdentifier(storeACL(operation, object.getAcl()));
+				String aclId = storeACL(operation, object, translator);
+				if (aclId != null) {
+					acl.setStoredIdentifier(aclId);
+				}
 			}
 			Long ret = storeObject(operation, object, translator);
 			operation.commit();
@@ -594,8 +597,21 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract CmfValue clearProperty(O operation, String property) throws CmfStorageException;
 
-	protected abstract CmfACL loadACL(O operation, String aclId) throws CmfStorageException;
+	public final <V> CmfACL<V> loadACL(String aclId, CmfAttributeTranslator<V> translator) throws CmfStorageException,
+		CmfValueDecoderException {
+		O operation = beginInvocation();
+		try {
+			CmfACL<V> ret = loadACL(operation, aclId, translator);
+			operation.commit();
+			return ret;
+		} finally {
+			endInvocation(operation);
+		}
+	}
 
-	protected abstract String storeACL(O operation, CmfACL acl) throws CmfStorageException;
+	protected abstract <V> CmfACL<V> loadACL(O operation, String aclId, CmfAttributeTranslator<V> translator)
+		throws CmfStorageException, CmfValueDecoderException;
 
+	protected abstract <V> String storeACL(O operation, CmfObject<V> sourceObject, CmfAttributeTranslator<V> translator)
+		throws CmfStorageException, CmfValueEncoderException;
 }

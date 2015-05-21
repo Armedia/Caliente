@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class CmfACL implements Serializable {
+public final class CmfACL<V> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	public static enum AccessorType {
@@ -26,10 +26,14 @@ public final class CmfACL implements Serializable {
 	private String storedIdentifier = null;
 	private final Set<CmfAccessor> allAccessors;
 	private final Map<AccessorType, Map<String, CmfAccessor>> accessors;
-	private final Map<String, CmfProperty<CmfValue>> properties;
+	private final Map<String, CmfProperty<V>> properties;
 
 	public CmfACL() {
 		this(null, null);
+	}
+
+	public CmfACL(String identifier) {
+		this(identifier, null);
 	}
 
 	public CmfACL(Set<CmfAccessor> accessors) {
@@ -38,9 +42,12 @@ public final class CmfACL implements Serializable {
 
 	public CmfACL(String identifier, Set<CmfAccessor> accessors) {
 		this.identifier = identifier;
+		if (identifier != null) {
+			this.storedIdentifier = identifier;
+		}
 		this.accessors = new EnumMap<AccessorType, Map<String, CmfAccessor>>(AccessorType.class);
 		this.allAccessors = new TreeSet<CmfAccessor>();
-		this.properties = new TreeMap<String, CmfProperty<CmfValue>>();
+		this.properties = new TreeMap<String, CmfProperty<V>>();
 
 		if ((accessors == null) || accessors.isEmpty()) { return; }
 
@@ -149,17 +156,17 @@ public final class CmfACL implements Serializable {
 		return this.properties.containsKey(name);
 	}
 
-	public CmfProperty<CmfValue> getProperty(String name) {
+	public CmfProperty<V> getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name"); }
 		return this.properties.get(name);
 	}
 
-	public CmfProperty<CmfValue> setProperty(CmfProperty<CmfValue> property) {
+	public CmfProperty<V> setProperty(CmfProperty<V> property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
 		return this.properties.put(property.getName(), property);
 	}
 
-	public CmfProperty<CmfValue> clearProperty(String name) {
+	public CmfProperty<V> clearProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name"); }
 		return this.properties.remove(name);
 	}
@@ -172,7 +179,7 @@ public final class CmfACL implements Serializable {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		CmfACL other = CmfACL.class.cast(obj);
+		CmfACL<?> other = CmfACL.class.cast(obj);
 		if (!Tools.equals(this.identifier, other.identifier)) { return false; }
 		if (!Tools.equals(this.properties, other.properties)) { return false; }
 		if (!Tools.equals(this.allAccessors, other.allAccessors)) { return false; }
