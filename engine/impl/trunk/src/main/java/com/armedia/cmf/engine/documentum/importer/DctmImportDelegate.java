@@ -28,13 +28,13 @@ import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
-import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
@@ -104,7 +104,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 		return false;
 	}
 
-	protected void prepareOperation(T object, boolean newObject) throws DfException, ImportException {
+	protected void prepareOperation(T object, boolean newObject, DctmImportContext context) throws DfException,
+		ImportException {
 	}
 
 	protected IDfId persistChanges(T object, DctmImportContext context) throws DfException, ImportException {
@@ -159,9 +160,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 						// We log this here and don't raise it because if we're aborting, it means
 						// that there's another exception already bubbling up, so we don't want
 						// to intercept that
-						this.log.error(
-							String.format("Failed to roll back the transaction for [%s](%s)",
-								this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+						this.log.error(String.format("Failed to roll back the transaction for [%s](%s)",
+							this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 					}
 				}
 			}
@@ -232,13 +232,13 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 				}
 				ok = true;
 				this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
-					getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel,
-					object.getObjectId().getId()));
+					getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel, object
+						.getObjectId().getId()));
 
 				return new ImportOutcome(cmsImportResult, newLabel, object.getObjectId().getId());
 			}
 
-			prepareOperation(object, isNew);
+			prepareOperation(object, isNew, context);
 			prepareForConstruction(object, isNew, context);
 
 			/*
@@ -294,8 +294,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 						if (!versionLabel.isRepeating()) {
 							// If the incoming attribute doesn't support multiple values, we
 							// need to change that...
-							versionLabel = new CmfAttribute<IDfValue>(versionLabel.getName(),
-								versionLabel.getType(), true, versionLabel.getValues());
+							versionLabel = new CmfAttribute<IDfValue>(versionLabel.getName(), versionLabel.getType(),
+								true, versionLabel.getValues());
 							this.cmfObject.setAttribute(versionLabel);
 						}
 						versionLabel.addValue(DctmImportDelegate.CURRENT_VERSION_LABEL);
@@ -327,8 +327,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 				newLabel = calculateLabel(object);
 			}
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
-				getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel,
-				object.getObjectId().getId()));
+				getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel, object
+					.getObjectId().getId()));
 
 			ImportOutcome ret = new ImportOutcome(cmsImportResult, object.getObjectId().getId(), newLabel);
 			ok = true;
@@ -485,8 +485,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 		return setAttributeOnObject(attribute, Collections.singleton(value), object);
 	}
 
-	protected final boolean setAttributeOnObject(CmfAttribute<IDfValue> attribute, Collection<IDfValue> values,
-		T object) throws DfException {
+	protected final boolean setAttributeOnObject(CmfAttribute<IDfValue> attribute, Collection<IDfValue> values, T object)
+		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set on the object"); }
 		return setAttributeOnObject(attribute.getName(), DctmTranslator.translateType(attribute.getType()),
@@ -692,8 +692,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 	 * @throws DfException
 	 *             Signals that Dctm Server error has occurred.
 	 */
-	private boolean updateSystemAttributes(CmfObject<IDfValue> stored, IDfPersistentObject object,
-		DctmImportContext ctx) throws DfException {
+	private boolean updateSystemAttributes(CmfObject<IDfValue> stored, IDfPersistentObject object, DctmImportContext ctx)
+		throws DfException {
 		final String sqlStr = generateSystemAttributesSQL(stored, object, ctx);
 		if (sqlStr == null) { return true; }
 		return runExecSQL(object.getSession(), sqlStr);
