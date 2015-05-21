@@ -25,6 +25,7 @@ public final class CmfACL implements Serializable {
 	private final String identifier;
 	private final Set<CmfAccessor> allAccessors;
 	private final Map<AccessorType, Map<String, CmfAccessor>> accessors;
+	private final Map<String, CmfProperty<CmfValue>> properties;
 
 	public CmfACL() {
 		this(null, null);
@@ -38,6 +39,7 @@ public final class CmfACL implements Serializable {
 		this.identifier = identifier;
 		this.accessors = new EnumMap<AccessorType, Map<String, CmfAccessor>>(AccessorType.class);
 		this.allAccessors = new TreeSet<CmfAccessor>();
+		this.properties = new TreeMap<String, CmfProperty<CmfValue>>();
 
 		if ((accessors == null) || accessors.isEmpty()) { return; }
 
@@ -125,9 +127,37 @@ public final class CmfACL implements Serializable {
 		return ret;
 	}
 
+	public Set<String> getPropertyNames() {
+		return new TreeSet<String>(this.properties.keySet());
+	}
+
+	public int getPropertyCount() {
+		return this.properties.size();
+	}
+
+	public boolean hasProperty(String name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a property name"); }
+		return this.properties.containsKey(name);
+	}
+
+	public CmfProperty<CmfValue> getProperty(String name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a property name"); }
+		return this.properties.get(name);
+	}
+
+	public CmfProperty<CmfValue> setProperty(CmfProperty<CmfValue> property) {
+		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
+		return this.properties.put(property.getName(), property);
+	}
+
+	public CmfProperty<CmfValue> clearProperty(String name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a property name"); }
+		return this.properties.remove(name);
+	}
+
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.identifier, this.allAccessors);
+		return Tools.hashTool(this, null, this.identifier, this.properties, this.allAccessors);
 	}
 
 	@Override
@@ -135,6 +165,7 @@ public final class CmfACL implements Serializable {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		CmfACL other = CmfACL.class.cast(obj);
 		if (!Tools.equals(this.identifier, other.identifier)) { return false; }
+		if (!Tools.equals(this.properties, other.properties)) { return false; }
 		if (!Tools.equals(this.allAccessors, other.allAccessors)) { return false; }
 		return true;
 	}
