@@ -58,15 +58,6 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
-		// BASE_TYPE_ID (ACL)
-		// OBJECT_TYPE_ID (DM_ACL)
-		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
-		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
-		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
-		attributeMappings.put(CmfType.ACL, UnmodifiableBidiMap.unmodifiableBidiMap(am));
-
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
-		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (TYPE)
 		// OBJECT_TYPE_ID (DM_TYPE)
 		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
