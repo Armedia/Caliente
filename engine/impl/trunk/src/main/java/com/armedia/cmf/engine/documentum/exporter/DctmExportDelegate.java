@@ -13,12 +13,13 @@ import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.CmfContentStore;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfACL;
 import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -26,8 +27,8 @@ import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmExportDelegate<T extends IDfPersistentObject>
-	extends
-	ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory, DctmExportEngine> {
+extends
+ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory, DctmExportEngine> {
 
 	private final DctmObjectType dctmType;
 
@@ -100,7 +101,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 				if (handler.includeInExport(this.object, attr)) {
 					CmfAttribute<IDfValue> attribute = new CmfAttribute<IDfValue>(attr.getName(), DctmDataType
 						.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(
-						this.object, attr));
+							this.object, attr));
 					object.setAttribute(attribute);
 				}
 			}
@@ -115,10 +116,17 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 				// This mechanism overwrites properties, and intentionally so
 				object.setProperty(property);
 			}
+
+			CmfACL<IDfValue> acl = calculateACL(typedObject);
+			object.setAcl(acl);
 			return true;
 		} catch (DfException e) {
 			throw new ExportException(String.format("Failed to export %s %s", getType(), getObjectId()), e);
 		}
+	}
+
+	protected CmfACL<IDfValue> calculateACL(T object) throws DfException, ExportException {
+		return null;
 	}
 
 	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
@@ -133,7 +141,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 
 	protected List<ContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?> streamStore)
-		throws Exception {
+			throws Exception {
 		return null;
 	}
 
