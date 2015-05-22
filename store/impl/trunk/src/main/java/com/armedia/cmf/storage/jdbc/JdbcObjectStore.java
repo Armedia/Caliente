@@ -74,7 +74,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private static final String OBJECT_NUMBER_COLUMN = "object_number";
 
-	private static final String INSERT_OBJECT_SQL = "insert into cmf_object (object_id, search_key, object_type, object_subtype, object_label, batch_id, acl_id) values (?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_OBJECT_SQL = "insert into cmf_object (object_id, search_key, object_type, object_subtype, object_label, batch_id, acl_id) values (?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_SQL = "insert into cmf_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into cmf_attribute_value (object_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into cmf_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
@@ -82,7 +82,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private static final String INSERT_ACL_SQL = "insert into cmf_acl (acl_id, source_object_id, source_object_type) values (?, ?, ?)";
 	private static final String INSERT_ACL_ACCESSOR_SQL = "insert into cmf_acl_accessor (acl_id, accessor_id, accessor_type, accessor_name) values (?, ?, ?, ?)";
-	private static final String INSERT_ACL_PERMISSION_SQL = "insert into cmf_acl_permission (acl_id, accessor_name, permission_type, permission_name, granted) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_ACL_PERMISSION_SQL = "insert into cmf_acl_permission (acl_id, accessor_id, permission_type, permission_name, granted) values (?, ?, ?, ?, ?)";
 	private static final String INSERT_ACL_PROPERTY_SQL = "insert into cmf_acl_property (acl_id, name, data_type, repeating) values (?, ?, ?, ?)";
 	private static final String INSERT_ACL_PROPERTY_VALUE_SQL = "insert into cmf_acl_property_value (acl_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 
