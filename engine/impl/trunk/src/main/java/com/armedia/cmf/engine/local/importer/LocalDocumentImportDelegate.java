@@ -13,10 +13,10 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
-import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
@@ -59,7 +59,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 				"A non-file object already exists at [%s] for document [%s](%s)", targetFile,
 				this.cmfObject.getLabel(), this.cmfObject.getId())); }
 
-			if (this.factory.isFailOnCollision()) { throw new ImportException(String.format(
+			if (this.factory.isFailOnCollisions()) { throw new ImportException(String.format(
 				"A file already exists at [%s] for document [%s](%s)", targetFile, this.cmfObject.getLabel(),
 				this.cmfObject.getId())); }
 

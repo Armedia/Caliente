@@ -14,20 +14,20 @@ public class LocalImportDelegateFactory extends
 	ImportDelegateFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine> {
 
 	private final boolean includeAllVersions;
-	private final boolean failOnCollision;
+	private final boolean failOnCollisions;
 
 	public LocalImportDelegateFactory(LocalImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
 		this.includeAllVersions = configuration.getBoolean(Setting.INCLUDE_ALL_VERSIONS);
-		this.failOnCollision = configuration.getBoolean(Setting.FAIL_ON_COLLISION);
+		this.failOnCollisions = configuration.getBoolean(Setting.FAIL_ON_COLLISIONS);
 	}
 
 	public final boolean isIncludeAllVersions() {
 		return this.includeAllVersions;
 	}
 
-	public final boolean isFailOnCollision() {
-		return this.failOnCollision;
+	public final boolean isFailOnCollisions() {
+		return this.failOnCollisions;
 	}
 
 	@Override
