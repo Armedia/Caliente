@@ -6,10 +6,13 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collection;
 
+import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.storage.CmfACL;
 import com.armedia.cmf.storage.CmfObject;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
+import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -52,5 +55,10 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 			ret.add(this.factory.newExportDelegate(dep));
 		}
 		return ret;
+	}
+
+	@Override
+	protected CmfACL<IDfValue> calculateACL(final IDfUser user) throws DfException, ExportException {
+		return DctmExportACL.calculateACL(user.getSession().getACL(user.getACLDomain(), user.getACLName()));
 	}
 }

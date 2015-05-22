@@ -4,16 +4,24 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
+import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
-import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmACL;
-import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.storage.CmfACL;
+import com.armedia.cmf.storage.CmfACL.AccessorType;
+import com.armedia.cmf.storage.CmfAccessor;
+import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfPermission;
 import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
@@ -21,8 +29,8 @@ import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfList;
 import com.documentum.fc.common.IDfValue;
 
@@ -30,7 +38,9 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL {
+public class DctmExportACL {
+
+	private static final Logger LOG = LoggerFactory.getLogger(DctmExportACL.class);
 
 	/**
 	 * This DQL will find all users for which this ACL is marked as the default ACL, and thus all
@@ -38,93 +48,38 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
-	protected DctmExportACL(DctmExportDelegateFactory factory, IDfACL acl) throws Exception {
-		super(factory, IDfACL.class, acl);
-	}
+	public static CmfACL<IDfValue> calculateACL(final IDfACL acl) throws DfException, ExportException {
+		if (acl == null) { return null; }
+		final IDfSession session = acl.getSession();
+		CmfACL<IDfValue> cmfAcl = new CmfACL<IDfValue>(acl.getObjectId().getId());
 
-	DctmExportACL(DctmExportDelegateFactory factory, IDfPersistentObject acl) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfACL.class, acl));
-	}
-
-	@Override
-	protected String calculateLabel(IDfACL acl) throws Exception {
-		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
-	}
-
-	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, IDfACL acl)
-		throws DfException {
 		final String aclId = acl.getObjectId().getId();
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		CmfProperty<IDfValue> property = null;
 		try {
-			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL,
-				DctmDataType.DF_STRING.getStoredType());
+			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL, DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
-				property.addValue(resultCol.getValueAt(0));
+				IDfValue user = resultCol.getValueAt(0);
+				property.addValue(user);
 			}
-			properties.add(property);
+			cmfAcl.setProperty(property);
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
 
-		CmfProperty<IDfValue> accessors = new CmfProperty<IDfValue>(DctmACL.ACCESSORS,
-			DctmDataType.DF_STRING.getStoredType(), true);
-		CmfProperty<IDfValue> permitTypes = new CmfProperty<IDfValue>(DctmACL.PERMIT_TYPE,
-			DctmDataType.DF_INTEGER.getStoredType(), true);
-		CmfProperty<IDfValue> permitValues = new CmfProperty<IDfValue>(DctmACL.PERMIT_VALUE,
-			DctmDataType.DF_STRING.getStoredType(), true);
-		IDfList permits = acl.getPermissions();
-		final int permitCount = permits.getCount();
-		final IDfSession session = acl.getSession();
-		Set<String> missingAccessors = new HashSet<String>();
-		for (int i = 0; i < permitCount; i++) {
-			IDfPermit p = IDfPermit.class.cast(permits.get(i));
-			// First, validate the accessor
-			final String accessor = p.getAccessorName();
-			final boolean group;
-			switch (p.getPermitType()) {
-				case IDfPermit.DF_REQUIRED_GROUP:
-				case IDfPermit.DF_REQUIRED_GROUP_SET:
-					group = true;
-					break;
-
-				default:
-					group = false;
-					break;
-			}
-
-			IDfPersistentObject o = (group ? session.getGroup(accessor) : session.getUser(accessor));
-			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessor)) {
-				// Accessor not there, skip it...
-				if (!missingAccessors.contains(accessor)) {
-					this.log.warn(String.format(
-						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", getLabel(),
-						(group ? "group" : "user"), accessor));
-					missingAccessors.add(accessor);
-				}
-				continue;
-			}
-
-			accessors.addValue(DfValueFactory.newStringValue(DctmMappingUtils.substituteMappableUsers(acl, accessor)));
-			permitTypes.addValue(DfValueFactory.newIntValue(p.getPermitType()));
-			permitValues.addValue(DfValueFactory.newStringValue(p.getPermitValueString()));
+		final int attCount = acl.getAttrCount();
+		for (int i = 0; i < attCount; i++) {
+			final IDfAttr attr = acl.getAttr(i);
+			final CmfDataType type = DctmDataType.fromAttribute(attr).getStoredType();
+			final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(attr.getName(), type, attr.isRepeating());
+			// TODO: Only use this as the handler for the attributes which contain user/group
+			// names...
+			AttributeHandler h = DctmAttributeHandlers.USER_NAME_HANDLER;
+			prop.setValues(h.getExportableValues(acl, attr));
+			cmfAcl.setProperty(prop);
 		}
-		properties.add(accessors);
-		properties.add(permitValues);
-		properties.add(permitTypes);
-	}
-
-	@Override
-	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
-		IDfACL acl, DctmExportContext ctx) throws Exception {
-		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, acl, ctx);
-		final int count = acl.getAccessorCount();
-		for (int i = 0; i < count; i++) {
-			final String name = acl.getAccessorName(i);
-			final boolean group = acl.isGroup(i);
-
+		/*
 			if (!group) {
 				if (DctmMappingUtils.isMappableUser(session, name) || ctx.isSpecialUser(name)) {
 					// User is mapped to a special user, so we shouldn't include it as a dependency
@@ -143,26 +98,70 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 				continue;
 			}
 
-			final IDfPersistentObject obj = (group ? session.getGroup(name) : session.getUser(name));
-			if (obj == null) {
-				this.log.warn(String.format("Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)",
-					acl.getObjectName(), (group ? "group" : "user"), name));
+		 */
+
+		Set<String> missingAccessors = new HashSet<String>();
+
+		// Now do the accessors...
+		final IDfList permits = acl.getPermissions();
+		final int permitCount = permits.getCount();
+		for (int i = 0; i < permitCount; i++) {
+			IDfPermit p = IDfPermit.class.cast(permits.get(i));
+			final String accessorName = p.getAccessorName();
+
+			final int permitType = p.getPermitType();
+			final String permit = p.getPermitValueString();
+			boolean grant = true;
+			boolean group = false;
+			switch (permitType) {
+				case IDfPermit.DF_REQUIRED_GROUP:
+				case IDfPermit.DF_REQUIRED_GROUP_SET:
+					group = true;
+					break;
+
+				case IDfPermit.DF_ACCESS_RESTRICTION:
+				case IDfPermit.DF_APPLICATION_RESTRICTION:
+				case IDfPermit.DF_EXTENDED_RESTRICTION:
+					grant = false;
+					break;
+
+				default:
+					break;
+			}
+
+			IDfPersistentObject o = (group ? session.getGroup(accessorName) : session.getUser(accessorName));
+			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessorName)) {
+				// Accessor not there, skip it...
+				if (!missingAccessors.contains(accessorName)) {
+					DctmExportACL.LOG.warn(String.format(
+						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectId()
+						.getId(), (group ? "group" : "user"), accessorName));
+					missingAccessors.add(accessorName);
+				}
 				continue;
 			}
-			ret.add(this.factory.newExportDelegate(obj));
+
+			AccessorType accessorType = (group ? AccessorType.GROUP : AccessorType.USER);
+			CmfAccessor accessor = cmfAcl.getAccessor(accessorType, accessorName);
+			if (accessor == null) {
+				accessor = new CmfAccessor(accessorName, accessorType);
+				cmfAcl.addAccessor(accessor);
+			}
+
+			String pt = null;
+			switch (permitType) {
+				case IDfPermit.DF_EXTENDED_PERMIT:
+				case IDfPermit.DF_EXTENDED_RESTRICTION:
+					pt = "dctm:extended";
+					break;
+				default:
+					pt = "dctm:access";
+					break;
+			}
+
+			accessor.addPermission(new CmfPermission(pt, permit, grant));
 		}
 
-		// Do the owner
-		final String owner = acl.getDomain();
-		if (DctmMappingUtils.isMappableUser(session, owner) || ctx.isSpecialUser(owner)) {
-			this.log.warn(String.format("Skipping export of special user [%s]", owner));
-		} else {
-			IDfUser user = session.getUser(owner);
-			if (user == null) { throw new Exception(String.format(
-				"Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner, acl.getObjectName(),
-				owner)); }
-			ret.add(this.factory.newExportDelegate(user));
-		}
-		return ret;
+		return cmfAcl;
 	}
 }

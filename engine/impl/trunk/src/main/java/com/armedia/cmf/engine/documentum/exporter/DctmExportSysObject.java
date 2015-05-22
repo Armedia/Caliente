@@ -6,7 +6,6 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,12 +14,9 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
-import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmException;
-import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmVersionNumber;
 import com.armedia.cmf.engine.documentum.DctmVersionTree;
 import com.armedia.cmf.engine.documentum.DfUtils;
@@ -28,26 +24,17 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfACL;
-import com.armedia.cmf.storage.CmfACL.AccessorType;
-import com.armedia.cmf.storage.CmfAccessor;
-import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfPermission;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
-import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
-import com.documentum.fc.client.IDfPermit;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
-import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
-import com.documentum.fc.common.IDfList;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -307,84 +294,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected CmfACL<IDfValue> calculateACL(T sysObject) throws DfException, ExportException {
-		IDfACL acl = sysObject.getACL();
-		if (acl == null) { return null; }
-		CmfACL<IDfValue> cmfAcl = new CmfACL<IDfValue>(acl.getObjectId().getId());
-		// Fill it with some garbage...we're just testing crap out
-		final int attCount = sysObject.getAttrCount();
-		for (int i = 0; i < attCount; i++) {
-			final IDfAttr attr = sysObject.getAttr(i);
-			final CmfDataType type = DctmDataType.fromAttribute(attr).getStoredType();
-			final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(attr.getName(), type, attr.isRepeating());
-			AttributeHandler h = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
-			prop.setValues(h.getExportableValues(sysObject, attr));
-			cmfAcl.setProperty(prop);
-		}
-
-		final IDfSession session = acl.getSession();
-		Set<String> missingAccessors = new HashSet<String>();
-
-		// Now do the accessors...
-		final IDfList permits = acl.getPermissions();
-		final int permitCount = permits.getCount();
-		for (int i = 0; i < permitCount; i++) {
-			IDfPermit p = IDfPermit.class.cast(permits.get(i));
-			final String accessorName = p.getAccessorName();
-
-			final int permitType = p.getPermitType();
-			final String permit = p.getPermitValueString();
-			boolean grant = true;
-			boolean group = false;
-			switch (permitType) {
-				case IDfPermit.DF_REQUIRED_GROUP:
-				case IDfPermit.DF_REQUIRED_GROUP_SET:
-					group = true;
-					break;
-
-				case IDfPermit.DF_ACCESS_RESTRICTION:
-				case IDfPermit.DF_APPLICATION_RESTRICTION:
-				case IDfPermit.DF_EXTENDED_RESTRICTION:
-					grant = false;
-					break;
-
-				default:
-					break;
-			}
-
-			IDfPersistentObject o = (group ? session.getGroup(accessorName) : session.getUser(accessorName));
-			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessorName)) {
-				// Accessor not there, skip it...
-				if (!missingAccessors.contains(accessorName)) {
-					this.log.warn(String.format(
-						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", getLabel(),
-						(group ? "group" : "user"), accessorName));
-					missingAccessors.add(accessorName);
-				}
-				continue;
-			}
-
-			AccessorType accessorType = (group ? AccessorType.GROUP : AccessorType.USER);
-			CmfAccessor accessor = cmfAcl.getAccessor(accessorType, accessorName);
-			if (accessor == null) {
-				accessor = new CmfAccessor(accessorName, accessorType);
-				cmfAcl.addAccessor(accessor);
-			}
-
-			String pt = null;
-			switch (permitType) {
-				case IDfPermit.DF_EXTENDED_PERMIT:
-				case IDfPermit.DF_EXTENDED_RESTRICTION:
-					pt = "dctm:extended";
-					break;
-				default:
-					pt = "dctm:access";
-					break;
-			}
-
-			accessor.addPermission(new CmfPermission(pt, permit, grant));
-		}
-
-		return cmfAcl;
+	protected CmfACL<IDfValue> calculateACL(final T sysObject) throws DfException, ExportException {
+		return DctmExportACL.calculateACL(sysObject.getACL());
 	}
 }
