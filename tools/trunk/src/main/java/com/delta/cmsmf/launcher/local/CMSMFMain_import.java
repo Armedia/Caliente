@@ -30,6 +30,12 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 	@Override
 	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
 		settings.put(LocalSessionFactory.ROOT, this.targetDir.getAbsolutePath());
+		// TODO: Enable these, but get them from a system-wide configuration
+		/*
+		settings.put(Setting.COPY_CONTENT.getLabel(), false);
+		settings.put(Setting.INCLUDE_ALL_VERSIONS.getLabel(), false);
+		settings.put(Setting.FAIL_ON_COLLISIONS.getLabel(), false);
+		 */
 		super.customizeSettings(settings);
 	}
 }
