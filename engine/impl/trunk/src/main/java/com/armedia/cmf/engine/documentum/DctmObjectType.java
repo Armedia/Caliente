@@ -8,6 +8,7 @@ import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
@@ -31,6 +32,7 @@ public enum DctmObjectType {
 	FORMAT(CmfType.FORMAT, IDfFormat.class),
 	FOLDER(CmfType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	DOCUMENT(CmfType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
+	ACL(null, IDfACL.class),
 	//
 	;
 
@@ -175,7 +177,10 @@ public enum DctmObjectType {
 			if (DctmObjectType.OBJECT_TYPE_TRANSLATOR == null) {
 				Map<CmfType, DctmObjectType> m = new EnumMap<CmfType, DctmObjectType>(CmfType.class);
 				for (DctmObjectType t : DctmObjectType.values()) {
-					m.put(t.getStoredObjectType(), t);
+					CmfType c = t.getStoredObjectType();
+					if (c != null) {
+						m.put(c, t);
+					}
 				}
 				DctmObjectType.OBJECT_TYPE_TRANSLATOR = Tools.freezeMap(m);
 			}

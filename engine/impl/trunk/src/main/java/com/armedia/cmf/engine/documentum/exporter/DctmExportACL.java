@@ -14,6 +14,7 @@ import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
+import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmACL;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -73,9 +74,7 @@ public class DctmExportACL {
 			final IDfAttr attr = acl.getAttr(i);
 			final CmfDataType type = DctmDataType.fromAttribute(attr).getStoredType();
 			final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(attr.getName(), type, attr.isRepeating());
-			// TODO: Only use this as the handler for the attributes which contain user/group
-			// names...
-			AttributeHandler h = DctmAttributeHandlers.USER_NAME_HANDLER;
+			AttributeHandler h = DctmAttributeHandlers.getAttributeHandler(DctmObjectType.ACL, attr);
 			prop.setValues(h.getExportableValues(acl, attr));
 			cmfAcl.setProperty(prop);
 		}
@@ -135,7 +134,7 @@ public class DctmExportACL {
 				if (!missingAccessors.contains(accessorName)) {
 					DctmExportACL.LOG.warn(String.format(
 						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectId()
-						.getId(), (group ? "group" : "user"), accessorName));
+							.getId(), (group ? "group" : "user"), accessorName));
 					missingAccessors.add(accessorName);
 				}
 				continue;
