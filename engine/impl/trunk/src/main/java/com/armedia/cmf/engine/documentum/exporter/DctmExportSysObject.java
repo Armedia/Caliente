@@ -15,6 +15,8 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateProperty;
+import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
+import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmException;
@@ -315,16 +317,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			final IDfAttr attr = sysObject.getAttr(i);
 			final CmfDataType type = DctmDataType.fromAttribute(attr).getStoredType();
 			final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(attr.getName(), type, attr.isRepeating());
-			final int vcount = sysObject.getValueCount(attr.getName());
-			if (prop.isRepeating()) {
-				for (int v = 0; v < vcount; v++) {
-					// TODO: Intercept the attributes that require mappable user substitution
-					prop.addValue(sysObject.getRepeatingValue(attr.getName(), v));
-				}
-			} else {
-				// TODO: Intercept the attributes that require mappable user substitution
-				prop.setValue(sysObject.getValue(attr.getName()));
-			}
+			AttributeHandler h = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
+			prop.setValues(h.getExportableValues(sysObject, attr));
 			cmfAcl.setProperty(prop);
 		}
 
