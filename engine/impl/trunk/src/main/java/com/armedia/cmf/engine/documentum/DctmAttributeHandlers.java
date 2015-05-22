@@ -104,7 +104,7 @@ public class DctmAttributeHandlers {
 		}
 	};
 
-	static final AttributeHandler USER_NAME_HANDLER = new AttributeHandler() {
+	public static final AttributeHandler USER_NAME_HANDLER = new AttributeHandler() {
 		@Override
 		public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr) throws DfException {
 			return DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER.getExportableValues(object, attr);
@@ -236,19 +236,19 @@ public class DctmAttributeHandlers {
 			DctmAttributes.GROUP_GLOBAL_UNIQUE_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.GROUP, DctmDataType.DF_STRING,
 			DctmAttributes.USERS_NAMES, new AttributeHandler() {
-				@Override
-				public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
-					throws DfException {
-					return false;
-				}
+			@Override
+			public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
+				throws DfException {
+				return false;
+			}
 
-				@Override
-				public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
-					throws DfException {
-					return DctmMappingUtils.substituteMappableUsers(object, attr);
-				}
+			@Override
+			public Collection<IDfValue> getExportableValues(IDfPersistentObject object, IDfAttr attr)
+				throws DfException {
+				return DctmMappingUtils.substituteMappableUsers(object, attr);
+			}
 
-			});
+		});
 
 		//
 		// Type
