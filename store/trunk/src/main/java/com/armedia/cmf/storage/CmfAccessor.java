@@ -29,17 +29,19 @@ public final class CmfAccessor implements Serializable, Comparable<CmfAccessor> 
 		this.allPermissions = new TreeSet<CmfPermission>();
 		this.permissions = new TreeMap<String, Map<String, CmfPermission>>();
 
-		for (CmfPermission p : permissions) {
-			String type = p.getType();
-			if (type == null) {
-				type = CmfAccessor.DEFAULT_TYPE;
+		if (permissions != null) {
+			for (CmfPermission p : permissions) {
+				String type = p.getType();
+				if (type == null) {
+					type = CmfAccessor.DEFAULT_TYPE;
+				}
+				Map<String, CmfPermission> m = this.permissions.get(type);
+				if (m == null) {
+					m = new TreeMap<String, CmfPermission>();
+					this.permissions.put(type, m);
+				}
+				m.put(p.getName(), p);
 			}
-			Map<String, CmfPermission> m = this.permissions.get(type);
-			if (m == null) {
-				m = new TreeMap<String, CmfPermission>();
-				this.permissions.put(type, m);
-			}
-			m.put(p.getName(), p);
 		}
 	}
 
