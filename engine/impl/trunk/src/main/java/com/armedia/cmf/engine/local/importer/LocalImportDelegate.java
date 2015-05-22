@@ -28,11 +28,11 @@ import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
-import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.cmf.storage.tools.FilenameFixer;
@@ -40,8 +40,8 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-extends
-ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+	extends
+	ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected LocalImportDelegate(LocalImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -56,13 +56,16 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 	protected final ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
-		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION
-			.encode());
+		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION.encode());
 		if ((att != null) && att.hasValues()) {
 			CmfValue v = att.getValue();
 			if (!v.isNull() && !v.asBoolean() && !this.factory.isIncludeAllVersions()) {
 				// If this isn't the last version, we bork out if we're configured to only deal
 				// with the last version
+				if (this.log.isDebugEnabled()) {
+					this.log.warn(String.format("Skipping non-final version for %s [%s](%s)", this.cmfObject.getType(),
+						this.cmfObject.getLabel(), this.cmfObject.getId()));
+				}
 				return new ImportOutcome(ImportResult.SKIPPED);
 			}
 		}
@@ -70,8 +73,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 		return doImportObject(translator, ctx);
 	}
 
-	protected abstract ImportOutcome doImportObject(CmfAttributeTranslator<CmfValue> translator,
-		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException;
+	protected abstract ImportOutcome doImportObject(CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
+		throws ImportException, CmfStorageException, CmfValueDecoderException;
 
 	protected final File getTargetFile(LocalImportContext ctx) throws ImportException, IOException {
 		final CmfAttributeTranslator<CmfValue> translator = this.factory.getEngine().getTranslator();
@@ -188,8 +191,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 		return true;
 	}
 
-	protected void applyAttributes(File targetFile, CmfAttributeTranslator<CmfValue> translator)
-		throws IOException, ParseException {
+	protected void applyAttributes(File targetFile, CmfAttributeTranslator<CmfValue> translator) throws IOException,
+		ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
 
