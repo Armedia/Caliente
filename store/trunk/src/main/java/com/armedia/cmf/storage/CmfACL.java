@@ -18,6 +18,7 @@ public final class CmfACL<V> implements Serializable {
 		//
 		USER,
 		GROUP,
+		ROLE,
 		//
 		;
 	}
