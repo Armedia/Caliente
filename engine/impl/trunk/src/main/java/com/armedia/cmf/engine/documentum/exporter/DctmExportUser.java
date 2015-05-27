@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfACL;
-import com.armedia.cmf.storage.CmfActor;
 import com.armedia.cmf.storage.CmfObject;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -48,26 +47,7 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 		deps.add(session.getFolderByPath(user.getDefaultFolder()));
 
 		// The user's default ACL
-		CmfACL<IDfValue> acl = marshaled.getAcl();
-		if (acl != null) {
-			for (CmfActor actor : acl.getActors()) {
-				IDfPersistentObject obj = null;
-				switch (actor.getType()) {
-					case GROUP:
-						obj = session.getGroup(actor.getName());
-						break;
-					case USER:
-						obj = session.getUser(actor.getName());
-						break;
-					default:
-						continue;
-				}
-
-				if (obj != null) {
-					deps.add(obj);
-				}
-			}
-		}
+		deps.addAll(DctmExportACL.gatherRequirements(ctx, marshaled.getAcl()));
 
 		for (IDfPersistentObject dep : deps) {
 			if (dep == null) {

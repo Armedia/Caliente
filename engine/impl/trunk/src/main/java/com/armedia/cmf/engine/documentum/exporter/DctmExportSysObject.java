@@ -24,7 +24,6 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfACL;
-import com.armedia.cmf.storage.CmfActor;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
@@ -290,26 +289,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			}
 		}
 
-		// Export the ACL
-		CmfACL<IDfValue> acl = marshaled.getAcl();
-		if (acl != null) {
-			for (CmfActor actor : acl.getActors()) {
-				IDfPersistentObject obj = null;
-				switch (actor.getType()) {
-					case GROUP:
-						obj = session.getGroup(actor.getName());
-						break;
-					case USER:
-						obj = session.getUser(actor.getName());
-						break;
-					default:
-						continue;
-				}
-
-				if (obj != null) {
-					req.add(this.factory.newExportDelegate(obj));
-				}
-			}
+		// Export the ACL's requirements
+		for (IDfPersistentObject obj : DctmExportACL.gatherRequirements(ctx, marshaled.getAcl())) {
+			req.add(this.factory.newExportDelegate(obj));
 		}
 		return req;
 	}

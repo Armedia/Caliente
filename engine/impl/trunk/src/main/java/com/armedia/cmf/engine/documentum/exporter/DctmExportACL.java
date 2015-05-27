@@ -319,7 +319,7 @@ public class DctmExportACL {
 				// Accessor not there, skip it...
 				if (!missingAccessors.contains(accessor)) {
 					DctmExportACL.LOG.warn(String.format(
-						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectId()
+						"Missing dependency for ACL [%s] - %s [%s] not exported (as ACL accessor)", acl.getObjectId()
 							.getId(), (group ? "group" : "user"), accessor));
 					missingAccessors.add(accessor);
 				}
@@ -361,7 +361,7 @@ public class DctmExportACL {
 				// Accessor not there, skip it...
 				if (!missingAccessors.contains(accessorName)) {
 					DctmExportACL.LOG.warn(String.format(
-						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectId()
+						"Missing dependency for ACL [%s] - %s [%s] not exported (as ACL accessor)", acl.getObjectId()
 							.getId(), (group ? "group" : "user"), accessorName));
 					missingAccessors.add(accessorName);
 				}
@@ -377,5 +377,40 @@ public class DctmExportACL {
 		}
 
 		return cmfAcl;
+	}
+
+	public static List<IDfPersistentObject> gatherRequirements(DctmExportContext ctx, CmfACL<IDfValue> acl)
+		throws DfException {
+		List<IDfPersistentObject> ret = new ArrayList<IDfPersistentObject>();
+		if (acl == null) { return ret; }
+
+		final IDfSession session = ctx.getSession();
+		for (CmfActor actor : acl.getActors()) {
+			final String actorName = actor.getName();
+			if (DctmMappingUtils.SPECIAL_NAMES.contains(actorName)) {
+				continue;
+			}
+
+			IDfPersistentObject obj = null;
+			switch (actor.getType()) {
+				case GROUP:
+					if (!ctx.isSpecialUser(actorName) && !DctmMappingUtils.isMappableUser(session, actorName)) {
+						obj = session.getGroup(actorName);
+					}
+					break;
+				case USER:
+					if (!ctx.isSpecialGroup(actorName)) {
+						obj = session.getUser(actorName);
+					}
+					break;
+				default:
+					continue;
+			}
+
+			if (obj != null) {
+				ret.add(obj);
+			}
+		}
+		return ret;
 	}
 }
