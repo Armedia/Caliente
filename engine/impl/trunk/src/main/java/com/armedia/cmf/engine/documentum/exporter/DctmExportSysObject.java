@@ -21,6 +21,7 @@ import com.armedia.cmf.engine.documentum.DctmVersionNumber;
 import com.armedia.cmf.engine.documentum.DctmVersionTree;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
+import com.armedia.cmf.engine.documentum.common.DctmACL;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfACL;
@@ -290,7 +291,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the ACL's requirements
-		for (IDfPersistentObject obj : DctmACLTools.gatherRequirements(ctx, marshaled.getAcl())) {
+		for (IDfPersistentObject obj : DctmExportDelegate.gatherACLRequirements(ctx, marshaled.getAcl())) {
 			req.add(this.factory.newExportDelegate(obj));
 		}
 		return req;
@@ -298,6 +299,6 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 	@Override
 	protected CmfACL<IDfValue> calculateACL(final T sysObject) throws DfException, ExportException {
-		return DctmACLTools.calculateACL(sysObject.getACL());
+		return DctmACL.calculateACL(sysObject.getACL());
 	}
 }
