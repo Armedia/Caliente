@@ -60,49 +60,43 @@
 			<column name="source_object_id" />
 		</createIndex>
 
-		<!-- The ACL accessors table -->
-		<createTable tableName="cmf_acl_accessor" remarks="The ACL accessors">
+		<!-- The ACL actors table -->
+		<createTable tableName="cmf_acl_actor" remarks="The ACL actors">
 			<column name="acl_id" type="varchar(96)" remarks="The ACL's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="accessor_id" type="bigint" remarks="The ACL accessor's ID">
+			<column name="actor_id" type="bigint" remarks="The ACL actor's ID">
 				<constraints nullable="false" unique="false"/>
 			</column>
-			<column name="accessor_type" type="varchar(32)" remarks="The accessor's type">
+			<column name="actor_type" type="varchar(32)" remarks="The actor's type">
 				<constraints nullable="false" />
 			</column>
-			<column name="accessor_name" type="varchar(128)" remarks="The accessor's name">
+			<column name="actor_name" type="varchar(128)" remarks="The actor's name">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_acl_accessor" columnNames="acl_id, accessor_id" />
-		<addForeignKeyConstraint constraintName="fk_cmf_acl_accessor_acl"
-			baseTableName="cmf_acl_accessor" baseColumnNames="acl_id"
+		<addPrimaryKey tableName="cmf_acl_actor" columnNames="acl_id, actor_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_acl_actor_acl"
+			baseTableName="cmf_acl_actor" baseColumnNames="acl_id"
 			referencedTableName="cmf_acl" referencedColumnNames="acl_id"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 
-		<!-- The ACL permissions table -->
-		<createTable tableName="cmf_acl_permission" remarks="The ACL permissions">
+		<!-- The ACL actions table -->
+		<createTable tableName="cmf_acl_action" remarks="The ACL actions">
 			<column name="acl_id" type="varchar(96)" remarks="The ACL's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="accessor_id" type="bigint" remarks="The ACL accessor's ID">
+			<column name="actor_id" type="bigint" remarks="The ACL actor's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="permission_type" type="varchar(64)" remarks="The permission's type">
-				<constraints nullable="false" />
-			</column>
-			<column name="permission_name" type="varchar(96)" remarks="The permission's name">
-				<constraints nullable="false" />
-			</column>
-			<column name="granted" type="boolean" remarks="A flag indicating whether the permission is granted or revoked">
+			<column name="action_name" type="varchar(128)" remarks="The action's type">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_acl_permission" columnNames="acl_id, accessor_id, permission_type, permission_name" />
-		<addForeignKeyConstraint constraintName="fk_cmf_acl_permission_accessor"
-			baseTableName="cmf_acl_permission" baseColumnNames="acl_id, accessor_id"
-			referencedTableName="cmf_acl_accessor" referencedColumnNames="acl_id, accessor_id"
+		<addPrimaryKey tableName="cmf_acl_action" columnNames="acl_id, actor_id, action_name" />
+		<addForeignKeyConstraint constraintName="fk_cmf_acl_action_actor"
+			baseTableName="cmf_acl_action" baseColumnNames="acl_id, actor_id"
+			referencedTableName="cmf_acl_actor" referencedColumnNames="acl_id, actor_id"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 
 		<!-- The ACL property descriptor table -->

@@ -38,15 +38,13 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
 import com.armedia.cmf.storage.CmfACL;
-import com.armedia.cmf.storage.CmfACL.AccessorType;
-import com.armedia.cmf.storage.CmfAccessor;
+import com.armedia.cmf.storage.CmfActor;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfObjectStore;
-import com.armedia.cmf.storage.CmfPermission;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
@@ -81,8 +79,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into cmf_property_value (object_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 
 	private static final String INSERT_ACL_SQL = "insert into cmf_acl (acl_id, source_object_id, source_object_type) values (?, ?, ?)";
-	private static final String INSERT_ACL_ACCESSOR_SQL = "insert into cmf_acl_accessor (acl_id, accessor_id, accessor_type, accessor_name) values (?, ?, ?, ?)";
-	private static final String INSERT_ACL_PERMISSION_SQL = "insert into cmf_acl_permission (acl_id, accessor_id, permission_type, permission_name, granted) values (?, ?, ?, ?, ?)";
+	private static final String INSERT_ACL_ACTOR_SQL = "insert into cmf_acl_actor (acl_id, actor_id, actor_type, actor_name) values (?, ?, ?, ?)";
+	private static final String INSERT_ACL_ACTION_SQL = "insert into cmf_acl_action (acl_id, actor_id, action_name) values (?, ?, ?)";
 	private static final String INSERT_ACL_PROPERTY_SQL = "insert into cmf_acl_property (acl_id, name, data_type, repeating) values (?, ?, ?, ?)";
 	private static final String INSERT_ACL_PROPERTY_VALUE_SQL = "insert into cmf_acl_property_value (acl_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 
@@ -183,17 +181,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		" where a.acl_id = b.acl_id " + //
 		"   and b.object_id = ? ";
 
-	private static final String LOAD_ACL_ACCESSOR_SQL = //
+	private static final String LOAD_ACL_ACTOR_SQL = //
 		"    select * " + //
-		"  from cmf_acl_accessor " + //
+		"  from cmf_acl_actor " + //
 		" where acl_id = ? " + //
-		" order by accessor_type, accessor_name";
+		" order by actor_type, actor_name";
 
-	private static final String LOAD_ACL_PERMISSION_SQL = //
+	private static final String LOAD_ACL_ACTION_SQL = //
 		"    select * " + //
-		"  from cmf_acl_permission " + //
+		"  from cmf_acl_action " + //
 		" where acl_id = ? " + //
-		" order by accessor_name, permission_type, permission_name ";
+		"   and actor_id = ? " + //
+		" order by action_name ";
 
 	private static final String LOAD_ACL_PROPERTIES_SQL = //
 		"    select * " + //
@@ -1224,21 +1223,21 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		CmfAttributeTranslator<V> translator) throws CmfStorageException, CmfValueDecoderException {
 		Connection c = operation.getConnection();
 		PreparedStatement aclPS = null;
-		PreparedStatement aclAccPS = null;
-		PreparedStatement aclPermPS = null;
+		PreparedStatement aclActorPS = null;
+		PreparedStatement aclActionPS = null;
 		PreparedStatement aclPropPS = null;
 		PreparedStatement aclPropValPS = null;
 		try {
 			try {
 				aclPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_SQL);
-				aclAccPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_ACCESSOR_SQL);
-				aclPermPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_PERMISSION_SQL);
+				aclActorPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_ACTOR_SQL);
+				aclActionPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_ACTION_SQL);
 				aclPropPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_PROPERTIES_SQL);
 				aclPropValPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_PROPERTY_VALUES_SQL);
 
 				ResultSet aclRS = null;
-				ResultSet aclAccRS = null;
-				ResultSet aclPermRS = null;
+				ResultSet aclActorRS = null;
+				ResultSet aclActionRS = null;
 				ResultSet aclPropRS = null;
 				ResultSet aclPropValRS = null;
 				try {
@@ -1249,24 +1248,26 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					final String aclId = aclRS.getString("acl_id");
 					final CmfACL<V> acl = new CmfACL<V>(aclId);
 
-					aclAccPS.setString(1, aclId);
-					aclAccRS = aclAccPS.executeQuery();
-					while (aclAccRS.next()) {
-						int accId = aclAccRS.getInt("accessor_id");
-						AccessorType accType = AccessorType.valueOf(aclAccRS.getString("accessor_type"));
-						String accName = aclAccRS.getString("accessor_name");
+					aclActorPS.setString(1, aclId);
+					aclActionPS.setString(1, aclId);
 
-						final CmfAccessor accessor = new CmfAccessor(accName, accType);
-						acl.addAccessor(accessor);
+					aclActorRS = aclActorPS.executeQuery();
+					while (aclActorRS.next()) {
+						int actorId = aclActorRS.getInt("actor_id");
+						CmfActor.Type actorType = CmfActor.Type.valueOf(aclActorRS.getString("actor_type"));
+						String actorName = aclActorRS.getString("actor_name");
 
-						aclPermPS.setString(1, aclId);
-						aclPermPS.setInt(2, accId);
-						aclPermRS = aclPermPS.executeQuery();
-						while (aclPermRS.next()) {
-							String permType = aclPermRS.getString("permission_type");
-							String permName = aclPermRS.getString("permission_name");
-							boolean granted = aclPermRS.getBoolean("granted");
-							accessor.addPermission(new CmfPermission(permType, permName, granted));
+						final CmfActor actor = new CmfActor(actorName, actorType);
+						acl.addActor(actor);
+
+						aclActionPS.setInt(2, actorId);
+						aclActionRS = aclActionPS.executeQuery();
+						while (aclActionRS.next()) {
+							String action = aclActionRS.getString("action_name");
+							if (aclActionRS.wasNull() || (action == null)) {
+								continue;
+							}
+							actor.addAction(action);
 						}
 					}
 
@@ -1292,15 +1293,15 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				} finally {
 					DbUtils.closeQuietly(aclPropValRS);
 					DbUtils.closeQuietly(aclPropRS);
-					DbUtils.closeQuietly(aclPermRS);
-					DbUtils.closeQuietly(aclAccRS);
+					DbUtils.closeQuietly(aclActionRS);
+					DbUtils.closeQuietly(aclActorRS);
 					DbUtils.closeQuietly(aclRS);
 				}
 			} finally {
 				DbUtils.closeQuietly(aclPropValPS);
 				DbUtils.closeQuietly(aclPropPS);
-				DbUtils.closeQuietly(aclAccPS);
-				DbUtils.closeQuietly(aclPermPS);
+				DbUtils.closeQuietly(aclActionPS);
+				DbUtils.closeQuietly(aclActorPS);
 				DbUtils.closeQuietly(aclPS);
 			}
 		} catch (SQLException e) {
@@ -1329,40 +1330,38 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				qr.insert(c, JdbcObjectStore.INSERT_ACL_SQL, JdbcObjectStore.HANDLER_NULL, aclId, object.getId(),
 					object.getType().name());
 			} catch (SQLException e) {
-				// If the ACL an be shared, then we check to see if someone beat us to the punch,
-				// and avoid storing the ACL data a second time
-				if (canShare) {
-					// Check to see if it's a duplicate key exception (i.e. a race condition storing
-					// ACLs)
+				// If the ACL an be shared, then we check to see if someone beat us to the
+				// punch, and avoid storing the ACL data a second time
+				if (e.getSQLState().equals("23505") && canShare) {
+					// Check to see if it's a duplicate key exception (i.e. a race condition
+					// storing ACLs)
 					boolean exists = qr.query(c, JdbcObjectStore.CHECK_ACL_SQL, JdbcObjectStore.HANDLER_EXISTS, aclId);
 					if (exists) { return aclId; }
 				}
-				// If this ACL can't be shared, then any exception is a problem
+				// If this ACL can't be shared, or it's a different error, then we have a problem
 				throw new SQLException("Exception cascade", e);
 			}
 
-			Collection<Object[]> accessors = new ArrayList<Object[]>();
+			Collection<Object[]> actors = new ArrayList<Object[]>();
 			Collection<Object[]> permissions = new ArrayList<Object[]>();
 			Collection<Object[]> properties = new ArrayList<Object[]>();
 			Collection<Object[]> propertyValues = new ArrayList<Object[]>();
 
-			Object[] accessorData = new Object[4];
-			Object[] permissionData = new Object[5];
-			accessorData[0] = aclId;
-			permissionData[0] = aclId;
-			for (CmfAccessor a : acl.getAccessors()) {
-				int accId = accessors.size();
-				accessorData[1] = accId;
-				accessorData[2] = a.getAccessorType().name();
-				accessorData[3] = a.getName();
-				accessors.add(accessorData.clone());
+			Object[] actorData = new Object[4];
+			Object[] actionData = new Object[3];
+			actorData[0] = aclId;
+			actionData[0] = aclId;
+			for (CmfActor a : acl.getAccessors()) {
+				int actorId = actors.size();
+				actorData[1] = actorId;
+				actorData[2] = a.getType().name();
+				actorData[3] = a.getName();
+				actors.add(actorData.clone());
 
-				permissionData[1] = accId;
-				for (CmfPermission p : a.getPermissions()) {
-					permissionData[2] = p.getType();
-					permissionData[3] = p.getName();
-					permissionData[4] = p.isGranted();
-					permissions.add(permissionData.clone());
+				actionData[1] = actorId;
+				for (String p : a.getActions()) {
+					actionData[2] = p;
+					permissions.add(actionData.clone());
 				}
 			}
 
@@ -1400,9 +1399,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					propertyValues.add(propertyValueData.clone());
 				}
 			}
-			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_ACCESSOR_SQL, JdbcObjectStore.HANDLER_NULL,
-				accessors.toArray(JdbcObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_PERMISSION_SQL, JdbcObjectStore.HANDLER_NULL,
+			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_ACTOR_SQL, JdbcObjectStore.HANDLER_NULL,
+				actors.toArray(JdbcObjectStore.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_ACTION_SQL, JdbcObjectStore.HANDLER_NULL,
 				permissions.toArray(JdbcObjectStore.NO_PARAMS));
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_PROPERTY_SQL, JdbcObjectStore.HANDLER_NULL,
 				properties.toArray(JdbcObjectStore.NO_PARAMS));
