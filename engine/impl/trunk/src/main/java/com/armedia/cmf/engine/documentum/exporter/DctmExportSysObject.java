@@ -24,11 +24,13 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfACL;
+import com.armedia.cmf.storage.CmfActor;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.content.IDfStore;
@@ -289,7 +291,26 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the ACL
-		// req.add(this.factory.newExportDelegate(sysObject.getACL()));
+		CmfACL<IDfValue> acl = marshaled.getAcl();
+		if (acl != null) {
+			for (CmfActor actor : acl.getActors()) {
+				IDfPersistentObject obj = null;
+				switch (actor.getType()) {
+					case GROUP:
+						obj = session.getGroup(actor.getName());
+						break;
+					case USER:
+						obj = session.getUser(actor.getName());
+						break;
+					default:
+						continue;
+				}
+
+				if (obj != null) {
+					req.add(this.factory.newExportDelegate(obj));
+				}
+			}
+		}
 		return req;
 	}
 

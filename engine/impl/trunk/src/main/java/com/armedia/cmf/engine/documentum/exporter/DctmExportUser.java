@@ -4,10 +4,13 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfACL;
+import com.armedia.cmf.storage.CmfActor;
 import com.armedia.cmf.storage.CmfObject;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -38,22 +41,44 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfUser user, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, user, ctx);
-		final IDfPersistentObject[] deps = {
-			// The user's default group
-			session.getGroup(user.getUserGroupName()),
-
-			// The user's home folder
-			session.getFolderByPath(user.getDefaultFolder()),
+		List<IDfPersistentObject> deps = new ArrayList<IDfPersistentObject>();
+		// The user's default group
+		deps.add(session.getGroup(user.getUserGroupName()));
+		// The user's home folder
+		deps.add(session.getFolderByPath(user.getDefaultFolder()));
 
 		// The user's default ACL
-		// session.getACL(user.getACLDomain(), user.getACLName())
-		};
+		CmfACL<IDfValue> acl = marshaled.getAcl();
+		if (acl != null) {
+			for (CmfActor actor : acl.getActors()) {
+				IDfPersistentObject obj = null;
+				switch (actor.getType()) {
+					case GROUP:
+						obj = session.getGroup(actor.getName());
+						break;
+					case USER:
+						obj = session.getUser(actor.getName());
+						break;
+					default:
+						continue;
+				}
+
+				if (obj != null) {
+					deps.add(obj);
+				}
+			}
+		}
+
 		for (IDfPersistentObject dep : deps) {
 			if (dep == null) {
 				continue;
 			}
-			ret.add(this.factory.newExportDelegate(dep));
+			DctmExportDelegate<?> delegate = this.factory.newExportDelegate(dep);
+			if (delegate != null) {
+				ret.add(delegate);
+			}
 		}
+
 		return ret;
 	}
 
