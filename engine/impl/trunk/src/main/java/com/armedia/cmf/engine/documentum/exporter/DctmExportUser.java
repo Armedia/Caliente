@@ -47,7 +47,7 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 		deps.add(session.getFolderByPath(user.getDefaultFolder()));
 
 		// The user's default ACL
-		deps.addAll(DctmExportACL.gatherRequirements(ctx, marshaled.getAcl()));
+		deps.addAll(DctmACLTools.gatherRequirements(ctx, marshaled.getAcl()));
 
 		for (IDfPersistentObject dep : deps) {
 			if (dep == null) {
@@ -64,6 +64,6 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 
 	@Override
 	protected CmfACL<IDfValue> calculateACL(final IDfUser user) throws DfException, ExportException {
-		return DctmExportACL.calculateACL(user.getSession().getACL(user.getACLDomain(), user.getACLName()));
+		return DctmACLTools.calculateACL(user.getSession().getACL(user.getACLDomain(), user.getACLName()));
 	}
 }

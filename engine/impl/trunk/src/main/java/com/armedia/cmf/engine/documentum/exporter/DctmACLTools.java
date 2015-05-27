@@ -48,9 +48,9 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportACL {
+public class DctmACLTools {
 
-	private static final Logger LOG = LoggerFactory.getLogger(DctmExportACL.class);
+	private static final Logger LOG = LoggerFactory.getLogger(DctmACLTools.class);
 
 	/**
 	 * This DQL will find all users for which this ACL is marked as the default ACL, and thus all
@@ -214,7 +214,7 @@ public class DctmExportACL {
 		// We must include all the actions from permission requested as well as all
 		// actions from prior permissions, since that's how Documentum permissions work
 		for (int i = permit; i >= IDfACL.DF_PERMIT_NONE; i--) {
-			actions = DctmExportACL.PERMIT_TO_ACTION.get(i);
+			actions = DctmACLTools.PERMIT_TO_ACTION.get(i);
 			if (actions != null) {
 				ret.addAll(actions);
 			}
@@ -222,7 +222,7 @@ public class DctmExportACL {
 
 		if (extended != null) {
 			for (String xp : FileNameTools.tokenize(extended, ',')) {
-				actions = DctmExportACL.XPERMIT_TO_ACTION.get(xp);
+				actions = DctmACLTools.XPERMIT_TO_ACTION.get(xp);
 				if (actions != null) {
 					ret.addAll(actions);
 				}
@@ -240,11 +240,11 @@ public class DctmExportACL {
 			int perm = IDfACL.DF_PERMIT_NONE;
 			Set<String> extended = new TreeSet<String>();
 			for (String a : actions) {
-				Integer newPerm = DctmExportACL.ACTION_TO_PERMIT.get(a);
+				Integer newPerm = DctmACLTools.ACTION_TO_PERMIT.get(a);
 				if ((newPerm != null) && (newPerm.intValue() > perm)) {
 					perm = newPerm.intValue();
 				}
-				String e = DctmExportACL.ACTION_TO_XPERMIT.get(a);
+				String e = DctmACLTools.ACTION_TO_XPERMIT.get(a);
 				if (e != null) {
 					extended.add(e);
 				}
@@ -318,7 +318,7 @@ public class DctmExportACL {
 			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessor)) {
 				// Accessor not there, skip it...
 				if (!missingAccessors.contains(accessor)) {
-					DctmExportACL.LOG.warn(String.format(
+					DctmACLTools.LOG.warn(String.format(
 						"Missing dependency for ACL [%s] - %s [%s] not exported (as ACL accessor)", acl.getObjectId()
 							.getId(), (group ? "group" : "user"), accessor));
 					missingAccessors.add(accessor);
@@ -335,7 +335,7 @@ public class DctmExportACL {
 		cmfAcl.setProperty(permitTypes);
 
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
-			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
+			String.format(DctmACLTools.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
 			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL, DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
@@ -360,7 +360,7 @@ public class DctmExportACL {
 			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessorName)) {
 				// Accessor not there, skip it...
 				if (!missingAccessors.contains(accessorName)) {
-					DctmExportACL.LOG.warn(String.format(
+					DctmACLTools.LOG.warn(String.format(
 						"Missing dependency for ACL [%s] - %s [%s] not exported (as ACL accessor)", acl.getObjectId()
 							.getId(), (group ? "group" : "user"), accessorName));
 					missingAccessors.add(accessorName);
@@ -370,7 +370,7 @@ public class DctmExportACL {
 
 			final CmfActor.Type actorType = (group ? CmfActor.Type.GROUP : CmfActor.Type.USER);
 			CmfActor accessor = new CmfActor(accessorName, actorType);
-			for (String action : DctmExportACL.calculateActionsForPermissions(accessorPermit, extendedPermits)) {
+			for (String action : DctmACLTools.calculateActionsForPermissions(accessorPermit, extendedPermits)) {
 				accessor.addAction(action);
 			}
 			cmfAcl.addActor(accessor);

@@ -290,7 +290,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the ACL's requirements
-		for (IDfPersistentObject obj : DctmExportACL.gatherRequirements(ctx, marshaled.getAcl())) {
+		for (IDfPersistentObject obj : DctmACLTools.gatherRequirements(ctx, marshaled.getAcl())) {
 			req.add(this.factory.newExportDelegate(obj));
 		}
 		return req;
@@ -298,6 +298,6 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 	@Override
 	protected CmfACL<IDfValue> calculateACL(final T sysObject) throws DfException, ExportException {
-		return DctmExportACL.calculateACL(sysObject.getACL());
+		return DctmACLTools.calculateACL(sysObject.getACL());
 	}
 }
