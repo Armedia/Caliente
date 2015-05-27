@@ -14,19 +14,10 @@ import com.armedia.commons.utilities.Tools;
 public final class CmfACL<V> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	public static enum AccessorType {
-		//
-		USER,
-		GROUP,
-		ROLE,
-		//
-		;
-	}
-
 	private final String identifier;
 	private String storedIdentifier = null;
-	private final Set<CmfAccessor> allAccessors;
-	private final Map<AccessorType, Map<String, CmfAccessor>> accessors;
+	private final Set<CmfActor> allAccessors;
+	private final Map<CmfActor.Type, Map<String, CmfActor>> accessors;
 	private final Map<String, CmfProperty<V>> properties;
 
 	public CmfACL() {
@@ -37,28 +28,28 @@ public final class CmfACL<V> implements Serializable {
 		this(identifier, null);
 	}
 
-	public CmfACL(Set<CmfAccessor> accessors) {
+	public CmfACL(Set<CmfActor> accessors) {
 		this(null, accessors);
 	}
 
-	public CmfACL(String identifier, Set<CmfAccessor> accessors) {
+	public CmfACL(String identifier, Set<CmfActor> accessors) {
 		this.identifier = identifier;
 		if (identifier != null) {
 			this.storedIdentifier = identifier;
 		}
-		this.accessors = new EnumMap<AccessorType, Map<String, CmfAccessor>>(AccessorType.class);
-		this.allAccessors = new TreeSet<CmfAccessor>();
+		this.accessors = new EnumMap<CmfActor.Type, Map<String, CmfActor>>(CmfActor.Type.class);
+		this.allAccessors = new TreeSet<CmfActor>();
 		this.properties = new TreeMap<String, CmfProperty<V>>();
 
 		if ((accessors == null) || accessors.isEmpty()) { return; }
 
 		this.allAccessors.addAll(accessors);
 
-		for (CmfAccessor a : this.allAccessors) {
-			Map<String, CmfAccessor> m = this.accessors.get(a.getAccessorType());
+		for (CmfActor a : this.allAccessors) {
+			Map<String, CmfActor> m = this.accessors.get(a.getType());
 			if (m == null) {
-				m = new TreeMap<String, CmfAccessor>();
-				this.accessors.put(a.getAccessorType(), m);
+				m = new TreeMap<String, CmfActor>();
+				this.accessors.put(a.getType(), m);
 			}
 			m.put(a.getName(), a);
 		}
@@ -84,62 +75,62 @@ public final class CmfACL<V> implements Serializable {
 		return !this.allAccessors.isEmpty();
 	}
 
-	public Set<CmfAccessor> getAccessors() {
-		return new TreeSet<CmfAccessor>(this.allAccessors);
+	public Set<CmfActor> getAccessors() {
+		return new TreeSet<CmfActor>(this.allAccessors);
 	}
 
-	public Set<AccessorType> getAccessorTypes() {
+	public Set<CmfActor.Type> getAccessorTypes() {
 		return EnumSet.copyOf(this.accessors.keySet());
 	}
 
-	public int getAccessorCount(AccessorType type) {
-		Map<String, CmfAccessor> m = this.accessors.get(type);
+	public int getAccessorCount(CmfActor.Type type) {
+		Map<String, CmfActor> m = this.accessors.get(type);
 		if (m == null) { return 0; }
 		return m.size();
 	}
 
-	public boolean hasAccessors(AccessorType type) {
+	public boolean hasAccessors(CmfActor.Type type) {
 		return (this.accessors.get(type) != null);
 	}
 
-	public Set<CmfAccessor> getAccessors(AccessorType type) {
-		Map<String, CmfAccessor> m = this.accessors.get(type);
-		if (m == null) { return new TreeSet<CmfAccessor>(); }
-		return new TreeSet<CmfAccessor>(m.values());
+	public Set<CmfActor> getAccessors(CmfActor.Type type) {
+		Map<String, CmfActor> m = this.accessors.get(type);
+		if (m == null) { return new TreeSet<CmfActor>(); }
+		return new TreeSet<CmfActor>(m.values());
 	}
 
-	public Set<String> getAccessorNames(AccessorType type) {
-		Map<String, CmfAccessor> m = this.accessors.get(type);
+	public Set<String> getAccessorNames(CmfActor.Type type) {
+		Map<String, CmfActor> m = this.accessors.get(type);
 		if (m == null) { return Collections.emptySet(); }
 		return m.keySet();
 	}
 
-	public boolean hasAccessor(AccessorType type, String name) {
-		Map<String, CmfAccessor> m = this.accessors.get(type);
+	public boolean hasAccessor(CmfActor.Type type, String name) {
+		Map<String, CmfActor> m = this.accessors.get(type);
 		return (m != null) && m.containsKey(name);
 	}
 
-	public CmfAccessor getAccessor(AccessorType type, String name) {
-		Map<String, CmfAccessor> m = this.accessors.get(type);
+	public CmfActor getAccessor(CmfActor.Type type, String name) {
+		Map<String, CmfActor> m = this.accessors.get(type);
 		if (m == null) { return null; }
 		return m.get(name);
 	}
 
-	public CmfAccessor addAccessor(CmfAccessor accessor) {
-		Map<String, CmfAccessor> m = this.accessors.get(accessor.getAccessorType());
+	public CmfActor addActor(CmfActor accessor) {
+		Map<String, CmfActor> m = this.accessors.get(accessor.getType());
 		if (m == null) {
-			m = new TreeMap<String, CmfAccessor>();
-			this.accessors.put(accessor.getAccessorType(), m);
+			m = new TreeMap<String, CmfActor>();
+			this.accessors.put(accessor.getType(), m);
 		}
-		CmfAccessor ret = m.put(accessor.getName(), accessor);
+		CmfActor ret = m.put(accessor.getName(), accessor);
 		this.allAccessors.add(accessor);
 		return ret;
 	}
 
-	public CmfAccessor removeAccessor(AccessorType type, String name) {
-		Map<String, CmfAccessor> m = this.accessors.get(type);
+	public CmfActor removeAccessor(CmfActor.Type type, String name) {
+		Map<String, CmfActor> m = this.accessors.get(type);
 		if (m == null) { return null; }
-		CmfAccessor ret = m.remove(name);
+		CmfActor ret = m.remove(name);
 		this.allAccessors.remove(ret);
 		return ret;
 	}
