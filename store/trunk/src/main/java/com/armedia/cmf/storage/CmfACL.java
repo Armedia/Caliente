@@ -177,4 +177,10 @@ public final class CmfACL<V> implements Serializable {
 		if (!Tools.equals(this.allAccessors, other.allAccessors)) { return false; }
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("CmfACL [identifier=%s, storedIdentifier=%s, allAccessors=%s, properties=%s]",
+			this.identifier, this.storedIdentifier, this.allAccessors, this.properties);
+	}
 }
