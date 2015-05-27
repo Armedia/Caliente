@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -227,7 +227,7 @@ public class DfUtils {
 		return ret;
 	}
 
-	public static String decodeAccessPermission(int permission) throws DfException {
+	public static String decodeAccessPermission(int permission) {
 		// We do it the "hardcoded" way here because it's MUCH faster than maps...
 		switch (permission) {
 			case IDfACL.DF_PERMIT_NONE:
@@ -245,18 +245,19 @@ public class DfUtils {
 			case IDfACL.DF_PERMIT_DELETE:
 				return IDfACL.DF_PERMIT_DELETE_STR;
 			default:
-				throw new DfException(String.format("Unknown permissions value [%d] detected", permission));
+				throw new IllegalArgumentException(String.format("Unknown permissions value [%d] detected", permission));
 		}
 	}
 
-	public static int decodeAccessPermission(String permission) throws DfException {
+	public static int decodeAccessPermission(String permission) {
 		if (permission == null) { throw new IllegalArgumentException("Must provide a permission to map"); }
 		Integer ret = DfUtils.PERMISSIONS_MAP.get(permission);
-		if (ret == null) { throw new DfException(String.format("Unknown permissions value [%s] detected", permission)); }
+		if (ret == null) { throw new IllegalArgumentException(String.format("Unknown permissions value [%s] detected",
+			permission)); }
 		return ret;
 	}
 
-	public static String decodePermitType(int permitType) throws DfException {
+	public static String decodePermitType(int permitType) {
 		switch (permitType) {
 			case IDfPermit.DF_ACCESS_PERMIT:
 				return IDfPermit.DF_ACCESS_PERMIT_STR;
@@ -275,18 +276,19 @@ public class DfUtils {
 			case IDfPermit.DF_REQUIRED_GROUP_SET:
 				return IDfPermit.DF_REQUIRED_GROUP_SET_STR;
 		}
-		throw new DfException(String.format("Unknown permit type [%d] detected", permitType));
+		throw new IllegalArgumentException(String.format("Unknown permit type [%d] detected", permitType));
 	}
 
-	public static int decodePermitType(String permitType) throws DfException {
+	public static int decodePermitType(String permitType) {
 		if (permitType == null) { throw new IllegalArgumentException("Must provide a permit type to map"); }
 		Integer ret = DfUtils.PERMIT_TYPES_MAP.get(permitType);
-		if (ret == null) { throw new DfException(String.format("Unknown permit type value [%s] detected", permitType)); }
+		if (ret == null) { throw new IllegalArgumentException(String.format("Unknown permit type value [%s] detected",
+			permitType)); }
 		return ret;
 	}
 
 	public static ExportTarget getExportTarget(IDfPersistentObject source) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
 		final DctmObjectType type = DctmObjectType.decodeType(source);
