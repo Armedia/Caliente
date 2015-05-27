@@ -231,7 +231,7 @@ public class DctmExportACL {
 		return ret;
 	}
 
-	private static Collection<IDfPermit> calculatePermissionsFromActor(CmfActor actor) {
+	public static Collection<IDfPermit> calculatePermissionsForActor(CmfActor actor) {
 		if (actor == null) { throw new IllegalArgumentException("Must provide an actor"); }
 		final String actorName = actor.getName();
 		final Collection<String> actions = actor.getActions();
