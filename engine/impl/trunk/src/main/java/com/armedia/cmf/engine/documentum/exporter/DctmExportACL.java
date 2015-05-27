@@ -23,6 +23,7 @@ import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
+import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmACL;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfACL;
@@ -40,6 +41,7 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
+import com.documentum.fc.common.IDfList;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -212,7 +214,7 @@ public class DctmExportACL {
 		// We must include all the actions from permission requested as well as all
 		// actions from prior permissions, since that's how Documentum permissions work
 		for (int i = permit; i >= IDfACL.DF_PERMIT_NONE; i--) {
-			actions = DctmExportACL.PERMIT_TO_ACTION.get(permit);
+			actions = DctmExportACL.PERMIT_TO_ACTION.get(i);
 			if (actions != null) {
 				ret.addAll(actions);
 			}
@@ -229,8 +231,10 @@ public class DctmExportACL {
 		return ret;
 	}
 
-	private static Collection<IDfPermit> calculatePermissionsFromActions(String accessorName, Set<String> actions) {
-		if (accessorName == null) { throw new IllegalArgumentException("Must provide an accessor name"); }
+	private static Collection<IDfPermit> calculatePermissionsFromActor(CmfActor actor) {
+		if (actor == null) { throw new IllegalArgumentException("Must provide an actor"); }
+		final String actorName = actor.getName();
+		final Collection<String> actions = actor.getActions();
 		List<IDfPermit> ret = new ArrayList<IDfPermit>();
 		if (actions != null) {
 			int perm = IDfACL.DF_PERMIT_NONE;
@@ -247,14 +251,14 @@ public class DctmExportACL {
 			}
 
 			DfPermit permit = new DfPermit();
-			permit.setAccessorName(accessorName);
+			permit.setAccessorName(actorName);
 			permit.setPermitType(IDfPermit.DF_ACCESS_PERMIT);
 			permit.setPermitValue(DfUtils.decodeAccessPermission(perm));
 			ret.add(permit);
 
 			for (String x : extended) {
 				permit = new DfPermit();
-				permit.setAccessorName(accessorName);
+				permit.setAccessorName(actorName);
 				permit.setPermitType(IDfPermit.DF_EXTENDED_PERMIT);
 				permit.setPermitValue(x);
 				ret.add(permit);
@@ -263,20 +267,75 @@ public class DctmExportACL {
 		return ret;
 	}
 
-	public static IDfACL calculateACL(IDfSession session, CmfACL<IDfValue> acl) throws DfException, ExportException {
-		DctmExportACL.calculatePermissionsFromActions(null, null);
-		return null;
-	}
-
 	public static CmfACL<IDfValue> calculateACL(final IDfACL acl) throws DfException, ExportException {
 		if (acl == null) { return null; }
 		final IDfSession session = acl.getSession();
 		CmfACL<IDfValue> cmfAcl = new CmfACL<IDfValue>(acl.getObjectId().getId());
 
 		final String aclId = acl.getObjectId().getId();
+		CmfProperty<IDfValue> property = null;
+
+		property = new CmfProperty<IDfValue>(DctmACL.DOCUMENTUM_MARKER, DctmDataType.DF_BOOLEAN.getStoredType());
+		property.setValue(DfValueFactory.newBooleanValue(true));
+
+		// Add all the object's attributes...for safekeeping
+		final int attCount = acl.getAttrCount();
+		for (int i = 0; i < attCount; i++) {
+			final IDfAttr attr = acl.getAttr(i);
+			final CmfDataType type = DctmDataType.fromAttribute(attr).getStoredType();
+			final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(attr.getName(), type, attr.isRepeating());
+			AttributeHandler h = DctmAttributeHandlers.getAttributeHandler(DctmObjectType.ACL, attr);
+			prop.setValues(h.getExportableValues(acl, attr));
+			cmfAcl.setProperty(prop);
+		}
+
+		CmfProperty<IDfValue> accessors = new CmfProperty<IDfValue>(DctmACL.ACCESSORS,
+			DctmDataType.DF_STRING.getStoredType(), true);
+		CmfProperty<IDfValue> permitTypes = new CmfProperty<IDfValue>(DctmACL.PERMIT_TYPE,
+			DctmDataType.DF_INTEGER.getStoredType(), true);
+		CmfProperty<IDfValue> permitValues = new CmfProperty<IDfValue>(DctmACL.PERMIT_VALUE,
+			DctmDataType.DF_STRING.getStoredType(), true);
+		IDfList permits = acl.getPermissions();
+		final int permitCount = permits.getCount();
+		Set<String> missingAccessors = new HashSet<String>();
+		for (int i = 0; i < permitCount; i++) {
+			IDfPermit p = IDfPermit.class.cast(permits.get(i));
+			// First, validate the accessor
+			final String accessor = p.getAccessorName();
+			final boolean group;
+			switch (p.getPermitType()) {
+				case IDfPermit.DF_REQUIRED_GROUP:
+				case IDfPermit.DF_REQUIRED_GROUP_SET:
+					group = true;
+					break;
+
+				default:
+					group = false;
+					break;
+			}
+
+			IDfPersistentObject o = (group ? session.getGroup(accessor) : session.getUser(accessor));
+			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessor)) {
+				// Accessor not there, skip it...
+				if (!missingAccessors.contains(accessor)) {
+					DctmExportACL.LOG.warn(String.format(
+						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectId()
+							.getId(), (group ? "group" : "user"), accessor));
+					missingAccessors.add(accessor);
+				}
+				continue;
+			}
+
+			accessors.addValue(DfValueFactory.newStringValue(DctmMappingUtils.substituteMappableUsers(acl, accessor)));
+			permitTypes.addValue(DfValueFactory.newIntValue(p.getPermitType()));
+			permitValues.addValue(DfValueFactory.newStringValue(p.getPermitValueString()));
+		}
+		cmfAcl.setProperty(accessors);
+		cmfAcl.setProperty(permitValues);
+		cmfAcl.setProperty(permitTypes);
+
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
-		CmfProperty<IDfValue> property = null;
 		try {
 			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL, DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
@@ -288,19 +347,7 @@ public class DctmExportACL {
 			DfUtils.closeQuietly(resultCol);
 		}
 
-		final int attCount = acl.getAttrCount();
-		for (int i = 0; i < attCount; i++) {
-			final IDfAttr attr = acl.getAttr(i);
-			final CmfDataType type = DctmDataType.fromAttribute(attr).getStoredType();
-			final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(attr.getName(), type, attr.isRepeating());
-			AttributeHandler h = DctmAttributeHandlers.getAttributeHandler(DctmObjectType.ACL, attr);
-			prop.setValues(h.getExportableValues(acl, attr));
-			cmfAcl.setProperty(prop);
-		}
-
-		Set<String> missingAccessors = new HashSet<String>();
-
-		// Now do the accessors...
+		// Now do the CMIS part...
 		final int accCount = acl.getValueCount(DctmAttributes.R_ACCESSOR_NAME);
 		for (int i = 0; i < accCount; i++) {
 			// We're only interested in the basic permissions
