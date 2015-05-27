@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
+import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
@@ -19,20 +20,17 @@ import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmACL;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfACL;
-import com.armedia.cmf.storage.CmfACL.AccessorType;
-import com.armedia.cmf.storage.CmfAccessor;
+import com.armedia.cmf.storage.CmfActor;
 import com.armedia.cmf.storage.CmfDataType;
-import com.armedia.cmf.storage.CmfPermission;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
-import com.documentum.fc.common.IDfList;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -78,37 +76,60 @@ public class DctmExportACL {
 			prop.setValues(h.getExportableValues(acl, attr));
 			cmfAcl.setProperty(prop);
 		}
-		/*
-			if (!group) {
-				if (DctmMappingUtils.isMappableUser(session, name) || ctx.isSpecialUser(name)) {
-					// User is mapped to a special user, so we shouldn't include it as a dependency
-					// because it will be mapped on the target
-					continue;
-				}
-			} else {
-				if (ctx.isSpecialGroup(name)) {
-					continue;
-				}
-			}
-
-			if (DctmMappingUtils.SPECIAL_NAMES.contains(name)) {
-				// This is a special name - non-existent per-se, but supported by the system
-				// such as dm_owner, dm_group, dm_world
-				continue;
-			}
-
-		 */
 
 		Set<String> missingAccessors = new HashSet<String>();
 
 		// Now do the accessors...
+		final int accCount = acl.getValueCount(DctmAttributes.R_ACCESSOR_NAME);
+		for (int i = 0; i < accCount; i++) {
+			// We're only interested in the basic permissions
+			final String accessorName = acl.getRepeatingString(DctmAttributes.R_ACCESSOR_NAME, i);
+			final boolean group = acl.getRepeatingBoolean(DctmAttributes.R_IS_GROUP, i);
+			final int accessorPermit = acl.getRepeatingInt(DctmAttributes.R_ACCESSOR_PERMIT, i);
+			final String specialPermit = acl.getAccessorXPermitNames(i);
+
+			IDfPersistentObject o = (group ? session.getGroup(accessorName) : session.getUser(accessorName));
+			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessorName)) {
+				// Accessor not there, skip it...
+				if (!missingAccessors.contains(accessorName)) {
+					DctmExportACL.LOG.warn(String.format(
+						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", acl.getObjectId()
+							.getId(), (group ? "group" : "user"), accessorName));
+					missingAccessors.add(accessorName);
+				}
+				continue;
+			}
+
+			final CmfActor.Type actorType = (group ? CmfActor.Type.GROUP : CmfActor.Type.USER);
+			String s = DfUtils.decodeAccessPermission(accessorPermit);
+			CmfActor accessor = new CmfActor(accessorName, actorType);
+			accessor.addAction(s.toLowerCase());
+			for (String x : FileNameTools.tokenize(specialPermit, ',')) {
+				accessor.addAction(x.toLowerCase());
+			}
+			cmfAcl.addActor(accessor);
+		}
+
+		/*
 		final IDfList permits = acl.getPermissions();
 		final int permitCount = permits.getCount();
 		for (int i = 0; i < permitCount; i++) {
 			IDfPermit p = IDfPermit.class.cast(permits.get(i));
 			final String accessorName = p.getAccessorName();
 
+			Permission permission = Permission.NONE;
+
 			final int permitType = p.getPermitType();
+			switch (permitType) {
+				case IDfPermit.DF_EXTENDED_PERMIT:
+				case IDfPermit.DF_EXTENDED_RESTRICTION:
+					// Extended permits aren't allowed
+					continue;
+
+				default:
+					break;
+			}
+
 			final String permit = p.getPermitValueString();
 			boolean grant = true;
 			boolean group = false;
@@ -140,10 +161,10 @@ public class DctmExportACL {
 				continue;
 			}
 
-			AccessorType accessorType = (group ? AccessorType.GROUP : AccessorType.USER);
-			CmfAccessor accessor = cmfAcl.getAccessor(accessorType, accessorName);
+			ActorType accessorType = (group ? ActorType.GROUP : ActorType.USER);
+			CmfActor accessor = cmfAcl.getAccessor(accessorType, accessorName);
 			if (accessor == null) {
-				accessor = new CmfAccessor(accessorName, accessorType);
+				accessor = new CmfActor(accessorName, accessorType);
 				cmfAcl.addAccessor(accessor);
 			}
 
@@ -160,6 +181,7 @@ public class DctmExportACL {
 
 			accessor.addPermission(new CmfPermission(pt, permit, grant));
 		}
+		 */
 
 		return cmfAcl;
 	}
