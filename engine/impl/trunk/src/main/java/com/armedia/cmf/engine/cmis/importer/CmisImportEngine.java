@@ -16,14 +16,42 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportEngine extends
-	ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory> {
+ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory> {
+
+	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return false;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return true;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+	};
 
 	public CmisImportEngine() {
 	}
 
 	@Override
 	protected ImportStrategy getImportStrategy(CmfType type) {
-		return null;
+		return CmisImportEngine.IGNORE_STRATEGY;
 	}
 
 	@Override
