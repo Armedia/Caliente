@@ -40,8 +40,8 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-	extends
-	ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+extends
+ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected LocalImportDelegate(LocalImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -56,7 +56,7 @@ public abstract class LocalImportDelegate
 	protected final ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
-		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION.encode());
+		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION);
 		if ((att != null) && att.hasValues()) {
 			CmfValue v = att.getValue();
 			if (!v.isNull() && !v.asBoolean() && !this.factory.isIncludeAllVersions()) {
@@ -86,7 +86,7 @@ public abstract class LocalImportDelegate
 
 		File tgt = ctx.getSession().getFile();
 
-		CmfProperty<CmfValue> pathProp = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
+		CmfProperty<CmfValue> pathProp = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		String p = "/";
 		if ((pathProp != null) && pathProp.hasValues()) {
 			p = ctx.getTargetPath(pathProp.getValue().toString());
@@ -99,7 +99,7 @@ public abstract class LocalImportDelegate
 		}
 
 		CmfAttribute<CmfValue> nameAtt = this.cmfObject.getAttribute(translator.decodeAttributeName(
-			this.cmfObject.getType(), IntermediateAttribute.NAME.encode()));
+			this.cmfObject.getType(), IntermediateAttribute.NAME));
 
 		// We always fix the file's name, since it's not part of the path and may also need fixing.
 		// Same dilemma as above, though - need to know "when" to use windows mode...
@@ -138,7 +138,7 @@ public abstract class LocalImportDelegate
 			}
 
 			CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(translator.decodeAttributeName(
-				this.cmfObject.getType(), att.encode()));
+				this.cmfObject.getType(), att));
 			if ((v == null) || !v.hasValues()) {
 				continue;
 			}
@@ -154,7 +154,7 @@ public abstract class LocalImportDelegate
 			UserPrincipal local = ownerView.getOwner();
 			if (local != null) {
 				CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(translator.decodeAttributeName(
-					this.cmfObject.getType(), IntermediateAttribute.GROUP.encode()));
+					this.cmfObject.getType(), IntermediateAttribute.GROUP));
 				if ((v != null) && v.hasValues()) {
 					CmfValue sv = v.getValue();
 					if (!sv.isNull()) {
@@ -173,7 +173,7 @@ public abstract class LocalImportDelegate
 			GroupPrincipal local = posixView.readAttributes().group();
 			if (local != null) {
 				CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(translator.decodeAttributeName(
-					this.cmfObject.getType(), IntermediateAttribute.GROUP.encode()));
+					this.cmfObject.getType(), IntermediateAttribute.GROUP));
 				if ((v != null) && v.hasValues()) {
 					CmfValue sv = v.getValue();
 					if (!sv.isNull()) {
@@ -192,7 +192,7 @@ public abstract class LocalImportDelegate
 	}
 
 	protected void applyAttributes(File targetFile, CmfAttributeTranslator<CmfValue> translator) throws IOException,
-		ParseException {
+	ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
 
@@ -223,7 +223,7 @@ public abstract class LocalImportDelegate
 		// the blanks assuming the logical order of C<=M<=A (C = creation
 		// date, M = modification date, A = last access date).
 		v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-			IntermediateAttribute.LAST_ACCESS_DATE.encode()));
+			IntermediateAttribute.LAST_ACCESS_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -233,7 +233,7 @@ public abstract class LocalImportDelegate
 		}
 
 		v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-			IntermediateAttribute.LAST_MODIFICATION_DATE.encode()));
+			IntermediateAttribute.LAST_MODIFICATION_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -243,7 +243,7 @@ public abstract class LocalImportDelegate
 		}
 
 		v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-			IntermediateAttribute.CREATION_DATE.encode()));
+			IntermediateAttribute.CREATION_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -296,7 +296,7 @@ public abstract class LocalImportDelegate
 		if (posixView != null) {
 			// Set the group
 			v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-				IntermediateAttribute.GROUP.encode()));
+				IntermediateAttribute.GROUP));
 			if ((v != null) && v.hasValues()) {
 				CmfValue sv = v.getValue();
 				if (!sv.isNull()) {
@@ -313,7 +313,7 @@ public abstract class LocalImportDelegate
 		if (ownerView != null) {
 			// Set the owner
 			v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-				IntermediateAttribute.OWNER.encode()));
+				IntermediateAttribute.OWNER));
 			if ((v != null) && v.hasValues()) {
 				CmfValue sv = v.getValue();
 				if (!sv.isNull()) {

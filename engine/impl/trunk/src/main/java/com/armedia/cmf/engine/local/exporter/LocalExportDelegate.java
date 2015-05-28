@@ -33,18 +33,18 @@ import com.armedia.cmf.engine.local.common.LocalFile;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.engine.tools.MimeTools;
-import com.armedia.cmf.storage.CmfContentStore;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 
 public class LocalExportDelegate
-	extends
-	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+extends
+ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
 		super(factory, LocalFile.class, object);
@@ -71,11 +71,11 @@ public class LocalExportDelegate
 	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		final File file = this.object.getAbsolute();
 		CmfAttribute<CmfValue> att = null;
-		att = new CmfAttribute<CmfValue>(IntermediateAttribute.NAME.encode(), CmfDataType.STRING, false);
+		att = new CmfAttribute<CmfValue>(IntermediateAttribute.NAME, CmfDataType.STRING, false);
 		att.setValue(new CmfValue(file.getName()));
 		object.setAttribute(att);
 
-		att = new CmfAttribute<CmfValue>(IntermediateAttribute.OBJECT_ID.encode(), CmfDataType.ID, false);
+		att = new CmfAttribute<CmfValue>(IntermediateAttribute.OBJECT_ID, CmfDataType.ID, false);
 		att.setValue(new CmfValue(getObjectId()));
 		object.setAttribute(att);
 
@@ -92,37 +92,31 @@ public class LocalExportDelegate
 		try {
 			BasicFileAttributes basicAtts = basic.readAttributes();
 
-			att = new CmfAttribute<CmfValue>(IntermediateAttribute.CREATION_DATE.encode(),
-				CmfDataType.DATETIME, false);
+			att = new CmfAttribute<CmfValue>(IntermediateAttribute.CREATION_DATE, CmfDataType.DATETIME, false);
 			att.setValue(new CmfValue(new Date(basicAtts.creationTime().toMillis())));
 			object.setAttribute(att);
 
-			att = new CmfAttribute<CmfValue>(IntermediateAttribute.LAST_MODIFICATION_DATE.encode(),
-				CmfDataType.DATETIME, false);
+			att = new CmfAttribute<CmfValue>(IntermediateAttribute.LAST_MODIFICATION_DATE, CmfDataType.DATETIME, false);
 			att.setValue(new CmfValue(new Date(basicAtts.lastModifiedTime().toMillis())));
 			object.setAttribute(att);
 
-			att = new CmfAttribute<CmfValue>(IntermediateAttribute.LAST_ACCESS_DATE.encode(),
-				CmfDataType.DATETIME, false);
+			att = new CmfAttribute<CmfValue>(IntermediateAttribute.LAST_ACCESS_DATE, CmfDataType.DATETIME, false);
 			att.setValue(new CmfValue(new Date(basicAtts.lastAccessTime().toMillis())));
 			object.setAttribute(att);
 
 			if (getType() == CmfType.DOCUMENT) {
-				att = new CmfAttribute<CmfValue>(IntermediateAttribute.CONTENT_STREAM_LENGTH.encode(),
-					CmfDataType.DOUBLE, false);
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfDataType.DOUBLE, false);
 				att.setValue(new CmfValue(basicAtts.size()));
 				object.setAttribute(att);
 			}
 
 			if (owner != null) {
 				UserPrincipal ownerUser = owner.getOwner();
-				att = new CmfAttribute<CmfValue>(IntermediateAttribute.CREATED_BY.encode(),
-					CmfDataType.STRING, false);
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.CREATED_BY, CmfDataType.STRING, false);
 				att.setValue(new CmfValue(ownerUser.getName()));
 				object.setAttribute(att);
 
-				att = new CmfAttribute<CmfValue>(IntermediateAttribute.OWNER.encode(), CmfDataType.STRING,
-					false);
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.OWNER, CmfDataType.STRING, false);
 				att.setValue(new CmfValue(ownerUser.getName()));
 				object.setAttribute(att);
 			}
@@ -130,8 +124,7 @@ public class LocalExportDelegate
 			if (posix != null) {
 				PosixFileAttributes posixAtts = posix.readAttributes();
 				GroupPrincipal ownerGroup = posixAtts.group();
-				att = new CmfAttribute<CmfValue>(IntermediateAttribute.GROUP.encode(), CmfDataType.STRING,
-					false);
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.GROUP, CmfDataType.STRING, false);
 				att.setValue(new CmfValue(ownerGroup.getName()));
 				object.setAttribute(att);
 			}
@@ -144,10 +137,8 @@ public class LocalExportDelegate
 			throw new ExportException(String.format("Failed to collect the attribute information for [%s]", file), e);
 		}
 
-		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID.encode(),
-			CmfDataType.ID, true);
-		CmfProperty<CmfValue> paths = new CmfProperty<CmfValue>(IntermediateProperty.PATH.encode(),
-			CmfDataType.STRING, true);
+		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
+		CmfProperty<CmfValue> paths = new CmfProperty<CmfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true);
 		if (this.object.getPathCount() > 1) {
 			paths.setValue(new CmfValue(this.object.getPortablePath()));
 			String parentPath = this.object.getPath();
@@ -161,15 +152,15 @@ public class LocalExportDelegate
 		object.setProperty(paths);
 		object.setProperty(parents);
 
-		att = new CmfAttribute<CmfValue>(IntermediateAttribute.PATH.encode(), CmfDataType.STRING, true);
+		att = new CmfAttribute<CmfValue>(IntermediateAttribute.PATH, CmfDataType.STRING, true);
 		att.setValue(new CmfValue(this.object.getPortablePath()));
 		object.setAttribute(att);
 		return true;
 	}
 
 	@Override
-	protected Collection<LocalExportDelegate> identifyDependents(CmfObject<CmfValue> marshalled,
-		LocalExportContext ctx) throws Exception {
+	protected Collection<LocalExportDelegate> identifyDependents(CmfObject<CmfValue> marshalled, LocalExportContext ctx)
+		throws Exception {
 		return null;
 	}
 
@@ -188,8 +179,8 @@ public class LocalExportDelegate
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
 
-		CmfAttribute<CmfValue> typeAtt = new CmfAttribute<CmfValue>(
-			IntermediateAttribute.CONTENT_STREAM_MIME_TYPE.encode(), CmfDataType.STRING, false);
+		CmfAttribute<CmfValue> typeAtt = new CmfAttribute<CmfValue>(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE,
+			CmfDataType.STRING, false);
 		typeAtt.setValue(new CmfValue(type.getBaseType()));
 		marshalled.setAttribute(typeAtt);
 
