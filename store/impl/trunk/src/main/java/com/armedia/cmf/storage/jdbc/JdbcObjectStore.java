@@ -37,8 +37,6 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
-import com.armedia.cmf.storage.CmfACL;
-import com.armedia.cmf.storage.CmfActor;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
@@ -72,17 +70,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private static final String OBJECT_NUMBER_COLUMN = "object_number";
 
-	private static final String INSERT_OBJECT_SQL = "insert into cmf_object (object_id, search_key, object_type, object_subtype, object_label, batch_id, acl_id) values (?, ?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_OBJECT_SQL = "insert into cmf_object (object_id, search_key, object_type, object_subtype, object_label, batch_id) values (?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_SQL = "insert into cmf_attribute (object_id, name, id, data_type, length, qualifiable, repeating) values (?, ?, ?, ?, ?, ?, ?)";
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into cmf_attribute_value (object_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into cmf_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into cmf_property_value (object_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
-
-	private static final String INSERT_ACL_SQL = "insert into cmf_acl (acl_id, source_object_id, source_object_type) values (?, ?, ?)";
-	private static final String INSERT_ACL_ACTOR_SQL = "insert into cmf_acl_actor (acl_id, actor_id, actor_type, actor_name) values (?, ?, ?, ?)";
-	private static final String INSERT_ACL_ACTION_SQL = "insert into cmf_acl_action (acl_id, actor_id, action_name) values (?, ?, ?)";
-	private static final String INSERT_ACL_PROPERTY_SQL = "insert into cmf_acl_property (acl_id, name, data_type, repeating) values (?, ?, ?, ?)";
-	private static final String INSERT_ACL_PROPERTY_VALUE_SQL = "insert into cmf_acl_property_value (acl_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 
 	private static final String QUERY_EXPORT_PLAN_DUPE_SQL = "select * from cmf_export_plan where object_id = ?";
 	private static final String INSERT_EXPORT_PLAN_SQL = "insert into cmf_export_plan (object_type, object_id) values (?, ?)";
@@ -100,112 +92,75 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private static final String DELETE_BOTH_MAPPINGS_SQL = "delete from cmf_mapper where object_type = ? and name = ? and not (source_value = ? and target_value = ?) and (source_value = ? or target_value = ?)";
 
 	private static final String LOAD_OBJECT_TYPES_SQL = //
-	"   select object_type, count(*) as total " + //
+		"   select object_type, count(*) as total " + //
 		" from cmf_object " + //
 		"group by object_type " + // ;
 		"having total > 0 " + //
 		"order by object_type ";
 
 	private static final String LOAD_OBJECTS_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
-	"    select o.* " + //
+		"    select o.* " + //
 		"  from cmf_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
 		"   and o.object_id = t.x " + //
 		" order by o.batch_id, o.object_number";
 
 	private static final String LOAD_ATTRIBUTES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_attribute " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_ATTRIBUTE_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_attribute_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String LOAD_PROPERTIES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_property " + //
 		" where object_id = ? " + //
 		" order by name";
 
 	private static final String LOAD_PROPERTY_VALUES_SQL = //
-	"    select * " + //
+		"    select * " + //
 		"  from cmf_property_value " + //
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
 
 	private static final String GET_STORE_PROPERTY_SQL = //
-	"    select * from cmf_info where name = ? ";
+		"    select * from cmf_info where name = ? ";
 
 	private static final String UPDATE_STORE_PROPERTY_SQL = //
-	"    update cmf_info set value = ? where name = ? ";
+		"    update cmf_info set value = ? where name = ? ";
 
 	private static final String INSERT_STORE_PROPERTY_SQL = //
-	"    insert into cmf_info (name, data_type, value) values (?, ?, ?) ";
+		"    insert into cmf_info (name, data_type, value) values (?, ?, ?) ";
 
 	private static final String DELETE_STORE_PROPERTY_SQL = //
-	"    delete from cmf_info where name = ? ";
+		"    delete from cmf_info where name = ? ";
 
 	private static final String GET_STORE_PROPERTY_NAMES_SQL = //
-	"    select name from cmf_info order by name ";
+		"    select name from cmf_info order by name ";
 
 	private static final String DELETE_ALL_STORE_PROPERTIES_SQL = //
-	"    truncate table cmf_info ";
-
-	private static final String CHECK_ACL_SQL = //
-	"    select * " + //
-		"  from cmf_acl " + //
-		" where acl_id = ? ";
-
-	private static final String LOAD_ACL_SQL = //
-	"    select a.* " + //
-		"  from cmf_acl a, cmf_object_acl b " + //
-		" where a.acl_id = b.acl_id " + //
-		"   and b.object_id = ? ";
-
-	private static final String LOAD_ACL_ACTOR_SQL = //
-	"    select * " + //
-		"  from cmf_acl_actor " + //
-		" where acl_id = ? " + //
-		" order by actor_type, actor_name";
-
-	private static final String LOAD_ACL_ACTION_SQL = //
-	"    select * " + //
-		"  from cmf_acl_action " + //
-		" where acl_id = ? " + //
-		"   and actor_id = ? " + //
-		" order by action_name ";
-
-	private static final String LOAD_ACL_PROPERTIES_SQL = //
-	"    select * " + //
-		"  from cmf_acl_property " + //
-		" where acl_id = ? " + //
-		" order by name";
-
-	private static final String LOAD_ACL_PROPERTY_VALUES_SQL = //
-	"    select * " + //
-		"  from cmf_acl_property_value " + //
-		" where acl_id = ? " + //
-		"   and name = ? " + //
-		" order by value_number";
+		"    truncate table cmf_info ";
 
 	private static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
 		@Override
@@ -360,10 +315,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
 					this.log
-						.warn(String
-							.format(
-								"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-								name, attribute.getName(), duplicate));
+					.warn(String
+						.format(
+							"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+							name, attribute.getName(), duplicate));
 					continue;
 				}
 				final boolean repeating = attribute.isRepeating();
@@ -416,10 +371,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				final String duplicate = encodedNames.put(name, property.getName());
 				if (duplicate != null) {
 					this.log
-						.warn(String
-							.format(
-								"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-								name, property.getName(), duplicate));
+					.warn(String
+						.format(
+							"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+							name, property.getName(), duplicate));
 					continue;
 				}
 				final String type = translator.encodeValue(property.getType());
@@ -458,13 +413,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 			}
 
-			final CmfACL<V> acl = object.getAcl();
-			final String aclId = (acl != null ? acl.getStoredIdentifier() : null);
-
 			// Do all the inserts in a row
 			Long ret = qr.insert(c, JdbcObjectStore.INSERT_OBJECT_SQL, this.objectNumberHandler, objectId,
 				object.getSearchKey(), objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()),
-				object.getLabel(), object.getBatchId(), aclId);
+				object.getLabel(), object.getBatchId());
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_SQL, JdbcObjectStore.HANDLER_NULL,
 				attributeParameters.toArray(JdbcObjectStore.NO_PARAMS));
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
@@ -752,7 +704,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
 			this.log
-				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+			.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
 				targetValue));
@@ -818,26 +770,26 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			return new QueryRunner().query(c, JdbcObjectStore.LOAD_OBJECT_TYPES_SQL,
 				new ResultSetHandler<Map<CmfType, Integer>>() {
-					@Override
-					public Map<CmfType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<CmfType, Integer> ret = new EnumMap<CmfType, Integer>(CmfType.class);
-						while (rs.next()) {
-							String t = rs.getString("object_type");
-							if ((t == null) || rs.wasNull()) {
-								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
-							try {
-								ret.put(CmfType.decodeString(t), rs.getInt("total"));
-							} catch (IllegalArgumentException e) {
-								JdbcObjectStore.this.log.warn(String.format(
-									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
+				@Override
+				public Map<CmfType, Integer> handle(ResultSet rs) throws SQLException {
+					Map<CmfType, Integer> ret = new EnumMap<CmfType, Integer>(CmfType.class);
+					while (rs.next()) {
+						String t = rs.getString("object_type");
+						if ((t == null) || rs.wasNull()) {
+							JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+							continue;
 						}
-						return ret;
+						try {
+							ret.put(CmfType.decodeString(t), rs.getInt("total"));
+						} catch (IllegalArgumentException e) {
+							JdbcObjectStore.this.log.warn(String.format(
+								"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+							continue;
+						}
 					}
-				});
+					return ret;
+				}
+			});
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to retrieve the stored object types", e);
 		}
@@ -1112,30 +1064,30 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_SQL,
 				new ResultSetHandler<CmfValue>() {
-					@Override
-					public CmfValue handle(ResultSet rs) throws SQLException {
-						if (!rs.next()) { return null; }
-						String name = rs.getString("name");
-						String type = rs.getString("data_type");
-						final CmfDataType t;
+				@Override
+				public CmfValue handle(ResultSet rs) throws SQLException {
+					if (!rs.next()) { return null; }
+					String name = rs.getString("name");
+					String type = rs.getString("data_type");
+					final CmfDataType t;
 
-						try {
-							t = CmfDataType.decodeString(type);
-						} catch (IllegalArgumentException e) {
-							throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
-						}
-						final CmfValueSerializer deserializer = CmfValueSerializer.get(t);
-						if (deserializer == null) { throw new SQLException(String.format(
-							"Unsupported data type name for serialization: [%s]", type)); }
-						String value = rs.getString("value");
-						try {
-							return deserializer.deserialize(value);
-						} catch (ParseException e) {
-							throw new SQLException(String.format(
-								"Failed to deserialize store property [%s]:[%s] as a %s", name, value, type), e);
-						}
+					try {
+						t = CmfDataType.decodeString(type);
+					} catch (IllegalArgumentException e) {
+						throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
 					}
-				}, property);
+					final CmfValueSerializer deserializer = CmfValueSerializer.get(t);
+					if (deserializer == null) { throw new SQLException(String.format(
+						"Unsupported data type name for serialization: [%s]", type)); }
+					String value = rs.getString("value");
+					try {
+						return deserializer.deserialize(value);
+					} catch (ParseException e) {
+						throw new SQLException(String.format(
+							"Failed to deserialize store property [%s]:[%s] as a %s", name, value, type), e);
+					}
+				}
+			}, property);
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to retrieve the value of store property [%s]", property), e);
@@ -1179,15 +1131,15 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_NAMES_SQL,
 				new ResultSetHandler<Set<String>>() {
 
-					@Override
-					public Set<String> handle(ResultSet rs) throws SQLException {
-						Set<String> ret = new TreeSet<String>();
-						while (rs.next()) {
-							ret.add(rs.getString("name"));
-						}
-						return ret;
+				@Override
+				public Set<String> handle(ResultSet rs) throws SQLException {
+					Set<String> ret = new TreeSet<String>();
+					while (rs.next()) {
+						ret.add(rs.getString("name"));
 					}
-				});
+					return ret;
+				}
+			});
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to retrieve the store property names", e);
 		}
@@ -1216,202 +1168,5 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private void clearProperties(Connection c) throws SQLException {
 		JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_ALL_STORE_PROPERTIES_SQL);
-	}
-
-	@Override
-	protected <V> CmfACL<V> loadACL(JdbcOperation operation, final CmfObject<V> object,
-		CmfAttributeTranslator<V> translator) throws CmfStorageException, CmfValueDecoderException {
-		Connection c = operation.getConnection();
-		PreparedStatement aclPS = null;
-		PreparedStatement aclActorPS = null;
-		PreparedStatement aclActionPS = null;
-		PreparedStatement aclPropPS = null;
-		PreparedStatement aclPropValPS = null;
-		try {
-			try {
-				aclPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_SQL);
-				aclActorPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_ACTOR_SQL);
-				aclActionPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_ACTION_SQL);
-				aclPropPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_PROPERTIES_SQL);
-				aclPropValPS = c.prepareStatement(JdbcObjectStore.LOAD_ACL_PROPERTY_VALUES_SQL);
-
-				ResultSet aclRS = null;
-				ResultSet aclActorRS = null;
-				ResultSet aclActionRS = null;
-				ResultSet aclPropRS = null;
-				ResultSet aclPropValRS = null;
-				try {
-					aclPS.setString(1, object.getId());
-					aclRS = aclPS.executeQuery();
-					if (!aclRS.next()) { return null; }
-
-					final String aclId = aclRS.getString("acl_id");
-					final CmfACL<V> acl = new CmfACL<V>(aclId);
-
-					aclActorPS.setString(1, aclId);
-					aclActionPS.setString(1, aclId);
-
-					aclActorRS = aclActorPS.executeQuery();
-					while (aclActorRS.next()) {
-						int actorId = aclActorRS.getInt("actor_id");
-						CmfActor.Type actorType = CmfActor.Type.valueOf(aclActorRS.getString("actor_type"));
-						String actorName = aclActorRS.getString("actor_name");
-
-						final CmfActor actor = new CmfActor(actorName, actorType);
-						acl.addActor(actor);
-
-						aclActionPS.setInt(2, actorId);
-						aclActionRS = aclActionPS.executeQuery();
-						while (aclActionRS.next()) {
-							String action = aclActionRS.getString("action_name");
-							if (aclActionRS.wasNull() || (action == null)) {
-								continue;
-							}
-							actor.addAction(action);
-						}
-					}
-
-					aclPropPS.setString(1, aclId);
-					aclPropRS = aclPropPS.executeQuery();
-					while (aclPropRS.next()) {
-						String name = aclPropRS.getString("name");
-						CmfDataType type = translator.decodeValue(aclPropRS.getString("data_type"));
-						boolean repeating = aclPropRS.getBoolean("repeating");
-						final CmfProperty<V> property = new CmfProperty<V>(name, type, repeating);
-
-						final CmfValueCodec<V> codec = translator.getCodec(type);
-						final CmfValueSerializer deserializer = CmfValueSerializer.get(type);
-
-						aclPropValPS.setString(1, aclId);
-						aclPropValPS.setString(2, name);
-						aclPropValRS = aclPropValPS.executeQuery();
-						loadValues(codec, deserializer, aclPropValRS, property);
-						acl.setProperty(property);
-					}
-
-					return acl;
-				} finally {
-					DbUtils.closeQuietly(aclPropValRS);
-					DbUtils.closeQuietly(aclPropRS);
-					DbUtils.closeQuietly(aclActionRS);
-					DbUtils.closeQuietly(aclActorRS);
-					DbUtils.closeQuietly(aclRS);
-				}
-			} finally {
-				DbUtils.closeQuietly(aclPropValPS);
-				DbUtils.closeQuietly(aclPropPS);
-				DbUtils.closeQuietly(aclActionPS);
-				DbUtils.closeQuietly(aclActorPS);
-				DbUtils.closeQuietly(aclPS);
-			}
-		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to load the ACL for %s [%s](%s) ", object.getType(),
-				object.getLabel(), object.getId()), e);
-		}
-	}
-
-	@Override
-	protected <V> String storeACL(JdbcOperation operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException, CmfValueEncoderException {
-		Connection c = operation.getConnection();
-		CmfACL<V> acl = object.getAcl();
-		String aclId = acl.getIdentifier();
-		if (aclId == null) {
-			// If we've not been given an ID, we'll re-use the source object's
-			aclId = object.getId();
-		}
-		// We can only share this ACL if the object ID is different from the ACL ID
-		boolean canShare = !Tools.equals(aclId, object.getId());
-
-		final QueryRunner qr = new QueryRunner();
-		try {
-			// We do this on top to avoid wasting time if the ACL has already been stowed.
-			try {
-				qr.insert(c, JdbcObjectStore.INSERT_ACL_SQL, JdbcObjectStore.HANDLER_NULL, aclId, object.getId(),
-					object.getType().name());
-			} catch (SQLException e) {
-				// If the ACL an be shared, then we check to see if someone beat us to the
-				// punch, and avoid storing the ACL data a second time
-				if (e.getSQLState().equals("23505") && canShare) {
-					// Check to see if it's a duplicate key exception (i.e. a race condition
-					// storing ACLs)
-					boolean exists = qr.query(c, JdbcObjectStore.CHECK_ACL_SQL, JdbcObjectStore.HANDLER_EXISTS, aclId);
-					if (exists) { return aclId; }
-				}
-				// If this ACL can't be shared, or it's a different error, then we have a problem
-				throw new SQLException("Exception cascade", e);
-			}
-
-			Collection<Object[]> actors = new ArrayList<Object[]>();
-			Collection<Object[]> permissions = new ArrayList<Object[]>();
-			Collection<Object[]> properties = new ArrayList<Object[]>();
-			Collection<Object[]> propertyValues = new ArrayList<Object[]>();
-
-			Object[] actorData = new Object[4];
-			Object[] actionData = new Object[3];
-			actorData[0] = aclId;
-			actionData[0] = aclId;
-			for (CmfActor actor : acl.getActors()) {
-				int actorId = actors.size();
-				actorData[1] = actorId;
-				actorData[2] = actor.getType().name();
-				actorData[3] = actor.getName();
-				actors.add(actorData.clone());
-
-				actionData[1] = actorId;
-				for (String action : actor.getActions()) {
-					actionData[2] = action;
-					permissions.add(actionData.clone());
-				}
-			}
-
-			Object[] propertyData = new Object[4];
-			Object[] propertyValueData = new Object[5];
-			propertyData[0] = aclId;
-			propertyValueData[0] = aclId;
-			for (String propertyName : acl.getPropertyNames()) {
-				CmfProperty<V> property = acl.getProperty(propertyName);
-				propertyData[1] = property.getName();
-				propertyData[2] = translator.encodeValue(property.getType());
-				propertyData[3] = property.isRepeating();
-				properties.add(propertyData.clone());
-
-				propertyValueData[1] = property.getName();
-				CmfValueCodec<V> codec = translator.getCodec(property.getType());
-				final CmfValueSerializer serializer = CmfValueSerializer.get(property.getType());
-				int num = -1;
-				for (V value : property) {
-					CmfValue V = codec.encodeValue(value);
-					propertyValueData[2] = ++num;
-					propertyValueData[3] = V.isNull();
-					propertyValueData[4] = V.toString();
-					if (!V.isNull()) {
-						try {
-							propertyValueData[4] = serializer.serialize(V);
-						} catch (ParseException e) {
-							throw new CmfValueEncoderException(String.format(
-								"Failed to encode value #%d for ACL property [%s::%s]: %s", num, propertyValueData[0],
-								propertyValueData[1], V), e);
-						}
-					} else {
-						propertyValueData[4] = JdbcObjectStore.NULL;
-					}
-					propertyValues.add(propertyValueData.clone());
-				}
-			}
-			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_ACTOR_SQL, JdbcObjectStore.HANDLER_NULL,
-				actors.toArray(JdbcObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_ACTION_SQL, JdbcObjectStore.HANDLER_NULL,
-				permissions.toArray(JdbcObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_PROPERTY_SQL, JdbcObjectStore.HANDLER_NULL,
-				properties.toArray(JdbcObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcObjectStore.INSERT_ACL_PROPERTY_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
-				propertyValues.toArray(JdbcObjectStore.NO_PARAMS));
-
-			return aclId;
-		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to store the ACL for %s %s", object.getType(),
-				object.getId()), e);
-		}
 	}
 }

@@ -43,106 +43,6 @@
 			<column name="object_id" />
 		</createIndex>
 
-		<!-- The ACL table -->
-		<createTable tableName="cmf_acl" remarks="The ACLs for the CMS objects">
-			<column name="acl_id" type="varchar(96)" remarks="The ACL's ID">
-				<constraints nullable="false" />
-			</column>
-			<column name="source_object_id" type="varchar(96)" remarks="The source object that caused this ACL to be added">
-				<constraints nullable="false" />
-			</column>
-			<column name="source_object_type" type="varchar(32)" remarks="The source object's type">
-				<constraints nullable="false" />
-			</column>
-		</createTable>
-		<addPrimaryKey tableName="cmf_acl" columnNames="acl_id" />
-		<createIndex tableName="cmf_acl" indexName="idx_cmf_source_object" unique="true">
-			<column name="source_object_id" />
-		</createIndex>
-
-		<!-- The ACL actors table -->
-		<createTable tableName="cmf_acl_actor" remarks="The ACL actors">
-			<column name="acl_id" type="varchar(96)" remarks="The ACL's ID">
-				<constraints nullable="false" />
-			</column>
-			<column name="actor_id" type="bigint" remarks="The ACL actor's ID">
-				<constraints nullable="false" unique="false"/>
-			</column>
-			<column name="actor_type" type="varchar(32)" remarks="The actor's type">
-				<constraints nullable="false" />
-			</column>
-			<column name="actor_name" type="varchar(128)" remarks="The actor's name">
-				<constraints nullable="false" />
-			</column>
-		</createTable>
-		<addPrimaryKey tableName="cmf_acl_actor" columnNames="acl_id, actor_id" />
-		<addForeignKeyConstraint constraintName="fk_cmf_acl_actor_acl"
-			baseTableName="cmf_acl_actor" baseColumnNames="acl_id"
-			referencedTableName="cmf_acl" referencedColumnNames="acl_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-
-		<!-- The ACL actions table -->
-		<createTable tableName="cmf_acl_action" remarks="The ACL actions">
-			<column name="acl_id" type="varchar(96)" remarks="The ACL's ID">
-				<constraints nullable="false" />
-			</column>
-			<column name="actor_id" type="bigint" remarks="The ACL actor's ID">
-				<constraints nullable="false" />
-			</column>
-			<column name="action_name" type="varchar(128)" remarks="The action's type">
-				<constraints nullable="false" />
-			</column>
-		</createTable>
-		<addPrimaryKey tableName="cmf_acl_action" columnNames="acl_id, actor_id, action_name" />
-		<addForeignKeyConstraint constraintName="fk_cmf_acl_action_actor"
-			baseTableName="cmf_acl_action" baseColumnNames="acl_id, actor_id"
-			referencedTableName="cmf_acl_actor" referencedColumnNames="acl_id, actor_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-
-		<!-- The ACL property descriptor table -->
-		<createTable tableName="cmf_acl_property">
-			<column name="acl_id" type="varchar(96)" remarks="The ACL the property is for">
-				<constraints nullable="false" />
-			</column>
-			<column name="name" type="varchar(64)" remarks="The property's name">
-				<constraints nullable="false" />
-			</column>
-			<column name="data_type" type="varchar(32)" remarks="The property's data type">
-				<constraints nullable="false" />
-			</column>
-			<column name="repeating" type="boolean" remarks="The flag indicating whether this is a single or repeating value property">
-				<constraints nullable="false" />
-			</column>
-		</createTable>
-		<addPrimaryKey tableName="cmf_acl_property" columnNames="acl_id, name" />
-		<addForeignKeyConstraint constraintName="fk_cmf_acl_property_acl"
-			baseTableName="cmf_acl_property" baseColumnNames="acl_id"
-			referencedTableName="cmf_acl" referencedColumnNames="acl_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-
-		<!-- The ACL property values table -->
-		<createTable tableName="cmf_acl_property_value">
-			<column name="acl_id" type="varchar(96)" remarks="The ACL the property is for">
-				<constraints nullable="false" />
-			</column>
-			<column name="name" type="varchar(64)" remarks="The property's name">
-				<constraints nullable="false" />
-			</column>
-			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
-				<constraints nullable="false" />
-			</column>
-			<column name="null_value" type="boolean" remarks="Indicates whether this value is null">
-				<constraints nullable="false" />
-			</column>
-			<column name="data" type="text" remarks="The actual string-encoded data" />
-		</createTable>
-		<addPrimaryKey tableName="cmf_acl_property_value"
-			columnNames="acl_id, name, value_number" />
-		<addForeignKeyConstraint constraintName="fk_cmf_acl_property_value_property"
-			baseTableName="cmf_acl_property_value" baseColumnNames="acl_id, name"
-			referencedTableName="cmf_acl_property" referencedColumnNames="acl_id, name"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-
 		<!-- The main objects table -->
 		<createTable tableName="cmf_object" remarks="The CMS objects">
 			<column name="object_id" type="varchar(96)" remarks="The object's ID">
@@ -166,18 +66,11 @@
 			<column name="object_label" type="text" remarks="A label to quickly identify the object">
 				<constraints nullable="false" />
 			</column>
-			<column name="acl_id" type="varchar(96)" remarks="The object's ACL's ID">
-				<constraints nullable="true" />
-			</column>
 		</createTable>
 		<addPrimaryKey tableName="cmf_object" columnNames="object_id" />
 		<addForeignKeyConstraint constraintName="fk_cmf_object_plan"
 			baseTableName="cmf_object" baseColumnNames="object_id"
 			referencedTableName="cmf_export_plan" referencedColumnNames="object_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-		<addForeignKeyConstraint constraintName="fk_cmf_acl"
-			baseTableName="cmf_object" baseColumnNames="acl_id"
-			referencedTableName="cmf_acl" referencedColumnNames="acl_id"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 		<createIndex tableName="cmf_object" indexName="idx_cmf_object_number" unique="true">
 			<column name="object_number" />
