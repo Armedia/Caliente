@@ -10,13 +10,14 @@ import org.apache.chemistry.opencmis.commons.PropertyIds;
 
 import com.armedia.cmf.engine.converter.MappingManager.Mappable;
 import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfEncodeableName;
 import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
  *
  */
-public enum IntermediateProperty implements Mappable {
+public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	// CMIS-inspired properties
 	PATH(PropertyIds.PATH, CmfDataType.STRING),
 	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.STRING),
@@ -25,6 +26,9 @@ public enum IntermediateProperty implements Mappable {
 
 	// Non-CMIS properties
 	ACL_ID(CmfDataType.ID),
+	ACL_ACCESSOR(CmfDataType.STRING),
+	ACL_ACCESSOR_TYPE(CmfDataType.STRING),
+	ACL_ACCESSOR_ACTIONS(CmfDataType.STRING),
 	USERS_WITH_DEFAULT_GROUP(CmfDataType.ID),
 	VERSION_PATCHES(CmfDataType.STRING),
 	PATCH_ANTECEDENT(CmfDataType.STRING),
@@ -60,6 +64,7 @@ public enum IntermediateProperty implements Mappable {
 		return this.name;
 	}
 
+	@Override
 	public final String encode() {
 		return this.name;
 	}
