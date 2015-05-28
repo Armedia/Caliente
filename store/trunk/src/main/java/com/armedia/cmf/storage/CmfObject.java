@@ -101,6 +101,11 @@ public class CmfObject<V> {
 		return Collections.unmodifiableSet(this.attributes.keySet());
 	}
 
+	public final CmfAttribute<V> getAttribute(CmfEncodeableName name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
+		return getAttribute(name.encode());
+	}
+
 	public final CmfAttribute<V> getAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
 		return this.attributes.get(name);
@@ -109,6 +114,11 @@ public class CmfObject<V> {
 	public final CmfAttribute<V> setAttribute(CmfAttribute<V> attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set"); }
 		return this.attributes.put(attribute.getName(), attribute);
+	}
+
+	public final CmfAttribute<V> removeAttribute(CmfEncodeableName name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to remove"); }
+		return removeAttribute(name.encode());
 	}
 
 	public final CmfAttribute<V> removeAttribute(String name) {
@@ -135,6 +145,11 @@ public class CmfObject<V> {
 		return Collections.unmodifiableSet(this.properties.keySet());
 	}
 
+	public final CmfProperty<V> getProperty(CmfEncodeableName name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
+		return getProperty(name.encode());
+	}
+
 	public final CmfProperty<V> getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return this.properties.get(name);
@@ -143,6 +158,11 @@ public class CmfObject<V> {
 	public final CmfProperty<V> setProperty(CmfProperty<V> property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
 		return this.properties.put(property.getName(), property);
+	}
+
+	public final CmfProperty<V> removeProperty(CmfEncodeableName name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a property name to remove"); }
+		return removeProperty(name.encode());
 	}
 
 	public final CmfProperty<V> removeProperty(String name) {

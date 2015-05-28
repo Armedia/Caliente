@@ -8,6 +8,14 @@ public class CmfAttribute<V> extends CmfProperty<V> {
 		super(pattern);
 	}
 
+	public CmfAttribute(CmfEncodeableName name, CmfDataType type, boolean repeating) {
+		super(name, type, repeating);
+	}
+
+	public CmfAttribute(CmfEncodeableName name, CmfDataType type, boolean repeating, Collection<V> values) {
+		super(name, type, repeating, values);
+	}
+
 	public CmfAttribute(String name, CmfDataType type, boolean repeating) {
 		super(name, type, repeating);
 	}

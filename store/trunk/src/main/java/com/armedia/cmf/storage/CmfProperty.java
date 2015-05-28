@@ -29,6 +29,30 @@ public class CmfProperty<V> implements Iterable<V> {
 		setValues(pattern.values);
 	}
 
+	public CmfProperty(CmfEncodeableName name, CmfDataType type) {
+		this(name, type, true, (V) null);
+	}
+
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating) {
+		this(name, type, repeating, (V) null);
+	}
+
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, V value) {
+		this(name, type, false, value);
+	}
+
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating, V value) {
+		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
+	}
+
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, Collection<V> values) {
+		this(name, type, true, values);
+	}
+
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating, Collection<V> values) {
+		this(name.encode(), type, repeating, values);
+	}
+
 	public CmfProperty(String name, CmfDataType type) {
 		this(name, type, true, (V) null);
 	}
