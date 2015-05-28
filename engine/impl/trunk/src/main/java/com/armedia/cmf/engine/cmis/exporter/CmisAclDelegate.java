@@ -9,9 +9,9 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 
-public class CmisACLDelegate extends CmisExportDelegate<FileableCmisObject> {
+public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 
-	protected CmisACLDelegate(CmisExportDelegateFactory factory, FileableCmisObject object) throws Exception {
+	protected CmisAclDelegate(CmisExportDelegateFactory factory, FileableCmisObject object) throws Exception {
 		super(factory, FileableCmisObject.class, object);
 	}
 

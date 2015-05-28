@@ -87,7 +87,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		for (Folder f : this.object.getParents()) {
 			ret.add(new CmisFolderDelegate(this.factory, f));
 		}
-		// ret.add(new CmisAclDelegate(this.engine, this.object));
+		ret.add(new CmisAclDelegate(this.factory, this.object));
 		return ret;
 	}
 
@@ -97,6 +97,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (Folder.class.isInstance(object)) { return CmfType.FOLDER; }
 		throw new Exception(String.format(
 			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
-			.getClass().getCanonicalName(), object.getType().getId()));
+				.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }
