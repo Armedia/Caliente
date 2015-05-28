@@ -38,6 +38,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -402,6 +403,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	@Override
 	protected void prepareOperation(T sysObject, boolean newObject, DctmImportContext context) throws DfException,
 		ImportException {
+
 		if (!isTransitoryObject(sysObject)) {
 			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
 			if (this.existingTemporaryPermission.grant(sysObject)) {
@@ -412,43 +414,32 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected void restoreAcl(T sysObject, DctmImportContext ctx) throws DfException, ImportException {
 		final IDfSession session = ctx.getSession();
-		// Set the ACL
-		CmfAttribute<IDfValue> aclDomainAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_DOMAIN);
-		CmfAttribute<IDfValue> aclNameAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_NAME);
-		@SuppressWarnings("unchecked")
-		int firstNull = Tools.firstNull(aclDomainAtt, aclNameAtt);
-		if (firstNull == -1) {
-			String aclDomain = DctmMappingUtils.resolveMappableUser(session, aclDomainAtt.getValue().asString());
-			try {
-				IDfUser u = DctmImportUser.locateExistingUser(ctx, aclDomain);
-				if (u != null) {
-					aclDomain = u.getUserName();
-					IDfACL acl = session.getACL(aclDomain, aclNameAtt.getValue().asString());
-					if (acl != null) {
-						sysObject.setACL(acl);
-					} else {
-						String msg = String
-							.format(
-								"Failed to set the ACL [%s:%s] for %s [%s](%s) - the ACL wasn't found - probably didn't need to be copied over",
-								aclDomain, aclNameAtt.getValue().asString(), this.cmfObject.getType(),
-								this.cmfObject.getLabel(), sysObject.getObjectId().getId());
-						this.log.warn(msg);
-					}
-				} else {
-					String msg = String
-						.format(
-							"Failed to find the user [%s] who owns the ACL for %s [%s](%s) - the user wasn't found - probably didn't need to be copied over",
-							aclDomain, this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId()
-								.getId());
-					if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
-					this.log.warn(msg);
-				}
-			} catch (MultipleUserMatchesException e) {
-				String msg = String.format("Failed to find the user [%s] who owns the ACL for folder [%s](%s) - %s",
-					aclDomain, this.cmfObject.getLabel(), sysObject.getObjectId().getId(), e.getMessage());
-				if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
-				this.log.warn(msg);
+
+		// First, find the ACL_ID property - if it doesn't exist, we have no ACL to restore
+		CmfProperty<IDfValue> aclIdProp = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
+		if ((aclIdProp != null) && aclIdProp.hasValues()) {
+			IDfId aclId = aclIdProp.getValue().asId();
+			if (aclId.isNull()) {
+				// No acl...
+				return;
 			}
+
+			// Find the mapped ACL
+			Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID,
+				aclId.getId());
+			if (m != null) {
+				try {
+					IDfACL acl = IDfACL.class.cast(session.getObject(new DfId(m.getTargetValue())));
+					sysObject.setACL(acl);
+					return;
+				} catch (DfIdNotFoundException e) {
+				}
+
+				// ACL or not, we're done here...
+			}
+			this.log.warn(String.format(
+				"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (%s), but couldn't be found",
+				aclId.getId(), this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId()));
 		}
 	}
 
@@ -459,7 +450,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		doFinalizeConstruction(object, newObject, context);
 		// Now, link to the parent folders
 		linkToParents(object, context);
-		// restoreAcl(object, context);
+		restoreAcl(object, context);
 	}
 
 	protected void doFinalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
@@ -577,7 +568,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		String aclName = "acl_name";
 		String aclDomain = "acl_domain";
-		/*
 		CmfAttribute<IDfValue> aclNameAtt = stored.getAttribute(DctmAttributes.ACL_NAME);
 		CmfAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
 		if ((aclNameAtt != null) && (aclDomainAtt != null)) {
@@ -591,7 +581,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 			aclDomain = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, aclDomain));
 		}
-		 */
 
 		CmfAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
 		final boolean deletedFlag = (deletedAtt != null) && deletedAtt.getValue().asBoolean();
