@@ -5,6 +5,7 @@ public enum CmfType {
 	DATASTORE,
 	USER,
 	GROUP,
+	ACL,
 	TYPE,
 	FORMAT,
 	FOLDER,
