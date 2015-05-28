@@ -26,9 +26,9 @@ import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
 import com.armedia.cmf.engine.tools.MimeTools;
-import com.armedia.cmf.storage.CmfContentStore;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
@@ -183,8 +183,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			Date d = this.version.getCreatedTime();
 			if (d != null) {
 				Collection<CmfValue> c = Collections.singleton(new CmfValue(d));
-				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name,
-					CmfDataType.DATETIME, false, c));
+				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME,
+					false, c));
 				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.MODIFICATION_DATE.name,
 					CmfDataType.DATETIME, false, c));
 			}
@@ -192,8 +192,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 		versionNames.add(new CmfValue(this.versionNumber.toString()));
 
-		CmfProperty<CmfValue> current = new CmfProperty<CmfValue>(
-			IntermediateProperty.IS_LATEST_VERSION.encode(), CmfDataType.BOOLEAN, false);
+		CmfProperty<CmfValue> current = new CmfProperty<CmfValue>(IntermediateProperty.IS_LATEST_VERSION,
+			CmfDataType.BOOLEAN, false);
 		current.setValue(new CmfValue((this.version == null) || this.version.isCurrentVersion()));
 		object.setProperty(current);
 
@@ -201,8 +201,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			this.predecessors = Collections.emptyList();
 			this.successors = Collections.emptyList();
 			if (this.antecedentId != null) {
-				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name,
-					CmfDataType.ID, false, Collections.singleton(new CmfValue(this.antecedentId))));
+				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID,
+					false, Collections.singleton(new CmfValue(this.antecedentId))));
 			}
 		} else {
 			String antecedentId = this.antecedentId;
@@ -266,8 +266,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 						.getServerRelativeUrl(), this.versionNumber, antecedentId != null ? antecedentId : "none"));
 				}
 				if (antecedentId != null) {
-					object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name,
-						CmfDataType.ID, false, Collections.singleton(new CmfValue(antecedentId))));
+					object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID,
+						false, Collections.singleton(new CmfValue(antecedentId))));
 				}
 			} catch (ShptSessionException e) {
 				throw new ExportException(String.format("Failed to retrieve file versions for [%s]",
@@ -277,8 +277,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION.name, CmfDataType.STRING, true,
 			versionNames));
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_TREE.name, CmfDataType.ID,
-			false, Collections.singleton(new CmfValue(getBatchId()))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_TREE.name, CmfDataType.ID, false,
+			Collections.singleton(new CmfValue(getBatchId()))));
 		return true;
 	}
 
@@ -290,8 +290,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		try {
 			author = new ShptUser(this.factory, service.getFileAuthor(this.object.getServerRelativeUrl()));
 			ret.add(author);
-			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OWNER.name, CmfDataType.STRING,
-				false, Collections.singleton(new CmfValue(author.getName()))));
+			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OWNER.name, CmfDataType.STRING, false,
+				Collections.singleton(new CmfValue(author.getName()))));
 		} catch (IncompleteDataException e) {
 			this.log.warn(e.getMessage());
 		}
@@ -312,15 +312,15 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 		if (creator != null) {
 			ret.add(creator);
-			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATOR.name, CmfDataType.STRING,
-				false, Collections.singleton(new CmfValue(creator.getName()))));
+			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATOR.name, CmfDataType.STRING, false,
+				Collections.singleton(new CmfValue(creator.getName()))));
 
 		}
 
 		if (modifier != null) {
 			ret.add(modifier);
-			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.MODIFIER.name,
-				CmfDataType.STRING, false, Collections.singleton(new CmfValue(modifier.getName()))));
+			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.MODIFIER.name, CmfDataType.STRING, false,
+				Collections.singleton(new CmfValue(modifier.getName()))));
 		}
 
 		for (ShptFile f : this.predecessors) {
@@ -393,8 +393,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		} catch (Exception e) {
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
-		marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CONTENT_TYPE.name,
-			CmfDataType.STRING, false, Collections.singleton(new CmfValue(type.getBaseType()))));
+		marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CONTENT_TYPE.name, CmfDataType.STRING, false,
+			Collections.singleton(new CmfValue(type.getBaseType()))));
 		List<ContentInfo> ret = new ArrayList<ContentInfo>();
 		ret.add(new ContentInfo(h.getQualifier()));
 		return ret;

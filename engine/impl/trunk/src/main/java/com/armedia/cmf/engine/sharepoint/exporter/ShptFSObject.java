@@ -66,19 +66,19 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			name = FileNameTools.removeEdgeSeparators(name, '/');
 			name = name.replaceFirst("/", "_");
 		}
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OBJECT_NAME.name, CmfDataType.STRING,
-			false, Collections.singleton(new CmfValue(name))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OBJECT_NAME.name, CmfDataType.STRING, false,
+			Collections.singleton(new CmfValue(name))));
 
 		Date d = getCreatedTime();
 		if (d != null) {
-			object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name,
-				CmfDataType.DATETIME, false, Collections.singleton(new CmfValue(d))));
+			object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME,
+				false, Collections.singleton(new CmfValue(d))));
 		}
 
 		d = getLastModifiedTime();
 		if (d != null) {
-			object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.MODIFICATION_DATE.name,
-				CmfDataType.DATETIME, false, Collections.singleton(new CmfValue(d))));
+			object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.MODIFICATION_DATE.name, CmfDataType.DATETIME,
+				false, Collections.singleton(new CmfValue(d))));
 		}
 
 		// Target Paths
@@ -92,8 +92,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]",
 					path, getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
 			}
-			object.setProperty(new CmfProperty<CmfValue>(IntermediateProperty.PATH.encode(),
-				CmfDataType.STRING, true, Collections.singleton(new CmfValue(path))));
+			object.setProperty(new CmfProperty<CmfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true,
+				Collections.singleton(new CmfValue(path))));
 		}
 		return true;
 	}
@@ -106,8 +106,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			String parentPath = getServerRelativeUrl();
 			parentPath = FileNameTools.dirname(parentPath, '/');
 			ShptFolder parent = new ShptFolder(this.factory, session.getFolder(parentPath));
-			marshaled.setProperty(new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID.encode(),
-				CmfDataType.ID, true,
+			marshaled.setProperty(new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true,
 				Collections.singleton(new CmfValue(CmfDataType.ID, parent.getObjectId()))));
 			ret.add(parent);
 			if (this.log.isDebugEnabled()) {
