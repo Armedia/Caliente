@@ -27,6 +27,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
@@ -121,6 +122,16 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(p)));
 			}
 		}
+
+		CmfProperty<IDfValue> acl = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ID,
+			DctmDataType.DF_ID.getStoredType(), false);
+		properties.add(acl);
+		IDfId aclId = DfId.DF_NULLID;
+		IDfACL aclObj = object.getACL();
+		if (aclObj != null) {
+			aclId = aclObj.getObjectId();
+		}
+		acl.setValue(DfValueFactory.newIdValue(aclId));
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
