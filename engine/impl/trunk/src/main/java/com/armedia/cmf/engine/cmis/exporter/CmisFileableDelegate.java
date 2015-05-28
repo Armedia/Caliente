@@ -13,8 +13,8 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
@@ -46,10 +46,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 	protected void marshalParentsAndPaths(CmisExportContext ctx, CmfObject<CmfValue> marshaled, T object)
 		throws ExportException {
-		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID.encode(),
-			CmfDataType.ID, true);
-		CmfProperty<CmfValue> paths = new CmfProperty<CmfValue>(IntermediateProperty.PATH.encode(),
-			CmfDataType.STRING, true);
+		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
+		CmfProperty<CmfValue> paths = new CmfProperty<CmfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true);
 		final String rootPath = ctx.getSession().getRootFolder().getName();
 		for (Folder f : object.getParents()) {
 			try {
@@ -99,6 +97,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (Folder.class.isInstance(object)) { return CmfType.FOLDER; }
 		throw new Exception(String.format(
 			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
-				.getClass().getCanonicalName(), object.getType().getId()));
+			.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }

@@ -19,9 +19,9 @@ import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.CmfContentStore;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
@@ -111,8 +111,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			}
 			object.setAttribute(antecedentId);
 		}
-		CmfProperty<CmfValue> current = new CmfProperty<CmfValue>(
-			IntermediateProperty.IS_LATEST_VERSION.encode(), CmfDataType.BOOLEAN, false);
+		CmfProperty<CmfValue> current = new CmfProperty<CmfValue>(IntermediateProperty.IS_LATEST_VERSION,
+			CmfDataType.BOOLEAN, false);
 		current.setValue(new CmfValue(this.object.isLatestVersion()));
 		object.setProperty(current);
 
@@ -153,7 +153,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 	protected CmfContentStore<?>.Handle storeContentStream(CmfObject<CmfValue> marshalled,
 		CmfAttributeTranslator<CmfValue> translator, Rendition r, ContentStream cs, CmfContentStore<?> streamStore)
-			throws Exception {
+		throws Exception {
 		CmfContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
 		InputStream src = cs.getStream();
 		OutputStream tgt = h.openOutput();
@@ -167,8 +167,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
-		CmisExportContext ctx) throws Exception {
+	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled, CmisExportContext ctx)
+		throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
 		String prev = this.object.getId();
 		for (Document d : this.successors) {
