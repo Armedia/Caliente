@@ -7,10 +7,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
-import com.armedia.cmf.storage.CmfOrganizationStrategy;
 import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfOrganizationStrategy;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.FileNameTools;
 
@@ -24,8 +24,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 
 	@Override
 	public String calculateAddendum(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
-		final String attName = translator.decodeAttributeName(object.getType(),
-			IntermediateAttribute.VERSION_LABEL.encode());
+		final String attName = translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL);
 		final CmfAttribute<?> versionLabelAtt = object.getAttribute(attName);
 		String oldFrag = super.calculateAddendum(translator, object, qualifier);
 		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {
@@ -41,7 +40,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		CmfProperty<?> paths = object.getProperty(IntermediateProperty.PATH.encode());
+		CmfProperty<?> paths = object.getProperty(IntermediateProperty.PATH);
 
 		List<String> ret = new ArrayList<String>();
 		for (String p : FileNameTools.tokenize(paths.getValue().toString(), '/')) {
@@ -49,7 +48,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 		}
 
 		CmfAttribute<?> name = object.getAttribute(translator.decodeAttributeName(object.getType(),
-			IntermediateAttribute.NAME.encode()));
+			IntermediateAttribute.NAME));
 		ret.add(name.getValue().toString());
 		return ret;
 	}
