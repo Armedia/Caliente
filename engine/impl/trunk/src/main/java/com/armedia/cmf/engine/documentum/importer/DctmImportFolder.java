@@ -163,11 +163,11 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-				.warn(
-					String
-					.format(
-						"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-						actualUser, this.cmfObject.getLabel()), e);
+					.warn(
+						String
+							.format(
+								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+								actualUser, this.cmfObject.getLabel()), e);
 			}
 		}
 	}
@@ -177,7 +177,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		// If I'm a cabinet, then find it by cabinet name
 		IDfSession session = ctx.getSession();
 		// Easier way: determine if we have parent folders...if not, then we're a cabinet
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
 			String path = String.format("/%s", this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
@@ -189,7 +189,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		CmfAttribute<IDfValue> a = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
 		String path = "";
 		final String name = a.getValue().asString();

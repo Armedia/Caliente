@@ -8,14 +8,11 @@ import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmDataType;
-import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.CmfACL;
-import com.armedia.cmf.storage.CmfActor;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
@@ -119,15 +116,10 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 				object.setProperty(property);
 			}
 
-			object.setAcl(calculateACL(typedObject));
 			return true;
 		} catch (DfException e) {
 			throw new ExportException(String.format("Failed to export %s %s", getType(), getObjectId()), e);
 		}
-	}
-
-	protected CmfACL<IDfValue> calculateACL(T object) throws DfException, ExportException {
-		return null;
 	}
 
 	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
@@ -153,40 +145,5 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 		if (!klazz.isInstance(p)) { throw new ClassCastException(String.format("Can't convert a [%s] into a [%s]", p
 			.getClass().getCanonicalName(), klazz.getCanonicalName())); }
 		return klazz.cast(p);
-	}
-
-	protected static List<IDfPersistentObject> gatherACLRequirements(DctmExportContext ctx, CmfACL<IDfValue> acl)
-		throws DfException {
-		List<IDfPersistentObject> ret = new ArrayList<IDfPersistentObject>();
-		if (acl == null) { return ret; }
-
-		final IDfSession session = ctx.getSession();
-		for (CmfActor actor : acl.getActors()) {
-			final String actorName = actor.getName();
-			if (DctmMappingUtils.SPECIAL_NAMES.contains(actorName)) {
-				continue;
-			}
-
-			IDfPersistentObject obj = null;
-			switch (actor.getType()) {
-				case GROUP:
-					if (!ctx.isSpecialUser(actorName) && !DctmMappingUtils.isMappableUser(session, actorName)) {
-						obj = session.getGroup(actorName);
-					}
-					break;
-				case USER:
-					if (!ctx.isSpecialGroup(actorName)) {
-						obj = session.getUser(actorName);
-					}
-					break;
-				default:
-					continue;
-			}
-
-			if (obj != null) {
-				ret.add(obj);
-			}
-		}
-		return ret;
 	}
 }

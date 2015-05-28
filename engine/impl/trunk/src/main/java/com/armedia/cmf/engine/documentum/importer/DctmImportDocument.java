@@ -181,7 +181,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
 		IDfId mainFolderId = getMappedParentId(context);
 		if (mainFolderId == null) {
-			mainFolderId = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode()).getValue().asId();
+			mainFolderId = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID).getValue().asId();
 			throw new ImportException(String.format(
 				"Reference [%s] mapping for its parent folder [%s->???] could not be found", this.cmfObject.getLabel(),
 				mainFolderId.getId()));

@@ -154,7 +154,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		IDfType type = session.getType(subType);
 		if (type != null) {
 			// TODO: Fix this kludge for something cleaner
-			CmfProperty<IDfValue> targetPaths = object.getProperty(IntermediateProperty.PATH.encode());
+			CmfProperty<IDfValue> targetPaths = object.getProperty(IntermediateProperty.PATH);
 			if (Tools.equals("dm_cabinet", type.getName()) && targetPaths.hasValues()) {
 				type = type.getSuperType();
 			}

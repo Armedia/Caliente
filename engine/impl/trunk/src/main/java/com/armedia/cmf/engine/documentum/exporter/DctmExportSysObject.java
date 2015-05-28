@@ -21,16 +21,13 @@ import com.armedia.cmf.engine.documentum.DctmVersionNumber;
 import com.armedia.cmf.engine.documentum.DctmVersionTree;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
-import com.armedia.cmf.engine.documentum.common.DctmACL;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
-import com.armedia.cmf.storage.CmfACL;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfFolder;
-import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.content.IDfStore;
@@ -100,10 +97,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
 		IDfSession session = object.getSession();
-		CmfProperty<IDfValue> paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH.encode(),
+		CmfProperty<IDfValue> paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		properties.add(paths);
-		CmfProperty<IDfValue> parents = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(),
+		CmfProperty<IDfValue> parents = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_ID,
 			DctmDataType.DF_ID.getStoredType(), true);
 		properties.add(parents);
 
@@ -290,15 +287,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			}
 		}
 
-		// Export the ACL's requirements
-		for (IDfPersistentObject obj : DctmExportDelegate.gatherACLRequirements(ctx, marshaled.getAcl())) {
-			req.add(this.factory.newExportDelegate(obj));
-		}
+		// Export the ACL requirements
+		req.add(this.factory.newExportDelegate(sysObject.getACL()));
 		return req;
-	}
-
-	@Override
-	protected CmfACL<IDfValue> calculateACL(final T sysObject) throws DfException, ExportException {
-		return DctmACL.calculateACL(sysObject.getACL());
 	}
 }

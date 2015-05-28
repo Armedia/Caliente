@@ -28,11 +28,11 @@ public enum DctmObjectType {
 	STORE(CmfType.DATASTORE, IDfStore.class),
 	USER(CmfType.USER, IDfUser.class),
 	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
+	ACL(CmfType.ACL, IDfACL.class),
 	TYPE(CmfType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	FORMAT(CmfType.FORMAT, IDfFormat.class),
 	FOLDER(CmfType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	DOCUMENT(CmfType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
-	ACL(null, IDfACL.class),
 	//
 	;
 

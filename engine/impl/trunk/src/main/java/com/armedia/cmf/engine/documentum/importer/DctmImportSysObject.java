@@ -32,7 +32,6 @@ import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.storage.CmfACL;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfDataType;
@@ -670,7 +669,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
-		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String.format(
 			"No target paths specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
 		return p.getValues();
@@ -754,12 +753,12 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected IDfId getMappedParentId(DctmImportContext context, int pos) throws DfException, ImportException {
 		final IDfSession session = context.getSession();
-		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
+		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		IDfId mainFolderId = parents.getValue(pos).asId();
 		if (mainFolderId.isNull()) {
 			// This is only valid if pos is 0, and it's the only parent value, and there's only one
 			// path value. If it's used under any other circumstance, it's an error.
-			CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
+			CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH);
 			if ((pos == 0) && (parents.getValueCount() == 1) && (paths.getValueCount() == 1)) {
 				// This is a "fixup" from the path repairs, so we look up by path
 				String path = context.getTargetPath(paths.getValue().asString());
@@ -776,7 +775,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
-		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
+		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		List<String> newParents = new ArrayList<String>(parents.getValueCount());
 		if ((parents == null) || (parents.getValueCount() == 0)) {
 			// This might be a cabinet import, so we try to find the target folder
@@ -939,25 +938,24 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	@Override
 	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
 		// First things first: fix the parent paths in the incoming object
-		CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH.encode());
+		CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		if (paths == null) {
-			paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH.encode(), CmfDataType.STRING, true);
+			paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true);
 			this.cmfObject.setProperty(paths);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
-				IntermediateProperty.PATH.encode(), this.cmfObject.getLabel(), this.cmfObject.getId()));
+				IntermediateProperty.PATH, this.cmfObject.getLabel(), this.cmfObject.getId()));
 		}
 
-		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID.encode());
+		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if (parents == null) {
-			parents = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_ID.encode(), CmfDataType.ID, true);
+			parents = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
 			this.cmfObject.setProperty(parents);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
 				PropertyIds.PARENT_ID, this.cmfObject.getLabel(), this.cmfObject.getId()));
 		}
 
 		// TODO: Restore the object's ACL here
-		final String propName = IntermediateProperty.ACL_ID.encode();
-		CmfProperty<IDfValue> aclId = this.cmfObject.getProperty(propName);
+		CmfProperty<IDfValue> aclId = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
 		IDfACL acl = null;
 		CmfACL<IDfValue> cmfAcl = null;
 		if ((aclId != null) && aclId.hasValues()) {
