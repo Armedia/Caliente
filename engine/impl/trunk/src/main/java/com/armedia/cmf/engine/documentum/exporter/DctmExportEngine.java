@@ -30,7 +30,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine extends
-	ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory> {
+ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
@@ -60,12 +60,12 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected DctmExportContextFactory newContextFactory(CfgTools config) {
+	protected DctmExportContextFactory newContextFactory(IDfSession session, CfgTools config) {
 		return new DctmExportContextFactory(this, config);
 	}
 
 	@Override
-	protected DctmExportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+	protected DctmExportDelegateFactory newDelegateFactory(IDfSession session, CfgTools cfg) throws Exception {
 		return new DctmExportDelegateFactory(this, cfg);
 	}
 

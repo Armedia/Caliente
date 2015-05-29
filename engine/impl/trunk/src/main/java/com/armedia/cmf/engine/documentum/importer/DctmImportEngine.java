@@ -28,7 +28,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine extends
-ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory> {
+	ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -67,7 +67,7 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmIm
 	}
 
 	@Override
-	protected DctmImportContextFactory newContextFactory(CfgTools config) {
+	protected DctmImportContextFactory newContextFactory(IDfSession session, CfgTools config) {
 		return new DctmImportContextFactory(this, config);
 	}
 
@@ -87,7 +87,7 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmIm
 	}
 
 	@Override
-	protected DctmImportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+	protected DctmImportDelegateFactory newDelegateFactory(IDfSession session, CfgTools cfg) throws Exception {
 		return new DctmImportDelegateFactory(this, cfg);
 	}
 
