@@ -21,8 +21,7 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 
 	@Override
 	protected CmfType calculateType(FileableCmisObject object) throws Exception {
-		// return CmfType.ACL;
-		return null;
+		return CmfType.ACL;
 	}
 
 	@Override
