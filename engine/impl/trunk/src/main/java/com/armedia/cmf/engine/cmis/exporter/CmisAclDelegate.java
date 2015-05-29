@@ -50,12 +50,15 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		// Copy the ACL Data into the object's attributes using the common ACL attributes
 		Acl acl = this.object.getAcl();
-		for (Ace ace : acl.getAces()) {
-			Set<String> actions = new TreeSet<String>();
-			for (String permission : ace.getPermissions()) {
-				actions.addAll(ctx.convertPermissionToAllowableActions(permission));
+		if (acl != null) {
+			for (Ace ace : acl.getAces()) {
+				Set<String> actions = new TreeSet<String>();
+				for (String permission : ace.getPermissions()) {
+					ctx.printf(permission);
+					actions.addAll(ctx.convertPermissionToAllowableActions(permission));
+				}
+				actions.size();
 			}
-			actions.size();
 		}
 		return true;
 	}

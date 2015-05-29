@@ -32,7 +32,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportDelegateFactory> {
+	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportDelegateFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -157,7 +157,7 @@ ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExpor
 
 	@Override
 	protected CmisExportContextFactory newContextFactory(Session session, CfgTools cfg) throws Exception {
-		return new CmisExportContextFactory(this, cfg);
+		return new CmisExportContextFactory(this, session, cfg);
 	}
 
 	@Override
