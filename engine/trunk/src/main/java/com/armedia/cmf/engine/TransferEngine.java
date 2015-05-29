@@ -22,8 +22,8 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectCounter;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
@@ -217,9 +217,9 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 
 	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg) throws Exception;
 
-	protected abstract F newContextFactory(CfgTools cfg) throws Exception;
+	protected abstract F newContextFactory(S session, CfgTools cfg) throws Exception;
 
-	protected abstract D newDelegateFactory(CfgTools cfg) throws Exception;
+	protected abstract D newDelegateFactory(S session, CfgTools cfg) throws Exception;
 
 	protected abstract Set<String> getTargetNames();
 
@@ -240,17 +240,15 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V>, F ex
 		// Now, add the properties to reference the referrent object
 		if (referrent != null) {
 			final CmfAttributeTranslator<V> translator = getTranslator();
-			CmfProperty<V> referrentType = new CmfProperty<V>(TransferEngine.REFERRENT_TYPE,
-				CmfDataType.STRING, false);
+			CmfProperty<V> referrentType = new CmfProperty<V>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING, false);
 			try {
 				referrentType.setValue(translator.getValue(CmfDataType.STRING, referrent.getType().name()));
 				marshaled.setProperty(referrentType);
-				CmfProperty<V> referrentId = new CmfProperty<V>(TransferEngine.REFERRENT_ID,
-					CmfDataType.STRING, false);
+				CmfProperty<V> referrentId = new CmfProperty<V>(TransferEngine.REFERRENT_ID, CmfDataType.STRING, false);
 				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getId()));
 				marshaled.setProperty(referrentId);
-				CmfProperty<V> referrentKey = new CmfProperty<V>(TransferEngine.REFERRENT_KEY,
-					CmfDataType.STRING, false);
+				CmfProperty<V> referrentKey = new CmfProperty<V>(TransferEngine.REFERRENT_KEY, CmfDataType.STRING,
+					false);
 				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
 				marshaled.setProperty(referrentKey);
 			} catch (ParseException e) {
