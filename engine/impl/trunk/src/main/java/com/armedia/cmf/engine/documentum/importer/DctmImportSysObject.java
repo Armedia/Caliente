@@ -56,7 +56,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -402,7 +402,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected void prepareOperation(T sysObject, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 
 		if (!isTransitoryObject(sysObject)) {
 			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
@@ -437,9 +437,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 				// ACL or not, we're done here...
 			}
-			this.log.warn(String.format(
-				"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (%s), but couldn't be found",
-				aclId.getId(), this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId()));
+
+			String msg = String.format(
+				"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (to %s), but couldn't be found",
+				aclId.getId(), this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
+				m.getTargetValue());
+			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+			this.log.warn(msg);
 		}
 	}
 
@@ -454,13 +458,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected void doFinalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 
 	}
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;

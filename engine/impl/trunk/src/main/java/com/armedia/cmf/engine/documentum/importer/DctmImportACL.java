@@ -14,6 +14,7 @@ import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.common.DctmACL;
+import com.armedia.cmf.engine.documentum.common.DctmCmisACLTools;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfObject;
@@ -88,8 +89,12 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		}
 	}
 
+	private final boolean documentumMode;
+
 	protected DctmImportACL(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfACL.class, null, storedObject);
+		CmfProperty<IDfValue> prop = storedObject.getProperty(DctmACL.DOCUMENTUM_MARKER);
+		this.documentumMode = ((prop != null) && prop.hasValues() && prop.getValue().asBoolean());
 	}
 
 	@Override
@@ -99,6 +104,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 	@Override
 	protected IDfACL locateInCms(DctmImportContext ctx) throws DfException {
+		if (!this.documentumMode) {
+			// TODO: If the incoming ACL isn't a documentum-exported ACL, how the hell do we
+			// find the "existing" ACL to compare it with?
+			return null;
+		}
 		final IDfValue ownerName = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME).getValue();
 		final IDfValue objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue();
 		final IDfSession session = ctx.getSession();
@@ -153,7 +163,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 	@Override
 	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		if (newObject) {
 			String user = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME).getValue().asString();
 			String name = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
@@ -184,11 +194,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
 					// we can survive this...
 					this.log
-						.warn(String
-							.format(
-								"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
-								this.cmfObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
-								permit.getPermitValueInt(), permit.getPermitValueString()));
+					.warn(String
+						.format(
+							"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
+							this.cmfObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
+							permit.getPermitValueInt(), permit.getPermitValueString()));
 					continue;
 				}
 				// something else? don't snuff it...
@@ -197,139 +207,168 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		}
 
 		// Now, apply the new permissions
-		CmfProperty<IDfValue> accessors = this.cmfObject.getProperty(DctmACL.ACCESSORS);
-		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), accessors));
-		}
-		CmfProperty<IDfValue> permitTypes = this.cmfObject.getProperty(DctmACL.PERMIT_TYPE);
-		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), permitTypes));
-		}
-		CmfProperty<IDfValue> permitValues = this.cmfObject.getProperty(DctmACL.PERMIT_VALUE);
-		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), permitValues));
-		}
-
-		// If all 3 are null, then we assume an empty list
-		if ((accessors == null) && (permitTypes == null) && (permitValues == null)) {
-			if (this.log.isDebugEnabled()) {
-				this.log.warn("Empty ACL created at [{}]({})", this.cmfObject.getLabel(), this.cmfObject.getId());
+		List<IDfPermit> extendedPerms = new ArrayList<IDfPermit>();
+		if (this.documentumMode) {
+			CmfProperty<IDfValue> accessors = this.cmfObject.getProperty(DctmACL.ACCESSORS);
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), accessors));
 			}
-			return;
-		}
-
-		// Ok...so at least "some" of the properties are there, so we validate that they
-		// all have the proper structure: none of them are missing, and they all have the
-		// same number of values
-		if ((accessors == null) || (permitTypes == null) || (permitValues == null)
-			|| (accessors.getValueCount() != permitTypes.getValueCount())
-			|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(String.format(
-			"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%permitType = %s%npermitValue = %s",
-			this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
-
-		// One final check to shortcut and avoid unnecessary processing...
-		final int accessorCount = accessors.getValueCount();
-		if (accessorCount == 0) {
-			if (this.log.isDebugEnabled()) {
-				this.log.warn("Empty ACL created at [{}]({})", this.cmfObject.getLabel(), this.cmfObject.getId());
+			CmfProperty<IDfValue> permitTypes = this.cmfObject.getProperty(DctmACL.PERMIT_TYPE);
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), permitTypes));
 			}
-			return;
-		}
-
-		List<IDfPermit> extendedPerms = new ArrayList<IDfPermit>(accessorCount);
-		DfPermit p = new DfPermit();
-		for (int i = 0; i < accessorCount; i++) {
-			String name = accessors.getValue(i).asString();
-			int type = permitTypes.getValue(i).asInteger();
-			String perm = permitValues.getValue(i).asString();
-
-			// In addition, need to check for groups for these types
-			boolean group = false;
-			switch (p.getPermitType()) {
-				case IDfPermit.DF_REQUIRED_GROUP:
-				case IDfPermit.DF_REQUIRED_GROUP_SET:
-					group = true;
-					break;
+			CmfProperty<IDfValue> permitValues = this.cmfObject.getProperty(DctmACL.PERMIT_VALUE);
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), permitValues));
 			}
 
-			// Before we check if it's a special name, we must resolve
-			// it to its true value if necessary. We only do this for
-			// users.
-			if (!group) {
-				name = DctmMappingUtils.resolveMappableUser(session, name);
+			// If all 3 are null, then we assume an empty list
+			if ((accessors == null) && (permitTypes == null) && (permitValues == null)) {
+				if (this.log.isDebugEnabled()) {
+					this.log.warn("Empty ACL created at [{}]({})", this.cmfObject.getLabel(), this.cmfObject.getId());
+				}
+				return;
 			}
 
-			boolean exists = false;
-			String accessorType = null;
-			if (!DctmMappingUtils.SPECIAL_NAMES.contains(name)) {
-				if (group) {
-					accessorType = "group";
-					exists = (acl.getSession().getGroup(name) != null);
-				} else {
-					accessorType = "user";
-					try {
-						IDfUser u = DctmImportUser.locateExistingUser(context, name);
-						if (u != null) {
-							name = u.getUserName();
-							exists = true;
-						} else {
-							exists = false;
+			// Ok...so at least "some" of the properties are there, so we validate that they
+			// all have the proper structure: none of them are missing, and they all have the
+			// same number of values
+			if ((accessors == null) || (permitTypes == null) || (permitValues == null)
+				|| (accessors.getValueCount() != permitTypes.getValueCount())
+				|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(
+				String.format(
+					"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%permitType = %s%npermitValue = %s",
+					this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
+
+			// One final check to shortcut and avoid unnecessary processing...
+			final int accessorCount = accessors.getValueCount();
+			if (accessorCount == 0) {
+				if (this.log.isDebugEnabled()) {
+					this.log.warn("Empty ACL created at [{}]({})", this.cmfObject.getLabel(), this.cmfObject.getId());
+				}
+				return;
+			}
+
+			DfPermit p = new DfPermit();
+			for (int i = 0; i < accessorCount; i++) {
+				String name = accessors.getValue(i).asString();
+				int type = permitTypes.getValue(i).asInteger();
+				String perm = permitValues.getValue(i).asString();
+
+				// In addition, need to check for groups for these types
+				boolean group = false;
+				switch (p.getPermitType()) {
+					case IDfPermit.DF_REQUIRED_GROUP:
+					case IDfPermit.DF_REQUIRED_GROUP_SET:
+						group = true;
+						break;
+				}
+
+				// Before we check if it's a special name, we must resolve
+				// it to its true value if necessary. We only do this for
+				// users.
+				if (!group) {
+					name = DctmMappingUtils.resolveMappableUser(session, name);
+				}
+
+				boolean exists = false;
+				String accessorType = null;
+				if (!DctmMappingUtils.SPECIAL_NAMES.contains(name)) {
+					if (group) {
+						accessorType = "group";
+						exists = (session.getGroup(name) != null);
+					} else {
+						accessorType = "user";
+						try {
+							IDfUser u = DctmImportUser.locateExistingUser(context, name);
+							if (u != null) {
+								name = u.getUserName();
+								exists = true;
+							} else {
+								exists = false;
+							}
+						} catch (ImportException e) {
+							this.log.warn(String.format(
+								"ACL [%s] references the user %s - %s - will not add the accessor to the ACL",
+								this.cmfObject.getLabel(), name, e.getMessage()));
+							continue;
 						}
-					} catch (ImportException e) {
-						this.log.warn(String.format(
-							"ACL [%s] references the user %s - %s - will not add the accessor to the ACL",
-							this.cmfObject.getLabel(), name, e.getMessage()));
-						continue;
-					}
-					// Safety net?
-					if (!exists) {
-						// This shouldn't be necessary
-						this.log
+						// Safety net?
+						if (!exists) {
+							// This shouldn't be necessary
+							this.log
 							.warn(String
 								.format(
 									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
 									this.cmfObject.getLabel(), name));
-						exists = (acl.getSession().getGroup(name) != null);
-						accessorType = "accessor (user or group)";
+							exists = (session.getGroup(name) != null);
+							accessorType = "accessor (user or group)";
+						}
 					}
+				} else {
+					exists = true;
+					accessorType = "[SPECIAL]";
 				}
-			} else {
-				exists = true;
-				accessorType = "[SPECIAL]";
+
+				if (!exists) {
+					this.log.warn(String.format(
+						"ACL [%s] references the %s [%s] for %s permission %s, but the %1$s wasn't found",
+						this.cmfObject.getLabel(), accessorType, name, type, perm));
+					continue;
+				}
+
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("PERMIT GRANTED on [%s]: [%s|%s|%s]", this.cmfObject.getLabel(), name,
+						type, perm));
+				}
+
+				p.setAccessorName(name);
+				p.setPermitType(type);
+				p.setPermitValue(perm);
+
+				if ((type == IDfPermit.DF_EXTENDED_PERMIT) || (type == IDfPermit.DF_EXTENDED_RESTRICTION)) {
+					extendedPerms.add(p);
+					// We need a new object...
+					p = new DfPermit();
+					continue;
+				}
+
+				acl.grantPermit(p);
+
+				// Sadly, these need to be revoked - see below
+				p.setPermitType(IDfPermit.DF_EXTENDED_PERMIT);
+				p.setPermitValue(IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+				acl.revokePermit(p);
+				p.setPermitValue(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR);
+				acl.revokePermit(p);
+			}
+		} else {
+			// In CMIS mode, we simply get the list of permits to grant, ordered by accessor
+			for (IDfPermit p : DctmCmisACLTools.calculatePermissionsFromCMIS(this.cmfObject)) {
+				switch (p.getPermitType()) {
+					case IDfPermit.DF_ACCESS_PERMIT:
+						acl.grantPermit(p);
+
+						// Sadly, these need to be revoked - see below
+						p.setPermitType(IDfPermit.DF_EXTENDED_PERMIT);
+						p.setPermitValue(IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+						acl.revokePermit(p);
+						p.setPermitValue(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR);
+						acl.revokePermit(p);
+						break;
+
+					case IDfPermit.DF_EXTENDED_PERMIT:
+						extendedPerms.add(p);
+						break;
+
+					default:
+						// Ignore it...don't know what the hell it is...
+						continue;
+				}
 			}
 
-			if (!exists) {
-				this.log.warn(String.format(
-					"ACL [%s] references the %s [%s] for %s permission %s, but the %1$s wasn't found",
-					this.cmfObject.getLabel(), accessorType, name, type, perm));
-				continue;
-			}
-
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("PERMIT GRANTED on [%s]: [%s|%s|%s]", this.cmfObject.getLabel(), name,
-					type, perm));
-			}
-
-			p.setAccessorName(name);
-			p.setPermitType(type);
-			p.setPermitValue(perm);
-
-			if ((type == IDfPermit.DF_EXTENDED_PERMIT) || (type == IDfPermit.DF_EXTENDED_RESTRICTION)) {
-				extendedPerms.add(p);
-				// We need a new object...
-				p = new DfPermit();
-				continue;
-			}
-
-			acl.grantPermit(p);
-
-			// Sadly, these need to be revoked - see below
-			p.setPermitType(IDfPermit.DF_EXTENDED_PERMIT);
-			p.setPermitValue(IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
-			acl.revokePermit(p);
-			p.setPermitValue(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR);
-			acl.revokePermit(p);
 		}
+
 		// We have to do it in two passes because EMC (god bless their souls) decided that it
 		// would be wise for additional extended permissions to be added automatically as part
 		// of adding regular permissions. So in the above cycle we defer the granting of those
@@ -392,11 +431,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-								user.getUserName(), this.cmfObject.getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+						user.getUserName(), this.cmfObject.getLabel()), e);
 			}
 		}
 	}

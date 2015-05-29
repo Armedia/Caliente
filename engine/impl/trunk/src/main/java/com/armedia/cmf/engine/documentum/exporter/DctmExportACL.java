@@ -55,10 +55,15 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 
 	protected void getDataPropertiesForDocumentum(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfACL acl) throws DfException {
+		CmfProperty<IDfValue> property = null;
+
+		property = new CmfProperty<IDfValue>(DctmACL.DOCUMENTUM_MARKER, DctmDataType.DF_BOOLEAN.getStoredType(), false);
+		property.setValue(DfValueFactory.newBooleanValue(true));
+		properties.add(property);
+
 		final String aclId = acl.getObjectId().getId();
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
-		CmfProperty<IDfValue> property = null;
 		try {
 			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL, DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
