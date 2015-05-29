@@ -27,8 +27,9 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmImportEngine extends
-	ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory> {
+public class DctmImportEngine
+	extends
+	ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -105,7 +106,7 @@ public class DctmImportEngine extends
 		return super.abortImport(type, errors);
 	}
 
-	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine() {
+	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(DctmCommon.TARGET_NAME);
 	}
 }

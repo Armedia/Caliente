@@ -9,8 +9,8 @@ import org.slf4j.Logger;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.common.DctmSpecialValues;
 import com.armedia.cmf.engine.importer.ImportContext;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
@@ -22,13 +22,13 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmImportContext extends ImportContext<IDfSession, IDfValue> {
+public class DctmImportContext extends ImportContext<IDfSession, IDfValue, DctmImportContextFactory> {
 
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContext(DctmImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
-		IDfSession session, Logger output, CmfAttributeTranslator<IDfValue> translator, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?> streamStore) {
+		IDfSession session, Logger output, CmfAttributeTranslator<IDfValue> translator,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore) {
 		super(factory, settings, rootId, rootType, session, output, translator, objectStore, streamStore);
 		this.specialValues = factory.getSpecialValues();
 	}

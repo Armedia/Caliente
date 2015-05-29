@@ -16,7 +16,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-class DctmExportContext extends ExportContext<IDfSession, IDfValue> {
+class DctmExportContext extends ExportContext<IDfSession, IDfValue, DctmExportContextFactory> {
 
 	private final DctmSpecialValues specialValues;
 

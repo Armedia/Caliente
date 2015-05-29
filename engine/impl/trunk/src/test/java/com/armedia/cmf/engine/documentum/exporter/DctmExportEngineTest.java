@@ -21,7 +21,7 @@ public class DctmExportEngineTest extends DctmEngineTest {
 
 	@Test
 	public void test() throws Exception {
-		ExportEngine<?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("dctm");
+		ExportEngine<?, ?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("dctm");
 
 		Map<String, String> settings = new HashMap<String, String>();
 		settings.put(DctmSessionFactory.DOCBASE, "documentum");
