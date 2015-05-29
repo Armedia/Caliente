@@ -56,7 +56,7 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-DctmSysObject {
+	DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -402,7 +402,7 @@ DctmSysObject {
 
 	@Override
 	protected void prepareOperation(T sysObject, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 
 		if (!isTransitoryObject(sysObject)) {
 			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
@@ -458,13 +458,13 @@ DctmSysObject {
 	}
 
 	protected void doFinalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 
 	}
 
 	@Override
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-	ImportException {
+		ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -570,22 +570,6 @@ DctmSysObject {
 		}
 		creatorName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, creatorName));
 
-		String aclName = "acl_name";
-		String aclDomain = "acl_domain";
-		CmfAttribute<IDfValue> aclNameAtt = stored.getAttribute(DctmAttributes.ACL_NAME);
-		CmfAttribute<IDfValue> aclDomainAtt = stored.getAttribute(DctmAttributes.ACL_DOMAIN);
-		if ((aclNameAtt != null) && (aclDomainAtt != null)) {
-			aclName = DfUtils.sqlQuoteString(aclNameAtt.getValue().asString());
-			aclDomain = "";
-			if (aclDomainAtt != null) {
-				aclDomain = aclDomainAtt.getValue().asString();
-			}
-			if (aclDomain.length() == 0) {
-				aclDomain = "${owner_name}";
-			}
-			aclDomain = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, aclDomain));
-		}
-
 		CmfAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
 		final boolean deletedFlag = (deletedAtt != null) && deletedAtt.getValue().asBoolean();
 
@@ -595,8 +579,6 @@ DctmSysObject {
 			+ "       r_modifier = %s, " //
 			+ "       r_creation_date = %s, " //
 			+ "       r_creator_name = %s, " //
-			+ "       acl_name = %s, " //
-			+ "       acl_domain = %s, " //
 			+ "       i_is_deleted = %d " //
 			+ "       %s " //
 			+ " WHERE r_object_id = %s";
@@ -604,8 +586,8 @@ DctmSysObject {
 		// TODO: For now we don't touch the i_vstamp b/c we don't think it necessary
 		// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
-		return String.format(sql, modifyDate, modifierName, creationDate, creatorName, aclName, aclDomain,
-			(deletedFlag ? 1 : 0), vstampFlag, DfUtils.sqlQuoteString(sysObject.getObjectId().getId()));
+		return String.format(sql, modifyDate, modifierName, creationDate, creatorName, (deletedFlag ? 1 : 0),
+			vstampFlag, DfUtils.sqlQuoteString(sysObject.getObjectId().getId()));
 	}
 
 	/**
