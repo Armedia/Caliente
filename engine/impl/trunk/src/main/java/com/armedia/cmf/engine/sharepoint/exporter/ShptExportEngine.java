@@ -29,7 +29,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public class ShptExportEngine extends
-	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory> {
+ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -71,12 +71,12 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected ShptExportContextFactory newContextFactory(CfgTools cfg) throws Exception {
+	protected ShptExportContextFactory newContextFactory(ShptSession session, CfgTools cfg) throws Exception {
 		return new ShptExportContextFactory(this, cfg);
 	}
 
 	@Override
-	protected ShptExportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+	protected ShptExportDelegateFactory newDelegateFactory(ShptSession session, CfgTools cfg) throws Exception {
 		return new ShptExportDelegateFactory(this, cfg);
 	}
 
