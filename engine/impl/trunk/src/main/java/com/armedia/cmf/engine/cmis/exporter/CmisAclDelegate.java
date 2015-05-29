@@ -1,8 +1,12 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
+import org.apache.chemistry.opencmis.commons.data.Ace;
+import org.apache.chemistry.opencmis.commons.data.Acl;
 
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfObject;
@@ -46,6 +50,13 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	@Override
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		// Copy the ACL Data into the object's attributes using the common ACL attributes
+		Acl acl = this.object.getAcl();
+		for (Ace ace : acl.getAces()) {
+			Set<String> actions = new TreeSet<String>();
+			for (String permission : ace.getPermissions()) {
+				actions.addAll(ctx.convertPermissionToAllowableActions(permission));
+			}
+		}
 		return true;
 	}
 }
