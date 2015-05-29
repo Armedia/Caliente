@@ -8,10 +8,10 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalExportContext extends ExportContext<LocalRoot, CmfValue> {
+public class LocalExportContext extends ExportContext<LocalRoot, CmfValue, LocalExportContextFactory> {
 
-	public LocalExportContext(LocalExportContextFactory factory, CfgTools settings, String rootId,
-		CmfType rootType, LocalRoot session, Logger output) {
+	public LocalExportContext(LocalExportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
+		LocalRoot session, Logger output) {
 		super(factory, settings, rootId, rootType, session, output);
 	}
 }

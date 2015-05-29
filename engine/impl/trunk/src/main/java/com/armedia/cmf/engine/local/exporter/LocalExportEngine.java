@@ -16,8 +16,9 @@ import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalExportEngine extends
-ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory> {
+public class LocalExportEngine
+	extends
+	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory> {
 
 	@Override
 	protected Iterator<ExportTarget> findExportResults(LocalRoot session, CfgTools configuration,
@@ -59,7 +60,7 @@ ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, Local
 		return LocalCommon.TARGETS;
 	}
 
-	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
+	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(LocalCommon.TARGET_NAME);
 	}
 }

@@ -16,8 +16,9 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalImportEngine extends
-ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory> {
+public class LocalImportEngine
+	extends
+	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -144,7 +145,7 @@ ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, Local
 		return new LocalImportDelegateFactory(this, cfg);
 	}
 
-	public static ImportEngine<?, ?, ?, ?, ?> getImportEngine() {
+	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(LocalCommon.TARGET_NAME);
 	}
 
