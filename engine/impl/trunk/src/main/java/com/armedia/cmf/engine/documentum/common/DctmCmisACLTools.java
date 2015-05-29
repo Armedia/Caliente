@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.chemistry.opencmis.commons.data.PermissionMapping;
 import org.apache.commons.lang3.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,41 +51,41 @@ public class DctmCmisACLTools implements DctmACL {
 		//
 		DF_PERMIT_NONE(IDfACL.DF_PERMIT_NONE),
 		DF_PERMIT_BROWSE(IDfACL.DF_PERMIT_BROWSE, //
-			"canGetACL.Object", //
-			"canGetChildren.Folder", //
-			"canGetDescendants.Folder", //
-			"canGetFolderParent.Folder", //
-			"canGetObjectParents.Object", //
-			"canGetObjectRelationships.Object", //
-			"canGetProperties.Object" //
+			PermissionMapping.CAN_GET_ACL_OBJECT, //
+			PermissionMapping.CAN_GET_CHILDREN_FOLDER, //
+			PermissionMapping.CAN_GET_DESCENDENTS_FOLDER, //
+			PermissionMapping.CAN_GET_PARENTS_FOLDER, //
+			PermissionMapping.CAN_GET_FOLDER_PARENT_OBJECT, //
+			PermissionMapping.CAN_GET_OBJECT_RELATIONSHIPS_OBJECT, //
+			PermissionMapping.CAN_GET_PROPERTIES_OBJECT //
 		),
 		DF_PERMIT_READ(IDfACL.DF_PERMIT_READ, //
-			"canGetAllVersions.Document", //
-			"canGetContentStream.Object" //
+			PermissionMapping.CAN_GET_ALL_VERSIONS_VERSION_SERIES, //
+			PermissionMapping.CAN_VIEW_CONTENT_OBJECT //
 		),
 		DF_PERMIT_RELATE(IDfACL.DF_PERMIT_RELATE, //
-			"canCreateRelationship.Source", //
-			"canCreateRelationship.Target" //
+			PermissionMapping.CAN_CREATE_RELATIONSHIP_SOURCE, //
+			PermissionMapping.CAN_CREATE_RELATIONSHIP_TARGET //
 		),
 		DF_PERMIT_VERSION(IDfACL.DF_PERMIT_VERSION, //
-			"canCancelCheckout.Document", //
-			"canCheckin.Document", //
-			"canCheckOut.Document" //
+			PermissionMapping.CAN_CANCEL_CHECKOUT_DOCUMENT, //
+			PermissionMapping.CAN_CHECKIN_DOCUMENT, //
+			PermissionMapping.CAN_CHECKOUT_DOCUMENT //
 		),
 		DF_PERMIT_WRITE(IDfACL.DF_PERMIT_WRITE, //
-			"canAddToFolder.Object", //
-			"canCreateDocument.Folder", //
-			"canCreateFolder.Folder", //
-			"canDeleteContentStream.Document", //
-			"canMoveObject.Object", //
-			"canMoveObject.Source", //
-			"canMoveObject.Target", //
-			"canRemoveObjectFromFolder.Folder", //
-			"canSetContentStream.Document", //
-			"canUpdateProperties.Object" //
+			PermissionMapping.CAN_ADD_TO_FOLDER_OBJECT, //
+			PermissionMapping.CAN_CREATE_DOCUMENT_FOLDER, //
+			PermissionMapping.CAN_CREATE_FOLDER_FOLDER, //
+			PermissionMapping.CAN_DELETE_CONTENT_DOCUMENT, //
+			PermissionMapping.CAN_MOVE_OBJECT, //
+			PermissionMapping.CAN_MOVE_SOURCE, //
+			PermissionMapping.CAN_MOVE_TARGET, //
+			PermissionMapping.CAN_REMOVE_FROM_FOLDER_FOLDER, //
+			PermissionMapping.CAN_SET_CONTENT_DOCUMENT, //
+			PermissionMapping.CAN_UPDATE_PROPERTIES_OBJECT //
 		),
 		DF_PERMIT_DELETE(IDfACL.DF_PERMIT_DELETE, //
-			"canDelete.Object" //
+			PermissionMapping.CAN_DELETE_OBJECT //
 		),
 		//
 		;
