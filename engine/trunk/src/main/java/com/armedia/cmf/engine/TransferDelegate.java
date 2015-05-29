@@ -3,7 +3,7 @@ package com.armedia.cmf.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class TransferDelegate<T, S, V, C extends TransferContext<S, V>, F extends TransferDelegateFactory<S, V, C, E>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
+public abstract class TransferDelegate<T, S, V, C extends TransferContext<S, V, ?>, F extends TransferDelegateFactory<S, V, C, E>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	protected final F factory;

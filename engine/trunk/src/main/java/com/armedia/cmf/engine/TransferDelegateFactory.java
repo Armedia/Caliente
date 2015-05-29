@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class TransferDelegateFactory<S, V, C extends TransferContext<S, V>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
+public abstract class TransferDelegateFactory<S, V, C extends TransferContext<S, V, ?>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 

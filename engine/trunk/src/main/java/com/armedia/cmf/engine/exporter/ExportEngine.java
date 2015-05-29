@@ -40,8 +40,8 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, ?>>
-	extends TransferEngine<S, V, C, ExportContextFactory<S, W, V, C, ?>, F, ExportEngineListener> {
+public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, CF>, CF extends ExportContextFactory<S, W, V, C, ?>, DF extends ExportDelegateFactory<S, W, V, C, ?>>
+extends TransferEngine<S, V, C, CF, DF, ExportEngineListener> {
 
 	private class Result {
 		private final Long objectNumber;
@@ -250,7 +250,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+				.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
 			for (ExportDelegate<?, S, W, V, C, ?, ?> requirement : referenced) {
 				exportObject(objectStore, streamStore, target, requirement.getExportTarget(), requirement, ctx,
@@ -318,7 +318,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter)
-		throws ExportException, CmfStorageException {
+			throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -330,7 +330,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		final ContextFactory<S, V, C, ?> contextFactory;
-		final F delegateFactory;
+		final DF delegateFactory;
 		try {
 			final SessionWrapper<S> baseSession;
 			try {
@@ -517,7 +517,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							Thread.currentThread().interrupt();
 							if (this.log.isDebugEnabled()) {
 								this.log
-									.warn(String.format("Thread interrupted after reading %d object targets", c), e);
+								.warn(String.format("Thread interrupted after reading %d object targets", c), e);
 							} else {
 								this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
 							}
@@ -552,9 +552,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								future.get();
 							} catch (InterruptedException e) {
 								this.log
-									.warn(
-										"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
-										e);
+								.warn(
+									"Interrupted while waiting for an executor thread to exit, forcing the shutdown",
+									e);
 								Thread.currentThread().interrupt();
 								executor.shutdownNow();
 								break;
@@ -609,10 +609,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -631,7 +631,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
 	}
 
-	protected abstract Iterator<ExportTarget> findExportResults(S session, CfgTools configuration, F factory)
+	protected abstract Iterator<ExportTarget> findExportResults(S session, CfgTools configuration, DF factory)
 		throws Exception;
 
 	/*
@@ -639,7 +639,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		String searchKey, CfgTools configuration) throws Exception;
 	 */
 
-	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine(String targetName) {
+	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
 	}
 }

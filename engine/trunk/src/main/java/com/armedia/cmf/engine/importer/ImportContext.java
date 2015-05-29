@@ -16,15 +16,16 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ImportContext<S, V> extends TransferContext<S, V> {
+public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>> extends
+	TransferContext<S, V, CF> {
 
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
 	private final CmfAttributeTranslator<V> translator;
 	private final CmfContentStore<?> streamStore;
 
-	public <C extends ImportContext<S, V>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
-		F factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
+	public <C extends ImportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
+		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
 		CmfAttributeTranslator<V> translator, CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore) {
 		super(factory, settings, rootId, rootType, session, output);
 		this.factory = factory;

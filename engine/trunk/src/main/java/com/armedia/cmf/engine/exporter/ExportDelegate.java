@@ -6,19 +6,19 @@ import java.util.List;
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferDelegate;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 
-public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, F extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, F>>
-	extends TransferDelegate<T, S, V, C, F, E> {
+public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, ?>, DF extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, ?, DF>>
+	extends TransferDelegate<T, S, V, C, DF, E> {
 	protected final T object;
 	protected final ExportTarget exportTarget;
 	protected final String label;
 	protected final String batchId;
 
-	protected ExportDelegate(F factory, Class<T> objectClass, T object) throws Exception {
+	protected ExportDelegate(DF factory, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass);
 		if (object == null) { throw new IllegalArgumentException("Must provide a source object to export"); }
 		this.object = object;
@@ -66,7 +66,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.batchId;
 	}
 
-	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyRequirements(
+	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyRequirements(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
@@ -80,7 +80,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	protected abstract boolean marshal(C ctx, CmfObject<V> object) throws ExportException;
 
-	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, F, ?>> identifyDependents(
+	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyDependents(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
 	protected abstract List<ContentInfo> storeContent(S session, CmfAttributeTranslator<V> translator,

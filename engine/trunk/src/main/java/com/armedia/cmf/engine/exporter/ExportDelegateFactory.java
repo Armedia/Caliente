@@ -5,13 +5,13 @@ import com.armedia.cmf.engine.TransferDelegateFactory;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ExportDelegateFactory<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V>, E extends ExportEngine<S, W, V, C, ?>>
+public abstract class ExportDelegateFactory<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, ?>, E extends ExportEngine<S, W, V, C, ?, ?>>
 	extends TransferDelegateFactory<S, V, C, E> {
 
 	protected ExportDelegateFactory(E engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
-	protected abstract ExportDelegate<?, S, W, V, C, ?, E> newExportDelegate(S session, CmfType type,
-		String searchKey) throws Exception;
+	protected abstract ExportDelegate<?, S, W, V, C, ?, E> newExportDelegate(S session, CmfType type, String searchKey)
+		throws Exception;
 }
