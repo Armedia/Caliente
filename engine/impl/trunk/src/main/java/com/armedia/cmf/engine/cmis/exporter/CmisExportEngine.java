@@ -31,8 +31,9 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public class CmisExportEngine extends
-	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportDelegateFactory> {
+public class CmisExportEngine
+extends
+	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -170,7 +171,7 @@ public class CmisExportEngine extends
 		return CmisCommon.TARGETS;
 	}
 
-	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
+	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(CmisCommon.TARGET_NAME);
 	}
 

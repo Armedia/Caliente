@@ -17,7 +17,7 @@ public class BaseTest {
 
 	@Test
 	public void test() throws Exception {
-		final ExportEngine<?, ?, ?, ?, ?> engine = CmisExportEngine.getExportEngine();
+		final ExportEngine<?, ?, ?, ?, ?, ?> engine = CmisExportEngine.getExportEngine();
 		CmfObjectStore<?, ?> objectStore = CmfStores.getObjectStore("default");
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();

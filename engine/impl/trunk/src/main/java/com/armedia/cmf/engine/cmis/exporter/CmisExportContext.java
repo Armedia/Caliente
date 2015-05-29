@@ -10,17 +10,14 @@ import com.armedia.cmf.engine.exporter.ExportContext;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 
-public class CmisExportContext extends ExportContext<Session, CmfValue> {
-
-	private final CmisExportContextFactory factory;
+public class CmisExportContext extends ExportContext<Session, CmfValue, CmisExportContextFactory> {
 
 	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfType rootType, Session session, Logger output) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output);
-		this.factory = factory;
 	}
 
 	public Set<String> convertPermissionToAllowableActions(String permission) {
-		return this.factory.convertPermissionToAllowableActions(permission);
+		return getFactory().convertPermissionToAllowableActions(permission);
 	}
 
 	public OperationContext newOperationContext() {
