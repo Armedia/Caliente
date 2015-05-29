@@ -31,7 +31,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public abstract class AbstractCMSMFMain_import extends
-AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements ImportEngineListener {
+	AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
@@ -40,7 +40,7 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?>> implements 
 	private final Map<CmfType, Integer> total = new HashMap<CmfType, Integer>();
 	private final Map<CmfType, AtomicInteger> current = new HashMap<CmfType, AtomicInteger>();
 
-	public AbstractCMSMFMain_import(ImportEngine<?, ?, ?, ?, ?> engine) throws Throwable {
+	public AbstractCMSMFMain_import(ImportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine);
 	}
 

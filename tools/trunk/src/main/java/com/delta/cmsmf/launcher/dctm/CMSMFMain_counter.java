@@ -37,7 +37,7 @@ import com.documentum.fc.common.IDfValue;
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?>> {
+public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
 
 	private static final String COUNTER = "select count(*) from dm_sysobject where folder(ID('%s')) and not type(dm_folder)";
 	private static final String RECURSOR = "select distinct r_object_id from dm_sysobject where folder(ID('%s')) and type(dm_folder)";
@@ -47,7 +47,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 	}
 
 	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest) throws CMSMFException,
-		DfException {
+	DfException {
 		// If we're already traversed, we skip it
 		final String id = folder.getObjectId().getId();
 		if (!traversed.add(id)) { return; }
