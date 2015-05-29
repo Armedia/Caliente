@@ -16,7 +16,7 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportEngine extends
-ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory> {
+	ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -70,12 +70,12 @@ ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImpor
 	}
 
 	@Override
-	protected CmisImportContextFactory newContextFactory(CfgTools cfg) throws Exception {
+	protected CmisImportContextFactory newContextFactory(Session session, CfgTools cfg) throws Exception {
 		return new CmisImportContextFactory(this, cfg);
 	}
 
 	@Override
-	protected CmisImportDelegateFactory newDelegateFactory(CfgTools cfg) throws Exception {
+	protected CmisImportDelegateFactory newDelegateFactory(Session session, CfgTools cfg) throws Exception {
 		return new CmisImportDelegateFactory(this, cfg);
 	}
 

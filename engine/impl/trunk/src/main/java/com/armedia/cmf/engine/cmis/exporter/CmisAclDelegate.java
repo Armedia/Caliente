@@ -56,6 +56,7 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 			for (String permission : ace.getPermissions()) {
 				actions.addAll(ctx.convertPermissionToAllowableActions(permission));
 			}
+			actions.size();
 		}
 		return true;
 	}
