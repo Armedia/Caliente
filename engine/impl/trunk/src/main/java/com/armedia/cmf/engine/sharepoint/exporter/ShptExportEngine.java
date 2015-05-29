@@ -28,8 +28,9 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public class ShptExportEngine extends
-ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory> {
+public class ShptExportEngine
+extends
+ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -85,7 +86,7 @@ ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptE
 		return ShptExportEngine.TARGETS;
 	}
 
-	public static ExportEngine<?, ?, ?, ?, ?> getExportEngine() {
+	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return TransferEngine.getTransferEngine(ExportEngine.class, ShptExportEngine.TARGETS.iterator().next());
 	}
 }
