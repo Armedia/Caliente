@@ -32,12 +32,6 @@ public class CmisExportContextFactory extends
 		Map<String, Set<String>> permToActions = new TreeMap<String, Set<String>>();
 		Map<String, PermissionMapping> m = session.getRepositoryInfo().getAclCapabilities().getPermissionMapping();
 
-		/*
-		Map<String, String> allPerms = new TreeMap<String, String>();
-		for (PermissionDefinition pd : session.getRepositoryInfo().getAclCapabilities().getPermissions()) {
-			allPerms.put(pd.getId(), pd.getDescription());
-		}
-		 */
 		Set<String> permissions = new HashSet<String>();
 		for (String action : m.keySet()) {
 			PermissionMapping mapping = m.get(action);
@@ -64,8 +58,6 @@ public class CmisExportContextFactory extends
 		Set<String> ret = this.permToActions.get(permission);
 		if (ret == null) {
 			ret = Collections.emptySet();
-		} else {
-			ret.size();
 		}
 		return ret;
 	}
