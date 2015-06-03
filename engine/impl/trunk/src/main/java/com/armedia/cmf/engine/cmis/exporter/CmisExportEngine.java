@@ -12,6 +12,7 @@ import org.apache.chemistry.opencmis.client.api.QueryResult;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
+import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
 import com.armedia.cmf.engine.cmis.CmisCommon;
@@ -32,7 +33,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine
-extends
+	extends
 	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
@@ -132,14 +133,26 @@ extends
 	}
 
 	protected CmfType decodeType(ObjectType type) throws ExportException {
-		if (!type.isBaseType()) { return decodeType(type.getParentType()); }
+		if (!type.isBaseType()) { return decodeType(type.getBaseType()); }
 		return decodeType(type.getId());
 	}
 
 	protected CmfType decodeType(String type) throws ExportException {
-		if (Tools.equals("cmis:folder", type)) { return CmfType.FOLDER; }
-		if (Tools.equals("cmis:document", type)) { return CmfType.DOCUMENT; }
-		return null;
+		final BaseTypeId id;
+		try {
+			id = BaseTypeId.fromValue(type);
+		} catch (IllegalArgumentException e) {
+			throw new ExportException(String.format("Unknown base type [%s]", type), e);
+		}
+
+		switch (id) {
+			case CMIS_DOCUMENT:
+				return CmfType.DOCUMENT;
+			case CMIS_FOLDER:
+				return CmfType.FOLDER;
+			default:
+				return null;
+		}
 	}
 
 	@Override
