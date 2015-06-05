@@ -3,6 +3,7 @@ package com.armedia.cmf.engine.cmis.exporter;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
+import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
@@ -14,7 +15,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportDelegateFactory extends
-ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+	ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
 	CmisExportDelegateFactory(CmisExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
@@ -42,7 +43,6 @@ ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, 
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Document-type",
 					searchKey, obj.getClass().getCanonicalName()));
 			case TYPE:
-				/*
 				if (obj instanceof ObjectType) {
 					ObjectType objectType = ObjectType.class.cast(obj);
 					if (objectType.isBaseType()) { return null; }
@@ -50,7 +50,6 @@ ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, 
 				}
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not an ObjectType-type",
 					searchKey, obj.getClass().getCanonicalName()));
-				 */
 			case USER:
 			case GROUP:
 			default:
