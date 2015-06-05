@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.cmis.importer;
 
-import org.apache.chemistry.opencmis.client.api.Document;
+import org.apache.chemistry.opencmis.client.api.Folder;
 
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -10,11 +10,10 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class CmisImportDelegateDocument extends CmisImportDelegate<Document> {
+public class CmisFolderDelegate extends CmisImportDelegate<Folder> {
 
-	public CmisImportDelegateDocument(CmisImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
-		throws Exception {
-		super(factory, Document.class, storedObject);
+	public CmisFolderDelegate(CmisImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
+		super(factory, Folder.class, storedObject);
 	}
 
 	@Override

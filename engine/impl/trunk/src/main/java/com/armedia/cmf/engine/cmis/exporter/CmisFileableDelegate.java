@@ -69,14 +69,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		marshalParentsAndPaths(ctx, object, this.object);
-		/*
-		List<String> l = this.object.getPaths();
-		if ((l != null) && !l.isEmpty()) {
-			CmfProperty<CmfValue> path = new CmfProperty<CmfValue>(CmisFileableDelegate.MAIN_PATH,
-				CmfDataType.STRING, new CmfValue(l.get(0)));
-			object.setProperty(path);
-		}
-		 */
 		return true;
 	}
 
@@ -88,6 +80,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			ret.add(new CmisFolderDelegate(this.factory, f));
 		}
 		ret.add(new CmisAclDelegate(this.factory, this.object));
+		ret.add(new CmisObjectTypeDelegate(this.factory, this.object.getType()));
 		return ret;
 	}
 

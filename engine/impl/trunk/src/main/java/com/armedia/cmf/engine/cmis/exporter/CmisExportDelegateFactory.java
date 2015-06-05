@@ -41,6 +41,16 @@ ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, 
 				}
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Document-type",
 					searchKey, obj.getClass().getCanonicalName()));
+			case TYPE:
+				/*
+				if (obj instanceof ObjectType) {
+					ObjectType objectType = ObjectType.class.cast(obj);
+					if (objectType.isBaseType()) { return null; }
+					return new CmisObjectTypeDelegate(this, objectType);
+				}
+				throw new ExportException(String.format("Object with ID [%s] (class %s) is not an ObjectType-type",
+					searchKey, obj.getClass().getCanonicalName()));
+				 */
 			case USER:
 			case GROUP:
 			default:
