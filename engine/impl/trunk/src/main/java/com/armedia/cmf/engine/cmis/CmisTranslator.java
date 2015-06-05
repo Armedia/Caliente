@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.EnumMap;
 import java.util.Map;
 
+import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.commons.enums.PropertyType;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
@@ -22,6 +23,9 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	private static final Map<PropertyType, CmfDataType> DATA_TYPES;
 	private static final Map<CmfDataType, PropertyType> DATA_TYPES_REV;
+
+	private static final Map<BaseTypeId, CmfType> OBJECT_TYPES;
+	private static final Map<CmfType, BaseTypeId> OBJECT_TYPES_REV;
 
 	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
@@ -48,6 +52,18 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		n.put(CmfDataType.HTML, PropertyType.HTML);
 		DATA_TYPES_REV = Tools.freezeMap(n);
 
+		Map<BaseTypeId, CmfType> o = new EnumMap<BaseTypeId, CmfType>(BaseTypeId.class);
+		o.put(BaseTypeId.CMIS_DOCUMENT, CmfType.DOCUMENT);
+		o.put(BaseTypeId.CMIS_FOLDER, CmfType.FOLDER);
+		// TODO: add other types...such as policies
+		OBJECT_TYPES = Tools.freezeMap(o);
+
+		Map<CmfType, BaseTypeId> p = new EnumMap<CmfType, BaseTypeId>(CmfType.class);
+		p.put(CmfType.DOCUMENT, BaseTypeId.CMIS_DOCUMENT);
+		p.put(CmfType.FOLDER, BaseTypeId.CMIS_FOLDER);
+		// TODO: add other types...such as policies
+		OBJECT_TYPES_REV = Tools.freezeMap(p);
+
 		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
 			CmfType.class);
 
@@ -67,6 +83,14 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	public static PropertyType decodePropertyType(CmfDataType t) {
 		return CmisTranslator.DATA_TYPES_REV.get(t);
+	}
+
+	public static CmfType decodeObjectType(BaseTypeId type) {
+		return CmisTranslator.OBJECT_TYPES.get(type);
+	}
+
+	public static BaseTypeId decodeObjectType(CmfType type) {
+		return CmisTranslator.OBJECT_TYPES_REV.get(type);
 	}
 
 	@Override
