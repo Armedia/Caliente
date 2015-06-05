@@ -10,7 +10,6 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
-import org.apache.chemistry.opencmis.commons.enums.Cardinality;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
@@ -29,8 +28,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public abstract class CmisImportDelegate<T>
-	extends
-	ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
+extends
+ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
 
 	protected CmisImportDelegate(CmisImportDelegateFactory factory, Class<T> objectClass,
 		CmfObject<CmfValue> storedObject) throws Exception {
@@ -41,6 +40,10 @@ public abstract class CmisImportDelegate<T>
 	protected ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		return null;
+	}
+
+	protected boolean skipAttribute(String name) {
+		return false;
 	}
 
 	protected Map<String, Object> prepareProperties(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
@@ -70,28 +73,47 @@ public abstract class CmisImportDelegate<T>
 		}
 
 		Map<String, Object> properties = new HashMap<String, Object>();
-		outer: for (PropertyDefinition<?> def : type.getPropertyDefinitions().values()) {
+		for (PropertyDefinition<?> def : type.getPropertyDefinitions().values()) {
 			CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(def.getId());
 			if (att == null) {
-				continue outer;
+				// No such attribute...move along!
+				continue;
 			}
+			if (skipAttribute(def.getId())) {
+				// Attribute not of interest (at least, not yet)...move along!
+				continue;
+			}
+
 			final CmfDataType targetType = CmisTranslator.decodePropertyType(def.getPropertyType());
 
-			final Object value;
-			if (!att.isRepeating() || (def.getCardinality() != Cardinality.MULTI)) {
-				// Only copy the first one
-				value = targetType.getValue(att.getValue());
-			} else {
-				// Copy ALL the values
-				final int count = att.getValueCount();
-				List<Object> l = new ArrayList<Object>(count);
-				for (int i = 0; i < count; i++) {
-					l.add(targetType.getValue(att.getValue(i)));
-				}
-				value = l;
+			Object value = null;
+			switch (def.getCardinality()) {
+				case MULTI:
+					// Copy ALL the values
+					final int count = att.getValueCount();
+					List<Object> l = new ArrayList<Object>(count);
+					for (int i = 0; i < count; i++) {
+						CmfValue v = att.getValue(i);
+						if (v.isNull()) {
+							// Don't add null-values...right?
+							l.add(targetType.getValue(v));
+						}
+					}
+					value = l;
+					break;
+
+				case SINGLE:
+					// Only copy the first one
+					CmfValue v = att.getValue();
+					if (!v.isNull()) {
+						value = targetType.getValue(v);
+					}
+					break;
 			}
 
-			properties.put(def.getId(), value);
+			if (value != null) {
+				properties.put(def.getId(), value);
+			}
 		}
 
 		return properties;
