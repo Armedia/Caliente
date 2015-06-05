@@ -33,8 +33,8 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		m.put(PropertyType.DATETIME, CmfDataType.DATETIME);
 		m.put(PropertyType.ID, CmfDataType.ID);
 		m.put(PropertyType.STRING, CmfDataType.STRING);
-		m.put(PropertyType.URI, CmfDataType.STRING); // TODO: Add this to CmfDataType
-		m.put(PropertyType.HTML, CmfDataType.STRING); // TODO: Add this to CmfDataType
+		m.put(PropertyType.URI, CmfDataType.URI);
+		m.put(PropertyType.HTML, CmfDataType.HTML);
 		DATA_TYPES = Tools.freezeMap(m);
 
 		Map<CmfDataType, PropertyType> n = new EnumMap<CmfDataType, PropertyType>(CmfDataType.class);
@@ -43,7 +43,9 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		n.put(CmfDataType.DOUBLE, PropertyType.DECIMAL);
 		n.put(CmfDataType.DATETIME, PropertyType.DATETIME);
 		n.put(CmfDataType.ID, PropertyType.ID);
-		n.put(CmfDataType.STRING, PropertyType.STRING); // TODO: Need to handle HTML and URI
+		n.put(CmfDataType.STRING, PropertyType.STRING);
+		n.put(CmfDataType.URI, PropertyType.URI);
+		n.put(CmfDataType.HTML, PropertyType.HTML);
 		DATA_TYPES_REV = Tools.freezeMap(n);
 
 		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
