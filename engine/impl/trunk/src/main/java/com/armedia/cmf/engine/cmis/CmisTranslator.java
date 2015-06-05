@@ -63,7 +63,7 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		return CmisTranslator.DATA_TYPES.get(t);
 	}
 
-	public static PropertyType decodePropertyType(CmfType t) {
+	public static PropertyType decodePropertyType(CmfDataType t) {
 		return CmisTranslator.DATA_TYPES_REV.get(t);
 	}
 
