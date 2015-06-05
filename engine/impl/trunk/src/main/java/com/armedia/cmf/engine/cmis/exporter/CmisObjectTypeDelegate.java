@@ -20,6 +20,9 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 
 	@Override
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
+		// TODO: For now, do nothing...
+		if (ctx != null) { return false; }
+
 		// Don't marshal base types
 		if (this.object.isBaseType()) { return false; }
 
