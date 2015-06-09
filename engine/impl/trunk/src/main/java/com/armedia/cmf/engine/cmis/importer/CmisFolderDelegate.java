@@ -18,4 +18,9 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	protected Folder createNew(CmisImportContext ctx, Folder parent, Map<String, ?> properties) throws ImportException {
 		return parent.createFolder(properties);
 	}
+
+	@Override
+	protected boolean isMultifilable(Folder existing) {
+		return false;
+	}
 }

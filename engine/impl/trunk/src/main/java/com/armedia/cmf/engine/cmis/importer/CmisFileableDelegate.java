@@ -1,14 +1,18 @@
 package com.armedia.cmf.engine.cmis.importer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
-import org.apache.chemistry.opencmis.client.api.Property;
+import org.apache.chemistry.opencmis.client.api.ObjectId;
 import org.apache.chemistry.opencmis.client.api.Session;
+import org.apache.chemistry.opencmis.client.runtime.ObjectIdImpl;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
@@ -33,7 +37,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		super(factory, klass, storedObject);
 	}
 
-	public List<Folder> getParentFolders(CmisImportContext ctx) throws ImportException {
+	protected List<Folder> getParentFolders(CmisImportContext ctx) throws ImportException {
 
 		final List<Folder> ret = new ArrayList<Folder>();
 		final Session session = ctx.getSession();
@@ -140,13 +144,72 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		return false;
 	}
 
+	protected abstract boolean isMultifilable(T existing);
+
 	protected String calculateNewLabel(T existing) {
 		List<String> paths = existing.getPaths();
-		if ((paths == null) || paths.isEmpty()) { return String.format("<unfiled>::%s#%s", existing.getName(), existing
-			.getProperty(PropertyIds.VERSION_LABEL).getValueAsString()); }
+		String versionLabel = "";
+		if (isVersionable(existing)) {
+			versionLabel = String.format("#%s", existing.getProperty(PropertyIds.VERSION_LABEL).getValueAsString());
+		}
+		if ((paths == null) || paths.isEmpty()) { return String.format("<unfiled>::%s%s", existing.getName(),
+			versionLabel); }
 		String path = paths.get(0);
-		return String.format("%s/%s#%s", path, existing.getName(), existing.getProperty(PropertyIds.VERSION_LABEL)
-			.getValueAsString());
+		return String.format("%s%s", path, versionLabel);
+	}
+
+	protected void linkToParents(CmisImportContext ctx, T existing, List<Folder> finalParents) {
+		final ObjectId id = new ObjectIdImpl(existing.getId());
+		Map<String, Folder> oldParents = new HashMap<String, Folder>();
+		Map<String, Folder> newParents = new HashMap<String, Folder>();
+		for (Folder f : finalParents) {
+			newParents.put(f.getId(), f);
+		}
+		for (Folder f : existing.getParents()) {
+			oldParents.put(f.getId(), f);
+		}
+		Set<String> oldParentsIds = new HashSet<String>(oldParents.keySet());
+		Set<String> newParentsIds = new HashSet<String>(newParents.keySet());
+		Set<String> bothParentsIds = new HashSet<String>();
+
+		// Remove those that need not be unlinked
+		for (String s : newParentsIds) {
+			oldParents.remove(s);
+		}
+
+		// Remove those that need not be re-linked
+		for (String s : oldParentsIds) {
+			newParents.remove(s);
+		}
+		bothParentsIds.addAll(oldParentsIds);
+		bothParentsIds.retainAll(newParentsIds);
+
+		final boolean multifile = ctx.getRepositoryInfo().getCapabilities().isMultifilingSupported()
+			&& isMultifilable(existing);
+
+		// Unlink from those no longer needed
+		for (String s : oldParents.keySet()) {
+			oldParents.get(s).removeFromFolder(id);
+		}
+
+		if (multifile || bothParentsIds.isEmpty()) {
+			// Link to those needed but not yet linked
+			for (String s : newParents.keySet()) {
+				newParents.get(s).addToFolder(id, false);
+				if (!multifile) {
+					break;
+				}
+			}
+		}
+
+		if (!newParents.isEmpty() || !oldParents.isEmpty()) {
+			existing.refresh();
+		}
+	}
+
+	private void setMapping(CmisImportContext ctx, T existing) {
+		ctx.getAttributeMapper().setMapping(this.cmfObject.getType(), PropertyIds.OBJECT_ID, this.cmfObject.getId(),
+			existing.getId());
 	}
 
 	@Override
@@ -158,18 +221,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		props.remove(PropertyIds.PARENT_ID);
 
 		List<Folder> parents = getParentFolders(ctx);
-		List<String> parentIds = new ArrayList<String>();
-		List<String> paths = new ArrayList<String>();
-		for (Folder p : parents) {
-			parentIds.add(p.getId());
-			Property<?> prop = p.getProperty(PropertyIds.PATH);
-			for (Object o : prop.getValues()) {
-				paths.add(o.toString());
-			}
-		}
-		props.put(PropertyIds.PATH, paths);
-		props.put(PropertyIds.PARENT_ID, parentIds);
-
 		// Find the parent folder...
 		final Folder parent = parents.get(0);
 
@@ -178,17 +229,23 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (existing == null) {
 			// If it doesn't exist, we'll create the new object...
 			existing = createNew(ctx, parent, props);
+			linkToParents(ctx, existing, parents);
+			setMapping(ctx, existing);
 			return new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing));
 		}
 
 		if (isSameObject(existing)) { return new ImportOutcome(ImportResult.DUPLICATE); }
 		if (isVersionable(existing)) {
 			existing = createNewVersion(ctx, existing, props);
+			linkToParents(ctx, existing, parents);
+			setMapping(ctx, existing);
 			return new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing));
 		} else {
 			// Not the same...we must update the properties and/or content
 			updateExisting(ctx, existing, props);
 		}
-		return new ImportOutcome(ImportResult.UPDATED);
+		linkToParents(ctx, existing, parents);
+		setMapping(ctx, existing);
+		return new ImportOutcome(ImportResult.UPDATED, existing.getId(), calculateNewLabel(existing));
 	}
 }

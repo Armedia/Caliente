@@ -65,7 +65,7 @@ ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, Cmis
 
 		final ObjectType type;
 		try {
-			type = session.getTypeDefinition(typeName);
+			type = session.getTypeDefinition(finalTypeName);
 		} catch (CmisObjectNotFoundException e) {
 			throw new ImportException(String.format(
 				"Failed to locate the type called [%s] (from source type [%s]) for %s [%s](%s)", finalTypeName,
@@ -73,10 +73,11 @@ ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, Cmis
 		}
 
 		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put(PropertyIds.OBJECT_TYPE_ID, finalTypeName);
 		for (PropertyDefinition<?> def : type.getPropertyDefinitions().values()) {
 			CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(def.getId());
-			if (att == null) {
-				// No such attribute...move along!
+			if ((att == null) || !att.hasValues()) {
+				// No such attribute or no values...move along!
 				continue;
 			}
 			if (skipAttribute(def.getId())) {

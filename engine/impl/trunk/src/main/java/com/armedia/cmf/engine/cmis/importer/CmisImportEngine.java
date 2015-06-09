@@ -48,11 +48,75 @@ ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImpor
 		}
 	};
 
+	private static final ImportStrategy FOLDER_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return true;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return false;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_CONCURRENT;
+		}
+	};
+
+	private static final ImportStrategy DOCUMENT_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return true;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return true;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+	};
+
 	public CmisImportEngine() {
 	}
 
 	@Override
 	protected ImportStrategy getImportStrategy(CmfType type) {
+		switch (type) {
+			case DOCUMENT:
+				return CmisImportEngine.DOCUMENT_STRATEGY;
+			case FOLDER:
+				return CmisImportEngine.FOLDER_STRATEGY;
+			default:
+				break;
+		}
 		return CmisImportEngine.IGNORE_STRATEGY;
 	}
 
@@ -73,12 +137,12 @@ ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImpor
 
 	@Override
 	protected CmisImportContextFactory newContextFactory(Session session, CfgTools cfg) throws Exception {
-		return new CmisImportContextFactory(this, cfg);
+		return new CmisImportContextFactory(this, session, cfg);
 	}
 
 	@Override
 	protected CmisImportDelegateFactory newDelegateFactory(Session session, CfgTools cfg) throws Exception {
-		return new CmisImportDelegateFactory(this, cfg);
+		return new CmisImportDelegateFactory(this, session, cfg);
 	}
 
 	@Override

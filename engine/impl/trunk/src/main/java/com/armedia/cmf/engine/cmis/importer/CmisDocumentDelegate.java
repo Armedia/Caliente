@@ -95,4 +95,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		throws ImportException {
 		return parent.createDocument(properties, getContentsStream(ctx), VersioningState.NONE);
 	}
+
+	@Override
+	protected boolean isMultifilable(Document existing) {
+		return true;
+	}
 }

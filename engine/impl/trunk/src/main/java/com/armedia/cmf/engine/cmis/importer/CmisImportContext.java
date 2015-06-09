@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.cmis.importer;
 
 import org.apache.chemistry.opencmis.client.api.Session;
+import org.apache.chemistry.opencmis.commons.data.RepositoryInfo;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.importer.ImportContext;
@@ -16,5 +17,9 @@ public class CmisImportContext extends ImportContext<Session, CmfValue, CmisImpo
 		Logger output, CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?> streamStore) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output, translator, objectStore, streamStore);
+	}
+
+	public final RepositoryInfo getRepositoryInfo() {
+		return getFactory().getRepositoryInfo();
 	}
 }

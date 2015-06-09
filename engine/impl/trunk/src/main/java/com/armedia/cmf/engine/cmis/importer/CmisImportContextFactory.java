@@ -8,6 +8,7 @@ import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
+import org.apache.chemistry.opencmis.commons.data.RepositoryInfo;
 import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.slf4j.Logger;
@@ -21,10 +22,17 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportContextFactory extends
-ImportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportEngine, Folder> {
+	ImportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportEngine, Folder> {
 
-	CmisImportContextFactory(CmisImportEngine engine, CfgTools settings) {
+	private final RepositoryInfo repositoryInfo;
+
+	CmisImportContextFactory(CmisImportEngine engine, Session session, CfgTools settings) {
 		super(engine, settings);
+		this.repositoryInfo = session.getRepositoryInfo();
+	}
+
+	public final RepositoryInfo getRepositoryInfo() {
+		return this.repositoryInfo;
 	}
 
 	@Override
