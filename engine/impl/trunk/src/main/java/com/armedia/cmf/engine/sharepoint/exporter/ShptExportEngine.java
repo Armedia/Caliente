@@ -4,7 +4,6 @@
 
 package com.armedia.cmf.engine.sharepoint.exporter;
 
-import java.text.ParseException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -29,8 +28,8 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public class ShptExportEngine
-extends
-ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory> {
+	extends
+	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -54,11 +53,7 @@ ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptE
 
 	@Override
 	protected CmfValue getValue(CmfDataType type, Object value) {
-		try {
-			return new CmfValue(type, value);
-		} catch (ParseException e) {
-			throw new RuntimeException("Exception raised while creating a new value", e);
-		}
+		return CmfValue.newValue(type, value);
 	}
 
 	@Override
