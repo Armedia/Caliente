@@ -1,6 +1,5 @@
 package com.armedia.cmf.engine.local.exporter;
 
-import java.text.ParseException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -28,11 +27,7 @@ public class LocalExportEngine
 
 	@Override
 	protected CmfValue getValue(CmfDataType type, Object value) {
-		try {
-			return new CmfValue(type, value);
-		} catch (ParseException e) {
-			throw new RuntimeException(String.format("Can't convert [%s] as a %s", value, type), e);
-		}
+		return CmfValue.newValue(type, value);
 	}
 
 	@Override
