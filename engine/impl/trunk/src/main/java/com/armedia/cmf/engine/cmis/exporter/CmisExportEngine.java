@@ -1,6 +1,5 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
-import java.text.ParseException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -33,8 +32,8 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine
-	extends
-	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
+extends
+ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -157,11 +156,7 @@ public class CmisExportEngine
 
 	@Override
 	protected CmfValue getValue(CmfDataType type, Object value) {
-		try {
-			return new CmfValue(type, value);
-		} catch (ParseException e) {
-			throw new RuntimeException(String.format("Can't convert [%s] as a %s", value, type), e);
-		}
+		return CmfValue.newValue(type, value);
 	}
 
 	@Override

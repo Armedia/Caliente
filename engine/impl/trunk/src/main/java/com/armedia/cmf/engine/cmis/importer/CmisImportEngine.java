@@ -7,6 +7,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import com.armedia.cmf.engine.cmis.CmisCommon;
 import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
+import com.armedia.cmf.engine.cmis.CmisTranslator;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
@@ -16,8 +17,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportEngine
-extends
-	ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory> {
+	extends
+ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -57,12 +58,12 @@ extends
 
 	@Override
 	protected CmfValue getValue(CmfDataType type, Object value) {
-		return null;
+		return CmfValue.newValue(type, value);
 	}
 
 	@Override
 	protected CmfAttributeTranslator<CmfValue> getTranslator() {
-		return null;
+		return new CmisTranslator();
 	}
 
 	@Override
