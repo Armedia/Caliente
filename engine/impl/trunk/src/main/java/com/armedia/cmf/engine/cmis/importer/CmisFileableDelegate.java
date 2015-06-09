@@ -128,8 +128,25 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		existing.updateProperties(properties);
 	}
 
+	protected T createNewVersion(CmisImportContext ctx, T existing, Map<String, ?> properties) throws ImportException {
+		return existing;
+	}
+
+	protected boolean isVersionable(T existing) {
+		return false;
+	}
+
 	protected boolean isSameObject(T existing) {
 		return false;
+	}
+
+	protected String calculateNewLabel(T existing) {
+		List<String> paths = existing.getPaths();
+		if ((paths == null) || paths.isEmpty()) { return String.format("<unfiled>::%s#%s", existing.getName(), existing
+			.getProperty(PropertyIds.VERSION_LABEL).getValueAsString()); }
+		String path = paths.get(0);
+		return String.format("%s/%s#%s", path, existing.getName(), existing.getProperty(PropertyIds.VERSION_LABEL)
+			.getValueAsString());
 	}
 
 	@Override
@@ -158,18 +175,20 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 		// First, try to find the existing object.
 		T existing = findExisting(ctx, parents);
-		// TODO: Versions...
 		if (existing == null) {
 			// If it doesn't exist, we'll create the new object...
 			existing = createNew(ctx, parent, props);
-			return new ImportOutcome(ImportResult.CREATED, existing.getId(), String.format("%s/%s", parent.getPath(),
-				existing.getName()));
+			return new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing));
 		}
 
 		if (isSameObject(existing)) { return new ImportOutcome(ImportResult.DUPLICATE); }
-
-		// Not the same...we must update the properties and/or content
-		updateExisting(ctx, existing, props);
+		if (isVersionable(existing)) {
+			existing = createNewVersion(ctx, existing, props);
+			return new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing));
+		} else {
+			// Not the same...we must update the properties and/or content
+			updateExisting(ctx, existing, props);
+		}
 		return new ImportOutcome(ImportResult.UPDATED);
 	}
 }
