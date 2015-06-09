@@ -128,6 +128,10 @@ public final class CmfValue {
 		return DateFormat.getDateInstance().parse(this.value.toString());
 	}
 
+	public Object asObject() {
+		return this.value;
+	}
+
 	public CmfDataType getDataType() {
 		return this.type;
 	}
