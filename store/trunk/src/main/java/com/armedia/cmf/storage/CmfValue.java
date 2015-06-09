@@ -158,4 +158,12 @@ public final class CmfValue {
 	public String toString() {
 		return asString();
 	}
+
+	public static CmfValue newValue(CmfDataType type, Object value) {
+		try {
+			return new CmfValue(type, value);
+		} catch (ParseException e) {
+			throw new RuntimeException(String.format("Can't convert [%s] as a %s", value, type), e);
+		}
+	}
 }
