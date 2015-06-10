@@ -224,10 +224,10 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			setMapping(ctx, existing);
 			return Collections.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(),
 				calculateNewLabel(existing)));
-		} else {
-			// Not the same...we must update the properties and/or content
-			updateExisting(ctx, existing, props);
 		}
+
+		// Not the same...we must update the properties and/or content
+		updateExisting(ctx, existing, props);
 		linkToParents(ctx, existing, parents);
 		setMapping(ctx, existing);
 		return Collections.singleton(new ImportOutcome(ImportResult.UPDATED, existing.getId(),
