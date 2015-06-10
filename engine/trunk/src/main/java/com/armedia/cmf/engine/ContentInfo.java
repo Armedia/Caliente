@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.cmf.storage.CmfEncodeableName;
 import com.armedia.commons.utilities.CfgTools;
 
 public final class ContentInfo {
@@ -60,16 +61,32 @@ public final class ContentInfo {
 		return this.cfg;
 	}
 
+	public String setProperty(CmfEncodeableName name, String value) {
+		return setProperty(name.encode(), value);
+	}
+
 	public String setProperty(String name, String value) {
 		return this.properties.put(name, value);
+	}
+
+	public boolean hasProperty(CmfEncodeableName name) {
+		return hasProperty(name.encode());
 	}
 
 	public boolean hasProperty(String name) {
 		return this.properties.containsKey(name);
 	}
 
+	public String getProperty(CmfEncodeableName name) {
+		return getProperty(name.encode());
+	}
+
 	public String getProperty(String name) {
 		return this.properties.get(name);
+	}
+
+	public String clearProperty(CmfEncodeableName name) {
+		return clearProperty(name.encode());
 	}
 
 	public String clearProperty(String name) {
