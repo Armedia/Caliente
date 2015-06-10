@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.cmis.importer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +36,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
+	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
 		Map<String, Object> props = super.prepareProperties(translator, ctx);
@@ -73,33 +74,6 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 			updateExisting(ctx, existing, props);
 			outcomes.add(new ImportOutcome(ImportResult.UPDATED, existing.getId(), calculateNewLabel(existing)));
 		}
-
-		// Now select which outcome to return:
-		// * Only return DUPLICATE if ALL entries are DUPLICATE.
-		// * Only return UPDATED if there are no CREATED entries
-		// * Otherwise, return the first CREATED entry
-		ImportOutcome ret = null;
-		for (ImportOutcome o : outcomes) {
-			switch (o.getResult()) {
-				case CREATED:
-					return o;
-
-				case UPDATED:
-					if ((ret == null) || (ret.getResult() == ImportResult.DUPLICATE)) {
-						ret = o;
-					}
-					continue;
-
-				case DUPLICATE:
-					if (ret == null) {
-						ret = o;
-					}
-					continue;
-
-				default:
-					break;
-			}
-		}
-		return ret;
+		return outcomes;
 	}
 }

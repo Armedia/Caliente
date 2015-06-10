@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.cmis.importer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public abstract class CmisImportDelegate<T>
-extends
-ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
+	extends
+	ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
 
 	protected CmisImportDelegate(CmisImportDelegateFactory factory, Class<T> objectClass,
 		CmfObject<CmfValue> storedObject) throws Exception {
@@ -37,7 +38,7 @@ ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, Cmis
 	}
 
 	@Override
-	protected ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
+	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		return null;
 	}

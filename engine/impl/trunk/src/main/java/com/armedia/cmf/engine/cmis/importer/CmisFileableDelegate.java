@@ -1,6 +1,8 @@
 package com.armedia.cmf.engine.cmis.importer;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -192,7 +194,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
+	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
 		Map<String, Object> props = super.prepareProperties(translator, ctx);
@@ -210,21 +212,25 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			existing = createNew(ctx, parent, props);
 			linkToParents(ctx, existing, parents);
 			setMapping(ctx, existing);
-			return new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing));
+			return Collections.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(),
+				calculateNewLabel(existing)));
 		}
 
-		if (isSameObject(existing)) { return new ImportOutcome(ImportResult.DUPLICATE); }
+		if (isSameObject(existing)) { return Collections.singleton(new ImportOutcome(ImportResult.DUPLICATE, existing
+			.getId(), calculateNewLabel(existing))); }
 		if (isVersionable(existing)) {
 			existing = createNewVersion(ctx, existing, props);
 			linkToParents(ctx, existing, parents);
 			setMapping(ctx, existing);
-			return new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing));
+			return Collections.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(),
+				calculateNewLabel(existing)));
 		} else {
 			// Not the same...we must update the properties and/or content
 			updateExisting(ctx, existing, props);
 		}
 		linkToParents(ctx, existing, parents);
 		setMapping(ctx, existing);
-		return new ImportOutcome(ImportResult.UPDATED, existing.getId(), calculateNewLabel(existing));
+		return Collections.singleton(new ImportOutcome(ImportResult.UPDATED, existing.getId(),
+			calculateNewLabel(existing)));
 	}
 }
