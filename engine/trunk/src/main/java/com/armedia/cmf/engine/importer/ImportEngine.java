@@ -220,8 +220,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectBatchImportFinished(CmfType objectType, String batchId, Map<String, ImportOutcome> outcomes,
-			boolean failed) {
+		public void objectBatchImportFinished(CmfType objectType, String batchId,
+			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectBatchImportFinished(objectType, batchId, outcomes, failed);
@@ -338,7 +338,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							}
 
 							boolean failBatch = false;
-							Map<String, ImportOutcome> outcomes = new LinkedHashMap<String, ImportOutcome>(
+							Map<String, Collection<ImportOutcome>> outcomes = new LinkedHashMap<String, Collection<ImportOutcome>>(
 								batch.contents.size());
 							try {
 								if ((batch == null) || (batch.contents == null) || batch.contents.isEmpty()) {
@@ -388,30 +388,32 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 											// intermediate format into the target format
 											ImportDelegate<?, S, W, V, C, ?, ?> delegate = delegateFactory
 												.newImportDelegate(next);
-											final ImportOutcome outcome = delegate.importObject(getTranslator(), ctx);
-											listenerDelegator.objectImportCompleted(next, outcome);
+											final Collection<ImportOutcome> outcome = delegate.importObject(
+												getTranslator(), ctx);
 											outcomes.put(next.getId(), outcome);
-											if (this.log.isDebugEnabled()) {
-												String msg = null;
-												switch (outcome.getResult()) {
-													case CREATED:
-													case UPDATED:
-														msg = String.format("Persisted (%s) %s as [%s](%s)",
-															outcome.getResult(), next, outcome.getNewId(),
-															outcome.getNewLabel());
-														break;
+											for (ImportOutcome o : outcome) {
+												listenerDelegator.objectImportCompleted(next, o);
+												if (this.log.isDebugEnabled()) {
+													String msg = null;
+													switch (o.getResult()) {
+														case CREATED:
+														case UPDATED:
+															msg = String.format("Persisted (%s) %s as [%s](%s)",
+																o.getResult(), next, o.getNewId(), o.getNewLabel());
+															break;
 
-													case DUPLICATE:
-														msg = String.format("Found a duplicate of %s as [%s](%s)",
-															next, outcome.getNewId(), outcome.getNewLabel());
-														break;
+														case DUPLICATE:
+															msg = String.format("Found a duplicate of %s as [%s](%s)",
+																next, o.getNewId(), o.getNewLabel());
+															break;
 
-													default:
-														msg = String.format("Persisted (%s) %s", outcome.getResult(),
-															next);
-														break;
+														default:
+															msg = String.format("Persisted (%s) %s", o.getResult(),
+																next);
+															break;
+													}
+													this.log.debug(msg);
 												}
-												this.log.debug(msg);
 											}
 											session.commit();
 										} catch (Throwable t) {

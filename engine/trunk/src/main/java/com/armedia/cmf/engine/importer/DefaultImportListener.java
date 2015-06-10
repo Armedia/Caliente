@@ -1,5 +1,6 @@
 package com.armedia.cmf.engine.importer;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class DefaultImportListener implements ImportListener {
 
 	@Override
 	public void objectBatchImportFinished(CmfType objectType, String batchId,
-		Map<String, ImportOutcome> outcomes, boolean failed) {
+		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 	}
 
 }

@@ -1,5 +1,7 @@
 package com.armedia.cmf.engine.importer;
 
+import java.util.Collection;
+
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferDelegate;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
@@ -8,7 +10,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public abstract class ImportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, ?>, DF extends ImportDelegateFactory<S, W, V, C, E>, E extends ImportEngine<S, W, V, C, ?, DF>>
-extends TransferDelegate<T, S, V, C, DF, E> {
+	extends TransferDelegate<T, S, V, C, DF, E> {
 
 	protected final CmfObject<V> cmfObject;
 
@@ -17,7 +19,7 @@ extends TransferDelegate<T, S, V, C, DF, E> {
 		this.cmfObject = storedObject;
 	}
 
-	protected abstract ImportOutcome importObject(CmfAttributeTranslator<V> translator, C ctx) throws ImportException,
-	CmfStorageException, CmfValueDecoderException;
+	protected abstract Collection<ImportOutcome> importObject(CmfAttributeTranslator<V> translator, C ctx)
+		throws ImportException, CmfStorageException, CmfValueDecoderException;
 
 }

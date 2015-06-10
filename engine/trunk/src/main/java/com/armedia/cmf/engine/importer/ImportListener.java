@@ -1,5 +1,6 @@
 package com.armedia.cmf.engine.importer;
 
+import java.util.Collection;
 import java.util.Map;
 
 import com.armedia.cmf.storage.CmfObject;
@@ -61,5 +62,5 @@ public interface ImportListener {
 	 * @param failed
 	 */
 	public void objectBatchImportFinished(CmfType objectType, String batchId,
-		Map<String, ImportOutcome> outcomes, boolean failed);
+		Map<String, Collection<ImportOutcome>> outcomes, boolean failed);
 }
