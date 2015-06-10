@@ -24,6 +24,7 @@ import javax.activation.MimeType;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
+import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
@@ -43,8 +44,8 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 
 public class LocalExportDelegate
-extends
-ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+	extends
+	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
 		super(factory, LocalFile.class, object);
@@ -185,9 +186,9 @@ ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportC
 		marshalled.setAttribute(typeAtt);
 
 		// TODO: add the attributes...
-		info.setProperty("mimeType", type.getBaseType());
-		info.setProperty("size", String.valueOf(src.length()));
-		info.setProperty("fileName", src.getName());
+		info.setProperty(ContentProperty.MIME_TYPE, type.getBaseType());
+		info.setProperty(ContentProperty.SIZE, String.valueOf(src.length()));
+		info.setProperty(ContentProperty.FILE_NAME, src.getName());
 		ret.add(info);
 
 		if (this.factory.isCopyContent()) {
