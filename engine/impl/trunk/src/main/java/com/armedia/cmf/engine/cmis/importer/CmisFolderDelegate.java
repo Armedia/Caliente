@@ -13,6 +13,7 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundExcept
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
@@ -45,7 +46,15 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
 		List<Folder> parents = getParentFolders(ctx);
 		List<ImportOutcome> outcomes = new ArrayList<ImportOutcome>(parents.size());
-		final String name = null;
+		CmfAttribute<CmfValue> nameAtt = this.cmfObject.getAttribute(PropertyIds.NAME);
+		if ((nameAtt == null) || !nameAtt.hasValues()) { throw new ImportException(String.format(
+			"No %s attribute found for %s [%s](%s)", PropertyIds.NAME, this.cmfObject.getType(),
+			this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		final CmfValue nameValue = nameAtt.getValue();
+		if (nameValue.isNull()) { throw new ImportException(String.format(
+			"%s attribute has a null value for %s [%s](%s)", PropertyIds.NAME, this.cmfObject.getType(),
+			this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		final String name = nameValue.asString();
 		for (Folder f : getParentFolders(ctx)) {
 			String path = String.format("%s/%s", f.getPath(), name);
 			Folder existing = null;
