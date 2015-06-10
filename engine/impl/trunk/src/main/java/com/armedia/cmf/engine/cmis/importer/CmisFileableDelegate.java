@@ -21,12 +21,10 @@ import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.CmfAttribute;
-import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
@@ -42,45 +40,26 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		final List<Folder> ret = new ArrayList<Folder>();
 		final Session session = ctx.getSession();
 
-		// Try by IDs
-		CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
+		// We only search by path, since by CMIS specification, a folder may have one and only
+		// one parent (i.e. folder multi-filing is not supported). Thus, if an incoming object
+		// has multiple parents, we can't rely on the PARENT_ID property to do all our work
+		// for us since we know for a fact that each individual path must match an individual,
+		// distinct folder. Thus, all folders must be returned that match potential paths for
+		// the object, since we know for sure they will all be unique in their own right.
+		CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		if ((prop != null) && prop.hasValues()) {
 			for (CmfValue v : prop) {
 				if (v.isNull()) {
 					continue;
 				}
-				Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.FOLDER, PropertyIds.OBJECT_ID, v.asId());
-				if (m == null) {
-					// no mapping, we simply skip...right?
-					continue;
-				}
+				String path = ctx.getTargetPath(v.asString());
 				try {
-					CmisObject obj = session.getObject(m.getTargetValue());
+					CmisObject obj = session.getObjectByPath(path);
 					if ((obj != null) && (obj instanceof Folder)) {
 						ret.add(Folder.class.cast(obj));
 					}
 				} catch (CmisObjectNotFoundException e) {
 					// Ignore a missing parent
-				}
-			}
-		} else {
-			// Parents couldn't be found by ID... so resort to finding
-			// them by path
-			prop = this.cmfObject.getProperty(IntermediateProperty.PATH);
-			if ((prop != null) && prop.hasValues()) {
-				for (CmfValue v : prop) {
-					if (v.isNull()) {
-						continue;
-					}
-					String path = ctx.getTargetPath(v.asString());
-					try {
-						CmisObject obj = session.getObjectByPath(path);
-						if ((obj != null) && (obj instanceof Folder)) {
-							ret.add(Folder.class.cast(obj));
-						}
-					} catch (CmisObjectNotFoundException e) {
-						// Ignore a missing parent
-					}
 				}
 			}
 		}
