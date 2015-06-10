@@ -122,8 +122,8 @@ ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, D
 	}
 
 	@Override
-	protected final ImportOutcome importObject(CmfAttributeTranslator<IDfValue> translator, DctmImportContext context)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<IDfValue> translator,
+		DctmImportContext context) throws ImportException, CmfStorageException, CmfValueDecoderException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		final IDfSession session = context.getSession();
 		boolean ok = false;
@@ -145,7 +145,7 @@ ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, D
 					session.commitTrans();
 				}
 				ok = true;
-				return ret;
+				return Collections.singleton(ret);
 			} finally {
 				if (!ok) {
 					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.cmfObject.getLabel(),
