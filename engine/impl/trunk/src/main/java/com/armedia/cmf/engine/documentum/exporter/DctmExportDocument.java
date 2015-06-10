@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.activation.MimeType;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -26,6 +28,7 @@ import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
@@ -240,6 +243,13 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					CmfContentStore<?>.Handle handle = storeContentStream(session, translator, marshaled, document,
 						content, streamStore);
 					ContentInfo info = new ContentInfo(handle.getQualifier());
+					IDfId formatId = content.getFormatId();
+					MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
+					if (!formatId.isNull()) {
+						IDfFormat format = IDfFormat.class.cast(session.getObject(formatId));
+						mimeType = MimeTools.resolveMimeType(format.getMIMEType());
+					}
+					info.setProperty(DctmAttributes.A_CONTENT_TYPE, mimeType.toString());
 					info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
 					info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
 					info.setProperty(DctmAttributes.SET_TIME,
