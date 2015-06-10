@@ -32,4 +32,10 @@ public class ImportOutcome {
 	public final String getNewLabel() {
 		return this.newLabel;
 	}
+
+	@Override
+	public String toString() {
+		return String
+			.format("ImportOutcome [result=%s, newId=%s, newLabel=%s]", this.result, this.newId, this.newLabel);
+	}
 }
