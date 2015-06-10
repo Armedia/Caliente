@@ -1,6 +1,7 @@
 package com.delta.cmsmf.launcher;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -158,7 +159,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 	@Override
 	public void objectBatchImportFinished(CmfType objectType, String batchId,
-		Map<String, ImportOutcome> outcomes, boolean failed) {
+		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 		if (!this.types.contains(objectType)) { return; }
 		List<Record> batch = this.openBatches.get(batchId);
 		if (batch != null) {

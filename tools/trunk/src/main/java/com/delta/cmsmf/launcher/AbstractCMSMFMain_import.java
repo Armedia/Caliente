@@ -2,6 +2,7 @@ package com.delta.cmsmf.launcher;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +32,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public abstract class AbstractCMSMFMain_import extends
-	AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
+AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
@@ -258,7 +259,7 @@ public abstract class AbstractCMSMFMain_import extends
 
 	@Override
 	public final void objectBatchImportFinished(CmfType objectType, String batchId,
-		Map<String, ImportOutcome> outcomes, boolean failed) {
+		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 		showProgress(objectType);
 	}
 }
