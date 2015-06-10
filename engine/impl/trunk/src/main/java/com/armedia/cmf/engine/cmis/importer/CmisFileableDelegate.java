@@ -192,7 +192,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
+	protected ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
 		Map<String, Object> props = super.prepareProperties(translator, ctx);
