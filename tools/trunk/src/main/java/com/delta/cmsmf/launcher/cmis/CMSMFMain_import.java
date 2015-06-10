@@ -5,20 +5,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
-import java.util.Set;
 
 import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.cmis.CmisSessionSetting;
 import com.armedia.cmf.engine.cmis.importer.CmisImportEngine;
-import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
-import com.delta.cmsmf.launcher.AbstractCMSMFMain;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_import;
-import com.delta.cmsmf.launcher.ImportManifest;
 
 public class CMSMFMain_import extends AbstractCMSMFMain_import {
 
@@ -30,13 +25,6 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
 		if (this.server == null) { throw new CMSMFException(
 			"Must provide the base URL where the CMIS repository may be accessed"); }
-
-		Set<ImportResult> outcomes = Tools.parseEnumCSV(ImportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
-			AbstractCMSMFMain.ALL, false);
-		Set<CmfType> types = Tools.parseEnumCSV(CmfType.class, Setting.MANIFEST_TYPES.getString(),
-			AbstractCMSMFMain.ALL, false);
-		this.engine.addListener(this);
-		this.engine.addListener(new ImportManifest(outcomes, types));
 
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later
