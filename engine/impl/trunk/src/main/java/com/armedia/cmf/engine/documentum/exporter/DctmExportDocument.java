@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
+import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
@@ -232,6 +233,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			+ " order by dcs.rendition ";
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
+		final String fileName = document.getObjectName();
 		List<ContentInfo> contentInfo = new ArrayList<ContentInfo>();
 		for (int i = 0; i < pageCount; i++) {
 			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
@@ -249,7 +251,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 						IDfFormat format = IDfFormat.class.cast(session.getObject(formatId));
 						mimeType = MimeTools.resolveMimeType(format.getMIMEType());
 					}
-					info.setProperty(DctmAttributes.A_CONTENT_TYPE, mimeType.toString());
+					info.setProperty(ContentProperty.MIME_TYPE, mimeType.toString());
+					info.setProperty(ContentProperty.SIZE, String.valueOf(content.getContentSize()));
+					info.setProperty(ContentProperty.FILE_NAME, fileName);
 					info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
 					info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
 					info.setProperty(DctmAttributes.SET_TIME,
