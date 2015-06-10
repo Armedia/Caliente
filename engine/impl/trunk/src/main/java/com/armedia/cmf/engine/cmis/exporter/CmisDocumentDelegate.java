@@ -16,6 +16,7 @@ import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
 import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
+import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -129,23 +130,23 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ContentStream main = this.object.getContentStream();
 		CmfContentStore<?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
 		ContentInfo mainInfo = new ContentInfo(mainHandle.getQualifier());
-		mainInfo.setProperty("mimeType", main.getMimeType());
-		mainInfo.setProperty("size", String.valueOf(main.getLength()));
-		mainInfo.setProperty("fileName", main.getFileName());
+		mainInfo.setProperty(ContentProperty.MIME_TYPE, main.getMimeType());
+		mainInfo.setProperty(ContentProperty.SIZE, String.valueOf(main.getLength()));
+		mainInfo.setProperty(ContentProperty.FILE_NAME, main.getFileName());
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
 			ContentStream cs = r.getContentStream();
 			CmfContentStore<?>.Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
 			ContentInfo info = new ContentInfo(handle.getQualifier());
+			info.setProperty(ContentProperty.MIME_TYPE, r.getMimeType());
+			info.setProperty(ContentProperty.SIZE, String.valueOf(cs.getLength()));
+			info.setProperty(ContentProperty.FILE_NAME, cs.getFileName());
 			info.setProperty("kind", r.getKind());
-			info.setProperty("mimeType", r.getMimeType());
 			info.setProperty("docId", r.getRenditionDocumentId());
 			info.setProperty("streamId", r.getStreamId());
 			info.setProperty("title", r.getTitle());
 			info.setProperty("height", String.valueOf(r.getHeight()));
 			info.setProperty("width", String.valueOf(r.getWidth()));
-			info.setProperty("size", String.valueOf(cs.getLength()));
-			info.setProperty("fileName", cs.getFileName());
 			ret.add(info);
 		}
 		return ret;

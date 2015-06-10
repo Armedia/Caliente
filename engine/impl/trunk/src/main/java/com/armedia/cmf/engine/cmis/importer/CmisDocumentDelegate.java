@@ -43,7 +43,18 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		String fileName = this.cmfObject.getAttribute(PropertyIds.NAME).getValue().asString();
 
 		// MimeType... how to detect?
+		CmfAttribute<CmfValue> mimeAtt = this.cmfObject.getAttribute(PropertyIds.CONTENT_STREAM_MIME_TYPE);
+		boolean detectMime = (mimeAtt == null) || !mimeAtt.hasValues();
+
+		if (!detectMime) {
+			CmfValue v = mimeAtt.getValue();
+			detectMime = !v.isNull();
+		}
 		String mimeType = null;
+
+		if (detectMime) {
+			// Detect the mime type for the source object
+		}
 
 		try {
 			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getStreamSize()), mimeType, h.openInput());
