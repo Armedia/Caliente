@@ -2,13 +2,15 @@ package com.armedia.cmf.engine.local.importer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
-import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
@@ -20,8 +22,8 @@ public class LocalFolderImportDelegate extends LocalImportDelegate {
 	}
 
 	@Override
-	protected ImportOutcome doImportObject(CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
+		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
 		File targetFile;
 		try {
 			targetFile = getTargetFile(ctx);
@@ -30,8 +32,8 @@ public class LocalFolderImportDelegate extends LocalImportDelegate {
 				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 
-		if (targetFile.isDirectory()) { return new ImportOutcome(ImportResult.DUPLICATE, getNewId(targetFile),
-			targetFile.getAbsolutePath()); }
+		if (targetFile.isDirectory()) { return Collections.singleton(new ImportOutcome(ImportResult.DUPLICATE,
+			getNewId(targetFile), targetFile.getAbsolutePath())); }
 
 		final boolean created = targetFile.mkdirs();
 		if (!targetFile.isDirectory()) { throw new ImportException(String.format(
@@ -48,7 +50,7 @@ public class LocalFolderImportDelegate extends LocalImportDelegate {
 				"Failed to apply attributes to the target file [%s] for folder [%s](%s)", targetFile,
 				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
-		return new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED, getNewId(targetFile),
-			targetFile.getAbsolutePath());
+		return Collections.singleton(new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED,
+			getNewId(targetFile), targetFile.getAbsolutePath()));
 	}
 }

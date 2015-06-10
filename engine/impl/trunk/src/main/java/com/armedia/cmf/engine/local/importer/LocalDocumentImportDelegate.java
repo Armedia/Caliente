@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -28,8 +30,8 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 	}
 
 	@Override
-	protected ImportOutcome doImportObject(CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
+		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
 		File targetFile;
 		try {
 			targetFile = getTargetFile(ctx);
@@ -64,8 +66,8 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 				this.cmfObject.getId())); }
 
 			try {
-				if (isSameDatesAndOwners(targetFile, translator)) { return new ImportOutcome(ImportResult.DUPLICATE,
-					getNewId(targetFile), targetFile.getAbsolutePath()); }
+				if (isSameDatesAndOwners(targetFile, translator)) { return Collections.singleton(new ImportOutcome(
+					ImportResult.DUPLICATE, getNewId(targetFile), targetFile.getAbsolutePath())); }
 			} catch (Exception e) {
 				throw new ImportException(String.format(
 					"Failed to validate the dates and owners at [%s] for document [%s](%s)", targetFile,
@@ -118,7 +120,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 				"Failed to apply attributes to the target file [%s] for %s [%s](%s)", targetFile,
 				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
-		return new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED, getNewId(targetFile),
-			targetFile.getAbsolutePath());
+		return Collections.singleton(new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED,
+			getNewId(targetFile), targetFile.getAbsolutePath()));
 	}
 }

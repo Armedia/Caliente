@@ -15,6 +15,8 @@ import java.nio.file.attribute.UserPrincipal;
 import java.nio.file.attribute.UserPrincipalLookupService;
 import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.text.ParseException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -53,8 +55,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 	}
 
 	@Override
-	protected final ImportOutcome importObject(CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
+		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
 
 		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION);
 		if ((att != null) && att.hasValues()) {
@@ -66,15 +68,15 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 					this.log.warn(String.format("Skipping non-final version for %s [%s](%s)", this.cmfObject.getType(),
 						this.cmfObject.getLabel(), this.cmfObject.getId()));
 				}
-				return new ImportOutcome(ImportResult.SKIPPED);
+				return Collections.singleton(new ImportOutcome(ImportResult.SKIPPED));
 			}
 		}
 
 		return doImportObject(translator, ctx);
 	}
 
-	protected abstract ImportOutcome doImportObject(CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException;
+	protected abstract Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
+		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException;
 
 	protected final File getTargetFile(LocalImportContext ctx) throws ImportException, IOException {
 		final CmfAttributeTranslator<CmfValue> translator = this.factory.getEngine().getTranslator();
