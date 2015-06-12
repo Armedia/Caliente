@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.cmf.storage.CmfEncodeableName;
@@ -18,9 +19,17 @@ public final class ContentInfo {
 	private static final String ENCODING = "UTF-8";
 	private static final char ENTRY_SEP = '|';
 	private static final char VALUE_SEP = '=';
-	private static final Pattern CHECKER = Pattern.compile("^(?:[\\w-.~+%]*\\Q" + ContentInfo.VALUE_SEP
-		+ "\\E[\\w-.~+%]*(?:\\Q" + ContentInfo.ENTRY_SEP + "\\E[\\w-.~+%]*\\Q" + ContentInfo.VALUE_SEP
-		+ "\\E[\\w-.~+%]*)*)?$");
+	private static final String VALUE_STR = "+*%\\w.-";
+	private static final String CHECKER_FMT = "^(?:[${value}]*\\Q${valueSep}\\E[${value}]*(?:\\Q${entrySep}\\E[${value}]*\\Q${valueSep}\\E[${value}]*)*)?$";
+	private static final Pattern CHECKER;
+
+	static {
+		Map<String, String> v = new HashMap<String, String>();
+		v.put("value", ContentInfo.VALUE_STR);
+		v.put("valueSep", String.valueOf(ContentInfo.VALUE_SEP));
+		v.put("entrySep", String.valueOf(ContentInfo.ENTRY_SEP));
+		CHECKER = Pattern.compile(StrSubstitutor.replace(ContentInfo.CHECKER_FMT, v));
+	}
 
 	private final String qualifier;
 	private final Map<String, String> properties = new HashMap<String, String>();
