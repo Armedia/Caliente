@@ -2,14 +2,9 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-	<changeSet author="cmf" id="1001">
-		<preConditions onFail="MARK_RAN">
-			<not>
-				<changeSetExecuted id="1" author="master" changeLogFile="com/delta/cmsmf/datastore/changelog/db.changelog-1.0.xml"/>
-			</not>
-		</preConditions>
 
-		<!-- The CMSMF info table -->
+	<changeSet author="cmf" id="1001">
+		<!-- The CMF info table -->
 		<createTable tableName="cmf_info">
 			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
 				<constraints nullable="false" />
@@ -209,5 +204,53 @@
 			<column name="name" />
 			<column name="target_value" />
 		</createIndex>
+
+		<!-- The content streams -->
+		<createTable tableName="cmf_content">
+			<column name="content_id" type="varchar(96)" remarks="The content ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="object_id" type="varchar(96)" remarks="The object the content belongs to">
+				<constraints nullable="false" />
+			</column>
+			<column name="qualifier" type="varchar(64)" remarks="The content stream's qualifier">
+				<constraints nullable="false" />
+			</column>
+			<column name="file_name" type="varchar(256)" remarks="The content stream's qualifier">
+				<constraints nullable="false" />
+			</column>
+			<column name="mime_type" type="varchar(96)" remarks="The content stream's mime type">
+				<constraints nullable="false" />
+			</column>
+			<column name="size" type="bigint" remarks="The content stream's length in bytes">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_content" columnNames="content_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_content_object"
+			baseTableName="cmf_content" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<!-- The content stream properties -->
+		<createTable tableName="cmf_content_prop">
+			<column name="content_id" type="varchar(96)" remarks="The content ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
+				<constraints nullable="false" />
+			</column>
+			<column name="data_type" type="varchar(32)" remarks="The property's data type">
+				<constraints nullable="false" />
+			</column>
+			<column name="value" type="text" remarks="The property's value">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_content_prop" columnNames="content_id, name" />
+		<addForeignKeyConstraint constraintName="fk_cmf_content_prop_content"
+			baseTableName="cmf_content_prop" baseColumnNames="content_id"
+			referencedTableName="cmf_content" referencedColumnNames="content_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>
