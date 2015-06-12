@@ -43,6 +43,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		Map<String, Object> props = super.prepareProperties(translator, ctx);
 		props.remove(PropertyIds.PATH);
 		props.remove(PropertyIds.PARENT_ID);
+		props.remove(PropertyIds.ALLOWED_CHILD_OBJECT_TYPE_IDS);
 
 		List<Folder> parents = getParentFolders(ctx);
 		List<ImportOutcome> outcomes = new ArrayList<ImportOutcome>(parents.size());
