@@ -106,14 +106,16 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		return null;
 	}
 
-	protected abstract T createNew(CmisImportContext ctx, Folder parent, Map<String, ?> properties)
+	protected abstract T createNew(CmisImportContext ctx, Folder parent, Map<String, Object> properties)
 		throws ImportException;
 
-	protected void updateExisting(CmisImportContext ctx, T existing, Map<String, ?> properties) throws ImportException {
+	protected void updateExisting(CmisImportContext ctx, T existing, Map<String, Object> properties)
+		throws ImportException {
 		existing.updateProperties(properties);
 	}
 
-	protected T createNewVersion(CmisImportContext ctx, T existing, Map<String, ?> properties) throws ImportException {
+	protected T createNewVersion(CmisImportContext ctx, T existing, Map<String, Object> properties)
+		throws ImportException {
 		return existing;
 	}
 
@@ -122,7 +124,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	protected boolean isSameObject(T existing) {
-		return false;
+		// Calendar creationDate = existing.getCreationDate();
+		// Calendar modificationDate = existing.getLastModificationDate();
+		return true;
 	}
 
 	protected abstract boolean isMultifilable(T existing);
@@ -197,7 +201,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
-		Map<String, Object> props = super.prepareProperties(translator, ctx);
+		Map<String, Object> props = prepareProperties(translator, ctx);
 		props.remove(PropertyIds.PATH);
 		props.remove(PropertyIds.PARENT_ID);
 

@@ -27,7 +27,8 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected Folder createNew(CmisImportContext ctx, Folder parent, Map<String, ?> properties) throws ImportException {
+	protected Folder createNew(CmisImportContext ctx, Folder parent, Map<String, Object> properties)
+		throws ImportException {
 		return parent.createFolder(properties);
 	}
 

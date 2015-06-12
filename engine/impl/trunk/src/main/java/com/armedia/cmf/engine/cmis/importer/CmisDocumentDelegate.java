@@ -22,10 +22,12 @@ import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
@@ -77,11 +79,20 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected Document createNewVersion(CmisImportContext ctx, Document existing, Map<String, ?> properties)
+	protected Map<String, Object> prepareProperties(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
+		throws ImportException, CmfValueDecoderException {
+		Map<String, Object> properties = super.prepareProperties(translator, ctx);
+		properties.put(PropertyIds.IS_LATEST_VERSION, true);
+		return properties;
+	}
+
+	@Override
+	protected Document createNewVersion(CmisImportContext ctx, Document existing, Map<String, Object> properties)
 		throws ImportException {
 		ObjectId checkOutId = existing.checkOut();
 		Document newVersion = null;
 		ContentStream content = null;
+		properties.remove(PropertyIds.NAME);
 		try {
 			newVersion = Document.class.cast(ctx.getSession().getObject(checkOutId));
 
@@ -92,6 +103,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			newVersion = null;
 			return finalVersion;
 		} finally {
+			// properties.put(PropertyIds.NAME, name);
 			IOUtils.closeQuietly(content);
 			if (newVersion != null) {
 				try {
@@ -118,7 +130,20 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 						String seriesId = m.getTargetValue();
 						try {
 							CmisObject obj = ctx.getSession().getObject(seriesId);
-							if (obj instanceof Document) { return Document.class.cast(obj); }
+							if (obj instanceof Document) {
+								Document doc = Document.class.cast(obj);
+								for (Document d : doc.getAllVersions()) {
+									Boolean pwc = d.isPrivateWorkingCopy();
+									if ((pwc != null) && pwc.booleanValue()) { throw new ImportException(String.format(
+										"The document is already checked out [%s](%s)", this.cmfObject.getLabel(),
+										this.cmfObject.getId())); }
+									Boolean lv = d.isLatestVersion();
+									if ((lv != null) && lv.booleanValue()) { return d; }
+								}
+								throw new ImportException(String.format(
+									"Failed to locate the latest version for [%s](%s)", this.cmfObject.getLabel(),
+									this.cmfObject.getId()));
+							}
 							// If the object isn't a document, we have a problem
 							throw new ImportException(String.format(
 								"Root object for version series [%s] is not a document for %s [%s](%s)", seriesId,
@@ -145,7 +170,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected Document createNew(CmisImportContext ctx, Folder parent, Map<String, ?> properties)
+	protected Document createNew(CmisImportContext ctx, Folder parent, Map<String, Object> properties)
 		throws ImportException {
 		ContentStream content = getContentStream(ctx);
 		try {
