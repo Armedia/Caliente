@@ -4,7 +4,6 @@
 
 package com.armedia.cmf.storage;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -298,7 +297,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
@@ -330,7 +329,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				}
 
 				@Override
-				public boolean handleException(SQLException e) {
+				public boolean handleException(Exception e) {
 					return false;
 				}
 

@@ -1,6 +1,5 @@
 package com.armedia.cmf.storage;
 
-import java.sql.SQLException;
 
 public interface CmfObjectHandler<V> {
 
@@ -43,7 +42,7 @@ public interface CmfObjectHandler<V> {
 	 * @return {@code true} if the load process should continue, {@code false} if it should be
 	 *         aborted.
 	 */
-	public boolean handleException(SQLException e);
+	public boolean handleException(Exception e);
 
 	/**
 	 * <p>
