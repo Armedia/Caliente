@@ -316,25 +316,10 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					actualIds.add(s);
 				}
 			}
-			final CmfObjectHandler<V> handler = new CmfObjectHandler<V>() {
-				@Override
-				public boolean newBatch(String batchId) throws CmfStorageException {
-					return true;
-				}
-
+			final CmfObjectHandler<V> handler = new DefaultCmfObjectHandler<V>() {
 				@Override
 				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
 					ret.add(translator.decodeObject(dataObject));
-					return true;
-				}
-
-				@Override
-				public boolean handleException(Exception e) {
-					return false;
-				}
-
-				@Override
-				public boolean closeBatch(boolean ok) throws CmfStorageException {
 					return true;
 				}
 			};
