@@ -31,6 +31,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
+import com.armedia.cmf.storage.DefaultCmfObjectHandler;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisImportDelegate<T> {
 
@@ -43,12 +44,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		String aclId = null;
 		final Acl acl = object.getAcl();
 
-		CmfObjectHandler<CmfValue> handler = new CmfObjectHandler<CmfValue>() {
-
-			@Override
-			public boolean newBatch(String batchId) throws CmfStorageException {
-				return true;
-			}
+		CmfObjectHandler<CmfValue> handler = new DefaultCmfObjectHandler<CmfValue>() {
 
 			@Override
 			public boolean handleObject(CmfObject<CmfValue> dataObject) {
@@ -59,16 +55,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				return false;
 			}
 
-			@Override
-			public boolean handleException(Exception e) {
-				// TODO: Raise this exception
-				return false;
-			}
-
-			@Override
-			public boolean closeBatch(boolean ok) {
-				return false;
-			}
 		};
 		try {
 			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId), handler);
