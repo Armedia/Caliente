@@ -35,6 +35,7 @@ import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValueDecoderException;
+import com.armedia.cmf.storage.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -54,8 +55,8 @@ import com.documentum.fc.common.admin.DfAdminException;
  * @param <T>
  */
 public abstract class DctmImportDelegate<T extends IDfPersistentObject>
-	extends
-	ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
+extends
+ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
 
 	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory.newStringValue("CURRENT");
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
@@ -76,7 +77,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 		Class<T> dfClass = getObjectClass();
 		if (!dfClass.isInstance(object)) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", dfClass.getCanonicalName(), object.getClass()
-				.getCanonicalName())); }
+			.getCanonicalName())); }
 		return dfClass.cast(object);
 	}
 
@@ -104,7 +105,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 	}
 
 	protected void prepareOperation(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected IDfId persistChanges(T object, DctmImportContext context) throws DfException, ImportException {
@@ -232,7 +233,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 				ok = true;
 				this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
 					getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel, object
-						.getObjectId().getId()));
+					.getObjectId().getId()));
 
 				return new ImportOutcome(cmsImportResult, newLabel, object.getObjectId().getId());
 			}
@@ -327,7 +328,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 			}
 			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
 				getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel, object
-					.getObjectId().getId()));
+				.getObjectId().getId()));
 
 			ImportOutcome ret = new ImportOutcome(cmsImportResult, object.getObjectId().getId(), newLabel);
 			ok = true;
@@ -339,11 +340,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
@@ -416,7 +417,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -430,16 +431,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
@@ -622,22 +623,12 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 
 		Set<String> s = Collections.singleton(m.getSourceValue());
 		final AtomicReference<CmfObject<IDfValue>> loaded = new AtomicReference<CmfObject<IDfValue>>(null);
-		final CmfObjectHandler<IDfValue> handler = new CmfObjectHandler<IDfValue>() {
-
-			@Override
-			public boolean newBatch(String batchId) throws CmfStorageException {
-				return true;
-			}
+		final CmfObjectHandler<IDfValue> handler = new DefaultCmfObjectHandler<IDfValue>() {
 
 			@Override
 			public boolean handleObject(CmfObject<IDfValue> dataObject) throws CmfStorageException {
 				loaded.set(dataObject);
 				return false;
-			}
-
-			@Override
-			public boolean closeBatch(boolean ok) throws CmfStorageException {
-				return true;
 			}
 
 			@Override
