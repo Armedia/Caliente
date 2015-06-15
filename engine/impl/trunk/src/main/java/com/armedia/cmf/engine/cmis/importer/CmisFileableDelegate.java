@@ -12,9 +12,7 @@ import java.util.Set;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
-import org.apache.chemistry.opencmis.client.api.ObjectId;
 import org.apache.chemistry.opencmis.client.api.Session;
-import org.apache.chemistry.opencmis.client.runtime.ObjectIdImpl;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
@@ -144,7 +142,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	protected void linkToParents(CmisImportContext ctx, T existing, List<Folder> finalParents) {
-		final ObjectId id = new ObjectIdImpl(existing.getId());
 		Map<String, Folder> oldParents = new HashMap<String, Folder>();
 		Map<String, Folder> newParents = new HashMap<String, Folder>();
 		for (Folder f : finalParents) {
@@ -169,18 +166,18 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		bothParentsIds.addAll(oldParentsIds);
 		bothParentsIds.retainAll(newParentsIds);
 
-		final boolean multifile = ctx.getRepositoryInfo().getCapabilities().isMultifilingSupported()
-			&& isMultifilable(existing);
+		final boolean multifile = ctx.getRepositoryInfo().getCapabilities().isMultifilingSupported();
+		// && isMultifilable(existing);
 
 		// Unlink from those no longer needed
 		for (String s : oldParents.keySet()) {
-			oldParents.get(s).removeFromFolder(id);
+			existing.removeFromFolder(oldParents.get(s));
 		}
 
 		if (multifile || bothParentsIds.isEmpty()) {
 			// Link to those needed but not yet linked
 			for (String s : newParents.keySet()) {
-				newParents.get(s).addToFolder(id, false);
+				existing.addToFolder(newParents.get(s), false);
 				if (!multifile) {
 					break;
 				}
