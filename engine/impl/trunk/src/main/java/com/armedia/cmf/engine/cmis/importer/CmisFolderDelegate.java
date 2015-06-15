@@ -71,6 +71,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 			if (existing == null) {
 				// If it doesn't exist, we'll create the new object...
 				existing = createNew(ctx, f, props);
+				applyAcl(ctx, existing);
 				outcomes.add(new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing)));
 				continue;
 			}
@@ -82,6 +83,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
 			// Not the same...we must update the properties and/or content
 			updateExisting(ctx, existing, props);
+			applyAcl(ctx, existing);
 			outcomes.add(new ImportOutcome(ImportResult.UPDATED, existing.getId(), calculateNewLabel(existing)));
 		}
 		return outcomes;

@@ -14,6 +14,8 @@ import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
+import org.apache.chemistry.opencmis.commons.data.Ace;
+import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
 import com.armedia.cmf.engine.converter.IntermediateProperty;
@@ -23,8 +25,10 @@ import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
@@ -33,6 +37,49 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	public CmisFileableDelegate(CmisImportDelegateFactory factory, Class<T> klass, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(factory, klass, storedObject);
+	}
+
+	protected void applyAcl(CmisImportContext ctx, final T object) throws ImportException {
+		String aclId = null;
+		final Acl acl = object.getAcl();
+
+		CmfObjectHandler<CmfValue> handler = new CmfObjectHandler<CmfValue>() {
+
+			@Override
+			public boolean newBatch(String batchId) throws CmfStorageException {
+				return true;
+			}
+
+			@Override
+			public boolean handleObject(CmfObject<CmfValue> dataObject) {
+				List<Ace> aces = acl.getAces();
+				aces.clear();
+
+				object.setAcl(aces);
+				return false;
+			}
+
+			@Override
+			public boolean handleException(Exception e) {
+				// TODO: Raise this exception
+				return false;
+			}
+
+			@Override
+			public boolean closeBatch(boolean ok) {
+				return false;
+			}
+		};
+		try {
+			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId), handler);
+			if (count == 0) { return; }
+		} catch (CmfStorageException e) {
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclId,
+				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+		} catch (CmfValueDecoderException e) {
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclId,
+				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+		}
 	}
 
 	protected List<Folder> getParentFolders(CmisImportContext ctx) throws ImportException {
@@ -211,6 +258,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (existing == null) {
 			// If it doesn't exist, we'll create the new object...
 			existing = createNew(ctx, parent, props);
+			applyAcl(ctx, existing);
 			linkToParents(ctx, existing, parents);
 			setMapping(ctx, existing);
 			return Collections.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(),
@@ -221,6 +269,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			.getId(), calculateNewLabel(existing))); }
 		if (isVersionable(existing)) {
 			existing = createNewVersion(ctx, existing, props);
+			applyAcl(ctx, existing);
 			linkToParents(ctx, existing, parents);
 			setMapping(ctx, existing);
 			return Collections.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(),
@@ -229,6 +278,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 		// Not the same...we must update the properties and/or content
 		updateExisting(ctx, existing, props);
+		applyAcl(ctx, existing);
 		linkToParents(ctx, existing, parents);
 		setMapping(ctx, existing);
 		return Collections.singleton(new ImportOutcome(ImportResult.UPDATED, existing.getId(),
