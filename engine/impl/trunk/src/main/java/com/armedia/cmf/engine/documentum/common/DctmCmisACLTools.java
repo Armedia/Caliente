@@ -24,7 +24,6 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.tools.AclTools;
-import com.armedia.cmf.storage.CmfAclActorType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.FileNameTools;
@@ -277,8 +276,6 @@ public class DctmCmisACLTools implements DctmACL {
 
 		CmfProperty<IDfValue> accessors = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ACCESSOR_NAME,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		CmfProperty<IDfValue> accessorTypes = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ACCESSOR_TYPE,
-			DctmDataType.DF_STRING.getStoredType(), true);
 		CmfProperty<IDfValue> accessorActions = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ACCESSOR_ACTIONS,
 			DctmDataType.DF_STRING.getStoredType(), true);
 
@@ -288,7 +285,6 @@ public class DctmCmisACLTools implements DctmACL {
 			// We're only interested in the basic permissions
 			final String accessorName = acl.getRepeatingString(DctmAttributes.R_ACCESSOR_NAME, i);
 			final boolean group = acl.getRepeatingBoolean(DctmAttributes.R_IS_GROUP, i);
-			final CmfAclActorType accessorType = (group ? CmfAclActorType.GROUP : CmfAclActorType.USER);
 			final int accessorPermit = acl.getRepeatingInt(DctmAttributes.R_ACCESSOR_PERMIT, i);
 			final String extendedPermits = acl.getAccessorXPermitNames(i);
 
@@ -306,9 +302,6 @@ public class DctmCmisACLTools implements DctmACL {
 			// Set the actor name property
 			accessors.addValue(DfValueFactory.newStringValue(accessorName));
 
-			// Set the actor type property
-			accessorTypes.addValue(DfValueFactory.newStringValue(accessorType.name()));
-
 			// Comma-concatenate the actions into the actions property
 			Set<String> actions = DctmCmisACLTools.calculateActionsForPermissions(accessorPermit, extendedPermits);
 			String allActions = AclTools.encodeActions(actions);
@@ -316,7 +309,6 @@ public class DctmCmisACLTools implements DctmACL {
 		}
 
 		properties.add(accessors);
-		properties.add(accessorTypes);
 		properties.add(accessorActions);
 	}
 }
