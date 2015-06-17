@@ -23,9 +23,9 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportContextFactory extends
-	ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
-	private final Map<String, Set<String>> permToActions;
+	private final Map<String, Set<String>> permissionsToActions;
 
 	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings) {
 		super(engine, settings);
@@ -51,11 +51,11 @@ public class CmisExportContextFactory extends
 			Set<String> s = permToActions.get(p);
 			permToActions.put(p, Tools.freezeSet(new LinkedHashSet<String>(s)));
 		}
-		this.permToActions = Tools.freezeMap(new LinkedHashMap<String, Set<String>>(permToActions));
+		this.permissionsToActions = Tools.freezeMap(new LinkedHashMap<String, Set<String>>(permToActions));
 	}
 
 	public Set<String> convertPermissionToAllowableActions(String permission) {
-		Set<String> ret = this.permToActions.get(permission);
+		Set<String> ret = this.permissionsToActions.get(permission);
 		if (ret == null) {
 			ret = Collections.emptySet();
 		}
