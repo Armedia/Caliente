@@ -24,6 +24,7 @@ import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfACLException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
@@ -346,6 +347,15 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		} else {
 			// In CMIS mode, we simply get the list of permits to grant, ordered by accessor
 			for (IDfPermit p : DctmCmisACLTools.calculatePermissionsFromCMIS(this.cmfObject)) {
+
+				// First, validate if this principal is a valid user/group
+				IDfUser u = session.getUser(p.getAccessorName());
+				IDfGroup g = session.getGroup(p.getAccessorName());
+				if ((u == null) && (g == null)) {
+					// Missing principal...forget it
+					continue;
+				}
+
 				switch (p.getPermitType()) {
 					case IDfPermit.DF_ACCESS_PERMIT:
 						acl.grantPermit(p);
