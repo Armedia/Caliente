@@ -15,13 +15,16 @@ import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.Ace;
-import org.apache.chemistry.opencmis.commons.data.Acl;
+import org.apache.chemistry.opencmis.commons.data.MutableAce;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlEntryImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlPrincipalDataImpl;
 
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.engine.tools.AclTools;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
@@ -40,16 +43,49 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		super(factory, klass, storedObject);
 	}
 
-	protected void applyAcl(CmisImportContext ctx, final T object) throws ImportException {
-		String aclId = null;
-		final Acl acl = object.getAcl();
+	protected void applyAcl(final CmisImportContext ctx, final T object) throws ImportException {
+
+		CmfProperty<CmfValue> aclIdAtt = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
+		if ((aclIdAtt == null) || !aclIdAtt.hasValues()) { return; }
+		CmfValue aclId = aclIdAtt.getValue();
+		if ((aclId == null) || aclId.isNull()) { return; }
 
 		CmfObjectHandler<CmfValue> handler = new DefaultCmfObjectHandler<CmfValue>() {
 
 			@Override
-			public boolean handleObject(CmfObject<CmfValue> dataObject) {
-				List<Ace> aces = acl.getAces();
+			public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+				List<Ace> aces = object.getAcl().getAces();
 				aces.clear();
+				CmfProperty<CmfValue> accessorNames = dataObject.getProperty(IntermediateProperty.ACL_ACCESSOR_NAME);
+				CmfProperty<CmfValue> accessorActions = dataObject
+					.getProperty(IntermediateProperty.ACL_ACCESSOR_ACTIONS);
+
+				if ((accessorNames == null) || (accessorActions == null)) { return false; }
+
+				if (accessorNames.getValueCount() != accessorActions.getValueCount()) { throw new CmfStorageException(
+					String.format("ACL accessors and actions have different object counts (%s != %s) for %s [%s](%s)",
+						accessorNames.getValueCount(), accessorActions.getValueCount(),
+						CmisFileableDelegate.this.cmfObject.getType(), CmisFileableDelegate.this.cmfObject.getLabel(),
+						CmisFileableDelegate.this.cmfObject.getId())); }
+
+				final int count = accessorNames.getValueCount();
+				for (int i = 0; i < count; i++) {
+					CmfValue accessor = accessorNames.getValue(i);
+					if ((accessor == null) || accessor.isNull()) {
+						continue;
+					}
+					CmfValue actions = accessorActions.getValue(i);
+					if ((actions == null) || actions.isNull()) {
+						continue;
+					}
+					Set<String> permissions = ctx.convertAllowableActionsToPermissions(AclTools.decodeActions(actions
+						.asString()));
+					MutableAce ace = new AccessControlEntryImpl();
+					ace.setDirect(true);
+					ace.setPermissions(new ArrayList<String>(permissions));
+					ace.setPrincipal(new AccessControlPrincipalDataImpl(accessor.asString()));
+					aces.add(ace);
+				}
 
 				object.setAcl(aces);
 				return false;
@@ -57,14 +93,14 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 		};
 		try {
-			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId), handler);
+			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
 			if (count == 0) { return; }
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclId,
-				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)",
+				aclIdAtt, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		} catch (CmfValueDecoderException e) {
-			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclId,
-				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)",
+				aclIdAtt, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 	}
 
