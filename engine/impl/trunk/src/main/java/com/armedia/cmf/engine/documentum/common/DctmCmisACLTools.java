@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.chemistry.opencmis.commons.data.PermissionMapping;
-import org.apache.commons.lang3.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,7 @@ import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
+import com.armedia.cmf.engine.tools.AclTools;
 import com.armedia.cmf.storage.CmfAclActorType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
@@ -44,8 +44,6 @@ import com.documentum.fc.common.IDfValue;
 public class DctmCmisACLTools implements DctmACL {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DctmCmisACLTools.class);
-
-	private static final char ACTION_SEP = '|';
 
 	private static enum PermitToAction {
 		//
@@ -241,8 +239,7 @@ public class DctmCmisACLTools implements DctmACL {
 
 			int perm = IDfACL.DF_PERMIT_NONE;
 			Set<String> extended = new TreeSet<String>();
-			Collection<String> actions = new StrTokenizer(accessorActions.getValue(i).asString(),
-				DctmCmisACLTools.ACTION_SEP).getTokenList();
+			Set<String> actions = AclTools.decodeActions(accessorActions.getValue(i).asString());
 			for (String a : actions) {
 				Integer newPerm = DctmCmisACLTools.ACTION_TO_PERMIT.get(a);
 				if ((newPerm != null) && (newPerm.intValue() > perm)) {
@@ -314,7 +311,7 @@ public class DctmCmisACLTools implements DctmACL {
 
 			// Comma-concatenate the actions into the actions property
 			Set<String> actions = DctmCmisACLTools.calculateActionsForPermissions(accessorPermit, extendedPermits);
-			String allActions = FileNameTools.reconstitute(actions, false, false, DctmCmisACLTools.ACTION_SEP);
+			String allActions = AclTools.encodeActions(actions);
 			accessorActions.addValue(DfValueFactory.newStringValue(allActions));
 		}
 
