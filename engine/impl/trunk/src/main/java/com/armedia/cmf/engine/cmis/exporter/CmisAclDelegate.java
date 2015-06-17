@@ -7,9 +7,14 @@ import java.util.TreeSet;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.commons.data.Ace;
 import org.apache.chemistry.opencmis.commons.data.Acl;
+import org.apache.chemistry.opencmis.commons.data.Principal;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.engine.tools.AclTools;
+import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 
@@ -49,16 +54,33 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	@Override
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		// Copy the ACL Data into the object's attributes using the common ACL attributes
-		Acl acl = this.object.getAcl();
+		final Acl acl = this.object.getAcl();
 		if (acl != null) {
+			CmfProperty<CmfValue> accessors = new CmfProperty<CmfValue>(IntermediateProperty.ACL_ACCESSOR_NAME,
+				CmfDataType.STRING, true);
+			CmfProperty<CmfValue> accessorActions = new CmfProperty<CmfValue>(
+				IntermediateProperty.ACL_ACCESSOR_ACTIONS, CmfDataType.STRING, true);
+
 			for (Ace ace : acl.getAces()) {
+				// Only export directly-applied ACEs
+				if (!ace.isDirect()) {
+					continue;
+				}
+
 				Set<String> actions = new TreeSet<String>();
 				for (String permission : ace.getPermissions()) {
-					ctx.printf(permission);
 					actions.addAll(ctx.convertPermissionToAllowableActions(permission));
 				}
-				actions.size();
+				Principal p = ace.getPrincipal();
+
+				// Ok...so now we have the principal, and the list of allowable actions that should
+				// be permitted. Therefore, we can export this information
+				accessors.addValue(new CmfValue(p.getId()));
+				accessorActions.addValue(new CmfValue(AclTools.encodeActions(actions)));
 			}
+
+			object.setProperty(accessors);
+			object.setProperty(accessorActions);
 		}
 		return true;
 	}
