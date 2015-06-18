@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.PermissionMapping;
+import org.apache.chemistry.opencmis.commons.data.RepositoryInfo;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
@@ -23,14 +24,16 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportContextFactory extends
-ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+	ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
+	private final RepositoryInfo repositoryInfo;
 	private final Map<String, Set<String>> permissionsToActions;
 
 	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings) {
 		super(engine, settings);
+		this.repositoryInfo = session.getRepositoryInfo();
 		Map<String, Set<String>> permToActions = new TreeMap<String, Set<String>>();
-		Map<String, PermissionMapping> m = session.getRepositoryInfo().getAclCapabilities().getPermissionMapping();
+		Map<String, PermissionMapping> m = this.repositoryInfo.getAclCapabilities().getPermissionMapping();
 
 		Set<String> permissions = new HashSet<String>();
 		for (String action : m.keySet()) {
@@ -52,6 +55,10 @@ ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, C
 			permToActions.put(p, Tools.freezeSet(new LinkedHashSet<String>(s)));
 		}
 		this.permissionsToActions = Tools.freezeMap(new LinkedHashMap<String, Set<String>>(permToActions));
+	}
+
+	public final RepositoryInfo getRepositoryInfo() {
+		return this.repositoryInfo;
 	}
 
 	public Set<String> convertPermissionToAllowableActions(String permission) {
