@@ -3,22 +3,22 @@ package com.armedia.cmf.engine.converter;
 import java.util.HashMap;
 import java.util.Map;
 
-final class MappingManager {
+public final class MappingManager {
 
-	static interface Mappable {
+	public static interface Mappable {
 		public String getMapping();
 	}
 
 	private MappingManager() {
 	}
 
-	static String generateMapping(String mapping, String name) {
+	public static String generateMapping(String mapping, String name) {
 		if (mapping != null) { return mapping; }
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to generate a mapping for"); }
 		return String.format("cmf:%s", name.toLowerCase());
 	}
 
-	static <E extends Mappable> Map<String, E> createMappings(Class<E> mappableClass, E... mappables) {
+	public static <E extends Mappable> Map<String, E> createMappings(Class<E> mappableClass, E... mappables) {
 		Map<String, E> m = new HashMap<String, E>();
 		if (mappables != null) {
 			for (E a : mappables) {
