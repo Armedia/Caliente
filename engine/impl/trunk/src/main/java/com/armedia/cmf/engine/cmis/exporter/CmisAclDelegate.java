@@ -9,6 +9,7 @@ import org.apache.chemistry.opencmis.commons.data.Ace;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.data.Principal;
 
+import com.armedia.cmf.engine.cmis.CmisProperty;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.tools.AclTools;
@@ -56,8 +57,11 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 		// Copy the ACL Data into the object's attributes using the common ACL attributes
 		final Acl acl = this.object.getAcl();
 		if (acl != null) {
+			String permissionsName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT, ctx.getRepositoryInfo()
+				.getProductName().toLowerCase());
 			CmfProperty<CmfValue> accessors = new CmfProperty<CmfValue>(IntermediateProperty.ACL_ACCESSOR_NAME,
 				CmfDataType.STRING, true);
+			CmfProperty<CmfValue> permissions = new CmfProperty<CmfValue>(permissionsName, CmfDataType.STRING, true);
 			CmfProperty<CmfValue> accessorActions = new CmfProperty<CmfValue>(
 				IntermediateProperty.ACL_ACCESSOR_ACTIONS, CmfDataType.STRING, true);
 
@@ -76,11 +80,14 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 				// Ok...so now we have the principal, and the list of allowable actions that should
 				// be permitted. Therefore, we can export this information
 				accessors.addValue(new CmfValue(p.getId()));
-				accessorActions.addValue(new CmfValue(AclTools.encodeActions(actions)));
+				permissions.addValue(new CmfValue(AclTools.encode(ace.getPermissions())));
+				accessorActions.addValue(new CmfValue(AclTools.encode(actions)));
 			}
 
 			object.setProperty(accessors);
+			object.setProperty(permissions);
 			object.setProperty(accessorActions);
+			// TODO: Export extensions
 		}
 		return true;
 	}

@@ -4,6 +4,7 @@ import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.OperationContext;
 import org.apache.chemistry.opencmis.client.api.Session;
+import org.apache.chemistry.opencmis.commons.data.RepositoryInfo;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.exporter.ExportContext;
@@ -12,8 +13,15 @@ import com.armedia.cmf.storage.CmfValue;
 
 public class CmisExportContext extends ExportContext<Session, CmfValue, CmisExportContextFactory> {
 
+	private final RepositoryInfo repositoryInfo;
+
 	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfType rootType, Session session, Logger output) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output);
+		this.repositoryInfo = session.getRepositoryInfo();
+	}
+
+	public final RepositoryInfo getRepositoryInfo() {
+		return this.repositoryInfo;
 	}
 
 	public Set<String> convertPermissionToAllowableActions(String permission) {

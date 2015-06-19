@@ -20,6 +20,7 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundExcept
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlEntryImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlPrincipalDataImpl;
 
+import com.armedia.cmf.engine.cmis.CmisProperty;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -50,6 +51,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		CmfValue aclId = aclIdAtt.getValue();
 		if ((aclId == null) || aclId.isNull()) { return; }
 
+		final String permissionPropertyName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT, ctx
+			.getRepositoryInfo().getProductName().toLowerCase());
+
 		CmfObjectHandler<CmfValue> handler = new DefaultCmfObjectHandler<CmfValue>() {
 
 			@Override
@@ -57,10 +61,48 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				List<Ace> aces = object.getAcl().getAces();
 				aces.clear();
 				CmfProperty<CmfValue> accessorNames = dataObject.getProperty(IntermediateProperty.ACL_ACCESSOR_NAME);
+				CmfProperty<CmfValue> directPermissions = dataObject.getProperty(permissionPropertyName);
 				CmfProperty<CmfValue> accessorActions = dataObject
 					.getProperty(IntermediateProperty.ACL_ACCESSOR_ACTIONS);
 
-				if ((accessorNames == null) || (accessorActions == null)) { return false; }
+				if ((accessorNames == null) || ((accessorActions == null) && (directPermissions == null))) { return false; }
+
+				if (directPermissions != null) {
+					if (accessorNames.getValueCount() != directPermissions.getValueCount()) {
+						CmisFileableDelegate.this.log
+							.warn(String
+								.format(
+									"ACL accessors and directPermissions have different object counts (%s != %s) for %s [%s](%s)",
+									accessorNames.getValueCount(), accessorActions.getValueCount(),
+									CmisFileableDelegate.this.cmfObject.getType(),
+									CmisFileableDelegate.this.cmfObject.getLabel(),
+									CmisFileableDelegate.this.cmfObject.getId()));
+					} else {
+						// Ok...we have explicit permissions for each accessor, so skip the actions
+						// mappings and simply apply them directly
+						final int count = accessorNames.getValueCount();
+						for (int i = 0; i < count; i++) {
+							CmfValue accessor = accessorNames.getValue(i);
+							if ((accessor == null) || accessor.isNull()) {
+								continue;
+							}
+							CmfValue permissions = directPermissions.getValue(i);
+							if ((permissions == null) || permissions.isNull()) {
+								continue;
+							}
+
+							MutableAce ace = new AccessControlEntryImpl();
+							ace.setDirect(true);
+							ace.setPermissions(new ArrayList<String>(AclTools.decode(permissions.asString())));
+							ace.setPrincipal(new AccessControlPrincipalDataImpl(accessor.asString()));
+							// TODO: Copy extensions!!
+							aces.add(ace);
+						}
+
+						object.setAcl(aces);
+						return false;
+					}
+				}
 
 				if (accessorNames.getValueCount() != accessorActions.getValueCount()) { throw new CmfStorageException(
 					String.format("ACL accessors and actions have different object counts (%s != %s) for %s [%s](%s)",
@@ -78,7 +120,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 					if ((actions == null) || actions.isNull()) {
 						continue;
 					}
-					Set<String> permissions = ctx.convertAllowableActionsToPermissions(AclTools.decodeActions(actions
+					Set<String> permissions = ctx.convertAllowableActionsToPermissions(AclTools.decode(actions
 						.asString()));
 					MutableAce ace = new AccessControlEntryImpl();
 					ace.setDirect(true);
