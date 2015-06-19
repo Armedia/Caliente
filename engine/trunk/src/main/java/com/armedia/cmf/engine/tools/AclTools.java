@@ -3,6 +3,7 @@ package com.armedia.cmf.engine.tools;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -31,10 +32,13 @@ public abstract class AclTools {
 		}
 	}
 
-	public static String encode(Set<String> names) {
+	public static String encode(Collection<String> names) {
 		if ((names == null) || names.isEmpty()) { return ""; }
 		Set<String> ret = new TreeSet<String>();
 		for (String p : names) {
+			if (p == null) {
+				continue;
+			}
 			ret.add(AclTools.UrlEncode(p));
 		}
 		return FileNameTools.reconstitute(ret, false, false, AclTools.SEPARATOR);
