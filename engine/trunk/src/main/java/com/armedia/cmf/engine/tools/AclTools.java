@@ -1,5 +1,8 @@
 package com.armedia.cmf.engine.tools;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -9,16 +12,42 @@ import com.armedia.commons.utilities.FileNameTools;
 
 public abstract class AclTools {
 
-	private static final char ACTION_SEP = '|';
+	private static final String ENCODING = "UTF-8";
+	private static final char SEPARATOR = '|';
 
-	public static String encodeActions(Set<String> actions) {
-		if ((actions == null) || actions.isEmpty()) { return ""; }
-		return FileNameTools.reconstitute(actions, false, false, AclTools.ACTION_SEP);
+	private static String UrlEncode(String str) {
+		try {
+			return URLEncoder.encode(str, AclTools.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(String.format("[%s] encoding not supported"), e);
+		}
 	}
 
-	public static Set<String> decodeActions(String str) {
-		if (str == null) { return new TreeSet<String>(); }
-		return new TreeSet<String>(new StrTokenizer(str, AclTools.ACTION_SEP).getTokenList());
+	private static String UrlDecode(String str) {
+		try {
+			return URLDecoder.decode(str, AclTools.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(String.format("[%s] encoding not supported"), e);
+		}
+	}
+
+	public static String encode(Set<String> names) {
+		if ((names == null) || names.isEmpty()) { return ""; }
+		Set<String> ret = new TreeSet<String>();
+		for (String p : names) {
+			ret.add(AclTools.UrlEncode(p));
+		}
+		return FileNameTools.reconstitute(ret, false, false, AclTools.SEPARATOR);
+	}
+
+	public static Set<String> decode(String encodedNames) {
+		Set<String> ret = new TreeSet<String>();
+		if (encodedNames != null) {
+			for (String p : new StrTokenizer(encodedNames, AclTools.SEPARATOR).getTokenList()) {
+				ret.add(AclTools.UrlDecode(p));
+			}
+		}
+		return ret;
 	}
 
 	private AclTools() {
