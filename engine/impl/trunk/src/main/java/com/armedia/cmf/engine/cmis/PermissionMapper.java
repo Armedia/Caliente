@@ -208,9 +208,15 @@ public class PermissionMapper {
 					}
 				}
 				if (match == 0) {
+					// This should be impossible, but still...
 					continue;
 				}
 				sortedPermissions.add(new PriorityKey(extra, extra + match, p));
+			}
+
+			if (sortedPermissions.isEmpty()) {
+				// This should be impossible, but still...
+				continue;
 			}
 
 			// Now, add the permission with the highest priority to the return set
