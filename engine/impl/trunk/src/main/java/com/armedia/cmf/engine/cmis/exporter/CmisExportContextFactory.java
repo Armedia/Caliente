@@ -1,60 +1,30 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.chemistry.opencmis.client.api.Session;
-import org.apache.chemistry.opencmis.commons.data.PermissionMapping;
 import org.apache.chemistry.opencmis.commons.data.RepositoryInfo;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
+import com.armedia.cmf.engine.cmis.PermissionMapper;
 import com.armedia.cmf.engine.exporter.ExportContextFactory;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.Tools;
 
 public class CmisExportContextFactory extends
-	ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
 	private final RepositoryInfo repositoryInfo;
-	private final Map<String, Set<String>> permissionsToActions;
+	private final PermissionMapper permissionMapper;
 
 	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings) {
 		super(engine, settings);
 		this.repositoryInfo = session.getRepositoryInfo();
-		Map<String, Set<String>> permToActions = new TreeMap<String, Set<String>>();
-		Map<String, PermissionMapping> m = this.repositoryInfo.getAclCapabilities().getPermissionMapping();
-
-		Set<String> permissions = new HashSet<String>();
-		for (String action : m.keySet()) {
-			PermissionMapping mapping = m.get(action);
-			for (String permission : mapping.getPermissions()) {
-				permissions.add(permission);
-				Set<String> s = permToActions.get(permission);
-				if (s == null) {
-					s = new TreeSet<String>();
-					permToActions.put(permission, s);
-				}
-				s.add(action);
-			}
-		}
-
-		// Use Linked* to preserve order, but get better performance
-		for (String p : permissions) {
-			Set<String> s = permToActions.get(p);
-			permToActions.put(p, Tools.freezeSet(new LinkedHashSet<String>(s)));
-		}
-		this.permissionsToActions = Tools.freezeMap(new LinkedHashMap<String, Set<String>>(permToActions));
+		this.permissionMapper = new PermissionMapper(session);
 	}
 
 	public final RepositoryInfo getRepositoryInfo() {
@@ -62,11 +32,7 @@ public class CmisExportContextFactory extends
 	}
 
 	public Set<String> convertPermissionToAllowableActions(String permission) {
-		Set<String> ret = this.permissionsToActions.get(permission);
-		if (ret == null) {
-			ret = Collections.emptySet();
-		}
-		return ret;
+		return this.permissionMapper.convertPermissionToAllowableActions(permission);
 	}
 
 	@Override
