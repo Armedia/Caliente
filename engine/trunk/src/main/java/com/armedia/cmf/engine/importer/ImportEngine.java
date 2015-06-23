@@ -829,6 +829,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 				}
 				listenerDelegator.importFinished();
+				typeMapper.close();
 			}
 		} finally {
 			sessionFactory.close();
