@@ -21,6 +21,7 @@ import com.armedia.cmf.engine.importer.ImportContextFactory;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -46,9 +47,9 @@ public class CmisImportContextFactory extends
 
 	@Override
 	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore) {
-		return new CmisImportContext(this, rootId, rootType, session, output, getEngine().getTranslator(), objectStore,
-			streamStore);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore, CmfTypeMapper typeMapper) {
+		return new CmisImportContext(this, rootId, rootType, session, output, typeMapper, getEngine().getTranslator(),
+			objectStore, streamStore);
 	}
 
 	private boolean isFolderType(ObjectType type) {
