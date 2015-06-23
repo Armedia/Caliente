@@ -13,6 +13,7 @@ import com.armedia.cmf.engine.importer.ImportContextFactory;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -23,7 +24,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportContextFactory extends
-	ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine, IDfFolder> {
+ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine, IDfFolder> {
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg) {
@@ -33,8 +34,8 @@ public class DctmImportContextFactory extends
 
 	@Override
 	protected DctmImportContext constructContext(String rootId, CmfType rootType, IDfSession session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore) {
-		return new DctmImportContext(this, getSettings(), rootId, rootType, session, output, getEngine()
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
+		return new DctmImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper, getEngine()
 			.getTranslator(), objectStore, contentStore);
 	}
 

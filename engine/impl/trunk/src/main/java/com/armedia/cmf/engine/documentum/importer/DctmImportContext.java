@@ -13,6 +13,7 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -27,9 +28,9 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfValue, DctmI
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContext(DctmImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
-		IDfSession session, Logger output, CmfAttributeTranslator<IDfValue> translator,
+		IDfSession session, Logger output, CmfTypeMapper typeMapper, CmfAttributeTranslator<IDfValue> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore) {
-		super(factory, settings, rootId, rootType, session, output, translator, objectStore, streamStore);
+		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore);
 		this.specialValues = factory.getSpecialValues();
 	}
 

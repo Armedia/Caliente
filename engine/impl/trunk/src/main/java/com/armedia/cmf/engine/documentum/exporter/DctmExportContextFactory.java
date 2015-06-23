@@ -12,6 +12,7 @@ import com.armedia.cmf.engine.exporter.ExportContextFactory;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -21,7 +22,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportContextFactory extends
-ExportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
+	ExportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
 
 	private final DctmSpecialValues specialValues;
 
@@ -31,8 +32,8 @@ ExportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext
 	}
 
 	@Override
-	protected DctmExportContext constructContext(String rootId, CmfType rootType, IDfSession session,
-		Logger output, CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore) {
+	protected DctmExportContext constructContext(String rootId, CmfType rootType, IDfSession session, Logger output,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore, CmfTypeMapper typeMapper) {
 		return new DctmExportContext(this, rootId, rootType, session, output);
 	}
 
