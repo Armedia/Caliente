@@ -10,11 +10,12 @@ import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportContextFactory extends
-	ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine, File> {
+ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine, File> {
 
 	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings) {
 		super(engine, settings);
@@ -37,9 +38,9 @@ public class LocalImportContextFactory extends
 	}
 
 	@Override
-	protected LocalImportContext constructContext(String rootId, CmfType rootType, LocalRoot session,
-		Logger output, CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore) {
-		return new LocalImportContext(this, getSettings(), rootId, rootType, session, output, getEngine()
+	protected LocalImportContext constructContext(String rootId, CmfType rootType, LocalRoot session, Logger output,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
+		return new LocalImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper, getEngine()
 			.getTranslator(), objectStore, contentStore);
 	}
 }
