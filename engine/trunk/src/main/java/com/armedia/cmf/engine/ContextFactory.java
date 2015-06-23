@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
@@ -113,17 +114,17 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	}
 
 	public final C newContext(String rootId, CmfType rootType, S session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
-			return constructContext(rootId, rootType, session, output, objectStore, contentStore);
+			return constructContext(rootId, rootType, session, output, objectStore, contentStore, typeMapper);
 		} finally {
 			this.lock.readLock().unlock();
 		}
 	}
 
 	protected abstract C constructContext(String rootId, CmfType rootType, S session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper);
 
 }

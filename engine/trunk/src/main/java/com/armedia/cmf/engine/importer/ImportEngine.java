@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +37,7 @@ import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -43,7 +45,19 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, CF>, CF extends ImportContextFactory<S, W, V, C, ?, ?>, DF extends ImportDelegateFactory<S, W, V, C, ?>>
-extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
+	extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
+
+	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
+	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
+
+	private static final CmfTypeMapper DEFAULT_TYPE_MAPPER = new CmfTypeMapper() {
+
+		@Override
+		protected TypeSpec getMapping(TypeSpec sourceType) {
+			return null;
+		}
+
+	};
 
 	private static enum BatchStatus {
 		//
@@ -236,6 +250,24 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
 
+	protected final CmfTypeMapper getTypeMapper(S session, CfgTools cfg) throws Exception {
+		final String typeMapperName = cfg.getString(ImportEngine.TYPE_MAPPER_SELECTOR);
+
+		Map<String, Object> m = new HashMap<String, Object>();
+		for (String str : cfg.getSettings()) {
+			if (str.startsWith(ImportEngine.TYPE_MAPPER_PREFIX)) {
+				str = str.substring(ImportEngine.TYPE_MAPPER_PREFIX.length());
+				m.put(str, cfg.getObject(str));
+			}
+		}
+		cfg = new CfgTools(m);
+		CmfTypeMapper mapper = CmfTypeMapper.getTypeMapper(typeMapperName, cfg);
+		if (mapper == null) {
+			mapper = ImportEngine.DEFAULT_TYPE_MAPPER;
+		}
+		return mapper;
+	}
+
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?> streamStore, Map<String, ?> settings) throws ImportException, CmfStorageException {
 		return runImport(output, objectStore, streamStore, settings, null);
@@ -243,7 +275,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
-			throws ImportException, CmfStorageException {
+		throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -264,6 +296,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory;
 		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory;
+		final CmfTypeMapper typeMapper;
 		try {
 			final SessionWrapper<S> baseSession;
 			try {
@@ -282,6 +315,12 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
+				}
+
+				try {
+					typeMapper = getTypeMapper(baseSession.getWrapped(), configuration);
+				} catch (Exception e) {
+					throw new ImportException("Failed to configure the required type mapper", e);
 				}
 			} finally {
 				baseSession.close(false);
@@ -350,7 +389,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -376,7 +415,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 									}
 
 									final C ctx = contextFactory.newContext(next.getId(), next.getType(),
-										session.getWrapped(), output, objectStore, streamStore);
+										session.getWrapped(), output, objectStore, streamStore, typeMapper);
 									try {
 										initContext(ctx);
 										final CmfType storedType = next.getType();
@@ -425,10 +464,10 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 												// the other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -690,9 +729,9 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 					}
 
 					this.log
-					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
-						objectStore.loadObjects(translator, type, handler);
+						objectStore.loadObjects(typeMapper, translator, type, handler);
 					} catch (Exception e) {
 						throw new ImportException(String.format("Exception raised while loading objects of type [%s]",
 							type), e);
@@ -779,10 +818,10 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);

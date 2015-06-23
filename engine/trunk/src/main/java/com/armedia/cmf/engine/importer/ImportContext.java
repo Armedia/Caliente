@@ -13,6 +13,7 @@ import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -22,16 +23,19 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
 	private final CmfAttributeTranslator<V> translator;
+	private final CmfTypeMapper typeMapper;
 	private final CmfContentStore<?> streamStore;
 
 	public <C extends ImportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
-		CmfAttributeTranslator<V> translator, CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore) {
+		CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?> streamStore) {
 		super(factory, settings, rootId, rootType, session, output);
 		this.factory = factory;
 		this.translator = translator;
 		this.cmfObjectStore = objectStore;
 		this.streamStore = streamStore;
+		this.typeMapper = typeMapper;
 	}
 
 	public final CmfAttributeMapper getAttributeMapper() {
@@ -40,7 +44,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 
 	public final int loadObjects(CmfType type, Set<String> ids, CmfObjectHandler<V> handler)
 		throws CmfStorageException, CmfValueDecoderException {
-		return this.cmfObjectStore.loadObjects(this.translator, type, ids, handler);
+		return this.cmfObjectStore.loadObjects(this.typeMapper, this.translator, type, ids, handler);
 	}
 
 	public final CmfContentStore<?> getContentStore() {
