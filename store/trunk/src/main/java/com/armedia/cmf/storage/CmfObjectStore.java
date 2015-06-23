@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
+import com.armedia.cmf.storage.CmfTypeMapper.TypeSpec;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -278,16 +279,18 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract boolean lockForStorage(O operation, CmfType type, String objectId) throws CmfStorageException;
 
-	public final <V> Collection<CmfObject<V>> loadObjects(CmfAttributeTranslator<V> translator, CmfType type,
-		String... ids) throws CmfStorageException, CmfValueDecoderException {
-		return loadObjects(translator, type, (ids != null ? Arrays.asList(ids) : null));
+	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
+		CmfAttributeTranslator<V> translator, CmfType type, String... ids) throws CmfStorageException,
+		CmfValueDecoderException {
+		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null));
 	}
 
-	public final <V> Collection<CmfObject<V>> loadObjects(final CmfAttributeTranslator<V> translator,
-		final CmfType type, Collection<String> ids) throws CmfStorageException, CmfValueDecoderException {
+	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
+		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
+		throws CmfStorageException, CmfValueDecoderException {
 		O operation = beginInvocation();
 		try {
-			Collection<CmfObject<V>> ret = loadObjects(operation, translator, type, ids);
+			Collection<CmfObject<V>> ret = loadObjects(operation, typeMapper, translator, type, ids);
 			operation.commit();
 			return ret;
 		} finally {
@@ -295,7 +298,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation,
+	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
 			throws CmfStorageException, CmfValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
@@ -319,6 +322,10 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			final CmfObjectHandler<V> handler = new DefaultCmfObjectHandler<V>() {
 				@Override
 				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
+					TypeSpec altType = typeMapper.mapType(dataObject.getType(), dataObject.getSubtype());
+					if (altType != null) {
+						dataObject = new CmfObject<V>(dataObject, altType);
+					}
 					ret.add(translator.decodeObject(dataObject));
 					return true;
 				}
@@ -330,20 +337,47 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	public final <V> int loadObjects(CmfAttributeTranslator<V> translator, final CmfType type,
-		CmfObjectHandler<V> handler) throws CmfStorageException, CmfValueDecoderException {
-		return loadObjects(translator, type, null, handler);
+	public final <V> int loadObjects(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
+		final CmfType type, CmfObjectHandler<V> handler) throws CmfStorageException, CmfValueDecoderException {
+		return loadObjects(typeMapper, translator, type, null, handler);
 	}
 
-	public final <V> int loadObjects(CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids,
-		CmfObjectHandler<V> handler) throws CmfStorageException, CmfValueDecoderException {
+	public final <V> int loadObjects(final CmfTypeMapper typeMapper, final CmfAttributeTranslator<V> translator,
+		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler) throws CmfStorageException,
+		CmfValueDecoderException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
 		O operation = beginInvocation();
 		try {
-			int ret = loadObjects(operation, translator, type, ids, handler);
+			final CmfObjectHandler<V> handlerWrapper = new CmfObjectHandler<V>() {
+				@Override
+				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
+					// Ensure type mapping takes place, and ensure that translation also takes place
+					TypeSpec altType = typeMapper.mapType(dataObject.getType(), dataObject.getSubtype());
+					if (altType != null) {
+						dataObject = new CmfObject<V>(dataObject, altType);
+					}
+					return handler.handleObject(translator.decodeObject(dataObject));
+				}
+
+				@Override
+				public boolean newBatch(String batchId) throws CmfStorageException {
+					return handler.newBatch(batchId);
+				}
+
+				@Override
+				public boolean handleException(Exception e) {
+					return handler.handleException(e);
+				}
+
+				@Override
+				public boolean closeBatch(boolean ok) throws CmfStorageException {
+					return handler.closeBatch(ok);
+				}
+			};
+			int ret = loadObjects(operation, translator, type, ids, handlerWrapper);
 			operation.commit();
 			return ret;
 		} finally {

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.armedia.cmf.storage.CmfTypeMapper.TypeSpec;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -29,6 +30,13 @@ public class CmfObject<V> {
 	private final Map<String, CmfAttribute<V>> attributes = new HashMap<String, CmfAttribute<V>>();
 	private final Map<String, CmfProperty<V>> properties = new HashMap<String, CmfProperty<V>>();
 
+	/**
+	 * <p>
+	 * Make a new copy of the object in the given pattern.
+	 * </p>
+	 *
+	 * @param pattern
+	 */
 	public CmfObject(CmfObject<V> pattern) {
 		this.type = pattern.getType();
 		this.id = pattern.getId();
@@ -41,6 +49,30 @@ public class CmfObject<V> {
 		}
 		for (CmfProperty<V> property : pattern.getProperties()) {
 			this.properties.put(property.getName(), new CmfProperty<V>(property));
+		}
+	}
+
+	/**
+	 * <p>
+	 * Make a new copy of the object in the given pattern, but with the given type specification
+	 * data instead.
+	 * </p>
+	 *
+	 * @param pattern
+	 * @param altType
+	 */
+	CmfObject(CmfObject<V> pattern, TypeSpec altType) {
+		this.type = altType.getBaseType();
+		this.subtype = altType.getSubType();
+		this.id = pattern.getId();
+		this.searchKey = pattern.getSearchKey();
+		this.batchId = pattern.getBatchId();
+		this.label = pattern.getLabel();
+		for (CmfAttribute<V> attribute : pattern.getAttributes()) {
+			this.attributes.put(attribute.getName(), attribute);
+		}
+		for (CmfProperty<V> property : pattern.getProperties()) {
+			this.properties.put(property.getName(), property);
 		}
 	}
 
