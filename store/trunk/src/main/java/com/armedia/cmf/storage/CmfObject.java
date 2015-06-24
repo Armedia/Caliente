@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.armedia.cmf.storage.CmfTypeMapper.TypeSpec;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -61,9 +60,9 @@ public class CmfObject<V> {
 	 * @param pattern
 	 * @param altType
 	 */
-	CmfObject(CmfObject<V> pattern, TypeSpec altType) {
-		this.type = altType.getBaseType();
-		this.subtype = altType.getSubType();
+	CmfObject(CmfObject<V> pattern, CmfType altBaseType, String altSubType) {
+		this.type = altBaseType;
+		this.subtype = altSubType;
 		this.id = pattern.getId();
 		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();

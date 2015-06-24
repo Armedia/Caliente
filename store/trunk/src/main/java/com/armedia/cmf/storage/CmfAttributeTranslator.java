@@ -93,4 +93,6 @@ public abstract class CmfAttributeTranslator<V> {
 	}
 
 	public abstract V getValue(CmfDataType type, Object value) throws ParseException;
+
+	public abstract String getDefaultSubtype(CmfType baseType);
 }

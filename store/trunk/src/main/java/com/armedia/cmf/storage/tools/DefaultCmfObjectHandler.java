@@ -1,6 +1,10 @@
-package com.armedia.cmf.storage;
+package com.armedia.cmf.storage.tools;
 
 import java.util.BitSet;
+
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectHandler;
+import com.armedia.cmf.storage.CmfStorageException;
 
 public abstract class DefaultCmfObjectHandler<V> implements CmfObjectHandler<V> {
 
