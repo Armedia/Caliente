@@ -35,7 +35,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
-import com.armedia.cmf.storage.DefaultCmfObjectHandler;
+import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisImportDelegate<T> {
 

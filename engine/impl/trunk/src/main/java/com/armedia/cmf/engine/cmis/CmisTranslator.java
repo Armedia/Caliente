@@ -143,4 +143,19 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
 		return new CmfValue(type, value);
 	}
+
+	@Override
+	public String getDefaultSubtype(CmfType baseType) {
+		switch (baseType) {
+			case DOCUMENT:
+				return BaseTypeId.CMIS_DOCUMENT.value();
+
+			case FOLDER:
+				return BaseTypeId.CMIS_FOLDER.value();
+
+			default:
+				break;
+		}
+		return null;
+	}
 }
