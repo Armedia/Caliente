@@ -165,4 +165,9 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 			throw new RuntimeException("Exception raised while creating a new value", e);
 		}
 	}
+
+	@Override
+	public String getDefaultSubtype(CmfType baseType) {
+		return baseType.name();
+	}
 }
