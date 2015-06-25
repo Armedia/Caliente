@@ -47,9 +47,9 @@ public abstract class CmfTypeMapperFactory {
 
 	protected CmfTypeMapperFactory(String name) {
 		if (name == null) { throw new IllegalArgumentException("Name must not be null"); }
-		if (CmfTypeMapperFactory.VALIDATOR.matcher(name).matches()) { throw new IllegalArgumentException(String.format(
-			"The name [%s] is not valid - it must match the regular expression /%s/", name,
-			CmfTypeMapperFactory.VALIDATOR.pattern())); }
+		if (!CmfTypeMapperFactory.VALIDATOR.matcher(name).matches()) { throw new IllegalArgumentException(
+			String.format("The name [%s] is not valid - it must match the regular expression /%s/", name,
+				CmfTypeMapperFactory.VALIDATOR.pattern())); }
 		this.name = name;
 	}
 
