@@ -8,18 +8,6 @@
 		</layout>
 	</appender>
 
-	<appender name="default" class="org.apache.log4j.RollingFileAppender">
-		<param name="File" value="test.log4j.log"/>
-		<param name="ImmediateFlush" value="true"/>
-		<param name="Append" value="false"/>
-		<param name="Threshold" value="trace"/>
-		<param name="MaxBackupIndex" value="10"/>
-		<param name="MaxFileSize" value="1024MB"/>
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%-16t] %c - %m%n"/>
-		</layout>
-	</appender>
-
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
 
 	<logger name="com.armedia.cmf">
@@ -30,11 +18,10 @@
 	<logger name="console">
 		<level value="INFO"/>
 		<appender-ref ref="stdout"/>
-		<appender-ref ref="default"/>
 	</logger>
 
 	<root>
 		<level value="INFO"/>
-		<appender-ref ref="default"/>
+		<appender-ref ref="stdout"/>
 	</root>
 </log4j:configuration>

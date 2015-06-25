@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns="http://www.armedia.com/ns/cmf/engine/mappings" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.armedia.com/ns/cmf/engine/mappings ../../main/resources/type-mappings.xsd ">
+  <baseType name="DOCUMENT">
+    <mapping from="a" to="b"/>
+    <mapping from="b" to="c"/>
+    <mapping from="c" to="d"/>
+  </baseType>
+  <baseType name="FOLDER">
+    <mapping from="a" to="b"/>
+    <mapping from="b" to="c"/>
+    <mapping from="c" to="d"/>
+  </baseType>
+</mappings>

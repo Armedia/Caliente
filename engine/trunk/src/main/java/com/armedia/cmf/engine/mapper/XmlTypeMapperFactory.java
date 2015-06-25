@@ -22,7 +22,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
-public class FileBasedTypeMapperFactory extends CmfTypeMapperFactory {
+public class XmlTypeMapperFactory extends CmfTypeMapperFactory {
 
 	private static final String CLASSPATH = "classpath";
 
@@ -81,14 +81,14 @@ public class FileBasedTypeMapperFactory extends CmfTypeMapperFactory {
 							msg = String
 								.format(
 									"Duplicate mapping for subtype [%s] in base type [%s], will only use the first one declared",
-									existing, e.getKey(), bt.getBaseType());
+									bt.getBaseType(), e.getKey());
 						} else {
 							msg = String
 								.format(
 									"Duplicate mapping for subtype [%s] in base type [%s] from base type [%s], will only use the first one declared",
-									existing, e.getKey(), bt.getBaseType());
+									e.getKey(), existing, bt.getBaseType());
 						}
-						FileBasedTypeMapperFactory.this.log.warn(msg);
+						XmlTypeMapperFactory.this.log.warn(msg);
 						continue;
 					}
 					s.put(e.getKey(), e.getValue());
@@ -110,7 +110,7 @@ public class FileBasedTypeMapperFactory extends CmfTypeMapperFactory {
 		}
 	}
 
-	public FileBasedTypeMapperFactory() {
+	public XmlTypeMapperFactory() {
 		super("xml");
 	}
 
@@ -129,7 +129,7 @@ public class FileBasedTypeMapperFactory extends CmfTypeMapperFactory {
 			}
 		}
 
-		if ((in == null) || Tools.equals(scheme.toLowerCase(), FileBasedTypeMapperFactory.CLASSPATH)) {
+		if ((in == null) || Tools.equals(scheme.toLowerCase(), XmlTypeMapperFactory.CLASSPATH)) {
 			// Try it as classpath-only
 			in = cl.getResourceAsStream(uri.getSchemeSpecificPart());
 		}
@@ -149,9 +149,10 @@ public class FileBasedTypeMapperFactory extends CmfTypeMapperFactory {
 
 		// Step 2: unmarshal the XML
 		InputStream in = getResourceStream(uri);
+		if (in == null) { throw new Exception(String.format("Failed to locate the resource from [%s]", uri)); }
 		MappingsT mappings = null;
 		try {
-			mappings = XmlTools.unmarshal(MappingsT.class, FileBasedTypeMapperFactory.SCHEMA_NAME, in);
+			mappings = XmlTools.unmarshal(MappingsT.class, XmlTypeMapperFactory.SCHEMA_NAME, in);
 		} finally {
 			IOUtils.closeQuietly(in);
 		}
