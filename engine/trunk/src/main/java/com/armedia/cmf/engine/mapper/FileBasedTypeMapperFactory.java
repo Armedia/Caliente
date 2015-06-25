@@ -111,7 +111,7 @@ public class FileBasedTypeMapperFactory extends CmfTypeMapperFactory {
 	}
 
 	public FileBasedTypeMapperFactory() {
-		super("properties");
+		super("xml");
 	}
 
 	protected InputStream getResourceStream(URI uri) throws Exception {
