@@ -10,13 +10,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfTypeMapper;
-import com.armedia.cmf.storage.CmfTypeMapper.TypeSpec;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.Tools;
 
-public class XmlTypeMapperFactoryTest {
+public class PropertiesTypeMapperFactoryTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -37,7 +34,7 @@ public class XmlTypeMapperFactoryTest {
 	@Test
 	public void testGetMapperInstance() throws Exception {
 		Map<String, String> settings = new HashMap<String, String>();
-		settings.put(XmlTypeMapperFactory.Setting.MAPPING_FILE.getLabel(), "type-mappings.xml");
+		settings.put(PropertiesTypeMapperFactory.Setting.MAPPING_FILE.getLabel(), "type-mappings.xml");
 		CfgTools cfg = new CfgTools(settings);
 		CmfTypeMapper mapper = CmfTypeMapper.getTypeMapper("xml", cfg);
 
@@ -58,10 +55,13 @@ public class XmlTypeMapperFactoryTest {
 			final String src = s[0];
 			final String tgt = s[1];
 
-			TypeSpec mapping = mapper.mapType(CmfType.DOCUMENT, src);
-			Assert.assertNotNull(mapping);
-			Assert.assertEquals(CmfType.DOCUMENT, mapping.getBaseType());
-			Assert.assertEquals(Tools.coalesce(tgt, src), mapping.getSubType());
+			String mapping = mapper.mapType(src);
+			if (tgt == null) {
+				Assert.assertNull(mapping);
+			} else {
+				Assert.assertNotNull(mapping);
+				Assert.assertEquals(tgt, mapping);
+			}
 		}
 	}
 }
