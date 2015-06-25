@@ -60,8 +60,8 @@ public class CmfObject<V> {
 	 * @param pattern
 	 * @param altType
 	 */
-	CmfObject(CmfObject<V> pattern, CmfType altBaseType, String altSubType) {
-		this.type = altBaseType;
+	CmfObject(CmfObject<V> pattern, String altSubType) {
+		this.type = pattern.getType();
 		this.subtype = altSubType;
 		this.id = pattern.getId();
 		this.searchKey = pattern.getSearchKey();

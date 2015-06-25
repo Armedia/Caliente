@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
-import com.armedia.cmf.storage.CmfTypeMapper.TypeSpec;
 import com.armedia.cmf.storage.tools.CollectionObjectHandler;
 
 /**
@@ -302,13 +301,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator) {
 		// Ensure type mapping takes place, and ensure that translation also takes place
-		TypeSpec altType = typeMapper.mapType(dataObject.getType(), dataObject.getSubtype());
+		// TODO: This should only happen if "necessary" (i.e. target CMS is different from the
+		// source)
+		String altType = typeMapper.mapType(dataObject.getSubtype());
 		if (altType != null) {
-			String subType = altType.getSubType();
-			if (subType == null) {
-				subType = translator.getDefaultSubtype(altType.getBaseType());
-			}
-			dataObject = new CmfObject<V>(dataObject, altType.getBaseType(), subType);
+			dataObject = new CmfObject<V>(dataObject, altType);
 		}
 		return translator.decodeObject(dataObject);
 	}
