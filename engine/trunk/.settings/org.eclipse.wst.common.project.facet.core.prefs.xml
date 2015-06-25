@@ -11,7 +11,7 @@
     </node>
     <node name="schemas">
       <node name="schema-1">
-        <attribute name="location" value="platform:/resource/cmf-engine/src/main/resources/mappings.xsd"/>
+        <attribute name="location" value="platform:/resource/cmf-engine/src/main/resources/type-mappings.xsd"/>
       </node>
     </node>
   </facet>

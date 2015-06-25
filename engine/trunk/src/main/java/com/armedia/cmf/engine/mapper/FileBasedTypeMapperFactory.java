@@ -114,7 +114,7 @@ public class FileBasedTypeMapperFactory extends CmfTypeMapperFactory {
 		super("properties");
 	}
 
-	protected InputStream locateResource(URI uri) throws Exception {
+	protected InputStream getResourceStream(URI uri) throws Exception {
 		String scheme = uri.getScheme();
 		InputStream in = null;
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -148,7 +148,7 @@ public class FileBasedTypeMapperFactory extends CmfTypeMapperFactory {
 		URI uri = new URI(cfg.getString(Setting.MAPPING_FILE));
 
 		// Step 2: unmarshal the XML
-		InputStream in = locateResource(uri);
+		InputStream in = getResourceStream(uri);
 		MappingsT mappings = null;
 		try {
 			mappings = XmlTools.unmarshal(MappingsT.class, FileBasedTypeMapperFactory.SCHEMA_NAME, in);
