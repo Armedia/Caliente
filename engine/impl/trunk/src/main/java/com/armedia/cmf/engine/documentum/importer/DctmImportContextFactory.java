@@ -24,11 +24,11 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportContextFactory extends
-ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine, IDfFolder> {
+	ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine, IDfFolder> {
 	private final DctmSpecialValues specialValues;
 
-	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg) {
-		super(engine, cfg);
+	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg, IDfSession session) throws Exception {
+		super(engine, cfg, session);
 		this.specialValues = new DctmSpecialValues(cfg);
 	}
 
@@ -58,5 +58,15 @@ ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext
 		}
 		f.save();
 		return f;
+	}
+
+	@Override
+	protected String calculateProductName(IDfSession session) {
+		return "Documentum";
+	}
+
+	@Override
+	protected String calculateProductVersion(IDfSession session) throws Exception {
+		return session.getServerVersion();
 	}
 }

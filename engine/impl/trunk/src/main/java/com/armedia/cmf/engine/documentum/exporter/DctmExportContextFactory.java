@@ -26,8 +26,8 @@ public class DctmExportContextFactory extends
 
 	private final DctmSpecialValues specialValues;
 
-	DctmExportContextFactory(DctmExportEngine engine, CfgTools settings) {
-		super(engine, settings);
+	DctmExportContextFactory(DctmExportEngine engine, CfgTools settings, IDfSession session) throws Exception {
+		super(engine, settings, session);
 		this.specialValues = new DctmSpecialValues(settings);
 	}
 
@@ -39,5 +39,15 @@ public class DctmExportContextFactory extends
 
 	public final DctmSpecialValues getSpecialValues() {
 		return this.specialValues;
+	}
+
+	@Override
+	protected final String calculateProductName(IDfSession session) {
+		return "Documentum";
+	}
+
+	@Override
+	protected final String calculateProductVersion(IDfSession session) throws Exception {
+		return session.getServerVersion();
 	}
 }

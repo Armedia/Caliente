@@ -28,8 +28,8 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine
-extends
-ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory> {
+	extends
+	ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -68,8 +68,8 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmIm
 	}
 
 	@Override
-	protected DctmImportContextFactory newContextFactory(IDfSession session, CfgTools config) {
-		return new DctmImportContextFactory(this, config);
+	protected DctmImportContextFactory newContextFactory(IDfSession session, CfgTools config) throws Exception {
+		return new DctmImportContextFactory(this, config, session);
 	}
 
 	@Override
@@ -108,15 +108,5 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmIm
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(DctmCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected String getProductName(IDfSession session) throws Exception {
-		return "Documentum";
-	}
-
-	@Override
-	protected String getProductVersion(IDfSession session) throws Exception {
-		return session.getServerVersion();
 	}
 }

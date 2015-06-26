@@ -30,8 +30,8 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmExportEngine
-extends
-ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportContextFactory, DctmExportDelegateFactory> {
+	extends
+	ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportContextFactory, DctmExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
@@ -61,8 +61,8 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmEx
 	}
 
 	@Override
-	protected DctmExportContextFactory newContextFactory(IDfSession session, CfgTools config) {
-		return new DctmExportContextFactory(this, config);
+	protected DctmExportContextFactory newContextFactory(IDfSession session, CfgTools config) throws Exception {
+		return new DctmExportContextFactory(this, config, session);
 	}
 
 	@Override
@@ -82,15 +82,5 @@ ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmEx
 
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(DctmCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected String getProductName(IDfSession session) throws Exception {
-		return "Documentum";
-	}
-
-	@Override
-	protected String getProductVersion(IDfSession session) throws Exception {
-		return session.getServerVersion();
 	}
 }
