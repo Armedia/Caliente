@@ -61,8 +61,10 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	private CfgTools settings = CfgTools.EMPTY;
 	private final E engine;
 	private final Set<CmfType> excludes;
+	private final String productName;
+	private final String productVersion;
 
-	protected ContextFactory(E engine, CfgTools settings) {
+	protected ContextFactory(E engine, CfgTools settings, S session) throws Exception {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to which this factory is tied"); }
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
@@ -78,6 +80,8 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 				.getSimpleName(), excludes));
 		}
 		this.excludes = Tools.freezeSet(excludes);
+		this.productName = calculateProductName(session);
+		this.productVersion = calculateProductVersion(session);
 	}
 
 	public final boolean isSupported(CmfType type) {
@@ -111,6 +115,18 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 			this.open = false;
 			this.lock.writeLock().unlock();
 		}
+	}
+
+	protected abstract String calculateProductName(S session) throws Exception;
+
+	protected abstract String calculateProductVersion(S session) throws Exception;
+
+	public final String getProductName() {
+		return this.productName;
+	}
+
+	public final String getProductVersion() {
+		return this.productVersion;
 	}
 
 	public final C newContext(String rootId, CmfType rootType, S session, Logger output,

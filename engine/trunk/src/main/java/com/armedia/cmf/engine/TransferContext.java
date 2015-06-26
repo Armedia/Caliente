@@ -124,6 +124,14 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 		return this.factory.isSupported(type);
 	}
 
+	public final String getProductName() {
+		return this.factory.getProductName();
+	}
+
+	public final String getProductVersion() {
+		return this.factory.getProductVersion();
+	}
+
 	public void close() {
 
 	}

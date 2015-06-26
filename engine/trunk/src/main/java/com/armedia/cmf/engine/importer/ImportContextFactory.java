@@ -10,14 +10,14 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, ?>, E extends ImportEngine<S, W, V, C, ?, ?>, FOLDER>
-	extends ContextFactory<S, V, C, E> {
+extends ContextFactory<S, V, C, E> {
 
 	private final List<String> rootPath;
 	private final String rootPathStr;
 	private final int pathTrunc;
 
-	protected ImportContextFactory(E engine, CfgTools settings) {
-		super(engine, settings);
+	protected ImportContextFactory(E engine, CfgTools settings, S session) throws Exception {
+		super(engine, settings, session);
 		String rootPath = settings.getString(ImportSetting.TARGET_LOCATION);
 		this.rootPath = Tools.freezeList(FileNameTools.tokenize(rootPath, '/'));
 		this.pathTrunc = Math.max(0, settings.getInteger(ImportSetting.TRIM_PREFIX));
@@ -55,9 +55,9 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 		final int delta = (this.rootPath.size() > 0 ? 1 : 0);
 		if (l.size() < (this.pathTrunc - delta)) { throw new ImportException(
 			String
-				.format(
-					"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
-					this.pathTrunc, sourcePath, l.size())); }
+			.format(
+				"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
+				this.pathTrunc, sourcePath, l.size())); }
 		for (int i = 0; i < this.pathTrunc; i++) {
 			l.remove(0);
 		}
