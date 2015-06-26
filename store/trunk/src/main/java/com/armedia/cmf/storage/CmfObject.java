@@ -25,6 +25,8 @@ public class CmfObject<V> {
 	private final String batchId;
 	private final String label;
 	private final String subtype;
+	private final String productName;
+	private final String productVersion;
 	private String relativeStreamLocation = null;
 	private final Map<String, CmfAttribute<V>> attributes = new HashMap<String, CmfAttribute<V>>();
 	private final Map<String, CmfProperty<V>> properties = new HashMap<String, CmfProperty<V>>();
@@ -43,6 +45,8 @@ public class CmfObject<V> {
 		this.batchId = pattern.getBatchId();
 		this.label = pattern.getLabel();
 		this.subtype = pattern.getSubtype();
+		this.productName = pattern.getProductName();
+		this.productVersion = pattern.getProductVersion();
 		for (CmfAttribute<V> attribute : pattern.getAttributes()) {
 			this.attributes.put(attribute.getName(), new CmfAttribute<V>(attribute));
 		}
@@ -67,6 +71,8 @@ public class CmfObject<V> {
 		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
 		this.label = pattern.getLabel();
+		this.productName = pattern.getProductName();
+		this.productVersion = pattern.getProductVersion();
 		for (CmfAttribute<V> attribute : pattern.getAttributes()) {
 			this.attributes.put(attribute.getName(), attribute);
 		}
@@ -75,21 +81,27 @@ public class CmfObject<V> {
 		}
 	}
 
-	public CmfObject(CmfType type, String id, String batchId, String label, String subtype) {
-		this(type, id, id, batchId, label, subtype);
+	public CmfObject(CmfType type, String id, String batchId, String label, String subtype, String productName,
+		String productVersion) {
+		this(type, id, id, batchId, label, subtype, productName, productVersion);
 	}
 
-	public CmfObject(CmfType type, String id, String searchKey, String batchId, String label, String subtype) {
+	public CmfObject(CmfType type, String id, String searchKey, String batchId, String label, String subtype,
+		String productName, String productVersion) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }
 		if (subtype == null) { throw new IllegalArgumentException("Must provide a valid object subtype"); }
+		if (productName == null) { throw new IllegalArgumentException("Must provide a valid product name"); }
+		if (productVersion == null) { throw new IllegalArgumentException("Must provide a valid product version"); }
 		this.type = type;
 		this.id = id;
 		this.searchKey = Tools.coalesce(searchKey, id);
 		this.batchId = Tools.coalesce(batchId, id);
 		this.label = label;
 		this.subtype = subtype;
+		this.productName = productName;
+		this.productVersion = productVersion;
 	}
 
 	final String getRelativeStreamLocation() {
@@ -122,6 +134,14 @@ public class CmfObject<V> {
 
 	public final String getLabel() {
 		return this.label;
+	}
+
+	public final String getProductName() {
+		return this.productName;
+	}
+
+	public final String getProductVersion() {
+		return this.productVersion;
 	}
 
 	public final int getAttributeCount() {
