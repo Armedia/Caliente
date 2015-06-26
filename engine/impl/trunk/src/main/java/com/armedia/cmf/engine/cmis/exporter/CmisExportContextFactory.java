@@ -22,8 +22,8 @@ public class CmisExportContextFactory extends
 	private final RepositoryInfo repositoryInfo;
 	private final PermissionMapper permissionMapper;
 
-	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings) {
-		super(engine, settings);
+	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings) throws Exception {
+		super(engine, settings, session);
 		this.repositoryInfo = session.getRepositoryInfo();
 		this.permissionMapper = new PermissionMapper(session);
 	}
@@ -40,5 +40,15 @@ public class CmisExportContextFactory extends
 	protected CmisExportContext constructContext(String rootId, CmfType rootType, Session session, Logger output,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore, CmfTypeMapper typeMapper) {
 		return new CmisExportContext(this, rootId, rootType, session, output);
+	}
+
+	@Override
+	public final String calculateProductName(Session session) {
+		return session.getRepositoryInfo().getProductName();
+	}
+
+	@Override
+	public final String calculateProductVersion(Session session) {
+		return session.getRepositoryInfo().getProductVersion();
 	}
 }

@@ -17,7 +17,7 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportEngine
-extends
+	extends
 	ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
@@ -152,15 +152,5 @@ extends
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(CmisCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected String getProductName(Session session) throws Exception {
-		return session.getRepositoryInfo().getProductName();
-	}
-
-	@Override
-	protected String getProductVersion(Session session) throws Exception {
-		return session.getRepositoryInfo().getProductVersion();
 	}
 }

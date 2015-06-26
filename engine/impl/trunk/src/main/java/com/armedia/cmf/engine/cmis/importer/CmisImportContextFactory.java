@@ -31,8 +31,8 @@ public class CmisImportContextFactory extends
 	private final PermissionMapper permissionMapper;
 	private final RepositoryInfo repositoryInfo;
 
-	CmisImportContextFactory(CmisImportEngine engine, Session session, CfgTools settings) {
-		super(engine, settings);
+	CmisImportContextFactory(CmisImportEngine engine, Session session, CfgTools settings) throws Exception {
+		super(engine, settings, session);
 		this.repositoryInfo = session.getRepositoryInfo();
 		this.permissionMapper = new PermissionMapper(session);
 	}
@@ -81,5 +81,15 @@ public class CmisImportContextFactory extends
 		properties.put(PropertyIds.OBJECT_TYPE_ID, BaseTypeId.CMIS_FOLDER.value());
 		properties.put(PropertyIds.NAME, name);
 		return parent.createFolder(properties);
+	}
+
+	@Override
+	public final String calculateProductName(Session session) {
+		return session.getRepositoryInfo().getProductName();
+	}
+
+	@Override
+	public final String calculateProductVersion(Session session) {
+		return session.getRepositoryInfo().getProductVersion();
 	}
 }

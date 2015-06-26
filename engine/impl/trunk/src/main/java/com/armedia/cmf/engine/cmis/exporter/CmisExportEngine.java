@@ -187,14 +187,4 @@ public class CmisExportEngine
 	protected CmisTranslator getTranslator() {
 		return new CmisTranslator();
 	}
-
-	@Override
-	protected String getProductName(Session session) throws Exception {
-		return session.getRepositoryInfo().getProductName();
-	}
-
-	@Override
-	protected String getProductVersion(Session session) throws Exception {
-		return session.getRepositoryInfo().getProductVersion();
-	}
 }
