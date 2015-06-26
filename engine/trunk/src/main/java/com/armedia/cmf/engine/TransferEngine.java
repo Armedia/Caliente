@@ -211,6 +211,10 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 			new LinkedBlockingQueue<Runnable>());
 	}
 
+	protected abstract String getProductName(S session) throws Exception;
+
+	protected abstract String getProductVersion(S session) throws Exception;
+
 	protected abstract V getValue(CmfDataType type, Object value);
 
 	protected abstract CmfAttributeTranslator<V> getTranslator();
