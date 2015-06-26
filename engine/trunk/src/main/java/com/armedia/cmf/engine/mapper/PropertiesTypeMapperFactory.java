@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
 import java.util.Properties;
 
@@ -12,6 +13,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfTypeMapperFactory;
+import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.Tools;
@@ -113,11 +115,23 @@ public class PropertiesTypeMapperFactory extends CmfTypeMapperFactory {
 		// Step 2: unmarshal the XML
 		InputStream in = getResourceStream(uri);
 		if (in == null) { throw new Exception(String.format("Failed to locate the resource from [%s]", uri)); }
-		Properties properties = new Properties();
+
+		// Read the raw file into memory
+		BinaryMemoryBuffer buf = new BinaryMemoryBuffer();
 		try {
-			properties.loadFromXML(in);
+			IOUtils.copy(in, buf);
 		} finally {
 			IOUtils.closeQuietly(in);
+			IOUtils.closeQuietly(buf);
+		}
+
+		Properties properties = new Properties();
+		try {
+			properties.loadFromXML(buf.getInputStream());
+		} catch (InvalidPropertiesFormatException e) {
+			// Not in XML format, try "classic" format...
+			properties.clear();
+			properties.load(buf.getInputStream());
 		}
 
 		// Step 3: build the mapper
