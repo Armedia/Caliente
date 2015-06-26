@@ -32,8 +32,8 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine
-extends
-ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
+	extends
+	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -186,5 +186,15 @@ ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExpor
 	@Override
 	protected CmisTranslator getTranslator() {
 		return new CmisTranslator();
+	}
+
+	@Override
+	protected String getProductName(Session session) throws Exception {
+		return session.getRepositoryInfo().getProductName();
+	}
+
+	@Override
+	protected String getProductVersion(Session session) throws Exception {
+		return session.getRepositoryInfo().getProductVersion();
 	}
 }
