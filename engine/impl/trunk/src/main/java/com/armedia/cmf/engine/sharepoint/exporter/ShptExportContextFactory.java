@@ -23,13 +23,23 @@ import com.armedia.commons.utilities.CfgTools;
 public class ShptExportContextFactory extends
 	ExportContextFactory<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportEngine> {
 
-	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings) {
-		super(engine, settings);
+	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings, ShptSession session) throws Exception {
+		super(engine, settings, session);
 	}
 
 	@Override
 	protected ShptExportContext constructContext(String rootId, CmfType rootType, ShptSession session, Logger output,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
 		return new ShptExportContext(this, getSettings(), rootId, rootType, session, output);
+	}
+
+	@Override
+	protected String calculateProductName(ShptSession session) throws Exception {
+		return "Sharepoint";
+	}
+
+	@Override
+	protected String calculateProductVersion(ShptSession session) throws Exception {
+		return session.getContextInfo().getLibraryVersion();
 	}
 }

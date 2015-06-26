@@ -68,7 +68,7 @@ public class ShptExportEngine
 
 	@Override
 	protected ShptExportContextFactory newContextFactory(ShptSession session, CfgTools cfg) throws Exception {
-		return new ShptExportContextFactory(this, cfg);
+		return new ShptExportContextFactory(this, cfg, session);
 	}
 
 	@Override
@@ -83,15 +83,5 @@ public class ShptExportEngine
 
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return TransferEngine.getTransferEngine(ExportEngine.class, ShptExportEngine.TARGETS.iterator().next());
-	}
-
-	@Override
-	protected String getProductName(ShptSession session) throws Exception {
-		return "Sharepoint";
-	}
-
-	@Override
-	protected String getProductVersion(ShptSession session) throws Exception {
-		return session.getContextInfo().getLibraryVersion();
 	}
 }
