@@ -32,6 +32,8 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 	private final Map<String, Object> objects = new HashMap<String, Object>();
 	private final CfgTools settings;
 	private final Logger output;
+	private final String productName;
+	private final String productVersion;
 
 	protected <C extends TransferContext<S, V, F>, E extends TransferEngine<S, V, C, ?, ?, ?>> TransferContext(
 		F factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output) {
@@ -42,6 +44,8 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 		this.rootType = rootType;
 		this.session = session;
 		this.output = output;
+		this.productName = factory.getProductName();
+		this.productVersion = factory.getProductVersion();
 	}
 
 	protected F getFactory() {
@@ -125,11 +129,11 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 	}
 
 	public final String getProductName() {
-		return this.factory.getProductName();
+		return this.productName;
 	}
 
 	public final String getProductVersion() {
-		return this.factory.getProductVersion();
+		return this.productVersion;
 	}
 
 	public void close() {
