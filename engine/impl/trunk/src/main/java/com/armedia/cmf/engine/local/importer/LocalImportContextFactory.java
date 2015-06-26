@@ -15,10 +15,10 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportContextFactory extends
-ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine, File> {
+	ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine, File> {
 
-	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings) {
-		super(engine, settings);
+	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings, LocalRoot root) throws Exception {
+		super(engine, settings, root);
 	}
 
 	@Override
@@ -42,5 +42,15 @@ ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
 		return new LocalImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper, getEngine()
 			.getTranslator(), objectStore, contentStore);
+	}
+
+	@Override
+	protected String calculateProductName(LocalRoot session) throws Exception {
+		return "LocalFilesystem";
+	}
+
+	@Override
+	protected String calculateProductVersion(LocalRoot session) throws Exception {
+		return "1.0";
 	}
 }

@@ -15,13 +15,24 @@ import com.armedia.commons.utilities.CfgTools;
 public class LocalExportContextFactory extends
 	ExportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportEngine> {
 
-	protected LocalExportContextFactory(LocalExportEngine engine, CfgTools settings) {
-		super(engine, settings);
+	protected LocalExportContextFactory(LocalExportEngine engine, CfgTools settings, LocalRoot session)
+		throws Exception {
+		super(engine, settings, session);
 	}
 
 	@Override
 	protected LocalExportContext constructContext(String rootId, CmfType rootType, LocalRoot session, Logger output,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
 		return new LocalExportContext(this, getSettings(), rootId, rootType, session, output);
+	}
+
+	@Override
+	protected String calculateProductName(LocalRoot session) throws Exception {
+		return "LocalFilesystem";
+	}
+
+	@Override
+	protected String calculateProductVersion(LocalRoot session) throws Exception {
+		return "1.0";
 	}
 }

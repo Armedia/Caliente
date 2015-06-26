@@ -16,8 +16,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalExportEngine
-extends
-ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory> {
+	extends
+	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory> {
 
 	@Override
 	protected Iterator<ExportTarget> findExportResults(LocalRoot session, CfgTools configuration,
@@ -42,7 +42,7 @@ ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, Local
 
 	@Override
 	protected LocalExportContextFactory newContextFactory(LocalRoot root, CfgTools cfg) throws Exception {
-		return new LocalExportContextFactory(this, cfg);
+		return new LocalExportContextFactory(this, cfg, root);
 	}
 
 	@Override
@@ -57,15 +57,5 @@ ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, Local
 
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return ExportEngine.getExportEngine(LocalCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected String getProductName(LocalRoot session) throws Exception {
-		return "LocalFilesystem";
-	}
-
-	@Override
-	protected String getProductVersion(LocalRoot session) throws Exception {
-		return "1.0";
 	}
 }
