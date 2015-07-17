@@ -18,7 +18,6 @@ import javax.activation.MimeType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
@@ -251,9 +250,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 						IDfFormat format = IDfFormat.class.cast(session.getObject(formatId));
 						mimeType = MimeTools.resolveMimeType(format.getMIMEType());
 					}
-					info.setProperty(ContentProperty.MIME_TYPE, mimeType.toString());
-					info.setProperty(ContentProperty.SIZE, String.valueOf(content.getContentSize()));
-					info.setProperty(ContentProperty.FILE_NAME, fileName);
+					info.setMimeType(mimeType);
+					info.setFileName(fileName);
+					info.setLength(content.getContentSize());
+
 					info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
 					info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
 					info.setProperty(DctmAttributes.SET_TIME,
