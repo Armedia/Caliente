@@ -16,7 +16,6 @@ import javax.activation.MimeType;
 
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -398,9 +397,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			Collections.singleton(new CmfValue(type.getBaseType()))));
 		List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>();
 		CmfContentInfo info = new CmfContentInfo(h.getQualifier());
-		info.setProperty(ContentProperty.MIME_TYPE, type.getBaseType());
-		info.setProperty(ContentProperty.SIZE, String.valueOf(buf.getCurrentSize()));
-		info.setProperty(ContentProperty.FILE_NAME, this.object.getName());
+		info.setMimeType(MimeTools.resolveMimeType(type.getBaseType()));
+		info.setLength(buf.getCurrentSize());
+		info.setFileName(this.object.getName());
 		ret.add(info);
 		return ret;
 	}
