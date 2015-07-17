@@ -249,6 +249,37 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> Long storeObject(O operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
 		throws CmfStorageException, CmfValueEncoderException;
 
+	public final <V> void setContentInfo(CmfObject<V> object, Collection<CmfContentInfo> content)
+		throws CmfStorageException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
+		if ((content == null) || content.isEmpty()) { return; }
+		O operation = beginInvocation();
+		try {
+			setContentInfo(operation, object, content);
+			operation.commit();
+		} finally {
+			endInvocation(operation);
+		}
+	}
+
+	protected abstract <V> void setContentInfo(O operation, CmfObject<V> object, Collection<CmfContentInfo> content)
+		throws CmfStorageException;
+
+	public final <V> List<CmfContentInfo> getContentInfo(CmfObject<V> object) throws CmfStorageException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
+		O operation = beginInvocation();
+		try {
+			List<CmfContentInfo> ret = getContentInfo(operation, object);
+			operation.commit();
+			return ret;
+		} finally {
+			endInvocation(operation);
+		}
+	}
+
+	protected abstract <V> List<CmfContentInfo> getContentInfo(O operation, CmfObject<V> object)
+		throws CmfStorageException;
+
 	public final boolean isStored(CmfType type, String objectId) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
@@ -287,7 +318,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		O operation = beginInvocation();
 		try {
 			Collection<CmfObject<V>> ret = loadObjects(operation, typeMapper, translator, type, ids);
@@ -312,7 +343,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
