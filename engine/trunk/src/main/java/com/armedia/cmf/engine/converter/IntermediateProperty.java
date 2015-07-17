@@ -26,6 +26,8 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 
 	// Non-CMIS properties
 	ACL_ID(CmfDataType.ID),
+	ACL_OWNER(CmfDataType.STRING),
+	ACL_OBJECT_ID(CmfDataType.STRING),
 	ACL_ACCESSOR_NAME(CmfDataType.STRING),
 	ACL_ACCESSOR_ACTIONS(CmfDataType.STRING),
 	USERS_WITH_DEFAULT_GROUP(CmfDataType.ID),
