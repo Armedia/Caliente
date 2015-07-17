@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
@@ -23,6 +22,7 @@ import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
@@ -403,7 +403,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 	}
 
-	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, ContentInfo info,
+	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, CmfContentInfo info,
 		CmfContentStore<?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount) throws DfException,
 		ImportException {
@@ -556,7 +556,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 	protected boolean loadContent(final IDfDocument document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
-		List<ContentInfo> infoList;
+		List<CmfContentInfo> infoList;
 		try {
 			infoList = context.getContentInfo(this.cmfObject);
 		} catch (Exception e) {
@@ -569,7 +569,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final String contentType = determineFormat(context.getSession(), (contentTypeAtt != null ? contentTypeAtt
 			.getValue().toString() : null));
 		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
-		for (ContentInfo info : infoList) {
+		for (CmfContentInfo info : infoList) {
 			CmfContentStore<?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info.getQualifier());
 
 			CfgTools cfg = info.getCfgTools();

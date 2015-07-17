@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmDataType;
@@ -15,6 +14,7 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
@@ -127,12 +127,12 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 	}
 
 	@Override
-	protected final List<ContentInfo> storeContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+	protected final List<CmfContentInfo> storeContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		return doStoreContent(session, translator, marshaled, referrent, castObject(this.object), streamStore);
 	}
 
-	protected List<ContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+	protected List<CmfContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?> streamStore)
 		throws Exception {
 		return null;

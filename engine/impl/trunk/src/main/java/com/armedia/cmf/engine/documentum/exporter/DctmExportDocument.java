@@ -18,7 +18,6 @@ import javax.activation.MimeType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
@@ -29,11 +28,12 @@ import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.tools.MimeTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -217,9 +217,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected List<ContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+	protected List<CmfContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, CmfContentStore<?> streamStore)
-			throws Exception {
+		throws Exception {
 		if (isDfReference(document)) { return super.doStoreContent(session, translator, marshaled, referrent, document,
 			streamStore); }
 
@@ -234,7 +234,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
 		final String fileName = document.getObjectName();
-		List<ContentInfo> contentInfo = new ArrayList<ContentInfo>();
+		List<CmfContentInfo> cmfContentInfo = new ArrayList<CmfContentInfo>();
 		for (int i = 0; i < pageCount; i++) {
 			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
 				IDfQuery.DF_EXECREAD_QUERY);
@@ -244,7 +244,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 						.getId(DctmAttributes.R_OBJECT_ID)));
 					CmfContentStore<?>.Handle handle = storeContentStream(session, translator, marshaled, document,
 						content, streamStore);
-					ContentInfo info = new ContentInfo(handle.getQualifier());
+					CmfContentInfo info = new CmfContentInfo(handle.getQualifier());
 					IDfId formatId = content.getFormatId();
 					MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
 					if (!formatId.isNull()) {
@@ -262,13 +262,13 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					info.setProperty(DctmAttributes.PAGE_MODIFIER, content.getString(DctmAttributes.PAGE_MODIFIER));
 					info.setProperty(DctmAttributes.PAGE, content.getString(DctmAttributes.PAGE));
 					info.setProperty(DctmAttributes.RENDITION, content.getString(DctmAttributes.RENDITION));
-					contentInfo.add(info);
+					cmfContentInfo.add(info);
 				}
 			} finally {
 				DfUtils.closeQuietly(results);
 			}
 		}
-		return contentInfo;
+		return cmfContentInfo;
 	}
 
 	protected CmfContentStore<?>.Handle storeContentStream(IDfSession session,
