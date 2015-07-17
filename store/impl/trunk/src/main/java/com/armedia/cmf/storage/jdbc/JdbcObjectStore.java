@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,6 +40,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
@@ -51,6 +53,7 @@ import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.cmf.storage.CmfValueEncoderException;
 import com.armedia.cmf.storage.CmfValueSerializer;
+import com.armedia.cmf.storage.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
 
@@ -75,6 +78,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private static final String INSERT_ATTRIBUTE_VALUE_SQL = "insert into cmf_attribute_value (object_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_SQL = "insert into cmf_property (object_id, name, data_type, repeating) values (?, ?, ?, ?)";
 	private static final String INSERT_PROPERTY_VALUE_SQL = "insert into cmf_property_value (object_id, name, value_number, null_value, data) values (?, ?, ?, ?, ?)";
+
+	private static final String INSERT_CONTENT_SQL = "insert into cmf_content (object_id, qualifier, content_number, stream_length, mime_type, file_name) values (?, ?, ?, ?, ?, ?)";
+	private static final String DELETE_CONTENT_SQL = "delete from cmf_content where object_id = ?";
+	private static final String INSERT_CONTENT_PROPERTY_SQL = "insert into cmf_content_property (object_id, qualifier, name, value) values (?, ?, ?, ?)";
 
 	private static final String QUERY_EXPORT_PLAN_DUPE_SQL = "select * from cmf_export_plan where object_id = ?";
 	private static final String INSERT_EXPORT_PLAN_SQL = "insert into cmf_export_plan (object_type, object_id) values (?, ?)";
@@ -103,6 +110,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		" order by batch_id, object_number";
+
+	private static final String LOAD_CONTENTS_SQL = //
+	"    select * " + //
+		"  from cmf_content " + //
+		" where object_id = ? " + //
+		" order by content_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
 	"    select * " + //
@@ -143,6 +156,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		" where object_id = ? " + //
 		"   and name = ? " + //
 		" order by value_number";
+
+	private static final String LOAD_CONTENT_PROPERTIES_SQL = //
+	"    select * " + //
+		"  from cmf_content_property " + //
+		" where object_id = ? " + //
+		"   and qualifier = ? " + //
+		" order by name ";
 
 	private static final String GET_STORE_PROPERTY_SQL = //
 	"    select * from cmf_info where name = ? ";
@@ -414,15 +434,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 
 			// Do all the inserts in a row
-			Long ret = qr.insert(
-				c,
-				JdbcObjectStore.INSERT_OBJECT_SQL,
-				this.objectNumberHandler,
-				objectId,
-				object.getSearchKey(),
-				objectType.name(),
-				Tools.coalesce(object.getSubtype(), objectType.name(), object.getProductName(),
-					object.getProductVersion()), object.getLabel(), object.getBatchId());
+			Long ret = qr.insert(c, JdbcObjectStore.INSERT_OBJECT_SQL, this.objectNumberHandler, objectId,
+				object.getSearchKey(), objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()),
+				object.getLabel(), object.getBatchId(), object.getProductName(), object.getProductVersion());
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_SQL, JdbcObjectStore.HANDLER_NULL,
 				attributeParameters.toArray(JdbcObjectStore.NO_PARAMS));
 			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
@@ -1176,5 +1190,132 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private void clearProperties(Connection c) throws SQLException {
 		JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_ALL_STORE_PROPERTIES_SQL);
+	}
+
+	@Override
+	protected <V> void setContentInfo(JdbcOperation operation, CmfObject<V> object, Collection<CmfContentInfo> content)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final String objectId = composeDatabaseId(object);
+		final QueryRunner qr = new QueryRunner();
+
+		// Step 1: Delete what's there
+		try {
+			qr.update(c, JdbcObjectStore.DELETE_CONTENT_SQL, objectId);
+		} catch (SQLException e) {
+			throw new CmfStorageException(String.format(
+				"Failed to delete the existing content records for %s [%s](%s)", object.getType(), object.getLabel(),
+				object.getId()), e);
+		}
+
+		// Step 2: prepare the new content records and properties
+		List<Object[]> contents = new ArrayList<Object[]>();
+		List<Object[]> properties = new ArrayList<Object[]>();
+		Object[] cArr = new Object[6];
+		Object[] pArr = new Object[4];
+		int pos = 0;
+		for (CmfContentInfo i : content) {
+			// First, the content record...
+			cArr[0] = objectId;
+			cArr[1] = i.getQualifier();
+			cArr[2] = pos++;
+			cArr[3] = i.getLength();
+			cArr[4] = Tools.toString(i.getMimeType());
+			cArr[5] = i.getFileName();
+			contents.add(cArr.clone());
+
+			// Then, the properties...
+			pArr[0] = objectId;
+			pArr[1] = i.getQualifier();
+			for (String s : i.getPropertyNames()) {
+				if (s == null) {
+					continue;
+				}
+				pArr[2] = s;
+				pArr[3] = i.getProperty(s);
+				if (pArr[3] == null) {
+					continue;
+				}
+				properties.add(pArr.clone());
+			}
+		}
+
+		// Step 3: execute the batch inserts
+		try {
+			qr.insertBatch(c, JdbcObjectStore.INSERT_CONTENT_SQL, JdbcObjectStore.HANDLER_NULL,
+				contents.toArray(JdbcObjectStore.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_CONTENT_PROPERTY_SQL, JdbcObjectStore.HANDLER_NULL,
+				properties.toArray(JdbcObjectStore.NO_PARAMS));
+		} catch (SQLException e) {
+			throw new CmfStorageException(String.format("Failed to insert the new content records for %s [%s](%s)",
+				object.getType(), object.getLabel(), object.getId()), e);
+		}
+	}
+
+	@Override
+	protected <V> List<CmfContentInfo> getContentInfo(JdbcOperation operation, CmfObject<V> object)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final String objectId = composeDatabaseId(object);
+
+		PreparedStatement cPS = null;
+		PreparedStatement pPS = null;
+
+		try {
+			cPS = c.prepareStatement(JdbcObjectStore.LOAD_CONTENTS_SQL);
+			pPS = c.prepareStatement(JdbcObjectStore.LOAD_CONTENT_PROPERTIES_SQL);
+
+			// This one will simply gather up the properties for each content record
+			final ResultSetHandler<Map<String, String>> pHandler = new ResultSetHandler<Map<String, String>>() {
+				@Override
+				public Map<String, String> handle(ResultSet rs) throws SQLException {
+					final Map<String, String> ret = new TreeMap<String, String>();
+					while (rs.next()) {
+						ret.put(rs.getString("name"), rs.getString("value"));
+					}
+					return ret;
+				}
+			};
+
+			// This one will process each content record
+			final ResultSetHandler<List<CmfContentInfo>> cHandler = new ResultSetHandler<List<CmfContentInfo>>() {
+				@Override
+				public List<CmfContentInfo> handle(ResultSet rs) throws SQLException {
+					final List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>();
+					final QueryRunner qr = new QueryRunner();
+					while (rs.next()) {
+						final CmfContentInfo info = new CmfContentInfo(rs.getString("qualifier"));
+						info.setLength(rs.getLong("stream_length"));
+						String str = rs.getString("mime_type");
+						if ((str != null) && !rs.wasNull()) {
+							info.setMimeType(MimeTools.resolveMimeType(str));
+						}
+						str = rs.getString("file_name");
+						if ((str != null) && !rs.wasNull()) {
+							info.setFileName(str);
+						}
+
+						Map<String, String> props = qr.query(c, JdbcObjectStore.LOAD_CONTENT_PROPERTIES_SQL, pHandler,
+							objectId, info.getQualifier());
+						for (String s : props.keySet()) {
+							String v = props.get(s);
+							if ((s != null) && (v != null)) {
+								info.setProperty(s, v);
+							}
+						}
+						ret.add(info);
+					}
+					return ret;
+				}
+			};
+
+			return new QueryRunner().query(c, JdbcObjectStore.LOAD_CONTENTS_SQL, cHandler, objectId);
+		} catch (SQLException e) {
+			throw new CmfStorageException(String.format("Failed to load the content records for %s [%s](%s)",
+				object.getType(), object.getLabel(), object.getId()), e);
+		} finally {
+			DbUtils.closeQuietly(pPS);
+			DbUtils.closeQuietly(cPS);
+		}
 	}
 }
