@@ -1,5 +1,6 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -50,6 +51,15 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	@Override
 	protected String calculateSearchKey(FileableCmisObject object) throws Exception {
 		return object.getId();
+	}
+
+	@Override
+	protected Collection<CmisExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
+		CmisExportContext ctx) throws Exception {
+		// TODO: identify the users/groups that need to be marshaled.
+		// TODO: How the hell to list the members of groups?
+		// TODO: How the hell to identify if an accessor is a user or a group?
+		return super.identifyRequirements(marshalled, ctx);
 	}
 
 	@Override
