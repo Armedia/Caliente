@@ -5,14 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
@@ -22,8 +22,8 @@ import com.independentsoft.share.Group;
 import com.independentsoft.share.User;
 
 public abstract class ShptExportDelegate<T>
-extends
-ExportDelegate<T, ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
+	extends
+	ExportDelegate<T, ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
 
 	private static final Map<Class<?>, CmfType> TYPE_MAP;
 
@@ -58,7 +58,7 @@ ExportDelegate<T, ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, 
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		return null;
 	}

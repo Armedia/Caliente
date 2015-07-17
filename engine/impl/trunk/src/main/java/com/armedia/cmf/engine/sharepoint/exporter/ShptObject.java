@@ -11,11 +11,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfValue;
 
@@ -69,7 +69,7 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		// TODO Auto-generated method stub
 		return null;

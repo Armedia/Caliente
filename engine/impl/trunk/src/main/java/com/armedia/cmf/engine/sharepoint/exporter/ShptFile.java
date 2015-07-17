@@ -16,7 +16,6 @@ import javax.activation.MimeType;
 
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -26,14 +25,15 @@ import com.armedia.cmf.engine.sharepoint.ShptAttributes;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
-import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.tools.MimeTools;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.CheckOutType;
@@ -365,7 +365,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		// TODO: We NEED to use something other than the object ID here...
 		CmfContentStore<?>.Handle h = streamStore.getHandle(translator, marshaled, "");
@@ -396,8 +396,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		}
 		marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CONTENT_TYPE.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(type.getBaseType()))));
-		List<ContentInfo> ret = new ArrayList<ContentInfo>();
-		ContentInfo info = new ContentInfo(h.getQualifier());
+		List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>();
+		CmfContentInfo info = new CmfContentInfo(h.getQualifier());
 		info.setProperty(ContentProperty.MIME_TYPE, type.getBaseType());
 		info.setProperty(ContentProperty.SIZE, String.valueOf(buf.getCurrentSize()));
 		info.setProperty(ContentProperty.FILE_NAME, this.object.getName());
