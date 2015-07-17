@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
@@ -167,8 +168,27 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context) throws DfException,
 		ImportException {
 		if (newObject) {
-			String user = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME).getValue().asString();
-			String name = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
+			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
+			String user = null;
+			if ((att != null) && att.hasValues()) {
+				user = att.getValue().asString();
+			} else {
+				CmfProperty<IDfValue> prop = this.cmfObject.getProperty(IntermediateProperty.ACL_OWNER);
+				if ((prop != null) && prop.hasValues()) {
+					user = prop.getValue().asString();
+				}
+			}
+			att = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
+			String name = null;
+			if ((att != null) && att.hasValues()) {
+				name = att.getValue().asString();
+			} else {
+				CmfProperty<IDfValue> prop = this.cmfObject.getProperty(IntermediateProperty.ACL_OBJECT_ID);
+				if ((prop != null) && prop.hasValues()) {
+					name = prop.getValue().asString();
+				}
+			}
+
 			user = DctmMappingUtils.resolveMappableUser(acl.getSession(), user);
 			IDfUser u = DctmImportUser.locateExistingUser(context, user);
 			if (u == null) { throw new ImportException(String.format(
@@ -238,9 +258,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			if ((accessors == null) || (permitTypes == null) || (permitValues == null)
 				|| (accessors.getValueCount() != permitTypes.getValueCount())
 				|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(
-					String.format(
-						"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%permitType = %s%npermitValue = %s",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
+				String.format(
+					"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%permitType = %s%npermitValue = %s",
+					this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
 
 			// One final check to shortcut and avoid unnecessary processing...
 			final int accessorCount = accessors.getValueCount();
