@@ -56,6 +56,14 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		// Copy the ACL Data into the object's attributes using the common ACL attributes
 		final Acl acl = this.object.getAcl();
+
+		CmfProperty<CmfValue> owner = new CmfProperty<CmfValue>(IntermediateProperty.ACL_OWNER, CmfDataType.STRING,
+			false);
+		owner.setValue(new CmfValue(this.object.getCreatedBy()));
+		CmfProperty<CmfValue> name = new CmfProperty<CmfValue>(IntermediateProperty.ACL_OBJECT_ID, CmfDataType.STRING,
+			false);
+		name.setValue(new CmfValue(this.object.getId()));
+
 		if (acl != null) {
 			String permissionsName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT, ctx.getRepositoryInfo()
 				.getProductName().toLowerCase());
@@ -89,6 +97,8 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 			object.setProperty(accessorActions);
 			// TODO: Export extensions
 		}
+		object.setProperty(owner);
+		object.setProperty(name);
 		return true;
 	}
 }
