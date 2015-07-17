@@ -11,11 +11,11 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
@@ -76,7 +76,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		}
 
 		// Copy the contents over...
-		List<ContentInfo> contents;
+		List<CmfContentInfo> contents;
 		try {
 			contents = ctx.getContentInfo(this.cmfObject);
 		} catch (Exception e) {
@@ -86,7 +86,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		}
 
 		if (!contents.isEmpty()) {
-			ContentInfo info = contents.get(0);
+			CmfContentInfo info = contents.get(0);
 			CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
 			File src = h.getFile();

@@ -23,7 +23,6 @@ import javax.activation.MimeType;
 
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
@@ -33,15 +32,16 @@ import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.local.common.LocalFile;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
-import com.armedia.cmf.engine.tools.MimeTools;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.tools.MimeTools;
 
 public class LocalExportDelegate
 	extends
@@ -166,12 +166,12 @@ public class LocalExportDelegate
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(LocalRoot session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(LocalRoot session, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
 		if (getType() != CmfType.DOCUMENT) { return null; }
 
-		List<ContentInfo> ret = new ArrayList<ContentInfo>(1);
-		ContentInfo info = new ContentInfo("");
+		List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>(1);
+		CmfContentInfo info = new CmfContentInfo("");
 		File src = this.object.getAbsolute();
 		MimeType type = null;
 		try {
