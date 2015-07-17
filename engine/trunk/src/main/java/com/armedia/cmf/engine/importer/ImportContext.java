@@ -1,5 +1,6 @@
 package com.armedia.cmf.engine.importer;
 
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -8,7 +9,9 @@ import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferContext;
 import com.armedia.cmf.storage.CmfAttributeMapper;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
@@ -18,7 +21,7 @@ import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>> extends
-	TransferContext<S, V, CF> {
+TransferContext<S, V, CF> {
 
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
@@ -57,5 +60,15 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 
 	public final boolean isPathAltering() {
 		return this.factory.isPathAltering();
+	}
+
+	public final List<CmfContentInfo> getContentInfo(CmfObject<V> object) throws ImportException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object whose content to retrieve"); }
+		try {
+			return this.cmfObjectStore.getContentInfo(object);
+		} catch (CmfStorageException e) {
+			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)",
+				object.getType(), object.getLabel(), object.getId()), e);
+		}
 	}
 }

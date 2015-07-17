@@ -3,16 +3,16 @@ package com.armedia.cmf.engine.exporter;
 import java.util.Collection;
 import java.util.List;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferDelegate;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, ?>, DF extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, ?, DF>>
-extends TransferDelegate<T, S, V, C, DF, E> {
+	extends TransferDelegate<T, S, V, C, DF, E> {
 	protected final T object;
 	protected final ExportTarget exportTarget;
 	protected final String label;
@@ -83,6 +83,6 @@ extends TransferDelegate<T, S, V, C, DF, E> {
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyDependents(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
-	protected abstract List<ContentInfo> storeContent(S session, CmfAttributeTranslator<V> translator,
+	protected abstract List<CmfContentInfo> storeContent(S session, CmfAttributeTranslator<V> translator,
 		CmfObject<V> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception;
 }

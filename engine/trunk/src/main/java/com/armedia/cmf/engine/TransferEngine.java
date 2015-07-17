@@ -32,8 +32,6 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
-	private static final String CONTENT_QUALIFIERS = "${CONTENT_QUALIFIERS}$";
-	private static final String CONTENT_PROPERTIES = "${CONTENT_PROPERTIES}$";
 
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
 	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<String, PluggableServiceLocator<?>>();
@@ -172,38 +170,6 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		this.threadCount = Tools.ensureBetween(TransferEngine.MIN_THREAD_COUNT, threadCount,
 			TransferEngine.MAX_THREAD_COUNT);
 		return old;
-	}
-
-	protected final List<ContentInfo> getContentInfo(CmfObject<V> marshaled) throws Exception {
-		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		CmfProperty<V> qualifiers = marshaled.getProperty(TransferEngine.CONTENT_QUALIFIERS);
-		CmfProperty<V> properties = marshaled.getProperty(TransferEngine.CONTENT_PROPERTIES);
-		List<ContentInfo> info = new ArrayList<ContentInfo>();
-		if ((qualifiers != null) && (properties != null)) {
-			if (qualifiers.getValueCount() != properties.getValueCount()) { throw new Exception(String.format(
-				"Attribute count mismatch - %d qualifiers and %d properties for %s [%s](%s)",
-				qualifiers.getValueCount(), properties.getValueCount(), marshaled.getType(), marshaled.getLabel(),
-				marshaled.getId())); }
-			for (int i = 0; i < qualifiers.getValueCount(); i++) {
-				V q = qualifiers.getValue(i);
-				V p = properties.getValue(i);
-				info.add(new ContentInfo(Tools.toString(q), Tools.toString(p)));
-			}
-		}
-		return info;
-	}
-
-	protected final void setContentInfo(CmfObject<V> marshaled, List<ContentInfo> contents) {
-		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		if (contents == null) { return; }
-		CmfProperty<V> q = new CmfProperty<V>(TransferEngine.CONTENT_QUALIFIERS, CmfDataType.STRING, true);
-		marshaled.setProperty(q);
-		CmfProperty<V> p = new CmfProperty<V>(TransferEngine.CONTENT_PROPERTIES, CmfDataType.STRING, true);
-		marshaled.setProperty(p);
-		for (ContentInfo d : contents) {
-			q.addValue(getValue(CmfDataType.STRING, d.getQualifier()));
-			p.addValue(getValue(CmfDataType.STRING, d.encodeProperties()));
-		}
 	}
 
 	protected final ExecutorService newExecutor(int threadCount) {

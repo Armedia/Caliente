@@ -21,11 +21,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectCounter;
@@ -261,19 +261,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug(String.format("Executing supplemental storage for %s", label));
 			}
 
-			List<ContentInfo> contentInfo = null;
-			try {
-				contentInfo = sourceObject.storeContent(ctx.getSession(), getTranslator(), marshaled, referrent,
-					streamStore);
-				if (contentInfo == null) {
-					contentInfo = Collections.emptyList();
-				}
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
-			}
-
-			setContentInfo(marshaled, contentInfo);
-
 			final Long ret = objectStore.storeObject(marshaled, getTranslator());
 			if (ret == null) {
 				// Should be impossible, but still guard against it
@@ -281,6 +268,16 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					this.log.trace(String.format("%s was stored by another thread", label));
 				}
 				return null;
+			}
+
+			try {
+				List<CmfContentInfo> cmfContentInfo = sourceObject.storeContent(ctx.getSession(), getTranslator(),
+					marshaled, referrent, streamStore);
+				if ((cmfContentInfo != null) && !cmfContentInfo.isEmpty()) {
+					objectStore.setContentInfo(marshaled, cmfContentInfo);
+				}
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
 			}
 
 			if (this.log.isDebugEnabled()) {

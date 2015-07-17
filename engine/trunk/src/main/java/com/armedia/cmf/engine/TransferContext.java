@@ -5,13 +5,11 @@
 package com.armedia.cmf.engine;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -24,7 +22,6 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final F factory;
-	private final TransferEngine<S, V, ?, ?, ?, ?> engine;
 	private final String rootId;
 	private final CmfType rootType;
 	private final S session;
@@ -35,10 +32,9 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 	private final String productName;
 	private final String productVersion;
 
-	protected <C extends TransferContext<S, V, F>, E extends TransferEngine<S, V, C, ?, ?, ?>> TransferContext(
-		F factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output) {
+	protected <C extends TransferContext<S, V, F>> TransferContext(F factory, CfgTools settings, String rootId,
+		CmfType rootType, S session, Logger output) {
 		this.factory = factory;
-		this.engine = factory.getEngine();
 		this.settings = settings;
 		this.rootId = rootId;
 		this.rootType = rootType;
@@ -118,10 +114,6 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 		if (this.output != null) {
 			this.output.info(String.format(format, args));
 		}
-	}
-
-	public final List<ContentInfo> getContentInfo(CmfObject<V> marshaled) throws Exception {
-		return this.engine.getContentInfo(marshaled);
 	}
 
 	public final boolean isSupported(CmfType type) {
