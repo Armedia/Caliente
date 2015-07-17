@@ -15,7 +15,6 @@ import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
 import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
-import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -27,6 +26,7 @@ import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.tools.MimeTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
@@ -130,17 +130,17 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ContentStream main = this.object.getContentStream();
 		CmfContentStore<?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
 		CmfContentInfo mainInfo = new CmfContentInfo(mainHandle.getQualifier());
-		mainInfo.setProperty(ContentProperty.MIME_TYPE, main.getMimeType());
-		mainInfo.setProperty(ContentProperty.SIZE, String.valueOf(main.getLength()));
-		mainInfo.setProperty(ContentProperty.FILE_NAME, main.getFileName());
+		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
+		mainInfo.setLength(main.getLength());
+		mainInfo.setFileName(main.getFileName());
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
 			ContentStream cs = r.getContentStream();
 			CmfContentStore<?>.Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
 			CmfContentInfo info = new CmfContentInfo(handle.getQualifier());
-			info.setProperty(ContentProperty.MIME_TYPE, r.getMimeType());
-			info.setProperty(ContentProperty.SIZE, String.valueOf(cs.getLength()));
-			info.setProperty(ContentProperty.FILE_NAME, cs.getFileName());
+			info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
+			info.setLength(cs.getLength());
+			info.setFileName(cs.getFileName());
 			info.setProperty("kind", r.getKind());
 			info.setProperty("docId", r.getRenditionDocumentId());
 			info.setProperty("streamId", r.getStreamId());

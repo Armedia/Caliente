@@ -17,7 +17,6 @@ import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import org.apache.commons.lang3.text.StrTokenizer;
 
-import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
@@ -66,9 +65,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		CmfContentStore<?>.Handle h = store.getHandle(this.factory.getEngine().getTranslator(), this.cmfObject,
 			content.getQualifier());
 
-		String fileName = content.getProperty(ContentProperty.FILE_NAME);
+		String fileName = content.getFileName();
 		// String size = content.getProperty(ContentProperty.SIZE);
-		String mimeType = content.getProperty(ContentProperty.MIME_TYPE);
+		String mimeType = content.getMimeType().toString();
 
 		try {
 			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getStreamSize()), mimeType, h.openInput());
