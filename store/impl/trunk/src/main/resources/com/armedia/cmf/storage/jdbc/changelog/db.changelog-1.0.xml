@@ -226,7 +226,7 @@
 				<constraints nullable="false" />
 			</column>
 			<column name="mime_type" type="varchar(96)" remarks="The content's mime type">
-				<constraints nullable="true" />
+				<constraints nullable="false" />
 			</column>
 			<column name="file_name" type="varchar(256)" remarks="The content's file name">
 				<constraints nullable="true" />

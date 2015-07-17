@@ -1220,7 +1220,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			cArr[1] = i.getQualifier();
 			cArr[2] = pos++;
 			cArr[3] = i.getLength();
-			cArr[4] = Tools.toString(i.getMimeType());
+			cArr[4] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
 			cArr[5] = i.getFileName();
 			contents.add(cArr.clone());
 
