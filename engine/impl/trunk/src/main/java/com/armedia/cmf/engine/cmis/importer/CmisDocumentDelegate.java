@@ -17,12 +17,12 @@ import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import org.apache.commons.lang3.text.StrTokenizer;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
@@ -54,7 +54,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 	protected ContentStream getContentStream(CmisImportContext ctx) throws ImportException {
 		CmfContentStore<?> store = ctx.getContentStore();
-		List<ContentInfo> info = null;
+		List<CmfContentInfo> info = null;
 		try {
 			info = ctx.getContentInfo(this.cmfObject);
 		} catch (Exception e) {
@@ -62,7 +62,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 		if ((info == null) || info.isEmpty()) { return null; }
-		ContentInfo content = info.get(0);
+		CmfContentInfo content = info.get(0);
 		CmfContentStore<?>.Handle h = store.getHandle(this.factory.getEngine().getTranslator(), this.cmfObject,
 			content.getQualifier());
 

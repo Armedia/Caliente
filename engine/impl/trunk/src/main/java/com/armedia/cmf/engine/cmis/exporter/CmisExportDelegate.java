@@ -6,12 +6,12 @@ import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.Session;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
 import com.armedia.cmf.engine.exporter.ExportDelegate;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfValue;
 
@@ -30,14 +30,14 @@ public abstract class CmisExportDelegate<T>
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
-		CmisExportContext ctx) throws Exception {
+	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled, CmisExportContext ctx)
+		throws Exception {
 		return new ArrayList<CmisExportDelegate<?>>();
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(Session session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(Session session, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
-		return new ArrayList<ContentInfo>();
+		return new ArrayList<CmfContentInfo>();
 	}
 }

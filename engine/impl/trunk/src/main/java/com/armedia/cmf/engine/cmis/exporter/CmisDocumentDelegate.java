@@ -14,7 +14,6 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
-import com.armedia.cmf.engine.ContentInfo;
 import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
 import com.armedia.cmf.engine.converter.ContentProperty;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
@@ -22,6 +21,7 @@ import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
@@ -124,12 +124,12 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected List<ContentInfo> storeContent(Session session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(Session session, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
-		List<ContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
+		List<CmfContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
 		CmfContentStore<?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
-		ContentInfo mainInfo = new ContentInfo(mainHandle.getQualifier());
+		CmfContentInfo mainInfo = new CmfContentInfo(mainHandle.getQualifier());
 		mainInfo.setProperty(ContentProperty.MIME_TYPE, main.getMimeType());
 		mainInfo.setProperty(ContentProperty.SIZE, String.valueOf(main.getLength()));
 		mainInfo.setProperty(ContentProperty.FILE_NAME, main.getFileName());
@@ -137,7 +137,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		for (Rendition r : this.object.getRenditions()) {
 			ContentStream cs = r.getContentStream();
 			CmfContentStore<?>.Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
-			ContentInfo info = new ContentInfo(handle.getQualifier());
+			CmfContentInfo info = new CmfContentInfo(handle.getQualifier());
 			info.setProperty(ContentProperty.MIME_TYPE, r.getMimeType());
 			info.setProperty(ContentProperty.SIZE, String.valueOf(cs.getLength()));
 			info.setProperty(ContentProperty.FILE_NAME, cs.getFileName());
