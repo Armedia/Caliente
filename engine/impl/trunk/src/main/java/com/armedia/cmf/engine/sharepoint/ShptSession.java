@@ -117,7 +117,7 @@ public class ShptSession {
 		}
 		return new ShptSessionException(String.format(
 			"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s", e
-			.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
+				.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
 			e);
 	}
 
@@ -684,7 +684,13 @@ public class ShptSession {
 
 	@Override
 	public boolean equals(Object obj) {
-		return this.service.equals(obj);
+		if (!Tools.baseEquals(this, obj)) { return false; }
+		ShptSession other = ShptSession.class.cast(obj);
+		if (!Tools.equals(this.url, other.url)) { return false; }
+		if (!Tools.equals(this.domain, other.domain)) { return false; }
+		if (!Tools.equals(this.user, other.user)) { return false; }
+		if (!Tools.equals(this.password, other.password)) { return false; }
+		return true;
 	}
 
 	public Group getAssociatedMemberGroup() throws ShptSessionException {
@@ -1227,8 +1233,8 @@ public class ShptSession {
 			final String newUrl = FileNameTools.reconstitute(items, url.startsWith("/"), url.endsWith("/"), '/');
 			if (this.log.isTraceEnabled()) {
 				this.log
-				.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
-					url, newUrl, newUrl));
+					.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
+						url, newUrl, newUrl));
 			}
 			try {
 				return this.service.getInputStream(newUrl);
