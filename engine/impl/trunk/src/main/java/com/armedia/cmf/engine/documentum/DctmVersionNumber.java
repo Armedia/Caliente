@@ -126,7 +126,12 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 
 	@Override
 	public DctmVersionNumber clone() {
-		return new DctmVersionNumber(this.string);
+		try {
+			return DctmVersionNumber.class.cast(super.clone());
+		} catch (CloneNotSupportedException e) {
+			// This should be impossible
+			throw new RuntimeException("Cloning operation failed", e);
+		}
 	}
 
 	private boolean isSameBranch(DctmVersionNumber other) {
