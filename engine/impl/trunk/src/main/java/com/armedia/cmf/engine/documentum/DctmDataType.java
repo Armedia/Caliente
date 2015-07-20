@@ -241,8 +241,8 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 	/**
 	 * <p>
 	 * Encode the value into a {@link CmfValue}, such that for a given value {@code A}, invoking
-	 * {@link #decodeValue(CmfValue)} on that encoded CmfValue will result in a value
-	 * {@code B}, such that {@code A.equals(B)} returns {@code true}.
+	 * {@link #decodeValue(CmfValue)} on that encoded CmfValue will result in a value {@code B},
+	 * such that {@code A.equals(B)} returns {@code true}.
 	 * </p>
 	 *
 	 * @param value
@@ -349,7 +349,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			case IDfValue.DF_UNDEFINED:
 				return DF_UNDEFINED;
 			default:
-				throw new IllegalArgumentException(String.format("Unsupported IDfValue constant [%d]"));
+				throw new IllegalArgumentException(String.format("Unsupported IDfValue constant [%d]", dataType));
 		}
 	}
 }

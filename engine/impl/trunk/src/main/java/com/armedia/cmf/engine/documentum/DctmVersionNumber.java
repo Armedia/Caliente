@@ -9,7 +9,7 @@ import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class DctmVersionNumber implements Comparable<DctmVersionNumber> {
+public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, Cloneable {
 
 	public static final Comparator<DctmVersionNumber> REVERSE_ORDER = new Comparator<DctmVersionNumber>() {
 		@Override

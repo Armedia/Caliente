@@ -427,6 +427,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			// Find the mapped ACL
 			Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID,
 				aclId.getId());
+			String msg = null;
 			if (m != null) {
 				try {
 					IDfACL acl = IDfACL.class.cast(session.getObject(new DfId(m.getTargetValue())));
@@ -436,12 +437,17 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				}
 
 				// ACL or not, we're done here...
+				msg = String
+					.format(
+						"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (to %s), but the target ACL couldn't be found",
+						aclId.getId(), this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId()
+							.getId(), m.getTargetValue());
+			} else {
+				msg = String
+					.format("Failed to find the ACL [%s] for %s [%s](%s) - no mapping was found", aclId.getId(),
+						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId());
 			}
 
-			String msg = String.format(
-				"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (to %s), but couldn't be found",
-				aclId.getId(), this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
-				m.getTargetValue());
 			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
 			this.log.warn(msg);
 		}
@@ -743,7 +749,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
 		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
-		List<String> newParents = new ArrayList<String>(parents.getValueCount());
+		List<String> newParents = new ArrayList<String>();
 		if ((parents == null) || (parents.getValueCount() == 0)) {
 			// This might be a cabinet import, so we try to find the target folder
 			String rootPath = context.getTargetPath("/");

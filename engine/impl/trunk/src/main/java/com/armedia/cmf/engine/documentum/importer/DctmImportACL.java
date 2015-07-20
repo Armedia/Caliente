@@ -166,7 +166,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 	@Override
 	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		if (newObject) {
 			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
 			String user = null;
@@ -216,11 +216,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
 					// we can survive this...
 					this.log
-						.warn(String
-							.format(
-								"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
-								this.cmfObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
-								permit.getPermitValueInt(), permit.getPermitValueString()));
+					.warn(String
+						.format(
+							"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
+							this.cmfObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
+							permit.getPermitValueInt(), permit.getPermitValueString()));
 					continue;
 				}
 				// something else? don't snuff it...
@@ -258,9 +258,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			if ((accessors == null) || (permitTypes == null) || (permitValues == null)
 				|| (accessors.getValueCount() != permitTypes.getValueCount())
 				|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(
-				String.format(
-					"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%permitType = %s%npermitValue = %s",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
+					String.format(
+						"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%npermitType = %s%npermitValue = %s",
+						this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
 
 			// One final check to shortcut and avoid unnecessary processing...
 			final int accessorCount = accessors.getValueCount();
@@ -319,10 +319,10 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 						if (!exists) {
 							// This shouldn't be necessary
 							this.log
-								.warn(String
-									.format(
-										"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-										this.cmfObject.getLabel(), name));
+							.warn(String
+								.format(
+									"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+									this.cmfObject.getLabel(), name));
 							exists = (session.getGroup(name) != null);
 							accessorType = "accessor (user or group)";
 						}
@@ -462,11 +462,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
 				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-								user.getUserName(), this.cmfObject.getLabel()), e);
+				.warn(
+					String
+					.format(
+						"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+						user.getUserName(), this.cmfObject.getLabel()), e);
 			}
 		}
 	}

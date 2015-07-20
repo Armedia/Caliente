@@ -44,7 +44,7 @@ public class DctmExportEngine
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
 		String dql = configuration.getString(Setting.DQL);
-		if (dql == null) { throw new Exception(String.format("Must provide the DQL to query with", dql)); }
+		if (dql == null) { throw new Exception("Must provide the DQL to query with"); }
 		final int batchSize = configuration.getInteger(Setting.EXPORT_BATCH_SIZE);
 		return new DctmExportTargetIterator(DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_EXECREAD_QUERY,
 			batchSize));
