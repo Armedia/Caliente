@@ -43,8 +43,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.tools.MimeTools;
 
 public class LocalExportDelegate
-extends
-ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
+	extends
+	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
 		super(factory, LocalFile.class, object);

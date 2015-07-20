@@ -42,8 +42,8 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-extends
-ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+	extends
+	ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected LocalImportDelegate(LocalImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -194,7 +194,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 	}
 
 	protected void applyAttributes(File targetFile, CmfAttributeTranslator<CmfValue> translator) throws IOException,
-	ParseException {
+		ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
 

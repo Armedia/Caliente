@@ -41,8 +41,7 @@ public class LocalExportDelegateFactory extends
 	}
 
 	@Override
-	protected LocalExportDelegate newExportDelegate(LocalRoot session, CmfType type, String searchKey)
-		throws Exception {
+	protected LocalExportDelegate newExportDelegate(LocalRoot session, CmfType type, String searchKey) throws Exception {
 		return new LocalExportDelegate(this, LocalFile.newFromSafePath(session, searchKey));
 	}
 }
