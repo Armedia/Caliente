@@ -21,7 +21,7 @@ import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>> extends
-TransferContext<S, V, CF> {
+	TransferContext<S, V, CF> {
 
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
