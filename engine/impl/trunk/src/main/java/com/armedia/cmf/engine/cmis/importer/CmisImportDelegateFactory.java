@@ -9,7 +9,7 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportDelegateFactory extends
-ImportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportEngine> {
+	ImportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportEngine> {
 
 	CmisImportDelegateFactory(CmisImportEngine engine, Session session, CfgTools configuration) {
 		super(engine, configuration);
