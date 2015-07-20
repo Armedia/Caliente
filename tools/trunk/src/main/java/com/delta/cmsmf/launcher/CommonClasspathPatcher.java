@@ -40,8 +40,11 @@ public class CommonClasspathPatcher extends ClasspathPatcher {
 			File libDir = new File(userDir, "cmsmf.lib");
 			if (libDir.exists() && libDir.isDirectory()) {
 				ret.add(new File(libDir, "classes").toURI().toURL());
-				for (File f : libDir.listFiles(CommonClasspathPatcher.LIB_FILTER)) {
-					ret.add(f.toURI().toURL());
+				File[] files = libDir.listFiles(CommonClasspathPatcher.LIB_FILTER);
+				if (files != null) {
+					for (File f : files) {
+						ret.add(f.toURI().toURL());
+					}
 				}
 			}
 			ret.add(new File(userDir, "cfg").toURI().toURL());
