@@ -61,8 +61,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	}
 
 	protected static IDfUser getUserMapping(DctmImportContext ctx, String userName) throws DfException {
-		Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.USER,
-			DctmImportUser.USERNAME_MAPPING_NAME, userName);
+		Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.USER, DctmImportUser.USERNAME_MAPPING_NAME,
+			userName);
 		if (m == null) { return null; }
 		return ctx.getSession().getUser(m.getTargetValue());
 	}

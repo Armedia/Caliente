@@ -142,8 +142,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 	protected boolean isSameObject(IDfType object) throws DfException {
 		// It's "impossible" to compare types...rather - it's far too complicated to do
 		// anything if the type is already there...so we just check names...
-		return Tools
-			.equals(object.getName(), this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString());
+		return Tools.equals(object.getName(), this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString());
 	}
 
 	@Override

@@ -174,9 +174,9 @@ public class DctmVersionTree {
 					// data, and we can't continue
 					throw new DctmException(
 						String
-						.format(
-							"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-							sysObjectId.getId(), chronicleId));
+							.format(
+								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+								sysObjectId.getId(), chronicleId));
 				}
 				continue;
 			}

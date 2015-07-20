@@ -12,7 +12,7 @@ import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfValue;
 
 public class DctmExportDelegateFactory extends
-ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
+	ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
 
 	DctmExportDelegateFactory(DctmExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
