@@ -80,8 +80,8 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	@Override
 	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.WELCOME_PAGE.name, CmfDataType.STRING,
-			false, Collections.singleton(new CmfValue(this.object.getWelcomePage()))));
+		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.WELCOME_PAGE.name, CmfDataType.STRING, false,
+			Collections.singleton(new CmfValue(this.object.getWelcomePage()))));
 		return true;
 	}
 

@@ -9,7 +9,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class ShptExportDelegateFactory extends
-ExportDelegateFactory<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportEngine> {
+	ExportDelegateFactory<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportEngine> {
 
 	protected ShptExportDelegateFactory(ShptExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
