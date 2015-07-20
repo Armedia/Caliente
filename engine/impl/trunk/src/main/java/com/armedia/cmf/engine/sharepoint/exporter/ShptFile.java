@@ -230,8 +230,10 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 						// then this should be the new antecedent, and our antecedent is the
 						// antecedent.
 						if ((antecedent == null) || (this.versionNumber.compareTo(antecedent.getVersionNumber()) < 0)) {
+							if (antecedent == null) {
+								antecedent = this;
+							}
 							antecedentId = antecedent.getObjectId();
-							antecedent = this;
 						}
 					} else if (c == 0) {
 						tgt = succ;
