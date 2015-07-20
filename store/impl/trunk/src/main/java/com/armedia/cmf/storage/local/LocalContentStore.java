@@ -32,11 +32,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfOrganizationStrategy;
 import com.armedia.cmf.storage.CmfStorageException;
-import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueSerializer;
@@ -117,7 +117,8 @@ public class LocalContentStore extends CmfContentStore<URI> {
 			this.propertiesLoaded = loadProperties();
 			CmfValue currentStrategyName = getProperty("strategy");
 			if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
-				CmfOrganizationStrategy currentStrategy = CmfOrganizationStrategy.getStrategy(currentStrategyName.asString());
+				CmfOrganizationStrategy currentStrategy = CmfOrganizationStrategy.getStrategy(currentStrategyName
+					.asString());
 				if (currentStrategy != null) {
 					strategy = currentStrategy;
 					storeStrategyName = false;
@@ -189,14 +190,13 @@ public class LocalContentStore extends CmfContentStore<URI> {
 
 		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
-			this.properties
-				.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new CmfValue(safeFilenameEncoding.name()));
+			this.properties.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new CmfValue(safeFilenameEncoding.name()));
 		}
 		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
 		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));
 		this.properties.put(Setting.IGNORE_EXTRA_FILENAME_INFO.getLabel(), new CmfValue(ignoreFragment));
-		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new CmfValue(useWindowsFix
-			|| SystemUtils.IS_OS_WINDOWS));
+		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(),
+			new CmfValue(useWindowsFix || SystemUtils.IS_OS_WINDOWS));
 	}
 
 	@Override
@@ -317,8 +317,11 @@ public class LocalContentStore extends CmfContentStore<URI> {
 
 	@Override
 	protected void doClearAllStreams() {
-		for (File f : this.baseDir.listFiles()) {
-			FileUtils.deleteQuietly(f);
+		File[] files = this.baseDir.listFiles();
+		if (files != null) {
+			for (File f : files) {
+				FileUtils.deleteQuietly(f);
+			}
 		}
 	}
 
