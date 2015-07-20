@@ -21,7 +21,8 @@ public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<Connection, Jd
 	}
 
 	@Override
-	protected JdbcObjectStore newInstance(StoreConfiguration configuration, boolean cleanData) throws CmfStorageException {
+	protected JdbcObjectStore newInstance(StoreConfiguration configuration, boolean cleanData)
+		throws CmfStorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		final String locationType = cfg.getString(Setting.LOCATION_TYPE);
@@ -46,7 +47,8 @@ public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<Connection, Jd
 		}
 
 		// If we got here, then we have no locator for that datasource, so we simply explode
-		throw new CmfStorageException(String.format("Failed to locate a DataSource for building the CmfObjectStore %s[%s]",
-			configuration.getName(), configuration.getId()));
+		throw new CmfStorageException(String.format(
+			"Failed to locate a DataSource for building the CmfObjectStore %s[%s]", configuration.getName(),
+			configuration.getId()));
 	}
 }
