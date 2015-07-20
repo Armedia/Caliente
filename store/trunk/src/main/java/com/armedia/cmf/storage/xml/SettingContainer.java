@@ -54,29 +54,6 @@ public class SettingContainer implements Cloneable {
 	@XmlTransient
 	private SettingContainer parent = null;
 
-	public SettingContainer() {
-	}
-
-	protected SettingContainer(SettingContainer pattern) {
-		if (pattern == null) { throw new IllegalArgumentException("Must provide an object to copy state from"); }
-		this.setting = new ArrayList<Setting>();
-		if (pattern.setting != null) {
-			this.setting.addAll(pattern.setting);
-		}
-		this.settings = new HashMap<String, String>(pattern.settings);
-		if (pattern.settings != null) {
-			this.settings.putAll(pattern.settings);
-		}
-		if (pattern.parent != null) {
-			try {
-				this.parent = pattern.parent.clone();
-			} catch (CloneNotSupportedException e) {
-				// This shouldn't happen
-				throw new RuntimeException("Cloning process failed", e);
-			}
-		}
-	}
-
 	protected void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
 		this.settings = new LinkedHashMap<String, String>();
 		if (this.setting != null) {
@@ -120,15 +97,19 @@ public class SettingContainer implements Cloneable {
 	}
 
 	@Override
-	public SettingContainer clone() throws CloneNotSupportedException {
-		SettingContainer newClone = SettingContainer.class.cast(super.clone());
-		newClone.setting = new ArrayList<Setting>();
-		if (this.setting != null) {
-			this.setting.addAll(this.setting);
+	public SettingContainer clone() {
+		final SettingContainer newClone;
+		try {
+			newClone = SettingContainer.class.cast(super.clone());
+		} catch (CloneNotSupportedException e) {
+			// if java.lang.Object isn't cloneable, we're screwed anyway...
+			throw new RuntimeException("Can't clone the SettingContainer", e);
 		}
-		newClone.settings = new HashMap<String, String>();
+		if (this.setting != null) {
+			newClone.setting = new ArrayList<Setting>(this.setting);
+		}
 		if (this.settings != null) {
-			this.settings.putAll(this.settings);
+			newClone.settings = new HashMap<String, String>(this.settings);
 		}
 		if (this.parent != null) {
 			newClone.parent = this.parent.clone();

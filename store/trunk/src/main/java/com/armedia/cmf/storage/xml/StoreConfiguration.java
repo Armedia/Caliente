@@ -20,15 +20,6 @@ public class StoreConfiguration extends SettingContainer {
 	@XmlAttribute(name = "id", required = true)
 	protected String id;
 
-	public StoreConfiguration() {
-	}
-
-	protected StoreConfiguration(StoreConfiguration pattern) {
-		super(pattern);
-		this.name = pattern.name;
-		this.id = pattern.id;
-	}
-
 	@Override
 	protected void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
 		super.afterUnmarshal(unmarshaller, parent);
@@ -83,6 +74,6 @@ public class StoreConfiguration extends SettingContainer {
 
 	@Override
 	public StoreConfiguration clone() {
-		return new StoreConfiguration(this);
+		return StoreConfiguration.class.cast(super.clone());
 	}
 }

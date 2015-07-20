@@ -47,4 +47,16 @@ public class StoreDefinitions extends SettingContainer {
 		}
 		return this.contentstore;
 	}
+
+	@Override
+	public StoreDefinitions clone() {
+		StoreDefinitions newClone = StoreDefinitions.class.cast(super.clone());
+		if (this.objectstore != null) {
+			newClone.objectstore = new ArrayList<StoreConfiguration>(this.objectstore);
+		}
+		if (this.contentstore != null) {
+			newClone.contentstore = new ArrayList<StoreConfiguration>(this.contentstore);
+		}
+		return newClone;
+	}
 }
