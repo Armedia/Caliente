@@ -17,11 +17,14 @@ public abstract class CmfTypeMapper {
 			doConfigure(cfg);
 			ok = true;
 		} finally {
-			if (!ok) {
-				close();
+			try {
+				if (!ok) {
+					close();
+				}
+			} finally {
+				this.closed = !ok;
+				this.lock.writeLock().unlock();
 			}
-			this.closed = !ok;
-			this.lock.writeLock().unlock();
 		}
 	}
 

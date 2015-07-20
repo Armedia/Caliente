@@ -19,7 +19,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public class SettingContainer {
+public class SettingContainer implements Cloneable {
 
 	@XmlTransient
 	private static class Lookup extends StrLookup<String> {
@@ -68,7 +68,12 @@ public class SettingContainer {
 			this.settings.putAll(pattern.settings);
 		}
 		if (pattern.parent != null) {
-			this.parent = pattern.parent.clone();
+			try {
+				this.parent = pattern.parent.clone();
+			} catch (CloneNotSupportedException e) {
+				// This shouldn't happen
+				throw new RuntimeException("Cloning process failed", e);
+			}
 		}
 	}
 
@@ -115,7 +120,19 @@ public class SettingContainer {
 	}
 
 	@Override
-	public SettingContainer clone() {
-		return new SettingContainer(this);
+	public SettingContainer clone() throws CloneNotSupportedException {
+		SettingContainer newClone = SettingContainer.class.cast(super.clone());
+		newClone.setting = new ArrayList<Setting>();
+		if (this.setting != null) {
+			this.setting.addAll(this.setting);
+		}
+		newClone.settings = new HashMap<String, String>();
+		if (this.settings != null) {
+			this.settings.putAll(this.settings);
+		}
+		if (this.parent != null) {
+			newClone.parent = this.parent.clone();
+		}
+		return newClone;
 	}
 }

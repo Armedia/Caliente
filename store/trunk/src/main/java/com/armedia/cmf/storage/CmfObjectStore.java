@@ -7,6 +7,7 @@ package com.armedia.cmf.storage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -318,7 +319,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException, CmfValueDecoderException {
 		O operation = beginInvocation();
 		try {
 			Collection<CmfObject<V>> ret = loadObjects(operation, typeMapper, translator, type, ids);
@@ -343,24 +344,25 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException, CmfValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		getReadLock().lock();
 		try {
+			if (ids == null) {
+				ids = Collections.emptyList();
+			}
 			Set<String> actualIds = null;
 			final List<CmfObject<V>> ret = new ArrayList<CmfObject<V>>(ids.size());
-			if (ids != null) {
-				if (ids.isEmpty()) { return ret; }
-				actualIds = new HashSet<String>();
-				for (String s : ids) {
-					if (s == null) {
-						continue;
-					}
-					actualIds.add(s);
+			if (ids.isEmpty()) { return ret; }
+			actualIds = new HashSet<String>();
+			for (String s : ids) {
+				if (s == null) {
+					continue;
 				}
+				actualIds.add(s);
 			}
 			loadObjects(operation, translator, type, actualIds, new CollectionObjectHandler<V>(ret));
 			return ret;
