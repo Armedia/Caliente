@@ -198,7 +198,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		try {
 			locked = objectStore.lockForStorage(type, id);
 		} catch (CmfStorageException e) {
-			throw new ExportException(String.format("Exception caught attempting to lock a %s for storage %s [%s](%s)",
+			throw new ExportException(String.format("Exception caught attempting to lock a %s for storage [%s](%s)",
 				type, label, id), e);
 		}
 

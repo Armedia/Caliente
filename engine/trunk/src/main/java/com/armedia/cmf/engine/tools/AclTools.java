@@ -20,7 +20,7 @@ public abstract class AclTools {
 		try {
 			return URLEncoder.encode(str, AclTools.ENCODING);
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(String.format("[%s] encoding not supported"), e);
+			throw new RuntimeException(String.format("[%s] encoding not supported", AclTools.ENCODING), e);
 		}
 	}
 
@@ -28,7 +28,7 @@ public abstract class AclTools {
 		try {
 			return URLDecoder.decode(str, AclTools.ENCODING);
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(String.format("[%s] encoding not supported"), e);
+			throw new RuntimeException(String.format("[%s] encoding not supported", AclTools.ENCODING), e);
 		}
 	}
 

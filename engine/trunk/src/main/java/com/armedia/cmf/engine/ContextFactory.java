@@ -76,7 +76,7 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 			}
 		}
 		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Excluded types for this context factory instance: %s", getClass()
+			this.log.debug(String.format("Excluded types for this context factory instance (%s): %s", getClass()
 				.getSimpleName(), excludes));
 		}
 		this.excludes = Tools.freezeSet(excludes);

@@ -45,7 +45,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, CF>, CF extends ImportContextFactory<S, W, V, C, ?, ?>, DF extends ImportDelegateFactory<S, W, V, C, ?>>
-extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
+	extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
 	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
@@ -275,7 +275,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
-			throws ImportException, CmfStorageException {
+		throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -365,6 +365,10 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 							final Batch batch;
 							try {
 								batch = workQueue.take();
+								if ((batch == null) || (batch.contents == null)) {
+									// These are impossible, but this will shut FindBugs up :)
+									continue;
+								}
 							} catch (InterruptedException e) {
 								Thread.currentThread().interrupt();
 								return;
@@ -379,7 +383,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 							Map<String, Collection<ImportOutcome>> outcomes = new LinkedHashMap<String, Collection<ImportOutcome>>(
 								batch.contents.size());
 							try {
-								if ((batch == null) || (batch.contents == null) || batch.contents.isEmpty()) {
+								if (batch.contents.isEmpty()) {
 									// Shouldn't happen, but still
 									this.log.warn(String.format(
 										"An invalid value made it into the work queue somehow: %s", batch));
@@ -389,7 +393,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -464,10 +468,10 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 												// the other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -695,7 +699,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 					}
 
 					if (total < 1) {
-						this.log.warn(String.format("No %s objects available"));
+						this.log.warn(String.format("No %s objects available", type.name()));
 						continue;
 					}
 
@@ -729,7 +733,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 					}
 
 					this.log
-					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(typeMapper, translator, type, handler);
 					} catch (Exception e) {
@@ -818,10 +822,10 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
