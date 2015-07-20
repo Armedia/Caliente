@@ -65,7 +65,7 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 		return LocalTranslator.DATA_TYPES.get(t);
 	}
 
-	public static PropertyType decodePropertyType(CmfType t) {
+	public static PropertyType decodePropertyType(CmfDataType t) {
 		return LocalTranslator.DATA_TYPES_REV.get(t);
 	}
 
