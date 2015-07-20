@@ -34,7 +34,8 @@ public abstract class CmfOrganizationStrategy {
 
 	static {
 		Map<String, CmfOrganizationStrategy> strategies = new HashMap<String, CmfOrganizationStrategy>();
-		PluggableServiceLocator<CmfOrganizationStrategy> l = new PluggableServiceLocator<CmfOrganizationStrategy>(CmfOrganizationStrategy.class);
+		PluggableServiceLocator<CmfOrganizationStrategy> l = new PluggableServiceLocator<CmfOrganizationStrategy>(
+			CmfOrganizationStrategy.class);
 		l.setHideErrors(true);
 		for (CmfOrganizationStrategy s : l) {
 			String name = s.getName();
@@ -53,7 +54,8 @@ public abstract class CmfOrganizationStrategy {
 							s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
 				continue;
 			}
-			CmfOrganizationStrategy.LOG.debug("Registering CmfOrganizationStrategy [{}] as [{}]", s.getClass().getCanonicalName(), name);
+			CmfOrganizationStrategy.LOG.debug("Registering CmfOrganizationStrategy [{}] as [{}]", s.getClass()
+				.getCanonicalName(), name);
 			strategies.put(name, s);
 		}
 		STRATEGIES = Tools.freezeMap(strategies);

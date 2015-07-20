@@ -12,8 +12,8 @@ public class CmfTypeDecoder {
 
 	/**
 	 * <p>
-	 * Translate the given string to a valid, non-{@code null} {@link CmfType} value, or
-	 * return {@code null} if it can't translate it.
+	 * Translate the given string to a valid, non-{@code null} {@link CmfType} value, or return
+	 * {@code null} if it can't translate it.
 	 * </p>
 	 *
 	 * @param objectType
@@ -27,8 +27,8 @@ public class CmfTypeDecoder {
 
 	/**
 	 * <p>
-	 * Translate the given string to a valid, non-{@code null} {@link CmfDataType} value, or
-	 * return {@code null} if it can't translate it.
+	 * Translate the given string to a valid, non-{@code null} {@link CmfDataType} value, or return
+	 * {@code null} if it can't translate it.
 	 * </p>
 	 *
 	 * @param dataType

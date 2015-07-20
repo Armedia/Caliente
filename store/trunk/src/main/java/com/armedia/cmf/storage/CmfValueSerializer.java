@@ -146,8 +146,7 @@ public enum CmfValueSerializer {
 	public static CmfValueSerializer get(CmfDataType type) {
 		synchronized (CmfValueSerializer.class) {
 			if (CmfValueSerializer.MAP == null) {
-				Map<CmfDataType, CmfValueSerializer> m = new EnumMap<CmfDataType, CmfValueSerializer>(
-					CmfDataType.class);
+				Map<CmfDataType, CmfValueSerializer> m = new EnumMap<CmfDataType, CmfValueSerializer>(CmfDataType.class);
 				for (CmfValueSerializer s : CmfValueSerializer.values()) {
 					if (m.containsKey(s.type)) { throw new IllegalStateException(String.format(
 						"Duplicate mapping for data type [%s]", s.type)); }

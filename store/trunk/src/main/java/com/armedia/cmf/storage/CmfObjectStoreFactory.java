@@ -3,7 +3,7 @@ package com.armedia.cmf.storage;
 import java.util.Collection;
 
 public abstract class CmfObjectStoreFactory<C, O extends CmfStoreOperation<C>, S extends CmfObjectStore<C, O>> extends
-CmfStoreFactory<S> {
+	CmfStoreFactory<S> {
 
 	protected CmfObjectStoreFactory(String... aliases) {
 		super(aliases);

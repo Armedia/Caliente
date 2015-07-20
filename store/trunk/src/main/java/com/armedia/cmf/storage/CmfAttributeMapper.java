@@ -113,8 +113,7 @@ public abstract class CmfAttributeMapper {
 	 * @param targetValue
 	 * @return a new instance of {@link Mapping}
 	 */
-	protected final Mapping newMapping(CmfType objectType, String mappingName, String sourceValue,
-		String targetValue) {
+	protected final Mapping newMapping(CmfType objectType, String mappingName, String sourceValue, String targetValue) {
 		return new Mapping(objectType, mappingName, sourceValue, targetValue);
 	}
 

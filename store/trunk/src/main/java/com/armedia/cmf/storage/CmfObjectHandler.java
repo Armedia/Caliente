@@ -1,6 +1,5 @@
 package com.armedia.cmf.storage;
 
-
 public interface CmfObjectHandler<V> {
 
 	/**

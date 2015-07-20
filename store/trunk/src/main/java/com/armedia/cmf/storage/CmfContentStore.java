@@ -153,9 +153,9 @@ public abstract class CmfContentStore<L> extends CmfStore {
 
 		/**
 		 * <p>
-		 * Write the content from the underlying {@link CmfContentStore} into the given file, using a
-		 * default read buffer size (from {@link CmfContentStore#DEFAULT_BUFFER_SIZE}). Supports files
-		 * larger than 2GB. used.
+		 * Write the content from the underlying {@link CmfContentStore} into the given file, using
+		 * a default read buffer size (from {@link CmfContentStore#DEFAULT_BUFFER_SIZE}). Supports
+		 * files larger than 2GB. used.
 		 * </p>
 		 *
 		 * @param target
@@ -169,8 +169,8 @@ public abstract class CmfContentStore<L> extends CmfStore {
 
 		/**
 		 * <p>
-		 * Write the content from the underlying {@link CmfContentStore} into the given file, using a
-		 * read buffer of {@code bufferSize} bytes. Supports files larger than 2GB. If
+		 * Write the content from the underlying {@link CmfContentStore} into the given file, using
+		 * a read buffer of {@code bufferSize} bytes. Supports files larger than 2GB. If
 		 * {@code bufferSize} is less than or equal to 0, a default buffer of DEFAULT_BUFFER_SIZE is
 		 * used.
 		 * </p>
@@ -189,8 +189,8 @@ public abstract class CmfContentStore<L> extends CmfStore {
 			if (bufferSize <= 0) {
 				bufferSize = CmfContentStore.DEFAULT_BUFFER_SIZE;
 			} else {
-				bufferSize = Tools
-					.ensureBetween(CmfContentStore.MIN_BUFFER_SIZE, bufferSize, CmfContentStore.MAX_BUFFER_SIZE);
+				bufferSize = Tools.ensureBetween(CmfContentStore.MIN_BUFFER_SIZE, bufferSize,
+					CmfContentStore.MAX_BUFFER_SIZE);
 			}
 			try {
 				// We use copyLarge() to support files greater than 2GB
@@ -361,8 +361,7 @@ public abstract class CmfContentStore<L> extends CmfStore {
 		}
 	}
 
-	protected abstract L doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object,
-		String qualifier);
+	protected abstract L doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier);
 
 	protected abstract File doGetFile(L locator);
 

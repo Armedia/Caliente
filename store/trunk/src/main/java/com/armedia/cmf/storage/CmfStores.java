@@ -111,7 +111,7 @@ public final class CmfStores {
 	}
 
 	private CmfStore createStore(StoreConfiguration configuration) throws CmfStorageException,
-	DuplicateCmfStoreException {
+		DuplicateCmfStoreException {
 		assertOpen();
 		if (configuration == null) { throw new IllegalArgumentException(
 			"Must provide a configuration to construct the instance from"); }
