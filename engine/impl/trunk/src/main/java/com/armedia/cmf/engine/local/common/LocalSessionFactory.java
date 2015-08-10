@@ -3,9 +3,9 @@ package com.armedia.cmf.engine.local.common;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.h2.store.fs.FileUtils;
 
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -21,7 +21,8 @@ public class LocalSessionFactory extends SessionFactory<LocalRoot> {
 		if (root == null) { throw new IllegalArgumentException(
 			"Must provide a root directory to base the local engine off of"); }
 		root = root.getCanonicalFile();
-		FileUtils.createDirectories(root.getPath());
+
+		FileUtils.forceMkdir(root);
 		if (!root.isDirectory()) { throw new IllegalArgumentException(String.format(
 			"Root directory [%s] could not be found, nor could it be created", root)); }
 		this.root = new LocalRoot(root);
