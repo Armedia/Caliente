@@ -84,7 +84,7 @@ public class LocalFile {
 	/**
 	 * <p>
 	 * Returns a "universally-safe" path for the absoluteFile which escapes all
-	 * potentially-dangerous characters with their URL-safe alternatives (i.e. ' ' -> '+', %XX
+	 * potentially-dangerous characters with their URL-safe alternatives (i.e. ' ' -&gt; '+', %XX
 	 * encoding, etc.). All path components are separated by forward slashes ('/'). Thus, the
 	 * algorithm to obtain the original filename is to tokenize on forward slashes, URL-decode each
 	 * component, and re-concatenate using the {@code File#separator} or {@code File#separatorChar}.
