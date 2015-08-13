@@ -44,6 +44,9 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 
 			// The user's default ACL
 			session.getACL(user.getACLDomain(), user.getACLName()),
+
+			// If this user represents a group, export that group
+			(user.isGroup() ? session.getGroup(user.getUserName()) : null),
 		};
 
 		for (IDfPersistentObject dep : deps) {
