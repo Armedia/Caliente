@@ -104,30 +104,44 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		return false;
 	}
 
+	protected boolean isSupportsTransaction() {
+		return true;
+	}
+
 	public final ImportOutcome importObject(DctmImportContext context) throws DfException, ImportException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		final IDfSession session = context.getSession();
+		final boolean supportsTransaction = isSupportsTransaction();
 		boolean ok = false;
 		final IDfLocalTransaction localTx;
-		if (session.isTransactionActive()) {
-			localTx = session.beginTransEx();
+		if (supportsTransaction) {
+			if (session.isTransactionActive()) {
+				localTx = session.beginTransEx();
+			} else {
+				localTx = null;
+				session.beginTrans();
+			}
 		} else {
+			if (session.isTransactionActive()) { throw new ImportException(String.format(
+				"Objects of type [%s] don't support transactions, but a transaction is already open",
+				this.storedObject.getType())); }
 			localTx = null;
-			session.beginTrans();
 		}
 		try {
 			ImportOutcome ret = doImportObject(context);
 			this.log.debug(String.format("Committing the transaction for [%s](%s)", this.storedObject.getLabel(),
 				this.storedObject.getId()));
-			if (localTx != null) {
-				session.commitTransEx(localTx);
-			} else {
-				session.commitTrans();
+			if (supportsTransaction) {
+				if (localTx != null) {
+					session.commitTransEx(localTx);
+				} else {
+					session.commitTrans();
+				}
 			}
 			ok = true;
 			return ret;
 		} finally {
-			if (!ok) {
+			if (supportsTransaction && !ok) {
 				this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
 					this.storedObject.getId()));
 				try {
@@ -182,7 +196,9 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				newLabel = calculateLabel(object);
 				this.log.info(String.format("Acquiring lock on %s [%s](%s)", getDctmType().name(),
 					this.storedObject.getLabel(), this.storedObject.getId()));
-				DfUtils.lockObject(this.log, object);
+				if (isSupportsTransaction()) {
+					DfUtils.lockObject(this.log, object);
+				}
 				object.fetch(null);
 				this.log.info(String.format("Acquired lock on %s [%s](%s)", getDctmType().name(),
 					this.storedObject.getLabel(), this.storedObject.getId()));

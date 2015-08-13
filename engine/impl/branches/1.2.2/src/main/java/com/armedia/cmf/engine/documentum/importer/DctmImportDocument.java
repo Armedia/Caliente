@@ -650,9 +650,12 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// References don't require any of this being done
 		if (isReference()) { return; }
 
+		// TODO: RE-enable this
+		/*
 		if (!loadContentLegacy(document, newObject, context)) {
 			loadContent(document, newObject, context);
 		}
+		 */
 
 		// Now, link to the parent folders
 		linkToParents(document, context);

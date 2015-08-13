@@ -36,6 +36,11 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 	}
 
 	@Override
+	protected boolean isSupportsTransaction() {
+		return false;
+	}
+
+	@Override
 	protected String calculateLabel(IDfType type) throws DfException {
 		String superName = type.getSuperName();
 		if ((superName != null) && (superName.length() > 0)) {

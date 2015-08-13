@@ -73,6 +73,16 @@ public enum DctmObjectType {
 			// For now, eventually we'll do something different
 			return true;
 		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			switch (DctmObjectType.this) {
+				case TYPE:
+					return false;
+				default:
+					return true;
+			}
+		}
 	};
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
