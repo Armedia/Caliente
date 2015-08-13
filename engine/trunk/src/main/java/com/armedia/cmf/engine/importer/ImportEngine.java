@@ -365,7 +365,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 							final Batch batch;
 							try {
 								batch = workQueue.take();
-								if ((batch == null) || (batch.contents == null)) {
+								if (batch == null) {
 									// These are impossible, but this will shut FindBugs up :)
 									continue;
 								}
