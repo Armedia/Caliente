@@ -31,7 +31,7 @@ public enum DctmObjectType {
 	USER(StoredObjectType.USER, IDfUser.class),
 	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
 	ACL(StoredObjectType.ACL, IDfACL.class),
-	TYPE(StoredObjectType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
+	TYPE(StoredObjectType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false, false),
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
 	FOLDER(StoredObjectType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	DOCUMENT(StoredObjectType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
@@ -43,6 +43,7 @@ public enum DctmObjectType {
 	private final BatchItemStrategy batchingStrategy;
 	private final boolean supportsBatching;
 	private final boolean failureInterruptsBatch;
+	private final boolean supportsTransactions;
 	private final Set<Object> surrogateOf;
 	public final ImportStrategy importStrategy = new ImportStrategy() {
 
@@ -76,12 +77,7 @@ public enum DctmObjectType {
 
 		@Override
 		public boolean isSupportsTransactions() {
-			switch (DctmObjectType.this) {
-				case TYPE:
-					return false;
-				default:
-					return true;
-			}
+			return DctmObjectType.this.supportsTransactions;
 		}
 	};
 
@@ -108,6 +104,12 @@ public enum DctmObjectType {
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
 		DctmObjectType... surrogateOf) {
+		this(cmsType, dfClass, batchingStrategy, dmType, false, false, true, surrogateOf);
+	}
+
+	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
+		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
+		boolean supportsTransactions, DctmObjectType... surrogateOf) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
@@ -118,6 +120,7 @@ public enum DctmObjectType {
 		this.batchingStrategy = batchingStrategy;
 		this.supportsBatching = supportsBatching;
 		this.failureInterruptsBatch = failureInterruptsBatch;
+		this.supportsTransactions = supportsTransactions;
 		Set<Object> s = null;
 		if (surrogateOf != null) {
 			s = new TreeSet<Object>();
