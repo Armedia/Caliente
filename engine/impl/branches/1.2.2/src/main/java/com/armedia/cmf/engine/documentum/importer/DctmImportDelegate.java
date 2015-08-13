@@ -24,6 +24,7 @@ import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.storage.StorageException;
 import com.armedia.cmf.storage.StoredAttribute;
 import com.armedia.cmf.storage.StoredAttributeMapper.Mapping;
@@ -52,6 +53,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
 	protected final StoredObject<IDfValue> storedObject;
+	protected final ImportStrategy strategy;
 
 	protected DctmImportDelegate(DctmImportEngine engine, DctmObjectType expectedType,
 		StoredObject<IDfValue> storedObject) {
@@ -60,6 +62,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 			"This delegate is meant for [%s], but the given object is of type [%s] (%s)", expectedType, getDctmType(),
 			storedObject.getType())); }
 		this.storedObject = storedObject;
+		this.strategy = engine.getImportStrategy(storedObject.getType());
 	}
 
 	protected abstract String calculateLabel(T object) throws DfException, ImportException;
@@ -104,14 +107,10 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		return false;
 	}
 
-	protected boolean isSupportsTransaction() {
-		return true;
-	}
-
 	public final ImportOutcome importObject(DctmImportContext context) throws DfException, ImportException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		final IDfSession session = context.getSession();
-		final boolean supportsTransaction = isSupportsTransaction();
+		final boolean supportsTransaction = this.strategy.isSupportsTransactions();
 		boolean ok = false;
 		final IDfLocalTransaction localTx;
 		if (supportsTransaction) {
@@ -196,7 +195,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				newLabel = calculateLabel(object);
 				this.log.info(String.format("Acquiring lock on %s [%s](%s)", getDctmType().name(),
 					this.storedObject.getLabel(), this.storedObject.getId()));
-				if (isSupportsTransaction()) {
+				if (this.strategy.isSupportsTransactions()) {
 					DfUtils.lockObject(this.log, object);
 				}
 				object.fetch(null);
@@ -308,11 +307,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
@@ -385,7 +384,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -399,16 +398,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
