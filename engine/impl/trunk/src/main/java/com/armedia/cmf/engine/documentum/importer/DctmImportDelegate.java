@@ -29,13 +29,13 @@ import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
-import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValueDecoderException;
+import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -127,27 +127,38 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		final IDfSession session = context.getSession();
 		boolean ok = false;
+		final boolean useTx = this.strategy.isSupportsTransactions();
 		final IDfLocalTransaction localTx;
 		try {
-			if (session.isTransactionActive()) {
-				localTx = session.beginTransEx();
+			if (useTx) {
+				if (session.isTransactionActive()) {
+					localTx = session.beginTransEx();
+				} else {
+					localTx = null;
+					session.beginTrans();
+				}
 			} else {
+				if (session.isTransactionActive()) { throw new ImportException(String.format(
+					"Objects of type [%s] don't support transactions, but a transaction is active",
+					this.cmfObject.getType())); }
+				ok = true;
 				localTx = null;
-				session.beginTrans();
 			}
 			try {
 				ImportOutcome ret = doImportObject(context);
 				this.log.debug(String.format("Committing the transaction for [%s](%s)", this.cmfObject.getLabel(),
 					this.cmfObject.getId()));
-				if (localTx != null) {
-					session.commitTransEx(localTx);
-				} else {
-					session.commitTrans();
+				if (useTx) {
+					if (localTx != null) {
+						session.commitTransEx(localTx);
+					} else {
+						session.commitTrans();
+					}
 				}
 				ok = true;
 				return Collections.singleton(ret);
 			} finally {
-				if (!ok) {
+				if (!ok && useTx) {
 					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.cmfObject.getLabel(),
 						this.cmfObject.getId()));
 					try {
@@ -206,7 +217,10 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 				newLabel = calculateLabel(object);
 				this.log.info(String.format("Acquiring lock on %s [%s](%s)", getDctmType().name(),
 					this.cmfObject.getLabel(), this.cmfObject.getId()));
-				DfUtils.lockObject(this.log, object);
+				if (session.isTransactionActive()) {
+					// Only do the locking if transactions are in use
+					DfUtils.lockObject(this.log, object);
+				}
 				object.fetch(null);
 				this.log.info(String.format("Acquired lock on %s [%s](%s)", getDctmType().name(),
 					this.cmfObject.getLabel(), this.cmfObject.getId()));

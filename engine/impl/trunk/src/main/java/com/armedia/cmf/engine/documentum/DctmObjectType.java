@@ -29,7 +29,7 @@ public enum DctmObjectType {
 	USER(CmfType.USER, IDfUser.class),
 	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
 	ACL(CmfType.ACL, IDfACL.class),
-	TYPE(CmfType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
+	TYPE(CmfType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false, false),
 	FORMAT(CmfType.FORMAT, IDfFormat.class),
 	FOLDER(CmfType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
 	DOCUMENT(CmfType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
@@ -42,6 +42,7 @@ public enum DctmObjectType {
 	private final BatchItemStrategy batchingStrategy;
 	private final boolean supportsBatching;
 	private final boolean failureInterruptsBatch;
+	private final boolean supportsTransactions;
 	public final ImportStrategy importStrategy = new ImportStrategy() {
 
 		@Override
@@ -71,6 +72,11 @@ public enum DctmObjectType {
 			// For now, eventually we'll do something different
 			return true;
 		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return DctmObjectType.this.supportsTransactions;
+		}
 	};
 
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass) {
@@ -93,6 +99,12 @@ public enum DctmObjectType {
 
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch) {
+		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch, true);
+	}
+
+	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
+		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
+		boolean supportsTransactions) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
@@ -103,6 +115,7 @@ public enum DctmObjectType {
 		this.batchingStrategy = batchingStrategy;
 		this.supportsBatching = supportsBatching;
 		this.failureInterruptsBatch = failureInterruptsBatch;
+		this.supportsTransactions = supportsTransactions;
 	}
 
 	public final CmfType getStoredObjectType() {
