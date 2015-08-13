@@ -16,8 +16,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportEngine
-	extends
-	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory> {
+extends
+ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -44,6 +44,11 @@ public class LocalImportEngine
 		@Override
 		public BatchItemStrategy getBatchItemStrategy() {
 			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
 		}
 	};
 
@@ -73,6 +78,11 @@ public class LocalImportEngine
 		public BatchItemStrategy getBatchItemStrategy() {
 			return BatchItemStrategy.ITEMS_SERIALIZED;
 		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
+		}
 	};
 
 	private static final ImportStrategy FOLDER_STRATEGY = new ImportStrategy() {
@@ -100,6 +110,11 @@ public class LocalImportEngine
 		@Override
 		public BatchItemStrategy getBatchItemStrategy() {
 			return BatchItemStrategy.ITEMS_CONCURRENT;
+		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
 		}
 	};
 
