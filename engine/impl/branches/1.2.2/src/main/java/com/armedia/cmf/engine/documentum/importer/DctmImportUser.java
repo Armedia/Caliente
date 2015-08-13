@@ -146,9 +146,10 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 
 	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws DfException {
+		IDfValue isGroupValue = this.storedObject.getAttribute(DctmAttributes.R_IS_GROUP).getValue();
 		IDfValue userNameValue = this.storedObject.getAttribute(DctmAttributes.USER_NAME).getValue();
 		final String userName = userNameValue.asString();
-		return ctx.isUntouchableUser(userName) || super.skipImport(ctx);
+		return isGroupValue.asBoolean() || ctx.isUntouchableUser(userName) || super.skipImport(ctx);
 	}
 
 	@Override
