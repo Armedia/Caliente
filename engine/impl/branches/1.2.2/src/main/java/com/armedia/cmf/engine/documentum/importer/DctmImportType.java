@@ -114,9 +114,12 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 
 		// Start the DQL
 		final StringBuilder dql = new StringBuilder();
-		dql.append("create type \"").append(typeName).append("\"( ");
+		dql.append("create type \"").append(typeName);
 		// Iterate through only the custom attributes of the type object and add them to the dql
 		// string
+		if (startPosition < attrCount) {
+			dql.append("\"( ");
+		}
 		for (int i = startPosition; i < attrCount; ++i) {
 			// If we're not the first, we need a comma
 			if (i > startPosition) {
@@ -154,9 +157,12 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 				dql.append(" repeating");
 			}
 		}
+		if (startPosition < attrCount) {
+			dql.append(")");
+		}
 
 		// Add the supertype phrase if needed
-		dql.append(") with supertype ").append((superType != null) ? superTypeName : "null").append(" publish");
+		dql.append(" with supertype ").append((superType != null) ? superTypeName : "null").append(" publish");
 
 		if (this.log.isInfoEnabled()) {
 			this.log.info(String.format("Creating new type [%s] with DQL:%n%n%s%n", typeName, dql));
