@@ -45,7 +45,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, CF>, CF extends ImportContextFactory<S, W, V, C, ?, ?>, DF extends ImportDelegateFactory<S, W, V, C, ?>>
-	extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
+extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
 	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
@@ -275,7 +275,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
-		throws ImportException, CmfStorageException {
+			throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -393,7 +393,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -423,7 +423,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 									try {
 										initContext(ctx);
 										final CmfType storedType = next.getType();
-										session.begin();
+										final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
+										if (useTx) {
+											session.begin();
+										}
 										try {
 											listenerDelegator.objectImportStarted(next);
 											// TODO: Transform the loaded object from the
@@ -457,9 +460,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 													this.log.debug(msg);
 												}
 											}
-											session.commit();
+											if (useTx) {
+												session.commit();
+											}
 										} catch (Throwable t) {
-											session.rollback();
+											if (useTx) {
+												session.rollback();
+											}
 											listenerDelegator.objectImportFailed(next, t);
 											// Log the error, move on
 											this.log.error(String.format("Exception caught processing %s", next), t);
@@ -468,10 +475,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 												// the other objects
 												failBatch = true;
 												this.log
-													.debug(String
-														.format(
-															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-															storedType));
+												.debug(String
+													.format(
+														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+														storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -733,7 +740,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 
 					this.log
-						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+					.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
 						objectStore.loadObjects(typeMapper, translator, type, handler);
 					} catch (Exception e) {
@@ -822,10 +829,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				if (pending > 0) {
 					try {
 						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
 						executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);

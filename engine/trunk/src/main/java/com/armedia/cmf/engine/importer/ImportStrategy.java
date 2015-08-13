@@ -71,4 +71,13 @@ public interface ImportStrategy {
 	 *         processing should continue regardless
 	 */
 	public boolean isBatchFailRemainder();
+
+	/**
+	 * <p>
+	 * Returns {@code true} if this object type supports transactions, {@code false} otherwise.
+	 * </p>
+	 * 
+	 * @return {@code true} if this object type supports transactions, {@code false} otherwise.
+	 */
+	public boolean isSupportsTransactions();
 }
