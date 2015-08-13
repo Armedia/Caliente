@@ -114,11 +114,11 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 
 		// Start the DQL
 		final StringBuilder dql = new StringBuilder();
-		dql.append("create type \"").append(typeName);
+		dql.append("create type \"").append(typeName).append("\"");
 		// Iterate through only the custom attributes of the type object and add them to the dql
 		// string
 		if (startPosition < attrCount) {
-			dql.append("\"( ");
+			dql.append("( ");
 		}
 		for (int i = startPosition; i < attrCount; ++i) {
 			// If we're not the first, we need a comma
@@ -158,7 +158,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			}
 		}
 		if (startPosition < attrCount) {
-			dql.append(")");
+			dql.append(" )");
 		}
 
 		// Add the supertype phrase if needed
