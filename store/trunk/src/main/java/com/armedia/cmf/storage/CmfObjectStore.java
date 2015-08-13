@@ -470,7 +470,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		try {
 			String source = getMapping(operation, false, type, name, target);
 			Mapping ret = null;
-			if (target != null) {
+			if (source != null) {
 				ret = this.mapper.constructMapping(type, name, source, target);
 			}
 			operation.commit();
