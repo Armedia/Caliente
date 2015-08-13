@@ -366,7 +366,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 									try {
 										initContext(ctx);
 										final StoredObjectType storedType = next.getType();
-										session.begin();
+										final ImportStrategy strategy = getImportStrategy(storedType);
+										if (strategy.isSupportsTransactions()) {
+											session.begin();
+										}
 										try {
 											listenerDelegator.objectImportStarted(next);
 											// TODO: Transform the loaded object from the
@@ -396,9 +399,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 												}
 												this.log.debug(msg);
 											}
-											session.commit();
+											if (strategy.isSupportsTransactions()) {
+												session.commit();
+											}
 										} catch (Throwable t) {
-											session.rollback();
+											if (strategy.isSupportsTransactions()) {
+												session.rollback();
+											}
 											listenerDelegator.objectImportFailed(next, t);
 											// Log the error, move on
 											this.log.error(String.format("Exception caught processing %s", next), t);
