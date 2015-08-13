@@ -41,7 +41,11 @@ public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 			session.getFolderByPath(user.getDefaultFolder()),
 
 			// The user's default ACL
-			session.getACL(user.getACLDomain(), user.getACLName())
+			session.getACL(user.getACLDomain(), user.getACLName()),
+
+			// If this user is a group, then get its group
+			(user.isGroup() ? session.getGroup(user.getUserName()) : null)
+
 		};
 		for (IDfPersistentObject dep : deps) {
 			if (dep == null) {
@@ -49,6 +53,7 @@ public class DctmExportUser extends DctmExportAbstract<IDfUser> {
 			}
 			ret.add(dep);
 		}
+
 		return ret;
 	}
 }
