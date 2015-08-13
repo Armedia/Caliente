@@ -46,6 +46,11 @@ public class CmisImportEngine
 		public BatchItemStrategy getBatchItemStrategy() {
 			return BatchItemStrategy.ITEMS_SERIALIZED;
 		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
+		}
 	};
 
 	private static final ImportStrategy FOLDER_STRATEGY = new ImportStrategy() {
@@ -74,6 +79,11 @@ public class CmisImportEngine
 		public BatchItemStrategy getBatchItemStrategy() {
 			return BatchItemStrategy.ITEMS_CONCURRENT;
 		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
+		}
 	};
 
 	private static final ImportStrategy DOCUMENT_STRATEGY = new ImportStrategy() {
@@ -101,6 +111,11 @@ public class CmisImportEngine
 		@Override
 		public BatchItemStrategy getBatchItemStrategy() {
 			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
 		}
 	};
 
