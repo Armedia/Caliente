@@ -14,8 +14,8 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmGroup;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -139,7 +139,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		if (groupsNames != null) {
 			for (IDfValue v : groupsNames) {
 				String groupName = v.asString();
-				if (ctx.isSpecialGroup(groupName)) {
+				if (ctx.isSpecialGroup(groupName) || DctmMappingUtils.SPECIAL_NAMES.contains(groupName)) {
 					this.log.warn(String.format("Will not persist special member group dependency [%s] for group [%s]",
 						groupName, group.getGroupName()));
 					continue;
