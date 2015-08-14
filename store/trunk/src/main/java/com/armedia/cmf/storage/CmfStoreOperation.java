@@ -28,7 +28,7 @@ public abstract class CmfStoreOperation<C> {
 		return this.connection;
 	}
 
-	public final boolean begin() throws Exception {
+	public final boolean begin() throws CmfOperationException {
 		assertValid();
 		if (this.transactionOpen) { return false; }
 		boolean tx = false;
@@ -39,49 +39,50 @@ public abstract class CmfStoreOperation<C> {
 		return tx;
 	}
 
-	protected abstract boolean beginTransaction() throws Exception;
+	protected abstract boolean beginTransaction() throws CmfOperationException;
 
-	public final void commit() throws CmfStorageException {
+	public final void commit() throws CmfOperationException {
 		assertValid();
 		if (!this.transactionOpen) { return; }
 		if (!supportsTransactions()) { throw new UnsupportedOperationException(
 			"This type of session doesn't support transactions"); }
 		try {
 			commitTransaction();
+		} finally {
 			this.transactionOpen = false;
-		} catch (Exception e) {
-			throw new CmfStorageException("Exception raised committing an operation", e);
 		}
 	}
 
-	protected abstract void commitTransaction() throws Exception;
+	protected abstract void commitTransaction() throws CmfOperationException;
 
-	public final void rollback() throws CmfStorageException {
+	public final void rollback() throws CmfOperationException {
 		assertValid();
 		if (!this.transactionOpen) { return; }
 		if (!supportsTransactions()) { throw new UnsupportedOperationException(
 			"This type of session doesn't support transactions"); }
 		try {
 			rollbackTransaction();
+		} finally {
 			this.transactionOpen = false;
-		} catch (Exception e) {
-			throw new CmfStorageException("Exception raised rolling back an operation", e);
 		}
 	}
 
-	protected abstract void rollbackTransaction() throws Exception;
+	protected abstract void rollbackTransaction() throws CmfOperationException;
 
 	public final void close() throws CmfStorageException {
+		if (!this.valid) { return; }
 		close(false);
 	}
 
 	public final void close(boolean commit) throws CmfStorageException {
 		if (!this.valid) { return; }
 		try {
-			if (commit) {
-				commit();
-			} else {
-				rollback();
+			if (this.transactionOpen) {
+				if (commit) {
+					commit();
+				} else {
+					rollback();
+				}
 			}
 		} finally {
 			closeConnectionQuietly();

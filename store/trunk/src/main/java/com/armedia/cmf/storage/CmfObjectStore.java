@@ -49,18 +49,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				"Must provide either a source or a target value for the mapping"); }
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.createMapping(type, name, source, target); }
-				O operation = CmfObjectStore.this.beginInvocation();
-				try {
-					CmfObjectStore.this.createMapping(this.operation, type, name, source, target);
-					Mapping ret = null;
-					if ((source != null) && (target != null)) {
-						ret = constructMapping(type, name, source, target);
-					}
-					operation.commit();
-					return ret;
-				} finally {
-					CmfObjectStore.this.endInvocation(operation);
+				CmfObjectStore.this.createMapping(this.operation, type, name, source, target);
+				Mapping ret = null;
+				if ((source != null) && (target != null)) {
+					ret = constructMapping(type, name, source, target);
 				}
+				return ret;
 			} catch (CmfStorageException e) {
 				throw new RuntimeException(String.format(
 					"Exception caught attempting to get the target mapping for [%s/%s/%s]", type, name, source), e);
@@ -69,23 +63,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 		@Override
 		public Mapping getTargetMapping(CmfType type, String name, String source) {
-			if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
-			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
-			if (source == null) { throw new IllegalArgumentException("Must provide a source value for the mapping"); }
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getTargetMapping(type, name, source); }
-				O operation = CmfObjectStore.this.beginInvocation();
-				try {
-					String target = CmfObjectStore.this.getMapping(this.operation, false, type, name, source);
-					Mapping ret = null;
-					if (source != null) {
-						ret = constructMapping(type, name, source, target);
-					}
-					operation.commit();
-					return ret;
-				} finally {
-					CmfObjectStore.this.endInvocation(operation);
-				}
+				return CmfObjectStore.this.getTargetMapping(this.operation, type, name, source);
 			} catch (CmfStorageException e) {
 				throw new RuntimeException(String.format(
 					"Exception caught attempting to get the target mapping for [%s/%s/%s]", type, name, source), e);
@@ -94,23 +74,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 		@Override
 		public Mapping getSourceMapping(CmfType type, String name, String target) {
-			if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
-			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
-			if (target == null) { throw new IllegalArgumentException("Must provide a target value for the mapping"); }
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getSourceMapping(type, name, target); }
-				O operation = CmfObjectStore.this.beginInvocation();
-				try {
-					String source = CmfObjectStore.this.getMapping(this.operation, true, type, name, target);
-					Mapping ret = null;
-					if (source != null) {
-						ret = constructMapping(type, name, source, target);
-					}
-					operation.commit();
-					return ret;
-				} finally {
-					CmfObjectStore.this.endInvocation(operation);
-				}
+				return CmfObjectStore.this.getSourceMapping(this.operation, type, name, target);
 			} catch (CmfStorageException e) {
 				throw new RuntimeException(String.format(
 					"Exception caught attempting to get the source mapping for [%s/%s/%s]", type, name, target), e);
@@ -121,14 +87,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		public Map<CmfType, Set<String>> getAvailableMappings() {
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getAvailableMappings(); }
-				O operation = CmfObjectStore.this.beginInvocation();
-				try {
-					Map<CmfType, Set<String>> ret = CmfObjectStore.this.getAvailableMappings(this.operation);
-					operation.commit();
-					return ret;
-				} finally {
-					CmfObjectStore.this.endInvocation(operation);
-				}
+				return CmfObjectStore.this.getAvailableMappings(this.operation);
 			} catch (CmfStorageException e) {
 				throw new RuntimeException("Exception caught attempting to get available mappings", e);
 			}
@@ -136,16 +95,10 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 		@Override
 		public Set<String> getAvailableMappings(CmfType type) {
+			if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getAvailableMappings(type); }
-				O operation = CmfObjectStore.this.beginInvocation();
-				try {
-					Set<String> ret = CmfObjectStore.this.getAvailableMappings(this.operation, type);
-					operation.commit();
-					return ret;
-				} finally {
-					CmfObjectStore.this.endInvocation(operation);
-				}
+				return CmfObjectStore.this.getAvailableMappings(this.operation, type);
 			} catch (CmfStorageException e) {
 				throw new RuntimeException("Exception caught attempting to get available mappings", e);
 			}
@@ -153,20 +106,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 		@Override
 		public Map<String, String> getMappings(CmfType type, String name) {
-			if (type == null) { throw new IllegalArgumentException(
-				"Must provide an object type to find the mappings for"); }
-			if (name == null) { throw new IllegalArgumentException(
-				"Must provide a mapping name to find the mappings for"); }
+			if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
+			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getMappings(type, name); }
-				O operation = CmfObjectStore.this.beginInvocation();
-				try {
-					Map<String, String> ret = CmfObjectStore.this.getMappings(this.operation, type, name);
-					operation.commit();
-					return ret;
-				} finally {
-					CmfObjectStore.this.endInvocation(operation);
-				}
+				return CmfObjectStore.this.getMappings(this.operation, type, name);
 			} catch (CmfStorageException e) {
 				throw new RuntimeException(String.format(
 					"Exception caught attempting to get available mappings for [%s/%s]", type, name), e);
@@ -238,11 +182,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			Long ret = storeObject(operation, object, translator);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -255,10 +208,19 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		if ((content == null) || content.isEmpty()) { return; }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			setContentInfo(operation, object, content);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -269,11 +231,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final <V> List<CmfContentInfo> getContentInfo(CmfObject<V> object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			List<CmfContentInfo> ret = getContentInfo(operation, object);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -285,11 +256,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			boolean ret = isStored(operation, type, objectId);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -300,11 +280,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			boolean ret = lockForStorage(operation, type, objectId);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -321,11 +310,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
 		throws CmfStorageException, CmfValueDecoderException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			Collection<CmfObject<V>> ret = loadObjects(operation, typeMapper, translator, type, ids);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -384,7 +382,10 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			final CmfObjectHandler<V> handlerWrapper = new CmfObjectHandler<V>() {
 				@Override
 				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
@@ -407,9 +408,15 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				}
 			};
 			int ret = loadObjects(operation, translator, type, ids, handlerWrapper);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -423,15 +430,24 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if ((source == null) && (target == null)) { throw new IllegalArgumentException(
 			"Must provide either a source or a target value for the mapping"); }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			createMapping(operation, type, name, source, target);
 			Mapping ret = null;
 			if ((source != null) && (target != null)) {
 				ret = this.mapper.constructMapping(type, name, source, target);
 			}
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -443,50 +459,85 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		throws CmfStorageException;
 
 	public final Mapping getTargetMapping(CmfType type, String name, String source) throws CmfStorageException {
+		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
+		try {
+			tx = operation.begin();
+			Mapping ret = getTargetMapping(operation, type, name, source);
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
+			return ret;
+		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
+			endInvocation(operation);
+		}
+	}
+
+	protected final Mapping getTargetMapping(O operation, CmfType type, String name, String source)
+		throws CmfStorageException {
+		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (source == null) { throw new IllegalArgumentException(
 			"Must provide a source value to find the target mapping for"); }
+		String target = getMapping(operation, true, type, name, source);
+		if (target == null) { return null; }
+		return this.mapper.constructMapping(type, name, source, target);
+	}
+
+	public final Mapping getSourceMapping(CmfType type, String name, String target) throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
-			String target = getMapping(operation, true, type, name, source);
-			Mapping ret = null;
-			if (target != null) {
-				ret = this.mapper.constructMapping(type, name, source, target);
+			tx = operation.begin();
+			Mapping ret = getSourceMapping(operation, type, name, target);
+			if (tx) {
+				operation.commit();
 			}
-			operation.commit();
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
 
-	public final Mapping getSourceMapping(CmfType type, String name, String target) throws CmfStorageException {
+	protected final Mapping getSourceMapping(O operation, CmfType type, String name, String target)
+		throws CmfStorageException {
+		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (target == null) { throw new IllegalArgumentException(
-			"Must provide a target value to find the target mapping for"); }
-		O operation = beginInvocation();
-		try {
-			String source = getMapping(operation, false, type, name, target);
-			Mapping ret = null;
-			if (source != null) {
-				ret = this.mapper.constructMapping(type, name, source, target);
-			}
-			operation.commit();
-			return ret;
-		} finally {
-			endInvocation(operation);
-		}
+			"Must provide a target value to find the source mapping for"); }
+		String source = getMapping(operation, false, type, name, target);
+		if (source == null) { return null; }
+		return this.mapper.constructMapping(type, name, source, target);
 	}
 
 	public final Map<CmfType, Integer> getStoredObjectTypes() throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			Map<CmfType, Integer> ret = getStoredObjectTypes(operation);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -503,11 +554,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final int clearAttributeMappings() throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			int ret = clearAttributeMappings(operation);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -516,11 +576,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final Map<CmfType, Set<String>> getAvailableMappings() throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			Map<CmfType, Set<String>> ret = getAvailableMappings(operation);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -530,11 +599,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final Set<String> getAvailableMappings(CmfType type) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			Set<String> ret = getAvailableMappings(operation, type);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -545,11 +623,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			Map<String, String> ret = getMappings(operation, type, name);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -559,10 +646,19 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final void clearAllObjects() throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			clearAllObjects(operation);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -572,10 +668,19 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	public final void clearProperties() throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			clearProperties(operation);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -585,11 +690,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			CmfValue ret = getProperty(operation, property);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -599,11 +713,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	protected final CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			CmfValue ret = setProperty(operation, property, value);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -613,11 +736,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	public final Set<String> getPropertyNames() throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			Set<String> ret = getPropertyNames(operation);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
@@ -627,11 +759,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
 		O operation = beginInvocation();
+		boolean tx = false;
+		boolean ok = false;
 		try {
+			tx = operation.begin();
 			CmfValue ret = clearProperty(operation, property);
-			operation.commit();
+			if (tx) {
+				operation.commit();
+			}
+			ok = true;
 			return ret;
 		} finally {
+			if (tx && !ok) {
+				operation.rollback();
+			}
 			endInvocation(operation);
 		}
 	}
