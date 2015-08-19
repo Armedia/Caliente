@@ -25,6 +25,7 @@ import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.importer.ImportSetting;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStore;
@@ -271,18 +272,20 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 					listenerDelegator);
 			}
 
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Executing supplemental storage for %s", label));
-			}
-			final Handle contentHandle;
-			try {
-				contentHandle = storeContent(session, marshaled, referrent, sourceObject, streamStore);
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
-			}
+			if (!ctx.getSettings().getBoolean(ImportSetting.IGNORE_CONTENT)) {
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Executing content storage for %s", label));
+				}
+				final Handle contentHandle;
+				try {
+					contentHandle = storeContent(session, marshaled, referrent, sourceObject, streamStore);
+				} catch (Exception e) {
+					throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
+				}
 
-			if (contentHandle != null) {
-				setContentQualifier(marshaled, contentHandle.getQualifier());
+				if (contentHandle != null) {
+					setContentQualifier(marshaled, contentHandle.getQualifier());
+				}
 			}
 
 			final Long ret = objectStore.storeObject(marshaled, getTranslator());
