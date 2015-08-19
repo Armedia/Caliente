@@ -64,7 +64,7 @@ public enum CLIParam {
 	skip_users(Setting.SKIP_USERS, false, "Skip exporting users"),
 	skip_groups(Setting.SKIP_GROUPS, false, "Skip exporting groups"),
 	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls"),
-
+	skip_content(null, false, "Skip importing document contents (only create \"empty\" documents)"),
 	//
 	;
 
