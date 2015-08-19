@@ -15,7 +15,7 @@ public final class FilenameFixer {
 	private static final String LIN_INVALID_CHARS = "/\0";
 	private static final Map<Character, String> LIN_ENCODER;
 
-	private static final String WIN_INVALID_CHARS = "<>:\\|?*";
+	private static final String WIN_INVALID_CHARS = "<>:\\|?*\"";
 	private static final Map<Character, String> WIN_ENCODER;
 
 	static {
