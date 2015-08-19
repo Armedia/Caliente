@@ -20,6 +20,7 @@ import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
+import com.armedia.cmf.engine.documentum.common.Setting;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.StorageException;
@@ -650,8 +651,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// References don't require any of this being done
 		if (isReference()) { return; }
 
-		if (!loadContentLegacy(document, newObject, context)) {
-			loadContent(document, newObject, context);
+		if (!context.getSettings().getBoolean(Setting.IGNORE_CONTENT)) {
+			if (!loadContentLegacy(document, newObject, context)) {
+				loadContent(document, newObject, context);
+			}
 		}
 
 		// Now, link to the parent folders
