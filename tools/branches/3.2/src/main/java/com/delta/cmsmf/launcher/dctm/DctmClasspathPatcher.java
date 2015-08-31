@@ -12,6 +12,7 @@ import com.delta.cmsmf.utils.ClasspathPatcher;
 
 public class DctmClasspathPatcher extends ClasspathPatcher {
 
+	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	protected static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
 	protected static final String ENV_DOCUMENTUM = "DOCUMENTUM";
 	protected static final String DCTM_JAR = "dctm.jar";
@@ -39,6 +40,14 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 			if (!f.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
 				f.getAbsolutePath())); }
 			ret.add(new File(f, "config").toURI().toURL());
+
+			var = CLIParam.dfc_prop.getString();
+			if (var != null) {
+				f = new File(var);
+				if (f.exists() && f.isFile() && f.canRead()) {
+					System.setProperty(DctmClasspathPatcher.DFC_PROPERTIES_PROP, f.getCanonicalPath());
+				}
+			}
 
 			// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
 			var = CLIParam.dfc.getString(System.getenv(DctmClasspathPatcher.ENV_DOCUMENTUM_SHARED));

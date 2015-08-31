@@ -18,6 +18,7 @@ public enum CLIParam {
 	help(null, false, "This help message"),
 	cfg(null, true, "The configuration file to use"),
 	dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
+	dfc_prop(null, true, "The dfc.properties file to use instead of the default"),
 	dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
 	mode(null, true, true, "The mode of operation, either 'import', 'export', 'encrypt', 'decrypt' or 'counter'"),
 	engine(null, true, true, "The engine to use for the operation (either dctm or shpt)"),
