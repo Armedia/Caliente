@@ -26,7 +26,7 @@ import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.utils.ClasspathPatcher;
 
-public class CMSMFLauncher extends AbstractLauncher {
+public class CMSMFLauncher {
 
 	static final Pattern ENGINE_PARSER = Pattern.compile("^\\w+$");
 	private static final String MAIN_CLASS = "com.delta.cmsmf.launcher.%s.CMSMFMain_%s";
@@ -158,7 +158,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, engine, mode));
 		} catch (ClassNotFoundException e) {
 			System.err
-				.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
+			.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
 			return;
 		}
 
