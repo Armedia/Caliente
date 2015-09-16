@@ -15,7 +15,6 @@ public enum Setting implements ConfigurationSetting {
 	SPECIAL_GROUPS("special.groups", ""),
 	SPECIAL_TYPES("special.types", ""),
 	EXPORT_BATCH_SIZE("export.batch.size", 1000),
-	IGNORE_CONTENT("ignore.content", false),
 	//
 	;
 
