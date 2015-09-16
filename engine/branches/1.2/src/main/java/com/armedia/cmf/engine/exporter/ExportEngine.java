@@ -54,10 +54,18 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 	private class Result {
 		private final Long objectNumber;
 		private final StoredObject<V> marshaled;
+		private final String message;
 
 		public Result(Long objectNumber, StoredObject<V> marshaled) {
 			this.objectNumber = objectNumber;
 			this.marshaled = marshaled;
+			this.message = null;
+		}
+
+		public Result(String message) {
+			this.objectNumber = null;
+			this.marshaled = null;
+			this.message = message;
 		}
 	}
 
@@ -111,11 +119,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		}
 
 		@Override
-		public void objectSkipped(StoredObjectType objectType, String objectId) {
+		public void objectSkipped(StoredObjectType objectType, String objectId, String reason) {
 			getStoredObjectCounter().increment(objectType, ExportResult.SKIPPED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
-					l.objectSkipped(objectType, objectId);
+					l.objectSkipped(objectType, objectId, reason);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -167,10 +175,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				result = doExportObject(objectStore, streamStore, session, referrent, target, sourceObject, ctx,
 					listenerDelegator);
 			}
-			if (result != null) {
+			if ((result.objectNumber != null) && (result.marshaled != null)) {
 				listenerDelegator.objectExportCompleted(result.marshaled, result.objectNumber);
 			} else {
-				listenerDelegator.objectSkipped(target.getType(), target.getId());
+				listenerDelegator.objectSkipped(target.getType(), target.getId(), result.message);
 			}
 			return result;
 		} catch (Exception e) {
@@ -207,6 +215,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		}
 
 		// First, make sure other threads don't work on this same object
+		if (objectStore.isStored(type, id)) {
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("%s is already stored, skipping it", label));
+			}
+			return new Result("Already stored");
+		}
+
 		boolean locked = false;
 		try {
 			locked = objectStore.lockForStorage(type, id);
@@ -214,19 +229,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (this.log.isTraceEnabled()) {
 				this.log.warn(String.format("Exception caught attempting to lock an object for storage: %s", label), e);
 			}
-			try {
-				locked = objectStore.lockForStorage(type, id);
-			} catch (StorageException e2) {
-				// There may be some circumstances where this is necessary
-				throw new ExportException(String.format("Failed to obtain or check the lock on %s", label), e2);
-			}
+			throw new ExportException(String.format("Failed to obtain or check the lock on %s", label), e);
 		}
 
 		if (!locked) {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("%s is already locked for storage, skipping it", label));
 			}
-			return null;
+			return new Result("Already locked for storage");
 		}
 
 		if (this.log.isTraceEnabled()) {
@@ -240,7 +250,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				this.log.trace(String.format("%s was locked for storage by this thread, but is already stored...",
 					label));
 			}
-			return null;
+			return new Result("Locked but already stored");
 		}
 
 		if (referrent != null) {
@@ -294,7 +304,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("%s was stored by another thread", label));
 				}
-				return null;
+				return new Result("Stored by another thread");
 			}
 
 			if (this.log.isDebugEnabled()) {

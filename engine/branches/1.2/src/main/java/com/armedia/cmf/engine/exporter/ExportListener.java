@@ -32,7 +32,7 @@ public interface ExportListener {
 	 * @param objectType
 	 * @param objectId
 	 */
-	public void objectSkipped(StoredObjectType objectType, String objectId);
+	public void objectSkipped(StoredObjectType objectType, String objectId, String reason);
 
 	/**
 	 * <p>

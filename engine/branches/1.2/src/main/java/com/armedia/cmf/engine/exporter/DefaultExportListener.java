@@ -19,7 +19,7 @@ public class DefaultExportListener implements ExportListener {
 	}
 
 	@Override
-	public void objectSkipped(StoredObjectType objectType, String objectId) {
+	public void objectSkipped(StoredObjectType objectType, String objectId, String reason) {
 	}
 
 	@Override
