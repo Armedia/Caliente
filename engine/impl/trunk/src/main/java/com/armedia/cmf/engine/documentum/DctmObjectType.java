@@ -27,7 +27,7 @@ public enum DctmObjectType {
 
 	STORE(CmfType.DATASTORE, IDfStore.class),
 	USER(CmfType.USER, IDfUser.class),
-	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
+	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true, true, false),
 	ACL(CmfType.ACL, IDfACL.class),
 	TYPE(CmfType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false, false),
 	FORMAT(CmfType.FORMAT, IDfFormat.class),
@@ -43,6 +43,7 @@ public enum DctmObjectType {
 	private final boolean supportsBatching;
 	private final boolean failureInterruptsBatch;
 	private final boolean supportsTransactions;
+	private final boolean parallelCapable;
 	public final ImportStrategy importStrategy = new ImportStrategy() {
 
 		@Override
@@ -58,8 +59,7 @@ public enum DctmObjectType {
 
 		@Override
 		public boolean isParallelCapable() {
-			// All are parallel capable one way or another
-			return true;
+			return DctmObjectType.this.parallelCapable;
 		}
 
 		@Override
@@ -99,12 +99,19 @@ public enum DctmObjectType {
 
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch) {
-		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch, true);
+		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch, true, true);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
-		boolean supportsTransactions) {
+		boolean supportsTransactions, DctmObjectType... surrogateOf) {
+		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch,
+			supportsTransactions, true, surrogateOf);
+	}
+
+	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
+		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
+		boolean supportsTransactions, boolean parallelCapable, DctmObjectType... surrogateOf) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
@@ -116,6 +123,7 @@ public enum DctmObjectType {
 		this.supportsBatching = supportsBatching;
 		this.failureInterruptsBatch = failureInterruptsBatch;
 		this.supportsTransactions = supportsTransactions;
+		this.parallelCapable = parallelCapable;
 	}
 
 	public final CmfType getStoredObjectType() {
