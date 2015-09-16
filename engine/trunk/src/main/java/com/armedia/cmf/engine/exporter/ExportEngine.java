@@ -25,6 +25,7 @@ import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.importer.ImportSetting;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
@@ -257,10 +258,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					listenerDelegator);
 			}
 
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Executing supplemental storage for %s", label));
-			}
-
 			final Long ret = objectStore.storeObject(marshaled, getTranslator());
 			if (ret == null) {
 				// Should be impossible, but still guard against it
@@ -270,14 +267,19 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				return null;
 			}
 
-			try {
-				List<CmfContentInfo> cmfContentInfo = sourceObject.storeContent(ctx.getSession(), getTranslator(),
-					marshaled, referrent, streamStore);
-				if ((cmfContentInfo != null) && !cmfContentInfo.isEmpty()) {
-					objectStore.setContentInfo(marshaled, cmfContentInfo);
+			if (!ctx.getSettings().getBoolean(ImportSetting.IGNORE_CONTENT)) {
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Executing supplemental storage for %s", label));
 				}
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
+				try {
+					List<CmfContentInfo> cmfContentInfo = sourceObject.storeContent(ctx.getSession(), getTranslator(),
+						marshaled, referrent, streamStore);
+					if ((cmfContentInfo != null) && !cmfContentInfo.isEmpty()) {
+						objectStore.setContentInfo(marshaled, cmfContentInfo);
+					}
+				} catch (Exception e) {
+					throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
+				}
 			}
 
 			if (this.log.isDebugEnabled()) {

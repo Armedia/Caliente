@@ -6,6 +6,7 @@ public enum ImportSetting implements ConfigurationSetting {
 	//
 	TARGET_LOCATION("/"),
 	TRIM_PREFIX(0),
+	IGNORE_CONTENT(false),
 	//
 	;
 
