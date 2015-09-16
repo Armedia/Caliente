@@ -64,6 +64,7 @@ public abstract class AbstractCMSMFMain_import extends
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), Setting.CMF_IMPORT_TARGET_LOCATION.getString("/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), Setting.CMF_IMPORT_TRIM_PREFIX.getInt(0));
+		settings.put(ImportSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();
