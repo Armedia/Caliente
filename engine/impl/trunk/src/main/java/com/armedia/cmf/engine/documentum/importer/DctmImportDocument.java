@@ -19,6 +19,7 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
+import com.armedia.cmf.engine.importer.ImportSetting;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
@@ -593,7 +594,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// References don't require any of this being done
 		if (isReference()) { return; }
 
-		loadContent(document, newObject, context);
+		if (!context.getSettings().getBoolean(ImportSetting.IGNORE_CONTENT)) {
+			loadContent(document, newObject, context);
+		}
 	}
 
 	@Override
