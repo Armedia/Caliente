@@ -14,7 +14,9 @@ public enum Setting implements ConfigurationSetting {
 	SPECIAL_USERS("special.users", ""),
 	SPECIAL_GROUPS("special.groups", ""),
 	SPECIAL_TYPES("special.types", ""),
-	EXPORT_BATCH_SIZE("export.batch.size", 1000);
+	EXPORT_BATCH_SIZE("export.batch.size", 1000),
+	//
+	;
 
 	public final String name;
 	private final Object defaultValue;
