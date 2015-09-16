@@ -143,10 +143,16 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 				}
 
 				IDfGroup member = session.getGroup(groupName);
-				if (member == null) { throw new Exception(String.format(
-					"Missing dependency for group [%s] - group [%s] not found (as group member)", group.getGroupName(),
-					groupName)); }
-				ret.add(member);
+				if (member != null) {
+					ret.add(member);
+					continue;
+				}
+				if (!DctmMappingUtils.SPECIAL_NAMES.contains(groupName)) {
+					// Make sure to explode because this is a group that's expected to exist
+					throw new Exception(String.format(
+						"Missing dependency for group [%s] - group [%s] not found (as group member)",
+						group.getGroupName(), groupName));
+				}
 			}
 		}
 		return ret;

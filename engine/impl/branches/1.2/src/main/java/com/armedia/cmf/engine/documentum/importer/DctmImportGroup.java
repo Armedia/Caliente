@@ -130,14 +130,19 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				final String actualGroup = v.asString();
 				final IDfGroup other = session.getGroup(actualGroup);
 				if (other == null) {
-					this.log
-						.warn(String
-							.format(
-								"Failed to add group [%s] as a member of [%s] - the group wasn't found - probably didn't need to be copied over",
-								actualGroup, groupName.asString()));
-					continue;
+					try {
+						group.addGroup(actualGroup);
+					} catch (DfException e) {
+						this.log
+							.warn(
+								String
+									.format(
+										"Failed to add group [%s] as a member of [%s] - the group wasn't found and couldn't be added by name",
+										actualGroup, groupName.asString()), e);
+					}
+				} else {
+					group.addGroup(other.getGroupName());
 				}
-				group.addGroup(actualGroup);
 			}
 		}
 	}
