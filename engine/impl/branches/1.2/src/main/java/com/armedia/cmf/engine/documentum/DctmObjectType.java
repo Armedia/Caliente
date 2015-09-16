@@ -29,7 +29,7 @@ public enum DctmObjectType {
 
 	STORE(StoredObjectType.DATASTORE, IDfStore.class),
 	USER(StoredObjectType.USER, IDfUser.class),
-	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED),
+	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true, true, false),
 	ACL(StoredObjectType.ACL, IDfACL.class),
 	TYPE(StoredObjectType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false, false),
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
@@ -44,6 +44,7 @@ public enum DctmObjectType {
 	private final boolean supportsBatching;
 	private final boolean failureInterruptsBatch;
 	private final boolean supportsTransactions;
+	private final boolean parallelCapable;
 	private final Set<Object> surrogateOf;
 	public final ImportStrategy importStrategy = new ImportStrategy() {
 
@@ -60,8 +61,7 @@ public enum DctmObjectType {
 
 		@Override
 		public boolean isParallelCapable() {
-			// All are parallel capable one way or another
-			return true;
+			return DctmObjectType.this.parallelCapable;
 		}
 
 		@Override
@@ -110,6 +110,13 @@ public enum DctmObjectType {
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
 		boolean supportsTransactions, DctmObjectType... surrogateOf) {
+		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch,
+			supportsTransactions, true, surrogateOf);
+	}
+
+	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
+		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
+		boolean supportsTransactions, boolean parallelCapable, DctmObjectType... surrogateOf) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
@@ -135,6 +142,7 @@ public enum DctmObjectType {
 		} else {
 			this.surrogateOf = Collections.unmodifiableSet(s);
 		}
+		this.parallelCapable = parallelCapable;
 	}
 
 	public final StoredObjectType getStoredObjectType() {

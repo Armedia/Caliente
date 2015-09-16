@@ -43,6 +43,11 @@ public class DctmExportGroup extends DctmExportAbstract<IDfGroup> implements Dct
 	}
 
 	@Override
+	protected String calculateBatchId(IDfSession session, IDfGroup object) throws DfException {
+		return "NO_BATCH";
+	}
+
+	@Override
 	protected String calculateLabel(IDfSession session, IDfGroup group) throws DfException {
 		return group.getGroupName();
 	}
