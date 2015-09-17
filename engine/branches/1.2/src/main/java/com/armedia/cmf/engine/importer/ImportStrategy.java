@@ -29,6 +29,22 @@ public interface ImportStrategy {
 
 	/**
 	 * <p>
+	 * Returns {@code true} if this strategy supports batching groups of objects together to be
+	 * processed as a unit, or {@code false} otherwise.
+	 * </p>
+	 * <p>
+	 * If this method returns {@code false}, then {@link #getBatchItemStrategy()},
+	 * {@link #isBatchFailRemainder()} and {@link #isBatchIndependent()} are all meaningless and
+	 * should not be used.
+	 * </p>
+	 *
+	 * @return {@code true} if this strategy supports batching groups of objects together to be
+	 *         processed as a unit, or {@code false} otherwise.
+	 */
+	public boolean isBatchingSupported();
+
+	/**
+	 * <p>
 	 * Returns the mode of operation for processing batch contents, or {@code null} if batching
 	 * should be ignored. This value is ignored if {@link #isParallelCapable()} returns
 	 * {@code false}.

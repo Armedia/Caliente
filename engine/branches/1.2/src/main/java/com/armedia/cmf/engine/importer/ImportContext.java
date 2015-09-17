@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferContext;
-import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.ContentStore;
 import com.armedia.cmf.storage.ContentStore.Handle;
 import com.armedia.cmf.storage.ObjectStorageTranslator;
@@ -43,8 +42,8 @@ public abstract class ImportContext<S, T, V> extends TransferContext<S, T, V> {
 	public final int loadObjects(StoredObjectType type, Set<String> ids, StoredObjectHandler<V> handler)
 		throws StorageException, StoredValueDecoderException {
 		if (isSurrogateType(getRootObjectType(), type)) {
-			final BatchItemStrategy strategy = this.factory.getEngine().getImportStrategy(type).getBatchItemStrategy();
-			return this.objectStore.loadObjects(this.translator, type, ids, handler, strategy != null);
+			return this.objectStore.loadObjects(this.translator, type, ids, handler, this.factory.getEngine()
+				.getImportStrategy(type).isBatchingSupported());
 		} else {
 			return 0;
 		}

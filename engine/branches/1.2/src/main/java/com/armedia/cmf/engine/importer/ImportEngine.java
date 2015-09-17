@@ -45,7 +45,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
-TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineListener> {
+	TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineListener> {
 
 	private static enum BatchStatus {
 		//
@@ -92,9 +92,10 @@ TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineL
 		public String toString() {
 			return String
 				.format(
-					"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.batching=%s, strategy.failRemainder=%s, contents=%s]",
+					"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.batchingSupported=%s, strategy.batchingStrategy=%s, strategy.failRemainder=%s, contents=%s]",
 					this.type, this.id, this.status, this.strategy.isParallelCapable(),
-					this.strategy.getBatchItemStrategy(), this.strategy.isBatchFailRemainder(), this.contents);
+					this.strategy.isBatchingSupported(), this.strategy.getBatchItemStrategy(),
+					this.strategy.isBatchFailRemainder(), this.contents);
 		}
 	}
 
@@ -248,7 +249,7 @@ TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineL
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
-			throws ImportException, StorageException {
+		throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -336,7 +337,7 @@ TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineL
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -415,10 +416,10 @@ TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineL
 												// the other objects
 												failBatch = true;
 												this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+													.debug(String
+														.format(
+															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+															storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -467,174 +468,6 @@ TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineL
 					if (getImportStrategy(t) == null) { throw new ImportException(String.format(
 						"No import strategy provided for available object type [%s]", t.name())); }
 				}
-
-				final StoredObjectHandler<V> handler = new StoredObjectHandler<V>() {
-					private final Logger log = ImportEngine.this.log;
-
-					private String batchId = null;
-					private List<StoredObject<?>> contents = null;
-
-					@Override
-					public boolean newBatch(String batchId) throws StorageException {
-						this.contents = new LinkedList<StoredObject<?>>();
-						this.batchId = batchId;
-						return true;
-					}
-
-					@Override
-					public boolean handleObject(StoredObject<V> dataObject) {
-						if (this.contents == null) {
-							ImportStrategy strategy = getImportStrategy(dataObject.getType());
-							if (strategy.getBatchItemStrategy() != null) {
-								// ERROR!
-							}
-
-							Collection<StoredObject<?>> c = new ArrayList<StoredObject<?>>(1);
-							c.add(dataObject);
-							try {
-								workQueue.put(new Batch(dataObject.getType(), dataObject.getBatchId(), c, strategy));
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-								String msg = String.format(
-									"Thread interrupted while trying to submit the batch %s containing [%s]",
-									this.batchId, dataObject);
-								if (this.log.isDebugEnabled()) {
-									this.log.warn(msg, e);
-								} else {
-									this.log.warn(msg);
-								}
-								return false;
-							}
-						} else {
-							this.contents.add(dataObject);
-						}
-						return true;
-					}
-
-					@Override
-					public boolean closeBatch(boolean ok) throws StorageException {
-						if ((this.contents == null) || this.contents.isEmpty()) { return true; }
-						StoredObject<?> sample = this.contents.get(0);
-						StoredObjectType storedType = sample.getType();
-						ImportStrategy strategy = getImportStrategy(storedType);
-						// We will have already validated that a valid strategy is provided for
-						// all stored types
-						if (!strategy.isParallelCapable()
-							|| (strategy.getBatchItemStrategy() == BatchItemStrategy.ITEMS_SERIALIZED)) {
-							// If we're not parallelizing AT ALL, or if we're processing batch
-							// contents serially (but whole batches in parallel), then we submit
-							// batches as a group, and don't wait
-							try {
-								workQueue.put(new Batch(storedType, this.batchId, this.contents, strategy));
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-								String msg = String.format(
-									"Thread interrupted while trying to submit the batch %s containing [%s]",
-									this.batchId, this.contents);
-								if (this.log.isDebugEnabled()) {
-									this.log.warn(msg, e);
-								} else {
-									this.log.warn(msg);
-								}
-								return false;
-							} finally {
-								this.contents = null;
-								this.batchId = null;
-							}
-						} else if ((strategy.getBatchItemStrategy() == null)
-							|| (strategy.getBatchItemStrategy() == BatchItemStrategy.ITEMS_CONCURRENT)) {
-							// Batch items are to be run in parallel. If the strategy is null,
-							// then we don't wait and simply fire every item off in its own
-							// individual batch. Otherwise, batch items are to be run in
-							// parallel, but batches themselves are to be serialized, so we have
-							// to wait until each batch is concluded before we return
-							batchCounter.set(0);
-							final int contentSize = this.contents.size();
-							List<Batch> batches = new ArrayList<Batch>(this.contents.size());
-							for (StoredObject<?> o : this.contents) {
-								List<StoredObject<?>> l = new ArrayList<StoredObject<?>>(1);
-								l.add(o);
-								try {
-									Batch batch = new Batch(o.getType(), this.batchId, l, strategy);
-									batches.add(batch);
-									workQueue.put(batch);
-								} catch (InterruptedException e) {
-									Thread.currentThread().interrupt();
-									String msg = String.format(
-										"Thread interrupted while trying to submit the batch %s containing [%s]",
-										this.batchId, this.contents);
-									if (this.log.isDebugEnabled()) {
-										this.log.warn(msg, e);
-									} else {
-										this.log.warn(msg);
-									}
-									// Thread is interrupted, take that as a sign to terminate
-									return false;
-								}
-							}
-
-							if (strategy.getBatchItemStrategy() != null) {
-								// We need to wait until the batch has been processed in its
-								// entirety, or no more workers waiting...
-								try {
-									synchronized (workerSynchronizer) {
-										while ((activeCounter.get() > 0) && (batchCounter.get() < contentSize)) {
-											workerSynchronizer.wait();
-										}
-										workerSynchronizer.notify();
-									}
-									// Check the result
-									boolean hasError = false;
-									for (Batch batch : batches) {
-										if ((batch.thrown != null) || (batch.status == BatchStatus.ABORTED)) {
-											hasError = true;
-											break;
-										}
-									}
-									if (hasError) {
-										StringBuilder b = new StringBuilder();
-										for (Batch batch : batches) {
-											if (b.length() > 0) {
-												b.append(String.format("%n"));
-											}
-											b.append(String.format("Batch [%s] %s with contents: %s", batch.id,
-												batch.status, batch.contents));
-											if (batch.thrown != null) {
-												hasError = true;
-												StringWriter sw = new StringWriter();
-												PrintWriter pw = new PrintWriter(sw);
-												batch.thrown.printStackTrace(pw);
-												b.append(String.format("%n%s", sw.toString()));
-											}
-										}
-										this.log.warn(String.format("Workers exited early%n%s", b.toString()));
-										return false;
-									}
-								} catch (InterruptedException e) {
-									Thread.currentThread().interrupt();
-									String msg = String
-										.format(
-											"Thread interrupted while waiting for work to complete for batch %s containing [%s]",
-											this.batchId, this.contents);
-									if (this.log.isDebugEnabled()) {
-										this.log.warn(msg, e);
-									} else {
-										this.log.warn(msg);
-									}
-									// Thread is interrupted, take that as a sign to terminate
-									return false;
-								}
-							}
-						}
-						// TODO: Perhaps check the error threshold
-						return true;
-					}
-
-					@Override
-					public boolean handleException(SQLException e) {
-						return true;
-					}
-				};
 
 				List<Future<?>> futures = new ArrayList<Future<?>>();
 				List<Batch> remaining = new ArrayList<Batch>();
@@ -706,7 +539,174 @@ TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineL
 					this.log
 						.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 					try {
-						objectStore.loadObjects(translator, type, handler, strategy.getBatchItemStrategy() != null);
+						objectStore.loadObjects(translator, type, new StoredObjectHandler<V>() {
+							private final Logger log = ImportEngine.this.log;
+
+							private String batchId = null;
+							private List<StoredObject<?>> contents = null;
+
+							@Override
+							public boolean newBatch(String batchId) throws StorageException {
+								this.contents = new LinkedList<StoredObject<?>>();
+								this.batchId = batchId;
+								return true;
+							}
+
+							@Override
+							public boolean handleObject(StoredObject<V> dataObject) {
+								if (this.contents == null) {
+									ImportStrategy strategy = getImportStrategy(dataObject.getType());
+									Collection<StoredObject<?>> c = new ArrayList<StoredObject<?>>(1);
+									c.add(dataObject);
+									try {
+										workQueue.put(new Batch(dataObject.getType(), dataObject.getBatchId(), c,
+											strategy));
+									} catch (InterruptedException e) {
+										Thread.currentThread().interrupt();
+										String msg = String.format(
+											"Thread interrupted while trying to submit the batch %s containing [%s]",
+											this.batchId, dataObject);
+										if (this.log.isDebugEnabled()) {
+											this.log.warn(msg, e);
+										} else {
+											this.log.warn(msg);
+										}
+										return false;
+									}
+								} else {
+									this.contents.add(dataObject);
+								}
+								return true;
+							}
+
+							@Override
+							public boolean closeBatch(boolean ok) throws StorageException {
+								if ((this.contents == null) || this.contents.isEmpty()) { return true; }
+								StoredObject<?> sample = this.contents.get(0);
+								StoredObjectType storedType = sample.getType();
+								ImportStrategy strategy = getImportStrategy(storedType);
+								// We will have already validated that a valid strategy is provided
+								// for all stored types
+								if (!strategy.isParallelCapable()
+									|| (strategy.getBatchItemStrategy() == BatchItemStrategy.ITEMS_SERIALIZED)) {
+									// If we're not parallelizing AT ALL, or if we're processing
+									// batch contents serially (but whole batches in parallel), then
+									// we submit batches as a group, and don't wait
+									try {
+										workQueue.put(new Batch(storedType, this.batchId, this.contents, strategy));
+									} catch (InterruptedException e) {
+										Thread.currentThread().interrupt();
+										String msg = String.format(
+											"Thread interrupted while trying to submit the batch %s containing [%s]",
+											this.batchId, this.contents);
+										if (this.log.isDebugEnabled()) {
+											this.log.warn(msg, e);
+										} else {
+											this.log.warn(msg);
+										}
+										return false;
+									} finally {
+										this.contents = null;
+										this.batchId = null;
+									}
+								} else if ((strategy.getBatchItemStrategy() == null)
+									|| (strategy.getBatchItemStrategy() == BatchItemStrategy.ITEMS_CONCURRENT)) {
+									// Batch items are to be run in parallel. If the strategy is
+									// null, then we don't wait and simply fire every item off in
+									// its own individual batch. Otherwise, batch items are to be
+									// run in parallel, but batches themselves are to be serialized,
+									// so we have to wait until each batch is concluded before we
+									// return
+									batchCounter.set(0);
+									final int contentSize = this.contents.size();
+									List<Batch> batches = new ArrayList<Batch>(this.contents.size());
+									for (StoredObject<?> o : this.contents) {
+										List<StoredObject<?>> l = new ArrayList<StoredObject<?>>(1);
+										l.add(o);
+										try {
+											Batch batch = new Batch(o.getType(), this.batchId, l, strategy);
+											batches.add(batch);
+											workQueue.put(batch);
+										} catch (InterruptedException e) {
+											Thread.currentThread().interrupt();
+											String msg = String
+												.format(
+													"Thread interrupted while trying to submit the batch %s containing [%s]",
+													this.batchId, this.contents);
+											if (this.log.isDebugEnabled()) {
+												this.log.warn(msg, e);
+											} else {
+												this.log.warn(msg);
+											}
+											// Thread is interrupted, take that as a sign to
+											// terminate
+											return false;
+										}
+									}
+
+									if (strategy.getBatchItemStrategy() != null) {
+										// We need to wait until the batch has been processed in its
+										// entirety, or no more workers waiting...
+										try {
+											synchronized (workerSynchronizer) {
+												while ((activeCounter.get() > 0) && (batchCounter.get() < contentSize)) {
+													workerSynchronizer.wait();
+												}
+												workerSynchronizer.notify();
+											}
+											// Check the result
+											boolean hasError = false;
+											for (Batch batch : batches) {
+												if ((batch.thrown != null) || (batch.status == BatchStatus.ABORTED)) {
+													hasError = true;
+													break;
+												}
+											}
+											if (hasError) {
+												StringBuilder b = new StringBuilder();
+												for (Batch batch : batches) {
+													if (b.length() > 0) {
+														b.append(String.format("%n"));
+													}
+													b.append(String.format("Batch [%s] %s with contents: %s", batch.id,
+														batch.status, batch.contents));
+													if (batch.thrown != null) {
+														hasError = true;
+														StringWriter sw = new StringWriter();
+														PrintWriter pw = new PrintWriter(sw);
+														batch.thrown.printStackTrace(pw);
+														b.append(String.format("%n%s", sw.toString()));
+													}
+												}
+												this.log.warn(String.format("Workers exited early%n%s", b.toString()));
+												return false;
+											}
+										} catch (InterruptedException e) {
+											Thread.currentThread().interrupt();
+											String msg = String
+												.format(
+													"Thread interrupted while waiting for work to complete for batch %s containing [%s]",
+													this.batchId, this.contents);
+											if (this.log.isDebugEnabled()) {
+												this.log.warn(msg, e);
+											} else {
+												this.log.warn(msg);
+											}
+											// Thread is interrupted, take that as a sign to
+											// terminate
+											return false;
+										}
+									}
+								}
+								// TODO: Perhaps check the error threshold
+								return true;
+							}
+
+							@Override
+							public boolean handleException(SQLException e) {
+								return true;
+							}
+						}, strategy.isBatchingSupported());
 					} catch (Exception e) {
 						throw new ImportException(String.format("Exception raised while loading objects of type [%s]",
 							type), e);
