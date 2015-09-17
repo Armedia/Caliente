@@ -215,13 +215,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 		}
 
 		// First, make sure other threads don't work on this same object
-		if (objectStore.isStored(type, id)) {
-			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("%s is already stored, skipping it", label));
-			}
-			return new Result("Already stored");
-		}
-
 		boolean locked = false;
 		try {
 			locked = objectStore.lockForStorage(type, id);
@@ -266,6 +259,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			}
 
 			final StoredObject<V> marshaled = marshal(ctx, session, referrent, sourceObject);
+			if (marshaled == null) { return new Result("Explicitly skipped"); }
 			Collection<T> referenced;
 			try {
 				referenced = identifyRequirements(session, marshaled, sourceObject, ctx);
