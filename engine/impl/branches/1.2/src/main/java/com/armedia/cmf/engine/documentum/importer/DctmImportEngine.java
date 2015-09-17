@@ -56,6 +56,11 @@ public class DctmImportEngine extends
 		}
 
 		@Override
+		public boolean isBatchingSupported() {
+			return true;
+		}
+
+		@Override
 		public boolean isBatchFailRemainder() {
 			return true;
 		}
@@ -91,7 +96,7 @@ public class DctmImportEngine extends
 	@Override
 	protected ImportOutcome importObject(StoredObject<?> marshaled,
 		ObjectStorageTranslator<IDfPersistentObject, IDfValue> translator, DctmImportContext ctx)
-			throws ImportException, StorageException, StoredValueDecoderException {
+		throws ImportException, StorageException, StoredValueDecoderException {
 		@SuppressWarnings("unchecked")
 		StoredObject<IDfValue> castedMarshaled = (StoredObject<IDfValue>) marshaled;
 		try {
