@@ -99,6 +99,12 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	"    select * " + //
 		"  from cmf_object " + //
 		" where object_type = ? " + //
+		" order by object_number";
+
+	private static final String LOAD_OBJECTS_BATCHED_SQL = //
+	"    select * " + //
+		"  from cmf_object " + //
+		" where object_type = ? " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_ANY_SQL = //
@@ -106,9 +112,23 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		"  from cmf_object " + //
 		" where object_type = ? " + //
 		"   and object_id = any ( ? ) " + //
+		" order by object_number";
+
+	private static final String LOAD_OBJECTS_BY_ID_ANY_BATCHED_SQL = //
+	"    select * " + //
+		"  from cmf_object " + //
+		" where object_type = ? " + //
+		"   and object_id = any ( ? ) " + //
 		" order by batch_id, object_number";
 
 	private static final String LOAD_OBJECTS_BY_ID_IN_SQL = //
+	"    select o.* " + //
+		"  from cmf_object o, table(x varchar=?) t " + //
+		" where o.object_type = ? " + //
+		"   and o.object_id = t.x " + //
+		" order by o.object_number";
+
+	private static final String LOAD_OBJECTS_BY_ID_IN_BATCHED_SQL = //
 	"    select o.* " + //
 		"  from cmf_object o, table(x varchar=?) t " + //
 		" where o.object_type = ? " + //
@@ -431,8 +451,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <T, V> int doLoadObjects(JdbcOperation operation, ObjectStorageTranslator<T, V> translator,
-		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler) throws StorageException,
-		StoredValueDecoderException {
+		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler, boolean batching)
+		throws StorageException, StoredValueDecoderException {
 		Connection objectConn = null;
 		Connection attributeConn = null;
 
@@ -452,14 +472,19 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				boolean limitByIDs = false;
 				boolean useSqlArray = false;
 				if (ids == null) {
-					objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_SQL);
+					objectPS = objectConn.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BATCHED_SQL
+						: JdbcObjectStore.LOAD_OBJECTS_SQL);
 				} else {
 					limitByIDs = true;
 					try {
-						objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
+						objectPS = objectConn
+							.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_BATCHED_SQL
+								: JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
 						useSqlArray = true;
 					} catch (SQLException e) {
-						objectPS = objectConn.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
+						objectPS = objectConn
+							.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_BATCHED_SQL
+								: JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
 					}
 				}
 
@@ -501,31 +526,34 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							// If batching is not required, then we simply use the object number
 							// as the batch ID, to ensure that object_number remains the sole
 							// ordering factor
-							String batchId = objectRS.getString("batch_id");
-							if ((batchId == null) || objectRS.wasNull()) {
-								batchId = String.format("%08x", objNum);
-							}
-							if (!Tools.equals(currentBatch, batchId)) {
-								if (currentBatch != null) {
-									if (this.log.isDebugEnabled()) {
-										this.log.debug(String.format("CLOSE BATCH: %s", currentBatch));
-									}
-									if (!handler.closeBatch(true)) {
-										this.log.warn(String.format("%s batch [%s] requested processing cancellation",
-											type.name(), batchId));
-										currentBatch = null;
-										break;
-									}
+							if (batching) {
+								String batchId = objectRS.getString("batch_id");
+								if (!batching || (batchId == null) || objectRS.wasNull()) {
+									batchId = String.format("%08x", objNum);
 								}
+								if (!Tools.equals(currentBatch, batchId)) {
+									if (currentBatch != null) {
+										if (this.log.isDebugEnabled()) {
+											this.log.debug(String.format("CLOSE BATCH: %s", currentBatch));
+										}
+										if (!handler.closeBatch(true)) {
+											this.log
+												.warn(String.format("%s batch [%s] requested processing cancellation",
+													type.name(), batchId));
+											currentBatch = null;
+											break;
+										}
+									}
 
-								if (this.log.isDebugEnabled()) {
-									this.log.debug(String.format("NEW BATCH: %s", batchId));
+									if (this.log.isDebugEnabled()) {
+										this.log.debug(String.format("NEW BATCH: %s", batchId));
+									}
+									if (!handler.newBatch(batchId)) {
+										this.log.warn(String.format("%s batch [%s] skipped", type.name(), batchId));
+										continue;
+									}
+									currentBatch = batchId;
 								}
-								if (!handler.newBatch(batchId)) {
-									this.log.warn(String.format("%s batch [%s] skipped", type.name(), batchId));
-									continue;
-								}
-								currentBatch = batchId;
 							}
 
 							final String objId = objectRS.getString("object_id");
