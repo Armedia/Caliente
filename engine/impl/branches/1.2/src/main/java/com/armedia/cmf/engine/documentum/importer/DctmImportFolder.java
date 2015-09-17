@@ -5,7 +5,9 @@
 package com.armedia.cmf.engine.documentum.importer;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
@@ -111,79 +113,111 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		final StoredProperty<IDfValue> usersDefaultFolderPaths = this.storedObject
 			.getProperty(DctmFolder.USERS_DEFAULT_FOLDER_PATHS);
 
-		if ((usersWithDefaultFolder == null) || (usersDefaultFolderPaths == null)
-			|| (usersWithDefaultFolder.getValueCount() == 0) || (usersDefaultFolderPaths.getValueCount() == 0)) { return; }
-
-		final int total = usersWithDefaultFolder.getValueCount();
-		Map<String, String> m = new TreeMap<String, String>();
-		for (int i = 0; i < total; i++) {
-			String user = usersWithDefaultFolder.getValue(i).asString();
-			// Don't touch the special users!!
-			if (context.isUntouchableUser(user)) {
-				this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
-					DctmMappingUtils.resolveMappableUser(session, user)));
-				continue;
+		if ((usersWithDefaultFolder != null) && (usersDefaultFolderPaths != null) && usersWithDefaultFolder.hasValues()
+			&& usersDefaultFolderPaths.hasValues()) {
+			final int total = usersWithDefaultFolder.getValueCount();
+			Map<String, String> m = new TreeMap<String, String>();
+			for (int i = 0; i < total; i++) {
+				String user = usersWithDefaultFolder.getValue(i).asString();
+				// Don't touch the special users!!
+				if (context.isUntouchableUser(user)) {
+					this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
+						DctmMappingUtils.resolveMappableUser(session, user)));
+					continue;
+				}
+				m.put(user, context.getTargetPath(usersDefaultFolderPaths.getValue(i).asString()));
 			}
-			m.put(user, context.getTargetPath(usersDefaultFolderPaths.getValue(i).asString()));
-		}
 
-		for (Map.Entry<String, String> entry : m.entrySet()) {
-			final String actualUser = entry.getKey();
-			final String pathValue = entry.getValue();
+			for (Map.Entry<String, String> entry : m.entrySet()) {
+				final String actualUser = entry.getKey();
+				final String pathValue = entry.getValue();
 
-			// TODO: How do we decide if we should update the default folder for this user? What
-			// if the user's default folder has been modified on the target CMS and we don't
-			// want to clobber that? That's a decision that needs to be made later...
-			final IDfUser user;
-			try {
-				user = DctmImportUser.locateExistingUser(context, actualUser);
-			} catch (MultipleUserMatchesException e) {
-				String msg = String.format("Failed to link folder [%s](%s) to user [%s] as its default folder - %s",
-					this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser, e.getMessage());
-				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
-				this.log.warn(msg);
-				continue;
-			}
-			if (user == null) {
-				// This may actually be a group...
-				IDfGroup group = session.getGroup(actualUser);
-				if (group != null) {
-					// It WAS a group! Set its group directory
-					DfUtils.lockObject(this.log, group);
-					group.fetch(null);
-					group.setGroupDirectoryId(folder.getObjectId());
-					group.save();
-				} else {
+				// TODO: How do we decide if we should update the default folder for this user? What
+				// if the user's default folder has been modified on the target CMS and we don't
+				// want to clobber that? That's a decision that needs to be made later...
+				final IDfUser user;
+				try {
+					user = DctmImportUser.locateExistingUser(context, actualUser);
+				} catch (MultipleUserMatchesException e) {
+					String msg = String.format(
+						"Failed to link folder [%s](%s) to user [%s] as its default folder - %s",
+						this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser, e.getMessage());
+					if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
+					continue;
+				}
+				if (user == null) {
 					String msg = String
 						.format(
 							"Failed to link folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
 							this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser);
 					if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
+					continue;
 				}
-				continue;
+
+				// Ok...so...is the user's default path one of ours? Or is it perhaps a different
+				// object? This will determine if the user's default folder will be private or
+				// not...
+				IDfFolder actual = session.getFolderByPath(pathValue);
+
+				// Ok...so...we set the path to "whatever"...
+				DfUtils.lockObject(this.log, user);
+				user.fetch(null);
+				user.setDefaultFolder(pathValue, (actual == null) || !actual.isPublic());
+				user.save();
+				// Update the system attributes, if we can
+				try {
+					updateSystemAttributes(user, context);
+				} catch (ImportException e) {
+					this.log
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+									actualUser, this.storedObject.getLabel()), e);
+				}
+			}
+		}
+
+		final StoredProperty<IDfValue> groupsWithDefaultFolder = this.storedObject
+			.getProperty(DctmFolder.GROUPS_WITH_DEFAULT_FOLDER);
+		if ((groupsWithDefaultFolder != null) && groupsWithDefaultFolder.hasValues()) {
+			Set<String> s = new TreeSet<String>();
+			for (IDfValue v : groupsWithDefaultFolder) {
+				s.add(v.asString());
 			}
 
-			// Ok...so...is the user's default path one of ours? Or is it perhaps a different
-			// object? This will determine if the user's default folder will be private or
-			// not...
-			IDfFolder actual = session.getFolderByPath(pathValue);
+			for (String g : s) {
+				IDfGroup group = session.getGroup(g);
 
-			// Ok...so...we set the path to "whatever"...
-			DfUtils.lockObject(this.log, user);
-			user.fetch(null);
-			user.setDefaultFolder(pathValue, (actual == null) || !actual.isPublic());
-			user.save();
-			// Update the system attributes, if we can
-			try {
-				updateSystemAttributes(user, context);
-			} catch (ImportException e) {
-				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-								actualUser, this.storedObject.getLabel()), e);
+				if (group == null) {
+					String msg = String
+						.format(
+							"Failed to link folder [%s](%s) to group [%s] as its default folder - the group wasn't found - probably didn't need to be copied over",
+							this.storedObject.getLabel(), folder.getObjectId().getId(), g);
+					if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
+					continue;
+				}
+
+				// It WAS a group! Set its group directory
+				DfUtils.lockObject(this.log, group);
+				group.fetch(null);
+				group.setGroupDirectoryId(folder.getObjectId());
+				group.save();
+
+				// Update the system attributes, if we can
+				try {
+					updateSystemAttributes(group, context);
+				} catch (ImportException e) {
+					this.log
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for group [%s] after assigning folder [%s] as its default folder",
+									g, this.storedObject.getLabel()), e);
+				}
 			}
 		}
 	}

@@ -38,6 +38,11 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	 * all users for whom it must be restored later on.
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_FOLDER = "SELECT u.user_name, u.default_folder FROM dm_user u, dm_folder f WHERE any f.r_folder_path = u.default_folder AND f.r_object_id = '%s'";
+	/**
+	 * This DQL will find all groups for which this folder is marked as the default folder, and thus
+	 * all groups for whom it must be restored later on.
+	 */
+	private static final String DQL_FIND_GROUPS_WITH_DEFAULT_FOLDER = "SELECT g.group_name FROM dm_group g WHERE g.group_directory_id = '%s'";
 
 	protected DctmExportFolder(DctmExportEngine engine) {
 		super(engine, DctmObjectType.FOLDER);
@@ -95,9 +100,9 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
 			String.format(DctmExportFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
-		StoredProperty<IDfValue> usersWithDefaultFolder = null;
-		StoredProperty<IDfValue> usersDefaultFolderPaths = null;
 		try {
+			StoredProperty<IDfValue> usersWithDefaultFolder = null;
+			StoredProperty<IDfValue> usersDefaultFolderPaths = null;
 			usersWithDefaultFolder = new StoredProperty<IDfValue>(DctmFolder.USERS_WITH_DEFAULT_FOLDER,
 				DctmDataType.DF_STRING.getStoredType());
 			usersDefaultFolderPaths = new StoredProperty<IDfValue>(DctmFolder.USERS_DEFAULT_FOLDER_PATHS,
@@ -114,6 +119,25 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			}
 			properties.add(usersWithDefaultFolder);
 			properties.add(usersDefaultFolderPaths);
+		} finally {
+			DfUtils.closeQuietly(resultCol);
+		}
+
+		resultCol = DfUtils.executeQuery(folder.getSession(),
+			String.format(DctmExportFolder.DQL_FIND_GROUPS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
+		try {
+			StoredProperty<IDfValue> groupsWithDefaultFolder = new StoredProperty<IDfValue>(
+				DctmFolder.GROUPS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
+			while (resultCol.next()) {
+				IDfValue v = resultCol.getValueAt(0);
+				if (ctx.isSpecialGroup(v.asString())) {
+					// We don't modify the home directory for special groups...
+					continue;
+				}
+
+				groupsWithDefaultFolder.addValue(v);
+			}
+			properties.add(groupsWithDefaultFolder);
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
