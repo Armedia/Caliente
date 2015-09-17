@@ -29,7 +29,7 @@ public enum DctmObjectType {
 
 	STORE(StoredObjectType.DATASTORE, IDfStore.class),
 	USER(StoredObjectType.USER, IDfUser.class),
-	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true, true, false),
+	GROUP(StoredObjectType.GROUP, IDfGroup.class, null, null, false, true, true, false),
 	ACL(StoredObjectType.ACL, IDfACL.class),
 	TYPE(StoredObjectType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false, false),
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
@@ -70,6 +70,11 @@ public enum DctmObjectType {
 		}
 
 		@Override
+		public boolean isBatchingSupported() {
+			return DctmObjectType.this.supportsBatching;
+		}
+
+		@Override
 		public boolean isBatchIndependent() {
 			// For now, eventually we'll do something different
 			return true;
@@ -104,7 +109,8 @@ public enum DctmObjectType {
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
 		DctmObjectType... surrogateOf) {
-		this(cmsType, dfClass, batchingStrategy, dmType, false, false, true, surrogateOf);
+		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch, true, true,
+			surrogateOf);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(StoredObjectType cmsType, Class<T> dfClass,
