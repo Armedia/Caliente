@@ -21,6 +21,7 @@ import com.armedia.cmf.storage.StoredObjectType;
 import com.armedia.cmf.storage.StoredProperty;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
@@ -123,7 +124,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 					DctmMappingUtils.resolveMappableUser(session, user)));
 				continue;
 			}
-			m.put(user, usersDefaultFolderPaths.getValue(i).asString());
+			m.put(user, context.getTargetPath(usersDefaultFolderPaths.getValue(i).asString()));
 		}
 
 		for (Map.Entry<String, String> entry : m.entrySet()) {
@@ -144,12 +145,22 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				continue;
 			}
 			if (user == null) {
-				String msg = String
-					.format(
-						"Failed to link folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-						this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser);
-				if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
-				this.log.warn(msg);
+				// This may actually be a group...
+				IDfGroup group = session.getGroup(actualUser);
+				if (group != null) {
+					// It WAS a group! Set its group directory
+					DfUtils.lockObject(this.log, group);
+					group.fetch(null);
+					group.setGroupDirectoryId(folder.getObjectId());
+					group.save();
+				} else {
+					String msg = String
+						.format(
+							"Failed to link folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+							this.storedObject.getLabel(), folder.getObjectId().getId(), actualUser);
+					if (context.isSupported(StoredObjectType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
+				}
 				continue;
 			}
 
@@ -161,7 +172,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			// Ok...so...we set the path to "whatever"...
 			DfUtils.lockObject(this.log, user);
 			user.fetch(null);
-			user.setDefaultFolder(pathValue, (actual == null));
+			user.setDefaultFolder(pathValue, (actual == null) || !actual.isPublic());
 			user.save();
 			// Update the system attributes, if we can
 			try {
