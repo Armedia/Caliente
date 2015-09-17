@@ -45,7 +45,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C extends ImportContext<S, T, V>> extends
-	TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineListener> {
+TransferEngine<S, T, V, C, ImportContextFactory<S, W, T, V, C, ?>, ImportEngineListener> {
 
 	private static enum BatchStatus {
 		//
@@ -248,7 +248,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 	public final StoredObjectCounter<ImportResult> runImport(final Logger output, final ObjectStore<?, ?> objectStore,
 		final ContentStore streamStore, Map<String, ?> settings, StoredObjectCounter<ImportResult> counter)
-		throws ImportException, StorageException {
+			throws ImportException, StorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -336,7 +336,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 								if (this.log.isDebugEnabled()) {
 									this.log
-										.debug(String.format("Polled a batch with %d items", batch.contents.size()));
+									.debug(String.format("Polled a batch with %d items", batch.contents.size()));
 								}
 								try {
 									session = sessionFactory.acquireSession();
@@ -415,10 +415,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 												// the other objects
 												failBatch = true;
 												this.log
-													.debug(String
-														.format(
-															"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-															storedType));
+												.debug(String
+													.format(
+														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+														storedType));
 												batch.markAborted(t);
 												continue;
 											}
@@ -483,7 +483,31 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 
 					@Override
 					public boolean handleObject(StoredObject<V> dataObject) {
-						this.contents.add(dataObject);
+						if (this.contents == null) {
+							ImportStrategy strategy = getImportStrategy(dataObject.getType());
+							if (strategy.getBatchItemStrategy() != null) {
+								// ERROR!
+							}
+
+							Collection<StoredObject<?>> c = new ArrayList<StoredObject<?>>(1);
+							c.add(dataObject);
+							try {
+								workQueue.put(new Batch(dataObject.getType(), dataObject.getBatchId(), c, strategy));
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+								String msg = String.format(
+									"Thread interrupted while trying to submit the batch %s containing [%s]",
+									this.batchId, dataObject);
+								if (this.log.isDebugEnabled()) {
+									this.log.warn(msg, e);
+								} else {
+									this.log.warn(msg);
+								}
+								return false;
+							}
+						} else {
+							this.contents.add(dataObject);
+						}
 						return true;
 					}
 
