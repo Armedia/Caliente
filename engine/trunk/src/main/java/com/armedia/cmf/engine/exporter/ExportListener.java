@@ -31,8 +31,9 @@ public interface ExportListener {
 	 *
 	 * @param objectType
 	 * @param objectId
+	 * @param reason
 	 */
-	public void objectSkipped(CmfType objectType, String objectId);
+	public void objectSkipped(CmfType objectType, String objectId, String reason);
 
 	/**
 	 * <p>
