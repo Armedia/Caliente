@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine</artifactId>
-	<version>1.2.5</version>
+	<version>1.2.5a</version>
 	<name>CMF Main Engine</name>
 	<description>CMF Main Engine</description>
 	<packaging>bundle</packaging>

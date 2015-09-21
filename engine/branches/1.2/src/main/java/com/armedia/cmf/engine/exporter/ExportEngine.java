@@ -174,6 +174,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, T, V, C exten
 			if (ctx.isSupported(target.getType())) {
 				result = doExportObject(objectStore, streamStore, session, referrent, target, sourceObject, ctx,
 					listenerDelegator);
+			} else {
+				result = new Result(String.format("Objects of type [%s] aren't supported in this export",
+					target.getType()));
 			}
 			if ((result.objectNumber != null) && (result.marshaled != null)) {
 				listenerDelegator.objectExportCompleted(result.marshaled, result.objectNumber);
