@@ -136,7 +136,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectSkipped(CmfType objectType, String objectId) {
+	public void objectSkipped(CmfType objectType, String objectId, String reason) {
 		// For the manifest, we're not really interested in Skipped objects, since
 		// they'll always be the result of duplicate serializations, so there's no
 		// problem to be reported or deduced from it

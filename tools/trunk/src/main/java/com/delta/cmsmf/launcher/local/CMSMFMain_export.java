@@ -168,8 +168,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 	}
 
 	@Override
-	public void objectSkipped(CmfType objectType, String objectId) {
-		this.console.info(String.format("%s object [%s] was skipped", objectType.name(), objectId));
+	public void objectSkipped(CmfType objectType, String objectId, String reason) {
+		this.console.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
 	}
 
 	@Override
