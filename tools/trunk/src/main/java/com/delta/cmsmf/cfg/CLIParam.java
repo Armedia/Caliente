@@ -7,81 +7,92 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 
 public enum CLIParam {
 	//
-	help(null, false, "This help message"),
-	cfg(null, true, "The configuration file to use"),
-	dfc(null, true, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
-	dfc_prop(null, true, "The dfc.properties file to use instead of the default"),
-	dctm(null, true, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
-	mode(null, true, true, "The mode of operation, either 'import', 'export', 'encrypt', 'decrypt' or 'counter'"),
-	engine(null, true, true, "The engine to use for the operation (either dctm or shpt)"),
-	server(null, true, "The server URL to connect to (Documentum docbase spec, or the sharepoint server URL)"),
-	repository(null, true, "The repostory name to connect to within the target server (optional)"),
-	user(null, true, "The username to connect with"),
-	password(null, true, "The password to connect with"),
-	domain(null, true, "The domain the user belongs to"),
-	log_name(null, true, "The base name of the log file to use instead of the default (cmsmf-${action})"),
-	log4j(null, true, "The Log4j configuration (XML format) to use instead of the default (overrides --log_name)"),
-	threads(null, true, "The number of threads to use while importing or exporting"),
-	non_recursive(null, false, "Turn off counter recursion (i.e. to count a single folder without descending)"),
-	count_path(null, false, "The path within which to count objects for"),
-	cmf_exclude_types(Setting.CMF_EXCLUDE_TYPES, true,
+	help(null, 0, "This help message"),
+	cfg(null, 1, "The configuration file to use"),
+	dfc(null, 1, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
+	dfc_prop(null, 1, "The dfc.properties file to use instead of the default"),
+	dctm(null, 1, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
+	mode(null, 1, true, "The mode of operation, either 'import', 'export', 'encrypt', 'decrypt' or 'counter'"),
+	engine(null, 1, true, "The engine to use for the operation (either dctm or shpt)"),
+	server(null, 1, "The server URL to connect to (Documentum docbase spec, or the sharepoint server URL)"),
+	repository(null, 1, "The repostory name to connect to within the target server (optional)"),
+	user(null, 1, "The username to connect with"),
+	password(null, 1, "The password to connect with"),
+	domain(null, 1, "The domain the user belongs to"),
+	log_name(null, 1, "The base name of the log file to use instead of the default (cmsmf-${action})"),
+	log4j(null, 1, "The Log4j configuration (XML format) to use instead of the default (overrides --log_name)"),
+	threads(null, 1, "The number of threads to use while importing or exporting"),
+	non_recursive(null, 0, "Turn off counter recursion (i.e. to count a single folder without descending)"),
+	count_path(null, 0, "The path within which to count objects for"),
+	cmf_exclude_types(Setting.CMF_EXCLUDE_TYPES, -1,
 		"The list of object types to be ignored during the operation (comma-separated)"),
-	cmf_import_target_location(Setting.CMF_IMPORT_TARGET_LOCATION, true,
+	cmf_import_target_location(Setting.CMF_IMPORT_TARGET_LOCATION, 1,
 		"The path location into which to import the contents"),
-	cmf_import_trim_prefix(Setting.CMF_IMPORT_TRIM_PREFIX, true,
+	cmf_import_trim_prefix(Setting.CMF_IMPORT_TRIM_PREFIX, 1,
 		"The number of leading path components to trim from the content being imported"),
-	special_users(Setting.SPECIAL_USERS, true,
+	special_users(Setting.SPECIAL_USERS, -1,
 		"The special users that should not be imported into the target instance (comma-separated)"),
-	special_groups(Setting.SPECIAL_GROUPS, true,
+	special_groups(Setting.SPECIAL_GROUPS, -1,
 		"The special users that should not be imported into the target instance (comma-separated)"),
-	special_types(Setting.SPECIAL_TYPES, true,
+	special_types(Setting.SPECIAL_TYPES, -1,
 		"The special types that should not be imported into the target instance (comma-separated)"),
-	batch_size(Setting.EXPORT_BATCH_SIZE, true, "The batch size to use when exporting objects from Documentum"),
-	post_process(Setting.POST_PROCESS_IMPORT, false, "Whether to post-process the imported content"),
-	source(Setting.EXPORT_PREDICATE, true,
+	batch_size(Setting.EXPORT_BATCH_SIZE, 1, "The batch size to use when exporting objects from Documentum"),
+	post_process(Setting.POST_PROCESS_IMPORT, 0, "Whether to post-process the imported content"),
+	source(Setting.EXPORT_PREDICATE, 1,
 		"The DQL 'from-where' predicate, or the name of the Sharepoint site, to use for exporting"),
-	shpt_source_prefix(Setting.SHPT_SOURCE_PREFIX, true,
+	shpt_source_prefix(Setting.SHPT_SOURCE_PREFIX, 1,
 		"The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)"),
-	db(Setting.DB_DIRECTORY, true, "The Database directory to use"),
-	content(Setting.CONTENT_DIRECTORY, true,
+	db(Setting.DB_DIRECTORY, 1, "The Database directory to use"),
+	content(Setting.CONTENT_DIRECTORY, 1,
 		"The Content directory to use (if omitted, it will be placed in the 'content' subdirectory of the Database directory)"),
-	attributes(Setting.OWNER_ATTRIBUTES, true, "The attributes to check for"),
-	errorCount(Setting.IMPORT_MAX_ERRORS, true, "The number of errors to accept before aborting an import"),
-	default_password(Setting.DEFAULT_USER_PASSWORD, true,
+	attributes(Setting.OWNER_ATTRIBUTES, 1, "The attributes to check for"),
+	errorCount(Setting.IMPORT_MAX_ERRORS, 1, "The number of errors to accept before aborting an import"),
+	default_password(Setting.DEFAULT_USER_PASSWORD, 1,
 		"The default password to use for users being copied over (the default is to use the same login name)"),
-	manifest_types(Setting.MANIFEST_TYPES, true, "The object types to include in the manifest (ALL = all types)"),
-	manifest_outcomes(Setting.MANIFEST_OUTCOMES, true, "The outcomes to include in the manifest (ALL = all outcomes)"),
-	mail_to(Setting.MAIL_RECIPIENTS, true, "The comma-separated list of recipients for the status e-mails"),
-	mail_from(Setting.MAIL_FROM_ADDX, true, "The e-mail address to use as the sender for the status e-mails"),
-	smtp_host(Setting.MAIL_SMTP_HOST, true, "The SMTP server through which e-mail must be sent"),
-	smtp_port(Setting.MAIL_SMTP_HOST, true, "The port SMTP server is listening on"),
-	skip_users(Setting.SKIP_USERS, false, "Skip exporting users"),
-	skip_groups(Setting.SKIP_GROUPS, false, "Skip exporting groups"),
-	skip_acls(Setting.SKIP_ACLS, false, "Skip exporting acls"),
-	direct_fs(null, false, "Export files to local FS duplicating the CMS's path"),
-	skip_content(null, false, "Skip importing document contents (only create \"empty\" documents)"),
+	manifest_types(Setting.MANIFEST_TYPES, 1, "The object types to include in the manifest (ALL = all types)"),
+	manifest_outcomes(Setting.MANIFEST_OUTCOMES, 1, "The outcomes to include in the manifest (ALL = all outcomes)"),
+	mail_to(Setting.MAIL_RECIPIENTS, 1, "The comma-separated list of recipients for the status e-mails"),
+	mail_from(Setting.MAIL_FROM_ADDX, 1, "The e-mail address to use as the sender for the status e-mails"),
+	smtp_host(Setting.MAIL_SMTP_HOST, 1, "The SMTP server through which e-mail must be sent"),
+	smtp_port(Setting.MAIL_SMTP_HOST, 1, "The port SMTP server is listening on"),
+	skip_users(Setting.SKIP_USERS, 0, "Skip exporting users"),
+	skip_groups(Setting.SKIP_GROUPS, 0, "Skip exporting groups"),
+	skip_acls(Setting.SKIP_ACLS, 0, "Skip exporting acls"),
+	direct_fs(null, 0, "Export files to local FS duplicating the CMS's path"),
+	skip_content(null, 0, "Skip importing document contents (only create \"empty\" documents)"),
 	//
 	;
 
 	public final Setting property;
 	public final Option option;
 
-	private CLIParam(Setting property, boolean hasParameter, boolean required, String description) {
+	private CLIParam(Setting property, int paramCount, boolean required, String description) {
 		this.property = property;
-		this.option = new Option(null, name().replace('_', '-'), hasParameter, description);
-		this.option.setRequired(required);
+		if (required) {
+			OptionBuilder.isRequired();
+		}
+		OptionBuilder.withLongOpt(name().replace('_', '-'));
+		OptionBuilder.withDescription(description);
+		OptionBuilder.withValueSeparator(',');
+		if (paramCount < 0) {
+			OptionBuilder.hasArgs(Integer.MAX_VALUE);
+		} else if (paramCount > 0) {
+			OptionBuilder.hasArgs(paramCount);
+		}
+		this.option = OptionBuilder.create();
 	}
 
-	private CLIParam(Setting property, boolean hasParameter, String description) {
-		this(property, hasParameter, false, description);
+	private CLIParam(Setting property, int paramCount, String description) {
+		this(property, paramCount, false, description);
 	}
 
 	public boolean isPresent() {
@@ -160,7 +171,7 @@ public enum CLIParam {
 			options.addOption(p.option);
 		}
 
-		CommandLineParser parser = new PosixParser();
+		CommandLineParser parser = new GnuParser();
 		final CommandLine cli;
 		try {
 			cli = parser.parse(options, args);
@@ -179,9 +190,28 @@ public enum CLIParam {
 
 		// Convert the command-line parameters into "configuration properties"
 		Map<CLIParam, String> cliParams = new EnumMap<CLIParam, String>(CLIParam.class);
+		StringBuilder b = new StringBuilder();
 		for (CLIParam p : CLIParam.values()) {
 			if (cli.hasOption(p.option.getLongOpt())) {
-				cliParams.put(p, cli.getOptionValue(p.option.getLongOpt()));
+				String[] v = cli.getOptionValues(p.option.getLongOpt());
+				if ((v != null) && (v.length > 0)) {
+					if (v.length == 1) {
+						// Single value, life is easy :)
+						cliParams.put(p, v[0]);
+					} else {
+						// Multi-value, must concatenate as comma-separated
+						b.setLength(0);
+						for (String s : v) {
+							if (b.length() > 0) {
+								b.append(',');
+							}
+							b.append(s);
+						}
+						cliParams.put(p, b.toString());
+					}
+				} else {
+					cliParams.put(p, null);
+				}
 			}
 		}
 		CLIParam.CLI_PARSED.set(Collections.unmodifiableMap(cliParams));
