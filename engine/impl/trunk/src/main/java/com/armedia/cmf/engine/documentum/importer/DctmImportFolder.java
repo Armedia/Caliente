@@ -188,7 +188,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 						.format(
 							"Failed to link folder [%s](%s) to group [%s] as its default folder - the group wasn't found - probably didn't need to be copied over",
 							this.cmfObject.getLabel(), folder.getObjectId().getId(), g);
-					if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
+					if (context.isSupported(CmfType.GROUP)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 					continue;
 				}
@@ -212,7 +212,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				}
 			}
 		}
-
 	}
 
 	@Override
