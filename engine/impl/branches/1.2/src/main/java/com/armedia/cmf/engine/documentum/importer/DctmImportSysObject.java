@@ -399,6 +399,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	@Override
 	protected void prepareOperation(T sysObject, boolean newObject) throws DfException, ImportException {
+		super.prepareOperation(sysObject, newObject);
 		if (!isTransitoryObject(sysObject)) {
 			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
 			if (this.existingTemporaryPermission.grant(sysObject)) {
