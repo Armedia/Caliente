@@ -453,15 +453,13 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	protected <T, V> int doLoadObjects(JdbcOperation operation, ObjectStorageTranslator<T, V> translator,
 		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler, boolean batching)
 		throws StorageException, StoredValueDecoderException {
-		Connection objectConn = null;
-		Connection attributeConn = null;
+		Connection connection = null;
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
 		try {
-			objectConn = this.dataSource.getConnection();
-			attributeConn = this.dataSource.getConnection();
+			connection = this.dataSource.getConnection();
 
 			PreparedStatement objectPS = null;
 			PreparedStatement attributePS = null;
@@ -472,26 +470,26 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				boolean limitByIDs = false;
 				boolean useSqlArray = false;
 				if (ids == null) {
-					objectPS = objectConn.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BATCHED_SQL
+					objectPS = connection.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BATCHED_SQL
 						: JdbcObjectStore.LOAD_OBJECTS_SQL);
 				} else {
 					limitByIDs = true;
 					try {
-						objectPS = objectConn
+						objectPS = connection
 							.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_BATCHED_SQL
 								: JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
 						useSqlArray = true;
 					} catch (SQLException e) {
-						objectPS = objectConn
+						objectPS = connection
 							.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_BATCHED_SQL
 								: JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
 					}
 				}
 
-				attributePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTES_SQL);
-				attributeValuePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
-				propertyPS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTIES_SQL);
-				propertyValuePS = attributeConn.prepareStatement(JdbcObjectStore.LOAD_PROPERTY_VALUES_SQL);
+				attributePS = connection.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTES_SQL);
+				attributeValuePS = connection.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTE_VALUES_SQL);
+				propertyPS = connection.prepareStatement(JdbcObjectStore.LOAD_PROPERTIES_SQL);
+				propertyValuePS = connection.prepareStatement(JdbcObjectStore.LOAD_PROPERTY_VALUES_SQL);
 
 				ResultSet objectRS = null;
 				ResultSet attributeRS = null;
@@ -508,7 +506,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					}
 					if (useSqlArray) {
 						objectPS.setString(1, type.name());
-						objectPS.setArray(2, objectConn.createArrayOf("text", arr));
+						objectPS.setArray(2, connection.createArrayOf("text", arr));
 					} else {
 						objectPS.setObject(1, arr);
 						objectPS.setString(2, type.name());
@@ -664,8 +662,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			throw new StorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
 				type), e);
 		} finally {
-			DbUtils.rollbackAndCloseQuietly(attributeConn);
-			DbUtils.rollbackAndCloseQuietly(objectConn);
+			DbUtils.rollbackAndCloseQuietly(connection);
 		}
 	}
 
