@@ -5,7 +5,9 @@
 package com.armedia.cmf.engine.documentum.importer;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
@@ -22,6 +24,7 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
@@ -170,6 +173,46 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 								actualUser, this.cmfObject.getLabel()), e);
 			}
 		}
+
+		final CmfProperty<IDfValue> groupsWithDefaultFolder = this.cmfObject
+			.getProperty(DctmFolder.GROUPS_WITH_DEFAULT_FOLDER);
+		if ((groupsWithDefaultFolder != null) && groupsWithDefaultFolder.hasValues()) {
+			Set<String> s = new TreeSet<String>();
+			for (IDfValue v : groupsWithDefaultFolder) {
+				s.add(v.asString());
+			}
+			for (String g : s) {
+				IDfGroup group = session.getGroup(g);
+				if (group == null) {
+					String msg = String
+						.format(
+							"Failed to link folder [%s](%s) to group [%s] as its default folder - the group wasn't found - probably didn't need to be copied over",
+							this.cmfObject.getLabel(), folder.getObjectId().getId(), g);
+					if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
+					this.log.warn(msg);
+					continue;
+				}
+
+				// It WAS a group! Set its group directory
+				DfUtils.lockObject(this.log, group);
+				group.fetch(null);
+				group.setGroupDirectoryId(folder.getObjectId());
+				group.save();
+
+				// Update the system attributes, if we can
+				try {
+					updateSystemAttributes(group, context);
+				} catch (ImportException e) {
+					this.log
+						.warn(
+							String
+								.format(
+									"Failed to update the system attributes for group [%s] after assigning folder [%s] as its default folder",
+									g, this.cmfObject.getLabel()), e);
+				}
+			}
+		}
+
 	}
 
 	@Override
