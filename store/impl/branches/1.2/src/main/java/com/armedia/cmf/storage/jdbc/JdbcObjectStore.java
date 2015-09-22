@@ -188,6 +188,13 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		}
 	};
 
+	private static final ResultSetHandler<Boolean> HANDLER_EXISTS = new ResultSetHandler<Boolean>() {
+		@Override
+		public Boolean handle(ResultSet rs) throws SQLException {
+			return rs.next();
+		}
+	};
+
 	private final ResultSetHandler<Long> objectNumberHandler = new ResultSetHandler<Long>() {
 
 		private volatile Integer codePath = null;
@@ -226,13 +233,6 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				}
 			}
 			return null;
-		}
-	};
-
-	private static final ResultSetHandler<Boolean> HANDLER_EXISTS = new ResultSetHandler<Boolean>() {
-		@Override
-		public Boolean handle(ResultSet rs) throws SQLException {
-			return rs.next();
 		}
 	};
 
