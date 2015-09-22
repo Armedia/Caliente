@@ -561,7 +561,7 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							// ordering factor
 							if (batching) {
 								String batchId = objectRS.getString("batch_id");
-								if (!batching || (batchId == null) || objectRS.wasNull()) {
+								if ((batchId == null) || objectRS.wasNull()) {
 									batchId = String.format("%08x", objNum);
 								}
 								if (!Tools.equals(currentBatch, batchId)) {
