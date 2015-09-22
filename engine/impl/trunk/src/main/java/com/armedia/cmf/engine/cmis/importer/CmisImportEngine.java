@@ -17,8 +17,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportEngine
-	extends
-	ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory> {
+extends
+ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -49,6 +49,11 @@ public class CmisImportEngine
 
 		@Override
 		public boolean isSupportsTransactions() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchingSupported() {
 			return false;
 		}
 	};
@@ -84,6 +89,11 @@ public class CmisImportEngine
 		public boolean isSupportsTransactions() {
 			return false;
 		}
+
+		@Override
+		public boolean isBatchingSupported() {
+			return true;
+		}
 	};
 
 	private static final ImportStrategy DOCUMENT_STRATEGY = new ImportStrategy() {
@@ -116,6 +126,11 @@ public class CmisImportEngine
 		@Override
 		public boolean isSupportsTransactions() {
 			return false;
+		}
+
+		@Override
+		public boolean isBatchingSupported() {
+			return true;
 		}
 	};
 
