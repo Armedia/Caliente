@@ -28,8 +28,8 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine
-extends
-ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory> {
+	extends
+	ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -59,6 +59,11 @@ ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmIm
 
 		@Override
 		public boolean isSupportsTransactions() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchingSupported() {
 			return false;
 		}
 	};

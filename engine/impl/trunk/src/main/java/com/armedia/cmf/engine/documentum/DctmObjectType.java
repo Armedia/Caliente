@@ -68,6 +68,11 @@ public enum DctmObjectType {
 		}
 
 		@Override
+		public boolean isBatchingSupported() {
+			return DctmObjectType.this.supportsBatching;
+		}
+
+		@Override
 		public boolean isBatchIndependent() {
 			// For now, eventually we'll do something different
 			return true;
@@ -147,13 +152,13 @@ public enum DctmObjectType {
 	private static Map<CmfType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}
 
 	public static DctmObjectType decodeType(IDfSession session, String typeName) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	UnsupportedDctmObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to find the type in"); }
 		if (typeName == null) { throw new IllegalArgumentException("Must provide a type to find"); }
 		IDfType type = session.getType(typeName);
