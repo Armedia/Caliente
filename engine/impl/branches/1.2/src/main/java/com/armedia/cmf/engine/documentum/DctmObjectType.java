@@ -29,7 +29,7 @@ public enum DctmObjectType {
 
 	STORE(StoredObjectType.DATASTORE, IDfStore.class),
 	USER(StoredObjectType.USER, IDfUser.class),
-	GROUP(StoredObjectType.GROUP, IDfGroup.class, null, null, false, true, true, false),
+	GROUP(StoredObjectType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, false, true, false),
 	ACL(StoredObjectType.ACL, IDfACL.class),
 	TYPE(StoredObjectType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false, false),
 	FORMAT(StoredObjectType.FORMAT, IDfFormat.class),
