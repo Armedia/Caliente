@@ -5,6 +5,9 @@
 package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
@@ -47,9 +50,54 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		this(factory, DctmExportDelegate.staticCast(IDfGroup.class, group));
 	}
 
+	private int calculateDepth(IDfGroup group, Set<String> visited) throws DfException {
+		final IDfSession session = group.getSession();
+		// If the group has already been visited, we have a loop...so let's explode loudly
+		final IDfId groupId = group.getObjectId();
+		if (visited.contains(groupId.getId())) { throw new DfException(String.format(
+			"Group loop detected, element [%s] exists twice: %s", groupId.getId(), visited.toString())); }
+		visited.add(groupId.getId());
+
+		try {
+			IDfCollection results = group.getGroupsNames();
+			Set<String> groupsNames = new TreeSet<String>();
+			try {
+				while (results.next()) {
+					// My depth is the maximum depth from any of my parents, plus one
+					final String nextGroupName = results.getString(DctmAttributes.GROUPS_NAMES);
+					if (nextGroupName == null) {
+						continue;
+					}
+					groupsNames.add(nextGroupName);
+				}
+			} finally {
+				DfUtils.closeQuietly(results);
+			}
+
+			int depth = 0;
+			for (String nextGroupName : groupsNames) {
+				IDfGroup nextGroup = session.getGroup(nextGroupName);
+				if (nextGroup == null) {
+					continue;
+				}
+				depth = Math.max(depth, calculateDepth(nextGroup, visited) + 1);
+			}
+			return depth;
+		} finally {
+			visited.remove(groupId.getId());
+		}
+	}
+
 	@Override
-	protected String calculateBatchId(IDfGroup object) throws Exception {
-		return "NO_BATCH";
+	protected String calculateBatchId(IDfGroup group) throws Exception {
+		// Calculate the maximum depth that this group resides in, from the other groups
+		// it references.
+		// Keep track of visited nodes, and explode on a loop.
+		Set<String> visited = new LinkedHashSet<String>();
+		int depth = calculateDepth(group, visited);
+		// We return it in zero-padded hex to allow for large numbers (up to 2^64
+		// depth), and also maintain consistent sorting
+		return String.format("%016x", depth);
 	}
 
 	@Override
