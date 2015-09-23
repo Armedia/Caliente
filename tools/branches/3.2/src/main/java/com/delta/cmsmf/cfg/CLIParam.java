@@ -67,6 +67,8 @@ public enum CLIParam {
 	skip_groups(Setting.SKIP_GROUPS, 0, "Skip exporting groups"),
 	skip_acls(Setting.SKIP_ACLS, 0, "Skip exporting acls"),
 	skip_content(null, 0, "Skip importing document contents (only create \"empty\" documents)"),
+	// dctm_sync_job(null, 1,
+// "The name of the Documentum synchronization job this export is to define"),
 	//
 	;
 
