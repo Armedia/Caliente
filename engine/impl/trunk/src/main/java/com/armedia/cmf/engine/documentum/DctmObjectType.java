@@ -27,7 +27,7 @@ public enum DctmObjectType {
 
 	STORE(CmfType.DATASTORE, IDfStore.class),
 	USER(CmfType.USER, IDfUser.class),
-	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true, true, false),
+	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, false, true, false),
 	ACL(CmfType.ACL, IDfACL.class),
 	TYPE(CmfType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false, false),
 	FORMAT(CmfType.FORMAT, IDfFormat.class),
@@ -152,13 +152,13 @@ public enum DctmObjectType {
 	private static Map<CmfType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
 
 	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}
 
 	public static DctmObjectType decodeType(IDfSession session, String typeName) throws DfException,
-	UnsupportedDctmObjectTypeException {
+		UnsupportedDctmObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to find the type in"); }
 		if (typeName == null) { throw new IllegalArgumentException("Must provide a type to find"); }
 		IDfType type = session.getType(typeName);
