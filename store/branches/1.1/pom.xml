@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-storage-api</artifactId>
-	<version>1.1.4</version>
+	<version>1.1.5</version>
 	<name>CMF Storage API</name>
 	<description>CMF Storage API</description>
 	<packaging>bundle</packaging>
