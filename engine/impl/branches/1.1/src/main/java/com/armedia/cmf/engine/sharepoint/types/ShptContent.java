@@ -13,8 +13,8 @@ import javax.activation.MimeType;
 
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptAttributes;
+import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptVersionNumber;
 import com.armedia.cmf.engine.sharepoint.common.MimeTools;
 import com.armedia.cmf.storage.ContentStore;

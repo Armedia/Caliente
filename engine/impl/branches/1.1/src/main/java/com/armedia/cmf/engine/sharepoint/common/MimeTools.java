@@ -1,15 +1,12 @@
 /**
  * *******************************************************************
- * 
- * THIS SOFTWARE IS PROTECTED BY U.S. AND INTERNATIONAL COPYRIGHT LAWS.
- * REPRODUCTION OF ANY PORTION OF THE SOURCE CODE, CONTAINED HEREIN,
- * OR ANY PORTION OF THE PRODUCT, EITHER IN PART OR WHOLE,
- * IS STRICTLY PROHIBITED.
- * 
- * Confidential Property of Armedia LLC.
- * (c) Copyright Armedia LLC 2011.
- * All Rights reserved.
- * 
+ *
+ * THIS SOFTWARE IS PROTECTED BY U.S. AND INTERNATIONAL COPYRIGHT LAWS. REPRODUCTION OF ANY PORTION
+ * OF THE SOURCE CODE, CONTAINED HEREIN, OR ANY PORTION OF THE PRODUCT, EITHER IN PART OR WHOLE, IS
+ * STRICTLY PROHIBITED.
+ *
+ * Confidential Property of Armedia LLC. (c) Copyright Armedia LLC 2011. All Rights reserved.
+ *
  * *******************************************************************
  */
 package com.armedia.cmf.engine.sharepoint.common;
@@ -26,11 +23,11 @@ import javax.activation.MimeTypeParseException;
 import eu.medsea.mimeutil.MimeUtil;
 
 /**
- * This class serves as a utility class to encapsulate the MIME functionality
- * from the identifier library.
- * 
+ * This class serves as a utility class to encapsulate the MIME functionality from the identifier
+ * library.
+ *
  * @author drivera@armedia.com
- * 
+ *
  */
 public class MimeTools {
 	private static final String DEFAULT_MIME_STRING = "application/octet-stream";
@@ -84,9 +81,9 @@ public class MimeTools {
 	}
 
 	/**
-	 * Convert to {@link MimeType} from {@link eu.medsea.mimeutil.MimeType}, by preserving
-	 * the primary and sub types.
-	 * 
+	 * Convert to {@link MimeType} from {@link eu.medsea.mimeutil.MimeType}, by preserving the
+	 * primary and sub types.
+	 *
 	 * @param type
 	 * @return the equivalent {@link MimeType} instance to the given
 	 *         {@link eu.medsea.mimeutil.MimeType}
@@ -98,7 +95,7 @@ public class MimeTools {
 
 	/**
 	 * Identifies the MIME type for the given data using MIME magic.
-	 * 
+	 *
 	 * @param data
 	 * @return the correct {@link MimeType} instance detected from the given data
 	 */
@@ -108,7 +105,7 @@ public class MimeTools {
 
 	/**
 	 * Identifies the MIME type for the given fileName using Extension mapping
-	 * 
+	 *
 	 * @param fileName
 	 * @return the correct {@link MimeType} instance detected from the given filename's extension
 	 */
@@ -118,7 +115,7 @@ public class MimeTools {
 
 	/**
 	 * Identifies the MIME type for the given data using MIME magic.
-	 * 
+	 *
 	 * @param data
 	 * @return the correct {@link MimeType} instance detected from the given data
 	 */
@@ -127,9 +124,9 @@ public class MimeTools {
 	}
 
 	/**
-	 * Identifies the MIME type for the given data and, if that fails, attempts to identify
-	 * it via the fileName.
-	 * 
+	 * Identifies the MIME type for the given data and, if that fails, attempts to identify it via
+	 * the fileName.
+	 *
 	 * @param data
 	 * @param fileName
 	 * @return the correct {@link MimeType} instance detected from the given data or filename
@@ -141,9 +138,9 @@ public class MimeTools {
 	}
 
 	/**
-	 * Identifies the MIME type for the given data and, if that fails, attempts to identify
-	 * it via the fileName.
-	 * 
+	 * Identifies the MIME type for the given data and, if that fails, attempts to identify it via
+	 * the fileName.
+	 *
 	 * @param data
 	 * @param fileName
 	 * @return the correct {@link MimeType} instance detected from the given data or filename
@@ -155,9 +152,9 @@ public class MimeTools {
 	}
 
 	/**
-	 * Identifies the MIME type for the given fileName and, if that fails, attempts to identify
-	 * it via the data sample.
-	 * 
+	 * Identifies the MIME type for the given fileName and, if that fails, attempts to identify it
+	 * via the data sample.
+	 *
 	 * @param fileName
 	 * @param data
 	 * @return the correct {@link MimeType} instance detected from the given filename or data
@@ -169,9 +166,9 @@ public class MimeTools {
 	}
 
 	/**
-	 * Identifies the MIME type for the given fileName and, if that fails, attempts to identify
-	 * it via the data sample.
-	 * 
+	 * Identifies the MIME type for the given fileName and, if that fails, attempts to identify it
+	 * via the data sample.
+	 *
 	 * @param fileName
 	 * @param data
 	 * @return the correct {@link MimeType} instance detected from the given filename or data

@@ -54,7 +54,7 @@ public abstract class ShptObject<T> {
 		if (object == null) { return null; }
 		if (!this.wrappedClass.isInstance(object)) { throw new Exception(String.format(
 			"Expected an object of class %s, but got one of class %s", this.wrappedClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.wrappedClass.cast(object);
 	}
 
@@ -91,8 +91,8 @@ public abstract class ShptObject<T> {
 
 	protected abstract void marshal(StoredObject<StoredValue> object) throws ExportException;
 
-	public final Collection<ShptObject<?>> identifyDependents(ShptSession service,
-		StoredObject<StoredValue> marshaled, ShptExportContext ctx) throws Exception {
+	public final Collection<ShptObject<?>> identifyDependents(ShptSession service, StoredObject<StoredValue> marshaled,
+		ShptExportContext ctx) throws Exception {
 		return findDependents(service, marshaled, ctx);
 	}
 

@@ -117,7 +117,7 @@ public class ShptSession {
 		}
 		return new ShptSessionException(String.format(
 			"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s", e
-			.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
+				.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
 			e);
 	}
 
@@ -1227,8 +1227,8 @@ public class ShptSession {
 			final String newUrl = FileNameTools.reconstitute(items, url.startsWith("/"), url.endsWith("/"), '/');
 			if (this.log.isTraceEnabled()) {
 				this.log
-				.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
-					url, newUrl, newUrl));
+					.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
+						url, newUrl, newUrl));
 			}
 			try {
 				return this.service.getInputStream(newUrl);
