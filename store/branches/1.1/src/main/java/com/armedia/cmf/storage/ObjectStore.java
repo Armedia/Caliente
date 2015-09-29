@@ -54,21 +54,36 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 				try {
 					o = newOperation();
 				} catch (StorageException e) {
-					throw new RuntimeException("Failed to initialize an operation to create the mapping");
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation to create the mapping [%s::%s(%s->%s)]", type, name, source,
+						target), e);
 				}
 			}
 
-			boolean ok = false;
+			if (newOperation) {
+				try {
+					o.begin();
+				} catch (StorageException e) {
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation transaction creating the mapping [%s::%s(%s->%s)]", type,
+						name, source, target), e);
+				}
+			}
 			try {
 				ObjectStore.this.createMapping(o, type, name, source, target);
-				ok = true;
+				if (newOperation) {
+					o.commit();
+				}
 			} catch (StorageException e) {
+				if (newOperation) {
+					o.rollback();
+				}
 				throw new RuntimeException(String.format("Failed to create the mapping for [%s::%s(%s->%s)]", type,
 					name, source, target), e);
 			} finally {
 				if (newOperation) {
 					try {
-						o.close(ok);
+						o.close();
 					} catch (StorageException e) {
 						throw new RuntimeException("Failed to complete the operation", e);
 					}
@@ -90,7 +105,18 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 				try {
 					o = newOperation();
 				} catch (StorageException e) {
-					throw new RuntimeException("Failed to initialize an operation to create the mapping");
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation to retrieve the target mapping [%s::%s(%s->?)]", type, name,
+						source));
+				}
+			}
+			if (newOperation) {
+				try {
+					o.begin();
+				} catch (StorageException e) {
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation transaction to retrieve the target mapping [%s::%s(%s->?)]",
+						type, name, source), e);
 				}
 			}
 			try {
@@ -121,7 +147,18 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 				try {
 					o = newOperation();
 				} catch (StorageException e) {
-					throw new RuntimeException("Failed to initialize an operation to create the mapping");
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation to retrieve the source mapping [%s::%s(?->%s)]", type, name,
+						target), e);
+				}
+			}
+			if (newOperation) {
+				try {
+					o.begin();
+				} catch (StorageException e) {
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation transaction to retrieve the source mapping [%s::%s(?->%s)]",
+						type, name, target), e);
 				}
 			}
 			try {
@@ -149,13 +186,22 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 				try {
 					o = newOperation();
 				} catch (StorageException e) {
-					throw new RuntimeException("Failed to initialize an operation to create the mapping");
+					throw new RuntimeException("Failed to initialize an operation to retrieve the available mappings",
+						e);
+				}
+			}
+			if (newOperation) {
+				try {
+					o.begin();
+				} catch (StorageException e) {
+					throw new RuntimeException(
+						"Failed to initialize an operation transaction to retrieve the available mappings", e);
 				}
 			}
 			try {
 				return ObjectStore.this.getAvailableMappings(o);
 			} catch (StorageException e) {
-				throw new RuntimeException("Failed to retrieve the mapping names in the system", e);
+				throw new RuntimeException("Failed to retrieve the available mappings", e);
 			} finally {
 				if (newOperation) {
 					try {
@@ -178,13 +224,24 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 				try {
 					o = newOperation();
 				} catch (StorageException e) {
-					throw new RuntimeException("Failed to initialize an operation to create the mapping");
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation to retrieve the available mappings for type [%s]", type), e);
+				}
+			}
+			if (newOperation) {
+				try {
+					o.begin();
+				} catch (StorageException e) {
+					throw new RuntimeException(
+						String.format(
+							"Failed to initialize an operation transaction to retrieve the available mappings for type [%s]",
+							type), e);
 				}
 			}
 			try {
 				return ObjectStore.this.getAvailableMappings(o, type);
 			} catch (StorageException e) {
-				throw new RuntimeException(String.format("Failed to retrieve the mapping names in the system for [%s]",
+				throw new RuntimeException(String.format("Failed to retrieve the available mappings for type [%s]",
 					type), e);
 			} finally {
 				if (newOperation) {
@@ -210,14 +267,24 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 				try {
 					o = newOperation();
 				} catch (StorageException e) {
-					throw new RuntimeException("Failed to initialize an operation to create the mapping");
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation to retrieve the mappings for [%s::%s(?->?)]", type, name), e);
+				}
+			}
+			if (newOperation) {
+				try {
+					o.begin();
+				} catch (StorageException e) {
+					throw new RuntimeException(String.format(
+						"Failed to initialize an operation transaction to retrieve the mappings for [%s::%s(?->?)]",
+						type, name), e);
 				}
 			}
 			try {
 				return ObjectStore.this.getMappings(o, type, name);
 			} catch (StorageException e) {
-				throw new RuntimeException(String.format("Failed to retrieves the mappings in the system for [%s::%s]",
-					type, name), e);
+				throw new RuntimeException(String.format("Failed to retrieve the mappings for [%s::%s(?->?)]", type,
+					name), e);
 			} finally {
 				if (newOperation) {
 					try {
@@ -271,13 +338,21 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 	public final <T, V> Long storeObject(StoredObject<V> object, ObjectStorageTranslator<T, V> translator)
 		throws StorageException, StoredValueEncoderException {
 		O operation = newOperation();
-		boolean ok = false;
 		try {
-			Long ret = storeObject(operation, object, translator);
-			ok = true;
-			return ret;
+			operation.begin();
+			boolean ok = false;
+			try {
+				Long ret = storeObject(operation, object, translator);
+				operation.commit();
+				ok = true;
+				return ret;
+			} finally {
+				if (!ok) {
+					operation.rollback();
+				}
+			}
 		} finally {
-			operation.close(ok);
+			operation.close();
 		}
 	}
 
@@ -303,7 +378,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return isStored(operation, type, objectId);
+			operation.begin();
+			try {
+				return isStored(operation, type, objectId);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -328,13 +408,20 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 	public final boolean lockForStorage(StoredObjectType type, String objectId) throws StorageException {
 		assertOpen();
 		O operation = newOperation();
-		boolean ok = false;
 		try {
-			boolean ret = lockForStorage(operation, type, objectId);
-			ok = true;
-			return ret;
+			boolean ok = false;
+			try {
+				boolean ret = lockForStorage(operation, type, objectId);
+				operation.commit();
+				ok = true;
+				return ret;
+			} finally {
+				if (!ok) {
+					operation.rollback();
+				}
+			}
 		} finally {
-			operation.close(ok);
+			operation.close();
 		}
 	}
 
@@ -360,13 +447,15 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		StoredValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
-		boolean ok = false;
 		try {
-			Collection<StoredObject<V>> ret = loadObjects(operation, translator, type, batching, ids);
-			ok = true;
-			return ret;
+			operation.begin();
+			try {
+				return loadObjects(operation, translator, type, batching, ids);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
-			operation.close(ok);
+			operation.close();
 		}
 	}
 
@@ -387,13 +476,15 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		StoredValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
-		boolean ok = false;
 		try {
-			Collection<StoredObject<V>> ret = loadObjects(operation, translator, type, ids, batching);
-			ok = true;
-			return ret;
+			operation.begin();
+			try {
+				return loadObjects(operation, translator, type, ids, batching);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
-			operation.close(ok);
+			operation.close();
 		}
 	}
 
@@ -452,13 +543,15 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		StoredObjectHandler<V> handler, boolean batching) throws StorageException, StoredValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
-		boolean ok = false;
 		try {
-			int ret = loadObjects(operation, translator, type, handler, batching);
-			ok = true;
-			return ret;
+			operation.begin();
+			try {
+				return loadObjects(operation, translator, type, handler, batching);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
-			operation.close(ok);
+			operation.close();
 		}
 	}
 
@@ -473,13 +566,15 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		StoredValueDecoderException {
 		assertOpen();
 		O operation = newOperation();
-		boolean ok = false;
 		try {
-			int ret = loadObjects(operation, translator, type, ids, handler, batching);
-			ok = true;
-			return ret;
+			operation.begin();
+			try {
+				return loadObjects(operation, translator, type, ids, handler, batching);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
-			operation.close(ok);
+			operation.close();
 		}
 	}
 
@@ -541,7 +636,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return getTargetMapping(operation, type, name, target);
+			operation.begin();
+			try {
+				return getTargetMapping(operation, type, name, target);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -569,7 +669,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return getSourceMapping(operation, type, name, target);
+			operation.begin();
+			try {
+				return getSourceMapping(operation, type, name, target);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -597,7 +702,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return getStoredObjectTypes(operation);
+			operation.begin();
+			try {
+				return getStoredObjectTypes(operation);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -612,7 +722,6 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		} finally {
 			getReadLock().unlock();
 		}
-
 	}
 
 	protected abstract Map<StoredObjectType, Integer> doGetStoredObjectTypes(O operation) throws StorageException;
@@ -629,7 +738,18 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return clearAttributeMappings(operation);
+			operation.begin();
+			boolean ok = false;
+			try {
+				int ret = clearAttributeMappings(operation);
+				operation.commit();
+				ok = true;
+				return ret;
+			} finally {
+				if (!ok) {
+					operation.rollback();
+				}
+			}
 		} finally {
 			operation.close();
 		}
@@ -652,7 +772,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return getAvailableMappings(operation);
+			operation.begin();
+			try {
+				return getAvailableMappings(operation);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -676,7 +801,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return getAvailableMappings(operation, type);
+			operation.begin();
+			try {
+				return getAvailableMappings(operation, type);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -701,7 +831,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return getMappings(operation, type, name);
+			operation.begin();
+			try {
+				return getMappings(operation, type, name);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -728,9 +863,19 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			clearAllObjects(operation);
+			operation.begin();
+			boolean ok = false;
+			try {
+				clearAllObjects(operation);
+				operation.commit();
+				ok = true;
+			} finally {
+				if (!ok) {
+					operation.rollback();
+				}
+			}
 		} finally {
-			operation.commit();
+			operation.close();
 		}
 	}
 
@@ -752,9 +897,19 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			doClearProperties(operation);
+			operation.begin();
+			boolean ok = false;
+			try {
+				doClearProperties(operation);
+				operation.commit();
+				ok = true;
+			} finally {
+				if (!ok) {
+					operation.rollback();
+				}
+			}
 		} finally {
-			operation.commit();
+			operation.close();
 		}
 	}
 
@@ -787,7 +942,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return doGetProperty(operation, property);
+			operation.begin();
+			try {
+				return doGetProperty(operation, property);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -812,7 +972,18 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return doSetProperty(operation, property, value);
+			operation.begin();
+			boolean ok = false;
+			try {
+				StoredValue ret = doSetProperty(operation, property, value);
+				operation.commit();
+				ok = true;
+				return ret;
+			} finally {
+				if (!ok) {
+					operation.rollback();
+				}
+			}
 		} finally {
 			operation.close();
 		}
@@ -826,7 +997,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return doGetPropertyNames(operation);
+			operation.begin();
+			try {
+				return doGetPropertyNames(operation);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}
@@ -861,7 +1037,12 @@ public abstract class ObjectStore<C, O extends ObjectStoreOperation<C>> extends 
 		assertOpen();
 		O operation = newOperation();
 		try {
-			return doClearProperty(operation, property);
+			operation.begin();
+			try {
+				return doClearProperty(operation, property);
+			} finally {
+				operation.rollback();
+			}
 		} finally {
 			operation.close();
 		}

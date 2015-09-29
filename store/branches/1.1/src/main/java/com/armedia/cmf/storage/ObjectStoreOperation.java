@@ -42,7 +42,7 @@ public abstract class ObjectStoreOperation<C> {
 
 	protected abstract boolean beginTransaction() throws Exception;
 
-	public final void commit() throws StorageException {
+	public final void commit() {
 		assertValid();
 		if (!this.transactionOpen) { return; }
 		if (!supportsTransactions()) { throw new UnsupportedOperationException(
@@ -50,7 +50,7 @@ public abstract class ObjectStoreOperation<C> {
 		try {
 			commitTransaction();
 		} catch (Exception e) {
-			throw new StorageException("Exception raised committing an operation", e);
+			this.log.warn("Exception raised committing an operation", e);
 		} finally {
 			this.transactionOpen = false;
 		}
@@ -58,7 +58,7 @@ public abstract class ObjectStoreOperation<C> {
 
 	protected abstract void commitTransaction() throws Exception;
 
-	public final void rollback() throws StorageException {
+	public final void rollback() {
 		assertValid();
 		if (!this.transactionOpen) { return; }
 		if (!supportsTransactions()) { throw new UnsupportedOperationException(
@@ -66,7 +66,7 @@ public abstract class ObjectStoreOperation<C> {
 		try {
 			rollbackTransaction();
 		} catch (Exception e) {
-			throw new StorageException("Exception raised rolling back an operation", e);
+			this.log.warn("Exception raised rolling back an operation", e);
 		} finally {
 			this.transactionOpen = false;
 		}
@@ -75,16 +75,7 @@ public abstract class ObjectStoreOperation<C> {
 	protected abstract void rollbackTransaction() throws Exception;
 
 	public final void close() throws StorageException {
-		close(false);
-	}
-
-	public final void close(boolean commit) throws StorageException {
 		if (!this.valid) { return; }
-		if (commit) {
-			commit();
-		} else {
-			rollback();
-		}
 		try {
 			closeConnection();
 		} catch (Exception e) {
