@@ -4,7 +4,6 @@
 
 package com.armedia.cmf.engine.documentum.common;
 
-
 /**
  * @author diego
  *

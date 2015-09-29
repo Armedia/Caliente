@@ -49,7 +49,7 @@ public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferE
 		if (object == null) { return null; }
 		if (!this.dfClass.isInstance(object)) { throw new DfException(String.format(
 			"Expected an object of class %s, but got one of class %s", this.dfClass.getCanonicalName(), object
-			.getClass().getCanonicalName())); }
+				.getClass().getCanonicalName())); }
 		return this.dfClass.cast(object);
 	}
 }
