@@ -25,12 +25,16 @@ public abstract class ObjectStoreOperation<C> {
 		return this.connection;
 	}
 
-	public final boolean begin() throws Exception {
+	public final boolean begin() throws StorageException {
 		assertValid();
 		if (this.transactionOpen) { return false; }
 		boolean tx = false;
 		if (supportsTransactions()) {
-			tx = beginTransaction();
+			try {
+				tx = beginTransaction();
+			} catch (Exception e) {
+				throw new StorageException("Failed to begin a new transaction", e);
+			}
 		}
 		this.transactionOpen = tx;
 		return tx;
