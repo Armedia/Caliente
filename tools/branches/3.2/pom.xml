@@ -5,7 +5,7 @@
 	<name>CMS Migration Framework</name>
 	<groupId>com.delta</groupId>
 	<artifactId>cmsmf</artifactId>
-	<version>3.2.5</version>
+	<version>3.2.4b</version>
 	<packaging>jar</packaging>
 
 	<scm>
@@ -68,14 +68,14 @@
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-documentum</artifactId>
-			<version>1.2.5</version>
+			<version>1.2.6</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-sharepoint</artifactId>
-			<version>1.1.5a</version>
+			<version>1.1.6</version>
 			<scope>compile</scope>
 		</dependency>
 
