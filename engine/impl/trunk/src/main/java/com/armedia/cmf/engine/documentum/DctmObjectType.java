@@ -109,14 +109,14 @@ public enum DctmObjectType {
 
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
-		boolean supportsTransactions, DctmObjectType... surrogateOf) {
+		boolean supportsTransactions) {
 		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch,
-			supportsTransactions, true, surrogateOf);
+			supportsTransactions, true);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
-		boolean supportsTransactions, boolean parallelCapable, DctmObjectType... surrogateOf) {
+		boolean supportsTransactions, boolean parallelCapable) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
