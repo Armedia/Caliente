@@ -6,10 +6,11 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,8 +106,14 @@ public class CMSMFLauncher extends AbstractLauncher {
 
 		// Make sure log4j is configured
 		Logger.getRootLogger().info("Logging active");
+		final Logger console = Logger.getLogger("console");
+		console.info(String.format("Launching CMSMF v%s %s mode for engine %s%n", CMSMFLauncher.VERSION,
+			CLIParam.mode.getString(), engine));
+		Runtime runtime = Runtime.getRuntime();
+		console.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
+		console.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
 
-		List<URL> patches = new ArrayList<URL>();
+		Set<URL> patches = new LinkedHashSet<URL>();
 		PluggableServiceSelector<ClasspathPatcher> selector = new PluggableServiceSelector<ClasspathPatcher>() {
 			@Override
 			public boolean matches(ClasspathPatcher p) {
@@ -130,6 +137,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 
 		for (URL u : patches) {
 			ClasspathPatcher.addToClassPath(u);
+			console.info(String.format("Classpath addition: [%s]", u));
 		}
 
 		// Now, convert the command-line parameters into configuration properties
@@ -145,10 +153,6 @@ public class CMSMFLauncher extends AbstractLauncher {
 				}
 			}
 		}
-
-		final Logger console = Logger.getLogger("console");
-		console.info(String.format("Launching CMSMF v%s %s mode for engine %s%n", CMSMFLauncher.VERSION,
-			CLIParam.mode.getString(), engine));
 
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
