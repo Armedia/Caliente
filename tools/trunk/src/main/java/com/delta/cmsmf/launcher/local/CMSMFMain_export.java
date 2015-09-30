@@ -18,6 +18,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
+import com.armedia.cmf.engine.exporter.ExportSkipReason;
 import com.armedia.cmf.engine.local.exporter.LocalExportEngine;
 import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
 import com.armedia.cmf.storage.CmfObject;
@@ -32,7 +33,7 @@ import com.delta.cmsmf.launcher.ExportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> implements
-	ExportEngineListener {
+ExportEngineListener {
 
 	public CMSMFMain_export() throws Throwable {
 		super(LocalExportEngine.getExportEngine());
@@ -168,7 +169,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 	}
 
 	@Override
-	public void objectSkipped(CmfType objectType, String objectId, String reason) {
+	public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason) {
 		this.console.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
 	}
 

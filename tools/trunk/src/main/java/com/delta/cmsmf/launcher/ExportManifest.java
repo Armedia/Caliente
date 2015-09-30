@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 
 import com.armedia.cmf.engine.exporter.DefaultExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
+import com.armedia.cmf.engine.exporter.ExportSkipReason;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
@@ -136,21 +137,21 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectSkipped(CmfType objectType, String objectId, String reason) {
+	public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason) {
 		// For the manifest, we're not really interested in Skipped objects, since
 		// they'll always be the result of duplicate serializations, so there's no
 		// problem to be reported or deduced from it
 		if (!this.types.contains(objectType)) { return; }
 		if (!this.results.contains(ExportResult.SKIPPED)) { return; }
-		// TODO: Only report skipped records ONCE...
-		new Record(objectType, objectId, ExportResult.SKIPPED).log(this.manifestLog);
+		if (reason == ExportSkipReason.SKIPPED) {
+			new Record(objectType, objectId, ExportResult.SKIPPED).log(this.manifestLog);
+		}
 	}
 
 	@Override
 	public void objectExportFailed(CmfType objectType, String objectId, Throwable thrown) {
 		if (!this.types.contains(objectType)) { return; }
 		if (!this.results.contains(ExportResult.FAILED)) { return; }
-		// TODO: Only report failed records ONCE...
 		new Record(objectType, objectId, thrown).log(this.manifestLog);
 	}
 }

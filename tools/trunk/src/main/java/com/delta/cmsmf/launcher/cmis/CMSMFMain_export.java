@@ -25,6 +25,7 @@ import com.armedia.cmf.engine.cmis.exporter.CmisExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
+import com.armedia.cmf.engine.exporter.ExportSkipReason;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
@@ -37,7 +38,7 @@ import com.delta.cmsmf.launcher.ExportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> implements
-ExportEngineListener {
+	ExportEngineListener {
 
 	public CMSMFMain_export() throws Throwable {
 		super(CmisExportEngine.getExportEngine());
@@ -198,7 +199,7 @@ ExportEngineListener {
 	}
 
 	@Override
-	public void objectSkipped(CmfType objectType, String objectId, String reason) {
+	public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason) {
 		this.console.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
 	}
 

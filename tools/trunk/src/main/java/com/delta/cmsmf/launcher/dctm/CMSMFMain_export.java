@@ -19,6 +19,7 @@ import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
+import com.armedia.cmf.engine.exporter.ExportSkipReason;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
@@ -37,7 +38,7 @@ import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfTime;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> implements
-ExportEngineListener {
+	ExportEngineListener {
 
 	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
@@ -264,7 +265,7 @@ ExportEngineListener {
 	}
 
 	@Override
-	public void objectSkipped(CmfType objectType, String objectId, String reason) {
+	public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason) {
 		this.console.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
 	}
 
