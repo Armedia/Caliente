@@ -71,32 +71,22 @@ public abstract class CmfStoreOperation<C> {
 
 	public final void close() throws CmfStorageException {
 		if (!this.valid) { return; }
-		close(false);
-	}
-
-	public final void close(boolean commit) throws CmfStorageException {
-		if (!this.valid) { return; }
 		try {
-			if (this.transactionOpen) {
-				if (commit) {
-					commit();
-				} else {
-					rollback();
-				}
-			}
+			closeConnection();
+		} catch (Exception e) {
+			throw new CmfStorageException("Failed to close the connection", e);
 		} finally {
-			closeConnectionQuietly();
 			this.valid = false;
 		}
 	}
 
-	protected final void closeConnectionQuietly() {
+	protected final void closeQuietly() {
 		try {
-			closeConnection();
-		} catch (Throwable t) {
+			close();
+		} catch (CmfStorageException e) {
 			// Ignore it...
 			if (this.log.isTraceEnabled()) {
-				this.log.error("Exception raised while closing an operation's connection", t);
+				this.log.error("Exception raised while closing an operation", e);
 			}
 		}
 	}

@@ -148,9 +148,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	private void endInvocation(O operation) throws CmfStorageException {
-		operation.close();
-		getReadLock().unlock();
+	private void endInvocation(O operation) {
+		try {
+			operation.closeQuietly();
+		} finally {
+			getReadLock().unlock();
+		}
 	}
 
 	protected abstract O newOperation() throws CmfStorageException;
@@ -182,20 +185,22 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Long ret = storeObject(operation, object, translator);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				Long ret = storeObject(operation, object, translator);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -208,19 +213,21 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		if ((content == null) || content.isEmpty()) { return; }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			setContentInfo(operation, object, content);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				setContentInfo(operation, object, content);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -231,20 +238,22 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final <V> List<CmfContentInfo> getContentInfo(CmfObject<V> object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			List<CmfContentInfo> ret = getContentInfo(operation, object);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				List<CmfContentInfo> ret = getContentInfo(operation, object);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -256,20 +265,22 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			boolean ret = isStored(operation, type, objectId);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				boolean ret = isStored(operation, type, objectId);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -280,20 +291,22 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			boolean ret = lockForStorage(operation, type, objectId);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				boolean ret = lockForStorage(operation, type, objectId);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -302,7 +315,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator, CmfType type, boolean batching, String... ids)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException, CmfValueDecoderException {
 		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null), batching);
 	}
 
@@ -310,20 +323,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
 		throws CmfStorageException, CmfValueDecoderException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Collection<CmfObject<V>> ret = loadObjects(operation, typeMapper, translator, type, ids, batching);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			try {
+				return loadObjects(operation, typeMapper, translator, type, ids, batching);
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -377,47 +386,42 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> int loadObjects(final CmfTypeMapper typeMapper, final CmfAttributeTranslator<V> translator,
 		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler, boolean batching)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException, CmfValueDecoderException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			final CmfObjectHandler<V> handlerWrapper = new CmfObjectHandler<V>() {
-				@Override
-				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
-					return handler.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
-				}
+			boolean tx = operation.begin();
+			try {
+				return loadObjects(operation, translator, type, ids, new CmfObjectHandler<V>() {
+					@Override
+					public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
+						return handler.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
+					}
 
-				@Override
-				public boolean newBatch(String batchId) throws CmfStorageException {
-					return handler.newBatch(batchId);
-				}
+					@Override
+					public boolean newBatch(String batchId) throws CmfStorageException {
+						return handler.newBatch(batchId);
+					}
 
-				@Override
-				public boolean handleException(Exception e) {
-					return handler.handleException(e);
-				}
+					@Override
+					public boolean handleException(Exception e) {
+						return handler.handleException(e);
+					}
 
-				@Override
-				public boolean closeBatch(boolean ok) throws CmfStorageException {
-					return handler.closeBatch(ok);
+					@Override
+					public boolean closeBatch(boolean ok) throws CmfStorageException {
+						return handler.closeBatch(ok);
+					}
+				}, batching);
+			} finally {
+				if (tx) {
+					operation.rollback();
 				}
-			};
-			int ret = loadObjects(operation, translator, type, ids, handlerWrapper, batching);
-			if (tx) {
-				operation.commit();
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -432,24 +436,26 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if ((source == null) && (target == null)) { throw new IllegalArgumentException(
 			"Must provide either a source or a target value for the mapping"); }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			createMapping(operation, type, name, source, target);
-			Mapping ret = null;
-			if ((source != null) && (target != null)) {
-				ret = this.mapper.constructMapping(type, name, source, target);
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				createMapping(operation, type, name, source, target);
+				Mapping ret = null;
+				if ((source != null) && (target != null)) {
+					ret = this.mapper.constructMapping(type, name, source, target);
+				}
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			if (tx) {
-				operation.commit();
-			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -462,20 +468,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final Mapping getTargetMapping(CmfType type, String name, String source) throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Mapping ret = getTargetMapping(operation, type, name, source);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			try {
+				return getTargetMapping(operation, type, name, source);
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -526,20 +528,17 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final Map<CmfType, Integer> getStoredObjectTypes() throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Map<CmfType, Integer> ret = getStoredObjectTypes(operation);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			try {
+				Map<CmfType, Integer> ret = getStoredObjectTypes(operation);
+				return ret;
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -556,20 +555,22 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final int clearAttributeMappings() throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			int ret = clearAttributeMappings(operation);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				int ret = clearAttributeMappings(operation);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -578,20 +579,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final Map<CmfType, Set<String>> getAvailableMappings() throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Map<CmfType, Set<String>> ret = getAvailableMappings(operation);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			try {
+				return getAvailableMappings(operation);
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -601,20 +598,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final Set<String> getAvailableMappings(CmfType type) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Set<String> ret = getAvailableMappings(operation, type);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			try {
+				return getAvailableMappings(operation, type);
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -625,20 +618,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Map<String, String> ret = getMappings(operation, type, name);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			try {
+				return getMappings(operation, type, name);
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -648,19 +637,21 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final void clearAllObjects() throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			clearAllObjects(operation);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				clearAllObjects(operation);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -670,19 +661,21 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	public final void clearProperties() throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			clearProperties(operation);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				clearProperties(operation);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -692,20 +685,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			CmfValue ret = getProperty(operation, property);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			try {
+				return getProperty(operation, property);
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -715,20 +704,22 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	protected final CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			CmfValue ret = setProperty(operation, property, value);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				CmfValue ret = setProperty(operation, property, value);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -738,20 +729,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	public final Set<String> getPropertyNames() throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Set<String> ret = getPropertyNames(operation);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			try {
+				return getPropertyNames(operation);
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -761,20 +748,22 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	@Override
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			CmfValue ret = clearProperty(operation, property);
-			if (tx) {
-				operation.commit();
+			boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				CmfValue ret = clearProperty(operation, property);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					operation.rollback();
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
