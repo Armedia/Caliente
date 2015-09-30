@@ -21,7 +21,11 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 		String rootPath = settings.getString(ImportSetting.TARGET_LOCATION);
 		this.rootPath = Tools.freezeList(FileNameTools.tokenize(rootPath, '/'));
 		this.pathTrunc = Math.max(0, settings.getInteger(ImportSetting.TRIM_PREFIX));
-		this.rootPathStr = FileNameTools.reconstitute(this.rootPath, true, false, '/');
+		if (this.rootPath.isEmpty()) {
+			this.rootPathStr = "/";
+		} else {
+			this.rootPathStr = FileNameTools.reconstitute(this.rootPath, true, false, '/');
+		}
 	}
 
 	final void ensureTargetPath(S session) throws ImportException {
