@@ -33,7 +33,7 @@ public interface ExportListener {
 	 * @param objectId
 	 * @param reason
 	 */
-	public void objectSkipped(CmfType objectType, String objectId, String reason);
+	public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason);
 
 	/**
 	 * <p>

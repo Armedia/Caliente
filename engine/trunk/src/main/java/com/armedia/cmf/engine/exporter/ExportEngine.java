@@ -47,7 +47,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private class Result {
 		private final Long objectNumber;
 		private final CmfObject<V> marshaled;
-		private final String message;
+		private final ExportSkipReason message;
 
 		public Result(Long objectNumber, CmfObject<V> marshaled) {
 			this.objectNumber = objectNumber;
@@ -55,7 +55,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			this.message = null;
 		}
 
-		public Result(String message) {
+		public Result(ExportSkipReason message) {
 			this.objectNumber = null;
 			this.marshaled = null;
 			this.message = message;
@@ -112,7 +112,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectSkipped(CmfType objectType, String objectId, String reason) {
+		public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason) {
 			getStoredObjectCounter().increment(objectType, ExportResult.SKIPPED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
@@ -164,8 +164,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				result = doExportObject(objectStore, streamStore, referrent, target, sourceObject, ctx,
 					listenerDelegator);
 			} else {
-				result = new Result(String.format("objects of type [%s] are not supported on this export operation",
-					sourceObject.getType()));
+				result = new Result(ExportSkipReason.UNSUPPORTED);
 			}
 			if ((result.objectNumber != null) && (result.marshaled != null)) {
 				listenerDelegator.objectExportCompleted(result.marshaled, result.objectNumber);
@@ -218,7 +217,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("%s is already locked for storage, skipping it", label));
 			}
-			return new Result("Already locked for storage");
+			return new Result(ExportSkipReason.ALREADY_LOCKED);
 		}
 
 		if (this.log.isTraceEnabled()) {
@@ -232,7 +231,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.trace(String.format("%s was locked for storage by this thread, but is already stored...",
 					label));
 			}
-			return new Result("Locked but already stored");
+			return new Result(ExportSkipReason.ALREADY_STORED);
 		}
 
 		if (referrent != null) {
@@ -248,7 +247,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			final CmfObject<V> marshaled = sourceObject.marshal(ctx, referrent);
-			if (marshaled == null) { return new Result("Explicitly skipped"); }
+			if (marshaled == null) { return new Result(ExportSkipReason.SKIPPED); }
 
 			Collection<? extends ExportDelegate<?, S, W, V, C, ?, ?>> referenced;
 			try {
@@ -275,7 +274,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("%s was stored by another thread", label));
 				}
-				return new Result("Stored by another thread");
+				return new Result(ExportSkipReason.ALREADY_STORED);
 			}
 
 			if (!ctx.getSettings().getBoolean(ImportSetting.IGNORE_CONTENT)) {
