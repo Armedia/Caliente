@@ -351,14 +351,16 @@ public class DfUtils {
 		final String objectId = obj.getObjectId().getId();
 		final String objectClass = obj.getClass().getSimpleName();
 		try {
-			if (log.isTraceEnabled()) {
-				log.trace(String.format("LOCKING OBJECT [%s](%s)", objectId, objectClass));
+			if (obj.getSession().isTransactionActive()) {
+				if (log.isTraceEnabled()) {
+					log.trace(String.format("LOCKING OBJECT [%s](%s)", objectId, objectClass));
+				}
+				obj.lock();
+				if (log.isTraceEnabled()) {
+					log.trace(String.format("SUCCESSFULLY LOCKED OBJECT [%s](%s)", objectId, objectClass));
+				}
 			}
-			obj.lock();
 			ok = true;
-			if (log.isTraceEnabled()) {
-				log.trace(String.format("SUCCESSFULLY LOCKED OBJECT [%s](%s)", objectId, objectClass));
-			}
 			return obj;
 		} finally {
 			if (!ok) {
