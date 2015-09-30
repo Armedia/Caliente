@@ -344,6 +344,10 @@ public class DfUtils {
 		oJob.save();
 	}
 
+	public static <T extends IDfPersistentObject> T lockObject(T obj) throws DfException {
+		return DfUtils.lockObject(null, obj);
+	}
+
 	public static <T extends IDfPersistentObject> T lockObject(Logger log, T obj) throws DfException {
 		if (obj == null) { return null; }
 		log = Tools.coalesce(log, DfUtils.LOG);
