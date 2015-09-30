@@ -33,7 +33,7 @@ import com.delta.cmsmf.launcher.ExportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> implements
-ExportEngineListener {
+	ExportEngineListener {
 
 	public CMSMFMain_export() throws Throwable {
 		super(LocalExportEngine.getExportEngine());
@@ -170,7 +170,9 @@ ExportEngineListener {
 
 	@Override
 	public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason) {
-		this.console.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
+		if (reason == ExportSkipReason.SKIPPED) {
+			this.console.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
+		}
 	}
 
 	@Override
