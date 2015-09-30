@@ -217,10 +217,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 				newLabel = calculateLabel(object);
 				this.log.info(String.format("Acquiring lock on %s [%s](%s)", getDctmType().name(),
 					this.cmfObject.getLabel(), this.cmfObject.getId()));
-				if (session.isTransactionActive()) {
-					// Only do the locking if transactions are in use
-					DfUtils.lockObject(this.log, object);
-				}
+				DfUtils.lockObject(this.log, object);
 				object.fetch(null);
 				this.log.info(String.format("Acquired lock on %s [%s](%s)", getDctmType().name(),
 					this.cmfObject.getLabel(), this.cmfObject.getId()));
