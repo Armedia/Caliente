@@ -10,7 +10,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public abstract class ImportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, ?>, DF extends ImportDelegateFactory<S, W, V, C, E>, E extends ImportEngine<S, W, V, C, ?, DF>>
-extends TransferDelegate<T, S, V, C, DF, E> {
+	extends TransferDelegate<T, S, V, C, DF, E> {
 
 	protected final CmfObject<V> cmfObject;
 	protected final ImportStrategy strategy;
