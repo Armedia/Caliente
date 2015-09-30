@@ -142,6 +142,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 		// problem to be reported or deduced from it
 		if (!this.types.contains(objectType)) { return; }
 		if (!this.results.contains(ExportResult.SKIPPED)) { return; }
+		// TODO: Only report skipped records ONCE...
 		new Record(objectType, objectId, ExportResult.SKIPPED).log(this.manifestLog);
 	}
 
@@ -149,6 +150,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	public void objectExportFailed(CmfType objectType, String objectId, Throwable thrown) {
 		if (!this.types.contains(objectType)) { return; }
 		if (!this.results.contains(ExportResult.FAILED)) { return; }
+		// TODO: Only report failed records ONCE...
 		new Record(objectType, objectId, thrown).log(this.manifestLog);
 	}
 }
