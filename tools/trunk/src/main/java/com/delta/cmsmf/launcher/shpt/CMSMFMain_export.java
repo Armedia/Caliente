@@ -38,7 +38,7 @@ import com.delta.cmsmf.launcher.ExportManifest;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> implements
-	ExportEngineListener {
+ExportEngineListener {
 
 	public CMSMFMain_export() throws Throwable {
 		super(ShptExportEngine.getExportEngine());
@@ -156,11 +156,15 @@ public class CMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, Ex
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
 		for (CLIParam p : CLIParam.values()) {
-			String v = p.getString();
-			if (v == null) {
+			if (!p.isPresent()) {
 				continue;
 			}
-			report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
+			String v = p.getString();
+			if (v == null) {
+				report.append(String.format("%n\t--%s", p.option.getLongOpt()));
+			} else {
+				report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
+			}
 		}
 
 		report.append(String.format("%n%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));

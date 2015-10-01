@@ -32,7 +32,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public abstract class AbstractCMSMFMain_import extends
-	AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
+AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
@@ -102,11 +102,15 @@ public abstract class AbstractCMSMFMain_import extends
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
 		for (CLIParam p : CLIParam.values()) {
-			String v = p.getString();
-			if (v == null) {
+			if (!p.isPresent()) {
 				continue;
 			}
-			report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
+			String v = p.getString();
+			if (v == null) {
+				report.append(String.format("%n\t--%s", p.option.getLongOpt()));
+			} else {
+				report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
+			}
 		}
 
 		report.append(String.format("%n%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));

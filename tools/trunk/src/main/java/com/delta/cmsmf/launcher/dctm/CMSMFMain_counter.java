@@ -47,7 +47,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 	}
 
 	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest) throws CMSMFException,
-		DfException {
+	DfException {
 		// If we're already traversed, we skip it
 		final String id = folder.getObjectId().getId();
 		if (!traversed.add(id)) { return; }
@@ -174,11 +174,15 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
 		for (CLIParam p : CLIParam.values()) {
-			String v = p.getString();
-			if (v == null) {
+			if (!p.isPresent()) {
 				continue;
 			}
-			report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
+			String v = p.getString();
+			if (v == null) {
+				report.append(String.format("%n\t--%s", p.option.getLongOpt()));
+			} else {
+				report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
+			}
 		}
 
 		report.append(String.format("%n%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
