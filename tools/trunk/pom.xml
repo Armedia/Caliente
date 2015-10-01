@@ -5,7 +5,7 @@
 	<name>CMS Migration Framework</name>
 	<groupId>com.delta</groupId>
 	<artifactId>cmsmf</artifactId>
-	<version>3.3.0-beta01</version>
+	<version>3.3.0-beta02</version>
 	<packaging>jar</packaging>
 
 	<scm>
@@ -117,7 +117,7 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<version>1.4.181</version>
+			<version>1.4.189</version>
 			<scope>compile</scope>
 		</dependency>
 
