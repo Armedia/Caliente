@@ -164,7 +164,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, engine, mode));
 		} catch (ClassNotFoundException e) {
 			System.err
-			.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
+				.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
 			return;
 		}
 
