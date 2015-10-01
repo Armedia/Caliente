@@ -64,6 +64,8 @@ public class CMSMFLauncher {
 
 	public static void main(String[] args) throws Throwable {
 		System.setProperty("logName", "cmsmf-startup");
+		// Temporary, for debugging
+		System.setProperty("h2.threadDeadlockDetector", "true");
 		if (!CLIParam.parse(args)) {
 			// If the parameters didn't parse, we fail.
 			return;
@@ -165,7 +167,7 @@ public class CMSMFLauncher {
 			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, engine, mode));
 		} catch (ClassNotFoundException e) {
 			System.err
-			.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
+				.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
 			return;
 		}
 
