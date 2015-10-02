@@ -1,11 +1,6 @@
 package com.delta.cmsmf.cfg;
 
 import java.io.File;
-import java.net.URL;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.importer.ImportSetting;
@@ -28,6 +23,7 @@ public enum Setting {
 
 	},
 	DB_DIRECTORY("db.directory"),
+	DB_TYPE("db.type"),
 	DEFAULT_USER_PASSWORD("default.user.password"),
 	OWNER_ATTRIBUTES("owner.attributes"),
 	MAIL_RECIPIENTS("mail.recipients"),
@@ -66,51 +62,35 @@ public enum Setting {
 		this.name = name;
 	}
 
-	private static final String DEFAULT_PROPERTIES = "default.properties";
-
-	private static Configuration DEFAULTS = null;
-
-	private static synchronized Configuration getDefaults() {
-		if (Setting.DEFAULTS == null) {
-			PropertiesConfiguration def = new PropertiesConfiguration();
-			URL url = Thread.currentThread().getContextClassLoader().getResource(Setting.DEFAULT_PROPERTIES);
-			if (url != null) {
-				def.setDelimiterParsingDisabled(true);
-				def.setListDelimiter('|');
-				try {
-					def.load(url);
-				} catch (ConfigurationException e) {
-					throw new RuntimeException(String.format("Failed to load the property defaults from [%s]",
-						Setting.DEFAULT_PROPERTIES));
-				}
-			}
-			// Load the defaults
-			Setting.DEFAULTS = def;
-		}
-		return Setting.DEFAULTS;
-	}
-
 	public int getInt() {
-		return getInt(Setting.getDefaults().getInt(this.name, 0));
+		return SettingManager.getInteger(this.name);
 	}
 
 	public int getInt(int altDefault) {
-		return SettingManager.getProperty(this.name, altDefault);
+		return SettingManager.getInteger(this.name, altDefault);
+	}
+
+	public long getLong() {
+		return SettingManager.getLong(this.name);
+	}
+
+	public long getLong(long altDefault) {
+		return SettingManager.getLong(this.name, altDefault);
 	}
 
 	public boolean getBoolean() {
-		return getBoolean(Setting.getDefaults().getBoolean(this.name, false));
+		return SettingManager.getBoolean(this.name);
 	}
 
 	public boolean getBoolean(boolean altDefault) {
-		return SettingManager.getProperty(this.name, altDefault);
+		return SettingManager.getBoolean(this.name, altDefault);
 	}
 
 	public String getString() {
-		return getString(Setting.getDefaults().getString(this.name, ""));
+		return SettingManager.getString(this.name);
 	}
 
 	public String getString(String altDefault) {
-		return SettingManager.getProperty(this.name, altDefault);
+		return SettingManager.getString(this.name, altDefault);
 	}
 }

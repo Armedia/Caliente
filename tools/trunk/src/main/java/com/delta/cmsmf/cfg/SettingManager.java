@@ -3,12 +3,11 @@ package com.delta.cmsmf.cfg;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.configuration.AbstractConfiguration;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -32,9 +31,28 @@ public class SettingManager {
 		// no code here; this is a singleton class so private constructor
 	}
 
-	private static final List<Configuration> CONFIGURATIONS = new ArrayList<Configuration>();
+	private static final String DEFAULT_PROPERTIES = "default.properties";
+	private static final AbstractConfiguration DEFAULTS;
+	private static final List<AbstractConfiguration> CONFIGURATIONS = new ArrayList<AbstractConfiguration>();
 
-	private static Configuration CFG = null;
+	static {
+		PropertiesConfiguration def = new PropertiesConfiguration();
+		URL url = Thread.currentThread().getContextClassLoader().getResource(SettingManager.DEFAULT_PROPERTIES);
+		if (url != null) {
+			def.setDelimiterParsingDisabled(true);
+			def.setListDelimiter('|');
+			try {
+				def.load(url);
+			} catch (ConfigurationException e) {
+				throw new RuntimeException(String.format("Failed to load the property defaults from [%s]",
+					SettingManager.DEFAULT_PROPERTIES));
+			}
+		}
+		// Load the defaults
+		DEFAULTS = def;
+	}
+
+	private static AbstractConfiguration CFG = null;
 
 	public static void addPropertySource(String propertyFilePath) throws ConfigurationException {
 		if (propertyFilePath == null) { return; }
@@ -42,10 +60,6 @@ public class SettingManager {
 	}
 
 	private static void configure(AbstractConfiguration cfg) {
-		if (cfg != null) {
-			cfg.setDelimiterParsingDisabled(true);
-			cfg.setListDelimiter('|');
-		}
 	}
 
 	public static void addPropertySource(URL propertyUrl) throws ConfigurationException {
@@ -95,8 +109,22 @@ public class SettingManager {
 
 	public static synchronized void init() {
 		if (SettingManager.CFG == null) {
-			SettingManager.CFG = new CompositeConfiguration(SettingManager.CONFIGURATIONS);
+			SettingManager.CFG = new MapConfiguration(new HashMap<String, Object>());
+
+			SettingManager.CFG.copy(SettingManager.DEFAULTS);
+			for (AbstractConfiguration c : SettingManager.CONFIGURATIONS) {
+				SettingManager.CFG.copy(c);
+			}
+
+			SettingManager.CFG.getSubstitutor().setEnableSubstitutionInVariables(true);
+			SettingManager.CFG.setDelimiterParsingDisabled(true);
+			SettingManager.CFG.setListDelimiter('|');
 		}
+	}
+
+	private static synchronized void ensureInitialized() {
+		if (SettingManager.CFG == null) { throw new IllegalStateException(
+			"The SettingsManager has not yet been initialized.  Make sure you call init() first"); }
 	}
 
 	/**
@@ -108,9 +136,13 @@ public class SettingManager {
 	 *            the default value
 	 * @return the string
 	 */
-	static String getProperty(String propName, String defaultValue) {
-		SettingManager.init();
+	static String getString(String propName, String defaultValue) {
+		SettingManager.ensureInitialized();
 		return SettingManager.CFG.getString(propName, defaultValue);
+	}
+
+	static String getString(String propName) {
+		return SettingManager.getString(propName, null);
 	}
 
 	/**
@@ -122,19 +154,40 @@ public class SettingManager {
 	 *            the default value
 	 * @return the int
 	 */
-	static int getProperty(String propName, int defaultValue) {
-		SettingManager.init();
+	static Integer getInteger(String propName, Integer defaultValue) {
+		SettingManager.ensureInitialized();
 		return SettingManager.CFG.getInt(propName, defaultValue);
 	}
 
-	static boolean getProperty(String propName, boolean defaultValue) {
-		SettingManager.init();
+	static Integer getInteger(String propName) {
+		return SettingManager.getInteger(propName, null);
+	}
+
+	/**
+	 * Gets a long property value for a given property name from a property configuration.
+	 *
+	 * @param propName
+	 *            the prop name
+	 * @param defaultValue
+	 *            the default value
+	 * @return the long
+	 */
+	static Long getLong(String propName, Long defaultValue) {
+		SettingManager.ensureInitialized();
+		return SettingManager.CFG.getLong(propName, defaultValue);
+	}
+
+	static Long getLong(String propName) {
+		return SettingManager.getLong(propName, null);
+	}
+
+	static Boolean getBoolean(String propName, Boolean defaultValue) {
+		SettingManager.ensureInitialized();
 		return SettingManager.CFG.getBoolean(propName, defaultValue);
 	}
 
-	public static List<Configuration> getConfigurations() {
-		SettingManager.init();
-		return SettingManager.CONFIGURATIONS;
+	static Boolean getBoolean(String propName) {
+		return SettingManager.getBoolean(propName, null);
 	}
 
 	public static synchronized void close() {

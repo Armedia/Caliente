@@ -52,6 +52,7 @@ public enum CLIParam {
 	shpt_source_prefix(Setting.SHPT_SOURCE_PREFIX, 1,
 		"The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)"),
 	db(Setting.DB_DIRECTORY, 1, "The Database directory to use"),
+	db_type(Setting.DB_TYPE, 1, "The Database type to use"),
 	content(Setting.CONTENT_DIRECTORY, 1,
 		"The Content directory to use (if omitted, it will be placed in the 'content' subdirectory of the Database directory)"),
 	attributes(Setting.OWNER_ATTRIBUTES, 1, "The attributes to check for"),
