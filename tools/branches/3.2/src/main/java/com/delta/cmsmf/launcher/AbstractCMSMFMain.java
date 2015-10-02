@@ -46,15 +46,14 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		// we have a configuration file explicitly listed.
 		this.console.info(String.format("CMSMF v%s", CMSMFLauncher.VERSION));
 		this.console.info("Configuring the properties");
-		SettingManager.addPropertySource(CMSMFLauncher.getParameterProperties());
 
+		// Now, the catch-all, default configuration
+		SettingManager.addPropertySource("cmsmf.properties");
 		// A configuration file has been specified, so use its values ahead of the defaults
 		if (CLIParam.cfg.getString() != null) {
 			SettingManager.addPropertySource(CLIParam.cfg.getString());
 		}
-
-		// Now, the catch-all, default configuration
-		SettingManager.addPropertySource("cmsmf.properties");
+		SettingManager.addPropertySource(CMSMFLauncher.getParameterProperties());
 
 		// And we start up the configuration engine...
 		SettingManager.init();
