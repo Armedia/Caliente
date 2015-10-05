@@ -70,7 +70,7 @@ public enum CLIParam {
 	skip_acls(Setting.SKIP_ACLS, 0, "Skip exporting acls"),
 	skip_content(null, 0, "Skip importing document contents (only create \"empty\" documents)"),
 	direct_fs(null, 0, "Export files to local FS duplicating the CMS's path"),
-	dctm_sync_job(null, 1, "The name of the synchronization job this export is to define"),
+	job_name(null, 1, "The name of the synchronization job this export is to define"),
 	//
 	;
 
