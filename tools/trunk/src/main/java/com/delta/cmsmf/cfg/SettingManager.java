@@ -60,6 +60,8 @@ public class SettingManager {
 	}
 
 	private static void configure(AbstractConfiguration cfg) {
+		cfg.setDelimiterParsingDisabled(true);
+		cfg.setListDelimiter('|');
 	}
 
 	public static void addPropertySource(URL propertyUrl) throws ConfigurationException {
