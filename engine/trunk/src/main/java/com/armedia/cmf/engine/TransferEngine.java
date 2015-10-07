@@ -7,10 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -170,11 +166,6 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		this.threadCount = Tools.ensureBetween(TransferEngine.MIN_THREAD_COUNT, threadCount,
 			TransferEngine.MAX_THREAD_COUNT);
 		return old;
-	}
-
-	protected final ExecutorService newExecutor(int threadCount) {
-		return new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
-			new LinkedBlockingQueue<Runnable>());
 	}
 
 	protected abstract V getValue(CmfDataType type, Object value);
