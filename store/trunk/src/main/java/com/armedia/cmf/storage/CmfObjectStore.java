@@ -186,7 +186,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			"Must provide a translator for storing object values"); }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				Long ret = storeObject(operation, object, translator);
@@ -197,7 +197,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				return ret;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
+							object.getType(), object.getLabel(), object.getId()), e);
+					}
 				}
 			}
 		} finally {
@@ -214,7 +219,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if ((content == null) || content.isEmpty()) { return; }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				setContentInfo(operation, object, content);
@@ -224,7 +229,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				ok = true;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
+							object.getType(), object.getLabel(), object.getId()), e);
+					}
 				}
 			}
 		} finally {
@@ -239,18 +249,17 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
-			boolean ok = false;
+			final boolean tx = operation.begin();
 			try {
-				List<CmfContentInfo> ret = getContentInfo(operation, object);
-				if (tx) {
-					operation.commit();
-				}
-				ok = true;
-				return ret;
+				return getContentInfo(operation, object);
 			} finally {
-				if (tx && !ok) {
-					operation.rollback();
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
+							object.getType(), object.getLabel(), object.getId()), e);
+					}
 				}
 			}
 		} finally {
@@ -266,18 +275,17 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
-			boolean ok = false;
+			final boolean tx = operation.begin();
 			try {
-				boolean ret = isStored(operation, type, objectId);
-				if (tx) {
-					operation.commit();
-				}
-				ok = true;
-				return ret;
+				return isStored(operation, type, objectId);
 			} finally {
-				if (tx && !ok) {
-					operation.rollback();
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for %s (%s)", type, objectId),
+							e);
+					}
 				}
 			}
 		} finally {
@@ -292,7 +300,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				boolean ret = lockForStorage(operation, type, objectId);
@@ -303,7 +311,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				return ret;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for %s (%s)", type, objectId),
+							e);
+					}
 				}
 			}
 		} finally {
@@ -324,12 +337,17 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		throws CmfStorageException, CmfValueDecoderException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
 				return loadObjects(operation, typeMapper, translator, type, ids, batching);
 			} finally {
 				if (tx) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for loading objects of type %s: %s", type, ids), e);
+					}
 				}
 			}
 		} finally {
@@ -393,7 +411,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			"Must provide an object handler to handle the deserialized objects"); }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
 				return loadObjects(operation, translator, type, ids, new CmfObjectHandler<V>() {
 					@Override
@@ -418,7 +436,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				}, batching);
 			} finally {
 				if (tx) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(
+							String.format("Failed to rollback the transaction for loading %s : %s", type, ids), e);
+					}
 				}
 			}
 		} finally {
@@ -437,7 +460,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			"Must provide either a source or a target value for the mapping"); }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				createMapping(operation, type, name, source, target);
@@ -452,7 +475,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				return ret;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for mapping [%s::%s(%s->%s))",
+							type, name, source, target), e);
+					}
 				}
 			}
 		} finally {
@@ -469,12 +497,17 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final Mapping getTargetMapping(CmfType type, String name, String source) throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
 				return getTargetMapping(operation, type, name, source);
 			} finally {
 				if (tx) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for mapping [%s::%s(%s->?))",
+							type, name, source), e);
+					}
 				}
 			}
 		} finally {
@@ -496,20 +529,21 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final Mapping getSourceMapping(CmfType type, String name, String target) throws CmfStorageException {
 		O operation = beginInvocation();
-		boolean tx = false;
-		boolean ok = false;
 		try {
-			tx = operation.begin();
-			Mapping ret = getSourceMapping(operation, type, name, target);
-			if (tx) {
-				operation.commit();
+			final boolean tx = operation.begin();
+			try {
+				return getSourceMapping(operation, type, name, target);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for mapping [%s::%s(?->%s))",
+							type, name, target), e);
+					}
+				}
 			}
-			ok = true;
-			return ret;
 		} finally {
-			if (tx && !ok) {
-				operation.rollback();
-			}
 			endInvocation(operation);
 		}
 	}
@@ -529,10 +563,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final Map<CmfType, Integer> getStoredObjectTypes() throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
-				Map<CmfType, Integer> ret = getStoredObjectTypes(operation);
-				return ret;
+				return getStoredObjectTypes(operation);
 			} finally {
 				if (tx) {
 					operation.rollback();
@@ -556,7 +589,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final int clearAttributeMappings() throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				int ret = clearAttributeMappings(operation);
@@ -567,7 +600,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				return ret;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					if (tx && !ok) {
+						try {
+							operation.rollback();
+						} catch (CmfStorageException e) {
+							this.log.warn("Failed to rollback the transaction for clearing all attribute mappings", e);
+						}
+					}
 				}
 			}
 		} finally {
@@ -580,12 +619,18 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final Map<CmfType, Set<String>> getAvailableMappings() throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
 				return getAvailableMappings(operation);
 			} finally {
 				if (tx) {
-					operation.rollback();
+					if (tx) {
+						try {
+							operation.rollback();
+						} catch (CmfStorageException e) {
+							this.log.warn("Failed to rollback the transaction for getting all available mappings", e);
+						}
+					}
 				}
 			}
 		} finally {
@@ -599,12 +644,18 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
 				return getAvailableMappings(operation, type);
 			} finally {
 				if (tx) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for getting all available mappings for type %s", type),
+							e);
+					}
 				}
 			}
 		} finally {
@@ -619,12 +670,18 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
 				return getMappings(operation, type, name);
 			} finally {
 				if (tx) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for getting all available [%s] mappings for type %s",
+							name, type), e);
+					}
 				}
 			}
 		} finally {
@@ -638,7 +695,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final void clearAllObjects() throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				clearAllObjects(operation);
@@ -648,7 +705,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				ok = true;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for clearing all objects", e);
+					}
 				}
 			}
 		} finally {
@@ -662,7 +723,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final void clearProperties() throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				clearProperties(operation);
@@ -672,7 +733,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				ok = true;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for clearing all properties", e);
+					}
 				}
 			}
 		} finally {
@@ -686,12 +751,17 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
 				return getProperty(operation, property);
 			} finally {
 				if (tx) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for retrieving the property [%s]", property), e);
+					}
 				}
 			}
 		} finally {
@@ -705,7 +775,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected final CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				CmfValue ret = setProperty(operation, property, value);
@@ -716,7 +786,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				return ret;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for setting the property [%s] to [%s]", property,
+							value.asString()), e);
+					}
 				}
 			}
 		} finally {
@@ -730,12 +806,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public final Set<String> getPropertyNames() throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			try {
 				return getPropertyNames(operation);
 			} finally {
 				if (tx) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for getting all property names", e);
+					}
 				}
 			}
 		} finally {
@@ -749,7 +829,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
 		O operation = beginInvocation();
 		try {
-			boolean tx = operation.begin();
+			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
 				CmfValue ret = clearProperty(operation, property);
@@ -760,7 +840,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				return ret;
 			} finally {
 				if (tx && !ok) {
-					operation.rollback();
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for clearing the property [%s]", property), e);
+					}
 				}
 			}
 		} finally {
