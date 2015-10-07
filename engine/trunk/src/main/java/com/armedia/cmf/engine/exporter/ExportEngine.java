@@ -369,7 +369,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			// ConcurrentLinkedQueue<ExportDelegate<?, S, W, V, C, ?, ?>>();
 
 			PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
-				threadCount, backlogSize, new ExportTarget()) {
+				backlogSize) {
 
 				@Override
 				protected SessionWrapper<S> prepare() throws Exception {
@@ -473,7 +473,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			try {
 				// Fire off the workers
-				worker.start();
+				worker.start(threadCount, new ExportTarget());
 
 				int c = 0;
 				// 1: run the query for the given predicate
@@ -503,6 +503,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				} finally {
 					worker.waitForCompletion();
 				}
+
+				// Ok...so...now we process the content queue
 
 				setExportProperties(objectStore);
 				return listenerDelegator.getStoredObjectCounter();

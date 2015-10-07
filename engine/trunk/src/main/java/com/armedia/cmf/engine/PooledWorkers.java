@@ -17,16 +17,22 @@ import org.slf4j.LoggerFactory;
 public abstract class PooledWorkers<S, Q> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final int threadCount;
 	private final BlockingQueue<Q> workQueue;
-	private final Q exitValue;
 	private final List<Future<?>> futures;
 	private final AtomicInteger activeCounter;
 
+	private Q exitValue = null;
+	private int threadCount = 0;
 	private ThreadPoolExecutor executor = null;
 
-	private final Runnable worker = new Runnable() {
+	private final class Worker implements Runnable {
 		private final Logger log = PooledWorkers.this.log;
+
+		private final Q exitValue;
+
+		private Worker(Q exitValue) {
+			this.exitValue = exitValue;
+		}
 
 		@Override
 		public void run() {
@@ -56,7 +62,7 @@ public abstract class PooledWorkers<S, Q> {
 					// looks the same out of some unfortunate coincidence. By checking
 					// instances, we ensure that we will not exit the loop prematurely
 					// due to a value collision.
-					if (next == PooledWorkers.this.exitValue) {
+					if (next == this.exitValue) {
 						// Work complete
 						this.log.info("Exiting the export polling loop");
 						return;
@@ -77,13 +83,11 @@ public abstract class PooledWorkers<S, Q> {
 				cleanup(state);
 			}
 		}
-	};
+	}
 
-	public PooledWorkers(int threadCount, int backlogSize, Q exitValue) {
-		this.threadCount = threadCount;
-		this.exitValue = exitValue;
+	public PooledWorkers(int backlogSize) {
 		this.workQueue = new ArrayBlockingQueue<Q>(backlogSize);
-		this.futures = new ArrayList<Future<?>>(threadCount);
+		this.futures = new ArrayList<Future<?>>(this.threadCount);
 		this.activeCounter = new AtomicInteger(0);
 	}
 
@@ -103,12 +107,15 @@ public abstract class PooledWorkers<S, Q> {
 		return ret;
 	}
 
-	public final synchronized boolean start() {
+	public final synchronized boolean start(int threadCount, Q exitValue) {
 		if (this.executor != null) { return false; }
+		this.threadCount = threadCount;
+		this.exitValue = exitValue;
 		this.activeCounter.set(0);
 		this.futures.clear();
+		Worker worker = new Worker(exitValue);
 		for (int i = 0; i < this.threadCount; i++) {
-			this.futures.add(this.executor.submit(this.worker));
+			this.futures.add(this.executor.submit(worker));
 		}
 		this.executor.shutdown();
 		return true;
@@ -190,10 +197,10 @@ public abstract class PooledWorkers<S, Q> {
 				if (pending > 0) {
 					try {
 						this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+							.info(String
+								.format(
+									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+									pending));
 						this.executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
@@ -202,6 +209,8 @@ public abstract class PooledWorkers<S, Q> {
 				}
 			} finally {
 				this.executor = null;
+				this.threadCount = 0;
+				this.exitValue = null;
 			}
 		}
 	}
