@@ -34,7 +34,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, CF>, CF extends ExportContextFactory<S, W, V, C, ?>, DF extends ExportDelegateFactory<S, W, V, C, ?>>
-extends TransferEngine<S, V, C, CF, DF, ExportEngineListener> {
+	extends TransferEngine<S, V, C, CF, DF, ExportEngineListener> {
 
 	private class Result {
 		private final Long objectNumber;
@@ -253,7 +253,7 @@ extends TransferEngine<S, V, C, CF, DF, ExportEngineListener> {
 
 			if (this.log.isDebugEnabled()) {
 				this.log
-				.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
 			for (ExportDelegate<?, S, W, V, C, ?, ?> requirement : referenced) {
 				exportObject(objectStore, streamStore, target, requirement.getExportTarget(), requirement, ctx,
@@ -270,7 +270,6 @@ extends TransferEngine<S, V, C, CF, DF, ExportEngineListener> {
 			}
 
 			if (!ctx.getSettings().getBoolean(ImportSetting.IGNORE_CONTENT)) {
-				// TODO: Queue the object for content exporting later on
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Executing supplemental storage for %s", label));
 				}
@@ -365,8 +364,6 @@ extends TransferEngine<S, V, C, CF, DF, ExportEngineListener> {
 				counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
 			}
 			final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
-			// final Queue<ExportDelegate<?, S, W, V, C, ?, ?>> contentQueue = new
-			// ConcurrentLinkedQueue<ExportDelegate<?, S, W, V, C, ?, ?>>();
 
 			PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
 				backlogSize) {
@@ -497,116 +494,14 @@ extends TransferEngine<S, V, C, CF, DF, ExportEngineListener> {
 								this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
 							}
 							break;
+						} finally {
+							c++;
 						}
 					}
 					this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
 				} finally {
 					worker.waitForCompletion();
 				}
-
-				// Ok...so...now we process the content queue
-				PooledWorkers<SessionWrapper<S>, ExportDelegate<?, S, W, V, C, ?, ?>> contentWorker = new PooledWorkers<SessionWrapper<S>, ExportDelegate<?, S, W, V, C, ?, ?>>(
-					backlogSize) {
-
-					@Override
-					protected SessionWrapper<S> prepare() throws Exception {
-						final SessionWrapper<S> s;
-						try {
-							s = sessionFactory.acquireSession();
-						} catch (Exception e) {
-							this.log.error("Failed to obtain a worker session", e);
-							return null;
-						}
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("Got session [%s]", s.getId()));
-						}
-						return s;
-					}
-
-					@Override
-					protected void process(SessionWrapper<S> session, ExportDelegate<?, S, W, V, C, ?, ?> next)
-						throws Exception {
-						final S s = session.getWrapped();
-
-						// TODO: need to stow the delegate, the referrent, and the marshalledObject
-						// next.storeContent(s, getTranslator(), marshalledObject, referrent,
-// contentStore);
-						/*
-						CmfType nextType = next.getType();
-						final String nextId = next.getId();
-						final String nextKey = next.getSearchKey();
-
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("Polled %s", next));
-						}
-
-						boolean tx = false;
-						boolean ok = false;
-						try {
-							// Begin transaction
-							tx = session.begin();
-
-							next.storeContent(s, getTranslator(), marshalledObject, null, contentStore)
-							final ExportDelegate<?, S, W, V, C, ?, ?> exportDelegate = delegateFactory
-								.newExportDelegate(s, nextType, nextKey);
-							if (exportDelegate == null) {
-								// No object found with that ID...
-								this.log.warn(String.format("No %s object found with searchKey[%s]",
-									(nextType != null ? nextType.name() : "globally unique"), nextKey));
-								return;
-							}
-							// This allows for object substitutions to take place
-							next = exportDelegate.getExportTarget();
-							nextType = next.getType();
-							if (nextType == null) {
-								this.log.error(String.format(
-									"Failed to determine the object type for target with ID[%s] and searchKey[%s]",
-									nextId, nextKey));
-								return;
-							}
-
-							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Exporting the %s object with ID[%s]", nextType, nextId));
-							}
-
-							// The type mapper parameter is null here because it's only useful
-							// for imports
-							final C ctx = contextFactory.newContext(nextId, nextType, s, output, objectStore,
-								contentStore, null);
-							try {
-								initContext(ctx);
-								Result result = exportObject(objectStore, contentStore, null, next, exportDelegate,
-									ctx, listenerDelegator);
-								if (result != null) {
-									if (this.log.isDebugEnabled()) {
-										this.log.debug(String.format("Exported %s [%s](%s) in position %d",
-											result.marshaled.getType(), result.marshaled.getLabel(),
-											result.marshaled.getId(), result.objectNumber));
-									}
-								}
-								ok = true;
-							} finally {
-								ctx.close();
-							}
-							if (tx) {
-								session.commit();
-							}
-						} catch (Throwable t) {
-							this.log
-							.error(String.format("Failed to export %s object with ID[%s]", nextType, nextId), t);
-							listenerDelegator.objectExportFailed(nextType, nextId, t);
-							if (tx && !ok) {
-								session.rollback();
-							}
-						}
-						 */
-					}
-
-					@Override
-					protected void cleanup(SessionWrapper<S> session) {
-						session.close();
-					}
-				};
 
 				setExportProperties(objectStore);
 				return listenerDelegator.getStoredObjectCounter();
