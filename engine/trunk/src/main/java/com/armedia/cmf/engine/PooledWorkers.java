@@ -7,7 +7,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,11 +18,12 @@ public abstract class PooledWorkers<S, Q> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final int threadCount;
-	private final ThreadPoolExecutor executor;
 	private final BlockingQueue<Q> workQueue;
 	private final Q exitValue;
 	private final List<Future<?>> futures;
 	private final AtomicInteger activeCounter;
+
+	private ThreadPoolExecutor executor = null;
 
 	private final Runnable worker = new Runnable() {
 		private final Logger log = PooledWorkers.this.log;
@@ -83,8 +83,6 @@ public abstract class PooledWorkers<S, Q> {
 		this.threadCount = threadCount;
 		this.exitValue = exitValue;
 		this.workQueue = new ArrayBlockingQueue<Q>(backlogSize);
-		this.executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
-			new LinkedBlockingQueue<Runnable>());
 		this.futures = new ArrayList<Future<?>>(threadCount);
 		this.activeCounter = new AtomicInteger(0);
 	}
@@ -99,14 +97,24 @@ public abstract class PooledWorkers<S, Q> {
 		this.workQueue.put(item);
 	}
 
-	public final void start() {
+	public final synchronized List<Q> clearWorkItems() {
+		List<Q> ret = new ArrayList<Q>();
+		this.workQueue.drainTo(ret);
+		return ret;
+	}
+
+	public final synchronized boolean start() {
+		if (this.executor != null) { return false; }
+		this.activeCounter.set(0);
+		this.futures.clear();
 		for (int i = 0; i < this.threadCount; i++) {
 			this.futures.add(this.executor.submit(this.worker));
 		}
 		this.executor.shutdown();
+		return true;
 	}
 
-	private final void waitCleanly() {
+	private final synchronized void waitCleanly() {
 		this.log.info("Signaling work completion for the workers");
 		boolean waitCleanly = true;
 		for (int i = 0; i < this.threadCount; i++) {
@@ -171,24 +179,29 @@ public abstract class PooledWorkers<S, Q> {
 		}
 	}
 
-	public final void waitForCompletion() {
+	public final synchronized void waitForCompletion() {
+		if (this.executor == null) { return; }
 		try {
 			waitCleanly();
 		} finally {
-			this.executor.shutdownNow();
-			int pending = this.activeCounter.get();
-			if (pending > 0) {
-				try {
-					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
-					this.executor.awaitTermination(1, TimeUnit.MINUTES);
-				} catch (InterruptedException e) {
-					this.log.warn("Interrupted while waiting for immediate executor termination", e);
-					Thread.currentThread().interrupt();
+			try {
+				this.executor.shutdownNow();
+				int pending = this.activeCounter.get();
+				if (pending > 0) {
+					try {
+						this.log
+						.info(String
+							.format(
+								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+								pending));
+						this.executor.awaitTermination(1, TimeUnit.MINUTES);
+					} catch (InterruptedException e) {
+						this.log.warn("Interrupted while waiting for immediate executor termination", e);
+						Thread.currentThread().interrupt();
+					}
 				}
+			} finally {
+				this.executor = null;
 			}
 		}
 	}
