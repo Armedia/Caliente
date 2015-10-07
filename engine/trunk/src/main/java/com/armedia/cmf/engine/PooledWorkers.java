@@ -7,6 +7,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -123,11 +124,15 @@ public abstract class PooledWorkers<S, Q> {
 
 	public final synchronized boolean start(int threadCount, Q exitValue, boolean blocking) {
 		if (this.executor != null) { return false; }
+		if (blocking && (exitValue == null)) { throw new IllegalArgumentException(
+			"Blocking mode requires an exit value"); }
 		this.threadCount = threadCount;
 		this.exitValue = exitValue;
 		this.activeCounter.set(0);
 		this.futures.clear();
 		Worker worker = new Worker(blocking, exitValue);
+		this.executor = new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
+			new LinkedBlockingQueue<Runnable>());
 		for (int i = 0; i < this.threadCount; i++) {
 			this.futures.add(this.executor.submit(worker));
 		}
@@ -138,17 +143,19 @@ public abstract class PooledWorkers<S, Q> {
 	private final synchronized void waitCleanly() {
 		this.log.info("Signaling work completion for the workers");
 		boolean waitCleanly = true;
-		for (int i = 0; i < this.threadCount; i++) {
-			try {
-				this.workQueue.put(this.exitValue);
-			} catch (InterruptedException e) {
-				waitCleanly = false;
-				// Here we have a problem: we're timing out while adding the exit
-				// values...
-				this.log.warn("Interrupted while attempting to request executor thread termination", e);
-				Thread.currentThread().interrupt();
-				this.executor.shutdownNow();
-				break;
+		if (this.exitValue != null) {
+			for (int i = 0; i < this.threadCount; i++) {
+				try {
+					this.workQueue.put(this.exitValue);
+				} catch (InterruptedException e) {
+					waitCleanly = false;
+					// Here we have a problem: we're timing out while adding the exit
+					// values...
+					this.log.warn("Interrupted while attempting to request executor thread termination", e);
+					Thread.currentThread().interrupt();
+					this.executor.shutdownNow();
+					break;
+				}
 			}
 		}
 
@@ -177,7 +184,7 @@ public abstract class PooledWorkers<S, Q> {
 			List<Q> remaining = new ArrayList<Q>();
 			this.workQueue.drainTo(remaining);
 			for (Q v : remaining) {
-				if (v == this.exitValue) {
+				if ((this.exitValue != null) && (v == this.exitValue)) {
 					continue;
 				}
 				this.log.error(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
