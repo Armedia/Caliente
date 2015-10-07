@@ -28,10 +28,16 @@ public abstract class PooledWorkers<S, Q> {
 	private final class Worker implements Runnable {
 		private final Logger log = PooledWorkers.this.log;
 
+		private final boolean blocking;
 		private final Q exitValue;
 
 		private Worker(Q exitValue) {
+			this(true, exitValue);
+		}
+
+		private Worker(boolean blocking, Q exitValue) {
 			this.exitValue = exitValue;
+			this.blocking = blocking;
 		}
 
 		@Override
@@ -50,11 +56,19 @@ public abstract class PooledWorkers<S, Q> {
 						this.log.debug("Polling the queue...");
 					}
 					Q next = null;
-					try {
-						next = PooledWorkers.this.workQueue.take();
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						return;
+					if (this.blocking) {
+						try {
+							next = PooledWorkers.this.workQueue.take();
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							return;
+						}
+					} else {
+						next = PooledWorkers.this.workQueue.poll();
+						if (next == null) {
+							this.log.info("Exiting the export polling loop");
+							return;
+						}
 					}
 
 					// We compare instances, and not values, because we're interested
@@ -107,13 +121,13 @@ public abstract class PooledWorkers<S, Q> {
 		return ret;
 	}
 
-	public final synchronized boolean start(int threadCount, Q exitValue) {
+	public final synchronized boolean start(int threadCount, Q exitValue, boolean blocking) {
 		if (this.executor != null) { return false; }
 		this.threadCount = threadCount;
 		this.exitValue = exitValue;
 		this.activeCounter.set(0);
 		this.futures.clear();
-		Worker worker = new Worker(exitValue);
+		Worker worker = new Worker(blocking, exitValue);
 		for (int i = 0; i < this.threadCount; i++) {
 			this.futures.add(this.executor.submit(worker));
 		}
