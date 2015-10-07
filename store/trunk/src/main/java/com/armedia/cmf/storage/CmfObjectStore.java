@@ -326,15 +326,27 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract boolean lockForStorage(O operation, CmfType type, String objectId) throws CmfStorageException;
 
+	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
+		CmfAttributeTranslator<V> translator) {
+		// Ensure type mapping takes place, and ensure that translation also takes place
+		// TODO: This should only happen if "necessary" (i.e. target CMS is different from the
+		// source)
+		String altType = typeMapper.mapType(dataObject.getSubtype());
+		if (altType != null) {
+			dataObject = new CmfObject<V>(dataObject, altType);
+		}
+		return translator.decodeObject(dataObject);
+	}
+
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator, CmfType type, boolean batching, String... ids)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null), batching);
 	}
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		O operation = beginInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -355,21 +367,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
-		CmfAttributeTranslator<V> translator) {
-		// Ensure type mapping takes place, and ensure that translation also takes place
-		// TODO: This should only happen if "necessary" (i.e. target CMS is different from the
-		// source)
-		String altType = typeMapper.mapType(dataObject.getSubtype());
-		if (altType != null) {
-			dataObject = new CmfObject<V>(dataObject, altType);
-		}
-		return translator.decodeObject(dataObject);
-	}
-
 	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
@@ -389,7 +389,28 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				}
 				actualIds.add(s);
 			}
-			loadObjects(operation, translator, type, actualIds, new CollectionObjectHandler<V>(ret), batching);
+			final CmfObjectHandler<V> h = new CollectionObjectHandler<V>(ret);
+			loadObjects(operation, translator, type, actualIds, new CmfObjectHandler<V>() {
+				@Override
+				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
+					return h.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
+				}
+
+				@Override
+				public boolean newBatch(String batchId) throws CmfStorageException {
+					return h.newBatch(batchId);
+				}
+
+				@Override
+				public boolean handleException(Exception e) {
+					return h.handleException(e);
+				}
+
+				@Override
+				public boolean closeBatch(boolean ok) throws CmfStorageException {
+					return h.closeBatch(ok);
+				}
+			}, batching);
 			return ret;
 		} finally {
 			getReadLock().unlock();
@@ -404,7 +425,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> int loadObjects(final CmfTypeMapper typeMapper, final CmfAttributeTranslator<V> translator,
 		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler, boolean batching)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
