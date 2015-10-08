@@ -902,7 +902,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	@Override
-	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
+	public ImportOutcome importObject(DctmImportContext context) throws DfException, ImportException {
 		// First things first: fix the parent paths in the incoming object
 		StoredProperty<IDfValue> paths = this.storedObject.getProperty(DctmSysObject.TARGET_PATHS);
 		if (paths == null) {
@@ -936,6 +936,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			paths.setValues(newPaths);
 		}
 
-		return super.doImportObject(context);
+		return super.importObject(context);
 	}
 }

@@ -32,7 +32,6 @@ import com.armedia.cmf.storage.StoredObject;
 import com.armedia.cmf.storage.StoredObjectHandler;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -107,62 +106,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 		return false;
 	}
 
-	public final ImportOutcome importObject(DctmImportContext context) throws DfException, ImportException {
+	public ImportOutcome importObject(DctmImportContext context) throws DfException, ImportException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
-		final IDfSession session = context.getSession();
-		final boolean supportsTransaction = this.strategy.isSupportsTransactions();
-		boolean ok = false;
-		final IDfLocalTransaction localTx;
-		if (supportsTransaction) {
-			if (session.isTransactionActive()) {
-				localTx = session.beginTransEx();
-			} else {
-				localTx = null;
-				session.beginTrans();
-			}
-		} else {
-			if (session.isTransactionActive()) { throw new ImportException(String.format(
-				"Objects of type [%s] don't support transactions, but a transaction is already open",
-				this.storedObject.getType())); }
-			localTx = null;
-		}
-		try {
-			ImportOutcome ret = doImportObject(context);
-			this.log.debug(String.format("Committing the transaction for [%s](%s)", this.storedObject.getLabel(),
-				this.storedObject.getId()));
-			if (supportsTransaction) {
-				if (localTx != null) {
-					session.commitTransEx(localTx);
-				} else {
-					session.commitTrans();
-				}
-			}
-			ok = true;
-			return ret;
-		} finally {
-			if (supportsTransaction && !ok) {
-				this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.storedObject.getLabel(),
-					this.storedObject.getId()));
-				try {
-					if (localTx != null) {
-						session.abortTransEx(localTx);
-					} else {
-						session.abortTrans();
-					}
-				} catch (DfException e) {
-					// We log this here and don't raise it because if we're aborting, it means
-					// that there's another exception already bubbling up, so we don't want
-					// to intercept that
-					this.log.error(String.format("Failed to roll back the transaction for [%s](%s)",
-						this.storedObject.getLabel(), this.storedObject.getId()), e);
-				}
-			}
-		}
-	}
-
-	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
-		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
-
 		boolean ok = false;
 
 		// We assume the worst, out of the gate
@@ -307,11 +252,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 				} catch (DfException e) {
 					ok = false;
 					this.log
-						.error(
-							String
-								.format(
-									"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-									this.storedObject.getLabel(), this.storedObject.getId()), e);
+					.error(
+						String
+						.format(
+							"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
+							this.storedObject.getLabel(), this.storedObject.getId()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
@@ -384,7 +329,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void prepareForConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	/**
@@ -398,16 +343,16 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends 
 	 * @throws DfException
 	 */
 	protected void finalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 	}
 
 	protected boolean postConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
 	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	ImportException {
 		return false;
 	}
 
