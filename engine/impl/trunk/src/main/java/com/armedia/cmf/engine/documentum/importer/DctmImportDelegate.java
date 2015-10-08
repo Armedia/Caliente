@@ -4,9 +4,11 @@
 
 package com.armedia.cmf.engine.documentum.importer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,7 +40,6 @@ import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -125,57 +126,10 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<IDfValue> translator,
 		DctmImportContext context) throws ImportException, CmfStorageException, CmfValueDecoderException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
-		final IDfSession session = context.getSession();
-		boolean ok = false;
-		final boolean useTx = this.strategy.isSupportsTransactions();
-		final IDfLocalTransaction localTx;
 		try {
-			if (useTx) {
-				if (session.isTransactionActive()) {
-					localTx = session.beginTransEx();
-				} else {
-					localTx = null;
-					session.beginTrans();
-				}
-			} else {
-				if (session.isTransactionActive()) { throw new ImportException(String.format(
-					"Objects of type [%s] don't support transactions, but a transaction is active",
-					this.cmfObject.getType())); }
-				ok = true;
-				localTx = null;
-			}
-			try {
-				ImportOutcome ret = doImportObject(context);
-				this.log.debug(String.format("Committing the transaction for [%s](%s)", this.cmfObject.getLabel(),
-					this.cmfObject.getId()));
-				if (useTx) {
-					if (localTx != null) {
-						session.commitTransEx(localTx);
-					} else {
-						session.commitTrans();
-					}
-				}
-				ok = true;
-				return Collections.singleton(ret);
-			} finally {
-				if (!ok && useTx) {
-					this.log.warn(String.format("Aborting the transaction for [%s](%s)", this.cmfObject.getLabel(),
-						this.cmfObject.getId()));
-					try {
-						if (localTx != null) {
-							session.abortTransEx(localTx);
-						} else {
-							session.abortTrans();
-						}
-					} catch (DfException e) {
-						// We log this here and don't raise it because if we're aborting, it means
-						// that there's another exception already bubbling up, so we don't want
-						// to intercept that
-						this.log.error(String.format("Failed to roll back the transaction for [%s](%s)",
-							this.cmfObject.getLabel(), this.cmfObject.getId()), e);
-					}
-				}
-			}
+			List<ImportOutcome> ret = new ArrayList<ImportOutcome>(1);
+			ret.add(doImportObject(context));
+			return ret;
 		} catch (DfException e) {
 			throw new ImportException(String.format("Documentum Exception caught while processing [%s](%s)",
 				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
