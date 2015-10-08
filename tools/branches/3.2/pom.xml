@@ -89,7 +89,7 @@
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-documentum</artifactId>
-			<version>1.2.7</version>
+			<version>1.2.8</version>
 			<scope>compile</scope>
 		</dependency>
 
