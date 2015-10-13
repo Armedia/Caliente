@@ -116,26 +116,8 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		final String jobName = CLIParam.job_name.getString();
 
 		validateState();
-		Map<String, Object> settings = null;
+		Map<String, Object> settings = new HashMap<String, Object>();
 		prepareSettings(settings);
-
-		boolean loaded = false;
-		if (!StringUtils.isBlank(jobName)) {
-			this.log.info(String.format("##### Loading settings for job [%s] #####", jobName));
-			settings = loadSettings(jobName);
-			if (settings != null) {
-				this.log.info(String.format("##### Settings for job [%s] #####", jobName));
-				for (String s : settings.keySet()) {
-					this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
-				}
-				loaded = true;
-			} else {
-				this.log.info(String.format("##### No settings stored for job [%s] #####", jobName));
-				settings = loadDefaultSettings(jobName);
-			}
-		}
-
-		processSettings(settings, loaded);
 
 		Date end = null;
 		Map<CmfType, Integer> summary = null;
@@ -144,6 +126,26 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		Date start = null;
 		try {
 			prepareState(settings);
+
+			boolean loaded = false;
+			if (!StringUtils.isBlank(jobName)) {
+				this.log.info(String.format("##### Loading settings for job [%s] #####", jobName));
+				Map<String, Object> m = loadSettings(jobName);
+				if (m != null) {
+					this.log.info(String.format("##### Settings for job [%s] #####", jobName));
+					for (String s : m.keySet()) {
+						this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
+					}
+					loaded = true;
+				} else {
+					this.log.info(String.format("##### No settings stored for job [%s] #####", jobName));
+					m = loadDefaultSettings(jobName);
+				}
+				settings.putAll(m);
+			}
+
+			processSettings(settings, loaded);
+
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");
@@ -153,7 +155,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 
 				summary = this.cmfObjectStore.getStoredObjectTypes();
 				if (!StringUtils.isBlank(jobName)) {
-					this.log.info(String.format("##### Storing settings for job [%s] #####"));
+					this.log.info(String.format("##### Storing settings for job [%s] #####", jobName));
 					for (String s : settings.keySet()) {
 						this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
 					}

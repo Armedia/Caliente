@@ -2,18 +2,14 @@ package com.delta.cmsmf.launcher.dctm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.text.ParseException;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TimeZone;
 
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
+import org.apache.commons.lang.time.DateFormatUtils;
 
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DocumentumOrganizationStrategy;
@@ -21,6 +17,7 @@ import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;
@@ -28,14 +25,13 @@ import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfTime;
 
 public class CMSMFMain_export extends AbstractCMSMFMain_export implements ExportEngineListener {
 
 	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
-	private static final FastDateFormat DATE_FORMAT = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT;
+	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss 'UTC'";
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
@@ -64,20 +60,6 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		if (this.password != null) {
 			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
-		String predicate = Setting.EXPORT_PREDICATE.getString();
-		if (StringUtils.isBlank(predicate)) {
-			// Try to locate a object in source repository that represents a last successful export
-			// to a target repository.
-			// NOTE : We will create a cabinet named 'CMSMF_SYNC' in source repository. We will
-			// create a folder for each target repository in this cabinet, the name of the folder
-			// will be the name of a target repository. In this folder we will create an object
-			// named 'cmsmf_last_export' and
-
-			// first get the last export date from the source repository
-			predicate = CMSMFMain_export.DEFAULT_PREDICATE;
-		}
-		// Set the default predicate...
-		settings.put("dql", String.format("select r_object_id from %s", predicate));
 	}
 
 	@Override
@@ -103,7 +85,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	private String getJobQualification(String jobName, IDfFolder exportFolder) throws DfException {
 		final String fileName = String.format("%s.job", jobName.toLowerCase());
 		return String.format("dm_document where object_name = %s and folder(ID(%s))", DfUtils.quoteString(fileName),
-			exportFolder.getObjectId().getId());
+			DfUtils.quoteString(exportFolder.getObjectId().getId()));
 	}
 
 	@Override
@@ -113,7 +95,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			try {
 				this.session.beginTrans();
 
-				IDfFolder exportFolder = DctmUtils.getCmsmfStateCabinet(this.session, false);
+				IDfFolder exportFolder = getCmsmfStateFolder(false);
 				if (exportFolder == null) { return null; }
 
 				final String qualification = getJobQualification(jobName, exportFolder);
@@ -138,11 +120,11 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					this.session.abortTrans();
 				} catch (DfException e) {
 					this.log
-						.error(
-							String
-								.format(
-									"Exception caught while rolling back the transaction for loading the export metadata for job [%s]",
-									jobName), e);
+					.error(
+						String
+						.format(
+							"Exception caught while rolling back the transaction for loading the export metadata for job [%s]",
+							jobName), e);
 				}
 			}
 		} catch (Exception e) {
@@ -154,8 +136,14 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	@Override
 	protected Map<String, Object> loadDefaultSettings(String jobName) throws CMSMFException {
 		Map<String, Object> settings = super.loadDefaultSettings(jobName);
-		String dql = String.format("select r_object_id from %s", buildExportPredicate(this.session));
-		settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
+
+		String predicate = Setting.EXPORT_PREDICATE.getString();
+		if (StringUtils.isBlank(predicate)) {
+			predicate = CMSMFMain_export.DEFAULT_PREDICATE;
+		}
+
+		String dql = String.format("select r_object_id from %s", predicate);
+		settings.put(AbstractCMSMFMain_export.BASE_SELECTOR, dql);
 		return settings;
 	}
 
@@ -170,7 +158,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			boolean ok = false;
 			this.session.beginTrans();
 			try {
-				final IDfFolder exportFolder = DctmUtils.getCmsmfStateCabinet(this.session, true);
+				final IDfFolder exportFolder = getCmsmfStateFolder(true);
 				final String qualification = getJobQualification(jobName, exportFolder);
 				IDfDocument doc = IDfDocument.class.cast(this.session.getObjectByQualification(qualification));
 				Map<String, Object> m = new HashMap<String, Object>();
@@ -178,13 +166,10 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					m.putAll(settings);
 				}
 
-				// TODO: Convert to a standard UTC string
-				Calendar c = Calendar.getInstance();
-				c.setTimeZone(TimeZone.getTimeZone("UTC"));
-				c.setTime(exportStart);
-				m.put(AbstractCMSMFMain_export.EXPORT_START, CMSMFMain_export.DATE_FORMAT.format(c));
-				c.setTime(exportEnd);
-				m.put(AbstractCMSMFMain_export.EXPORT_END, CMSMFMain_export.DATE_FORMAT.format(c));
+				m.put(AbstractCMSMFMain_export.EXPORT_START,
+					DateFormatUtils.formatUTC(exportStart, CMSMFMain_export.DATE_FORMAT));
+				m.put(AbstractCMSMFMain_export.EXPORT_END,
+					DateFormatUtils.formatUTC(exportEnd, CMSMFMain_export.DATE_FORMAT));
 
 				Properties p = new Properties();
 				for (String s : m.keySet()) {
@@ -203,6 +188,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					// Create a new one & save
 					doc = IDfDocument.class.cast(this.session.newObject("dm_document"));
 					doc.setObjectName(String.format("%s.job", jobName));
+					doc.setContentType("xml");
 					doc.setContent(out);
 					doc.link(exportFolder.getObjectId().getId());
 					doc.save();
@@ -233,50 +219,54 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			// and based on that construct the new FINAL_SELECTOR (dql)
 			Object startDate = settings.get(AbstractCMSMFMain_export.EXPORT_START);
 			if (startDate != null) {
-				final Date d;
-				try {
-					d = CMSMFMain_export.DATE_FORMAT.parse(startDate.toString());
-				} catch (ParseException e) {
-					throw new CMSMFException(String.format("Invalid date setting [%s] = [%s]",
-						AbstractCMSMFMain_export.EXPORT_START, startDate), e);
-				}
-				IDfTime t = new DfTime(d);
 				Object basePred = settings.get(AbstractCMSMFMain_export.BASE_SELECTOR);
 				final String dql = String.format("%s AND r_modify_date >= DATE(%s, %s)", basePred,
-					DfUtils.quoteString(t.asString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN)),
+					DfUtils.quoteString(startDate.toString()),
 					DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
 			} else {
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR,
 					settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
 			}
+		} else {
+			Object baseSel = settings.get(AbstractCMSMFMain_export.BASE_SELECTOR);
+			if (baseSel == null) {
+				baseSel = CLIParam.source.getString();
+			}
+			settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, baseSel);
 		}
+
+		settings.put("dql", settings.get(AbstractCMSMFMain_export.FINAL_SELECTOR));
 	}
 
-	private String buildExportPredicate(IDfSession session) {
+	private IDfFolder getCmsmfStateFolder(boolean createIfMissing) throws DfException {
+		final String targetDocbaseName = this.session.getDocbaseName();
+		final String cabinetName = Setting.STATE_CABINET.getString();
+		final String cabinetPath = String.format("/%s", cabinetName);
+		final String folderPath = String.format("%s/%s", cabinetPath, targetDocbaseName);
+		IDfFolder lstExportFolder = IDfFolder.class.cast(this.session.getObjectByPath(folderPath));
+		if ((lstExportFolder == null) && createIfMissing) {
+			// Object does not exist, create one.
+			// try to locate a folder for a target repository and create one if it doesn't exist
+			// target folder does not exist, create one.
+			// try to locate the cmsmf_sync cabinet and create one if it doesn't exist
+			IDfFolder cmsmfSyncCabinet = this.session.getFolderByPath(cabinetPath);
+			if (cmsmfSyncCabinet == null) {
+				this.log.info(String.format("Creating cabinet [%s] in source repository", cabinetName));
+				// create the cabinet and folder underneath
+				cmsmfSyncCabinet = IDfFolder.class.cast(this.session.newObject("dm_cabinet"));
+				cmsmfSyncCabinet.setObjectName(cabinetName);
+				cmsmfSyncCabinet.setHidden(true);
+				cmsmfSyncCabinet.save();
+			}
 
-		// First check to see if ad-hoc query property has any value. If it does have some value in
-		// it, use it to build the query string. If this value is blank, look into the source
-		// repository to see when was the last export run and pick up the sysobjects modified since
-		// then.
-
-		String predicate = Setting.EXPORT_PREDICATE.getString();
-		if (StringUtils.isBlank(predicate)) {
-			// Try to locate a object in source repository that represents a last successful export
-			// to a target repository.
-			// NOTE : We will create a cabinet named 'CMSMF_SYNC' in source repository. We will
-			// create a folder for each target repository in this cabinet, the name of the folder
-			// will be the name of a target repository. In this folder we will create an object
-			// named 'cmsmf_last_export' and
-
-			// first get the last export date from the source repository
-			Date lastExportRunDate = DctmUtils.getLastExportDate(session);
-			predicate = CMSMFMain_export.DEFAULT_PREDICATE;
-			if (lastExportRunDate != null) { return String.format("%s AND r_modify_date >= DATE('%s', '%s')",
-				predicate, new DfTime(lastExportRunDate).asString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN),
-				CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN); }
+			// create a folder for a target repository in this cabinet.
+			lstExportFolder = IDfFolder.class.cast(this.session.newObject("dm_folder"));
+			lstExportFolder.setObjectName(targetDocbaseName);
+			lstExportFolder.link(cmsmfSyncCabinet.getObjectId().getId());
+			lstExportFolder.save();
 		}
-		return predicate;
+		return lstExportFolder;
 	}
 
 	@Override
