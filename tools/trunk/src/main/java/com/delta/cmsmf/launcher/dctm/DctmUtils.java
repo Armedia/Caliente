@@ -62,6 +62,36 @@ class DctmUtils {
 		return lstExportObj;
 	}
 
+	public static IDfFolder getCmsmfStateCabinet(IDfSession dctmSession, boolean createIfMissing) throws DfException {
+		final String targetDocbaseName = dctmSession.getDocbaseName();
+		final String cabinetName = Setting.STATE_CABINET.getString();
+		final String cabinetPath = String.format("/%s", cabinetName);
+		final String folderPath = String.format("%s/%s", cabinetPath, targetDocbaseName);
+		IDfFolder lstExportFolder = IDfFolder.class.cast(dctmSession.getObjectByPath(folderPath));
+		if ((lstExportFolder == null) && createIfMissing) {
+			// Object does not exist, create one.
+			// try to locate a folder for a target repository and create one if it doesn't exist
+			// target folder does not exist, create one.
+			// try to locate the cmsmf_sync cabinet and create one if it doesn't exist
+			IDfFolder cmsmfSyncCabinet = dctmSession.getFolderByPath(cabinetPath);
+			if (cmsmfSyncCabinet == null) {
+				DctmUtils.log.info(String.format("Creating cabinet [%s] in source repository", cabinetName));
+				// create the cabinet and folder underneath
+				cmsmfSyncCabinet = IDfFolder.class.cast(dctmSession.newObject("dm_cabinet"));
+				cmsmfSyncCabinet.setObjectName(cabinetName);
+				cmsmfSyncCabinet.setHidden(true);
+				cmsmfSyncCabinet.save();
+			}
+
+			// create a folder for a target repository in this cabinet.
+			lstExportFolder = IDfFolder.class.cast(dctmSession.newObject("dm_folder"));
+			lstExportFolder.setObjectName(targetDocbaseName);
+			lstExportFolder.link(cmsmfSyncCabinet.getObjectId().getId());
+			lstExportFolder.save();
+		}
+		return lstExportFolder;
+	}
+
 	/**
 	 * Gets the last export date.
 	 *

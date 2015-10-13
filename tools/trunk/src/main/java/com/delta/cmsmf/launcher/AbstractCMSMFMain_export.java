@@ -32,6 +32,11 @@ import com.delta.cmsmf.utils.CMSMFUtils;
 public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>>
 	implements ExportEngineListener {
 
+	protected static final String EXPORT_START = "cmsmfExportStart";
+	protected static final String EXPORT_END = "cmsmfExportEnd";
+	protected static final String BASE_SELECTOR = "cmsmfBaseSelector";
+	protected static final String FINAL_SELECTOR = "cmsmfFinalSelector";
+
 	protected AbstractCMSMFMain_export(ExportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine);
 	}
@@ -58,8 +63,23 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
 	}
 
-	protected boolean loadSettings(String jobName, Map<String, Object> settings) throws CMSMFException {
-		return false;
+	/**
+	 * <p>
+	 * Loads the stored settings for the given job name. If no settings are stored for the given job
+	 * (i.e. no settings file found), then {@code null} is returned. Otherwise, the found settings
+	 * (whatever they may be) will be returned.
+	 * </p>
+	 *
+	 * @param jobName
+	 * @return the settings stored for the given job name, or {@code null} if there are none
+	 * @throws CMSMFException
+	 */
+	protected Map<String, Object> loadSettings(String jobName) throws CMSMFException {
+		return null;
+	}
+
+	protected Map<String, Object> loadDefaultSettings(String jobName) throws CMSMFException {
+		return new HashMap<String, Object>();
 	}
 
 	protected boolean storeSettings(String jobName, Map<String, Object> settings, Date exportStart, Date exportEnd)
@@ -96,13 +116,14 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		final String jobName = CLIParam.job_name.getString();
 
 		validateState();
-		Map<String, Object> settings = new HashMap<String, Object>();
+		Map<String, Object> settings = null;
 		prepareSettings(settings);
 
 		boolean loaded = false;
 		if (!StringUtils.isBlank(jobName)) {
 			this.log.info(String.format("##### Loading settings for job [%s] #####", jobName));
-			if (loadSettings(jobName, settings)) {
+			settings = loadSettings(jobName);
+			if (settings != null) {
 				this.log.info(String.format("##### Settings for job [%s] #####", jobName));
 				for (String s : settings.keySet()) {
 					this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
@@ -110,6 +131,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 				loaded = true;
 			} else {
 				this.log.info(String.format("##### No settings stored for job [%s] #####", jobName));
+				settings = loadDefaultSettings(jobName);
 			}
 		}
 

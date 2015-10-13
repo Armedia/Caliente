@@ -1,10 +1,21 @@
 package com.delta.cmsmf.launcher.dctm;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
+import java.util.TimeZone;
 
+import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 
+import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DocumentumOrganizationStrategy;
 import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
@@ -13,6 +24,8 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;
+import com.documentum.fc.client.IDfDocument;
+import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfTime;
@@ -21,6 +34,8 @@ import com.documentum.fc.common.IDfTime;
 public class CMSMFMain_export extends AbstractCMSMFMain_export implements ExportEngineListener {
 
 	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
+
+	private static final FastDateFormat DATE_FORMAT = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT;
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
@@ -85,29 +100,63 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		}
 	}
 
+	private String getJobQualification(String jobName, IDfFolder exportFolder) throws DfException {
+		final String fileName = String.format("%s.job", jobName.toLowerCase());
+		return String.format("dm_document where object_name = %s and folder(ID(%s))", DfUtils.quoteString(fileName),
+			exportFolder.getObjectId().getId());
+	}
+
 	@Override
-	protected boolean loadSettings(String jobName, Map<String, Object> settings) throws CMSMFException {
+	protected Map<String, Object> loadSettings(String jobName) throws CMSMFException {
 
 		try {
-			/**
-			 * Now, we try to set the last export date
-			 */
 			try {
 				this.session.beginTrans();
-				String dql = String.format("select r_object_id from %s", buildExportPredicate(this.session));
-				settings.put("dql", dql);
+
+				IDfFolder exportFolder = DctmUtils.getCmsmfStateCabinet(this.session, false);
+				if (exportFolder == null) { return null; }
+
+				final String qualification = getJobQualification(jobName, exportFolder);
+				final IDfDocument doc = IDfDocument.class.cast(this.session.getObjectByQualification(qualification));
+				Map<String, Object> settings = null;
+				if (doc != null) {
+					settings = new HashMap<String, Object>();
+					InputStream in = doc.getContent();
+					Properties props = new Properties();
+					try {
+						props.loadFromXML(in);
+					} finally {
+						IOUtils.closeQuietly(in);
+					}
+					for (Object o : props.keySet()) {
+						settings.put(o.toString(), props.get(o));
+					}
+				}
+				return settings;
 			} finally {
 				try {
 					this.session.abortTrans();
 				} catch (DfException e) {
-					this.log.error(
-						"Exception caught while rolling back the transaction for saving the export metadata", e);
+					this.log
+						.error(
+							String
+								.format(
+									"Exception caught while rolling back the transaction for loading the export metadata for job [%s]",
+									jobName), e);
 				}
 			}
-			return true;
 		} catch (Exception e) {
-			throw new CMSMFException("Exception caught storing the export metadata", e);
+			throw new CMSMFException(
+				String.format("Exception caught loading the export settings for job [%s]", jobName), e);
 		}
+	}
+
+	@Override
+	protected Map<String, Object> loadDefaultSettings(String jobName) throws CMSMFException {
+		Map<String, Object> settings = super.loadDefaultSettings(jobName);
+		String dql = String.format("select r_object_id from %s", buildExportPredicate(this.session));
+		settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
+		return settings;
 	}
 
 	@Override
@@ -119,12 +168,46 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			 * Now, we try to set the last export date
 			 */
 			boolean ok = false;
+			this.session.beginTrans();
 			try {
-				this.session.beginTrans();
-				// If this is auto run type of an export instead of an adhoc query export, store
-				// the value of the current export date in the repository. This value will be
-				// looked up in the next run. This is indeed an auto run type of export
-				DctmUtils.setLastExportDate(this.session, exportStart);
+				final IDfFolder exportFolder = DctmUtils.getCmsmfStateCabinet(this.session, true);
+				final String qualification = getJobQualification(jobName, exportFolder);
+				IDfDocument doc = IDfDocument.class.cast(this.session.getObjectByQualification(qualification));
+				Map<String, Object> m = new HashMap<String, Object>();
+				if ((settings != null) && !settings.isEmpty()) {
+					m.putAll(settings);
+				}
+
+				// TODO: Convert to a standard UTC string
+				Calendar c = Calendar.getInstance();
+				c.setTimeZone(TimeZone.getTimeZone("UTC"));
+				c.setTime(exportStart);
+				m.put(AbstractCMSMFMain_export.EXPORT_START, CMSMFMain_export.DATE_FORMAT.format(c));
+				c.setTime(exportEnd);
+				m.put(AbstractCMSMFMain_export.EXPORT_END, CMSMFMain_export.DATE_FORMAT.format(c));
+
+				Properties p = new Properties();
+				for (String s : m.keySet()) {
+					p.put(s, m.get(s));
+				}
+
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				p.storeToXML(out, String.format("Configurations for sync job [%s]", jobName), "UTF-8");
+				IOUtils.closeQuietly(out);
+
+				if (doc != null) {
+					doc.checkout();
+					doc.setContent(out);
+					doc.checkin(false, null);
+				} else {
+					// Create a new one & save
+					doc = IDfDocument.class.cast(this.session.newObject("dm_document"));
+					doc.setObjectName(String.format("%s.job", jobName));
+					doc.setContent(out);
+					doc.link(exportFolder.getObjectId().getId());
+					doc.save();
+				}
+
 				this.session.commitTrans();
 				ok = true;
 			} finally {
@@ -145,6 +228,29 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 
 	@Override
 	protected void processSettings(Map<String, Object> settings, boolean loaded) throws CMSMFException {
+		if (loaded) {
+			// If there are previous settings, we need to look at BASE_SELECTOR and the dates given,
+			// and based on that construct the new FINAL_SELECTOR (dql)
+			Object startDate = settings.get(AbstractCMSMFMain_export.EXPORT_START);
+			if (startDate != null) {
+				final Date d;
+				try {
+					d = CMSMFMain_export.DATE_FORMAT.parse(startDate.toString());
+				} catch (ParseException e) {
+					throw new CMSMFException(String.format("Invalid date setting [%s] = [%s]",
+						AbstractCMSMFMain_export.EXPORT_START, startDate), e);
+				}
+				IDfTime t = new DfTime(d);
+				Object basePred = settings.get(AbstractCMSMFMain_export.BASE_SELECTOR);
+				final String dql = String.format("%s AND r_modify_date >= DATE(%s, %s)", basePred,
+					DfUtils.quoteString(t.asString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN)),
+					DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
+				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
+			} else {
+				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR,
+					settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
+			}
+		}
 	}
 
 	private String buildExportPredicate(IDfSession session) {
