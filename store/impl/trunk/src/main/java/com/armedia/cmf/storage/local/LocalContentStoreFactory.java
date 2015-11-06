@@ -3,15 +3,15 @@ package com.armedia.cmf.storage.local;
 import java.io.File;
 
 import com.armedia.cmf.storage.CmfContentStoreFactory;
-import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfOrganizationStrategy;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.xml.StoreConfiguration;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalContentStoreFactory extends CmfContentStoreFactory<LocalContentStore> {
 
 	public LocalContentStoreFactory() {
-		super("local", "filesystem");
+		super("local", "fs");
 	}
 
 	@Override
