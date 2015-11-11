@@ -70,15 +70,16 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		// Iterate through only the custom attributes of the type object and add them to the dql
 		// string
 		final boolean parens = (startPosition < attrCount);
+		final String nl = String.format("%n");
 		if (parens) {
-			dql.append("( ");
+			dql.append("(").append(nl);
 		}
 		for (int i = startPosition; i < attrCount; ++i) {
 			// If we're not the first, we need a comma
 			if (i > startPosition) {
-				dql.append(", ");
+				dql.append(",").append(nl);
 			}
-			dql.append(attrNames.getValue(i).asString()).append(" ");
+			dql.append("\t").append(attrNames.getValue(i).asString()).append("\t");
 			switch (attrTypes.getValue(i).asInteger()) {
 				case IDfAttr.DM_BOOLEAN:
 					dql.append("boolean");
@@ -111,7 +112,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			}
 		}
 		if (parens) {
-			dql.append(" )");
+			dql.append(nl).append(")");
 		}
 
 		// Add the supertype phrase if needed
