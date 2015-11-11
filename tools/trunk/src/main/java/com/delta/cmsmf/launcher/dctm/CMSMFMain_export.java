@@ -120,11 +120,11 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					this.session.abortTrans();
 				} catch (DfException e) {
 					this.log
-					.error(
-						String
-						.format(
-							"Exception caught while rolling back the transaction for loading the export metadata for job [%s]",
-							jobName), e);
+						.error(
+							String
+								.format(
+									"Exception caught while rolling back the transaction for loading the export metadata for job [%s]",
+									jobName), e);
 				}
 			}
 		} catch (Exception e) {
@@ -134,8 +134,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	@Override
-	protected Map<String, Object> loadDefaultSettings(String jobName) throws CMSMFException {
-		Map<String, Object> settings = super.loadDefaultSettings(jobName);
+	protected Map<String, Object> loadDefaultSettings() throws CMSMFException {
+		Map<String, Object> settings = super.loadDefaultSettings();
 
 		String predicate = Setting.EXPORT_PREDICATE.getString();
 		if (StringUtils.isBlank(predicate)) {

@@ -30,7 +30,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>>
-	implements ExportEngineListener {
+implements ExportEngineListener {
 
 	protected static final String EXPORT_START = "cmsmfExportStart";
 	protected static final String EXPORT_END = "cmsmfExportEnd";
@@ -78,7 +78,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		return null;
 	}
 
-	protected Map<String, Object> loadDefaultSettings(String jobName) throws CMSMFException {
+	protected Map<String, Object> loadDefaultSettings() throws CMSMFException {
 		return new HashMap<String, Object>();
 	}
 
@@ -137,11 +137,15 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 						this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
 					}
 					loaded = true;
-				} else {
-					this.log.info(String.format("##### No settings stored for job [%s] #####", jobName));
-					m = loadDefaultSettings(jobName);
 				}
-				settings.putAll(m);
+			}
+
+			if (!loaded) {
+				this.log.info(String.format("##### Loading default settings #####", jobName));
+				Map<String, Object> m = loadDefaultSettings();
+				if ((m != null) && !m.isEmpty()) {
+					settings.putAll(m);
+				}
 			}
 
 			processSettings(settings, loaded);
