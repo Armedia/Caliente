@@ -40,14 +40,4 @@ public abstract class AbstractDecrypt implements CMSMFMain {
 	protected String decrypt(String password) throws Exception {
 		return Crypt.decrypt(password);
 	}
-
-	@Override
-	public final boolean requiresDataStore() {
-		return false;
-	}
-
-	@Override
-	public final boolean requiresCleanData() {
-		return false;
-	}
 }

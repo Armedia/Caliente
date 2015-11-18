@@ -38,7 +38,7 @@ implements ExportEngineListener {
 	protected static final String FINAL_SELECTOR = "cmsmfFinalSelector";
 
 	protected AbstractCMSMFMain_export(ExportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
-		super(engine);
+		super(engine, true, true);
 	}
 
 	protected void validateState() throws CMSMFException {
@@ -237,11 +237,6 @@ implements ExportEngineListener {
 		} catch (MessagingException e) {
 			this.log.error("Exception caught attempting to send the report e-mail", e);
 		}
-	}
-
-	@Override
-	public final boolean requiresCleanData() {
-		return true;
 	}
 
 	@Override

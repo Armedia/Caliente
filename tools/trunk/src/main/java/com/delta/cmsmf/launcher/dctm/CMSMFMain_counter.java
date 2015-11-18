@@ -43,7 +43,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 	private static final String RECURSOR = "select distinct r_object_id from dm_sysobject where folder(ID('%s')) and type(dm_folder)";
 
 	public CMSMFMain_counter() throws Throwable {
-		super(DctmExportEngine.getExportEngine());
+		super(DctmExportEngine.getExportEngine(), false, false);
 	}
 
 	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest) throws CMSMFException,
@@ -197,10 +197,5 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		} finally {
 			pool.close();
 		}
-	}
-
-	@Override
-	public boolean requiresCleanData() {
-		return false;
 	}
 }

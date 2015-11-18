@@ -7,9 +7,5 @@ public interface CMSMFMain {
 
 	public void run() throws CMSMFException;
 
-	public boolean requiresDataStore();
-
 	public CmfObjectStore<?, ?> getObjectStore();
-
-	public boolean requiresCleanData();
 }

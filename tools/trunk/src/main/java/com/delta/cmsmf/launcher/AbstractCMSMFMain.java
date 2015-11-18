@@ -38,7 +38,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	protected final String password;
 	protected final String domain;
 
-	protected AbstractCMSMFMain(E engine) throws Throwable {
+	protected AbstractCMSMFMain(E engine, boolean requiresStorage, boolean clearStorage) throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
 
 		this.engine = engine;
@@ -63,43 +63,48 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		// First things first...
 		AbstractCMSMFMain.instance = this;
 
-		File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
-		File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
+		if (requiresStorage) {
+			File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
+			File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
 
-		this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
+			this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
 
-		CmfStores.initializeConfigurations();
+			CmfStores.initializeConfigurations();
 
-		StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("cmsmf");
-		cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
-		cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
-		this.cmfObjectStore = CmfStores.createObjectStore(cfg);
+			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("cmsmf");
+			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
+			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
+			this.cmfObjectStore = CmfStores.createObjectStore(cfg);
 
-		final boolean directFsExport = CLIParam.direct_fs.isPresent();
+			final boolean directFsExport = CLIParam.direct_fs.isPresent();
 
-		final String contentStoreName = (directFsExport ? "direct" : "cmsmf");
-		cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
-		if (!directFsExport) {
-			String strategy = getContentStrategyName();
-			if (strategy != null) {
-				cfg.getSettings().put("dir.content.strategy", strategy);
+			final String contentStoreName = (directFsExport ? "direct" : "cmsmf");
+			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
+			if (!directFsExport) {
+				String strategy = getContentStrategyName();
+				if (strategy != null) {
+					cfg.getSettings().put("dir.content.strategy", strategy);
+				}
 			}
-		}
-		cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
-		cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(requiresCleanData()));
+			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
+			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
 
-		this.cmfContentStore = CmfStores.createContentStore(cfg);
+			this.cmfContentStore = CmfStores.createContentStore(cfg);
+
+			// Set the filesystem location where files will be created or read from
+			this.log.info(String.format("Using database directory: [%s]", databaseDirectoryLocation));
+
+			// Set the filesystem location where the content files will be created or read from
+			this.log.info(String.format("Using content directory: [%s]", contentFilesDirectoryLocation));
+		} else {
+			this.cmfObjectStore = null;
+			this.cmfContentStore = null;
+		}
 
 		this.server = CLIParam.server.getString();
 		this.user = CLIParam.user.getString();
 		this.password = CLIParam.password.getString();
 		this.domain = CLIParam.domain.getString();
-
-		// Set the filesystem location where files will be created or read from
-		this.log.info(String.format("Using database directory: [%s]", databaseDirectoryLocation));
-
-		// Set the filesystem location where the content files will be created or read from
-		this.log.info(String.format("Using content directory: [%s]", contentFilesDirectoryLocation));
 	}
 
 	public static AbstractCMSMFMain<?, ?> getInstance() {
@@ -109,16 +114,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	@Override
 	public CmfObjectStore<?, ?> getObjectStore() {
 		return this.cmfObjectStore;
-	}
-
-	@Override
-	public boolean requiresDataStore() {
-		return true;
-	}
-
-	@Override
-	public boolean requiresCleanData() {
-		return false;
 	}
 
 	protected String getContentStrategyName() {
