@@ -47,7 +47,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 	}
 
 	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest) throws CMSMFException,
-	DfException {
+		DfException {
 		// If we're already traversed, we skip it
 		final String id = folder.getObjectId().getId();
 		if (!traversed.add(id)) { return; }
@@ -60,7 +60,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		final IDfValue count = result.getValueAt(0);
 		DfUtils.closeQuietly(result);
 		if (count.asInteger() > 0) {
-			String msg = String.format("%s,%s,%d", id, path, count.asInteger());
+			String msg = String.format("%s,\"%s\",%d", id, path.replaceAll("\"", "\"\""), count.asInteger());
 			this.console.info(msg);
 			manifest.info(msg);
 		}
