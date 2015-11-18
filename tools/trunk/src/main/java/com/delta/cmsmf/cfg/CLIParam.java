@@ -32,7 +32,7 @@ public enum CLIParam {
 	log4j(null, 1, "The Log4j configuration (XML format) to use instead of the default (overrides --log_name)"),
 	threads(null, 1, "The number of threads to use while importing or exporting"),
 	non_recursive(null, 0, "Turn off counter recursion (i.e. to count a single folder without descending)"),
-	count_path(null, 0, "The path within which to count objects for"),
+	count_path(null, 1, "The path within which to count objects for"),
 	cmf_exclude_types(Setting.CMF_EXCLUDE_TYPES, -1,
 		"The list of object types to be ignored during the operation (comma-separated)"),
 	cmf_import_target_location(Setting.CMF_IMPORT_TARGET_LOCATION, 1,

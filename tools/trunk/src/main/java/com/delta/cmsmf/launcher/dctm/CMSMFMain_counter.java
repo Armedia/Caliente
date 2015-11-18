@@ -42,12 +42,12 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 	private static final String COUNTER = "select count(*) from dm_sysobject where folder(ID('%s')) and not type(dm_folder)";
 	private static final String RECURSOR = "select distinct r_object_id from dm_sysobject where folder(ID('%s')) and type(dm_folder)";
 
-	CMSMFMain_counter() throws Throwable {
+	public CMSMFMain_counter() throws Throwable {
 		super(DctmExportEngine.getExportEngine());
 	}
 
 	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest) throws CMSMFException,
-		DfException {
+	DfException {
 		// If we're already traversed, we skip it
 		final String id = folder.getObjectId().getId();
 		if (!traversed.add(id)) { return; }
@@ -119,79 +119,83 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			throw new CMSMFException("Failed to initialize the connection pool", e);
 		}
 
-		final Logger manifest = Logger.getLogger("manifest");
-		String folderPath = CLIParam.count_path.getString();
-		if (StringUtils.isEmpty(folderPath)) { throw new CMSMFException(
-			"Must provide a cabinet name to count the objects for"); }
 		try {
-			final IDfSession session = pool.acquireSession();
-			final Set<String> traversed = new HashSet<String>();
-
+			final Logger manifest = Logger.getLogger("manifest");
+			String folderPath = CLIParam.count_path.getString();
+			if (StringUtils.isEmpty(folderPath)) { throw new CMSMFException(
+				"Must provide a cabinet name to count the objects for"); }
 			try {
-				session.beginTrans();
-				IDfFolder folder = session.getFolderByPath(folderPath);
-				if (folder == null) { throw new CMSMFException(String.format("Could not find the cabinet at [%s]",
-					folderPath)); }
-				this.console.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
-				this.log.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
-				String msg = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT";
-				this.console.info(msg);
-				manifest.info(msg);
-				printFolderCounts(traversed, folder, manifest);
-			} finally {
-				this.console.info("##### Counter Process Finished #####");
-				this.log.info("##### Counter Process Finished #####");
+				final IDfSession session = pool.acquireSession();
+				final Set<String> traversed = new HashSet<String>();
+
 				try {
-					session.abortTrans();
-				} catch (DfException e) {
-					this.log.error("Exception caught while aborting the transaction for object counts", e);
+					session.beginTrans();
+					IDfFolder folder = session.getFolderByPath(folderPath);
+					if (folder == null) { throw new CMSMFException(String.format("Could not find the cabinet at [%s]",
+						folderPath)); }
+					this.console.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
+					this.log.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
+					String msg = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT";
+					this.console.info(msg);
+					manifest.info(msg);
+					printFolderCounts(traversed, folder, manifest);
+				} finally {
+					this.console.info("##### Counter Process Finished #####");
+					this.log.info("##### Counter Process Finished #####");
+					try {
+						session.abortTrans();
+					} catch (DfException e) {
+						this.log.error("Exception caught while aborting the transaction for object counts", e);
+					}
+					pool.releaseSession(session);
 				}
-				pool.releaseSession(session);
+			} catch (Throwable t) {
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				report.append(String.format("%n%nException caught while attempting an object count for [%s]%n%n",
+					folderPath));
+				t.printStackTrace(pw);
+				exceptionReport = sw.toString();
+			} finally {
+				// unlock
+				end = new Date();
 			}
-		} catch (Throwable t) {
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			report.append(String.format("%n%nException caught while attempting an object count for [%s]%n%n",
-				folderPath));
-			t.printStackTrace(pw);
-			exceptionReport = sw.toString();
+
+			long duration = (end.getTime() - start.getTime());
+			long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);
+			duration -= hours * TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
+			long minutes = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS);
+			duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
+			long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS);
+			report.append(String.format("Counter process start    : %s%n",
+				DateFormatUtils.format(start, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern())));
+			report.append(String.format("Counter process end      : %s%n",
+				DateFormatUtils.format(end, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern())));
+			report.append(String.format("Counter process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
+
+			report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
+			for (CLIParam p : CLIParam.values()) {
+				if (!p.isPresent()) {
+					continue;
+				}
+				String v = p.getString();
+				if (v == null) {
+					report.append(String.format("%n\t--%s", p.option.getLongOpt()));
+				} else {
+					report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
+				}
+			}
+
+			report.append(String.format("%n%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
+			for (Setting s : Setting.values()) {
+				report.append(String.format("%n\t%s = [%s]", s.name, s.getString()));
+			}
+
+			if (exceptionReport != null) {
+				report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
+			}
 		} finally {
-			// unlock
-			end = new Date();
-		}
-
-		long duration = (end.getTime() - start.getTime());
-		long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);
-		duration -= hours * TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
-		long minutes = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS);
-		duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
-		long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS);
-		report.append(String.format("Counter process start    : %s%n",
-			DateFormatUtils.format(start, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern())));
-		report.append(String.format("Counter process end      : %s%n",
-			DateFormatUtils.format(end, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern())));
-		report.append(String.format("Counter process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
-
-		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
-		for (CLIParam p : CLIParam.values()) {
-			if (!p.isPresent()) {
-				continue;
-			}
-			String v = p.getString();
-			if (v == null) {
-				report.append(String.format("%n\t--%s", p.option.getLongOpt()));
-			} else {
-				report.append(String.format("%n\t--%s = [%s]", p.option.getLongOpt(), v));
-			}
-		}
-
-		report.append(String.format("%n%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
-		for (Setting s : Setting.values()) {
-			report.append(String.format("%n\t%s = [%s]", s.name, s.getString()));
-		}
-
-		if (exceptionReport != null) {
-			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
+			pool.close();
 		}
 	}
 
