@@ -40,7 +40,7 @@ import com.documentum.fc.common.IDfValue;
 public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
 
 	private static final String COUNTER = "select count(*) from dm_sysobject where folder(ID('%s')) and not type(dm_folder)";
-	private static final String RECURSOR = "select distinct r_object_id from dm_sysobject where folder(ID('%s')) and type(dm_folder)";
+	private static final String RECURSOR = "select distinct r_object_id, object_name from dm_sysobject where folder(ID('%s')) and type(dm_folder) order by object_name, r_object_id";
 
 	public CMSMFMain_counter() throws Throwable {
 		super(DctmExportEngine.getExportEngine(), false, false);
