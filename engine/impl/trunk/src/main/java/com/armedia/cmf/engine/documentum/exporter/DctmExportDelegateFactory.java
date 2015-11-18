@@ -2,6 +2,7 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
+import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportDelegateFactory;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfType;
@@ -34,10 +35,21 @@ public class DctmExportDelegateFactory extends
 	DctmExportDelegate<?> newExportDelegate(IDfPersistentObject object, CmfType type) throws Exception {
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
-		final DctmObjectType dctmType = (type != null ? DctmObjectType.decodeType(type) : DctmObjectType
-			.decodeType(object));
+		String typeStr = null;
+		DctmObjectType dctmType = null;
+		if (type != null) {
+			typeStr = type.name();
+			dctmType = DctmObjectType.decodeType(type);
+		} else {
+			typeStr = object.getType().getName();
+			try {
+				dctmType = DctmObjectType.decodeType(object);
+			} catch (UnsupportedDctmObjectTypeException e) {
+				dctmType = null;
+			}
+		}
 		if (dctmType == null) { throw new ExportException(String.format(
-			"Unsupported object type [%s] (objectId = [%s])", type, object.getObjectId().getId())); }
+			"Unsupported object type [%s] (objectId = [%s])", typeStr, object.getObjectId().getId())); }
 
 		Class<? extends IDfPersistentObject> requiredClass = dctmType.getDfClass();
 		if (requiredClass.isInstance(object)) {
