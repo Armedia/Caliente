@@ -19,7 +19,6 @@ import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
-import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -211,17 +210,6 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 						"Missing dependency for group [%s] - group [%s] not found (as group member)",
 						group.getGroupName(), groupName));
 				}
-			}
-		}
-
-		IDfId groupDir = group.getGroupDirectoryId();
-		if (groupDir.isObjectId() && !groupDir.isNull()) {
-			try {
-				ret.add(this.factory.newExportDelegate(session.getObject(groupDir)));
-			} catch (DfIdNotFoundException e) {
-				// Folder not found...warn, but don't fail
-				this.log.warn(String.format("Group [%s] references a directory with ID[%s], but it couldn't be found",
-					group.getGroupName(), groupDir.getId()));
 			}
 		}
 		return ret;
