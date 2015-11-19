@@ -3,10 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.armedia.cmf</groupId>
-	<artifactId>cmf-export-sharepoint</artifactId>
-	<version>0.0.1</version>
-	<name>CMF Exporter for Sharepoint</name>
-	<description>CMF Exporter for Sharepoint</description>
+	<artifactId>cmf-engine-xml</artifactId>
+	<version>1.0.0</version>
+	<name>CMF Engine for Local Filesystem and XML Storage</name>
+	<description>CMF Engine for Local Filesystem and XML Storage</description>
 	<packaging>bundle</packaging>
 
 	<scm>
@@ -15,7 +15,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.target>1.7</project.build.target>
+		<project.build.target>1.8</project.build.target>
 	</properties>
 
 	<organization>
@@ -53,9 +53,62 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
-			<artifactId>cmf-export-api</artifactId>
-			<version>0.0.1</version>
+			<artifactId>cmf-engine</artifactId>
+			<version>1.3.0</version>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.10</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.1.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-storage-local</artifactId>
+			<version>1.1.3</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-storage-jdbc</artifactId>
+			<version>1.2.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>datasource-locator-pooled</artifactId>
+			<version>1.0.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.4.181</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

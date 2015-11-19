@@ -1,0 +1,122 @@
+<type>
+	<name>typeName</name>
+	<superType>superTypeName</superType>
+	<attributes>
+		<attribute name="attribute_name" dataType="data_type" length="length" repeating="true|false"/>
+		<attribute name="attribute_name" dataType="data_type" length="length" repeating="true|false"/>
+		<attribute name="attribute_name" dataType="data_type" length="length" repeating="true|false"/>
+		<attribute name="attribute_name" dataType="data_type" length="length" repeating="true|false"/>
+		<attribute name="attribute_name" dataType="data_type" length="length" repeating="true|false"/>
+		<attribute name="attribute_name" dataType="data_type" length="length" repeating="true|false"/>
+	</attributes>
+</type>
+
+<user>
+	<name>userName</name>
+	<defaultFolder>/folder/path</defaultFolder>
+	<description>The user's description</description>
+	<email>email-address</email>
+	<loginName>userLoginName</loginName>
+	<domain>userDomain</domain>
+</user>
+
+<group>
+	<name>groupName</name>
+	<class>group|role|module role|priv group|domain</class>
+	<email>email-address</email>
+	<admin>user_or_group</admin>
+	<displayName>.....</displayName>
+	<public>true|false</public>
+	<userMembers>
+		<member>userName</member>
+	</userMembers>
+	<groupMembers>
+		<member>groupName</member>
+	</groupMembers>
+</group>
+
+<acl>
+	<id>aclId</id>
+	<description>The ACL's description</description>
+	<userAccessors>
+		<permit type="permitType" name="accessorName" level="level" extended="extendedPermissions" />
+		<permit type="permitType" name="accessorName" level="level" extended="extendedPermissions" />
+		<permit type="permitType" name="accessorName" level="level" extended="extendedPermissions" />
+		<permit type="permitType" name="accessorName" level="level" extended="extendedPermissions" />
+	</userAccessors>
+	<groupAccessors>
+		<permit type="permitType" name="accessorName" level="level" extended="extendedPermissions" />
+		<permit type="permitType" name="accessorName" level="level" extended="extendedPermissions" />
+		<permit type="permitType" name="accessorName" level="level" extended="extendedPermissions" />
+		<permit type="permitType" name="accessorName" level="level" extended="extendedPermissions" />
+	</groupAccessors>
+</acl>
+
+<sysObject>
+	<id>objectId</id>
+	<parentId>objectId</parentId>
+	<name>objectName</name>
+	<sourcePath>the/object's/path/in/the/repository</sourcePath>
+	<type>objectType</type>
+	<creationDate>...</creationDate>
+	<creator>...</creator>
+	<modifyDate>...</modifyDate>
+	<modifier>...</modifier>
+	<lastAccessDate>...</lastAccessDate>
+	<lastAccessor>...</lastAccessor>
+	<acl>aclId</acl>
+	<attributes>
+		<attribute name="...." type="dataType">
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+		</attribute>
+		<attribute name="...." type="dataType">
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+		</attribute>
+		<attribute name="...." type="dataType">
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+		</attribute>
+		<attribute name="...." type="dataType">
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+		</attribute>
+		<attribute name="...." type="dataType">
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+			<value>...</value>
+		</attribute>
+	</attributes>
+</folder>
+
+<folder> <!-- extends sysObject -->
+</folder>
+
+<document> <!-- extends sysObject -->
+	<historyId>theChronicleId</historyId>
+	<version>1.0</version>
+	<current>true|false</current>
+	<antecedentId>objectId</antecedentId>
+	<contentSize>....</contentSize>
+	<contentSum type="SHA1|SHA256|MD5|...">checksum</contentSum>
+</document>
