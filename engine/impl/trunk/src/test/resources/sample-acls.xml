@@ -7,10 +7,10 @@
 		<id>id</id>
 		<description>description</description>
 		<users>
-			<permit extended="" level="0" name="" type="ACCESS" />
+			<permit extended="ss" level="1" name="dd" type="ACCESS" />
 		</users>
 		<groups>
-			<permit extended="" level="0" name="" type="ACCESS" />
+			<permit extended="xx" level="2" name="ff" type="ACCESS" />
 		</groups>
 	</acl>
 </acls>
