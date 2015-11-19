@@ -3,7 +3,7 @@
 // Implementation, vJAXB 2.1.10 in JDK 6
 // See <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a>
 // Any modifications to this file will be lost upon recompilation of the source schema.
-// Generated on: 2015.11.19 at 01:48:42 PM CST
+// Generated on: 2015.11.19 at 03:26:27 PM CST
 //
 
 package com.armedia.cmf.engine.xml.importer.jaxb;
@@ -26,6 +26,8 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
+	private final static QName _DocumentIndex_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import",
+		"documentIndex");
 	private final static QName _Types_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import", "types");
 	private final static QName _Groups_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import", "groups");
 	private final static QName _Folder_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import", "folder");
@@ -42,59 +44,11 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link SysObjectT }
+	 * Create an instance of {@link DocumentIndexEntryT }
 	 *
 	 */
-	public SysObjectT createSysObjectT() {
-		return new SysObjectT();
-	}
-
-	/**
-	 * Create an instance of {@link AttributeDefT }
-	 *
-	 */
-	public AttributeDefT createAttributeDefT() {
-		return new AttributeDefT();
-	}
-
-	/**
-	 * Create an instance of {@link GroupT }
-	 *
-	 */
-	public GroupT createGroupT() {
-		return new GroupT();
-	}
-
-	/**
-	 * Create an instance of {@link AttributeBaseT }
-	 *
-	 */
-	public AttributeBaseT createAttributeBaseT() {
-		return new AttributeBaseT();
-	}
-
-	/**
-	 * Create an instance of {@link DocumentT }
-	 *
-	 */
-	public DocumentT createDocumentT() {
-		return new DocumentT();
-	}
-
-	/**
-	 * Create an instance of {@link FolderT }
-	 *
-	 */
-	public FolderT createFolderT() {
-		return new FolderT();
-	}
-
-	/**
-	 * Create an instance of {@link TypesT }
-	 *
-	 */
-	public TypesT createTypesT() {
-		return new TypesT();
+	public DocumentIndexEntryT createDocumentIndexEntryT() {
+		return new DocumentIndexEntryT();
 	}
 
 	/**
@@ -106,19 +60,11 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link GroupsT }
+	 * Create an instance of {@link AttributeDefT }
 	 *
 	 */
-	public GroupsT createGroupsT() {
-		return new GroupsT();
-	}
-
-	/**
-	 * Create an instance of {@link AttributeT }
-	 *
-	 */
-	public AttributeT createAttributeT() {
-		return new AttributeT();
+	public AttributeDefT createAttributeDefT() {
+		return new AttributeDefT();
 	}
 
 	/**
@@ -130,6 +76,22 @@ public class ObjectFactory {
 	}
 
 	/**
+	 * Create an instance of {@link GroupsT }
+	 *
+	 */
+	public GroupsT createGroupsT() {
+		return new GroupsT();
+	}
+
+	/**
+	 * Create an instance of {@link AttributeBaseT }
+	 *
+	 */
+	public AttributeBaseT createAttributeBaseT() {
+		return new AttributeBaseT();
+	}
+
+	/**
 	 * Create an instance of {@link UsersT }
 	 *
 	 */
@@ -138,11 +100,76 @@ public class ObjectFactory {
 	}
 
 	/**
+	 * Create an instance of {@link AttributeT }
+	 *
+	 */
+	public AttributeT createAttributeT() {
+		return new AttributeT();
+	}
+
+	/**
+	 * Create an instance of {@link TypesT }
+	 *
+	 */
+	public TypesT createTypesT() {
+		return new TypesT();
+	}
+
+	/**
+	 * Create an instance of {@link DocumentT }
+	 *
+	 */
+	public DocumentT createDocumentT() {
+		return new DocumentT();
+	}
+
+	/**
 	 * Create an instance of {@link UserT }
 	 *
 	 */
 	public UserT createUserT() {
 		return new UserT();
+	}
+
+	/**
+	 * Create an instance of {@link SysObjectT }
+	 *
+	 */
+	public SysObjectT createSysObjectT() {
+		return new SysObjectT();
+	}
+
+	/**
+	 * Create an instance of {@link FolderT }
+	 *
+	 */
+	public FolderT createFolderT() {
+		return new FolderT();
+	}
+
+	/**
+	 * Create an instance of {@link GroupT }
+	 *
+	 */
+	public GroupT createGroupT() {
+		return new GroupT();
+	}
+
+	/**
+	 * Create an instance of {@link DocumentIndexT }
+	 *
+	 */
+	public DocumentIndexT createDocumentIndexT() {
+		return new DocumentIndexT();
+	}
+
+	/**
+	 * Create an instance of {@link JAXBElement }{@code <}{@link DocumentIndexT }{@code >}
+	 *
+	 */
+	@XmlElementDecl(namespace = "http://www.armedia.com/ns/cmf/engines/xml/import", name = "documentIndex")
+	public JAXBElement<DocumentIndexT> createDocumentIndex(DocumentIndexT value) {
+		return new JAXBElement<DocumentIndexT>(ObjectFactory._DocumentIndex_QNAME, DocumentIndexT.class, null, value);
 	}
 
 	/**

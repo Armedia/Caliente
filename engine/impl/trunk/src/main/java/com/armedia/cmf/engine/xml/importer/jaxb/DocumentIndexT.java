@@ -11,19 +11,18 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "types.t", propOrder = {
-	"type"
+@XmlType(name = "documentIndex.t", propOrder = {
+	"document"
 })
-public class TypesT {
+public class DocumentIndexT {
 
-	@XmlElement(name = "type", required = false)
-	protected List<TypeDefT> type;
+	@XmlElement(name = "document", required = false)
+	protected List<DocumentIndexEntryT> document;
 
-	public List<TypeDefT> getType() {
-		if (this.type == null) {
-			this.type = new ArrayList<TypeDefT>();
+	public List<DocumentIndexEntryT> getDocument() {
+		if (this.document == null) {
+			this.document = new ArrayList<DocumentIndexEntryT>();
 		}
-		return this.type;
+		return this.document;
 	}
-
 }

@@ -5,7 +5,7 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlList;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class AttributeT extends AttributeBaseT {
 
-	@XmlList
+	@XmlElement(name = "value", required = false)
 	protected List<String> value;
 
 	public List<String> getValue() {
