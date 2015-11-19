@@ -31,4 +31,7 @@ public abstract class TransferDelegateFactory<S, V, C extends TransferContext<S,
 	public final CmfAttributeTranslator<V> getTranslator() {
 		return this.translator;
 	}
+
+	public void close() {
+	}
 }

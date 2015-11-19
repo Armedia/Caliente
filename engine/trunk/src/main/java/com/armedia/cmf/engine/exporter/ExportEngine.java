@@ -330,194 +330,214 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			throw new ExportException("Failed to configure the session factory to carry out the export", e);
 		}
 
-		final ContextFactory<S, V, C, ?> contextFactory;
-		final DF delegateFactory;
 		try {
-			final SessionWrapper<S> baseSession;
+			SessionWrapper<S> baseSession = null;
 			try {
 				baseSession = sessionFactory.acquireSession();
 			} catch (Exception e) {
 				throw new ExportException("Failed to obtain the main export session", e);
 			}
 
+			ContextFactory<S, V, C, ?> contextFactory = null;
+			DF delegateFactory = null;
 			try {
-				contextFactory = newContextFactory(baseSession.getWrapped(), configuration);
-			} catch (Exception e) {
-				throw new ExportException("Failed to configure the context factory to carry out the export", e);
-			}
-
-			try {
-				delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
-			} catch (Exception e) {
-				throw new ExportException("Failed to configure the delegate factory to carry out the export", e);
-			}
-
-			final int threadCount;
-			final int backlogSize;
-			// Ensure nobody changes this under our feet
-			synchronized (this) {
-				threadCount = getThreadCount();
-				backlogSize = getBacklogSize();
-			}
-
-			if (counter == null) {
-				counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
-			}
-			final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
-
-			PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
-				backlogSize) {
-
-				@Override
-				protected SessionWrapper<S> prepare() throws Exception {
-					final SessionWrapper<S> s;
-					try {
-						s = sessionFactory.acquireSession();
-					} catch (Exception e) {
-						this.log.error("Failed to obtain a worker session", e);
-						return null;
-					}
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Got session [%s]", s.getId()));
-					}
-					return s;
-				}
-
-				@Override
-				protected void process(SessionWrapper<S> session, ExportTarget next) throws Exception {
-					final S s = session.getWrapped();
-
-					CmfType nextType = next.getType();
-					final String nextId = next.getId();
-					final String nextKey = next.getSearchKey();
-
-					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Polled %s", next));
-					}
-
-					boolean tx = false;
-					boolean ok = false;
-					try {
-						// Begin transaction
-						tx = session.begin();
-						final ExportDelegate<?, S, W, V, C, ?, ?> exportDelegate = delegateFactory.newExportDelegate(s,
-							nextType, nextKey);
-						if (exportDelegate == null) {
-							// No object found with that ID...
-							this.log.warn(String.format("No %s object found with searchKey[%s]",
-								(nextType != null ? nextType.name() : "globally unique"), nextKey));
-							return;
-						}
-						// This allows for object substitutions to take place
-						next = exportDelegate.getExportTarget();
-						nextType = next.getType();
-						if (nextType == null) {
-							this.log.error(String.format(
-								"Failed to determine the object type for target with ID[%s] and searchKey[%s]", nextId,
-								nextKey));
-							return;
-						}
-
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("Exporting the %s object with ID[%s]", nextType, nextId));
-						}
-
-						// The type mapper parameter is null here because it's only useful
-						// for imports
-						final C ctx = contextFactory.newContext(nextId, nextType, s, output, objectStore, contentStore,
-							null);
-						try {
-							initContext(ctx);
-							Result result = exportObject(objectStore, contentStore, null, next, exportDelegate, ctx,
-								listenerDelegator);
-							if (result != null) {
-								if (this.log.isDebugEnabled()) {
-									this.log.debug(String.format("Exported %s [%s](%s) in position %d",
-										result.marshaled.getType(), result.marshaled.getLabel(),
-										result.marshaled.getId(), result.objectNumber));
-								}
-							}
-							ok = true;
-						} finally {
-							ctx.close();
-						}
-						if (tx) {
-							session.commit();
-						}
-					} catch (Throwable t) {
-						this.log.error(String.format("Failed to export %s object with ID[%s]", nextType, nextId), t);
-						listenerDelegator.objectExportFailed(nextType, nextId, t);
-						if (tx && !ok) {
-							session.rollback();
-						}
-					}
-				}
-
-				@Override
-				protected void cleanup(SessionWrapper<S> session) {
-					session.close();
-				}
-			};
-
-			final Iterator<ExportTarget> results;
-			this.log.debug("Locating export results...");
-			try {
-				results = findExportResults(baseSession.getWrapped(), configuration, delegateFactory);
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to obtain the export results with settings: %s",
-					settings), e);
-			}
-
-			try {
-				// Fire off the workers
-				worker.start(threadCount, new ExportTarget(), true);
-
-				int c = 0;
-				// 1: run the query for the given predicate
-				listenerDelegator.exportStarted(configuration);
-				// 2: iterate over the results, gathering up the object IDs
 				try {
-					this.log.debug("Processing the located results...");
-					while ((results != null) && results.hasNext()) {
-						final ExportTarget target = results.next();
-						if (this.log.isTraceEnabled()) {
-							this.log.trace(String.format("Processing item %s", target));
-						}
-						try {
-							worker.addWorkItem(target);
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-							if (this.log.isDebugEnabled()) {
-								this.log
-									.warn(String.format("Thread interrupted after reading %d object targets", c), e);
-							} else {
-								this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
-							}
-							break;
-						} finally {
-							c++;
-						}
-					}
-					this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
-				} finally {
-					worker.waitForCompletion();
+					contextFactory = newContextFactory(baseSession.getWrapped(), configuration);
+				} catch (Exception e) {
+					throw new ExportException("Failed to configure the context factory to carry out the export", e);
 				}
 
-				setExportProperties(objectStore);
-				return listenerDelegator.getStoredObjectCounter();
+				try {
+					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
+				} catch (Exception e) {
+					throw new ExportException("Failed to configure the delegate factory to carry out the export", e);
+				}
+
+				return runExportImpl(output, objectStore, contentStore, settings, counter, configuration,
+					sessionFactory, baseSession, contextFactory, delegateFactory);
 			} finally {
-				baseSession.close(false);
-
-				Map<CmfType, Integer> summary = Collections.emptyMap();
-				try {
-					summary = objectStore.getStoredObjectTypes();
-				} catch (CmfStorageException e) {
-					this.log.warn("Exception caught attempting to get the work summary", e);
+				if (baseSession != null) {
+					baseSession.close();
 				}
-				listenerDelegator.exportFinished(summary);
+				if (delegateFactory != null) {
+					delegateFactory.close();
+				}
+				if (contextFactory != null) {
+					contextFactory.close();
+				}
 			}
 		} finally {
 			sessionFactory.close();
+		}
+	}
+
+	private CmfObjectCounter<ExportResult> runExportImpl(final Logger output, final CmfObjectStore<?, ?> objectStore,
+		final CmfContentStore<?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter,
+		final CfgTools configuration, final SessionFactory<S> sessionFactory, final SessionWrapper<S> baseSession,
+		final ContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory) throws ExportException,
+		CmfStorageException {
+		final int threadCount;
+		final int backlogSize;
+		// Ensure nobody changes this under our feet
+		synchronized (this) {
+			threadCount = getThreadCount();
+			backlogSize = getBacklogSize();
+		}
+
+		if (counter == null) {
+			counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
+		}
+		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
+
+		PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
+			backlogSize) {
+
+			@Override
+			protected SessionWrapper<S> prepare() throws Exception {
+				final SessionWrapper<S> s;
+				try {
+					s = sessionFactory.acquireSession();
+				} catch (Exception e) {
+					this.log.error("Failed to obtain a worker session", e);
+					return null;
+				}
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Got session [%s]", s.getId()));
+				}
+				return s;
+			}
+
+			@Override
+			protected void process(SessionWrapper<S> session, ExportTarget next) throws Exception {
+				final S s = session.getWrapped();
+
+				CmfType nextType = next.getType();
+				final String nextId = next.getId();
+				final String nextKey = next.getSearchKey();
+
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("Polled %s", next));
+				}
+
+				boolean tx = false;
+				boolean ok = false;
+				try {
+					// Begin transaction
+					tx = session.begin();
+					final ExportDelegate<?, S, W, V, C, ?, ?> exportDelegate = delegateFactory.newExportDelegate(s,
+						nextType, nextKey);
+					if (exportDelegate == null) {
+						// No object found with that ID...
+						this.log.warn(String.format("No %s object found with searchKey[%s]",
+							(nextType != null ? nextType.name() : "globally unique"), nextKey));
+						return;
+					}
+					// This allows for object substitutions to take place
+					next = exportDelegate.getExportTarget();
+					nextType = next.getType();
+					if (nextType == null) {
+						this.log.error(String.format(
+							"Failed to determine the object type for target with ID[%s] and searchKey[%s]", nextId,
+							nextKey));
+						return;
+					}
+
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Exporting the %s object with ID[%s]", nextType, nextId));
+					}
+
+					// The type mapper parameter is null here because it's only useful
+					// for imports
+					final C ctx = contextFactory.newContext(nextId, nextType, s, output, objectStore, contentStore,
+						null);
+					try {
+						initContext(ctx);
+						Result result = exportObject(objectStore, contentStore, null, next, exportDelegate, ctx,
+							listenerDelegator);
+						if (result != null) {
+							if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format("Exported %s [%s](%s) in position %d",
+									result.marshaled.getType(), result.marshaled.getLabel(), result.marshaled.getId(),
+									result.objectNumber));
+							}
+						}
+						ok = true;
+					} finally {
+						ctx.close();
+					}
+					if (tx) {
+						session.commit();
+					}
+				} catch (Throwable t) {
+					this.log.error(String.format("Failed to export %s object with ID[%s]", nextType, nextId), t);
+					listenerDelegator.objectExportFailed(nextType, nextId, t);
+					if (tx && !ok) {
+						session.rollback();
+					}
+				}
+			}
+
+			@Override
+			protected void cleanup(SessionWrapper<S> session) {
+				session.close();
+			}
+		};
+
+		final Iterator<ExportTarget> results;
+		this.log.debug("Locating export results...");
+		try {
+			results = findExportResults(baseSession.getWrapped(), configuration, delegateFactory);
+		} catch (Exception e) {
+			throw new ExportException(String.format("Failed to obtain the export results with settings: %s", settings),
+				e);
+		}
+
+		try {
+			// Fire off the workers
+			worker.start(threadCount, new ExportTarget(), true);
+
+			int c = 0;
+			// 1: run the query for the given predicate
+			listenerDelegator.exportStarted(configuration);
+			// 2: iterate over the results, gathering up the object IDs
+			try {
+				this.log.debug("Processing the located results...");
+				while ((results != null) && results.hasNext()) {
+					final ExportTarget target = results.next();
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(String.format("Processing item %s", target));
+					}
+					try {
+						worker.addWorkItem(target);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						if (this.log.isDebugEnabled()) {
+							this.log.warn(String.format("Thread interrupted after reading %d object targets", c), e);
+						} else {
+							this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
+						}
+						break;
+					} finally {
+						c++;
+					}
+				}
+				this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
+			} finally {
+				worker.waitForCompletion();
+			}
+
+			setExportProperties(objectStore);
+			return listenerDelegator.getStoredObjectCounter();
+		} finally {
+			baseSession.close(false);
+
+			Map<CmfType, Integer> summary = Collections.emptyMap();
+			try {
+				summary = objectStore.getStoredObjectTypes();
+			} catch (CmfStorageException e) {
+				this.log.warn("Exception caught attempting to get the work summary", e);
+			}
+			listenerDelegator.exportFinished(summary);
 		}
 	}
 
