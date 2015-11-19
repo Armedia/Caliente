@@ -180,7 +180,7 @@
 	<xsd:complexType name="sysObject.t">
 		<xsd:sequence>
 			<xsd:element name="id" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="parentId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="parentId" type="xsd:string" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="type" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="sourcePath" type="xsd:string" minOccurs="1" maxOccurs="1" />
@@ -216,7 +216,7 @@
 					<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="antecedentId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="antecedentId" type="xsd:string" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="contentSize" type="tns:nonNegativeInt.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="contentHash" type="xsd:base64Binary" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="contentLocation" type="xsd:string" minOccurs="1" maxOccurs="1" />
