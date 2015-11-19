@@ -18,6 +18,9 @@
 	<email>email-address</email>
 	<loginName>userLoginName</loginName>
 	<domain>userDomain</domain>
+	<acl>aclId</acl>
+	<osName>userOsName</osName>
+	<osDomain>userOsDomain</osDomain>
 </user>
 
 <group>
