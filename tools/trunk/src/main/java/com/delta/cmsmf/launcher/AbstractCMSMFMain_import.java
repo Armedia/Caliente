@@ -25,6 +25,7 @@ import com.armedia.cmf.engine.importer.ImportSetting;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectCounter;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
@@ -57,6 +58,21 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implemen
 			AbstractCMSMFMain.ALL, false);
 		this.engine.addListener(this);
 		this.engine.addListener(new ImportManifest(outcomes, types));
+		PluggableServiceLocator<ImportEngineListener> extraListeners = new PluggableServiceLocator<ImportEngineListener>(
+			ImportEngineListener.class);
+		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
+			@Override
+			public void errorRaised(Class<?> serviceClass, Throwable t) {
+				AbstractCMSMFMain_import.this.log.warn(
+					String.format("Failed to register an additional listener class [%s]",
+						serviceClass.getCanonicalName()), t);
+			}
+		});
+		extraListeners.setHideErrors(false);
+
+		for (ImportEngineListener l : extraListeners) {
+			this.engine.addListener(l);
+		}
 
 		// lock
 		Map<String, Object> settings = new HashMap<String, Object>();
