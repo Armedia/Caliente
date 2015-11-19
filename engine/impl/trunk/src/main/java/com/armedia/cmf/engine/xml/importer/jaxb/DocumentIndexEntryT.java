@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "documentIndexEntry.t", propOrder = {
-	"id", "historyId", "version", "current", "path", "name"
+	"id", "historyId", "version", "current", "path", "name", "location"
 })
 public class DocumentIndexEntryT {
 
@@ -28,6 +28,9 @@ public class DocumentIndexEntryT {
 
 	@XmlElement(name = "name", required = true)
 	protected String name;
+
+	@XmlElement(name = "location", required = true)
+	protected String location;
 
 	public String getId() {
 		return this.id;
@@ -75,5 +78,13 @@ public class DocumentIndexEntryT {
 
 	public void setName(String value) {
 		this.name = value;
+	}
+
+	public String getLocation() {
+		return this.location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
 	}
 }
