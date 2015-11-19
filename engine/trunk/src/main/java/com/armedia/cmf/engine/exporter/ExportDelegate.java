@@ -12,7 +12,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, ?>, DF extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, ?, DF>>
-	extends TransferDelegate<T, S, V, C, DF, E> {
+extends TransferDelegate<T, S, V, C, DF, E> {
 	protected final T object;
 	protected final ExportTarget exportTarget;
 	protected final String label;
@@ -71,8 +71,9 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
 		CmfType type = getType();
-		CmfObject<V> marshaled = new CmfObject<V>(type, getObjectId(), getSearchKey(), getBatchId(), getLabel(),
-			type.name(), ctx.getProductName(), ctx.getProductVersion());
+
+		CmfObject<V> marshaled = new CmfObject<V>(this.factory.getTranslator(), type, getObjectId(), getSearchKey(),
+			getBatchId(), getLabel(), type.name(), ctx.getProductName(), ctx.getProductVersion());
 		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);
 		return marshaled;
