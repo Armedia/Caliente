@@ -23,6 +23,7 @@ import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
@@ -30,7 +31,7 @@ import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
 public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>>
-implements ExportEngineListener {
+	implements ExportEngineListener {
 
 	protected static final String EXPORT_START = "cmsmfExportStart";
 	protected static final String EXPORT_END = "cmsmfExportEnd";
@@ -112,6 +113,21 @@ implements ExportEngineListener {
 			AbstractCMSMFMain.ALL, false);
 		this.engine.addListener(this);
 		this.engine.addListener(new ExportManifest(outcomes, types));
+		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<ExportEngineListener>(
+			ExportEngineListener.class);
+		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
+			@Override
+			public void errorRaised(Class<?> serviceClass, Throwable t) {
+				AbstractCMSMFMain_export.this.log.warn(
+					String.format("Failed to register an additional listener class [%s]",
+						serviceClass.getCanonicalName()), t);
+			}
+		});
+		extraListeners.setHideErrors(false);
+
+		for (ExportEngineListener l : extraListeners) {
+			this.engine.addListener(l);
+		}
 
 		final String jobName = CLIParam.job_name.getString();
 
