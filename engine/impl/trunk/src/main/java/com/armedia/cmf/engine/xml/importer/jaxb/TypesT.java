@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-@XmlRootElement
+@XmlRootElement(name = "types")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "types.t", propOrder = {
 	"type"
