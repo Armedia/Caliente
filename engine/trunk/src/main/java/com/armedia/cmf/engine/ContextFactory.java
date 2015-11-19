@@ -142,5 +142,4 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 
 	protected abstract C constructContext(String rootId, CmfType rootType, S session, Logger output,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper);
-
 }
