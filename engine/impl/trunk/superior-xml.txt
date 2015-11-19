@@ -110,7 +110,7 @@
 			<value>...</value>
 		</attribute>
 	</attributes>
-</folder>
+</sysObject>
 
 <folder> <!-- extends sysObject -->
 </folder>

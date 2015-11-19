@@ -232,4 +232,23 @@
 	</xsd:complexType>
 
 	<xsd:element name="document" type="tns:document.t" />
+
+	<xsd:complexType name="documentIndexEntry.t">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="path" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="documentIndex.t">
+		<xsd:sequence>
+			<xsd:element name="document" type="tns:documentIndexEntry.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="documentIndex" type="tns:documentIndex.t" />
 </xsd:schema>
