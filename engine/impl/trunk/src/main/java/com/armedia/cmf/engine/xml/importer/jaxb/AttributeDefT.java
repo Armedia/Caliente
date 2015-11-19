@@ -12,7 +12,7 @@ public class AttributeDefT extends AttributeBaseT {
 	@XmlAttribute(name = "length", required = false)
 	protected int length = 0;
 
-	@XmlAttribute(name = " repeating", required = false)
+	@XmlAttribute(name = "repeating", required = false)
 	protected boolean repeating = false;
 
 	public int getLength() {
