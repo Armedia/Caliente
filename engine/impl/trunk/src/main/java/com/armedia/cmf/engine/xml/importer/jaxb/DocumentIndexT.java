@@ -25,4 +25,9 @@ public class DocumentIndexT {
 		}
 		return this.document;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("DocumentIndexT [document=%s]", this.document);
+	}
 }

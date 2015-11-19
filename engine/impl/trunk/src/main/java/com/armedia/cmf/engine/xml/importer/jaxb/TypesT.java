@@ -26,4 +26,9 @@ public class TypesT {
 		return this.type;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("TypesT [type=%s]", this.type);
+	}
+
 }

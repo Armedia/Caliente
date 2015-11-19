@@ -52,4 +52,10 @@ public class AclPermitT {
 	public void setExtended(String value) {
 		this.extended = value;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("AclPermitT [type=%s, name=%s, level=%s, extended=%s]", this.type, this.name, this.level,
+			this.extended);
+	}
 }

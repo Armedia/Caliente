@@ -30,4 +30,10 @@ public class AttributeDefT extends AttributeBaseT {
 	public void setRepeating(boolean value) {
 		this.repeating = value;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("AttributeDefT [name=%s, dataType=%s, length=%s, repeating=%s]", this.name, this.dataType,
+			this.length, this.repeating);
+	}
 }

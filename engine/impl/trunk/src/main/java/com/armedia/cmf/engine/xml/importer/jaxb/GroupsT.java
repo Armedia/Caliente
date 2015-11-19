@@ -25,4 +25,9 @@ public class GroupsT {
 		}
 		return this.group;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("GroupsT [group=%s]", this.group);
+	}
 }

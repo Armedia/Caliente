@@ -23,4 +23,10 @@ public class AttributeT extends AttributeBaseT {
 		}
 		return this.value;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("AttributeT [name=%s, dataType=%s, value=%s]", this.name, this.dataType, this.value);
+	}
+
 }

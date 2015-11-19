@@ -109,4 +109,13 @@ public class UserT {
 	public void setDefaultAcl(String value) {
 		this.defaultAcl = value;
 	}
+
+	@Override
+	public String toString() {
+		return String
+			.format(
+				"UserT [name=%s, defaultFolder=%s, description=%s, email=%s, loginName=%s, loginDomain=%s, osName=%s, osDomain=%s, defaultAcl=%s]",
+				this.name, this.defaultFolder, this.description, this.email, this.loginName, this.loginDomain,
+				this.osName, this.osDomain, this.defaultAcl);
+	}
 }

@@ -87,4 +87,11 @@ public class DocumentIndexEntryT {
 	public void setLocation(String location) {
 		this.location = location;
 	}
+
+	@Override
+	public String toString() {
+		return String.format(
+			"DocumentIndexEntryT [id=%s, historyId=%s, version=%s, current=%s, path=%s, name=%s, location=%s]",
+			this.id, this.historyId, this.version, this.current, this.path, this.name, this.location);
+	}
 }

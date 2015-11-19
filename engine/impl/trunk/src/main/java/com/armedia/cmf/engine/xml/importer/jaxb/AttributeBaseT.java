@@ -34,4 +34,9 @@ public class AttributeBaseT {
 	public void setDataType(DataTypeT value) {
 		this.dataType = value;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("AttributeBaseT [name=%s, dataType=%s]", this.name, this.dataType);
+	}
 }

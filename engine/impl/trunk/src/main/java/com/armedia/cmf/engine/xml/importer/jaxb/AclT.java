@@ -55,4 +55,10 @@ public class AclT {
 	public void setDescription(String value) {
 		this.description = value;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("AclT [id=%s, description=%s, users=%s, groups=%s]", this.id, this.description,
+			this.users, this.groups);
+	}
 }

@@ -25,4 +25,9 @@ public class AclsT {
 		}
 		return this.acl;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("AclsT [acl=%s]", this.acl);
+	}
 }

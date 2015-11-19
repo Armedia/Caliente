@@ -100,4 +100,12 @@ public class GroupT {
 	public void setPublic(boolean value) {
 		this._public = value;
 	}
+
+	@Override
+	public String toString() {
+		return String.format(
+			"GroupT [name=%s, type=%s, email=%s, administrator=%s, displayName=%s, _public=%s, users=%s, groups=%s]",
+			this.name, this.type, this.email, this.administrator, this.displayName, this._public, this.users,
+			this.groups);
+	}
 }

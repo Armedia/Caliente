@@ -46,4 +46,10 @@ public class TypeDefT {
 	public void setSuperType(String value) {
 		this.superType = value;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("TypeDefT [name=%s, superType=%s, attributes=%s]", this.name, this.superType,
+			this.attributes);
+	}
 }

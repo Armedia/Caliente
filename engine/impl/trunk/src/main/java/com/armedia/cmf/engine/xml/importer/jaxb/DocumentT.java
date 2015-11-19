@@ -26,4 +26,9 @@ public class DocumentT {
 		return this.version;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("DocumentT [version=%s]", this.version);
+	}
+
 }

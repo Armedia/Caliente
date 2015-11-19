@@ -26,4 +26,9 @@ public class UsersT {
 		return this.user;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("UsersT [user=%s]", this.user);
+	}
+
 }
