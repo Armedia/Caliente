@@ -70,36 +70,25 @@ public class JaxbTest {
 	}
 
 	@Test
-	public void testAcl() throws Exception {
-		new XmlTest<AclsT>(AclsT.class, "acls") {
-			@Override
-			protected void validate(AclsT obj) throws Exception {
-				// TODO: validate
-				super.validate(obj);
-			}
+	public void testAll() throws Exception {
+		Class<?>[] k = {
+			AclsT.class, DocumentT.class, DocumentIndexT.class, FolderT.class, GroupsT.class, TypesT.class,
+			UsersT.class
+		};
+		String[] s = {
+			"acls", "document", "documentIndex", "folder", "groups", "types", "users"
+		};
 
-			@Override
-			protected void validate(AclsT obj, String str) throws Exception {
-				// TODO: validate
-				super.validate(obj, str);
+		for (int i = 0; i < k.length; i++) {
+			@SuppressWarnings({
+				"unchecked", "rawtypes"
+			})
+			XmlTest<?> xmlTest = new XmlTest(k[i], s[i]);
+			try {
+				xmlTest.run();
+			} catch (Throwable t) {
+				throw new Exception(String.format("Failed while processing [%s, %s]", k[i].getSimpleName(), s[i]), t);
 			}
-		}.run();
-	}
-
-	@Test
-	public void testDocument() throws Exception {
-		new XmlTest<DocumentT>(DocumentT.class, "document") {
-			@Override
-			protected void validate(DocumentT obj) throws Exception {
-				// TODO: validate
-				super.validate(obj);
-			}
-
-			@Override
-			protected void validate(DocumentT obj, String str) throws Exception {
-				// TODO: validate
-				super.validate(obj, str);
-			}
-		}.run();
+		}
 	}
 }
