@@ -6,6 +6,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -20,10 +21,12 @@ public class AclT {
 	@XmlElement(name = "description", required = true)
 	protected String description;
 
-	@XmlElement(name = "users", required = false)
+	@XmlElementWrapper(name = "users", required = false)
+	@XmlElement(name = "permit", required = false)
 	protected List<AclPermitT> users;
 
-	@XmlElement(name = "groups", required = false)
+	@XmlElementWrapper(name = "groups", required = false)
+	@XmlElement(name = "permit", required = false)
 	protected List<AclPermitT> groups;
 
 	public List<AclPermitT> getUsers() {
