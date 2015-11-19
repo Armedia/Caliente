@@ -22,6 +22,7 @@ public class TypeDefT {
 	protected String superType;
 
 	@XmlElementWrapper(name = "attributes", required = false)
+	@XmlElement(name = "attribute", required = false)
 	protected List<AttributeDefT> attributes;
 
 	public List<AttributeDefT> getAttributes() {

@@ -34,9 +34,11 @@ public class GroupT {
 	protected boolean _public;
 
 	@XmlElementWrapper(name = "users", required = false)
+	@XmlElement(name = "user", required = false)
 	protected List<String> users;
 
 	@XmlElementWrapper(name = "groups", required = false)
+	@XmlElement(name = "group", required = false)
 	protected List<String> groups;
 
 	public List<String> getUsers() {

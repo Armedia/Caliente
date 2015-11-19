@@ -62,6 +62,7 @@ public class SysObjectT {
 	protected String acl;
 
 	@XmlElementWrapper(name = "attributes", required = false)
+	@XmlElement(name = "attribute", required = false)
 	protected List<AttributeT> attributes;
 
 	public List<AttributeT> getAttributes() {
