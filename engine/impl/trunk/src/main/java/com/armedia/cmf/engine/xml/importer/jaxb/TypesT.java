@@ -30,5 +30,4 @@ public class TypesT {
 	public String toString() {
 		return String.format("TypesT [type=%s]", this.type);
 	}
-
 }

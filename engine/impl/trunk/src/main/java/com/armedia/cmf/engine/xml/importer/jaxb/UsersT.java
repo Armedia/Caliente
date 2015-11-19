@@ -30,5 +30,4 @@ public class UsersT {
 	public String toString() {
 		return String.format("UsersT [user=%s]", this.user);
 	}
-
 }
