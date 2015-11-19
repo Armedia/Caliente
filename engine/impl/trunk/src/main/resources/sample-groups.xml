@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<groups
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.armedia.com/ns/cmf/engines/xml/import"
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import import.xsd ">
+	<group>
+		<name>name</name>
+		<type>type</type>
+		<email>email</email>
+		<administrator>administrator</administrator>
+		<displayName>displayName</displayName>
+		<public>true</public>
+		<users>
+			<user>user</user>
+		</users>
+		<groups>
+			<group>group</group>
+		</groups>
+	</group>
+</groups>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.armedia.com/ns/cmf/engines/xml/import"
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import import.xsd ">
+	<version>
+		<id>id</id>
+		<parentId>parentId</parentId>
+		<name>name</name>
+		<type>type</type>
+		<sourcePath>sourcePath</sourcePath>
+		<creationDate>2001-12-31T12:00:00</creationDate>
+		<creator>creator</creator>
+		<modificationDate>2001-12-31T12:00:00</modificationDate>
+		<modifier>modifier</modifier>
+		<lastAccessDate>2001-12-31T12:00:00</lastAccessDate>
+		<lastAccessor>lastAccessor</lastAccessor>
+		<acl>acl</acl>
+		<attributes>
+			<attribute dataType="BOOLEAN" name="xxx">
+				<value>value</value>
+			</attribute>
+		</attributes>
+		<historyId>historyId</historyId>
+		<version>version</version>
+		<current>true</current>
+		<antecedentId>antecedentId</antecedentId>
+		<contentSize>0</contentSize>
+		<contentHash>MA==</contentHash>
+		<contentLocation>contentLocation</contentLocation>
+	</version>
+</document>

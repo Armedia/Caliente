@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<users
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.armedia.com/ns/cmf/engines/xml/import"
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import import.xsd ">
+	<user>
+		<name>name</name>
+		<defaultFolder>defaultFolder</defaultFolder>
+		<description>description</description>
+		<email>email</email>
+		<loginName>loginName</loginName>
+		<loginDomain>loginDomain</loginDomain>
+		<osName>osName</osName>
+		<osDomain>osDomain</osDomain>
+		<defaultAcl>defaultAcl</defaultAcl>
+	</user>
+</users>

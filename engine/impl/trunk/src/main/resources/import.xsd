@@ -17,6 +17,12 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="nonNegativeInt.t">
+		<xsd:restriction base="xsd:int">
+			<xsd:minInclusive value="0" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="class_name.t">
 		<xsd:restriction base="xsd:string">
 			<xsd:minLength value="1" />
@@ -170,4 +176,60 @@
 	</xsd:complexType>
 
 	<xsd:element name="groups" type="tns:groups.t" />
+
+	<xsd:complexType name="sysObject.t">
+		<xsd:sequence>
+			<xsd:element name="id" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="parentId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="type" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="sourcePath" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="creationDate" type="xsd:dateTime" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="creator" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="modificationDate" type="xsd:dateTime" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="modifier" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="lastAccessDate" type="xsd:dateTime" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="lastAccessor" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="acl" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="attributes" minOccurs="0" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="attribute" type="tns:attribute.t" minOccurs="0" maxOccurs="unbounded" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="folder.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:sysObject.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:element name="folder" type="tns:folder.t" />
+
+	<xsd:complexType name="documentVersion.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:sysObject.t">
+				<xsd:sequence>
+					<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="antecedentId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="contentSize" type="tns:nonNegativeInt.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="contentHash" type="xsd:base64Binary" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="contentLocation" type="xsd:string" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="document.t">
+		<xsd:sequence>
+			<xsd:element name="version" type="tns:documentVersion.t" minOccurs="1" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="document" type="tns:document.t" />
 </xsd:schema>
