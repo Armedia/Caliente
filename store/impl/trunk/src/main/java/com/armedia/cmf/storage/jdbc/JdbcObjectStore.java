@@ -618,7 +618,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									objLabel, objId));
 							}
 
-							obj = loadObject(objectRS);
+							obj = loadObject(translator, objectRS);
 							if (this.log.isTraceEnabled()) {
 								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 							} else if (this.log.isDebugEnabled()) {
@@ -977,7 +977,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		clearTables(c, tableNames);
 	}
 
-	private <V> CmfObject<V> loadObject(ResultSet rs) throws SQLException {
+	private <V> CmfObject<V> loadObject(CmfAttributeTranslator<V> translator, ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		CmfType type = CmfType.decodeString(rs.getString("object_type"));
 		String id = rs.getString("object_id");
@@ -995,7 +995,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		String productName = rs.getString("product_name");
 		String productVersion = rs.getString("product_version");
 
-		return new CmfObject<V>(type, id, searchKey, batchId, label, subtype, productName, productVersion);
+		return new CmfObject<V>(translator, type, id, searchKey, batchId, label, subtype, productName, productVersion);
 	}
 
 	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
