@@ -52,8 +52,11 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		// BASE_TYPE_ID (GROUP)
 		// OBJECT_TYPE_ID (DM_GROUP)
 		am.put(DctmAttributes.GROUP_NAME, IntermediateAttribute.NAME);
+		am.put(DctmAttributes.GROUP_ADMIN, IntermediateAttribute.ADMINISTRATOR);
+		am.put(DctmAttributes.GROUP_CLASS, IntermediateAttribute.GROUP_TYPE);
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
+		am.put(DctmAttributes.GROUP_ADDRESS, IntermediateAttribute.EMAIL);
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(CmfType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 

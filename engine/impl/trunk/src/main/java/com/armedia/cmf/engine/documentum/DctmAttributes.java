@@ -178,6 +178,12 @@ public class DctmAttributes {
 	/** The group_global_unique_id attribute of dm_group. */
 	public static final String GROUP_GLOBAL_UNIQUE_ID = "group_global_unique_id";
 
+	/** The group_address attribute of dm_group. */
+	public static final String GROUP_ADDRESS = "group_address";
+
+	/** The group_class attribute of dm_group. */
+	public static final String GROUP_CLASS = "group_class";
+
 	// dm_acl Attributes
 	/** The acl_class attribute of dm_acl. */
 	public static final String ACL_CLASS = "acl_class";
