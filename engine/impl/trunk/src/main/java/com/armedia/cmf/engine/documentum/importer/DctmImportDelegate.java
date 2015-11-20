@@ -145,7 +145,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 		final IDfSession session = context.getSession();
 		T object = null;
 		try {
-			if (skipImport(context)) { return new ImportOutcome(ImportResult.SKIPPED); }
+			if (skipImport(context)) { return ImportOutcome.SKIPPED; }
 
 			object = locateInCms(context);
 			final boolean isNew = (object == null);
@@ -180,7 +180,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 
 				if (isSameObject(object)) {
 					ok = true;
-					return new ImportOutcome(ImportResult.DUPLICATE, newLabel, object.getObjectId().getId());
+					return new ImportOutcome(ImportResult.DUPLICATE, object.getObjectId().getId(), newLabel);
 				}
 				cmsImportResult = ImportResult.UPDATED;
 			}
@@ -200,7 +200,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject>
 					getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel, object
 						.getObjectId().getId()));
 
-				return new ImportOutcome(cmsImportResult, newLabel, object.getObjectId().getId());
+				return new ImportOutcome(cmsImportResult, object.getObjectId().getId(), newLabel);
 			}
 
 			prepareOperation(object, isNew, context);
