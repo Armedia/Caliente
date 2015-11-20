@@ -3,6 +3,7 @@ package com.armedia.cmf.engine.xml.importer;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
@@ -27,15 +28,15 @@ public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
 		UsersT xml = getXmlObject();
 		UserT user = new UserT();
 
-		user.setName(null);
-		user.setLoginDomain(null);
-		user.setLoginName(null);
-		user.setOsDomain(null);
-		user.setOsName(null);
-		user.setDescription(null);
-		user.setEmail(null);
-		user.setDefaultAcl(null);
-		user.setDefaultFolder(null);
+		user.setName(getAttributeValue(IntermediateAttribute.NAME.encode()).asString());
+
+		user.setLoginDomain(getAttributeValue(IntermediateAttribute.LOGIN_REALM.encode()).asString());
+		user.setLoginName(getAttributeValue(IntermediateAttribute.LOGIN_NAME.encode()).asString());
+		user.setOsDomain(getAttributeValue(IntermediateAttribute.OS_NAME.encode()).asString());
+		user.setOsName(getAttributeValue(IntermediateAttribute.OS_NAME.encode()).asString());
+		user.setDescription(getAttributeValue(IntermediateAttribute.DESCRIPTION.encode()).asString());
+		user.setEmail(getAttributeValue(IntermediateAttribute.NAME.encode()).asString());
+		user.setDefaultFolder(getAttributeValue(IntermediateAttribute.DEFAULT_FOLDER.encode()).asString());
 
 		xml.getUsers().add(user);
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject
