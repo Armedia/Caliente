@@ -254,6 +254,8 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:element name="folder" type="tns:folder.t" />
+
 	<xsd:complexType name="folders.t">
 		<xsd:sequence>
 			<xsd:element name="folder" type="tns:folder.t" minOccurs="0" maxOccurs="unbounded" />
@@ -285,6 +287,14 @@
 	</xsd:complexType>
 
 	<xsd:element name="document" type="tns:document.t" />
+
+	<xsd:complexType name="documents.t">
+		<xsd:sequence>
+			<xsd:element name="document" type="tns:document.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="documents" type="tns:documents.t" />
 
 	<xsd:complexType name="documentIndexEntry.t">
 		<xsd:sequence>
