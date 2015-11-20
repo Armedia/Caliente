@@ -44,6 +44,7 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	CHECKIN_COMMENT(PropertyIds.CHECKIN_COMMENT, CmfDataType.STRING),
 
 	// Non-CMIS attributes
+	SUPER_NAME(CmfDataType.STRING),
 	OWNER(CmfDataType.STRING),
 	OWNER_PERMISSION(CmfDataType.STRING),
 	GROUP(CmfDataType.STRING),
