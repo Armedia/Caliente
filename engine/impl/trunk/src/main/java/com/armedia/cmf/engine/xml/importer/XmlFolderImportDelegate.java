@@ -34,6 +34,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderT
 		f.setSourcePath(null);
 		f.setType(null);
 
+		dumpAttributes(f.getAttributes());
 		return f;
 	}
 }
