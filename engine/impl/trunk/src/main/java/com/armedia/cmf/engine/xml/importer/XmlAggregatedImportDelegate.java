@@ -27,7 +27,7 @@ abstract class XmlAggregatedImportDelegate<I, T extends AggregatorBase<I>> exten
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		XmlImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
 		I item = createItem(translator, ctx);
-		if (item == null) { return Collections.singleton(new ImportOutcome(ImportResult.SKIPPED)); }
+		if (item == null) { return Collections.singleton(ImportOutcome.SKIPPED); }
 		getXmlObject().add(item);
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject
 			.getLabel()));

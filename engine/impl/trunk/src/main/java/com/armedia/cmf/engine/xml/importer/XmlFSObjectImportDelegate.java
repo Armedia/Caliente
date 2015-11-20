@@ -11,7 +11,6 @@ import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
@@ -47,7 +46,7 @@ public abstract class XmlFSObjectImportDelegate extends XmlImportDelegate {
 					this.log.warn(String.format("Skipping non-final version for %s [%s](%s)", this.cmfObject.getType(),
 						this.cmfObject.getLabel(), this.cmfObject.getId()));
 				}
-				return Collections.singleton(new ImportOutcome(ImportResult.SKIPPED));
+				return Collections.singleton(ImportOutcome.SKIPPED);
 			}
 		}
 
