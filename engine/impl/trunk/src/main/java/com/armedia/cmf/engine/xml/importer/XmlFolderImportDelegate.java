@@ -1,5 +1,13 @@
 package com.armedia.cmf.engine.xml.importer;
 
+import java.text.ParseException;
+import java.util.GregorianCalendar;
+
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+
+import com.armedia.cmf.engine.converter.IntermediateAttribute;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.xml.importer.jaxb.FolderT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FoldersT;
@@ -20,19 +28,37 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderT
 	protected FolderT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		FolderT f = new FolderT();
+		DatatypeFactory dtf;
+		try {
+			dtf = DatatypeFactory.newInstance();
+		} catch (DatatypeConfigurationException e) {
+			throw new ImportException(e);
+		}
+		GregorianCalendar gcal = new GregorianCalendar();
 
 		f.setId(this.cmfObject.getId());
-		f.setAcl(null);
-		f.setCreationDate(null);
-		f.setCreator(null);
-		f.setLastAccessDate(null);
-		f.setLastAccessor(null);
-		f.setModificationDate(null);
-		f.setModifier(null);
-		f.setName(null);
-		f.setParentId(null);
-		f.setSourcePath(null);
-		f.setType(null);
+		f.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
+
+		try {
+			gcal.setTime(getAttributeValue(IntermediateAttribute.CREATION_DATE).asTime());
+			f.setCreationDate(dtf.newXMLGregorianCalendar(gcal));
+			f.setCreator(getAttributeValue(IntermediateAttribute.CREATED_BY).asString());
+
+			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_ACCESS_DATE).asTime());
+			f.setLastAccessDate(dtf.newXMLGregorianCalendar(gcal));
+			f.setLastAccessor(getAttributeValue(IntermediateAttribute.LAST_ACCESSED_BY).asString());
+
+			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_MODIFICATION_DATE).asTime());
+			f.setModificationDate(dtf.newXMLGregorianCalendar(gcal));
+			f.setModifier(getAttributeValue(IntermediateAttribute.LAST_MODIFIED_BY).asString());
+		} catch (ParseException e) {
+			throw new CmfValueDecoderException("Failed to parse a date value", e);
+		}
+
+		f.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
+		f.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
+		f.setSourcePath(getAttributeValue(IntermediateAttribute.PATH).asString());
+		f.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 
 		dumpAttributes(f.getAttributes());
 		return f;
