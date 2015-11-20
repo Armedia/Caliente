@@ -65,6 +65,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		// BASE_TYPE_ID (TYPE)
 		// OBJECT_TYPE_ID (DM_TYPE)
 		am.put(DctmAttributes.NAME, IntermediateAttribute.NAME);
+		am.put(DctmAttributes.SUPER_NAME, IntermediateAttribute.SUPER_NAME);
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(DctmAttributes.OWNER, IntermediateAttribute.OWNER);
 		attributeMappings.put(CmfType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
