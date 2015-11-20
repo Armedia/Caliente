@@ -27,7 +27,6 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
 import com.armedia.cmf.storage.CmfAttribute;
@@ -42,8 +41,8 @@ import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class LocalImportDelegate
-	extends
-	ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+extends
+ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected LocalImportDelegate(LocalImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -68,7 +67,7 @@ public abstract class LocalImportDelegate
 					this.log.warn(String.format("Skipping non-final version for %s [%s](%s)", this.cmfObject.getType(),
 						this.cmfObject.getLabel(), this.cmfObject.getId()));
 				}
-				return Collections.singleton(new ImportOutcome(ImportResult.SKIPPED));
+				return Collections.singleton(ImportOutcome.SKIPPED);
 			}
 		}
 
@@ -194,7 +193,7 @@ public abstract class LocalImportDelegate
 	}
 
 	protected void applyAttributes(File targetFile, CmfAttributeTranslator<CmfValue> translator) throws IOException,
-		ParseException {
+	ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
 
