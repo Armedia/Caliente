@@ -247,7 +247,7 @@ public abstract class CmfContentStore<L> extends CmfStore {
 
 	protected abstract boolean isSupported(L locator);
 
-	protected abstract boolean isSupportsFileAccess();
+	public abstract boolean isSupportsFileAccess();
 
 	protected final void validateLocator(L locator) {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a non-null locator"); }
