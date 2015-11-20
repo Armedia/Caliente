@@ -2,11 +2,16 @@ package com.armedia.cmf.engine.importer;
 
 public class ImportOutcome {
 
+	public static final ImportOutcome SKIPPED = new ImportOutcome(ImportResult.SKIPPED);
+	public static final ImportOutcome FAILED = new ImportOutcome(ImportResult.FAILED);
+	public static final ImportOutcome IGNORED = new ImportOutcome(ImportResult.IGNORED);
+	public static final ImportOutcome DUPLICATE = new ImportOutcome(ImportResult.DUPLICATE);
+
 	private final ImportResult result;
 	private final String newId;
 	private final String newLabel;
 
-	public ImportOutcome(ImportResult result) {
+	private ImportOutcome(ImportResult result) {
 		this(result, null, null);
 	}
 

@@ -47,7 +47,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, CF>, CF extends ImportContextFactory<S, W, V, C, ?, ?>, DF extends ImportDelegateFactory<S, W, V, C, ?>>
-	extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
+extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
 	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
@@ -283,7 +283,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
-		throws ImportException, CmfStorageException {
+			throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -363,7 +363,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
 		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper)
-		throws ImportException, CmfStorageException {
+			throws ImportException, CmfStorageException {
 		final int threadCount;
 		final int backlogSize;
 		synchronized (this) {
@@ -448,11 +448,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							listenerDelegator.objectBatchImportStarted(batch.type, batch.id, batch.contents.size());
 							for (CmfObject<V> next : batch.contents) {
 								if (failBatch) {
-									final ImportResult result = ImportResult.SKIPPED;
 									this.log.error(String.format(
 										"Batch has been failed - will not process [%s](%s) (%s)", next.getLabel(),
-										next.getId(), result.name()));
-									listenerDelegator.objectImportCompleted(next, new ImportOutcome(result));
+										next.getId(), ImportResult.SKIPPED.name()));
+									listenerDelegator.objectImportCompleted(next, ImportOutcome.SKIPPED);
 									continue;
 								}
 
@@ -512,10 +511,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 											// the other objects
 											failBatch = true;
 											this.log
-												.debug(String
-													.format(
-														"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-														storedType));
+											.debug(String
+												.format(
+													"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+													storedType));
 											batch.markAborted(t);
 											continue;
 										}
@@ -885,10 +884,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			if (pending > 0) {
 				try {
 					this.log
-						.info(String
-							.format(
-								"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-								pending));
+					.info(String
+						.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
