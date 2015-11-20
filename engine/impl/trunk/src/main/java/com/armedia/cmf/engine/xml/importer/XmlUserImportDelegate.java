@@ -29,7 +29,6 @@ public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
 		UserT user = new UserT();
 
 		user.setName(getAttributeValue(IntermediateAttribute.NAME.encode()).asString());
-
 		user.setLoginDomain(getAttributeValue(IntermediateAttribute.LOGIN_REALM.encode()).asString());
 		user.setLoginName(getAttributeValue(IntermediateAttribute.LOGIN_NAME.encode()).asString());
 		user.setOsDomain(getAttributeValue(IntermediateAttribute.OS_NAME.encode()).asString());
