@@ -3,8 +3,6 @@ package com.armedia.cmf.engine.xml.importer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +20,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class XmlDocumentImportDelegate extends XmlImportDelegate {
+public class XmlDocumentImportDelegate extends XmlFSObjectImportDelegate {
 
 	protected XmlDocumentImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -30,8 +28,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 	}
 
 	@Override
-	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
-		XmlImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
+	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		File targetFile;
 		try {
 			targetFile = getTargetFile(ctx);

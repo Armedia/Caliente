@@ -14,7 +14,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class XmlFolderImportDelegate extends XmlImportDelegate {
+public class XmlFolderImportDelegate extends XmlFSObjectImportDelegate {
 
 	protected XmlFolderImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -22,8 +22,8 @@ public class XmlFolderImportDelegate extends XmlImportDelegate {
 	}
 
 	@Override
-	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
-		XmlImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
+	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		File targetFile;
 		try {
 			targetFile = getTargetFile(ctx);
