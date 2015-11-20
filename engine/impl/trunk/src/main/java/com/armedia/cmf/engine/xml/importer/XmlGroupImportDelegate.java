@@ -22,11 +22,11 @@ public class XmlGroupImportDelegate extends XmlAggregatedImportDelegate<GroupT, 
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		GroupT group = new GroupT();
 
-		group.setName(getAttributeValue(IntermediateAttribute.NAME.encode()).asString());
-		group.setAdministrator(getAttributeValue(IntermediateAttribute.ADMINISTRATOR.encode()).asString());
-		group.setDisplayName(getAttributeValue(IntermediateAttribute.ADMINISTRATOR.encode()).asString());
-		group.setEmail(getAttributeValue(IntermediateAttribute.EMAIL.encode()).asString());
-		group.setType(getAttributeValue(IntermediateAttribute.GROUP_TYPE.encode()).asString());
+		group.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
+		group.setAdministrator(getAttributeValue(IntermediateAttribute.ADMINISTRATOR).asString());
+		group.setDisplayName(getAttributeValue(IntermediateAttribute.ADMINISTRATOR).asString());
+		group.setEmail(getAttributeValue(IntermediateAttribute.EMAIL).asString());
+		group.setType(getAttributeValue(IntermediateAttribute.GROUP_TYPE).asString());
 
 		return group;
 	}

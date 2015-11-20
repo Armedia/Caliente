@@ -22,14 +22,14 @@ public class XmlUserImportDelegate extends XmlAggregatedImportDelegate<UserT, Us
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		UserT user = new UserT();
 
-		user.setName(getAttributeValue(IntermediateAttribute.NAME.encode()).asString());
-		user.setLoginDomain(getAttributeValue(IntermediateAttribute.LOGIN_REALM.encode()).asString());
-		user.setLoginName(getAttributeValue(IntermediateAttribute.LOGIN_NAME.encode()).asString());
-		user.setOsDomain(getAttributeValue(IntermediateAttribute.OS_NAME.encode()).asString());
-		user.setOsName(getAttributeValue(IntermediateAttribute.OS_NAME.encode()).asString());
-		user.setDescription(getAttributeValue(IntermediateAttribute.DESCRIPTION.encode()).asString());
-		user.setEmail(getAttributeValue(IntermediateAttribute.EMAIL.encode()).asString());
-		user.setDefaultFolder(getAttributeValue(IntermediateAttribute.DEFAULT_FOLDER.encode()).asString());
+		user.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
+		user.setLoginDomain(getAttributeValue(IntermediateAttribute.LOGIN_REALM).asString());
+		user.setLoginName(getAttributeValue(IntermediateAttribute.LOGIN_NAME).asString());
+		user.setOsDomain(getAttributeValue(IntermediateAttribute.OS_NAME).asString());
+		user.setOsName(getAttributeValue(IntermediateAttribute.OS_NAME).asString());
+		user.setDescription(getAttributeValue(IntermediateAttribute.DESCRIPTION).asString());
+		user.setEmail(getAttributeValue(IntermediateAttribute.EMAIL).asString());
+		user.setDefaultFolder(getAttributeValue(IntermediateAttribute.DEFAULT_FOLDER).asString());
 
 		return user;
 	}
