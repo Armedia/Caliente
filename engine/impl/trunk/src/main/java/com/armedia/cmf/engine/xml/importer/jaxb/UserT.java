@@ -9,7 +9,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "user.t", propOrder = {
-	"name", "defaultFolder", "description", "email", "loginName", "loginDomain", "osName", "osDomain", "defaultAcl"
+	"name", "defaultFolder", "description", "email", "loginName", "loginDomain", "osName", "osDomain"
 })
 public class UserT implements Comparable<UserT> {
 
@@ -36,9 +36,6 @@ public class UserT implements Comparable<UserT> {
 
 	@XmlElement(required = true)
 	protected String osDomain;
-
-	@XmlElement(required = true)
-	protected String defaultAcl;
 
 	public String getName() {
 		return this.name;
@@ -104,14 +101,6 @@ public class UserT implements Comparable<UserT> {
 		this.osDomain = value;
 	}
 
-	public String getDefaultAcl() {
-		return this.defaultAcl;
-	}
-
-	public void setDefaultAcl(String value) {
-		this.defaultAcl = value;
-	}
-
 	@Override
 	public int compareTo(UserT o) {
 		if (o == this) { return 0; }
@@ -133,8 +122,8 @@ public class UserT implements Comparable<UserT> {
 	public String toString() {
 		return String
 			.format(
-				"UserT [name=%s, defaultFolder=%s, description=%s, email=%s, loginName=%s, loginDomain=%s, osName=%s, osDomain=%s, defaultAcl=%s]",
+				"UserT [name=%s, defaultFolder=%s, description=%s, email=%s, loginName=%s, loginDomain=%s, osName=%s, osDomain=%s]",
 				this.name, this.defaultFolder, this.description, this.email, this.loginName, this.loginDomain,
-				this.osName, this.osDomain, this.defaultAcl);
+				this.osName, this.osDomain);
 	}
 }

@@ -181,7 +181,6 @@
 			<xsd:element name="loginDomain" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="osName" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="osDomain" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="defaultAcl" type="xsd:string" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 

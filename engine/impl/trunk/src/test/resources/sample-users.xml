@@ -12,6 +12,5 @@
 		<loginDomain>loginDomain</loginDomain>
 		<osName>osName</osName>
 		<osDomain>osDomain</osDomain>
-		<defaultAcl>defaultAcl</defaultAcl>
 	</user>
 </users>
