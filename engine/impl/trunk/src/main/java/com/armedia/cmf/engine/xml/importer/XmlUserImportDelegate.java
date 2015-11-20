@@ -33,7 +33,7 @@ public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
 		user.setOsDomain(getAttributeValue(IntermediateAttribute.OS_NAME.encode()).asString());
 		user.setOsName(getAttributeValue(IntermediateAttribute.OS_NAME.encode()).asString());
 		user.setDescription(getAttributeValue(IntermediateAttribute.DESCRIPTION.encode()).asString());
-		user.setEmail(getAttributeValue(IntermediateAttribute.NAME.encode()).asString());
+		user.setEmail(getAttributeValue(IntermediateAttribute.EMAIL.encode()).asString());
 		user.setDefaultFolder(getAttributeValue(IntermediateAttribute.DEFAULT_FOLDER.encode()).asString());
 
 		getXmlObject().getUsers().add(user);
