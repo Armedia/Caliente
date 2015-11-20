@@ -9,7 +9,6 @@
 		<email>email</email>
 		<administrator>administrator</administrator>
 		<displayName>displayName</displayName>
-		<public>true</public>
 		<users>
 			<user>user</user>
 		</users>

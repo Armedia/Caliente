@@ -199,7 +199,6 @@
 			<xsd:element name="email" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="administrator" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="displayName" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="public" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="users" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
 					<xsd:sequence>

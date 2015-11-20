@@ -30,9 +30,6 @@ public class GroupT {
 	@XmlElement(name = "displayName", required = true)
 	protected String displayName;
 
-	@XmlElement(name = "public", required = true)
-	protected boolean _public;
-
 	@XmlElementWrapper(name = "users", required = false)
 	@XmlElement(name = "user", required = false)
 	protected List<String> users;
@@ -95,19 +92,10 @@ public class GroupT {
 		this.displayName = value;
 	}
 
-	public boolean isPublic() {
-		return this._public;
-	}
-
-	public void setPublic(boolean value) {
-		this._public = value;
-	}
-
 	@Override
 	public String toString() {
 		return String.format(
-			"GroupT [name=%s, type=%s, email=%s, administrator=%s, displayName=%s, _public=%s, users=%s, groups=%s]",
-			this.name, this.type, this.email, this.administrator, this.displayName, this._public, this.users,
-			this.groups);
+			"GroupT [name=%s, type=%s, email=%s, administrator=%s, displayName=%s, users=%s, groups=%s]", this.name,
+			this.type, this.email, this.administrator, this.displayName, this.users, this.groups);
 	}
 }
