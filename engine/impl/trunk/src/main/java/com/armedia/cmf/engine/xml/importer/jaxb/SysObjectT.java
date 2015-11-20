@@ -1,8 +1,11 @@
 package com.armedia.cmf.engine.xml.importer.jaxb;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -64,6 +67,20 @@ public class SysObjectT {
 	@XmlElementWrapper(name = "attributes", required = false)
 	@XmlElement(name = "attribute", required = false)
 	protected List<AttributeT> attributes;
+
+	protected void sortAttributes() {
+		if (this.attributes != null) {
+			Collections.sort(this.attributes);
+		}
+	}
+
+	protected void beforeMarshal(Marshaller m) {
+		sortAttributes();
+	}
+
+	protected void afterUnmarshal(Unmarshaller u, Object parent) {
+		sortAttributes();
+	}
 
 	public List<AttributeT> getAttributes() {
 		if (this.attributes == null) {

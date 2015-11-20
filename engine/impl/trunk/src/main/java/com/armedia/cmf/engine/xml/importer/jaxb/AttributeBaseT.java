@@ -6,12 +6,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.commons.utilities.Tools;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "attributeBase.t")
 @XmlSeeAlso({
 	AttributeT.class, AttributeDefT.class
 })
-public class AttributeBaseT {
+public class AttributeBaseT implements Comparable<AttributeBaseT> {
 
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
@@ -33,6 +35,13 @@ public class AttributeBaseT {
 
 	public void setDataType(DataTypeT value) {
 		this.dataType = value;
+	}
+
+	@Override
+	public int compareTo(AttributeBaseT o) {
+		if (this == o) { return 0; }
+		if (o == null) { return 1; }
+		return Tools.compare(this.name, o.name);
 	}
 
 	@Override
