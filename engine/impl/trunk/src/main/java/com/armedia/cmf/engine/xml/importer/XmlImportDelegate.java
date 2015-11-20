@@ -1,16 +1,47 @@
 package com.armedia.cmf.engine.xml.importer;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.List;
 
 import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
+import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfValue;
 
 public abstract class XmlImportDelegate
-	extends
-	ImportDelegate<File, XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportDelegateFactory, XmlImportEngine> {
+extends
+ImportDelegate<File, XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportDelegateFactory, XmlImportEngine> {
+
+	protected final CmfValue getAttributeValue(String attribute) {
+		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(attribute);
+		if (att == null) { return CmfValue.NULL.get(CmfDataType.OTHER); }
+		if (att.hasValues()) { return att.getValue(); }
+		return CmfValue.NULL.get(att.getType());
+	}
+
+	protected final List<CmfValue> getAttributeValues(String attribute) {
+		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(attribute);
+		if (att == null) { return Collections.emptyList(); }
+		return att.getValues();
+	}
+
+	protected final CmfValue getPropertyValue(String attribute) {
+		CmfProperty<CmfValue> att = this.cmfObject.getProperty(attribute);
+		if (att == null) { return CmfValue.NULL.get(CmfDataType.OTHER); }
+		if (att.hasValues()) { return att.getValue(); }
+		return CmfValue.NULL.get(att.getType());
+	}
+
+	protected final List<CmfValue> getPropertyValues(String attribute) {
+		CmfProperty<CmfValue> att = this.cmfObject.getProperty(attribute);
+		if (att == null) { return Collections.emptyList(); }
+		return att.getValues();
+	}
 
 	protected XmlImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, File.class, storedObject);
