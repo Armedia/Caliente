@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "group.t", propOrder = {
-	"name", "type", "email", "administrator", "displayName", "_public", "users", "groups"
+	"name", "type", "email", "administrator", "displayName", "users", "groups"
 })
 public class GroupT {
 
