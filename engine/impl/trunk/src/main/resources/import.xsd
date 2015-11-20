@@ -106,31 +106,31 @@
 	<xsd:complexType name="attribute.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:attributeBase.t">
-				<xsd:sequence>
+				<xsd:choice maxOccurs="unbounded">
 					<xsd:element name="value" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
-				</xsd:sequence>
+				</xsd:choice>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="type.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="name" type="tns:trimmed_string.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="superType" type="tns:trimmed_string.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attributes" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
-					<xsd:sequence>
+					<xsd:choice maxOccurs="unbounded">
 						<xsd:element name="attribute" type="tns:attributeDef.t" minOccurs="0" maxOccurs="unbounded" />
-					</xsd:sequence>
+					</xsd:choice>
 				</xsd:complexType>
 			</xsd:element>
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:complexType name="types.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="type" type="tns:type.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:element name="types" type="tns:types.t" />
@@ -143,36 +143,36 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="acl.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="id" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="description" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="users" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
-					<xsd:sequence>
+					<xsd:choice maxOccurs="unbounded">
 						<xsd:element name="permit" type="tns:aclPermit.t" minOccurs="0" maxOccurs="unbounded" />
-					</xsd:sequence>
+					</xsd:choice>
 				</xsd:complexType>
 			</xsd:element>
 			<xsd:element name="groups" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
-					<xsd:sequence>
+					<xsd:choice maxOccurs="unbounded">
 						<xsd:element name="permit" type="tns:aclPermit.t" minOccurs="0" maxOccurs="unbounded" />
-					</xsd:sequence>
+					</xsd:choice>
 				</xsd:complexType>
 			</xsd:element>
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:complexType name="acls.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="acl" type="tns:acl.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:element name="acls" type="tns:acls.t" />
 
 	<xsd:complexType name="user.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="defaultFolder" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="description" type="xsd:string" minOccurs="1" maxOccurs="1" />
@@ -181,19 +181,19 @@
 			<xsd:element name="loginDomain" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="osName" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="osDomain" type="xsd:string" minOccurs="1" maxOccurs="1" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:complexType name="users.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="user" type="tns:user.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:element name="users" type="tns:users.t" />
 
 	<xsd:complexType name="group.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="type" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="email" type="xsd:string" minOccurs="1" maxOccurs="1" />
@@ -201,31 +201,31 @@
 			<xsd:element name="displayName" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="users" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
-					<xsd:sequence>
+					<xsd:choice maxOccurs="unbounded">
 						<xsd:element name="user" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
-					</xsd:sequence>
+					</xsd:choice>
 				</xsd:complexType>
 			</xsd:element>
 			<xsd:element name="groups" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
-					<xsd:sequence>
+					<xsd:choice maxOccurs="unbounded">
 						<xsd:element name="group" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
-					</xsd:sequence>
+					</xsd:choice>
 				</xsd:complexType>
 			</xsd:element>
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:complexType name="groups.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="group" type="tns:group.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:element name="groups" type="tns:groups.t" />
 
 	<xsd:complexType name="sysObject.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="id" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="parentId" type="xsd:string" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
@@ -240,12 +240,12 @@
 			<xsd:element name="acl" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="attributes" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
-					<xsd:sequence>
+					<xsd:choice maxOccurs="unbounded">
 						<xsd:element name="attribute" type="tns:attribute.t" minOccurs="0" maxOccurs="unbounded" />
-					</xsd:sequence>
+					</xsd:choice>
 				</xsd:complexType>
 			</xsd:element>
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:complexType name="folder.t">
@@ -257,17 +257,34 @@
 	<xsd:element name="folder" type="tns:folder.t" />
 
 	<xsd:complexType name="folders.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="folder" type="tns:folder.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:element name="folders" type="tns:folders.t" />
 
+	<xsd:complexType name="folderIndexEntry.t">
+		<xsd:choice maxOccurs="unbounded">
+			<xsd:element name="id" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="path" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="location" type="xsd:string" minOccurs="1" maxOccurs="1" />
+		</xsd:choice>
+	</xsd:complexType>
+
+	<xsd:complexType name="folderIndex.t">
+		<xsd:choice maxOccurs="unbounded">
+			<xsd:element name="folder" type="tns:folderIndexEntry.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:choice>
+	</xsd:complexType>
+
+	<xsd:element name="folderIndex" type="tns:folderIndex.t" />
+
 	<xsd:complexType name="documentVersion.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:sysObject.t">
-				<xsd:sequence>
+				<xsd:choice maxOccurs="unbounded">
 					<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
@@ -275,43 +292,43 @@
 					<xsd:element name="contentSize" type="tns:nonNegativeInt.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="contentHash" type="xsd:base64Binary" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="contentLocation" type="xsd:string" minOccurs="1" maxOccurs="1" />
-				</xsd:sequence>
+				</xsd:choice>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="document.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="version" type="tns:documentVersion.t" minOccurs="1" maxOccurs="unbounded" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:element name="document" type="tns:document.t" />
 
 	<xsd:complexType name="documents.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="document" type="tns:document.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:element name="documents" type="tns:documents.t" />
 
 	<xsd:complexType name="documentIndexEntry.t">
-		<xsd:sequence>
-			<xsd:element name="id" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="path" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="location" type="xsd:string" minOccurs="1" maxOccurs="1" />
-		</xsd:sequence>
+		<xsd:complexContent>
+			<xsd:extension base="tns:folderIndexEntry.t">
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
+				</xsd:choice>
+			</xsd:extension>
+		</xsd:complexContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="documentIndex.t">
-		<xsd:sequence>
+		<xsd:choice maxOccurs="unbounded">
 			<xsd:element name="document" type="tns:documentIndexEntry.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
+		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:element name="documentIndex" type="tns:documentIndex.t" />

@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<documentIndex
+<folderIndex
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="http://www.armedia.com/ns/cmf/engines/xml/import"
 	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import import.xsd ">
-	<document>
+	<folder>
 		<id>id</id>
 		<path>path</path>
 		<name>name</name>
 		<location>location</location>
-		<historyId>historyId</historyId>
-		<version>version</version>
-		<current>true</current>
-	</document>
-</documentIndex>
+	</folder>
+</folderIndex>

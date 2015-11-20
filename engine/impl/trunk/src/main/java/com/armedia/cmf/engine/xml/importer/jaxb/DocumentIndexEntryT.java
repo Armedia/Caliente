@@ -7,12 +7,9 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "documentIndexEntry.t", propOrder = {
-	"id", "historyId", "version", "current", "path", "name", "location"
+	"historyId", "version", "current",
 })
-public class DocumentIndexEntryT {
-
-	@XmlElement(name = "id", required = true)
-	protected String id;
+public class DocumentIndexEntryT extends FolderIndexEntryT {
 
 	@XmlElement(name = "historyId", required = true)
 	protected String historyId;
@@ -22,23 +19,6 @@ public class DocumentIndexEntryT {
 
 	@XmlElement(name = "current", required = true)
 	protected boolean current;
-
-	@XmlElement(name = "path", required = true)
-	protected String path;
-
-	@XmlElement(name = "name", required = true)
-	protected String name;
-
-	@XmlElement(name = "location", required = true)
-	protected String location;
-
-	public String getId() {
-		return this.id;
-	}
-
-	public void setId(String value) {
-		this.id = value;
-	}
 
 	public String getHistoryId() {
 		return this.historyId;
@@ -62,30 +42,6 @@ public class DocumentIndexEntryT {
 
 	public void setCurrent(boolean value) {
 		this.current = value;
-	}
-
-	public String getPath() {
-		return this.path;
-	}
-
-	public void setPath(String value) {
-		this.path = value;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String value) {
-		this.name = value;
-	}
-
-	public String getLocation() {
-		return this.location;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
 	}
 
 	@Override
