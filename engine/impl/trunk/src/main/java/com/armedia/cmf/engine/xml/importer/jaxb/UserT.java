@@ -5,11 +5,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.commons.utilities.Tools;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "user.t", propOrder = {
 	"name", "defaultFolder", "description", "email", "loginName", "loginDomain", "osName", "osDomain", "defaultAcl"
 })
-public class UserT {
+public class UserT implements Comparable<UserT> {
 
 	@XmlElement(required = true)
 	protected String name;
@@ -108,6 +110,23 @@ public class UserT {
 
 	public void setDefaultAcl(String value) {
 		this.defaultAcl = value;
+	}
+
+	@Override
+	public int compareTo(UserT o) {
+		if (o == this) { return 0; }
+		if (o == null) { return 1; }
+		int r = Tools.compare(this.name, o.name);
+		if (r != 0) { return r; }
+		r = Tools.compare(this.loginDomain, o.loginDomain);
+		if (r != 0) { return r; }
+		r = Tools.compare(this.loginName, o.loginName);
+		if (r != 0) { return r; }
+		r = Tools.compare(this.osDomain, o.osDomain);
+		if (r != 0) { return r; }
+		r = Tools.compare(this.osName, o.osName);
+		if (r != 0) { return r; }
+		return r;
 	}
 
 	@Override
