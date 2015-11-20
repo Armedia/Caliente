@@ -42,6 +42,9 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.DEFAULT_FOLDER, IntermediateAttribute.DEFAULT_FOLDER);
 		am.put(DctmAttributes.USER_LOGIN_NAME, IntermediateAttribute.LOGIN_NAME);
 		am.put(DctmAttributes.USER_LOGIN_DOMAIN, IntermediateAttribute.LOGIN_REALM);
+		am.put(DctmAttributes.USER_OS_NAME, IntermediateAttribute.OS_NAME);
+		am.put(DctmAttributes.USER_OS_DOMAIN, IntermediateAttribute.OS_REALM);
+		am.put(DctmAttributes.USER_ADDRESS, IntermediateAttribute.EMAIL);
 		attributeMappings.put(CmfType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
