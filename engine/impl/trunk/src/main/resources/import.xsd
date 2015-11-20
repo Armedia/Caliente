@@ -254,7 +254,13 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:element name="folder" type="tns:folder.t" />
+	<xsd:complexType name="folders.t">
+		<xsd:sequence>
+			<xsd:element name="folder" type="tns:folder.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="folders" type="tns:folders.t" />
 
 	<xsd:complexType name="documentVersion.t">
 		<xsd:complexContent>
