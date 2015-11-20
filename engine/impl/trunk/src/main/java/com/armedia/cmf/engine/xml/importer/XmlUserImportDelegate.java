@@ -36,7 +36,7 @@ public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
 		user.setEmail(getAttributeValue(IntermediateAttribute.EMAIL.encode()).asString());
 		user.setDefaultFolder(getAttributeValue(IntermediateAttribute.DEFAULT_FOLDER.encode()).asString());
 
-		getXmlObject().getUsers().add(user);
+		getXmlObject().addUser(user);
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject
 			.getLabel()));
 	}

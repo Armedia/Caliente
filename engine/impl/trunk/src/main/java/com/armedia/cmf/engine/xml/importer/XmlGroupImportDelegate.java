@@ -33,7 +33,7 @@ public class XmlGroupImportDelegate extends XmlSharedFileImportDelegate<GroupsT>
 		group.setEmail(getAttributeValue(IntermediateAttribute.EMAIL.encode()).asString());
 		group.setType(getAttributeValue(IntermediateAttribute.GROUP_TYPE.encode()).asString());
 
-		getXmlObject().getGroup().add(group);
+		getXmlObject().addGroup(group);
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject
 			.getLabel()));
 	}

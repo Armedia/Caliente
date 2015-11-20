@@ -2,19 +2,13 @@ package com.armedia.cmf.engine.xml.importer;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-
-import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
-import com.armedia.cmf.storage.CmfContentInfo;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
@@ -62,18 +56,10 @@ public class XmlDocumentImportDelegate extends XmlFSObjectImportDelegate {
 			if (this.factory.isFailOnCollisions()) { throw new ImportException(String.format(
 				"A file already exists at [%s] for document [%s](%s)", targetFile, this.cmfObject.getLabel(),
 				this.cmfObject.getId())); }
-
-			try {
-				if (isSameDatesAndOwners(targetFile, translator)) { return Collections.singleton(new ImportOutcome(
-					ImportResult.DUPLICATE, getNewId(targetFile), targetFile.getAbsolutePath())); }
-			} catch (Exception e) {
-				throw new ImportException(String.format(
-					"Failed to validate the dates and owners at [%s] for document [%s](%s)", targetFile,
-					this.cmfObject.getLabel(), this.cmfObject.getId()), e);
-			}
 		}
 
 		// Copy the contents over...
+		/*
 		List<CmfContentInfo> contents;
 		try {
 			contents = ctx.getContentInfo(this.cmfObject);
@@ -110,14 +96,7 @@ public class XmlDocumentImportDelegate extends XmlFSObjectImportDelegate {
 				}
 			}
 		}
-
-		try {
-			applyAttributes(targetFile, translator);
-		} catch (Exception e) {
-			throw new ImportException(String.format(
-				"Failed to apply attributes to the target file [%s] for %s [%s](%s)", targetFile,
-				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
-		}
+		 */
 		return Collections.singleton(new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED,
 			getNewId(targetFile), targetFile.getAbsolutePath()));
 	}

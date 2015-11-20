@@ -17,7 +17,8 @@ import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.xml.common.Setting;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
-import com.armedia.cmf.engine.xml.importer.jaxb.AclT;
+import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
+import com.armedia.cmf.engine.xml.importer.jaxb.FoldersT;
 import com.armedia.cmf.engine.xml.importer.jaxb.GroupsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.TypesT;
 import com.armedia.cmf.engine.xml.importer.jaxb.UsersT;
@@ -29,7 +30,7 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
 public class XmlImportDelegateFactory extends
-	ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
+ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	private static final String SCHEMA = "import.xsd";
 
@@ -46,7 +47,8 @@ public class XmlImportDelegateFactory extends
 		xml.put(CmfType.TYPE, new TypesT());
 		xml.put(CmfType.USER, new UsersT());
 		xml.put(CmfType.GROUP, new GroupsT());
-		xml.put(CmfType.ACL, new AclT());
+		xml.put(CmfType.ACL, new AclsT());
+		xml.put(CmfType.FOLDER, new FoldersT());
 		this.xml = Tools.freezeCopy(xml);
 	}
 
