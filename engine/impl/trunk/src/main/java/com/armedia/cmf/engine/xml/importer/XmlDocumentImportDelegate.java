@@ -24,6 +24,10 @@ public class XmlDocumentImportDelegate extends XmlFSObjectImportDelegate {
 	@Override
 	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
+
+		// TODO: Remove this
+		if (ctx != null) { return Collections.singleton(ImportOutcome.SKIPPED); }
+
 		File targetFile;
 		try {
 			targetFile = getTargetFile(ctx);
