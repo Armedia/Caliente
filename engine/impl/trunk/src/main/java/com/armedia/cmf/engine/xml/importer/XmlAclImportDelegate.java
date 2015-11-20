@@ -1,14 +1,10 @@
 package com.armedia.cmf.engine.xml.importer;
 
 import java.util.BitSet;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclPermitT;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclT;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
@@ -21,7 +17,7 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.Tools;
 
-public class XmlAclImportDelegate extends XmlSharedFileImportDelegate<AclsT> {
+public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, AclsT> {
 
 	private static final Map<Integer, String> XPERMITS;
 
@@ -41,7 +37,7 @@ public class XmlAclImportDelegate extends XmlSharedFileImportDelegate<AclsT> {
 	}
 
 	@Override
-	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+	protected AclT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		AclT acl = new AclT();
 
@@ -79,8 +75,6 @@ public class XmlAclImportDelegate extends XmlSharedFileImportDelegate<AclsT> {
 			p.setExtended(str.toString());
 			(isGroup.getValue(i).asBoolean() ? acl.getGroups() : acl.getUsers()).add(p);
 		}
-		getXmlObject().getAcl().add(acl);
-		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject
-			.getLabel()));
+		return acl;
 	}
 }

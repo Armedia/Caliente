@@ -1,12 +1,7 @@
 package com.armedia.cmf.engine.xml.importer;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.xml.importer.jaxb.UserT;
 import com.armedia.cmf.engine.xml.importer.jaxb.UsersT;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
@@ -15,7 +10,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
+public class XmlUserImportDelegate extends XmlAggregatedImportDelegate<UserT, UsersT> {
 
 	protected XmlUserImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -23,7 +18,7 @@ public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
 	}
 
 	@Override
-	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+	protected UserT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		UserT user = new UserT();
 
@@ -36,8 +31,6 @@ public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
 		user.setEmail(getAttributeValue(IntermediateAttribute.EMAIL.encode()).asString());
 		user.setDefaultFolder(getAttributeValue(IntermediateAttribute.DEFAULT_FOLDER.encode()).asString());
 
-		getXmlObject().addUser(user);
-		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject
-			.getLabel()));
+		return user;
 	}
 }

@@ -52,11 +52,11 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link TypeDefT }
+	 * Create an instance of {@link TypeT }
 	 *
 	 */
-	public TypeDefT createTypeDefT() {
-		return new TypeDefT();
+	public TypeT createTypeDefT() {
+		return new TypeT();
 	}
 
 	/**

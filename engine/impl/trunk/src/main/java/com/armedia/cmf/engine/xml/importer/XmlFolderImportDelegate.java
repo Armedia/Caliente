@@ -1,11 +1,6 @@
 package com.armedia.cmf.engine.xml.importer;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.xml.importer.jaxb.FolderT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FoldersT;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
@@ -14,7 +9,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class XmlFolderImportDelegate extends XmlSharedFileImportDelegate<FoldersT> {
+public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderT, FoldersT> {
 
 	protected XmlFolderImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -22,7 +17,7 @@ public class XmlFolderImportDelegate extends XmlSharedFileImportDelegate<Folders
 	}
 
 	@Override
-	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+	protected FolderT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 		FolderT f = new FolderT();
 
@@ -39,8 +34,6 @@ public class XmlFolderImportDelegate extends XmlSharedFileImportDelegate<Folders
 		f.setSourcePath(null);
 		f.setType(null);
 
-		getXmlObject().getFolders().add(f);
-		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject
-			.getLabel()));
+		return f;
 	}
 }

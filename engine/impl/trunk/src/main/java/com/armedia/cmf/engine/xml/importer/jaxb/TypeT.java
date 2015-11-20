@@ -13,10 +13,10 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "typeDef.t", propOrder = {
+@XmlType(name = "type.t", propOrder = {
 	"name", "superType", "attributes"
 })
-public class TypeDefT {
+public class TypeT {
 
 	@XmlElement(name = "name", required = true)
 	protected String name;
@@ -67,7 +67,7 @@ public class TypeDefT {
 
 	@Override
 	public String toString() {
-		return String.format("TypeDefT [name=%s, superType=%s, attributes=%s]", this.name, this.superType,
-			this.attributes);
+		return String
+			.format("TypeT [name=%s, superType=%s, attributes=%s]", this.name, this.superType, this.attributes);
 	}
 }

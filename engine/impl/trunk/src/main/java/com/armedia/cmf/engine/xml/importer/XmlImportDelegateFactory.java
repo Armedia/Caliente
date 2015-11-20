@@ -18,6 +18,8 @@ import com.armedia.cmf.engine.xml.common.Setting;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
+import com.armedia.cmf.engine.xml.importer.jaxb.AggregatorBase;
+import com.armedia.cmf.engine.xml.importer.jaxb.DocumentsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FoldersT;
 import com.armedia.cmf.engine.xml.importer.jaxb.GroupsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.TypesT;
@@ -37,18 +39,19 @@ ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xm
 	private final boolean includeAllVersions;
 	private final boolean failOnCollisions;
 
-	private final Map<CmfType, Object> xml;
+	private final Map<CmfType, AggregatorBase<?>> xml;
 
 	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
 		this.includeAllVersions = configuration.getBoolean(Setting.INCLUDE_ALL_VERSIONS);
 		this.failOnCollisions = configuration.getBoolean(Setting.FAIL_ON_COLLISIONS);
-		Map<CmfType, Object> xml = new EnumMap<CmfType, Object>(CmfType.class);
+		Map<CmfType, AggregatorBase<?>> xml = new EnumMap<CmfType, AggregatorBase<?>>(CmfType.class);
 		xml.put(CmfType.TYPE, new TypesT());
 		xml.put(CmfType.USER, new UsersT());
 		xml.put(CmfType.GROUP, new GroupsT());
 		xml.put(CmfType.ACL, new AclsT());
 		xml.put(CmfType.FOLDER, new FoldersT());
+		xml.put(CmfType.DOCUMENT, new DocumentsT());
 		this.xml = Tools.freezeCopy(xml);
 	}
 
@@ -91,10 +94,13 @@ ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xm
 	@Override
 	public void close() {
 		for (CmfType t : CmfType.values()) {
-			Object o = this.xml.get(t);
-			if (o == null) {
+			AggregatorBase<?> root = this.xml.get(t);
+			if ((root == null) || (root.getCount() == 0)) {
+				// If there is no aggregator, or it's empty, skip it
 				continue;
 			}
+
+			// There is an aggregator, so write out its file
 			final File f = calculateConsolidatedFile(t);
 			final OutputStream out;
 			try {
@@ -106,7 +112,7 @@ ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xm
 			boolean ok = false;
 			String xml = null;
 			try {
-				xml = XmlTools.marshal(o, XmlImportDelegateFactory.SCHEMA, true);
+				xml = XmlTools.marshal(root, XmlImportDelegateFactory.SCHEMA, true);
 				try {
 					IOUtils.write(xml, out);
 				} catch (IOException e) {

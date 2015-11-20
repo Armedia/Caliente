@@ -113,7 +113,7 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="typeDef.t">
+	<xsd:complexType name="type.t">
 		<xsd:sequence>
 			<xsd:element name="name" type="tns:trimmed_string.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="superType" type="tns:trimmed_string.t" minOccurs="0" maxOccurs="1" />
@@ -129,7 +129,7 @@
 
 	<xsd:complexType name="types.t">
 		<xsd:sequence>
-			<xsd:element name="type" type="tns:typeDef.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="type" type="tns:type.t" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
 

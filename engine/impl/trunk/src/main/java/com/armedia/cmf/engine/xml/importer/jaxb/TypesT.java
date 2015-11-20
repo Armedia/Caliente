@@ -1,33 +1,23 @@
 package com.armedia.cmf.engine.xml.importer.jaxb;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "types")
-@XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "types.t", propOrder = {
 	"type"
 })
-public class TypesT {
+public class TypesT extends AggregatorBase<TypeT> {
 
-	@XmlElement(name = "type", required = false)
-	protected List<TypeDefT> type;
-
-	public List<TypeDefT> getType() {
-		if (this.type == null) {
-			this.type = new ArrayList<TypeDefT>();
-		}
-		return this.type;
+	public TypesT() {
+		super("type");
 	}
 
-	@Override
-	public String toString() {
-		return String.format("TypesT [type=%s]", this.type);
+	@XmlElement(name = "type")
+	public List<TypeT> getType() {
+		return getItems();
 	}
 }
