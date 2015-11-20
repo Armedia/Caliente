@@ -1,11 +1,7 @@
 package com.armedia.cmf.engine.xml.importer.jaxb;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -22,25 +18,24 @@ public class UsersT {
 	@XmlElement(name = "user", required = false)
 	protected List<UserT> user;
 
-	protected void sortAttributes() {
-		if (this.user != null) {
-			Collections.sort(this.user);
-		}
+	public synchronized int getUserCount() {
+		return this.user.size();
 	}
 
-	protected void beforeMarshal(Marshaller m) {
-		sortAttributes();
+	public synchronized boolean addUser(UserT user) {
+		return this.user.add(user);
 	}
 
-	protected void afterUnmarshal(Unmarshaller u, Object parent) {
-		sortAttributes();
+	public synchronized boolean removeUser(UserT user) {
+		return this.user.remove(user);
 	}
 
-	public List<UserT> getUsers() {
-		if (this.user == null) {
-			this.user = new ArrayList<UserT>();
-		}
-		return this.user;
+	public synchronized boolean hasUser(UserT user) {
+		return this.user.contains(user);
+	}
+
+	public synchronized void clearUsers() {
+		this.user.clear();
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package com.armedia.cmf.engine.xml.importer.jaxb;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -19,11 +18,24 @@ public class GroupsT {
 	@XmlElement(name = "group")
 	protected List<GroupT> group;
 
-	public List<GroupT> getGroup() {
-		if (this.group == null) {
-			this.group = new ArrayList<GroupT>();
-		}
-		return this.group;
+	public synchronized int getGroupCount() {
+		return this.group.size();
+	}
+
+	public synchronized boolean addGroup(GroupT group) {
+		return this.group.add(group);
+	}
+
+	public synchronized boolean removeGroup(GroupT group) {
+		return this.group.remove(group);
+	}
+
+	public synchronized boolean hasGroup(GroupT group) {
+		return this.group.contains(group);
+	}
+
+	public synchronized void clearGroups() {
+		this.group.clear();
 	}
 
 	@Override

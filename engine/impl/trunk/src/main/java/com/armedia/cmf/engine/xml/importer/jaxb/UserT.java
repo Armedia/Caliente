@@ -102,19 +102,23 @@ public class UserT implements Comparable<UserT> {
 	}
 
 	@Override
+	public int hashCode() {
+		return Tools.hashTool(this, null, this.name);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!Tools.baseEquals(this, obj)) { return false; }
+		UserT other = UserT.class.cast(obj);
+		if (!Tools.equals(this.name, other.name)) { return false; }
+		return true;
+	}
+
+	@Override
 	public int compareTo(UserT o) {
 		if (o == this) { return 0; }
 		if (o == null) { return 1; }
 		int r = Tools.compare(this.name, o.name);
-		if (r != 0) { return r; }
-		r = Tools.compare(this.loginDomain, o.loginDomain);
-		if (r != 0) { return r; }
-		r = Tools.compare(this.loginName, o.loginName);
-		if (r != 0) { return r; }
-		r = Tools.compare(this.osDomain, o.osDomain);
-		if (r != 0) { return r; }
-		r = Tools.compare(this.osName, o.osName);
-		if (r != 0) { return r; }
 		return r;
 	}
 
