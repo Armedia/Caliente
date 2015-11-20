@@ -4,10 +4,27 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.Map;
 
 import com.armedia.commons.utilities.Tools;
 
 public final class CmfValue {
+
+	public static final Map<CmfDataType, CmfValue> NULL;
+
+	static {
+		Map<CmfDataType, CmfValue> nvl = new EnumMap<CmfDataType, CmfValue>(CmfDataType.class);
+		for (CmfDataType t : CmfDataType.values()) {
+			try {
+				nvl.put(t, new CmfValue(t, null));
+			} catch (ParseException e) {
+				throw new RuntimeException(String.format(
+					"Failed to create a CMF value with a null value for type [%s]", t), e);
+			}
+		}
+		NULL = Tools.freezeMap(nvl);
+	}
 
 	private final CmfDataType type;
 	private final Object value;
