@@ -311,7 +311,7 @@ public class LocalContentStore extends CmfContentStore<URI> {
 	}
 
 	@Override
-	protected boolean isSupportsFileAccess() {
+	public boolean isSupportsFileAccess() {
 		return true;
 	}
 
