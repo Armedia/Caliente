@@ -25,7 +25,6 @@ public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
 	@Override
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
-		UsersT xml = getXmlObject();
 		UserT user = new UserT();
 
 		user.setName(getAttributeValue(IntermediateAttribute.NAME.encode()).asString());
@@ -37,7 +36,7 @@ public class XmlUserImportDelegate extends XmlSharedFileImportDelegate<UsersT> {
 		user.setEmail(getAttributeValue(IntermediateAttribute.NAME.encode()).asString());
 		user.setDefaultFolder(getAttributeValue(IntermediateAttribute.DEFAULT_FOLDER.encode()).asString());
 
-		xml.getUsers().add(user);
+		getXmlObject().getUsers().add(user);
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject
 			.getLabel()));
 	}
