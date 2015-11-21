@@ -16,8 +16,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class XmlImportEngine
-	extends
-	ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory> {
+extends
+ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -66,7 +66,7 @@ public class XmlImportEngine
 
 		@Override
 		public boolean isIgnored() {
-			return true;
+			return false;
 		}
 
 		@Override
