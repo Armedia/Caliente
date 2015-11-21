@@ -23,6 +23,7 @@ import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
+import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
 import com.armedia.cmf.engine.xml.common.XmlSessionFactory;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
@@ -46,7 +47,7 @@ import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.XmlTools;
 
 public class XmlImportDelegateFactory extends
-	ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
+ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	static final String SCHEMA = "import.xsd";
 
@@ -92,9 +93,9 @@ public class XmlImportDelegateFactory extends
 			} else {
 				// The content's location is in the first version
 				DocumentVersionT first = l.get(0);
-				File tgt = new File(first.getContentLocation());
+				File tgt = new File(XmlImportDelegateFactory.this.content, first.getContentLocation());
 				File dir = tgt.getParentFile();
-				tgt = new File(dir, String.format("document-%s.xml", batchId));
+				tgt = new File(dir, String.format("%s-document.xml", batchId));
 
 				final OutputStream out;
 				try {
@@ -138,6 +139,47 @@ public class XmlImportDelegateFactory extends
 					idx.setHistoryId(v.getHistoryId());
 					idx.setCurrent(v.isCurrent());
 					index.add(idx);
+				}
+			}
+		}
+
+		@Override
+		public void objectTypeImportFinished(CmfType cmfType, Map<ImportResult, Integer> counters) {
+			AggregatorBase<?> root = XmlImportDelegateFactory.this.xml.get(cmfType);
+			if ((root == null) || (root.getCount() == 0)) {
+				// If there is no aggregator, or it's empty, skip it
+				return;
+			}
+
+			// There is an aggregator, so write out its file
+			final File f = calculateConsolidatedFile(cmfType);
+			final OutputStream out;
+			try {
+				out = new FileOutputStream(f);
+			} catch (FileNotFoundException e) {
+				this.log.error(String.format(
+					"Failed to open the output file for the aggregate XML for type %s at [%s]", cmfType, f), e);
+				return;
+			}
+			boolean ok = false;
+			String xml = null;
+			try {
+				xml = XmlTools.marshal(root, XmlImportDelegateFactory.SCHEMA, true);
+				try {
+					IOUtils.write(xml, out);
+				} catch (IOException e) {
+					this.log
+						.error(String.format("Failed to write the generated XML for type %s at [%s]:%n%s", cmfType, f,
+							xml), e);
+					return;
+				}
+				ok = true;
+			} catch (JAXBException e) {
+				this.log.error(String.format("Failed to generate the XML for %s", cmfType), e);
+			} finally {
+				IOUtils.closeQuietly(out);
+				if (!ok) {
+					FileUtils.deleteQuietly(f);
 				}
 			}
 		}
@@ -225,43 +267,6 @@ public class XmlImportDelegateFactory extends
 
 	@Override
 	public void close() {
-		for (CmfType t : CmfType.values()) {
-			AggregatorBase<?> root = this.xml.get(t);
-			if ((root == null) || (root.getCount() == 0)) {
-				// If there is no aggregator, or it's empty, skip it
-				continue;
-			}
-
-			// There is an aggregator, so write out its file
-			final File f = calculateConsolidatedFile(t);
-			final OutputStream out;
-			try {
-				out = new FileOutputStream(f);
-			} catch (FileNotFoundException e) {
-				// TODO: Log this error
-				continue;
-			}
-			boolean ok = false;
-			String xml = null;
-			try {
-				xml = XmlTools.marshal(root, XmlImportDelegateFactory.SCHEMA, true);
-				try {
-					IOUtils.write(xml, out);
-				} catch (IOException e) {
-					// TODO: Dump out the generated XML to the log
-					e.hashCode();
-				}
-				ok = true;
-			} catch (JAXBException e) {
-				this.log.error(String.format("Failed to generate the XML for %s", t), e);
-			} finally {
-				IOUtils.closeQuietly(out);
-				if (!ok) {
-					FileUtils.deleteQuietly(f);
-				}
-			}
-		}
-
 		super.close();
 	}
 }

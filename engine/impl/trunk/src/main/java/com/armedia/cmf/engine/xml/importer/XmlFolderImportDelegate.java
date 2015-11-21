@@ -51,7 +51,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 			}
 		}
 
-		tgt = new File(dir, String.format("folder-%s.xml", tgt.getName()));
+		tgt = new File(dir, String.format("%s-folder.xml", tgt.getName()));
 
 		final OutputStream out;
 		try {
