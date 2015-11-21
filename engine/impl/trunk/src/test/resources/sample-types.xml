@@ -2,12 +2,12 @@
 <types
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="http://www.armedia.com/ns/cmf/engines/xml/import"
-	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import import.xsd ">
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import platform:/resource/cmf-engine-xml/src/main/resources/import.xsd ">
 	<type>
 		<name>name</name>
 		<superType>superType</superType>
 		<attributes>
-			<attribute dataType="BOOLEAN" length="1" name="xxx" repeating="false" inherited="true" sourceName="" />
+			<attribute dataType="BOOLEAN" length="1" name="xxx" repeating="false" inherited="true" sourceName="x" />
 		</attributes>
 	</type>
 </types>

@@ -2,7 +2,7 @@
 <folder
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="http://www.armedia.com/ns/cmf/engines/xml/import"
-	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import import.xsd ">
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import platform:/resource/cmf-engine-xml/src/main/resources/import.xsd ">
 	<id>id</id>
 	<parentId>parentId</parentId>
 	<name>name</name>
