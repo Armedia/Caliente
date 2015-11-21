@@ -5,9 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBException;
 
@@ -17,6 +21,7 @@ import org.apache.commons.io.IOUtils;
 import com.armedia.cmf.engine.importer.DefaultImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
+import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
 import com.armedia.cmf.engine.xml.common.XmlSessionFactory;
@@ -24,9 +29,10 @@ import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.AggregatorBase;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentIndexT;
+import com.armedia.cmf.engine.xml.importer.jaxb.DocumentT;
+import com.armedia.cmf.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FolderIndexT;
-import com.armedia.cmf.engine.xml.importer.jaxb.FolderT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FoldersT;
 import com.armedia.cmf.engine.xml.importer.jaxb.GroupsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.TypesT;
@@ -35,6 +41,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.XmlTools;
 
 public class XmlImportDelegateFactory extends
@@ -47,41 +54,50 @@ public class XmlImportDelegateFactory extends
 	private final boolean aggregateDocuments;
 	private final File db;
 	private final File content;
+	private final LockDispenser<String, Object> documentBatchLocks = LockDispenser.getBasic();
+	private final Map<String, List<DocumentVersionT>> documentBatches = new ConcurrentHashMap<String, List<DocumentVersionT>>();
 
 	private final ImportEngineListener documentListener = new DefaultImportEngineListener() {
 
 		@Override
 		public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
-			if (objectType != CmfType.FOLDER) { return; }
-			if (XmlImportDelegateFactory.this.aggregateFolders) { return; }
-			FoldersT folders = FoldersT.class.cast(XmlImportDelegateFactory.this.xml.get(objectType));
-			String str = String.format("%d = %s", folders.getCount(), folders);
-			str.length();
-		}
-
-		@Override
-		public void objectImportStarted(CmfObject<?> object) {
-			// TODO Auto-generated method stub
-			super.objectImportStarted(object);
+			if (objectType != CmfType.DOCUMENT) { return; }
+			List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(batchId);
+			if (l == null) {
+				final Object lock = XmlImportDelegateFactory.this.documentBatchLocks.getLock(batchId);
+				synchronized (lock) {
+					l = XmlImportDelegateFactory.this.documentBatches.get(batchId);
+					if (l == null) {
+						l = Collections.synchronizedList(new ArrayList<DocumentVersionT>());
+						XmlImportDelegateFactory.this.documentBatches.put(batchId, l);
+					}
+				}
+			}
 		}
 
 		@Override
 		public void objectBatchImportFinished(CmfType objectType, String batchId,
 			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
+			if (objectType != CmfType.DOCUMENT) { return; }
 			if (failed) { return; }
-			if (XmlImportDelegateFactory.this.aggregateFolders) { return; }
+			List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(batchId);
+			if (l == null) { return; }
 
-			FoldersT folders = FoldersT.class.cast(XmlImportDelegateFactory.this.xml.get(objectType));
-			for (FolderT f : folders.getFolder()) {
-				// TODO: Generate the XML file for each folder
+			DocumentT doc = new DocumentT();
+			doc.getVersion().addAll(l);
+
+			if (XmlImportDelegateFactory.this.aggregateDocuments) {
+				DocumentsT.class.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT)).add(doc);
+			} else {
+				// Need to write out the document's XML to the history ID...but...how?!?
+				doc.hashCode();
 			}
-			String str = String.format("%d = %s", folders.getCount(), folders);
-			str.length();
 		}
 	};
 
 	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
+		engine.addListener(this.documentListener);
 		String db = configuration.getString(XmlSessionFactory.DB);
 		if (db != null) {
 			this.db = new File(db).getCanonicalFile();
@@ -107,6 +123,14 @@ public class XmlImportDelegateFactory extends
 		xml.put(CmfType.FOLDER, (this.aggregateFolders ? new FoldersT() : new FolderIndexT()));
 		xml.put(CmfType.DOCUMENT, (this.aggregateDocuments ? new DocumentsT() : new DocumentIndexT()));
 		this.xml = xml;
+	}
+
+	protected void storeDocumentVersion(DocumentVersionT v) throws ImportException {
+		List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(v.getHistoryId());
+		if (l == null) { throw new ImportException(String.format(
+			"Attempting to store version [%s] of history [%s], but no such history has been started: %s",
+			v.getVersion(), v.getHistoryId(), v)); }
+		l.add(v);
 	}
 
 	protected <T> T getXmlObject(CmfType t, Class<T> klazz) {

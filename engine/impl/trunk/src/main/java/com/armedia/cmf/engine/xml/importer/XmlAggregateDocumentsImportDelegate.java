@@ -81,8 +81,8 @@ public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDele
 
 		dumpAttributes(v.getAttributes());
 
-		DocumentT ret = new DocumentT();
-		ret.getVersion().add(v);
-		return ret;
+		this.factory.storeDocumentVersion(v);
+
+		return null;
 	}
 }
