@@ -1,62 +1,90 @@
 package com.armedia.cmf.engine.xml.importer;
 
-import java.text.ParseException;
-import java.util.GregorianCalendar;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
+import javax.xml.bind.JAXBException;
 
-import com.armedia.cmf.engine.converter.IntermediateAttribute;
-import com.armedia.cmf.engine.converter.IntermediateProperty;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
 import com.armedia.cmf.engine.importer.ImportException;
+import com.armedia.cmf.engine.xml.importer.jaxb.FolderIndexEntryT;
+import com.armedia.cmf.engine.xml.importer.jaxb.FolderIndexT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FolderT;
-import com.armedia.cmf.engine.xml.importer.jaxb.FoldersT;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
+import com.armedia.commons.utilities.XmlTools;
 
-public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderT, FoldersT> {
+public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderIndexEntryT, FolderIndexT> {
+
+	private final XmlAggregateFoldersImportDelegate delegate;
 
 	protected XmlFolderImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
-		super(factory, storedObject, FoldersT.class);
+		super(factory, storedObject, FolderIndexT.class);
+		this.delegate = new XmlAggregateFoldersImportDelegate(factory, storedObject);
 	}
 
 	@Override
-	protected FolderT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+	protected FolderIndexEntryT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
-		FolderT f = new FolderT();
-		DatatypeFactory dtf;
-		try {
-			dtf = DatatypeFactory.newInstance();
-		} catch (DatatypeConfigurationException e) {
-			throw new ImportException(e);
-		}
-		GregorianCalendar gcal = new GregorianCalendar();
 
-		f.setId(this.cmfObject.getId());
-		f.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
-
-		try {
-			gcal.setTime(getAttributeValue(IntermediateAttribute.CREATION_DATE).asTime());
-			f.setCreationDate(dtf.newXMLGregorianCalendar(gcal));
-			f.setCreator(getAttributeValue(IntermediateAttribute.CREATED_BY).asString());
-
-			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_MODIFICATION_DATE).asTime());
-			f.setModificationDate(dtf.newXMLGregorianCalendar(gcal));
-			f.setModifier(getAttributeValue(IntermediateAttribute.LAST_MODIFIED_BY).asString());
-		} catch (ParseException e) {
-			throw new CmfValueDecoderException("Failed to parse a date value", e);
+		FolderT f = this.delegate.createItem(translator, ctx);
+		CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
+		if (!h.getSourceStore().isSupportsFileAccess()) { return null; }
+		File tgt = h.getFile();
+		File dir = tgt.getParentFile();
+		if (dir != null) {
+			try {
+				FileUtils.forceMkdir(dir);
+			} catch (IOException e) {
+				throw new ImportException(String.format("Failed to create the folder at [%s]", dir.getAbsolutePath()),
+					e);
+			}
 		}
 
-		f.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
-		f.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		f.setSourcePath(getAttributeValue(IntermediateAttribute.PATH).asString());
-		f.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
+		tgt = new File(dir, String.format("folder-%s.xml", tgt.getName()));
 
-		dumpAttributes(f.getAttributes());
-		return f;
+		final OutputStream out;
+		try {
+			out = new FileOutputStream(tgt);
+		} catch (FileNotFoundException e) {
+			throw new ImportException(String.format("Failed to open an output stream to [%s]", tgt), e);
+		}
+
+		boolean ok = false;
+		String xml = null;
+		try {
+			xml = XmlTools.marshal(f, XmlImportDelegateFactory.SCHEMA, true);
+			try {
+				IOUtils.write(xml, out);
+			} catch (IOException e) {
+				throw new ImportException(String.format("Failed to write out the XML to [%s]:%n%s", tgt, xml), e);
+			}
+			ok = true;
+		} catch (JAXBException e) {
+			throw new ImportException(String.format("Failed to marshal the XML for folder [%s](%s) to [%s]",
+				this.cmfObject.getLabel(), this.cmfObject.getId(), tgt), e);
+		} finally {
+			IOUtils.closeQuietly(out);
+			if (!ok) {
+				FileUtils.deleteQuietly(tgt);
+			}
+		}
+
+		FolderIndexEntryT idx = new FolderIndexEntryT();
+		idx.setId(f.getId());
+		idx.setLocation(tgt.getAbsolutePath());
+		idx.setName(f.getName());
+		idx.setPath(f.getSourcePath());
+		return idx;
 	}
 }

@@ -7,6 +7,8 @@ import java.util.List;
 import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
+import com.armedia.cmf.engine.xml.importer.jaxb.AttributeT;
+import com.armedia.cmf.engine.xml.importer.jaxb.DataTypeT;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfEncodeableName;
@@ -15,8 +17,23 @@ import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfValue;
 
 public abstract class XmlImportDelegate
-extends
-ImportDelegate<File, XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportDelegateFactory, XmlImportEngine> {
+	extends
+	ImportDelegate<File, XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportDelegateFactory, XmlImportEngine> {
+
+	protected final void dumpAttributes(List<AttributeT> list) {
+		for (String name : this.cmfObject.getAttributeNames()) {
+			final AttributeT attribute = new AttributeT();
+			final CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(name);
+
+			attribute.setName(name);
+			attribute.setDataType(DataTypeT.convert(att.getType()));
+			for (CmfValue v : att) {
+				attribute.getValue().add(v.asString());
+			}
+
+			list.add(attribute);
+		}
+	}
 
 	protected final CmfValue getAttributeValue(CmfEncodeableName attribute) {
 		return getAttributeValue(attribute.encode());
