@@ -20,7 +20,7 @@ public class CmfObject<V> {
 
 	private final CmfType type;
 
-	private final Long number;
+	private Long number = null;
 	private final String id;
 	private final String searchKey;
 	private final String batchId;
@@ -109,6 +109,12 @@ public class CmfObject<V> {
 		this.productName = productName;
 		this.productVersion = productVersion;
 		this.translator = translator;
+	}
+
+	final void setNumber(Long number) {
+		if (number == null) { throw new IllegalArgumentException("Must provide a number to set"); }
+		if (this.number != null) { throw new IllegalStateException("A number has already been set, can't change it"); }
+		this.number = number;
 	}
 
 	public final Long getNumber() {
