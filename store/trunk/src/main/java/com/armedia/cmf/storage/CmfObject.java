@@ -20,6 +20,7 @@ public class CmfObject<V> {
 
 	private final CmfType type;
 
+	private final Long number;
 	private final String id;
 	private final String searchKey;
 	private final String batchId;
@@ -39,6 +40,7 @@ public class CmfObject<V> {
 	 * @param pattern
 	 */
 	public CmfObject(CmfObject<V> pattern) {
+		this.number = pattern.number;
 		this.type = pattern.getType();
 		this.id = pattern.getId();
 		this.searchKey = pattern.getSearchKey();
@@ -66,6 +68,7 @@ public class CmfObject<V> {
 	 * @param altType
 	 */
 	CmfObject(CmfObject<V> pattern, String altSubType) {
+		this.number = pattern.number;
 		this.type = pattern.getType();
 		this.subtype = altSubType;
 		this.id = pattern.getId();
@@ -84,18 +87,19 @@ public class CmfObject<V> {
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String batchId, String label,
-		String subtype, String productName, String productVersion) {
-		this(translator, type, id, id, batchId, label, subtype, productName, productVersion);
+		String subtype, String productName, String productVersion, Long number) {
+		this(translator, type, id, id, batchId, label, subtype, productName, productVersion, number);
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String searchKey, String batchId,
-		String label, String subtype, String productName, String productVersion) {
+		String label, String subtype, String productName, String productVersion, Long number) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }
 		if (subtype == null) { throw new IllegalArgumentException("Must provide a valid object subtype"); }
 		if (productName == null) { throw new IllegalArgumentException("Must provide a valid product name"); }
 		if (productVersion == null) { throw new IllegalArgumentException("Must provide a valid product version"); }
+		this.number = number;
 		this.type = type;
 		this.id = id;
 		this.searchKey = Tools.coalesce(searchKey, id);
@@ -105,6 +109,10 @@ public class CmfObject<V> {
 		this.productName = productName;
 		this.productVersion = productVersion;
 		this.translator = translator;
+	}
+
+	public final Long getNumber() {
+		return this.number;
 	}
 
 	public final CmfType getType() {
@@ -230,7 +238,7 @@ public class CmfObject<V> {
 	public final CmfObject<CmfValue> getEncodedVersion() throws CmfValueEncoderException {
 		if (this.translator == null) { return null; }
 		CmfObject<CmfValue> encoded = new CmfObject<CmfValue>(null, this.type, this.id, this.searchKey, this.batchId,
-			this.label, this.subtype, this.productName, this.productVersion);
+			this.label, this.subtype, this.productName, this.productVersion, this.number);
 		for (CmfAttribute<V> att : this.attributes.values()) {
 			final CmfValueCodec<V> codec = this.translator.getCodec(att.getType());
 			CmfAttribute<CmfValue> newAtt = new CmfAttribute<CmfValue>(this.translator.encodeAttributeName(this.type,
