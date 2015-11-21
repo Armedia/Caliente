@@ -28,6 +28,7 @@ import com.armedia.cmf.engine.xml.common.XmlSessionFactory;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.AggregatorBase;
+import com.armedia.cmf.engine.xml.importer.jaxb.DocumentIndexEntryT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentIndexT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentVersionT;
@@ -81,7 +82,7 @@ public class XmlImportDelegateFactory extends
 			if (objectType != CmfType.DOCUMENT) { return; }
 			if (failed) { return; }
 			List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(batchId);
-			if (l == null) { return; }
+			if ((l == null) || l.isEmpty()) { return; }
 
 			DocumentT doc = new DocumentT();
 			doc.getVersion().addAll(l);
@@ -89,8 +90,55 @@ public class XmlImportDelegateFactory extends
 			if (XmlImportDelegateFactory.this.aggregateDocuments) {
 				DocumentsT.class.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT)).add(doc);
 			} else {
-				// Need to write out the document's XML to the history ID...but...how?!?
-				doc.hashCode();
+				// The content's location is in the first version
+				DocumentVersionT first = l.get(0);
+				File tgt = new File(first.getContentLocation());
+				File dir = tgt.getParentFile();
+				tgt = new File(dir, String.format("document-%s.xml", batchId));
+
+				final OutputStream out;
+				try {
+					out = new FileOutputStream(tgt);
+				} catch (FileNotFoundException e) {
+					this.log.error(String.format("Failed to open an output stream to [%s]", tgt), e);
+					return;
+				}
+
+				boolean ok = false;
+				String xml = null;
+				try {
+					xml = XmlTools.marshal(doc, XmlImportDelegateFactory.SCHEMA, true);
+					try {
+						IOUtils.write(xml, out);
+					} catch (IOException e) {
+						this.log.error(String.format("Failed to write out the XML to [%s]:%n%s", tgt, xml), e);
+						return;
+					}
+					ok = true;
+				} catch (JAXBException e) {
+					this.log.error(String.format("Failed to marshal the XML for document [%s](%s) to [%s]",
+						first.getSourcePath(), first.getId(), tgt), e);
+					return;
+				} finally {
+					IOUtils.closeQuietly(out);
+					if (!ok) {
+						FileUtils.deleteQuietly(tgt);
+					}
+				}
+
+				DocumentIndexT index = DocumentIndexT.class.cast(XmlImportDelegateFactory.this.xml
+					.get(CmfType.DOCUMENT));
+				for (DocumentVersionT v : l) {
+					DocumentIndexEntryT idx = new DocumentIndexEntryT();
+					idx.setId(v.getId());
+					idx.setLocation(relativizeXmlLocation(tgt.getAbsolutePath()));
+					idx.setName(v.getName());
+					idx.setPath(v.getSourcePath());
+					idx.setVersion(v.getVersion());
+					idx.setHistoryId(v.getHistoryId());
+					idx.setCurrent(v.isCurrent());
+					index.add(idx);
+				}
 			}
 		}
 	};
@@ -123,6 +171,12 @@ public class XmlImportDelegateFactory extends
 		xml.put(CmfType.FOLDER, (this.aggregateFolders ? new FoldersT() : new FolderIndexT()));
 		xml.put(CmfType.DOCUMENT, (this.aggregateDocuments ? new DocumentsT() : new DocumentIndexT()));
 		this.xml = xml;
+	}
+
+	String relativizeXmlLocation(String absolutePath) {
+		String base = String.format("%s/", this.content.getAbsolutePath().replace(File.separatorChar, '/'));
+		absolutePath = absolutePath.replace(File.separatorChar, '/');
+		return absolutePath.substring(base.length());
 	}
 
 	protected void storeDocumentVersion(DocumentVersionT v) throws ImportException {

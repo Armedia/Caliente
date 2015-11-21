@@ -31,6 +31,11 @@ public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDele
 	@Override
 	protected DocumentT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		return createItem(translator, ctx, false);
+	}
+
+	protected DocumentT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx,
+		boolean returnCreated) throws ImportException, CmfStorageException, CmfValueDecoderException {
 		DocumentVersionT v = new DocumentVersionT();
 		DatatypeFactory dtf;
 		try {
@@ -52,9 +57,12 @@ public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDele
 			v.setModificationDate(dtf.newXMLGregorianCalendar(gcal));
 			v.setModifier(getAttributeValue(IntermediateAttribute.LAST_MODIFIED_BY).asString());
 
-			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_ACCESS_DATE).asTime());
-			v.setLastAccessDate(dtf.newXMLGregorianCalendar(gcal));
-			v.setLastAccessor(getAttributeValue(IntermediateAttribute.LAST_ACCESSED_BY).asString());
+			CmfValue lad = getAttributeValue(IntermediateAttribute.LAST_ACCESS_DATE);
+			if (!lad.isNull()) {
+				gcal.setTime(lad.asTime());
+				v.setLastAccessDate(dtf.newXMLGregorianCalendar(gcal));
+				v.setLastAccessor(getAttributeValue(IntermediateAttribute.LAST_ACCESSED_BY).asString());
+			}
 		} catch (ParseException e) {
 			throw new CmfValueDecoderException("Failed to parse a date value", e);
 		}
@@ -73,8 +81,7 @@ public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDele
 			CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
 			File f = h.getFile();
-			// TODO: Relativize the path with relation to the content root
-			v.setContentLocation(f.getAbsolutePath());
+			v.setContentLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
 			v.setContentSize((int) info.getLength());
 			break;
 		}
@@ -83,6 +90,10 @@ public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDele
 
 		this.factory.storeDocumentVersion(v);
 
-		return null;
+		if (!returnCreated) { return null; }
+
+		DocumentT doc = new DocumentT();
+		doc.getVersion().add(v);
+		return doc;
 	}
 }
