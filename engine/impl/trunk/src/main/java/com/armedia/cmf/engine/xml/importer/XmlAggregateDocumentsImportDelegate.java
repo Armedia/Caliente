@@ -1,104 +1,88 @@
 package com.armedia.cmf.engine.xml.importer;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
+import java.text.ParseException;
+import java.util.GregorianCalendar;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+
+import com.armedia.cmf.engine.converter.IntermediateAttribute;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.engine.xml.importer.jaxb.DocumentT;
+import com.armedia.cmf.engine.xml.importer.jaxb.DocumentVersionT;
+import com.armedia.cmf.engine.xml.importer.jaxb.DocumentsT;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class XmlAggregateDocumentsImportDelegate extends XmlFSObjectImportDelegate {
+public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDelegate<DocumentT, DocumentsT> {
 
 	protected XmlAggregateDocumentsImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
-		super(factory, storedObject);
+		super(factory, storedObject, DocumentsT.class);
 	}
 
 	@Override
-	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+	protected DocumentT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
-
-		// TODO: Remove this
-		if (ctx != null) { return Collections.singleton(ImportOutcome.SKIPPED); }
-
-		File targetFile;
+		DocumentVersionT v = new DocumentVersionT();
+		DatatypeFactory dtf;
 		try {
-			targetFile = getTargetFile(ctx);
-		} catch (IOException e) {
-			throw new ImportException(String.format("Failed to calculate the target file for document [%s](%s)",
-				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			dtf = DatatypeFactory.newInstance();
+		} catch (DatatypeConfigurationException e) {
+			throw new ImportException(e);
 		}
+		GregorianCalendar gcal = new GregorianCalendar();
 
-		File parent = targetFile.getParentFile();
-		if (parent != null) {
-			parent.mkdirs();
-		}
+		v.setId(this.cmfObject.getId());
+		v.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
 
-		final boolean created;
 		try {
-			created = targetFile.createNewFile();
-		} catch (IOException e) {
-			throw new ImportException(String.format("Failed to create the new file [%s] for DOCUMENT [%s](%s)",
-				targetFile.getAbsolutePath(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			gcal.setTime(getAttributeValue(IntermediateAttribute.CREATION_DATE).asTime());
+			v.setCreationDate(dtf.newXMLGregorianCalendar(gcal));
+			v.setCreator(getAttributeValue(IntermediateAttribute.CREATED_BY).asString());
+
+			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_MODIFICATION_DATE).asTime());
+			v.setModificationDate(dtf.newXMLGregorianCalendar(gcal));
+			v.setModifier(getAttributeValue(IntermediateAttribute.LAST_MODIFIED_BY).asString());
+
+			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_ACCESS_DATE).asTime());
+			v.setLastAccessDate(dtf.newXMLGregorianCalendar(gcal));
+			v.setLastAccessor(getAttributeValue(IntermediateAttribute.LAST_ACCESSED_BY).asString());
+		} catch (ParseException e) {
+			throw new CmfValueDecoderException("Failed to parse a date value", e);
 		}
 
-		if (!created) {
-			if (!targetFile.isFile()) { throw new ImportException(String.format(
-				"Failed to create the file (and parents) at [%s] for document [%s](%s)", targetFile,
-				this.cmfObject.getLabel(), this.cmfObject.getId())); }
-			if (!targetFile.exists()) { throw new ImportException(String.format(
-				"A non-file object already exists at [%s] for document [%s](%s)", targetFile,
-				this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		v.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
+		v.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
+		v.setSourcePath(getAttributeValue(IntermediateAttribute.PATH).asString());
+		v.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 
-		}
+		v.setHistoryId(getAttributeValue(IntermediateAttribute.VERSION_SERIES_ID).asString());
+		v.setAntecedentId(getAttributeValue(IntermediateAttribute.VERSION_ANTECEDENT_ID).asString());
+		v.setCurrent(getAttributeValue(IntermediateAttribute.IS_LAST_VERSION).asBoolean());
+		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
 
-		// Copy the contents over...
-		/*
-		List<CmfContentInfo> contents;
-		try {
-			contents = ctx.getContentInfo(this.cmfObject);
-		} catch (Exception e) {
-			throw new ImportException(String.format(
-				"Failed to obtain the list of content streams for document [%s](%s)", this.cmfObject.getLabel(),
-				this.cmfObject.getId()), e);
-		}
-
-		if (!contents.isEmpty()) {
-			CmfContentInfo info = contents.get(0);
+		for (CmfContentInfo info : ctx.getContentInfo(this.cmfObject)) {
 			CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
-			File src = h.getFile();
-			if (src != null) {
-				try {
-					Files.copy(src.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-				} catch (IOException e) {
-					throw new ImportException(String.format(
-						"Failed to copy the contents from [%s] to [%s] for document [%s](%s)", src, targetFile,
-						this.cmfObject.getLabel(), this.cmfObject.getId()), e);
-				}
-			} else {
-				InputStream in = null;
-				try {
-					in = h.openInput();
-					Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-				} catch (IOException e) {
-					throw new ImportException(String.format(
-						"Failed to copy the default content object into [%s] for document [%s](%s)", targetFile,
-						this.cmfObject.getLabel(), this.cmfObject.getId()), e);
-				} finally {
-					IOUtils.closeQuietly(in);
-				}
-			}
+			File f = h.getFile();
+			// TODO: Relativize the path with relation to the content root
+			v.setContentLocation(f.getAbsolutePath());
+			v.setContentSize((int) info.getLength());
+			break;
 		}
-		 */
-		return Collections.singleton(new ImportOutcome(created ? ImportResult.CREATED : ImportResult.UPDATED,
-			getNewId(targetFile), targetFile.getAbsolutePath()));
+
+		dumpAttributes(v.getAttributes());
+
+		DocumentT ret = new DocumentT();
+		ret.getVersion().add(v);
+		return ret;
 	}
 }

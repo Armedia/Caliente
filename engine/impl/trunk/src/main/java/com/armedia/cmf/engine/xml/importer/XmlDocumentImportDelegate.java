@@ -37,7 +37,7 @@ public class XmlDocumentImportDelegate extends XmlAggregatedImportDelegate<Docum
 	protected DocumentIndexEntryT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
-		DocumentT d = new DocumentT(); // this.delegate.createItem(translator, ctx);
+		DocumentT d = this.delegate.createItem(translator, ctx);
 		CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
 		if (!h.getSourceStore().isSupportsFileAccess()) { return null; }
 		File tgt = h.getFile();
@@ -50,6 +50,8 @@ public class XmlDocumentImportDelegate extends XmlAggregatedImportDelegate<Docum
 					String.format("Failed to create the document at [%s]", dir.getAbsolutePath()), e);
 			}
 		}
+
+		tgt = new File(dir, String.format("doc-%s.xml", tgt.getName()));
 
 		final OutputStream out;
 		try {
