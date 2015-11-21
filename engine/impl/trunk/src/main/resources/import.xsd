@@ -235,8 +235,6 @@
 			<xsd:element name="creator" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="modificationDate" type="xsd:dateTime" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="modifier" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="lastAccessDate" type="xsd:dateTime" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="lastAccessor" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="acl" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="attributes" minOccurs="0" maxOccurs="1">
 				<xsd:complexType>
@@ -285,6 +283,8 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:sysObject.t">
 				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="lastAccessDate" type="xsd:dateTime" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="lastAccessor" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />

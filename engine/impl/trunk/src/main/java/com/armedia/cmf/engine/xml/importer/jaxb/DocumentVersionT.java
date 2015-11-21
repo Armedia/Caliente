@@ -5,13 +5,23 @@ import java.util.Arrays;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "documentVersion.t", propOrder = {
-	"historyId", "version", "current", "antecedentId", "contentSize", "contentHash", "contentLocation"
+	"lastAccessDate", "lastAccessor", "historyId", "version", "current", "antecedentId", "contentSize", "contentHash",
+	"contentLocation"
 })
 public class DocumentVersionT extends SysObjectT {
+
+	@XmlElement(name = "lastAccessDate", required = true)
+	@XmlSchemaType(name = "dateTime")
+	protected XMLGregorianCalendar lastAccessDate;
+
+	@XmlElement(name = "lastAccessor", required = true)
+	protected String lastAccessor;
 
 	@XmlElement(name = "historyId", required = true)
 	protected String historyId;
@@ -33,6 +43,22 @@ public class DocumentVersionT extends SysObjectT {
 
 	@XmlElement(name = "contentLocation", required = true)
 	protected String contentLocation;
+
+	public XMLGregorianCalendar getLastAccessDate() {
+		return this.lastAccessDate;
+	}
+
+	public void setLastAccessDate(XMLGregorianCalendar value) {
+		this.lastAccessDate = value;
+	}
+
+	public String getLastAccessor() {
+		return this.lastAccessor;
+	}
+
+	public void setLastAccessor(String value) {
+		this.lastAccessor = value;
+	}
 
 	public String getHistoryId() {
 		return this.historyId;

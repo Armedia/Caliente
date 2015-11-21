@@ -12,8 +12,6 @@
 	<creator>creator</creator>
 	<modificationDate>2001-12-31T12:00:00</modificationDate>
 	<modifier>modifier</modifier>
-	<lastAccessDate>2001-12-31T12:00:00</lastAccessDate>
-	<lastAccessor>lastAccessor</lastAccessor>
 	<acl>acl</acl>
 	<attributes>
 		<attribute dataType="BOOLEAN" name="xxx">
