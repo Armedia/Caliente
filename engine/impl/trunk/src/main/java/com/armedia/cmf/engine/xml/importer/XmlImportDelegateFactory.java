@@ -47,7 +47,7 @@ import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.XmlTools;
 
 public class XmlImportDelegateFactory extends
-ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
+	ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	static final String SCHEMA = "import.xsd";
 
@@ -169,8 +169,8 @@ ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xm
 					IOUtils.write(xml, out);
 				} catch (IOException e) {
 					this.log
-						.error(String.format("Failed to write the generated XML for type %s at [%s]:%n%s", cmfType, f,
-							xml), e);
+					.error(String.format("Failed to write the generated XML for type %s at [%s]:%n%s", cmfType, f,
+						xml), e);
 					return;
 				}
 				ok = true;
@@ -262,7 +262,7 @@ ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xm
 	}
 
 	protected File calculateConsolidatedFile(CmfType t) {
-		return new File(this.db, String.format("all-%s.xml", t.name().toLowerCase()));
+		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
 	}
 
 	@Override
