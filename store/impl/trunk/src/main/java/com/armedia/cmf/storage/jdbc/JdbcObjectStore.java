@@ -989,13 +989,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		if (rs.wasNull()) {
 			searchKey = id;
 		}
+		Long number = rs.getLong("object_number");
+		if (rs.wasNull()) {
+			number = null;
+		}
 		String batchId = rs.getString("batch_id");
 		String label = rs.getString("object_label");
 		String subtype = rs.getString("object_subtype");
 		String productName = rs.getString("product_name");
 		String productVersion = rs.getString("product_version");
 
-		return new CmfObject<V>(translator, type, id, searchKey, batchId, label, subtype, productName, productVersion);
+		return new CmfObject<V>(translator, type, id, searchKey, batchId, label, subtype, productName, productVersion,
+			number);
 	}
 
 	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
