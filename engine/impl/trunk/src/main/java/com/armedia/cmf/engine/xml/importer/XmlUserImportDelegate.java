@@ -25,7 +25,7 @@ public class XmlUserImportDelegate extends XmlAggregatedImportDelegate<UserT, Us
 		user.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
 		user.setLoginDomain(getAttributeValue(IntermediateAttribute.LOGIN_REALM).asString());
 		user.setLoginName(getAttributeValue(IntermediateAttribute.LOGIN_NAME).asString());
-		user.setOsDomain(getAttributeValue(IntermediateAttribute.OS_NAME).asString());
+		user.setOsDomain(getAttributeValue(IntermediateAttribute.OS_REALM).asString());
 		user.setOsName(getAttributeValue(IntermediateAttribute.OS_NAME).asString());
 		user.setDescription(getAttributeValue(IntermediateAttribute.DESCRIPTION).asString());
 		user.setEmail(getAttributeValue(IntermediateAttribute.EMAIL).asString());
