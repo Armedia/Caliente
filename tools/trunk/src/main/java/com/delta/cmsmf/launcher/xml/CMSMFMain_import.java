@@ -31,8 +31,8 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 	@Override
 	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
 		settings.put(XmlSessionFactory.ROOT, this.targetDir.getAbsolutePath());
-		settings.put(XmlSessionFactory.DB, Setting.DB_DIRECTORY);
-		settings.put(XmlSessionFactory.CONTENT, Setting.CONTENT_DIRECTORY);
+		settings.put(XmlSessionFactory.DB, Setting.DB_DIRECTORY.getString());
+		settings.put(XmlSessionFactory.CONTENT, Setting.CONTENT_DIRECTORY.getString());
 		super.customizeSettings(settings);
 	}
 }
