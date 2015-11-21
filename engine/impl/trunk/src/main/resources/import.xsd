@@ -97,7 +97,7 @@
 	<xsd:complexType name="attributeDef.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:attributeBase.t">
-				<xsd:attribute name="length" type="tns:positiveInt.t" use="optional" />
+				<xsd:attribute name="length" type="tns:nonNegativeInt.t" use="optional" />
 				<xsd:attribute name="repeating" type="xsd:boolean" use="optional" />
 			</xsd:extension>
 		</xsd:complexContent>
