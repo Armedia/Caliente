@@ -57,9 +57,6 @@ public class XmlDocumentImportDelegate extends XmlFSObjectImportDelegate {
 				"A non-file object already exists at [%s] for document [%s](%s)", targetFile,
 				this.cmfObject.getLabel(), this.cmfObject.getId())); }
 
-			if (this.factory.isFailOnCollisions()) { throw new ImportException(String.format(
-				"A file already exists at [%s] for document [%s](%s)", targetFile, this.cmfObject.getLabel(),
-				this.cmfObject.getId())); }
 		}
 
 		// Copy the contents over...

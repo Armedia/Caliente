@@ -12,6 +12,8 @@ import com.armedia.commons.utilities.CfgTools;
 
 public class XmlSessionFactory extends SessionFactory<XmlRoot> {
 	public static final String ROOT = "root";
+	public static final String DB = "db";
+	public static final String CONTENT = "content";
 
 	private final XmlRoot root;
 

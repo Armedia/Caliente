@@ -3,7 +3,6 @@ package com.armedia.cmf.engine.xml.importer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.apache.commons.lang3.SystemUtils;
 
@@ -35,21 +34,6 @@ public abstract class XmlFSObjectImportDelegate extends XmlImportDelegate {
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		XmlImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
-
-		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION);
-		if ((att != null) && att.hasValues()) {
-			CmfValue v = att.getValue();
-			if (!v.isNull() && !v.asBoolean() && !this.factory.isIncludeAllVersions()) {
-				// If this isn't the last version, we bork out if we're configured to only deal
-				// with the last version
-				if (this.log.isDebugEnabled()) {
-					this.log.warn(String.format("Skipping non-final version for %s [%s](%s)", this.cmfObject.getType(),
-						this.cmfObject.getLabel(), this.cmfObject.getId()));
-				}
-				return Collections.singleton(ImportOutcome.SKIPPED);
-			}
-		}
-
 		return doImportObject(translator, ctx);
 	}
 

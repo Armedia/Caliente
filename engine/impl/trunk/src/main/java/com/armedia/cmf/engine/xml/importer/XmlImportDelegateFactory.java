@@ -14,7 +14,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
-import com.armedia.cmf.engine.xml.common.Setting;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
@@ -36,15 +35,10 @@ public class XmlImportDelegateFactory extends
 
 	private static final String SCHEMA = "import.xsd";
 
-	private final boolean includeAllVersions;
-	private final boolean failOnCollisions;
-
 	private final Map<CmfType, AggregatorBase<?>> xml;
 
 	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
-		this.includeAllVersions = configuration.getBoolean(Setting.INCLUDE_ALL_VERSIONS);
-		this.failOnCollisions = configuration.getBoolean(Setting.FAIL_ON_COLLISIONS);
 		Map<CmfType, AggregatorBase<?>> xml = new EnumMap<CmfType, AggregatorBase<?>>(CmfType.class);
 		xml.put(CmfType.TYPE, new TypesT());
 		xml.put(CmfType.USER, new UsersT());
@@ -53,14 +47,6 @@ public class XmlImportDelegateFactory extends
 		xml.put(CmfType.FOLDER, new FoldersT());
 		xml.put(CmfType.DOCUMENT, new DocumentsT());
 		this.xml = Tools.freezeCopy(xml);
-	}
-
-	public final boolean isIncludeAllVersions() {
-		return this.includeAllVersions;
-	}
-
-	public final boolean isFailOnCollisions() {
-		return this.failOnCollisions;
 	}
 
 	protected <T> T getXmlObject(CmfType t, Class<T> klazz) {
