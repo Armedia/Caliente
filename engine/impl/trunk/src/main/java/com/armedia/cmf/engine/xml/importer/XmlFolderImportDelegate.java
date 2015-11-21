@@ -44,10 +44,6 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderT
 			f.setCreationDate(dtf.newXMLGregorianCalendar(gcal));
 			f.setCreator(getAttributeValue(IntermediateAttribute.CREATED_BY).asString());
 
-			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_ACCESS_DATE).asTime());
-			f.setLastAccessDate(dtf.newXMLGregorianCalendar(gcal));
-			f.setLastAccessor(getAttributeValue(IntermediateAttribute.LAST_ACCESSED_BY).asString());
-
 			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_MODIFICATION_DATE).asTime());
 			f.setModificationDate(dtf.newXMLGregorianCalendar(gcal));
 			f.setModifier(getAttributeValue(IntermediateAttribute.LAST_MODIFIED_BY).asString());

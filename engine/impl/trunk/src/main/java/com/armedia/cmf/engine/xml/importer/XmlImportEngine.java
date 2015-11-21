@@ -16,8 +16,8 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class XmlImportEngine
-	extends
-	ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory> {
+extends
+ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -133,13 +133,99 @@ public class XmlImportEngine
 		}
 	};
 
+	private static final ImportStrategy GROUP_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return false;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchingSupported() {
+			return true;
+		}
+	};
+
+	private static final ImportStrategy AGGREGATE_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return true;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchingSupported() {
+			return true;
+		}
+	};
+
 	@Override
 	protected ImportStrategy getImportStrategy(CmfType type) {
 		switch (type) {
 			case DOCUMENT:
 				return XmlImportEngine.DOCUMENT_STRATEGY;
+
 			case FOLDER:
 				return XmlImportEngine.FOLDER_STRATEGY;
+
+			case USER:
+			case TYPE:
+			case ACL:
+				return XmlImportEngine.AGGREGATE_STRATEGY;
+
+			case GROUP:
+				return XmlImportEngine.GROUP_STRATEGY;
+
 			default:
 				return XmlImportEngine.IGNORE_STRATEGY;
 		}

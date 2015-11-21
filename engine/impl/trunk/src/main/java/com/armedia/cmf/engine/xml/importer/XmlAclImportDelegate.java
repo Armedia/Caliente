@@ -48,7 +48,7 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 		CmfAttribute<CmfValue> accessorPermit = this.cmfObject.getAttribute("dctm:r_accessor_permit");
 		CmfAttribute<CmfValue> accessorXpermit = this.cmfObject.getAttribute("dctm:r_accessor_xpermit");
 		CmfAttribute<CmfValue> permitType = this.cmfObject.getAttribute("dctm:r_permit_type");
-		CmfAttribute<CmfValue> isGroup = this.cmfObject.getAttribute("dcmt:r_is_group");
+		CmfAttribute<CmfValue> isGroup = this.cmfObject.getAttribute("dctm:r_is_group");
 
 		final int entries = accessorName.getValueCount();
 		StringBuilder str = new StringBuilder();

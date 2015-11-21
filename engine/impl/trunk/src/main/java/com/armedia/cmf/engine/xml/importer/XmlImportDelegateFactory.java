@@ -32,7 +32,7 @@ import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
 public class XmlImportDelegateFactory extends
-ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
+	ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	private static final String SCHEMA = "import.xsd";
 
@@ -88,7 +88,7 @@ ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xm
 	}
 
 	protected File calculateConsolidatedFile(CmfType t) {
-		return null;
+		return new File("/dev/null");
 	}
 
 	@Override
