@@ -138,10 +138,10 @@ public class DctmAttributes {
 	/** The user_login_name attribute of dm_user. */
 	public static final String USER_LOGIN_NAME = "user_login_name";
 
-	/** The os_domain attribute of dm_user. */
+	/** The user_os_domain attribute of dm_user. */
 	public static final String USER_OS_DOMAIN = "user_os_domain";
 
-	/** The os_name attribute of dm_user. */
+	/** The user_os_name attribute of dm_user. */
 	public static final String USER_OS_NAME = "user_os_name";
 
 	/** The email attribute of dm_user. */
