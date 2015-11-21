@@ -15,6 +15,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
+import com.armedia.cmf.engine.xml.common.XmlSessionFactory;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.AggregatorBase;
@@ -36,9 +37,26 @@ public class XmlImportDelegateFactory extends
 	private static final String SCHEMA = "import.xsd";
 
 	private final Map<CmfType, AggregatorBase<?>> xml;
+	private final File db;
+	private final File content;
 
 	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
+		String db = configuration.getString(XmlSessionFactory.DB);
+		if (db != null) {
+			this.db = new File(db).getCanonicalFile();
+		} else {
+			this.db = new File("cmsmf-xml").getCanonicalFile();
+		}
+		FileUtils.forceMkdir(this.db);
+		String content = configuration.getString(XmlSessionFactory.CONTENT);
+		if (content != null) {
+			this.content = new File(content).getCanonicalFile();
+		} else {
+			this.content = new File(db, "content").getCanonicalFile();
+		}
+		FileUtils.forceMkdir(this.content);
+
 		Map<CmfType, AggregatorBase<?>> xml = new EnumMap<CmfType, AggregatorBase<?>>(CmfType.class);
 		xml.put(CmfType.TYPE, new TypesT());
 		xml.put(CmfType.USER, new UsersT());
@@ -74,7 +92,7 @@ public class XmlImportDelegateFactory extends
 	}
 
 	protected File calculateConsolidatedFile(CmfType t) {
-		return new File("/dev/null");
+		return new File(this.db, String.format("all-%s.xml", t.name().toLowerCase()));
 	}
 
 	@Override
@@ -103,6 +121,7 @@ public class XmlImportDelegateFactory extends
 					IOUtils.write(xml, out);
 				} catch (IOException e) {
 					// TODO: Dump out the generated XML to the log
+					e.hashCode();
 				}
 				ok = true;
 			} catch (JAXBException e) {
