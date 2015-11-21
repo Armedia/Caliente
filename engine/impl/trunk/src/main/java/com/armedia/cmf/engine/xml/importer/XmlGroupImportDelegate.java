@@ -28,6 +28,14 @@ public class XmlGroupImportDelegate extends XmlAggregatedImportDelegate<GroupT, 
 		group.setEmail(getAttributeValue(IntermediateAttribute.EMAIL).asString());
 		group.setType(getAttributeValue(IntermediateAttribute.GROUP_TYPE).asString());
 
+		for (CmfValue v : getAttributeValues("dctm:users_names")) {
+			group.addUser(v.asString());
+		}
+
+		for (CmfValue v : getAttributeValues("dctm:groups_names")) {
+			group.addGroup(v.asString());
+		}
+
 		return group;
 	}
 }
