@@ -15,6 +15,12 @@ public class AttributeDefT extends AttributeBaseT {
 	@XmlAttribute(name = "repeating", required = false)
 	protected boolean repeating = false;
 
+	@XmlAttribute(name = "inherited", required = true)
+	protected boolean inherited = false;
+
+	@XmlAttribute(name = "sourceName", required = true)
+	protected String sourceName;
+
 	public int getLength() {
 		return this.length;
 	}
@@ -31,9 +37,26 @@ public class AttributeDefT extends AttributeBaseT {
 		this.repeating = value;
 	}
 
+	public boolean isInherited() {
+		return this.inherited;
+	}
+
+	public void setInherited(boolean inherited) {
+		this.inherited = inherited;
+	}
+
+	public String getSourceName() {
+		return this.sourceName;
+	}
+
+	public void setSourceName(String sourceName) {
+		this.sourceName = sourceName;
+	}
+
 	@Override
 	public String toString() {
-		return String.format("AttributeDefT [name=%s, dataType=%s, length=%s, repeating=%s]", this.name, this.dataType,
-			this.length, this.repeating);
+		return String.format(
+			"AttributeDefT [name=%s, dataType=%s, length=%s, repeating=%s, inherited=%s, sourceName=%s]", this.name,
+			this.dataType, this.length, this.repeating, this.inherited);
 	}
 }

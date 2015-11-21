@@ -7,7 +7,7 @@
 		<name>name</name>
 		<superType>superType</superType>
 		<attributes>
-			<attribute dataType="BOOLEAN" length="1" name="xxx" repeating="false" />
+			<attribute dataType="BOOLEAN" length="1" name="xxx" repeating="false" inherited="true" sourceName="" />
 		</attributes>
 	</type>
 </types>

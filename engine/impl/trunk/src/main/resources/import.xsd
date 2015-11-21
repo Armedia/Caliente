@@ -99,6 +99,8 @@
 			<xsd:extension base="tns:attributeBase.t">
 				<xsd:attribute name="length" type="tns:nonNegativeInt.t" use="optional" />
 				<xsd:attribute name="repeating" type="xsd:boolean" use="optional" />
+				<xsd:attribute name="inherited" type="xsd:boolean" use="required" />
+				<xsd:attribute name="sourceName" type="tns:propertyName.t" use="optional" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>

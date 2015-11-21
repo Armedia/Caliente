@@ -1,8 +1,12 @@
 package com.armedia.cmf.engine.xml.importer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.xml.importer.jaxb.AttributeDefT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DataTypeT;
@@ -11,9 +15,11 @@ import com.armedia.cmf.engine.xml.importer.jaxb.TypesT;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
+import com.armedia.commons.utilities.Tools;
 
 public class XmlTypeImportDelegate extends XmlAggregatedImportDelegate<TypeT, TypesT> {
 
@@ -43,9 +49,24 @@ public class XmlTypeImportDelegate extends XmlAggregatedImportDelegate<TypeT, Ty
 		CmfAttribute<CmfValue> attRep = this.cmfObject.getAttribute("dctm:attr_repeating");
 		CmfAttribute<CmfValue> attLen = this.cmfObject.getAttribute("dctm:attr_length");
 
-		for (int i = startPosition; i < attrCount; ++i) {
+		CmfProperty<CmfValue> origName = this.cmfObject.getProperty(IntermediateProperty.ORIG_ATTR_NAME);
+		CmfProperty<CmfValue> mappedName = this.cmfObject.getProperty(IntermediateProperty.MAPPED_ATTR_NAME);
+
+		Map<String, String> mapping = new HashMap<String, String>();
+		// If the mappings are in order, use them...
+		if ((origName != null) && (mappedName != null) && (origName.getValueCount() == mappedName.getValueCount())) {
+			for (int i = 0; i < origName.getValueCount(); i++) {
+				mapping.put(origName.getValue(i).asString(), mappedName.getValue(i).asString());
+			}
+		}
+
+		for (int i = 0; i < attrCount; ++i) {
+			boolean inherited = (i < startPosition);
 			AttributeDefT def = new AttributeDefT();
-			def.setName(attName.getValue(i).asString());
+			final String srcName = attName.getValue(i).asString();
+			final String tgtName = Tools.coalesce(mapping.get(srcName), srcName);
+			def.setName(tgtName);
+			def.setSourceName(srcName);
 			DataTypeT dt = null;
 			// We convert from the documentum values, because we can't do it more cleanly
 			switch (attType.getValue(i).asInteger()) {
@@ -70,6 +91,7 @@ public class XmlTypeImportDelegate extends XmlAggregatedImportDelegate<TypeT, Ty
 
 			}
 			def.setDataType(dt);
+			def.setInherited(inherited);
 			def.setRepeating(attRep.getValue(i).asBoolean());
 			int len = attLen.getValue(i).asInteger();
 			if (len > 0) {
