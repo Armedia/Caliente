@@ -35,6 +35,8 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	PATCH_ANTECEDENT(CmfDataType.STRING),
 	USERS_WITH_DEFAULT_FOLDER(CmfDataType.STRING),
 	USERS_DEFAULT_FOLDER_PATHS(CmfDataType.STRING),
+	ORIG_ATTR_NAME(CmfDataType.STRING),
+	MAPPED_ATTR_NAME(CmfDataType.STRING),
 	//
 	;
 
