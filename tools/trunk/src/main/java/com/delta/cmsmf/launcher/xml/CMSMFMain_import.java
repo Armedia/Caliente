@@ -3,9 +3,10 @@ package com.delta.cmsmf.launcher.xml;
 import java.io.File;
 import java.util.Map;
 
-import com.armedia.cmf.engine.local.common.LocalSessionFactory;
+import com.armedia.cmf.engine.xml.common.XmlSessionFactory;
 import com.armedia.cmf.engine.xml.importer.XmlImportEngine;
 import com.delta.cmsmf.cfg.CLIParam;
+import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_import;
 
@@ -29,13 +30,9 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 
 	@Override
 	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
-		settings.put(LocalSessionFactory.ROOT, this.targetDir.getAbsolutePath());
-		// TODO: Enable these, but get them from a system-wide configuration
-		/*
-		settings.put(Setting.COPY_CONTENT.getLabel(), false);
-		settings.put(Setting.INCLUDE_ALL_VERSIONS.getLabel(), false);
-		settings.put(Setting.FAIL_ON_COLLISIONS.getLabel(), false);
-		 */
+		settings.put(XmlSessionFactory.ROOT, this.targetDir.getAbsolutePath());
+		settings.put(XmlSessionFactory.DB, Setting.DB_DIRECTORY);
+		settings.put(XmlSessionFactory.CONTENT, Setting.CONTENT_DIRECTORY);
 		super.customizeSettings(settings);
 	}
 }
