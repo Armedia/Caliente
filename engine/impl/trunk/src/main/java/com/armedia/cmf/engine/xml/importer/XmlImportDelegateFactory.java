@@ -121,6 +121,7 @@ public class XmlImportDelegateFactory extends
 				ok = true;
 			} catch (JAXBException e) {
 				// TODO: Log this error
+				this.log.error(String.format("Failed to generate the XML for %s", t), e);
 			} finally {
 				IOUtils.closeQuietly(out);
 				if (!ok) {
