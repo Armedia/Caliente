@@ -6,7 +6,16 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collection;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
+import com.armedia.cmf.engine.documentum.DctmAttributes;
+import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DfValueFactory;
+import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
+import com.armedia.cmf.engine.exporter.ExportException;
+import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
@@ -50,6 +59,40 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	private int calculateDepth(IDfSession session, IDfType type) throws DfException {
 		if (type == null) { return -1; }
 		return calculateDepth(session, type.getSuperType()) + 1;
+	}
+
+	@Override
+	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, IDfType object)
+		throws DfException, ExportException {
+		String typeName = object.getString(DctmAttributes.NAME);
+		IDfType dfType = object.getSession().getType(typeName);
+		// If there's no dfType, then we clearly have an issue
+		if (dfType == null) { throw new ExportException(String.format(
+			"Could not locate the type object for [%s] even though its definition is being exported", typeName)); }
+		DctmObjectType type;
+		try {
+			type = DctmObjectType.decodeType(dfType);
+		} catch (UnsupportedDctmObjectTypeException e) {
+			// if this isn't a type we support (because it's a supertype that doesn't map to
+			// a concrete type), then we simply skip adding the "target" marker property
+			return;
+		}
+
+		final int attCount = object.getValueCount(DctmAttributes.ATTR_NAME);
+		// We map the name for every attribute, just to be safe
+		final CmfAttributeTranslator<IDfValue> translator = this.factory.getTranslator();
+		CmfProperty<IDfValue> orig = new CmfProperty<IDfValue>(IntermediateProperty.ORIG_ATTR_NAME, CmfDataType.STRING);
+		CmfProperty<IDfValue> mapped = new CmfProperty<IDfValue>(IntermediateProperty.MAPPED_ATTR_NAME,
+			CmfDataType.STRING);
+		for (int i = 0; i < attCount; i++) {
+			IDfValue o = object.getRepeatingValue(DctmAttributes.ATTR_NAME, i);
+			IDfValue m = DfValueFactory.newStringValue(translator.encodeAttributeName(type.getStoredObjectType(),
+				o.asString()));
+			orig.addValue(o);
+			mapped.addValue(m);
+		}
+		properties.add(orig);
+		properties.add(mapped);
 	}
 
 	@Override
