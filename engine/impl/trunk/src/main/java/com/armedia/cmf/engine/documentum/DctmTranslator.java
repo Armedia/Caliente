@@ -80,6 +80,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
+		am.put(DctmAttributes.R_OBJECT_TYPE, IntermediateAttribute.OBJECT_TYPE_ID);
 		// BASE_TYPE_ID (FOLDER)
 		// OBJECT_TYPE_ID (DM_FOLDER|DM_CABINET|...)
 		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
@@ -102,6 +103,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
+		am.put(DctmAttributes.R_OBJECT_TYPE, IntermediateAttribute.OBJECT_TYPE_ID);
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (DM_DOCUMENT|...)
 		am.put(DctmAttributes.OBJECT_NAME, IntermediateAttribute.NAME);
