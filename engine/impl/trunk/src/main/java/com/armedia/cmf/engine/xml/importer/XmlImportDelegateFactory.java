@@ -47,7 +47,7 @@ import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.XmlTools;
 
 public class XmlImportDelegateFactory extends
-	ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
+ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	static final String SCHEMA = "import.xsd";
 
@@ -262,11 +262,7 @@ public class XmlImportDelegateFactory extends
 					return new XmlFolderImportDelegate(this, storedObject);
 				}
 			case DOCUMENT:
-				if (this.aggregateDocuments) {
-					return new XmlAggregateDocumentsImportDelegate(this, storedObject);
-				} else {
-					return new XmlDocumentImportDelegate(this, storedObject);
-				}
+				return new XmlAggregateDocumentsImportDelegate(this, storedObject);
 			default:
 				return null;
 		}

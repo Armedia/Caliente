@@ -2,6 +2,8 @@ package com.armedia.cmf.engine.xml.importer;
 
 import java.io.File;
 import java.text.ParseException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -12,9 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.xml.importer.jaxb.DocumentT;
+import com.armedia.cmf.engine.importer.ImportOutcome;
+import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentVersionT;
-import com.armedia.cmf.engine.xml.importer.jaxb.DocumentsT;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
@@ -23,21 +25,15 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDelegate<DocumentT, DocumentsT> {
+public class XmlAggregateDocumentsImportDelegate extends XmlImportDelegate {
 
 	protected XmlAggregateDocumentsImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
-		super(factory, storedObject, DocumentsT.class);
+		super(factory, storedObject);
 	}
 
-	@Override
-	protected DocumentT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+	protected DocumentVersionT createVersion(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
-		return createItem(translator, ctx, false);
-	}
-
-	protected DocumentT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx,
-		boolean returnCreated) throws ImportException, CmfStorageException, CmfValueDecoderException {
 		DocumentVersionT v = new DocumentVersionT();
 		DatatypeFactory dtf;
 		try {
@@ -96,10 +92,17 @@ public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDele
 
 		this.factory.storeDocumentVersion(v);
 
-		if (!returnCreated) { return null; }
+		return v;
+	}
 
-		DocumentT doc = new DocumentT();
-		doc.getVersion().add(v);
-		return doc;
+	@Override
+	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		ImportOutcome outcome = ImportOutcome.SKIPPED;
+		DocumentVersionT v = createVersion(translator, ctx);
+		if (v != null) {
+			outcome = new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), this.cmfObject.getLabel());
+		}
+		return Collections.singleton(outcome);
 	}
 }
