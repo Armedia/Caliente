@@ -25,9 +25,9 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class XmlAggregateDocumentsImportDelegate extends XmlImportDelegate {
+public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
-	protected XmlAggregateDocumentsImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
+	protected XmlDocumentImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(factory, storedObject);
 	}

@@ -262,7 +262,7 @@ ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xm
 					return new XmlFolderImportDelegate(this, storedObject);
 				}
 			case DOCUMENT:
-				return new XmlAggregateDocumentsImportDelegate(this, storedObject);
+				return new XmlDocumentImportDelegate(this, storedObject);
 			default:
 				return null;
 		}
