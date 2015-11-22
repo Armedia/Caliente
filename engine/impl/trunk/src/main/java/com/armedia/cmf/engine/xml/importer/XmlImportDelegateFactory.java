@@ -85,61 +85,68 @@ public class XmlImportDelegateFactory extends
 			List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(batchId);
 			if ((l == null) || l.isEmpty()) { return; }
 
-			DocumentT doc = new DocumentT();
-			doc.getVersion().addAll(l);
+			try {
+				DocumentT doc = new DocumentT();
+				doc.getVersion().addAll(l);
 
-			if (XmlImportDelegateFactory.this.aggregateDocuments) {
-				DocumentsT.class.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT)).add(doc);
-			} else {
-				// The content's location is in the first version
-				DocumentVersionT first = l.get(0);
-				File tgt = new File(XmlImportDelegateFactory.this.content, first.getContentLocation());
-				File dir = tgt.getParentFile();
-				tgt = new File(dir, String.format("%s-document.xml", batchId));
+				if (XmlImportDelegateFactory.this.aggregateDocuments) {
+					DocumentsT.class.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT)).add(doc);
+				} else {
+					// The content's location is in the first version
+					DocumentVersionT first = l.get(0);
+					File tgt = new File(XmlImportDelegateFactory.this.content, first.getContentLocation());
+					File dir = tgt.getParentFile();
+					tgt = new File(dir, String.format("%s-document.xml", batchId));
 
-				final OutputStream out;
-				try {
-					out = new FileOutputStream(tgt);
-				} catch (FileNotFoundException e) {
-					this.log.error(String.format("Failed to open an output stream to [%s]", tgt), e);
-					return;
-				}
-
-				boolean ok = false;
-				String xml = null;
-				try {
-					xml = XmlTools.marshal(doc, XmlImportDelegateFactory.SCHEMA, true);
+					final OutputStream out;
 					try {
-						IOUtils.write(xml, out);
-					} catch (IOException e) {
-						this.log.error(String.format("Failed to write out the XML to [%s]:%n%s", tgt, xml), e);
+						out = new FileOutputStream(tgt);
+					} catch (FileNotFoundException e) {
+						this.log.error(String.format("Failed to open an output stream to [%s]", tgt), e);
 						return;
 					}
-					ok = true;
-				} catch (JAXBException e) {
-					this.log.error(String.format("Failed to marshal the XML for document [%s](%s) to [%s]",
-						first.getSourcePath(), first.getId(), tgt), e);
-					return;
-				} finally {
-					IOUtils.closeQuietly(out);
-					if (!ok) {
-						FileUtils.deleteQuietly(tgt);
+
+					boolean ok = false;
+					String xml = null;
+					try {
+						xml = XmlTools.marshal(doc, XmlImportDelegateFactory.SCHEMA, true);
+						try {
+							IOUtils.write(xml, out);
+						} catch (IOException e) {
+							this.log.error(String.format("Failed to write out the XML to [%s]:%n%s", tgt, xml), e);
+							return;
+						}
+						ok = true;
+					} catch (JAXBException e) {
+						this.log.error(
+							String.format("Failed to marshal the XML for document [%s](%s) to [%s]",
+								first.getSourcePath(), first.getId(), tgt), e);
+						return;
+					} finally {
+						IOUtils.closeQuietly(out);
+						if (!ok) {
+							FileUtils.deleteQuietly(tgt);
+						}
+					}
+
+					DocumentIndexT index = DocumentIndexT.class.cast(XmlImportDelegateFactory.this.xml
+						.get(CmfType.DOCUMENT));
+					for (DocumentVersionT v : l) {
+						DocumentIndexEntryT idx = new DocumentIndexEntryT();
+						idx.setId(v.getId());
+						idx.setLocation(relativizeXmlLocation(tgt.getAbsolutePath()));
+						idx.setName(v.getName());
+						idx.setPath(v.getSourcePath());
+						idx.setVersion(v.getVersion());
+						idx.setHistoryId(v.getHistoryId());
+						idx.setCurrent(v.isCurrent());
+						index.add(idx);
 					}
 				}
-
-				DocumentIndexT index = DocumentIndexT.class.cast(XmlImportDelegateFactory.this.xml
-					.get(CmfType.DOCUMENT));
-				for (DocumentVersionT v : l) {
-					DocumentIndexEntryT idx = new DocumentIndexEntryT();
-					idx.setId(v.getId());
-					idx.setLocation(relativizeXmlLocation(tgt.getAbsolutePath()));
-					idx.setName(v.getName());
-					idx.setPath(v.getSourcePath());
-					idx.setVersion(v.getVersion());
-					idx.setHistoryId(v.getHistoryId());
-					idx.setCurrent(v.isCurrent());
-					index.add(idx);
-				}
+			} finally {
+				// Some cleanup to facilitate garbage reclaiming
+				l.clear();
+				XmlImportDelegateFactory.this.documentBatches.remove(batchId);
 			}
 		}
 
@@ -150,37 +157,41 @@ public class XmlImportDelegateFactory extends
 				// If there is no aggregator, or it's empty, skip it
 				return;
 			}
+			try {
 
-			// There is an aggregator, so write out its file
-			final File f = calculateConsolidatedFile(cmfType);
-			final OutputStream out;
-			try {
-				out = new FileOutputStream(f);
-			} catch (FileNotFoundException e) {
-				this.log.error(String.format(
-					"Failed to open the output file for the aggregate XML for type %s at [%s]", cmfType, f), e);
-				return;
-			}
-			boolean ok = false;
-			String xml = null;
-			try {
-				xml = XmlTools.marshal(root, XmlImportDelegateFactory.SCHEMA, true);
+				// There is an aggregator, so write out its file
+				final File f = calculateConsolidatedFile(cmfType);
+				final OutputStream out;
 				try {
-					IOUtils.write(xml, out);
-				} catch (IOException e) {
-					this.log
-					.error(String.format("Failed to write the generated XML for type %s at [%s]:%n%s", cmfType, f,
-						xml), e);
+					out = new FileOutputStream(f);
+				} catch (FileNotFoundException e) {
+					this.log.error(String.format(
+						"Failed to open the output file for the aggregate XML for type %s at [%s]", cmfType, f), e);
 					return;
 				}
-				ok = true;
-			} catch (JAXBException e) {
-				this.log.error(String.format("Failed to generate the XML for %s", cmfType), e);
-			} finally {
-				IOUtils.closeQuietly(out);
-				if (!ok) {
-					FileUtils.deleteQuietly(f);
+				boolean ok = false;
+				String xml = null;
+				try {
+					xml = XmlTools.marshal(root, XmlImportDelegateFactory.SCHEMA, true);
+					try {
+						IOUtils.write(xml, out);
+					} catch (IOException e) {
+						this.log.error(String.format("Failed to write the generated XML for type %s at [%s]:%n%s",
+							cmfType, f, xml), e);
+						return;
+					}
+					ok = true;
+				} catch (JAXBException e) {
+					this.log.error(String.format("Failed to generate the XML for %s", cmfType), e);
+				} finally {
+					IOUtils.closeQuietly(out);
+					if (!ok) {
+						FileUtils.deleteQuietly(f);
+					}
 				}
+			} finally {
+				// Help the GC out
+				root.clear();
 			}
 		}
 	};
