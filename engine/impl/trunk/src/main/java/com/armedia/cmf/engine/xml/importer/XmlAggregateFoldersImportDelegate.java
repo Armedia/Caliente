@@ -6,6 +6,8 @@ import java.util.GregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
@@ -53,7 +55,11 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 
 		f.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
 		f.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		f.setSourcePath(getAttributeValue(IntermediateAttribute.PATH).asString());
+		String path = getPropertyValue(IntermediateProperty.PATH).asString();
+		if (StringUtils.isEmpty(path)) {
+			path = "/";
+		}
+		f.setSourcePath(path);
 		f.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 
 		dumpAttributes(f.getAttributes());

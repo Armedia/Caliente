@@ -69,7 +69,7 @@ public class XmlAggregateDocumentsImportDelegate extends XmlAggregatedImportDele
 
 		v.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
 		v.setParentId(getAttributeValue(IntermediateAttribute.PARENT_ID).asString());
-		v.setSourcePath(getAttributeValue(IntermediateAttribute.PATH).asString());
+		v.setSourcePath(getPropertyValue(IntermediateAttribute.PATH).asString());
 		v.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 
 		v.setHistoryId(getAttributeValue(IntermediateAttribute.VERSION_SERIES_ID).asString());
