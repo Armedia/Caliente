@@ -162,8 +162,6 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		IDfPersistentObject[] dep = {
 			// The group
 			session.getGroup(folder.getGroupName()),
-			// The type
-			folder.getType()
 		};
 
 		for (IDfPersistentObject obj : dep) {

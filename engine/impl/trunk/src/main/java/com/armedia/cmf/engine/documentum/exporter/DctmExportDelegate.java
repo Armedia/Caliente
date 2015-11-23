@@ -73,7 +73,9 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 
 	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
-		return new ArrayList<DctmExportDelegate<?>>();
+		Collection<DctmExportDelegate<?>> ret = new ArrayList<DctmExportDelegate<?>>();
+		ret.add(this.factory.newExportDelegate(object.getType()));
+		return ret;
 	}
 
 	@Override

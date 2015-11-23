@@ -147,9 +147,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		// We do nothing else for references, as we need nothing else
 		if (isDfReference(document)) { return req; }
 
-		// Export the object type
-		req.add(this.factory.newExportDelegate(document.getType()));
-
 		// Export the format
 		IDfFormat format = document.getFormat();
 		if (format != null) {
