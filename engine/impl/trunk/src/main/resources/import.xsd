@@ -162,6 +162,13 @@
 					</xsd:choice>
 				</xsd:complexType>
 			</xsd:element>
+			<xsd:element name="attributes" minOccurs="0" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:choice maxOccurs="unbounded">
+						<xsd:element name="attribute" type="tns:attribute.t" minOccurs="0" maxOccurs="unbounded" />
+					</xsd:choice>
+				</xsd:complexType>
+			</xsd:element>
 		</xsd:choice>
 	</xsd:complexType>
 

@@ -75,6 +75,8 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 			p.setExtended(str.toString());
 			(isGroup.getValue(i).asBoolean() ? acl.getGroups() : acl.getUsers()).add(p);
 		}
+
+		dumpAttributes(acl.getAttributes());
 		return acl;
 	}
 }
