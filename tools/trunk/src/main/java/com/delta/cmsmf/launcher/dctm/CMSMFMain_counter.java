@@ -109,7 +109,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			settings.put(DfcSessionFactory.USERNAME, this.user);
 		}
 		if (this.password != null) {
-			settings.put(DfcSessionFactory.PASSWORD, this.password);
+			settings.put(DfcSessionFactory.PASSWORD, DctmCrypt.decrypt(this.password));
 		}
 
 		final DfcSessionPool pool;
