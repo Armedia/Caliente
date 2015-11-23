@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.xml.importer.jaxb;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -18,7 +19,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "group.t", propOrder = {
-	"name", "type", "email", "administrator", "displayName", "users", "groups"
+	"name", "type", "email", "administrator", "displayName", "users", "groups", "attributes"
 })
 public class GroupT implements Comparable<GroupT> {
 
@@ -45,6 +46,16 @@ public class GroupT implements Comparable<GroupT> {
 	@XmlElement(name = "group", required = false)
 	protected List<String> groups;
 
+	@XmlElementWrapper(name = "attributes", required = false)
+	@XmlElement(name = "attribute", required = false)
+	protected List<AttributeT> attributes;
+
+	protected void sortAttributes() {
+		if (this.attributes != null) {
+			Collections.sort(this.attributes);
+		}
+	}
+
 	@XmlTransient
 	protected Set<String> userSet = new TreeSet<String>();
 
@@ -52,6 +63,7 @@ public class GroupT implements Comparable<GroupT> {
 	protected Set<String> groupSet = new TreeSet<String>();
 
 	protected void beforeMarshal(Marshaller m) {
+		sortAttributes();
 		if (this.users == null) {
 			this.users = new ArrayList<String>();
 		}
@@ -69,6 +81,7 @@ public class GroupT implements Comparable<GroupT> {
 	}
 
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
+		sortAttributes();
 		if (this.userSet == null) {
 			this.userSet = new TreeSet<String>();
 		}
@@ -83,6 +96,13 @@ public class GroupT implements Comparable<GroupT> {
 		if (this.groups != null) {
 			this.groupSet.addAll(this.groups);
 		}
+	}
+
+	public List<AttributeT> getAttributes() {
+		if (this.attributes == null) {
+			this.attributes = new ArrayList<AttributeT>();
+		}
+		return this.attributes;
 	}
 
 	public synchronized int getUserCount() {

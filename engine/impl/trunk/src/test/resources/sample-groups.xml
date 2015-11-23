@@ -15,5 +15,15 @@
 		<groups>
 			<group>group</group>
 		</groups>
+		<attributes>
+			<attribute dataType="BOOLEAN" name="xxx">
+				<value>value1</value>
+				<value>value2</value>
+				<value>value3</value>
+				<value>value4</value>
+				<value>value5</value>
+				<value>value6</value>
+			</attribute>
+		</attributes>
 	</group>
 </groups>
