@@ -30,8 +30,18 @@
 		<version>version</version>
 		<current>true</current>
 		<antecedentId>antecedentId</antecedentId>
-		<contentSize>0</contentSize>
-		<contentHash>MA==</contentHash>
-		<contentLocation>contentLocation</contentLocation>
+		<contents>
+			<content>
+				<qualifier></qualifier>
+				<size>1234</size>
+				<hash>MA==</hash>
+				<location>/ab//c/d/e</location>
+				<fileName>file.txt</fileName>
+				<mimeType>some/type</mimeType>
+				<properties>
+					<property name="a" value="b"/>
+				</properties>
+			</content>
+		</contents>
 	</version>
 </document>

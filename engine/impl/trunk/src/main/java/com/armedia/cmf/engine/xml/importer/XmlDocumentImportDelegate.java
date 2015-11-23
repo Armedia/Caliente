@@ -16,6 +16,7 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.engine.xml.importer.jaxb.ContentInfoT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
@@ -83,9 +84,17 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
 			File f = h.getFile();
-			v.setContentLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
-			v.setContentSize((int) info.getLength());
-			break;
+			ContentInfoT xml = new ContentInfoT();
+			xml.setFileName(info.getFileName());
+			// xml.setHash(null);
+			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
+			xml.setMimeType(info.getMimeType().getBaseType());
+			xml.setQualifier(info.getQualifier());
+			xml.setSize(info.getLength());
+			for (String k : info.getPropertyNames()) {
+				xml.setProperty(k, info.getProperty(k));
+			}
+			v.getContents().add(xml);
 		}
 
 		dumpAttributes(v.getAttributes());

@@ -29,6 +29,7 @@ import com.armedia.cmf.engine.xml.common.XmlSessionFactory;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.AggregatorBase;
+import com.armedia.cmf.engine.xml.importer.jaxb.ContentInfoT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentIndexEntryT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentIndexT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentT;
@@ -47,7 +48,7 @@ import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.XmlTools;
 
 public class XmlImportDelegateFactory extends
-ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
+	ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	static final String SCHEMA = "import.xsd";
 
@@ -94,7 +95,8 @@ ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xm
 				} else {
 					// The content's location is in the first version
 					DocumentVersionT first = l.get(0);
-					File tgt = new File(XmlImportDelegateFactory.this.content, first.getContentLocation());
+					ContentInfoT content = first.getContents().get(0);
+					File tgt = new File(XmlImportDelegateFactory.this.content, content.getLocation());
 					File dir = tgt.getParentFile();
 					tgt = new File(dir, String.format("%s-document.xml", batchId));
 
