@@ -132,6 +132,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfACL acl, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = super.findRequirements(session, marshaled, acl, ctx);
+
 		final int count = acl.getAccessorCount();
 		for (int i = 0; i < count; i++) {
 			final String name = acl.getAccessorName(i);
