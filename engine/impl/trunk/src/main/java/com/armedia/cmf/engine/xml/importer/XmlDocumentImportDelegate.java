@@ -60,8 +60,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			if (!lad.isNull()) {
 				gcal.setTime(lad.asTime());
 				v.setLastAccessDate(dtf.newXMLGregorianCalendar(gcal));
-				v.setLastAccessor(getAttributeValue(IntermediateAttribute.LAST_ACCESSED_BY).asString());
 			}
+			v.setLastAccessor(getAttributeValue(IntermediateAttribute.LAST_ACCESSED_BY).asString());
 		} catch (ParseException e) {
 			throw new CmfValueDecoderException("Failed to parse a date value", e);
 		}

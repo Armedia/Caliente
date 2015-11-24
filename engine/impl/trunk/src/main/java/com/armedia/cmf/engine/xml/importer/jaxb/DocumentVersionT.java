@@ -17,11 +17,11 @@ import javax.xml.datatype.XMLGregorianCalendar;
 })
 public class DocumentVersionT extends SysObjectT {
 
-	@XmlElement(name = "lastAccessDate", required = true)
+	@XmlElement(name = "lastAccessDate", required = false)
 	@XmlSchemaType(name = "dateTime")
 	protected XMLGregorianCalendar lastAccessDate;
 
-	@XmlElement(name = "lastAccessor", required = true)
+	@XmlElement(name = "lastAccessor", required = false)
 	protected String lastAccessor;
 
 	@XmlElement(name = "historyId", required = true)
