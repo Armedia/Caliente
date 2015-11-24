@@ -97,11 +97,10 @@ public class DocumentVersionT extends SysObjectT {
 
 	@Override
 	public String toString() {
-		return String
-			.format(
-				"DocumentVersionT [id=%s, parentId=%s, name=%s, type=%s, sourcePath=%s, creationDate=%s, creator=%s, modificationDate=%s, modifier=%s, lastAccessDate=%s, lastAccessor=%s, acl=%s, attributes=%s, historyId=%s, version=%s, current=%s, antecedentId=%s, contents=%s]",
-				this.id, this.parentId, this.name, this.type, this.sourcePath, this.creationDate, this.creator,
-				this.modificationDate, this.modifier, this.lastAccessDate, this.lastAccessor, this.acl,
-				this.attributes, this.historyId, this.version, this.current, this.antecedentId, this.contents);
+		return String.format(
+			"DocumentVersionT [id=%s, parentId=%s, name=%s, type=%s, sourcePath=%s, creationDate=%s, creator=%s, modificationDate=%s, modifier=%s, lastAccessDate=%s, lastAccessor=%s, acl=%s, attributes=%s, historyId=%s, version=%s, current=%s, antecedentId=%s, contents=%s]",
+			this.id, this.parentId, this.name, this.type, this.sourcePath, this.creationDate, this.creator,
+			this.modificationDate, this.modifier, this.lastAccessDate, this.lastAccessor, this.acl, this.attributes,
+			this.historyId, this.version, this.current, this.antecedentId, this.contents);
 	}
 }
