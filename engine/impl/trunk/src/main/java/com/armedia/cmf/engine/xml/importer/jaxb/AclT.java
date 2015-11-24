@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "acl.t", propOrder = {
-	"id", "description", "users", "groups", "attributes"
+	"id", "description", "users", "groups", "attributes", "properties"
 })
 public class AclT {
 
@@ -36,9 +36,16 @@ public class AclT {
 	@XmlElement(name = "attribute", required = false)
 	protected List<AttributeT> attributes;
 
+	@XmlElementWrapper(name = "properties", required = false)
+	@XmlElement(name = "property", required = false)
+	protected List<PropertyT> properties;
+
 	protected void sortAttributes() {
 		if (this.attributes != null) {
 			Collections.sort(this.attributes);
+		}
+		if (this.properties != null) {
+			Collections.sort(this.properties);
 		}
 	}
 
@@ -55,6 +62,13 @@ public class AclT {
 			this.attributes = new ArrayList<AttributeT>();
 		}
 		return this.attributes;
+	}
+
+	public List<PropertyT> getProperties() {
+		if (this.properties == null) {
+			this.properties = new ArrayList<PropertyT>();
+		}
+		return this.properties;
 	}
 
 	public List<AclPermitT> getUsers() {
@@ -89,7 +103,7 @@ public class AclT {
 
 	@Override
 	public String toString() {
-		return String.format("AclT [id=%s, description=%s, users=%s, groups=%s]", this.id, this.description,
-			this.users, this.groups);
+		return String.format("AclT [id=%s, description=%s, users=%s, groups=%s]", this.id, this.description, this.users,
+			this.groups);
 	}
 }

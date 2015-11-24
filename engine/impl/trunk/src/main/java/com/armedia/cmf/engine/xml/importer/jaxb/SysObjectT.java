@@ -18,7 +18,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "sysObject.t", propOrder = {
 	"id", "parentId", "name", "type", "sourcePath", "creationDate", "creator", "modificationDate", "modifier", "acl",
-	"attributes"
+	"attributes", "properties"
 })
 @XmlSeeAlso({
 	FolderT.class, DocumentVersionT.class
@@ -61,9 +61,16 @@ public class SysObjectT {
 	@XmlElement(name = "attribute", required = false)
 	protected List<AttributeT> attributes;
 
+	@XmlElementWrapper(name = "properties", required = false)
+	@XmlElement(name = "property", required = false)
+	protected List<PropertyT> properties;
+
 	protected void sortAttributes() {
 		if (this.attributes != null) {
 			Collections.sort(this.attributes);
+		}
+		if (this.properties != null) {
+			Collections.sort(this.properties);
 		}
 	}
 
@@ -80,6 +87,13 @@ public class SysObjectT {
 			this.attributes = new ArrayList<AttributeT>();
 		}
 		return this.attributes;
+	}
+
+	public List<PropertyT> getProperties() {
+		if (this.properties == null) {
+			this.properties = new ArrayList<PropertyT>();
+		}
+		return this.properties;
 	}
 
 	public String getId() {
@@ -164,10 +178,9 @@ public class SysObjectT {
 
 	@Override
 	public String toString() {
-		return String
-			.format(
-				"SysObjectT [id=%s, parentId=%s, name=%s, type=%s, sourcePath=%s, creationDate=%s, creator=%s, modificationDate=%s, modifier=%s, acl=%s, attributes=%s]",
-				this.id, this.parentId, this.name, this.type, this.sourcePath, this.creationDate, this.creator,
-				this.modificationDate, this.modifier, this.acl, this.attributes);
+		return String.format(
+			"SysObjectT [id=%s, parentId=%s, name=%s, type=%s, sourcePath=%s, creationDate=%s, creator=%s, modificationDate=%s, modifier=%s, acl=%s, attributes=%s, properties=%s]",
+			this.id, this.parentId, this.name, this.type, this.sourcePath, this.creationDate, this.creator,
+			this.modificationDate, this.modifier, this.acl, this.attributes, this.properties);
 	}
 }

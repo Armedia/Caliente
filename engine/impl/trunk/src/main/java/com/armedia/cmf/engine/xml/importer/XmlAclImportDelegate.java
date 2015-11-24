@@ -32,7 +32,8 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 		XPERMITS = Tools.freezeMap(m);
 	}
 
-	protected XmlAclImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
+	protected XmlAclImportDelegate(XmlImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
+		throws Exception {
 		super(factory, storedObject, AclsT.class);
 	}
 
@@ -77,6 +78,7 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 		}
 
 		dumpAttributes(acl.getAttributes());
+		dumpProperties(acl.getProperties());
 		return acl;
 	}
 }

@@ -1,7 +1,6 @@
 package com.armedia.cmf.engine.xml.importer.jaxb;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -19,7 +18,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "group.t", propOrder = {
-	"name", "type", "email", "administrator", "displayName", "users", "groups", "attributes"
+	"name", "type", "email", "administrator", "displayName", "users", "groups", "attributes", "properties"
 })
 public class GroupT implements Comparable<GroupT> {
 
@@ -50,11 +49,9 @@ public class GroupT implements Comparable<GroupT> {
 	@XmlElement(name = "attribute", required = false)
 	protected List<AttributeT> attributes;
 
-	protected void sortAttributes() {
-		if (this.attributes != null) {
-			Collections.sort(this.attributes);
-		}
-	}
+	@XmlElementWrapper(name = "properties", required = false)
+	@XmlElement(name = "property", required = false)
+	protected List<PropertyT> properties;
 
 	@XmlTransient
 	protected Set<String> userSet = new TreeSet<String>();
@@ -63,25 +60,23 @@ public class GroupT implements Comparable<GroupT> {
 	protected Set<String> groupSet = new TreeSet<String>();
 
 	protected void beforeMarshal(Marshaller m) {
-		sortAttributes();
-		if (this.users == null) {
+		if ((this.users == null) && !this.userSet.isEmpty()) {
 			this.users = new ArrayList<String>();
 		}
-		this.users.clear();
-		if (this.userSet != null) {
+		if ((this.userSet != null) && !this.userSet.isEmpty()) {
+			this.users.clear();
 			this.users.addAll(this.userSet);
 		}
-		if (this.groups == null) {
+		if ((this.groups == null) && !this.groupSet.isEmpty()) {
 			this.groups = new ArrayList<String>();
 		}
-		this.groups.clear();
-		if (this.groupSet != null) {
+		if ((this.groupSet != null) && !this.groupSet.isEmpty()) {
+			this.groups.clear();
 			this.groups.addAll(this.groupSet);
 		}
 	}
 
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
-		sortAttributes();
 		if (this.userSet == null) {
 			this.userSet = new TreeSet<String>();
 		}
@@ -96,6 +91,13 @@ public class GroupT implements Comparable<GroupT> {
 		if (this.groups != null) {
 			this.groupSet.addAll(this.groups);
 		}
+	}
+
+	public List<PropertyT> getProperties() {
+		if (this.properties == null) {
+			this.properties = new ArrayList<PropertyT>();
+		}
+		return this.properties;
 	}
 
 	public List<AttributeT> getAttributes() {

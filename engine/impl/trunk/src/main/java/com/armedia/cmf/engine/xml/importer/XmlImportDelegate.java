@@ -9,6 +9,7 @@ import com.armedia.cmf.engine.xml.common.XmlRoot;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
 import com.armedia.cmf.engine.xml.importer.jaxb.AttributeT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DataTypeT;
+import com.armedia.cmf.engine.xml.importer.jaxb.PropertyT;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfEncodeableName;
@@ -16,8 +17,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfValue;
 
-public abstract class XmlImportDelegate
-	extends
+public abstract class XmlImportDelegate extends
 	ImportDelegate<File, XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportDelegateFactory, XmlImportEngine> {
 
 	protected final void dumpAttributes(List<AttributeT> list) {
@@ -54,6 +54,22 @@ public abstract class XmlImportDelegate
 		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(attribute);
 		if (att == null) { return Collections.emptyList(); }
 		return att.getValues();
+	}
+
+	protected final void dumpProperties(List<PropertyT> list) {
+		for (String name : this.cmfObject.getPropertyNames()) {
+			final PropertyT property = new PropertyT();
+			final CmfProperty<CmfValue> prop = this.cmfObject.getProperty(name);
+
+			property.setName(name);
+			property.setDataType(DataTypeT.convert(prop.getType()));
+			property.setRepeating(prop.isRepeating());
+			for (CmfValue v : prop) {
+				property.getValue().add(v.asString());
+			}
+
+			list.add(property);
+		}
 	}
 
 	protected final CmfValue getPropertyValue(CmfEncodeableName attribute) {

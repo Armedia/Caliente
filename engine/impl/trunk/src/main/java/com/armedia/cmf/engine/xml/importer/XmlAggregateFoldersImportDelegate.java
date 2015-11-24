@@ -63,6 +63,7 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 		f.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
 
 		dumpAttributes(f.getAttributes());
+		dumpProperties(f.getProperties());
 		return f;
 	}
 }

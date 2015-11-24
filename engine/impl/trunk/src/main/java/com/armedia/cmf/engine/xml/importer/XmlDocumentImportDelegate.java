@@ -98,6 +98,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		}
 
 		dumpAttributes(v.getAttributes());
+		dumpProperties(v.getProperties());
 
 		this.factory.storeDocumentVersion(v);
 

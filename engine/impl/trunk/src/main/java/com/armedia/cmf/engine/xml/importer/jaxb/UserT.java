@@ -16,7 +16,8 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "user.t", propOrder = {
-	"name", "defaultFolder", "description", "email", "loginName", "loginDomain", "osName", "osDomain", "attributes"
+	"name", "defaultFolder", "description", "email", "loginName", "loginDomain", "osName", "osDomain", "attributes",
+	"properties"
 })
 public class UserT implements Comparable<UserT> {
 
@@ -48,9 +49,16 @@ public class UserT implements Comparable<UserT> {
 	@XmlElement(name = "attribute", required = false)
 	protected List<AttributeT> attributes;
 
+	@XmlElementWrapper(name = "properties", required = false)
+	@XmlElement(name = "property", required = false)
+	protected List<PropertyT> properties;
+
 	protected void sortAttributes() {
 		if (this.attributes != null) {
 			Collections.sort(this.attributes);
+		}
+		if (this.properties != null) {
+			Collections.sort(this.properties);
 		}
 	}
 
@@ -67,6 +75,13 @@ public class UserT implements Comparable<UserT> {
 			this.attributes = new ArrayList<AttributeT>();
 		}
 		return this.attributes;
+	}
+
+	public List<PropertyT> getProperties() {
+		if (this.properties == null) {
+			this.properties = new ArrayList<PropertyT>();
+		}
+		return this.properties;
 	}
 
 	public String getName() {
@@ -156,10 +171,9 @@ public class UserT implements Comparable<UserT> {
 
 	@Override
 	public String toString() {
-		return String
-			.format(
-				"UserT [name=%s, defaultFolder=%s, description=%s, email=%s, loginName=%s, loginDomain=%s, osName=%s, osDomain=%s]",
-				this.name, this.defaultFolder, this.description, this.email, this.loginName, this.loginDomain,
-				this.osName, this.osDomain);
+		return String.format(
+			"UserT [name=%s, defaultFolder=%s, description=%s, email=%s, loginName=%s, loginDomain=%s, osName=%s, osDomain=%s]",
+			this.name, this.defaultFolder, this.description, this.email, this.loginName, this.loginDomain, this.osName,
+			this.osDomain);
 	}
 }

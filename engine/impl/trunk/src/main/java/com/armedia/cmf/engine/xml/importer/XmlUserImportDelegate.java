@@ -32,6 +32,7 @@ public class XmlUserImportDelegate extends XmlAggregatedImportDelegate<UserT, Us
 		user.setDefaultFolder(getAttributeValue(IntermediateAttribute.DEFAULT_FOLDER).asString());
 
 		dumpAttributes(user.getAttributes());
+		dumpProperties(user.getProperties());
 		return user;
 	}
 }

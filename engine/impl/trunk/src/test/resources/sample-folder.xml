@@ -43,4 +43,14 @@
 			<value>value</value>
 		</attribute>
 	</attributes>
+	<properties>
+		<property dataType="BOOLEAN" name="xxx" repeating="true">
+			<value>value1</value>
+			<value>value2</value>
+			<value>value3</value>
+			<value>value4</value>
+			<value>value5</value>
+			<value>value6</value>
+		</property>
+	</properties>
 </folder>

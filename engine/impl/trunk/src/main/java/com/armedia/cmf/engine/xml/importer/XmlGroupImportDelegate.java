@@ -37,6 +37,7 @@ public class XmlGroupImportDelegate extends XmlAggregatedImportDelegate<GroupT, 
 		}
 
 		dumpAttributes(group.getAttributes());
+		dumpProperties(group.getProperties());
 		return group;
 	}
 }

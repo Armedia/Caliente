@@ -25,6 +25,16 @@
 					<value>value6</value>
 				</attribute>
 			</attributes>
+			<properties>
+				<property dataType="BOOLEAN" name="xxx" repeating="true">
+					<value>value1</value>
+					<value>value2</value>
+					<value>value3</value>
+					<value>value4</value>
+					<value>value5</value>
+					<value>value6</value>
+				</property>
+			</properties>
 			<lastAccessDate>2001-12-31T12:00:00</lastAccessDate>
 			<lastAccessor>lastAccessor</lastAccessor>
 			<historyId>historyId</historyId>

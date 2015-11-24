@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "type.t", propOrder = {
-	"name", "superType", "attributes"
+	"name", "superType", "attributes", "properties"
 })
 public class TypeT {
 
@@ -28,9 +28,16 @@ public class TypeT {
 	@XmlElement(name = "attribute", required = false)
 	protected List<AttributeDefT> attributes;
 
+	@XmlElementWrapper(name = "properties", required = false)
+	@XmlElement(name = "property", required = false)
+	protected List<PropertyT> properties;
+
 	protected void sortAttributes() {
 		if (this.attributes != null) {
 			Collections.sort(this.attributes);
+		}
+		if (this.properties != null) {
+			Collections.sort(this.properties);
 		}
 	}
 
@@ -47,6 +54,13 @@ public class TypeT {
 			this.attributes = new ArrayList<AttributeDefT>();
 		}
 		return this.attributes;
+	}
+
+	public List<PropertyT> getProperties() {
+		if (this.properties == null) {
+			this.properties = new ArrayList<PropertyT>();
+		}
+		return this.properties;
 	}
 
 	public String getName() {
@@ -67,7 +81,7 @@ public class TypeT {
 
 	@Override
 	public String toString() {
-		return String
-			.format("TypeT [name=%s, superType=%s, attributes=%s]", this.name, this.superType, this.attributes);
+		return String.format("TypeT [name=%s, superType=%s, attributes=%s]", this.name, this.superType,
+			this.attributes);
 	}
 }
