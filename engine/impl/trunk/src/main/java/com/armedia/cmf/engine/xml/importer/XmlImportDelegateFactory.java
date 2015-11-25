@@ -47,8 +47,8 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.XmlTools;
 
-public class XmlImportDelegateFactory extends
-	ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
+public class XmlImportDelegateFactory
+	extends ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
 	static final String SCHEMA = "import.xsd";
 
@@ -120,9 +120,8 @@ public class XmlImportDelegateFactory extends
 						}
 						ok = true;
 					} catch (JAXBException e) {
-						this.log.error(
-							String.format("Failed to marshal the XML for document [%s](%s) to [%s]",
-								first.getSourcePath(), first.getId(), tgt), e);
+						this.log.error(String.format("Failed to marshal the XML for document [%s](%s) to [%s]",
+							first.getSourcePath(), first.getId(), tgt), e);
 						return;
 					} finally {
 						IOUtils.closeQuietly(out);
@@ -131,8 +130,8 @@ public class XmlImportDelegateFactory extends
 						}
 					}
 
-					DocumentIndexT index = DocumentIndexT.class.cast(XmlImportDelegateFactory.this.xml
-						.get(CmfType.DOCUMENT));
+					DocumentIndexT index = DocumentIndexT.class
+						.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT));
 					for (DocumentVersionT v : l) {
 						DocumentIndexEntryT idx = new DocumentIndexEntryT();
 						idx.setId(v.getId());
@@ -226,6 +225,15 @@ public class XmlImportDelegateFactory extends
 		xml.put(CmfType.FOLDER, (this.aggregateFolders ? new FoldersT() : new FolderIndexT()));
 		xml.put(CmfType.DOCUMENT, (this.aggregateDocuments ? new DocumentsT() : new DocumentIndexT()));
 		this.xml = xml;
+
+		for (CmfType t : xml.keySet()) {
+			File f = calculateConsolidatedFile(t);
+			try {
+				FileUtils.forceDelete(f);
+			} catch (IOException e) {
+				this.log.warn(String.format("Failed to delete the aggregate XML file at [%s]", f.getAbsolutePath()), e);
+			}
+		}
 	}
 
 	String relativizeXmlLocation(String absolutePath) {
@@ -236,9 +244,9 @@ public class XmlImportDelegateFactory extends
 
 	protected void storeDocumentVersion(DocumentVersionT v) throws ImportException {
 		List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(v.getHistoryId());
-		if (l == null) { throw new ImportException(String.format(
-			"Attempting to store version [%s] of history [%s], but no such history has been started: %s",
-			v.getVersion(), v.getHistoryId(), v)); }
+		if (l == null) { throw new ImportException(
+			String.format("Attempting to store version [%s] of history [%s], but no such history has been started: %s",
+				v.getVersion(), v.getHistoryId(), v)); }
 		l.add(v);
 	}
 
