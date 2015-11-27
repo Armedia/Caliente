@@ -13,6 +13,7 @@ import java.util.Set;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.io.IOUtils;
 
@@ -265,25 +266,24 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 		final Connection c = operation.getConnection();
 		try {
 			final Blob blob = c.createBlob();
-			OutputStream out = blob.setBinaryStream(1);
 			try {
-				IOUtils.copy(in, out);
-			} catch (IOException e) {
-				throw new CmfStorageException(
-					String.format("Failed to copy the content from the given input stream for locator [%s]", locator),
-					e);
+				OutputStream out = blob.setBinaryStream(1);
+				try {
+					IOUtils.copy(in, out);
+				} catch (IOException e) {
+					throw new CmfStorageException(String
+						.format("Failed to copy the content from the given input stream for locator [%s]", locator), e);
+				} finally {
+					IOUtils.closeQuietly(out);
+				}
+				QueryRunner qr = JdbcTools.getQueryRunner();
+				qr.update(c, JdbcContentStore.DELETE_STREAM_SQL, locator.getObjectId(), locator.getQualifier());
+				qr.insert(c, JdbcContentStore.INSERT_STREAM_SQL, JdbcTools.HANDLER_NULL, locator.getObjectId(),
+					locator.getQualifier(), blob.length(), blob);
+				return blob.length();
 			} finally {
-				IOUtils.closeQuietly(out);
+				blob.free();
 			}
-			JdbcTools.getQueryRunner().update(c, JdbcContentStore.DELETE_STREAM_SQL, locator.getObjectId(),
-				locator.getQualifier());
-			final PreparedStatement ps = c.prepareStatement(JdbcContentStore.INSERT_STREAM_SQL);
-			ps.setString(1, locator.getObjectId());
-			ps.setString(2, locator.getQualifier());
-			ps.setLong(3, blob.length());
-			ps.setBlob(4, blob);
-			ps.executeUpdate();
-			return blob.length();
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("DB error setting the content for locator [%s]", locator), e);
 		}

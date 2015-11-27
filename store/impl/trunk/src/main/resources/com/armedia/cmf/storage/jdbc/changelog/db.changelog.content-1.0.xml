@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-	<changeSet author="cmf" id="1001">
+	<changeSet author="cmf" id="2001">
 		<!-- The CMF content info table -->
 		<createTable tableName="cmf_content_info">
 			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
@@ -35,8 +35,8 @@
 		</createTable>
 		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, qualifier" />
 	</changeSet>
-	<changeSet author="cmf" id="1002">
-    	<preConditions onFail="WARN">
+	<changeSet author="cmf" id="2002">
+    	<preConditions onFail="CONTINUE">
     		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
 	    </preConditions>
 		<addForeignKeyConstraint constraintName="fk_cmf_content_stream_content"
