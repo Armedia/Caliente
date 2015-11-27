@@ -5,6 +5,7 @@
 package com.armedia.cmf.engine.documentum.importer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +29,7 @@ import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -83,14 +85,14 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			IDfId id = document.getFolderId(i);
 			IDfFolder f = IDfFolder.class.cast(document.getSession().getFolderBySpecification(id.getId()));
 			if (f != null) {
-				String path = (f.getFolderPathCount() > 0 ? f.getFolderPath(0) : String.format("(unknown-folder:[%s])",
-					id.getId()));
+				String path = (f.getFolderPathCount() > 0 ? f.getFolderPath(0)
+					: String.format("(unknown-folder:[%s])", id.getId()));
 				return String.format("%s/%s [%s]", path, document.getObjectName(),
 					calculateVersionString(document, true));
 			}
 		}
-		throw new ImportException(String.format("None of the parent paths for object [%s] were found", document
-			.getObjectId().getId()));
+		throw new ImportException(
+			String.format("None of the parent paths for object [%s] were found", document.getObjectId().getId()));
 	}
 
 	@Override
@@ -138,9 +140,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		// Using the chronicle ID and the implicit version ID, we will seek out
 		// the exact existing version.
-		IDfPersistentObject obj = session.getObjectByQualification(String.format(
-			"dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = %s", chronicleId,
-			DfUtils.quoteString(implicitLabel)));
+		IDfPersistentObject obj = session.getObjectByQualification(
+			String.format("dm_sysobject (all) where i_chronicle_id = '%s' and any r_version_label = %s", chronicleId,
+				DfUtils.quoteString(implicitLabel)));
 
 		// Return whatever we found...if we found nothing, then this is a new version
 		// and must be handled as such
@@ -154,7 +156,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected IDfId persistChanges(IDfDocument document, DctmImportContext context) throws DfException, ImportException {
+	protected IDfId persistChanges(IDfDocument document, DctmImportContext context)
+		throws DfException, ImportException {
 		// Apparently, references require no saving
 		if (isReference()) { return document.getObjectId(); }
 		return super.persistChanges(document, context);
@@ -175,17 +178,17 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		IDfValue referenceById = this.cmfObject.getProperty(DctmAttributes.REFERENCE_BY_ID).getValue();
 
 		target = session.getObject(referenceById.asId());
-		if (!(target instanceof IDfSysObject)) { throw new ImportException(String.format(
-			"Reference [%s] target object [%s] is not an IDfSysObject instance", this.cmfObject.getLabel(),
-			referenceById.asString())); }
+		if (!(target instanceof IDfSysObject)) { throw new ImportException(
+			String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
+				this.cmfObject.getLabel(), referenceById.asString())); }
 
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
 		IDfId mainFolderId = getMappedParentId(context);
 		if (mainFolderId == null) {
 			mainFolderId = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID).getValue().asId();
-			throw new ImportException(String.format(
-				"Reference [%s] mapping for its parent folder [%s->???] could not be found", this.cmfObject.getLabel(),
-				mainFolderId.getId()));
+			throw new ImportException(
+				String.format("Reference [%s] mapping for its parent folder [%s->???] could not be found",
+					this.cmfObject.getLabel(), mainFolderId.getId()));
 		}
 		// TODO: Can a reference be *linked* to other folders?
 		IDfId newId = targetSysObj.addReference(mainFolderId, bindingCondition.asString(), bindingLabel.asString());
@@ -202,8 +205,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final String sourceChronicleId = (sourceChronicleAtt != null ? sourceChronicleAtt.getValue().asString() : null);
 
 		// If we have no chronicle info to look for, we don't try to...
-		final boolean root = ((sourceChronicleId == null) || (antecedentAtt == null) || Tools.equals(
-			this.cmfObject.getId(), sourceChronicleId));
+		final boolean root = ((sourceChronicleId == null) || (antecedentAtt == null)
+			|| Tools.equals(this.cmfObject.getId(), sourceChronicleId));
 		if (root) { return super.newObject(context); }
 
 		final IDfSession session = context.getSession();
@@ -244,8 +247,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				antecedentVersion = super.newObject(context);
 
 				// Set the name
-				antecedentVersion.setObjectName(this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
-					.asString());
+				antecedentVersion
+					.setObjectName(this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
 
 				// Link to prospective parents
 				// TODO: Mess with parents' permissions?
@@ -296,8 +299,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			// same except the last number), then we go ahead and assign it to antecedentVersion. If
 			// it's a sibling (same-level branch), or a descendant (sub-branch), then we leave the
 			// antecedent where it is
-			DctmVersionNumber newVersion = new DctmVersionNumber(this.cmfObject
-				.getAttribute(DctmAttributes.R_VERSION_LABEL).getValue().asString());
+			DctmVersionNumber newVersion = new DctmVersionNumber(
+				this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL).getValue().asString());
 			DctmVersionNumber lastVersion = new DctmVersionNumber(lastAntecedentVersion.asString());
 			if (newVersion.isSuccessorOf(lastVersion)) {
 				antecedentVersion = lastAntecedent;
@@ -406,11 +409,45 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, CmfContentInfo info,
 		CmfContentStore<?, ?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
-		int renditionNumber, String pageModifier, int currentContent, int totalContentCount) throws DfException,
-		ImportException {
+		int renditionNumber, String pageModifier, int currentContent, int totalContentCount)
+			throws DfException, ImportException {
 		// Step one: what's the content's path in the filesystem?
 		final IDfSession session = context.getSession();
-		final File path = contentHandle.getFile();
+		File path;
+		try {
+			path = contentHandle.getFile();
+		} catch (IOException e) {
+			throw new ImportException(
+				String.format("Failed to get the content file for DOCUMENT (%s)[%s], qualifier [%s]",
+					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getQualifier()),
+				e);
+		}
+
+		if (path == null) {
+			// If the content store doesn't support this, then we dump to a temp file and go from
+			// there
+			try {
+				path = File.createTempFile("content", null);
+				contentHandle.writeFile(path);
+				path.deleteOnExit();
+			} catch (IOException e) {
+				if (path != null) {
+					path.delete();
+				}
+				throw new ImportException(String.format(
+					"Failed to create and write the temporary content file for DOCUMENT (%s)[%s], qualifier [%s]",
+					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getQualifier()), e);
+			} catch (CmfStorageException e) {
+				if (path != null) {
+					path.delete();
+				}
+				throw new ImportException(
+					String.format("Failed to get the content stream for DOCUMENT (%s)[%s], qualifier [%s]",
+						this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getQualifier()),
+					e);
+			}
+		}
+
 		final String absolutePath = path.getAbsolutePath();
 
 		fullFormat = Tools.coalesce(fullFormat, contentType);
@@ -426,11 +463,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				DctmImportDocument.this.log.info(msg);
 				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
 			} catch (DfException e) {
-				final String msg = String.format(
-					"Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}", this.cmfObject.getLabel(),
-					this.cmfObject.getId(), absolutePath, fullFormat, pageNumber);
-				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
-					.getCanonicalName(), e.getMessage());
+				final String msg = String.format("Failed to add the primary content to document [%s](%s) -> {%s/%s/%s}",
+					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber);
+				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount,
+					e.getClass().getCanonicalName(), e.getMessage());
 				throw new ImportException(msg, e);
 			}
 		} else {
@@ -445,8 +481,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				final String msg = String.format(
 					"Failed to add rendition content to document [%s](%s) -> {%s/%s/%s/%s}", this.cmfObject.getLabel(),
 					this.cmfObject.getId(), absolutePath, fullFormat, pageNumber, pageModifier);
-				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
-					.getCanonicalName(), e.getMessage());
+				context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount,
+					e.getClass().getCanonicalName(), e.getMessage());
 				throw new ImportException(msg, e);
 			}
 		}
@@ -503,23 +539,20 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				DfUtils.sqlQuoteString(documentId), renditionNumber, pageModifier, pageNumber,
 				DfUtils.sqlQuoteString(fullFormat));
 			if (!runExecSQL(session, sql)) {
-				final String msg = String
-					.format(
-						"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber,
-						pageModifier, sql);
+				final String msg = String.format(
+					"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
+					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber,
+					pageModifier, sql);
 				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
 				throw new ImportException(msg);
 			}
 			return true;
 		} catch (DfException e) {
-			final String msg = String
-				.format(
-					"Exception caught generating updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber,
-					pageModifier);
-			context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount, e.getClass()
-				.getCanonicalName(), e.getMessage());
+			final String msg = String.format(
+				"Exception caught generating updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
+				this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber, pageModifier);
+			context.printf("\t%s (item %d of %d): %s [%s]", msg, currentContent, totalContentCount,
+				e.getClass().getCanonicalName(), e.getMessage());
 			throw new ImportException(msg, e);
 		}
 	}
@@ -531,7 +564,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			if (att == null) { return DctmImportDocument.DEFAULT_BINARY_FORMAT; }
 			aContentType = att.getValue().asString();
 		}
-		if (Tools.equals(aContentType, DctmImportDocument.DEFAULT_BINARY_MIME)) { return DctmImportDocument.DEFAULT_BINARY_FORMAT; }
+		if (Tools.equals(aContentType,
+			DctmImportDocument.DEFAULT_BINARY_MIME)) { return DctmImportDocument.DEFAULT_BINARY_FORMAT; }
 		IDfFormat format = null;
 		try {
 			format = session.getFormat(aContentType);
@@ -567,8 +601,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		CmfContentStore<?, ?, ?> contentStore = context.getContentStore();
 		int i = 0;
 		final CmfAttribute<IDfValue> contentTypeAtt = this.cmfObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
-		final String contentType = determineFormat(context.getSession(), (contentTypeAtt != null ? contentTypeAtt
-			.getValue().toString() : null));
+		final String contentType = determineFormat(context.getSession(),
+			(contentTypeAtt != null ? contentTypeAtt.getValue().toString() : null));
 		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		for (CmfContentInfo info : infoList) {
 			CmfContentStore<?, ?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info.getQualifier());
@@ -576,8 +610,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			CfgTools cfg = info.getCfgTools();
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);
 			int page = cfg.getInteger(DctmAttributes.PAGE, 0);
-			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER, DctmDataType.DF_STRING.getNull()
-				.asString());
+			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER,
+				DctmDataType.DF_STRING.getNull().asString());
 			int rendition = cfg.getInteger(DctmAttributes.RENDITION, 0);
 
 			saveContentStream(context, document, info, h, contentType, fullFormat, page, rendition, pageModifier, ++i,
@@ -588,8 +622,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void doFinalizeConstruction(final IDfDocument document, boolean newObject, final DctmImportContext context)
-		throws DfException, ImportException {
+	protected void doFinalizeConstruction(final IDfDocument document, boolean newObject,
+		final DctmImportContext context) throws DfException, ImportException {
 
 		// References don't require any of this being done
 		if (isReference()) { return; }
