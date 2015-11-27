@@ -2,6 +2,7 @@ package com.armedia.cmf.storage.jdbc;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.dbutils.QueryRunner;
@@ -34,6 +35,12 @@ class JdbcTools {
 	static final Object[][] NO_PARAMS = new Object[0][0];
 
 	private static final ThreadLocal<QueryRunner> QUERY_RUNNER = new ThreadLocal<QueryRunner>();
+
+	static boolean isValidId(String id) {
+		if (id == null) { return false; }
+		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
+		return m.matches();
+	}
 
 	static QueryRunner getQueryRunner() {
 		QueryRunner q = JdbcTools.QUERY_RUNNER.get();
