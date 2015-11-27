@@ -22,7 +22,7 @@ public class LocalExportContextFactory extends
 
 	@Override
 	protected LocalExportContext constructContext(String rootId, CmfType rootType, LocalRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
 		return new LocalExportContext(this, getSettings(), rootId, rootType, session, output);
 	}
 

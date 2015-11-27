@@ -87,7 +87,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 
 		if (!contents.isEmpty()) {
 			CmfContentInfo info = contents.get(0);
-			CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
+			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
 			File src = h.getFile();
 			if (src != null) {

@@ -166,7 +166,7 @@ public class LocalExportDelegate
 
 	@Override
 	protected List<CmfContentInfo> storeContent(LocalRoot session, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		if (getType() != CmfType.DOCUMENT) { return null; }
 
 		List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>(1);
@@ -191,7 +191,7 @@ public class LocalExportDelegate
 		ret.add(info);
 
 		if (this.factory.isCopyContent()) {
-			CmfContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
+			CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
 			File tgt = h.getFile();
 			if (tgt != null) {
 				if (this.log.isDebugEnabled()) {

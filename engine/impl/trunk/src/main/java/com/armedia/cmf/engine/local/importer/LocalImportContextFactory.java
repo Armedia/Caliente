@@ -39,7 +39,7 @@ public class LocalImportContextFactory extends
 
 	@Override
 	protected LocalImportContext constructContext(String rootId, CmfType rootType, LocalRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
 		return new LocalImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper, getEngine()
 			.getTranslator(), objectStore, contentStore);
 	}
