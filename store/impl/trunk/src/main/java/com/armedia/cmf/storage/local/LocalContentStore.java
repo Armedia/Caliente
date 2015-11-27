@@ -37,7 +37,6 @@ import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfOrganizationStrategy;
 import com.armedia.cmf.storage.CmfStorageException;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueSerializer;
 import com.armedia.cmf.storage.local.xml.PropertyT;
@@ -70,8 +69,8 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	private class LocalHandle extends Handle {
 
-		protected LocalHandle(CmfType objectType, String objectId, String qualifier, URI locator) {
-			super(objectType, objectId, qualifier, locator);
+		protected LocalHandle(CmfObject<?> object, String qualifier, URI locator) {
+			super(object, qualifier, locator);
 		}
 
 	}
@@ -280,34 +279,69 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected InputStream doOpenInput(URI locator) throws IOException {
-		return new FileInputStream(getFile(locator));
+	protected InputStream openInput(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f;
+		try {
+			f = getFile(locator);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
+		}
+		try {
+			return new FileInputStream(f);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to open the file at [%s] for input", f), e);
+		}
 	}
 
 	@Override
-	protected OutputStream doOpenOutput(URI locator) throws IOException {
-		File f = getFile(locator);
+	protected OutputStream openOutput(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f;
+		try {
+			f = getFile(locator);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
+		}
 		f.getParentFile().mkdirs(); // Create the parents, if needed
 
-		final boolean created = f.createNewFile();
+		boolean created;
+		try {
+			created = f.createNewFile();
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to create the file at [%s]", f), e);
+		}
 		if (!created) {
-			if (this.failOnCollisions) { throw new IOException(String.format(
+			if (this.failOnCollisions) { throw new CmfStorageException(String.format(
 				"Filename collision detected for target file [%s] - a file already exists at that location",
 				f.getAbsolutePath())); }
-			if (!f.exists()) { throw new IOException(
+			if (!f.exists()) { throw new CmfStorageException(
 				String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath())); }
 		}
-		return new FileOutputStream(f);
+		try {
+			return new FileOutputStream(f);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to open the file at [%s] for output", f), e);
+		}
 	}
 
 	@Override
-	protected boolean doIsExists(URI locator) {
-		return getFile(locator).exists();
+	protected boolean isExists(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f;
+		try {
+			f = getFile(locator);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
+		}
+		return f.exists();
 	}
 
 	@Override
-	protected long doGetStreamSize(URI locator) {
-		File f = getFile(locator);
+	protected long getStreamSize(LocalStoreOperation op, URI locator) throws CmfStorageException {
+		final File f;
+		try {
+			f = getFile(locator);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to identify the file for [%s]", locator), e);
+		}
 		return (f.exists() ? f.length() : -1);
 	}
 
@@ -317,7 +351,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected void doClearAllStreams() {
+	protected void clearAllStreams(LocalStoreOperation op) {
 		File[] files = this.baseDir.listFiles();
 		if (files != null) {
 			for (File f : files) {
@@ -452,6 +486,6 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	@Override
 	protected LocalHandle constructHandle(CmfObject<?> object, String qualifier, URI locator) {
-		return new LocalHandle(object.getType(), object.getId(), qualifier, locator);
+		return new LocalHandle(object, qualifier, locator);
 	}
 }
