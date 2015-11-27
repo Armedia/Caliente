@@ -26,6 +26,9 @@
 			<column name="qualifier" type="varchar(64)" remarks="The content's qualifier string">
 				<constraints nullable="false" />
 			</column>
+			<column name="length" type="bigint" remarks="The content stream's length">
+				<constraints nullable="false" />
+			</column>
 			<column name="data" type="blob" remarks="The actual data stream">
 				<constraints nullable="false" />
 			</column>
