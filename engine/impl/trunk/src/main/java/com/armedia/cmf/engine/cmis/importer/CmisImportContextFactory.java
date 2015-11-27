@@ -47,7 +47,7 @@ public class CmisImportContextFactory extends
 
 	@Override
 	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper) {
 		return new CmisImportContext(this, rootId, rootType, session, output, typeMapper, getEngine().getTranslator(),
 			objectStore, streamStore);
 	}

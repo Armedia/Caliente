@@ -125,10 +125,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 	@Override
 	protected List<CmfContentInfo> storeContent(Session session, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		List<CmfContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
-		CmfContentStore<?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
+		CmfContentStore<?, ?, ?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
 		CmfContentInfo mainInfo = new CmfContentInfo(mainHandle.getQualifier());
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
 		mainInfo.setLength(main.getLength());
@@ -136,7 +136,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
 			ContentStream cs = r.getContentStream();
-			CmfContentStore<?>.Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
+			CmfContentStore<?, ?, ?>.Handle handle = storeContentStream(marshalled, translator, r, cs, streamStore);
 			CmfContentInfo info = new CmfContentInfo(handle.getQualifier());
 			info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
 			info.setLength(cs.getLength());
@@ -152,10 +152,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		return ret;
 	}
 
-	protected CmfContentStore<?>.Handle storeContentStream(CmfObject<CmfValue> marshalled,
-		CmfAttributeTranslator<CmfValue> translator, Rendition r, ContentStream cs, CmfContentStore<?> streamStore)
+	protected CmfContentStore<?, ?, ?>.Handle storeContentStream(CmfObject<CmfValue> marshalled,
+		CmfAttributeTranslator<CmfValue> translator, Rendition r, ContentStream cs, CmfContentStore<?, ?, ?> streamStore)
 		throws Exception {
-		CmfContentStore<?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
+		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
 		InputStream src = cs.getStream();
 		OutputStream tgt = h.openOutput();
 		try {

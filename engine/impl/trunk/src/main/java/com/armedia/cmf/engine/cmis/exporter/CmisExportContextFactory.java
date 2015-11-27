@@ -38,7 +38,7 @@ public class CmisExportContextFactory extends
 
 	@Override
 	protected CmisExportContext constructContext(String rootId, CmfType rootType, Session session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper) {
 		return new CmisExportContext(this, rootId, rootType, session, output);
 	}
 

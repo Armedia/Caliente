@@ -22,7 +22,7 @@ public class BaseTest {
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();
 		objectStore.clearAttributeMappings();
-		CmfContentStore<?> contentStore = CmfStores.getContentStore("default");
+		CmfContentStore<?, ?, ?> contentStore = CmfStores.getContentStore("default");
 		contentStore.clearProperties();
 		contentStore.clearAllStreams();
 		Logger output = LoggerFactory.getLogger("console");
