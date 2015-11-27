@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+	<changeSet author="cmf" id="1001">
+		<!-- The CMF info table -->
+		<createTable tableName="cmf_content_info">
+			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
+				<constraints nullable="false" />
+			</column>
+			<column name="data_type" type="varchar(32)" remarks="The property's data type">
+				<constraints nullable="false" />
+			</column>
+			<column name="value" type="text" remarks="The property's value">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_content_info" columnNames="name" />
+
+		<!-- The content streams -->
+		<createTable tableName="cmf_content_stream">
+			<column name="object_id" type="varchar(96)" remarks="The object whose content this is">
+				<constraints nullable="false" />
+			</column>
+			<column name="qualifier" type="varchar(64)" remarks="The content's qualifier string">
+				<constraints nullable="false" />
+			</column>
+			<column name="data" type="blob" remarks="The actual data stream">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, qualifier" />
+	</changeSet>
+</databaseChangeLog>

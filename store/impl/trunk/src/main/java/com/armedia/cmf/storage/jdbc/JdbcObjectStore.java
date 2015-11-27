@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
@@ -50,25 +49,16 @@ import com.armedia.cmf.storage.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
 
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.DatabaseException;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
-
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
 public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
+	private static final String PROPERTY_TABLE = "cmf_info";
+	private static final String SCHEMA_CHANGE_LOG = "db.changelog.xml";
+
 	private static final String NULL = "{NULL-VALUE}";
-
-	private static final Pattern OBJECT_ID_PARSER = Pattern.compile("^\\{(?:[\\da-fA-F][\\da-fA-F])+-(.*)\\}$");
-
-	private static final Object[][] NO_PARAMS = new Object[0][0];
 
 	private static final String CHECK_IF_OBJECT_EXISTS_SQL = "select object_id from cmf_object where object_id = ? and object_type = ?";
 
@@ -185,38 +175,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		"   and qualifier = ? " + //
 		" order by name ";
 
-	private static final String GET_STORE_PROPERTY_SQL = //
-	"    select * from cmf_info where name = ? ";
-
-	private static final String UPDATE_STORE_PROPERTY_SQL = //
-	"    update cmf_info set value = ? where name = ? ";
-
-	private static final String INSERT_STORE_PROPERTY_SQL = //
-	"    insert into cmf_info (name, data_type, value) values (?, ?, ?) ";
-
-	private static final String DELETE_STORE_PROPERTY_SQL = //
-	"    delete from cmf_info where name = ? ";
-
-	private static final String GET_STORE_PROPERTY_NAMES_SQL = //
-	"    select name from cmf_info order by name ";
-
-	private static final String DELETE_ALL_STORE_PROPERTIES_SQL = //
-	"    truncate table cmf_info ";
-
-	private static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
-		@Override
-		public Object handle(ResultSet rs) throws SQLException {
-			return null;
-		}
-	};
-
-	private static final ResultSetHandler<Boolean> HANDLER_EXISTS = new ResultSetHandler<Boolean>() {
-		@Override
-		public Boolean handle(ResultSet rs) throws SQLException {
-			return rs.next();
-		}
-	};
-
 	private final ResultSetHandler<Long> objectNumberHandler = new ResultSetHandler<Long>() {
 
 		private volatile Integer codePath = null;
@@ -261,6 +219,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private final boolean managedTransactions;
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
+	private final JdbcStorePropertyManager propertyManager;
 
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
 		throws CmfStorageException {
@@ -278,67 +237,21 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			throw new CmfStorageException("Failed to get a SQL Connection to validate the schema", e);
 		}
 
-		boolean ok = false;
-		try {
-			Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(c));
-			Liquibase liquibase = new Liquibase("db.changelog.xml", new ClassLoaderResourceAccessor(), database);
-			if (updateSchema) {
-				liquibase.update((String) null);
-			} else {
-				liquibase.validate();
-			}
-			JdbcOperation op = new JdbcOperation(c, this.managedTransactions);
-			if (cleanData) {
-				clearProperties(op);
-				clearAllObjects(op);
-				clearAttributeMappings(op);
-			}
-			ok = true;
-		} catch (DatabaseException e) {
-			throw new CmfStorageException("Failed to find a supported database for the given connection", e);
-		} catch (LiquibaseException e) {
-			if (updateSchema) {
-				throw new CmfStorageException("Failed to generate/update the SQL schema", e);
-			} else {
-				throw new CmfStorageException("The SQL schema is of the wrong version or structure", e);
-			}
-		} finally {
-			finalizeTransaction(c, ok);
-		}
+		this.propertyManager = new JdbcStorePropertyManager(JdbcObjectStore.PROPERTY_TABLE);
+
+		JdbcSchemaManager.prepareSchema(JdbcObjectStore.SCHEMA_CHANGE_LOG, c, updateSchema, cleanData,
+			this.managedTransactions, new JdbcSchemaManager.Callback() {
+				@Override
+				public void cleanData(JdbcOperation op) throws CmfStorageException {
+					clearProperties(op);
+					clearAllObjects(op);
+					clearAttributeMappings(op);
+				}
+			});
 	}
 
 	protected final DataSourceDescriptor<?> getDataSourceDescriptor() {
 		return this.dataSourceDescriptor;
-	}
-
-	private void finalizeTransaction(Connection c, boolean commit) {
-		if (this.managedTransactions) {
-			// We're not owning the transaction
-			DbUtils.closeQuietly(c);
-		} else if (commit) {
-			DbUtils.commitAndCloseQuietly(c);
-		} else {
-			DbUtils.rollbackAndCloseQuietly(c);
-		}
-	}
-
-	private static final ThreadLocal<QueryRunner> QUERY_RUNNER = new ThreadLocal<QueryRunner>();
-
-	private static QueryRunner getQueryRunner() {
-		QueryRunner q = JdbcObjectStore.QUERY_RUNNER.get();
-		if (q == null) {
-			q = new QueryRunner();
-			JdbcObjectStore.QUERY_RUNNER.set(q);
-		}
-		return q;
-	}
-
-	private String composeDatabaseId(CmfType type, String id) {
-		return String.format("{%02x-%s}", type.ordinal(), id);
-	}
-
-	private String composeDatabaseId(CmfObject<?> obj) {
-		return composeDatabaseId(obj.getType(), obj.getId());
 	}
 
 	@Override
@@ -346,7 +259,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		throws CmfStorageException, CmfValueEncoderException {
 		final Connection c = operation.getConnection();
 		final CmfType objectType = object.getType();
-		final String objectId = composeDatabaseId(object);
+		final String objectId = JdbcTools.composeDatabaseId(object);
 
 		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
 		Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
@@ -357,7 +270,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		Object[] propData = new Object[4];
 
 		try {
-			QueryRunner qr = JdbcObjectStore.getQueryRunner();
+			QueryRunner qr = JdbcTools.getQueryRunner();
 
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
@@ -470,14 +383,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			Long ret = qr.insert(c, JdbcObjectStore.INSERT_OBJECT_SQL, this.objectNumberHandler, objectId,
 				object.getSearchKey(), objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()),
 				object.getLabel(), object.getBatchId(), object.getProductName(), object.getProductVersion());
-			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_SQL, JdbcObjectStore.HANDLER_NULL,
-				attributeParameters.toArray(JdbcObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
-				attributeValueParameters.toArray(JdbcObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcObjectStore.INSERT_PROPERTY_SQL, JdbcObjectStore.HANDLER_NULL,
-				propertyParameters.toArray(JdbcObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcObjectStore.INSERT_PROPERTY_VALUE_SQL, JdbcObjectStore.HANDLER_NULL,
-				propertyValueParameters.toArray(JdbcObjectStore.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_SQL, JdbcTools.HANDLER_NULL,
+				attributeParameters.toArray(JdbcTools.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_ATTRIBUTE_VALUE_SQL, JdbcTools.HANDLER_NULL,
+				attributeValueParameters.toArray(JdbcTools.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_PROPERTY_SQL, JdbcTools.HANDLER_NULL,
+				propertyParameters.toArray(JdbcTools.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_PROPERTY_VALUE_SQL, JdbcTools.HANDLER_NULL,
+				propertyValueParameters.toArray(JdbcTools.NO_PARAMS));
 			// lockRS.updateBoolean(1, true);
 			// lockRS.updateRow();
 			if (this.log.isDebugEnabled()) {
@@ -556,7 +469,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					// Process the IDs
 					Object[] arr = ids.toArray();
 					for (int i = 0; i < arr.length; i++) {
-						arr[i] = composeDatabaseId(type, arr[i].toString());
+						arr[i] = JdbcTools.composeDatabaseId(type, arr[i].toString());
 					}
 					if (useSqlArray) {
 						objectPS.setString(1, type.name());
@@ -756,15 +669,15 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		// or the exact mapping we wanted was already there. So if the deleteCount is not 0,
 		// we're already good to go on the insert. Otherwise, we have to check for an
 		// existing, identical mapping
-		if ((deleteCount > 0) || !qr.query(c, JdbcObjectStore.FIND_EXACT_MAPPING_SQL, JdbcObjectStore.HANDLER_EXISTS,
+		if ((deleteCount > 0) || !qr.query(c, JdbcObjectStore.FIND_EXACT_MAPPING_SQL, JdbcTools.HANDLER_EXISTS,
 			type.name(), name, sourceValue, targetValue)) {
 			// New mapping...so...we need to delete anything that points to this source, and
 			// anything that points to this target, since we don't accept duplicates on either
 			// column
 
 			// Now, add the new mapping...
-			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), name,
-				sourceValue, targetValue);
+			qr.insert(c, JdbcObjectStore.INSERT_MAPPING_SQL, JdbcTools.HANDLER_NULL, type.name(), name, sourceValue,
+				targetValue);
 			this.log
 				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
@@ -809,8 +722,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	private boolean isStored(Connection c, CmfType type, String objectId) throws SQLException {
-		return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.CHECK_IF_OBJECT_EXISTS_SQL,
-			JdbcObjectStore.HANDLER_EXISTS, composeDatabaseId(type, objectId), type.name());
+		return JdbcTools.getQueryRunner().query(c, JdbcObjectStore.CHECK_IF_OBJECT_EXISTS_SQL, JdbcTools.HANDLER_EXISTS,
+			JdbcTools.composeDatabaseId(type, objectId), type.name());
 	}
 
 	@Override
@@ -1012,7 +925,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		CmfType type = CmfType.decodeString(rs.getString("object_type"));
 		String id = rs.getString("object_id");
-		Matcher m = JdbcObjectStore.OBJECT_ID_PARSER.matcher(id);
+		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
 		if (m.matches()) {
 			id = m.group(1);
 		}
@@ -1110,20 +1023,20 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected boolean lockForStorage(JdbcOperation operation, CmfType type, String id) throws CmfStorageException {
 		final Connection c = operation.getConnection();
-		QueryRunner qr = JdbcObjectStore.getQueryRunner();
-		final String dbid = composeDatabaseId(type, id);
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		final String dbid = JdbcTools.composeDatabaseId(type, id);
 		try {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("ATTEMPTING TO PERSIST DEPENDENCY [%s::%s]", type.name(), id));
 			}
-			qr.insert(c, JdbcObjectStore.INSERT_EXPORT_PLAN_SQL, JdbcObjectStore.HANDLER_NULL, type.name(), dbid);
+			qr.insert(c, JdbcObjectStore.INSERT_EXPORT_PLAN_SQL, JdbcTools.HANDLER_NULL, type.name(), dbid);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
 			}
 			return true;
 		} catch (SQLException e) {
 			try {
-				if (qr.query(c, JdbcObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, JdbcObjectStore.HANDLER_EXISTS, dbid)) {
+				if (qr.query(c, JdbcObjectStore.QUERY_EXPORT_PLAN_DUPE_SQL, JdbcTools.HANDLER_EXISTS, dbid)) {
 					// Duplicate dependency...we skip it
 					if (this.log.isTraceEnabled()) {
 						this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
@@ -1143,122 +1056,35 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected CmfValue getProperty(JdbcOperation operation, String property) throws CmfStorageException {
-		final Connection c = operation.getConnection();
-		try {
-			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_SQL,
-				new ResultSetHandler<CmfValue>() {
-					@Override
-					public CmfValue handle(ResultSet rs) throws SQLException {
-						if (!rs.next()) { return null; }
-						String name = rs.getString("name");
-						String type = rs.getString("data_type");
-						final CmfDataType t;
-
-						try {
-							t = CmfDataType.decodeString(type);
-						} catch (IllegalArgumentException e) {
-							throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
-						}
-						final CmfValueSerializer deserializer = CmfValueSerializer.get(t);
-						if (deserializer == null) { throw new SQLException(
-							String.format("Unsupported data type name for serialization: [%s]", type)); }
-						String value = rs.getString("value");
-						try {
-							return deserializer.deserialize(value);
-						} catch (ParseException e) {
-							throw new SQLException(String.format(
-								"Failed to deserialize store property [%s]:[%s] as a %s", name, value, type), e);
-						}
-					}
-				}, property);
-		} catch (SQLException e) {
-			throw new CmfStorageException(
-				String.format("Failed to retrieve the value of store property [%s]", property), e);
-		}
+		return this.propertyManager.getProperty(operation, property);
 	}
 
 	@Override
 	protected CmfValue setProperty(JdbcOperation operation, String property, final CmfValue newValue)
 		throws CmfStorageException {
-		final CmfValue oldValue = getProperty(operation, property);
-		final Connection c = operation.getConnection();
-		final CmfValueSerializer serializer = CmfValueSerializer.get(newValue.getDataType());
-		final String newValueString;
-		try {
-			newValueString = serializer.serialize(newValue);
-		} catch (ParseException e) {
-			throw new CmfStorageException(
-				String.format("Failed to serialize the value [%s] for the store property [%s]", newValue, property));
-		}
-		try {
-			if (oldValue != null) {
-				int n = JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.UPDATE_STORE_PROPERTY_SQL,
-					newValueString, property);
-				if (n != 1) { throw new CmfStorageException(
-					String.format("Failed to properly update store property [%s] - updated %d values instead of just 1",
-						property, n)); }
-			} else {
-				JdbcObjectStore.getQueryRunner().insert(c, JdbcObjectStore.INSERT_STORE_PROPERTY_SQL,
-					JdbcObjectStore.HANDLER_NULL, property, newValue.getDataType().name(), newValueString);
-			}
-		} catch (SQLException e) {
-			throw new CmfStorageException(
-				String.format("Failed to set the value of store property [%s] to [%s]", property, newValueString), e);
-		}
-		return oldValue;
+		return this.propertyManager.setProperty(operation, property, newValue);
 	}
 
 	@Override
 	protected Set<String> getPropertyNames(JdbcOperation operation) throws CmfStorageException {
-		final Connection c = operation.getConnection();
-		try {
-			return JdbcObjectStore.getQueryRunner().query(c, JdbcObjectStore.GET_STORE_PROPERTY_NAMES_SQL,
-				new ResultSetHandler<Set<String>>() {
-
-					@Override
-					public Set<String> handle(ResultSet rs) throws SQLException {
-						Set<String> ret = new TreeSet<String>();
-						while (rs.next()) {
-							ret.add(rs.getString("name"));
-						}
-						return ret;
-					}
-				});
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to retrieve the store property names", e);
-		}
+		return this.propertyManager.getPropertyNames(operation);
 	}
 
 	@Override
 	protected CmfValue clearProperty(JdbcOperation operation, String property) throws CmfStorageException {
-		final CmfValue oldValue = getProperty(operation, property);
-		final Connection c = operation.getConnection();
-		try {
-			JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_STORE_PROPERTY_SQL, property);
-		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to delete the store property [%s]", property), e);
-		}
-		return oldValue;
+		return this.propertyManager.clearProperty(operation, property);
 	}
 
 	@Override
 	protected void clearProperties(JdbcOperation operation) throws CmfStorageException {
-		try {
-			clearProperties(operation.getConnection());
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to delete all the store properties", e);
-		}
-	}
-
-	private void clearProperties(Connection c) throws SQLException {
-		JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.DELETE_ALL_STORE_PROPERTIES_SQL);
+		this.propertyManager.clearProperties(operation);
 	}
 
 	@Override
 	protected <V> void setContentInfo(JdbcOperation operation, CmfObject<V> object, Collection<CmfContentInfo> content)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
-		final String objectId = composeDatabaseId(object);
+		final String objectId = JdbcTools.composeDatabaseId(object);
 		final QueryRunner qr = new QueryRunner();
 
 		// Step 1: Delete what's there
@@ -1303,10 +1129,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		// Step 3: execute the batch inserts
 		try {
-			qr.insertBatch(c, JdbcObjectStore.INSERT_CONTENT_SQL, JdbcObjectStore.HANDLER_NULL,
-				contents.toArray(JdbcObjectStore.NO_PARAMS));
-			qr.insertBatch(c, JdbcObjectStore.INSERT_CONTENT_PROPERTY_SQL, JdbcObjectStore.HANDLER_NULL,
-				properties.toArray(JdbcObjectStore.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_CONTENT_SQL, JdbcTools.HANDLER_NULL,
+				contents.toArray(JdbcTools.NO_PARAMS));
+			qr.insertBatch(c, JdbcObjectStore.INSERT_CONTENT_PROPERTY_SQL, JdbcTools.HANDLER_NULL,
+				properties.toArray(JdbcTools.NO_PARAMS));
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("Failed to insert the new content records for %s [%s](%s)",
 				object.getType(), object.getLabel(), object.getId()), e);
@@ -1317,7 +1143,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected <V> List<CmfContentInfo> getContentInfo(JdbcOperation operation, CmfObject<V> object)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
-		final String objectId = composeDatabaseId(object);
+		final String objectId = JdbcTools.composeDatabaseId(object);
 
 		PreparedStatement cPS = null;
 		PreparedStatement pPS = null;
