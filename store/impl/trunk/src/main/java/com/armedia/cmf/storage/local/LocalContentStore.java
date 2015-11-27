@@ -294,7 +294,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected OutputStream openOutput(LocalStoreOperation op, URI locator) throws CmfStorageException {
+	protected long setContents(LocalStoreOperation op, URI locator, InputStream in) throws CmfStorageException {
 		final File f;
 		try {
 			f = getFile(locator);
@@ -316,11 +316,20 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			if (!f.exists()) { throw new CmfStorageException(
 				String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath())); }
 		}
+		FileOutputStream out = null;
 		try {
-			return new FileOutputStream(f);
-		} catch (IOException e) {
-			throw new CmfStorageException(String.format("Failed to open the file at [%s] for output", f), e);
+			out = new FileOutputStream(f);
+		} catch (FileNotFoundException e) {
+			throw new CmfStorageException(String.format("Failed to open the output stream to the file at [%s]", f), e);
 		}
+		try {
+			IOUtils.copyLarge(in, out);
+		} catch (IOException e) {
+			throw new CmfStorageException(String.format("Failed to write the content out to the file at [%s]", f), e);
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+		return f.length();
 	}
 
 	@Override
