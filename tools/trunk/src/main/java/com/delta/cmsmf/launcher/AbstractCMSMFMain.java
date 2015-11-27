@@ -73,6 +73,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("cmsmf");
 			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
+			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 			this.cmfObjectStore = CmfStores.createObjectStore(cfg);
 
@@ -86,8 +87,9 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 					cfg.getSettings().put("dir.content.strategy", strategy);
 				}
 			}
-			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
+			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
+			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 
 			this.cmfContentStore = CmfStores.createContentStore(cfg);
 
