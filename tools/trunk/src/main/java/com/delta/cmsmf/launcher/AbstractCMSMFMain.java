@@ -30,7 +30,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	private static AbstractCMSMFMain<?, ?> instance = null;
 
 	protected final CmfObjectStore<?, ?> cmfObjectStore;
-	protected final CmfContentStore<?> cmfContentStore;
+	protected final CmfContentStore<?, ?, ?> cmfContentStore;
 	protected final E engine;
 
 	protected final String server;
