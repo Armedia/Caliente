@@ -405,7 +405,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, CmfContentInfo info,
-		CmfContentStore<?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
+		CmfContentStore<?, ?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount) throws DfException,
 		ImportException {
 		// Step one: what's the content's path in the filesystem?
@@ -564,14 +564,14 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)",
 				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
-		CmfContentStore<?> contentStore = context.getContentStore();
+		CmfContentStore<?, ?, ?> contentStore = context.getContentStore();
 		int i = 0;
 		final CmfAttribute<IDfValue> contentTypeAtt = this.cmfObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
 		final String contentType = determineFormat(context.getSession(), (contentTypeAtt != null ? contentTypeAtt
 			.getValue().toString() : null));
 		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		for (CmfContentInfo info : infoList) {
-			CmfContentStore<?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info.getQualifier());
+			CmfContentStore<?, ?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info.getQualifier());
 
 			CfgTools cfg = info.getCfgTools();
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);

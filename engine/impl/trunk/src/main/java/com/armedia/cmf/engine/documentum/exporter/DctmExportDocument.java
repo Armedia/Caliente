@@ -214,7 +214,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected List<CmfContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, CmfContentStore<?> streamStore)
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, CmfContentStore<?, ?, ?> streamStore)
 		throws Exception {
 		if (isDfReference(document)) { return super.doStoreContent(session, translator, marshaled, referrent, document,
 			streamStore); }
@@ -238,7 +238,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				while (results.next()) {
 					final IDfContent content = IDfContent.class.cast(session.getObject(results
 						.getId(DctmAttributes.R_OBJECT_ID)));
-					CmfContentStore<?>.Handle handle = storeContentStream(session, translator, marshaled, document,
+					CmfContentStore<?, ?, ?>.Handle handle = storeContentStream(session, translator, marshaled, document,
 						content, streamStore);
 					CmfContentInfo info = new CmfContentInfo(handle.getQualifier());
 					IDfId formatId = content.getFormatId();
@@ -268,9 +268,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		return cmfContentInfo;
 	}
 
-	protected CmfContentStore<?>.Handle storeContentStream(IDfSession session,
+	protected CmfContentStore<?, ?, ?>.Handle storeContentStream(IDfSession session,
 		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, IDfDocument document,
-		IDfContent content, CmfContentStore<?> streamStore) throws Exception {
+		IDfContent content, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (document == null) { throw new Exception(String.format(
 			"Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
@@ -284,7 +284,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		String qualifier = String.format(DctmExportDocument.QUALIFIER_FMT, pageNumber, pageModifier, format);
 
 		// CmfStore the content in the filesystem
-		CmfContentStore<?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
+		CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
 		final File targetFile = contentHandle.getFile();
 		if (targetFile != null) {
 			final File parent = targetFile.getParentFile();

@@ -34,7 +34,7 @@ public class DctmImportContextFactory extends
 
 	@Override
 	protected DctmImportContext constructContext(String rootId, CmfType rootType, IDfSession session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
 		return new DctmImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper, getEngine()
 			.getTranslator(), objectStore, contentStore);
 	}

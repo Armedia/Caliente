@@ -130,12 +130,12 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 
 	@Override
 	protected final List<CmfContentInfo> storeContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		return doStoreContent(session, translator, marshaled, referrent, castObject(this.object), streamStore);
 	}
 
 	protected List<CmfContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?> streamStore)
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?, ?, ?> streamStore)
 		throws Exception {
 		return null;
 	}

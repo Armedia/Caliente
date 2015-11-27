@@ -33,7 +33,7 @@ public class DctmExportContextFactory extends
 
 	@Override
 	protected DctmExportContext constructContext(String rootId, CmfType rootType, IDfSession session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper) {
 		return new DctmExportContext(this, rootId, rootType, session, output);
 	}
 
