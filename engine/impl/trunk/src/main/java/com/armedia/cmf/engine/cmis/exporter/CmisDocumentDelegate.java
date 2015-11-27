@@ -1,7 +1,6 @@
 package com.armedia.cmf.engine.cmis.exporter;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -128,7 +127,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		List<CmfContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
-		CmfContentStore<?, ?, ?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main, streamStore);
+		CmfContentStore<?, ?, ?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main,
+			streamStore);
 		CmfContentInfo mainInfo = new CmfContentInfo(mainHandle.getQualifier());
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
 		mainInfo.setLength(main.getLength());
@@ -153,23 +153,21 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	protected CmfContentStore<?, ?, ?>.Handle storeContentStream(CmfObject<CmfValue> marshalled,
-		CmfAttributeTranslator<CmfValue> translator, Rendition r, ContentStream cs, CmfContentStore<?, ?, ?> streamStore)
-		throws Exception {
+		CmfAttributeTranslator<CmfValue> translator, Rendition r, ContentStream cs,
+		CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
 		InputStream src = cs.getStream();
-		OutputStream tgt = h.openOutput();
 		try {
-			IOUtils.copy(src, tgt);
+			h.setContents(src);
 		} finally {
 			IOUtils.closeQuietly(src);
-			IOUtils.closeQuietly(tgt);
 		}
 		return h;
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled, CmisExportContext ctx)
-		throws Exception {
+	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
+		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
 		String prev = this.object.getId();
 		for (Document d : this.successors) {
