@@ -40,7 +40,14 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		FolderT f = this.delegate.createItem(translator, ctx);
 		CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
 		if (!h.getSourceStore().isSupportsFileAccess()) { return null; }
-		File tgt = h.getFile();
+		File tgt = null;
+		try {
+			tgt = h.getFile();
+		} catch (IOException e) {
+			// Failed to get the file, so we can't handle this
+			throw new CmfStorageException(String.format("Failed to locate the location for the FOLDER (%s)[%s]",
+				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+		}
 		File dir = tgt.getParentFile();
 		if (dir != null) {
 			try {

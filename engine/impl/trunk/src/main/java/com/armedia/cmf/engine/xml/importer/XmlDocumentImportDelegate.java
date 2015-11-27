@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.xml.importer;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
@@ -83,7 +84,16 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		for (CmfContentInfo info : ctx.getContentInfo(this.cmfObject)) {
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
-			File f = h.getFile();
+			final File f;
+			try {
+				f = h.getFile();
+			} catch (IOException e) {
+				// Failed to get the file, so we can't handle this
+				throw new CmfStorageException(
+					String.format("Failed to locate the content file for DOCUMENT (%s)[%s], content qualifier [%s]",
+						this.cmfObject.getLabel(), this.cmfObject.getId(), info.getQualifier()),
+					e);
+			}
 			ContentInfoT xml = new ContentInfoT();
 			xml.setFileName(info.getFileName());
 			// xml.setHash(null);
