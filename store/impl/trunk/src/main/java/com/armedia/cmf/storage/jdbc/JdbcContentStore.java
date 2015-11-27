@@ -1,19 +1,25 @@
 package com.armedia.cmf.storage.jdbc;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Blob;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfOperationException;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
@@ -26,6 +32,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	private static final String DELETE_ALL_STREAMS_SQL = "delete from cmf_content_stream";
 	private static final String CHECK_EXISTS_SQL = "select object_id from cmf_content_stream where object_id = ? and qualifier = ?";
 	private static final String GET_STREAM_LENGTH_SQL = "select length from cmf_content_stream where object_id = ? and qualifier = ?";
+	private static final String GET_STREAM_SQL = "select length, data from cmf_content_stream where object_id = ? and qualifier = ?";
+	private static final String DELETE_STREAM_SQL = "delete from cmf_content_stream where object_id = ? and qualifier = ?";
+	private static final String INSERT_STREAM_SQL = "insert into cmf_content_stream (object_id, qualifier, length, data) values (?, ?, ?, ?)";
 
 	private static final ResultSetHandler<Long> HANDLER_LENGTH = new ResultSetHandler<Long>() {
 		@Override
@@ -36,6 +45,132 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 			return l;
 		}
 	};
+
+	private class Input extends InputStream {
+		private final JdbcContentLocator locator;
+		private Blob blob = null;
+		private InputStream stream = null;
+		private JdbcOperation operation = null;
+		private boolean tx = false;
+		private boolean finished = false;
+		private PreparedStatement ps = null;
+		private ResultSet rs = null;
+
+		private Input(JdbcContentLocator locator) throws CmfStorageException, SQLException {
+			this.locator = locator;
+			boolean ok = false;
+			try {
+				this.operation = beginConcurrentInvocation();
+				this.tx = this.operation.begin();
+
+				this.ps = this.operation.getConnection().prepareStatement(JdbcContentStore.GET_STREAM_SQL);
+				this.ps.setString(1, this.locator.getObjectId());
+				this.ps.setString(2, this.locator.getQualifier());
+				this.rs = this.ps.executeQuery();
+				if (!this.rs.next()) { throw new CmfStorageException(
+					String.format("No data stream found for locator [%s]", this.locator)); }
+
+				this.blob = this.rs.getBlob("data");
+				if (this.rs.wasNull()) { throw new CmfStorageException(
+					String.format("The data stream for locator [%s] was NULL", this.locator)); }
+				this.stream = this.blob.getBinaryStream();
+				ok = true;
+			} finally {
+				if (!ok) {
+					DbUtils.closeQuietly(this.rs);
+					this.rs = null;
+					DbUtils.closeQuietly(this.ps);
+					this.ps = null;
+					if (this.operation != null) {
+						try {
+							close();
+						} catch (IOException e) {
+							throw new CmfStorageException(e);
+						}
+					}
+				}
+			}
+		}
+
+		private void assertOpen() throws IOException {
+			if (this.finished) { throw new IOException(
+				String.format("The InputStream for locator [%s] has already been closed", this.locator)); }
+		}
+
+		private void assertOpenRT() {
+			try {
+				assertOpen();
+			} catch (IOException e) {
+				throw new RuntimeException(
+					String.format("The InputStream for locator [%s] has already been closed", this.locator));
+			}
+		}
+
+		@Override
+		public int read(byte[] b, int off, int len) throws IOException {
+			assertOpen();
+			return this.stream.read(b, off, len);
+		}
+
+		@Override
+		public int read() throws IOException {
+			assertOpen();
+			return this.stream.read();
+		}
+
+		@Override
+		public long skip(long n) throws IOException {
+			assertOpen();
+			return this.stream.skip(n);
+		}
+
+		@Override
+		public int available() throws IOException {
+			assertOpen();
+			return this.stream.available();
+		}
+
+		@Override
+		public synchronized void mark(int readlimit) {
+			assertOpenRT();
+			this.stream.mark(readlimit);
+		}
+
+		@Override
+		public boolean markSupported() {
+			assertOpenRT();
+			return this.stream.markSupported();
+		}
+
+		@Override
+		public synchronized void reset() throws IOException {
+			assertOpen();
+			this.stream.reset();
+		}
+
+		@Override
+		public void close() throws IOException {
+			assertOpenRT();
+			this.finished = true;
+			IOUtils.closeQuietly(this.stream);
+			DbUtils.closeQuietly(this.rs);
+			DbUtils.closeQuietly(this.ps);
+			try {
+				if (this.tx) {
+					try {
+						this.operation.rollback();
+					} catch (CmfOperationException e) {
+						JdbcContentStore.this.log.warn(
+							String.format("Failed to rollback the transaction for closing the stream for locator [%s]",
+								this.locator),
+							e);
+					}
+				}
+			} finally {
+				endConcurrentInvocation(this.operation);
+			}
+		}
+	}
 
 	private final boolean managedTransactions;
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
@@ -112,12 +247,46 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 	@Override
 	protected InputStream openInput(JdbcOperation operation, JdbcContentLocator locator) throws CmfStorageException {
-		return null;
+		if (!isExists(operation, locator)) { return null; }
+		try {
+			return new Input(locator);
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Failed to open an input stream to the content at locator [%s]", locator), e);
+		}
 	}
 
 	@Override
-	protected OutputStream openOutput(JdbcOperation operation, JdbcContentLocator locator) throws CmfStorageException {
-		return null;
+	protected long setContents(JdbcOperation operation, JdbcContentLocator locator, InputStream in)
+		throws CmfStorageException {
+		// TODO: Modify to support large files by segmenting into multiple insert+update combos
+		// such that each subsequent query adds an additional "large" chunk to the overall BLOB
+		// in the DB
+		final Connection c = operation.getConnection();
+		try {
+			final Blob blob = c.createBlob();
+			OutputStream out = blob.setBinaryStream(1);
+			try {
+				IOUtils.copy(in, out);
+			} catch (IOException e) {
+				throw new CmfStorageException(
+					String.format("Failed to copy the content from the given input stream for locator [%s]", locator),
+					e);
+			} finally {
+				IOUtils.closeQuietly(out);
+			}
+			JdbcTools.getQueryRunner().update(c, JdbcContentStore.DELETE_STREAM_SQL, locator.getObjectId(),
+				locator.getQualifier());
+			final PreparedStatement ps = c.prepareStatement(JdbcContentStore.INSERT_STREAM_SQL);
+			ps.setString(1, locator.getObjectId());
+			ps.setString(2, locator.getQualifier());
+			ps.setLong(3, blob.length());
+			ps.setBlob(4, blob);
+			ps.executeUpdate();
+			return blob.length();
+		} catch (SQLException e) {
+			throw new CmfStorageException(String.format("DB error setting the content for locator [%s]", locator), e);
+		}
 	}
 
 	@Override
