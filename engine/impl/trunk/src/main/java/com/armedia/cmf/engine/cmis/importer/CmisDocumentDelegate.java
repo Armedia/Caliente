@@ -1,6 +1,5 @@
 package com.armedia.cmf.engine.cmis.importer;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +23,7 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
@@ -71,7 +71,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 		try {
 			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getStreamSize()), mimeType, h.openInput());
-		} catch (IOException e) {
+		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to access the [%s] content for DOCUMENT [%s](%s)",
 				h.getQualifier(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
@@ -108,9 +108,11 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				try {
 					newVersion.cancelCheckOut();
 				} catch (Exception e) {
-					this.log.warn(String.format(
-						"Failed to cancel the checkout for [%s], checked out from [%s] (for object [%s](%s))",
-						newVersion.getId(), existing.getId(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+					this.log.warn(
+						String.format(
+							"Failed to cancel the checkout for [%s], checked out from [%s] (for object [%s](%s))",
+							newVersion.getId(), existing.getId(), this.cmfObject.getLabel(), this.cmfObject.getId()),
+						e);
 				}
 			}
 		}
@@ -133,15 +135,15 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 								Document doc = Document.class.cast(obj);
 								for (Document d : doc.getAllVersions()) {
 									Boolean pwc = d.isPrivateWorkingCopy();
-									if ((pwc != null) && pwc.booleanValue()) { throw new ImportException(String.format(
-										"The document is already checked out [%s](%s)", this.cmfObject.getLabel(),
-										this.cmfObject.getId())); }
+									if ((pwc != null) && pwc.booleanValue()) { throw new ImportException(
+										String.format("The document is already checked out [%s](%s)",
+											this.cmfObject.getLabel(), this.cmfObject.getId())); }
 									Boolean lv = d.isLatestVersion();
 									if ((lv != null) && lv.booleanValue()) { return d; }
 								}
-								throw new ImportException(String.format(
-									"Failed to locate the latest version for [%s](%s)", this.cmfObject.getLabel(),
-									this.cmfObject.getId()));
+								throw new ImportException(
+									String.format("Failed to locate the latest version for [%s](%s)",
+										this.cmfObject.getLabel(), this.cmfObject.getId()));
 							}
 							// If the object isn't a document, we have a problem
 							throw new ImportException(String.format(
