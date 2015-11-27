@@ -1,8 +1,9 @@
 package com.armedia.cmf.engine.local.exporter;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -42,8 +43,7 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.tools.MimeTools;
 
-public class LocalExportDelegate
-	extends
+public class LocalExportDelegate extends
 	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
 	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
@@ -105,7 +105,8 @@ public class LocalExportDelegate
 			object.setAttribute(att);
 
 			if (getType() == CmfType.DOCUMENT) {
-				att = new CmfAttribute<CmfValue>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfDataType.DOUBLE, false);
+				att = new CmfAttribute<CmfValue>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfDataType.DOUBLE,
+					false);
 				att.setValue(new CmfValue(basicAtts.size()));
 				object.setAttribute(att);
 			}
@@ -199,12 +200,11 @@ public class LocalExportDelegate
 				}
 				Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			} else {
-				OutputStream out = null;
+				InputStream in = new FileInputStream(src);
 				try {
-					out = h.openOutput();
-					Files.copy(src.toPath(), out);
+					h.setContents(in);
 				} finally {
-					IOUtils.closeQuietly(out);
+					IOUtils.closeQuietly(in);
 				}
 			}
 		}
