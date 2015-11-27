@@ -145,7 +145,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?> streamStore,
+	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
 		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException,
 		CmfValueEncoderException, UnsupportedCmfTypeException {
@@ -174,7 +174,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private Result doExportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?> streamStore,
+	private Result doExportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
 		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException,
 		CmfValueEncoderException, UnsupportedCmfTypeException {
@@ -313,12 +313,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?> contentStore, Map<String, ?> settings) throws ExportException, CmfStorageException {
+		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) throws ExportException, CmfStorageException {
 		return runExport(output, objectStore, contentStore, settings, null);
 	}
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter)
+		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter)
 		throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
@@ -372,7 +372,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	private CmfObjectCounter<ExportResult> runExportImpl(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter,
+		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter,
 		final CfgTools configuration, final SessionFactory<S> sessionFactory, final SessionWrapper<S> baseSession,
 		final ContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory) throws ExportException,
 		CmfStorageException {

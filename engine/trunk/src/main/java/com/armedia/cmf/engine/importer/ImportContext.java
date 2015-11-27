@@ -27,12 +27,12 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 	private final CmfObjectStore<?, ?> cmfObjectStore;
 	private final CmfAttributeTranslator<V> translator;
 	private final CmfTypeMapper typeMapper;
-	private final CmfContentStore<?> streamStore;
+	private final CmfContentStore<?, ?, ?> streamStore;
 
 	public <C extends ImportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
 		CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?> streamStore) {
+		CmfContentStore<?, ?, ?> streamStore) {
 		super(factory, settings, rootId, rootType, session, output);
 		this.factory = factory;
 		this.translator = translator;
@@ -52,7 +52,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 			strategy.isBatchingSupported());
 	}
 
-	public final CmfContentStore<?> getContentStore() {
+	public final CmfContentStore<?, ?, ?> getContentStore() {
 		return this.streamStore;
 	}
 

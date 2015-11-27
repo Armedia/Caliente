@@ -130,7 +130,7 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	}
 
 	public final C newContext(String rootId, CmfType rootType, S session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
@@ -141,5 +141,5 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	}
 
 	protected abstract C constructContext(String rootId, CmfType rootType, S session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper);
 }

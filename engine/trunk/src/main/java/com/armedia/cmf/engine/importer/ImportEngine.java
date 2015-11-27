@@ -277,12 +277,12 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 	}
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?> streamStore, Map<String, ?> settings) throws ImportException, CmfStorageException {
+		final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings) throws ImportException, CmfStorageException {
 		return runImport(output, objectStore, streamStore, settings, null);
 	}
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
+		final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
 			throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
@@ -359,7 +359,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 	}
 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final Logger output,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?> streamStore, final Map<String, ?> settings,
+		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore, final Map<String, ?> settings,
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
 		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper)
@@ -910,7 +910,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 	}
 
 	protected void prepareImport(Map<String, ?> settings, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?> contentStore) throws CmfStorageException, ImportException {
+		CmfContentStore<?, ?, ?> contentStore) throws CmfStorageException, ImportException {
 		// In case we wish to do something before the import process runs...
 	}
 }
