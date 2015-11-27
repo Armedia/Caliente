@@ -35,13 +35,4 @@
 		</createTable>
 		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, qualifier" />
 	</changeSet>
-	<changeSet author="cmf" id="2002">
-    	<preConditions onFail="CONTINUE">
-    		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
-	    </preConditions>
-		<addForeignKeyConstraint constraintName="fk_cmf_content_stream_content"
-			baseTableName="cmf_content_stream" baseColumnNames="object_id, qualifier"
-			referencedTableName="cmf_content" referencedColumnNames="object_id, qualifier"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-	</changeSet>
 </databaseChangeLog>
