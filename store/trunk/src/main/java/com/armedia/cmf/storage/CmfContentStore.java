@@ -150,7 +150,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		 */
 		public final long readFile(File source, int bufferSize) throws IOException, CmfStorageException {
 			if (source == null) { throw new IllegalArgumentException("Must provide a file to read from"); }
-			return runTransfer(new FileInputStream(source), openOutput(), bufferSize);
+			return setContents(new FileInputStream(source));
 		}
 
 		/**
@@ -217,8 +217,8 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		 * @return an {@link OutputStream} that can be used to write to the actual content file
 		 * @throws CmfStorageException
 		 */
-		public final OutputStream openOutput() throws CmfStorageException {
-			return CmfContentStore.this.openOutput(this.locator);
+		public final long setContents(InputStream in) throws CmfStorageException {
+			return CmfContentStore.this.setContents(this.locator, in);
 		}
 
 		/**
@@ -344,7 +344,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 
 	protected abstract InputStream openInput(O operation, L locator) throws CmfStorageException;
 
-	protected final OutputStream openOutput(L locator) throws CmfStorageException {
+	protected final long setContents(L locator, InputStream in) throws CmfStorageException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
 		validateLocator(locator);
 
@@ -357,7 +357,15 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 				throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator), e);
 			}
 			try {
-				return new FileOutputStream(f);
+				OutputStream out = new FileOutputStream(f);
+				try {
+					IOUtils.copyLarge(in, out);
+				} catch (IOException e) {
+					throw new CmfStorageException(
+						String.format("Failed to copy the content from the file [%s]", f.getAbsolutePath()), e);
+				} finally {
+					IOUtils.closeQuietly(out);
+				}
 			} catch (FileNotFoundException e) {
 				throw new CmfStorageException(
 					String.format("Failed to open an output stream to the file [%s]", f.getAbsolutePath()), e);
@@ -368,15 +376,21 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
+			boolean ok = false;
 			try {
-				return openOutput(operation, locator);
-			} finally {
+				long ret = setContents(operation, locator, in);
 				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
 						this.log.warn(String.format(
-							"Failed to rollback the transaction for retrieving the file locator [%s]", locator), e);
+							"Failed to rollback the transaction for setting the content for locator [%s]", locator), e);
 					}
 				}
 			}
@@ -385,7 +399,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 	}
 
-	protected abstract OutputStream openOutput(O operation, L locator) throws CmfStorageException;
+	protected abstract long setContents(O operation, L locator, InputStream in) throws CmfStorageException;
 
 	protected final boolean isExists(L locator) throws CmfStorageException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
