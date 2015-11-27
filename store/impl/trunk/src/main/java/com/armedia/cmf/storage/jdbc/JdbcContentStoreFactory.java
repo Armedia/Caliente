@@ -42,7 +42,7 @@ public class JdbcContentStoreFactory extends CmfContentStoreFactory<JdbcContentS
 			try {
 				return new JdbcContentStore(ds, cfg.getBoolean(Setting.UPDATE_SCHEMA), cleanData);
 			} catch (Exception e) {
-				throw new CmfStorageException(String.format("Failed to initialize the CmsObjectStore %s[%s]",
+				throw new CmfStorageException(String.format("Failed to initialize the CmfContentStore %s[%s]",
 					configuration.getName(), configuration.getId()), e);
 			}
 		}
