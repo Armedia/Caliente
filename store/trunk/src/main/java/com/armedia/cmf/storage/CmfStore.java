@@ -54,26 +54,44 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 
 	protected abstract O newOperation() throws CmfStorageException;
 
-	protected final O beginInvocation() throws CmfStorageException {
+	protected final O beginConcurrentInvocation() throws CmfStorageException {
+		return beginInvocation(false);
+	}
+
+	protected final O beginExclusiveInvocation() throws CmfStorageException {
+		return beginInvocation(true);
+	}
+
+	private O beginInvocation(boolean exclusive) throws CmfStorageException {
 		boolean ok = true;
+		final Lock lock = (exclusive ? getWriteLock() : getReadLock());
 		try {
-			getReadLock().lock();
+			lock.lock();
 			assertOpen();
 			O ret = newOperation();
 			ok = true;
 			return ret;
 		} finally {
 			if (!ok) {
-				getReadLock().unlock();
+				lock.unlock();
 			}
 		}
 	}
 
-	protected final void endInvocation(O operation) {
+	protected final void endConcurrentInvocation(O operation) {
+		endInvocation(operation, false);
+	}
+
+	protected final void endExclusiveInvocation(O operation) {
+		endInvocation(operation, true);
+	}
+
+	private void endInvocation(O operation, boolean exclusive) {
+		final Lock lock = (exclusive ? getWriteLock() : getReadLock());
 		try {
 			operation.closeQuietly();
 		} finally {
-			getReadLock().unlock();
+			lock.unlock();
 		}
 	}
 
@@ -98,7 +116,7 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 	}
 
 	public final void clearProperties() throws CmfStorageException {
-		O operation = beginInvocation();
+		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -118,14 +136,14 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endConcurrentInvocation(operation);
 		}
 	}
 
 	protected abstract void clearProperties(O operation) throws CmfStorageException;
 
 	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
-		O operation = beginInvocation();
+		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -141,14 +159,14 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endConcurrentInvocation(operation);
 		}
 	}
 
 	protected abstract CmfValue getProperty(O operation, String property) throws CmfStorageException;
 
 	protected final CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
-		O operation = beginInvocation();
+		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -172,14 +190,14 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endConcurrentInvocation(operation);
 		}
 	}
 
 	protected abstract CmfValue setProperty(O operation, String property, CmfValue value) throws CmfStorageException;
 
 	public final Set<String> getPropertyNames() throws CmfStorageException {
-		O operation = beginInvocation();
+		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -194,14 +212,15 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endConcurrentInvocation(operation);
 		}
 	}
 
 	protected abstract Set<String> getPropertyNames(O operation) throws CmfStorageException;
 
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
-		O operation = beginInvocation();
+
+		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -223,7 +242,7 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endConcurrentInvocation(operation);
 		}
 	}
 
