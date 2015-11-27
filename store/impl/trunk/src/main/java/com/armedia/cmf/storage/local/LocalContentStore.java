@@ -52,13 +52,14 @@ import com.armedia.commons.utilities.XmlTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class LocalContentStore extends CmfContentStore<URI> {
+public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOperation> {
 
 	private static final String SCHEME_RAW = "raw";
 	private static final String SCHEME_FIXED = "fixed";
 	private static final String SCHEME_SAFE = "safe";
 
 	private static final Set<String> SUPPORTED;
+
 	static {
 		Set<String> s = new HashSet<String>();
 		s.add(LocalContentStore.SCHEME_RAW);
@@ -95,10 +96,10 @@ public class LocalContentStore extends CmfContentStore<URI> {
 		throws CmfStorageException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
-		if (baseDir.exists() && !baseDir.isDirectory()) { throw new IllegalArgumentException(String.format(
-			"The file at [%s] is not a directory", baseDir.getAbsolutePath())); }
-		if (!baseDir.exists() && !baseDir.mkdirs()) { throw new IllegalArgumentException(String.format(
-			"Failed to create the full path at [%s] ", baseDir.getAbsolutePath())); }
+		if (baseDir.exists() && !baseDir.isDirectory()) { throw new IllegalArgumentException(
+			String.format("The file at [%s] is not a directory", baseDir.getAbsolutePath())); }
+		if (!baseDir.exists() && !baseDir.mkdirs()) { throw new IllegalArgumentException(
+			String.format("Failed to create the full path at [%s] ", baseDir.getAbsolutePath())); }
 		this.settings = settings;
 		File f = baseDir;
 		try {
@@ -117,8 +118,8 @@ public class LocalContentStore extends CmfContentStore<URI> {
 			this.propertiesLoaded = loadProperties();
 			CmfValue currentStrategyName = getProperty("strategy");
 			if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
-				CmfOrganizationStrategy currentStrategy = CmfOrganizationStrategy.getStrategy(currentStrategyName
-					.asString());
+				CmfOrganizationStrategy currentStrategy = CmfOrganizationStrategy
+					.getStrategy(currentStrategyName.asString());
 				if (currentStrategy != null) {
 					strategy = currentStrategy;
 					storeStrategyName = false;
@@ -211,8 +212,8 @@ public class LocalContentStore extends CmfContentStore<URI> {
 				return URLEncoder.encode(str, this.safeFilenameEncoding.name());
 			} catch (UnsupportedEncodingException e) {
 				// Not gonna happen...but still...better safe than sorry
-				throw new RuntimeException(String.format("Encoding [%s] is not supported in this JVM",
-					this.safeFilenameEncoding.name()), e);
+				throw new RuntimeException(
+					String.format("Encoding [%s] is not supported in this JVM", this.safeFilenameEncoding.name()), e);
 			}
 		}
 		if (this.fixFilenames) {
@@ -262,8 +263,8 @@ public class LocalContentStore extends CmfContentStore<URI> {
 		try {
 			return new URI(scheme, ssp, fragment);
 		} catch (URISyntaxException e) {
-			throw new RuntimeException(String.format("Failed to allocate a handle ID for %s[%s]", object.getType(),
-				object.getId()), e);
+			throw new RuntimeException(
+				String.format("Failed to allocate a handle ID for %s[%s]", object.getType(), object.getId()), e);
 		}
 	}
 
@@ -293,8 +294,8 @@ public class LocalContentStore extends CmfContentStore<URI> {
 			if (this.failOnCollisions) { throw new IOException(String.format(
 				"Filename collision detected for target file [%s] - a file already exists at that location",
 				f.getAbsolutePath())); }
-			if (!f.exists()) { throw new IOException(String.format(
-				"Failed to create the non-existent target file [%s]", f.getAbsolutePath())); }
+			if (!f.exists()) { throw new IOException(
+				String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath())); }
 		}
 		return new FileOutputStream(f);
 	}
@@ -399,24 +400,38 @@ public class LocalContentStore extends CmfContentStore<URI> {
 	}
 
 	@Override
-	protected CmfValue doGetProperty(String property) throws CmfStorageException {
+	protected LocalStoreOperation newOperation() throws CmfStorageException {
+		return new LocalStoreOperation(this.baseDir);
+	}
+
+	@Override
+	protected void clearProperties(LocalStoreOperation operation) throws CmfStorageException {
+		this.modified.set(true);
+		this.properties.clear();
+		this.propertiesFile.delete();
+		this.modified.set(false);
+	}
+
+	@Override
+	protected CmfValue getProperty(LocalStoreOperation operation, String property) throws CmfStorageException {
 		return this.properties.get(property);
 	}
 
 	@Override
-	protected CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
+	protected CmfValue setProperty(LocalStoreOperation operation, String property, CmfValue value)
+		throws CmfStorageException {
 		CmfValue ret = this.properties.put(property, value);
 		this.modified.set(true);
 		return ret;
 	}
 
 	@Override
-	public Set<String> getPropertyNames() throws CmfStorageException {
+	protected Set<String> getPropertyNames(LocalStoreOperation operation) throws CmfStorageException {
 		return new TreeSet<String>(this.properties.keySet());
 	}
 
 	@Override
-	protected CmfValue doClearProperty(String property) throws CmfStorageException {
+	protected CmfValue clearProperty(LocalStoreOperation operation, String property) throws CmfStorageException {
 		CmfValue ret = this.properties.remove(property);
 		this.modified.set(true);
 		return ret;
@@ -433,14 +448,6 @@ public class LocalContentStore extends CmfContentStore<URI> {
 			}
 		}
 		return super.doClose();
-	}
-
-	@Override
-	public void clearProperties() throws CmfStorageException {
-		this.modified.set(true);
-		this.properties.clear();
-		this.propertiesFile.delete();
-		this.modified.set(false);
 	}
 
 	@Override
