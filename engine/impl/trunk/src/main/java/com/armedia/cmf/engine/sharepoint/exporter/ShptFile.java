@@ -1,7 +1,6 @@
 package com.armedia.cmf.engine.sharepoint.exporter;
 
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -82,8 +81,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 	@Override
 	public String calculateSearchKey(ShptVersion object) {
-		return String.format(String.format("%s#%s", object.getFile().getServerRelativeUrl(), object.getVersionNumber()
-			.toString()));
+		return String.format(
+			String.format("%s#%s", object.getFile().getServerRelativeUrl(), object.getVersionNumber().toString()));
 	}
 
 	@Override
@@ -183,10 +182,10 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			Date d = this.version.getCreatedTime();
 			if (d != null) {
 				Collection<CmfValue> c = Collections.singleton(new CmfValue(d));
-				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME,
-					false, c));
-				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.MODIFICATION_DATE.name,
-					CmfDataType.DATETIME, false, c));
+				object.setAttribute(
+					new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME, false, c));
+				object.setAttribute(
+					new CmfAttribute<CmfValue>(ShptAttributes.MODIFICATION_DATE.name, CmfDataType.DATETIME, false, c));
 			}
 		}
 
@@ -201,8 +200,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			this.predecessors = Collections.emptyList();
 			this.successors = Collections.emptyList();
 			if (this.antecedentId != null) {
-				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID,
-					false, Collections.singleton(new CmfValue(this.antecedentId))));
+				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID, false,
+					Collections.singleton(new CmfValue(this.antecedentId))));
 			}
 		} else {
 			String antecedentId = this.antecedentId;
@@ -264,21 +263,22 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 				this.successors = Tools.freezeList(succ);
 				// TODO: See previous note about version detection/antecedent detection
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("FILE [%s] - version %s is anteceded by %s", this.object
-						.getServerRelativeUrl(), this.versionNumber, antecedentId != null ? antecedentId : "none"));
+					this.log.debug(
+						String.format("FILE [%s] - version %s is anteceded by %s", this.object.getServerRelativeUrl(),
+							this.versionNumber, antecedentId != null ? antecedentId : "none"));
 				}
 				if (antecedentId != null) {
 					object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID,
 						false, Collections.singleton(new CmfValue(antecedentId))));
 				}
 			} catch (ShptSessionException e) {
-				throw new ExportException(String.format("Failed to retrieve file versions for [%s]",
-					this.object.getServerRelativeUrl()), e);
+				throw new ExportException(
+					String.format("Failed to retrieve file versions for [%s]", this.object.getServerRelativeUrl()), e);
 			}
 		}
 
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION.name, CmfDataType.STRING, true,
-			versionNames));
+		object.setAttribute(
+			new CmfAttribute<CmfValue>(ShptAttributes.VERSION.name, CmfDataType.STRING, true, versionNames));
 		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_TREE.name, CmfDataType.ID, false,
 			Collections.singleton(new CmfValue(getBatchId()))));
 		return true;
@@ -356,8 +356,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		File f = service.getFile(url);
 		if (f == null) { return null; }
 		String version = m.group(2);
-		if (Tools.equals(version, String.format("%d.%d", f.getMajorVersion(), f.getMinorVersion()))) { return new ShptFile(
-			factory, f); }
+		if (Tools.equals(version,
+			String.format("%d.%d", f.getMajorVersion(), f.getMinorVersion()))) { return new ShptFile(factory, f); }
 		for (FileVersion v : service.getFileVersions(url)) {
 			if (Tools.equals(version, v.getLabel())) { return new ShptFile(factory, f, v); }
 		}
@@ -378,14 +378,12 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		}
 		// TODO: sadly, this is not memory efficient for larger files...
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer(10240);
-		OutputStream out = h.openOutput();
 		try {
 			IOUtils.copy(in, buf);
 			buf.close();
-			IOUtils.copy(buf.getInputStream(), out);
+			h.setContents(buf.getInputStream());
 		} finally {
 			IOUtils.closeQuietly(in);
-			IOUtils.closeQuietly(out);
 		}
 		// Now, try to identify the content type...
 		in = buf.getInputStream();
