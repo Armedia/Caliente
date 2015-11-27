@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.xml.StoreConfiguration;
 
-public abstract class CmfStoreFactory<S extends CmfStore> {
+public abstract class CmfStoreFactory<S extends CmfStore<?, ?>> {
 
 	public static final String CFG_CLEAN_DATA = "clean.data";
 
@@ -40,14 +40,14 @@ public abstract class CmfStoreFactory<S extends CmfStore> {
 			}
 		}
 		if (a.isEmpty()) {
-			String msg = String.format("The final alias set for [%s] is empty - cannot continue", getClass()
-				.getCanonicalName());
+			String msg = String.format("The final alias set for [%s] is empty - cannot continue",
+				getClass().getCanonicalName());
 			this.log.error(msg);
 			throw new IllegalArgumentException(msg);
 		}
 		this.aliases = Collections.unmodifiableSet(a);
-		this.log.debug("CmfStoreFactory [{}] will attempt to register for the following aliases: {}", getClass()
-			.getCanonicalName(), this.aliases);
+		this.log.debug("CmfStoreFactory [{}] will attempt to register for the following aliases: {}",
+			getClass().getCanonicalName(), this.aliases);
 	}
 
 	protected final Set<String> getAliases() {

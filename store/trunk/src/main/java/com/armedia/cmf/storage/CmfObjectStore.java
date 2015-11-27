@@ -23,7 +23,7 @@ import com.armedia.cmf.storage.tools.CollectionObjectHandler;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends CmfStore {
+public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends CmfStore<C, O> {
 
 	private class Mapper extends CmfAttributeMapper {
 
@@ -112,8 +112,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				if (this.operation == null) { return CmfObjectStore.this.getMappings(type, name); }
 				return CmfObjectStore.this.getMappings(this.operation, type, name);
 			} catch (CmfStorageException e) {
-				throw new RuntimeException(String.format(
-					"Exception caught attempting to get available mappings for [%s/%s]", type, name), e);
+				throw new RuntimeException(
+					String.format("Exception caught attempting to get available mappings for [%s/%s]", type, name), e);
 			}
 		}
 	}
@@ -132,31 +132,6 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		this.operationClass = operationClass;
 		this.open = openState;
 	}
-
-	private O beginInvocation() throws CmfStorageException {
-		boolean ok = true;
-		try {
-			getReadLock().lock();
-			assertOpen();
-			O ret = newOperation();
-			ok = true;
-			return ret;
-		} finally {
-			if (!ok) {
-				getReadLock().unlock();
-			}
-		}
-	}
-
-	private void endInvocation(O operation) {
-		try {
-			operation.closeQuietly();
-		} finally {
-			getReadLock().unlock();
-		}
-	}
-
-	protected abstract O newOperation() throws CmfStorageException;
 
 	public final boolean init(Map<String, String> settings) throws CmfStorageException {
 		getWriteLock().lock();
@@ -341,13 +316,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator, CmfType type, boolean batching, String... ids)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null), batching);
 	}
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		O operation = beginInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -370,7 +345,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
@@ -419,14 +394,14 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	public final <V> int loadObjects(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
-		final CmfType type, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException,
-		CmfValueDecoderException {
+		final CmfType type, CmfObjectHandler<V> handler, boolean batching)
+			throws CmfStorageException, CmfValueDecoderException {
 		return loadObjects(typeMapper, translator, type, null, handler, batching);
 	}
 
 	public final <V> int loadObjects(final CmfTypeMapper typeMapper, final CmfAttributeTranslator<V> translator,
 		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler, boolean batching)
-		throws CmfStorageException, CmfValueDecoderException {
+			throws CmfStorageException, CmfValueDecoderException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
@@ -472,8 +447,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException,
-		CmfValueDecoderException;
+		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching)
+			throws CmfStorageException, CmfValueDecoderException;
 
 	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
@@ -740,140 +715,4 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract void clearAllObjects(O operation) throws CmfStorageException;
-
-	@Override
-	public final void clearProperties() throws CmfStorageException {
-		O operation = beginInvocation();
-		try {
-			final boolean tx = operation.begin();
-			boolean ok = false;
-			try {
-				clearProperties(operation);
-				if (tx) {
-					operation.commit();
-				}
-				ok = true;
-			} finally {
-				if (tx && !ok) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for clearing all properties", e);
-					}
-				}
-			}
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	protected abstract void clearProperties(O operation) throws CmfStorageException;
-
-	@Override
-	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
-		O operation = beginInvocation();
-		try {
-			final boolean tx = operation.begin();
-			try {
-				return getProperty(operation, property);
-			} finally {
-				if (tx) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for retrieving the property [%s]", property), e);
-					}
-				}
-			}
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	protected abstract CmfValue getProperty(O operation, String property) throws CmfStorageException;
-
-	@Override
-	protected final CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
-		O operation = beginInvocation();
-		try {
-			final boolean tx = operation.begin();
-			boolean ok = false;
-			try {
-				CmfValue ret = setProperty(operation, property, value);
-				if (tx) {
-					operation.commit();
-				}
-				ok = true;
-				return ret;
-			} finally {
-				if (tx && !ok) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for setting the property [%s] to [%s]", property,
-							value.asString()), e);
-					}
-				}
-			}
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	protected abstract CmfValue setProperty(O operation, String property, CmfValue value) throws CmfStorageException;
-
-	@Override
-	public final Set<String> getPropertyNames() throws CmfStorageException {
-		O operation = beginInvocation();
-		try {
-			final boolean tx = operation.begin();
-			try {
-				return getPropertyNames(operation);
-			} finally {
-				if (tx) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for getting all property names", e);
-					}
-				}
-			}
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	protected abstract Set<String> getPropertyNames(O operation) throws CmfStorageException;
-
-	@Override
-	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
-		O operation = beginInvocation();
-		try {
-			final boolean tx = operation.begin();
-			boolean ok = false;
-			try {
-				CmfValue ret = clearProperty(operation, property);
-				if (tx) {
-					operation.commit();
-				}
-				ok = true;
-				return ret;
-			} finally {
-				if (tx && !ok) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for clearing the property [%s]", property), e);
-					}
-				}
-			}
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	protected abstract CmfValue clearProperty(O operation, String property) throws CmfStorageException;
 }

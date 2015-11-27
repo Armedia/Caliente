@@ -11,7 +11,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class CmfContentStore<L> extends CmfStore {
+public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> extends CmfStore<C, O> {
 
 	protected static final int MIN_BUFFER_SIZE = 4096;
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
@@ -77,7 +77,7 @@ public abstract class CmfContentStore<L> extends CmfStore {
 		 *
 		 * @return the {@link CmfContentStore} from which this handle was obtained.
 		 */
-		public final CmfContentStore<L> getSourceStore() {
+		public final CmfContentStore<L, C, O> getSourceStore() {
 			return CmfContentStore.this;
 		}
 
@@ -251,8 +251,9 @@ public abstract class CmfContentStore<L> extends CmfStore {
 
 	protected final void validateLocator(L locator) {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a non-null locator"); }
-		if (!isSupported(locator)) { throw new IllegalArgumentException(String.format(
-			"The locator [%s] is not supported by CmfContentStore class [%s]", locator, getClass().getCanonicalName())); }
+		if (!isSupported(locator)) { throw new IllegalArgumentException(
+			String.format("The locator [%s] is not supported by CmfContentStore class [%s]", locator,
+				getClass().getCanonicalName())); }
 	}
 
 	protected abstract Handle constructHandle(CmfObject<?> object, String qualifier, L locator);
@@ -361,7 +362,8 @@ public abstract class CmfContentStore<L> extends CmfStore {
 		}
 	}
 
-	protected abstract L doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier);
+	protected abstract L doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		String qualifier);
 
 	protected abstract File doGetFile(L locator);
 
