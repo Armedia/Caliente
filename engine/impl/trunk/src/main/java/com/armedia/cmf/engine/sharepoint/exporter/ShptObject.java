@@ -70,7 +70,7 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 
 	@Override
 	protected List<CmfContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -367,9 +367,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 	@Override
 	protected List<CmfContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?> streamStore) throws Exception {
+		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		// TODO: We NEED to use something other than the object ID here...
-		CmfContentStore<?>.Handle h = streamStore.getHandle(translator, marshaled, "");
+		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshaled, "");
 		InputStream in = null;
 		if (this.version == null) {
 			in = session.getFileStream(this.object.getServerRelativeUrl());
