@@ -81,7 +81,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
 
 		for (CmfContentInfo info : ctx.getContentInfo(this.cmfObject)) {
-			CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
+			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
 			File f = h.getFile();
 			ContentInfoT xml = new ContentInfoT();

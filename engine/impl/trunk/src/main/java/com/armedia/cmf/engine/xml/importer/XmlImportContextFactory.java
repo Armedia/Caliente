@@ -39,7 +39,7 @@ ImportContextFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xml
 
 	@Override
 	protected XmlImportContext constructContext(String rootId, CmfType rootType, XmlRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> contentStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
 		return new XmlImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper, getEngine()
 			.getTranslator(), objectStore, contentStore);
 	}

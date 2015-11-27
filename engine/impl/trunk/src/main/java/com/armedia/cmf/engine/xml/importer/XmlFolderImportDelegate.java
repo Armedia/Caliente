@@ -38,7 +38,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
 		FolderT f = this.delegate.createItem(translator, ctx);
-		CmfContentStore<?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
+		CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
 		if (!h.getSourceStore().isSupportsFileAccess()) { return null; }
 		File tgt = h.getFile();
 		File dir = tgt.getParentFile();

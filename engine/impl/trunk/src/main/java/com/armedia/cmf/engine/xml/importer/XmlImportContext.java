@@ -16,7 +16,7 @@ public class XmlImportContext extends ImportContext<XmlRoot, CmfValue, XmlImport
 
 	public XmlImportContext(XmlImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
 		XmlRoot session, Logger output, CmfTypeMapper typeMapper, CmfAttributeTranslator<CmfValue> translator,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?> streamStore) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore) {
 		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore);
 	}
 }
