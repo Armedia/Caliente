@@ -7,7 +7,6 @@ package com.armedia.cmf.engine.documentum.exporter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -76,41 +75,43 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			getVersionHistory(ctx, document);
 			List<IDfValue> patches = getVersionPatches(document, ctx);
 			if ((patches != null) && !patches.isEmpty()) {
-				properties.add(new CmfProperty<IDfValue>(DctmSysObject.VERSION_PATCHES, DctmDataType.DF_STRING
-					.getStoredType(), true, patches));
+				properties.add(new CmfProperty<IDfValue>(DctmSysObject.VERSION_PATCHES,
+					DctmDataType.DF_STRING.getStoredType(), true, patches));
 			}
 			IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
 			if (patchAntecedent != null) {
-				properties.add(new CmfProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID
-					.getStoredType(), false, patchAntecedent));
+				properties.add(new CmfProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT,
+					DctmDataType.DF_ID.getStoredType(), false, patchAntecedent));
 			}
 
-			properties.add(new CmfProperty<IDfValue>(DctmSysObject.CURRENT_VERSION, DctmDataType.DF_BOOLEAN
-				.getStoredType(), false, DfValueFactory.newBooleanValue(document.getHasFolder())));
+			properties
+				.add(new CmfProperty<IDfValue>(DctmSysObject.CURRENT_VERSION, DctmDataType.DF_BOOLEAN.getStoredType(),
+					false, DfValueFactory.newBooleanValue(document.getHasFolder())));
 			return;
 		}
 
 		// TODO: this is untidy - using an undocumented API??
 		IDfReference ref = ReferenceFinder.getForMirrorId(document.getObjectId(), session);
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingCondition())));
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_CONDITION,
+			DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingCondition())));
 		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING.getStoredType(),
 			false, DfValueFactory.newStringValue(ref.getBindingLabel())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK,
+			DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME,
+			DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
 		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(),
 			false, DfValueFactory.newIdValue(ref.getReferenceById())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME, DctmDataType.DF_STRING
-			.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceByName())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL, DctmDataType.DF_INTEGER
-			.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME,
+			DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceByName())));
+		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL,
+			DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
 	}
 
 	private List<IDfDocument> getVersions(DctmExportContext ctx, boolean prior, IDfDocument document)
 		throws ExportException, DfException {
-		if (document == null) { throw new IllegalArgumentException("Must provide a document whose versions to analyze"); }
+		if (document == null) { throw new IllegalArgumentException(
+			"Must provide a document whose versions to analyze"); }
 
 		final List<IDfDocument> ret = new LinkedList<IDfDocument>();
 
@@ -176,8 +177,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
 			for (IDfDocument versionDoc : getVersions(ctx, true, document)) {
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String
-						.format("Adding prior version [%s]", calculateVersionString(versionDoc, false)));
+					this.log
+						.debug(String.format("Adding prior version [%s]", calculateVersionString(versionDoc, false)));
 				}
 				req.add(this.factory.newExportDelegate(versionDoc));
 			}
@@ -203,8 +204,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			// Now, also do the *SUBSEQUENT* versions...
 			for (IDfDocument versionDoc : getVersions(ctx, false, document)) {
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Adding subsequent version [%s]",
-						calculateVersionString(versionDoc, false)));
+					this.log.debug(
+						String.format("Adding subsequent version [%s]", calculateVersionString(versionDoc, false)));
 				}
 				ret.add(this.factory.newExportDelegate(versionDoc));
 			}
@@ -214,8 +215,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected List<CmfContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document, CmfContentStore<?, ?, ?> streamStore)
-		throws Exception {
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document,
+		CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		if (isDfReference(document)) { return super.doStoreContent(session, translator, marshaled, referrent, document,
 			streamStore); }
 
@@ -236,10 +237,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				while (results.next()) {
-					final IDfContent content = IDfContent.class.cast(session.getObject(results
-						.getId(DctmAttributes.R_OBJECT_ID)));
-					CmfContentStore<?, ?, ?>.Handle handle = storeContentStream(session, translator, marshaled, document,
-						content, streamStore);
+					final IDfContent content = IDfContent.class
+						.cast(session.getObject(results.getId(DctmAttributes.R_OBJECT_ID)));
+					CmfContentStore<?, ?, ?>.Handle handle = storeContentStream(session, translator, marshaled,
+						document, content, streamStore);
 					CmfContentInfo info = new CmfContentInfo(handle.getQualifier());
 					IDfId formatId = content.getFormatId();
 					MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
@@ -272,8 +273,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, IDfDocument document,
 		IDfContent content, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		final String contentId = content.getObjectId().getId();
-		if (document == null) { throw new Exception(String.format(
-			"Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
+		if (document == null) { throw new Exception(String
+			.format("Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
 
 		String format = content.getString(DctmAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(DctmAttributes.PAGE);
@@ -310,25 +311,24 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 						caught = e;
 					}
 				}
-				if (caught != null) { throw new ExportException(String.format(
-					"Failed to create the parent content directory [%s]", parent.getAbsolutePath()), caught); }
+				if (caught != null) { throw new ExportException(
+					String.format("Failed to create the parent content directory [%s]", parent.getAbsolutePath()),
+					caught); }
 			}
 
-			if (!parent.isDirectory()) { throw new ExportException(String.format(
-				"The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
+			if (!parent.isDirectory()) { throw new ExportException(
+				String.format("The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
 
 			document.getFileEx2(targetFile.getAbsolutePath(), format, pageNumber, pageModifier, false);
 		} else {
 			// Doesn't support file-level, so we (sadly) use stream-level transfers
 			InputStream in = null;
-			OutputStream out = contentHandle.openOutput();
 			try {
 				// Don't pull the content until we're sure we can put it somewhere...
 				in = document.getContentEx3(format, pageNumber, pageModifier, false);
-				IOUtils.copy(in, out);
+				contentHandle.setContents(in);
 			} finally {
 				IOUtils.closeQuietly(in);
-				IOUtils.closeQuietly(out);
 			}
 		}
 		return contentHandle;
