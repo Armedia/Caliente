@@ -25,14 +25,6 @@ import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.DatabaseException;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
-
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -53,6 +45,14 @@ import com.armedia.cmf.storage.StoredValueEncoderException;
 import com.armedia.cmf.storage.StoredValueSerializer;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
+
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.DatabaseException;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -346,11 +346,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				final String name = translator.encodeAttributeName(object.getType(), attribute.getName());
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
-					this.log
-						.warn(String
-							.format(
-								"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-								name, attribute.getName(), duplicate));
+					this.log.warn(String.format(
+						"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+						name, attribute.getName(), duplicate));
 					continue;
 				}
 				final boolean repeating = attribute.isRepeating();
@@ -384,9 +382,10 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							try {
 								attValue[4] = serializer.serialize(encoded);
 							} catch (ParseException e) {
-								throw new StoredValueEncoderException(String.format(
-									"Failed to encode value #%d for attribute [%s::%s]: %s", v, attValue[0],
-									attValue[1], encoded), e);
+								throw new StoredValueEncoderException(
+									String.format("Failed to encode value #%d for attribute [%s::%s]: %s", v,
+										attValue[0], attValue[1], encoded),
+									e);
 							}
 						} else {
 							attValue[4] = JdbcObjectStore.NULL;
@@ -404,11 +403,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				final String name = translator.encodePropertyName(object.getType(), property.getName());
 				final String duplicate = encodedNames.put(name, property.getName());
 				if (duplicate != null) {
-					this.log
-						.warn(String
-							.format(
-								"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-								name, property.getName(), duplicate));
+					this.log.warn(String.format(
+						"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+						name, property.getName(), duplicate));
 					continue;
 				}
 				final String type = translator.encodeValue(property.getType());
@@ -434,9 +431,10 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							try {
 								attValue[4] = serializer.serialize(encoded);
 							} catch (ParseException e) {
-								throw new StoredValueEncoderException(String.format(
-									"Failed to encode value #%d for property [%s::%s]: %s", v, attValue[0],
-									attValue[1], encoded), e);
+								throw new StoredValueEncoderException(
+									String.format("Failed to encode value #%d for property [%s::%s]: %s", v,
+										attValue[0], attValue[1], encoded),
+									e);
 							}
 						} else {
 							attValue[4] = JdbcObjectStore.NULL;
@@ -487,15 +485,13 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected <T, V> int doLoadObjects(JdbcOperation operation, ObjectStorageTranslator<T, V> translator,
 		final StoredObjectType type, Collection<String> ids, StoredObjectHandler<V> handler, boolean batching)
-		throws StorageException, StoredValueDecoderException {
-		Connection connection = null;
+			throws StorageException, StoredValueDecoderException {
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
+		final Connection connection = operation.getConnection();
 		try {
-			connection = this.dataSource.getConnection();
-
 			PreparedStatement objectPS = null;
 			PreparedStatement attributePS = null;
 			PreparedStatement attributeValuePS = null;
@@ -505,8 +501,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				boolean limitByIDs = false;
 				boolean useSqlArray = false;
 				if (ids == null) {
-					objectPS = connection.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BATCHED_SQL
-						: JdbcObjectStore.LOAD_OBJECTS_SQL);
+					objectPS = connection.prepareStatement(
+						batching ? JdbcObjectStore.LOAD_OBJECTS_BATCHED_SQL : JdbcObjectStore.LOAD_OBJECTS_SQL);
 				} else {
 					limitByIDs = true;
 					try {
@@ -662,8 +658,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 						try {
 							if (!handler.handleObject(obj)) {
 								if (this.log.isDebugEnabled()) {
-									this.log.debug(String.format(
-										"ObjectHandler requested load loop break on object: %s", obj));
+									this.log.debug(
+										String.format("ObjectHandler requested load loop break on object: %s", obj));
 								}
 								break;
 							}
@@ -679,9 +675,10 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 						try {
 							handler.closeBatch(ok);
 						} catch (StorageException e) {
-							this.log.error(String
-								.format("Exception caught attempting to close the pending batch [%s] (ok=%s)",
-									currentBatch, ok), e);
+							this.log.error(
+								String.format("Exception caught attempting to close the pending batch [%s] (ok=%s)",
+									currentBatch, ok),
+								e);
 						}
 					}
 					DbUtils.closeQuietly(objectRS);
@@ -694,10 +691,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 				DbUtils.closeQuietly(objectPS);
 			}
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Exception raised trying to deserialize objects of type [%s]",
-				type), e);
-		} finally {
-			DbUtils.rollbackAndCloseQuietly(connection);
+			throw new StorageException(
+				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
 		}
 	}
 
@@ -736,9 +731,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		// or the exact mapping we wanted was already there. So if the deleteCount is not 0,
 		// we're already good to go on the insert. Otherwise, we have to check for an
 		// existing, identical mapping
-		if ((deleteCount > 0)
-			|| !qr.query(c, JdbcObjectStore.FIND_EXACT_MAPPING_SQL, JdbcObjectStore.HANDLER_EXISTS, type.name(), name,
-				sourceValue, targetValue)) {
+		if ((deleteCount > 0) || !qr.query(c, JdbcObjectStore.FIND_EXACT_MAPPING_SQL, JdbcObjectStore.HANDLER_EXISTS,
+			type.name(), name, sourceValue, targetValue)) {
 			// New mapping...so...we need to delete anything that points to this source, and
 			// anything that points to this target, since we don't accept duplicates on either
 			// column
@@ -749,8 +743,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			this.log
 				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue,
-				targetValue));
+			this.log.debug(
+				String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue, targetValue));
 		}
 	}
 
@@ -760,8 +754,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			doCreateMappedValue(operation.getConnection(), type, name, sourceValue, targetValue);
 		} catch (SQLException e) {
-			throw new RuntimeException(String.format("Failed to create the mapping for [%s/%s/%s->%s]", type, name,
-				sourceValue, targetValue), e);
+			throw new RuntimeException(
+				String.format("Failed to create the mapping for [%s/%s/%s->%s]", type, name, sourceValue, targetValue),
+				e);
 		}
 	}
 
@@ -796,20 +791,11 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected boolean doIsStored(JdbcOperation operation, StoredObjectType type, String objectId)
 		throws StorageException {
-		final Connection c;
 		try {
-			c = this.dataSource.getConnection();
+			return doIsStored(operation.getConnection(), type, objectId);
 		} catch (SQLException e) {
-			throw new StorageException("Failed to connect to the object store's database", e);
-		}
-		try {
-			c.setAutoCommit(false);
-			return doIsStored(c, type, objectId);
-		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to check whether object [%s] was already serialized",
-				objectId), e);
-		} finally {
-			DbUtils.rollbackAndCloseQuietly(c);
+			throw new StorageException(
+				String.format("Failed to check whether object [%s] was already serialized", objectId), e);
 		}
 	}
 
@@ -830,8 +816,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							try {
 								ret.put(StoredObjectType.decodeString(t), rs.getInt("total"));
 							} catch (IllegalArgumentException e) {
-								JdbcObjectStore.this.log.warn(String.format(
-									"UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+								JdbcObjectStore.this.log
+									.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
 								continue;
 							}
 						}
@@ -907,8 +893,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			new QueryRunner().query(operation.getConnection(), JdbcObjectStore.LOAD_TYPE_MAPPINGS_SQL, h, type.name());
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to retrieve the declared mapping names for type [%s]",
-				type), e);
+			throw new StorageException(
+				String.format("Failed to retrieve the declared mapping names for type [%s]", type), e);
 		}
 		return ret;
 	}
@@ -929,8 +915,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 			new QueryRunner().query(operation.getConnection(), JdbcObjectStore.LOAD_TYPE_NAME_MAPPINGS_SQL, h,
 				type.name(), name);
 		} catch (SQLException e) {
-			throw new RuntimeException(String.format("Failed to retrieve the declared mappings for [%s::%s]", type,
-				name), e);
+			throw new RuntimeException(
+				String.format("Failed to retrieve the declared mappings for [%s::%s]", type, name), e);
 		}
 		return ret;
 	}
@@ -982,8 +968,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		return new StoredObject<V>(type, id, searchKey, batchId, label, subtype);
 	}
 
-	private <T, V> StoredProperty<V> loadProperty(StoredObjectType objectType,
-		ObjectStorageTranslator<T, V> translator, ResultSet rs) throws SQLException, StoredValueDecoderException {
+	private <T, V> StoredProperty<V> loadProperty(StoredObjectType objectType, ObjectStorageTranslator<T, V> translator,
+		ResultSet rs) throws SQLException, StoredValueDecoderException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = translator.decodePropertyName(objectType, rs.getString("name"));
 		StoredDataType type = translator.decodeValue(rs.getString("data_type"));
@@ -1018,8 +1004,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					v = deserializer.deserialize(data);
 				}
 			} catch (ParseException e) {
-				throw new StoredValueDecoderException(String.format("Failed to deserialize value [%s] as a %s", data,
-					property.getType()), e);
+				throw new StoredValueDecoderException(
+					String.format("Failed to deserialize value [%s] as a %s", data, property.getType()), e);
 			}
 			values.add(codec.decodeValue(v));
 			if (!property.isRepeating()) {
@@ -1083,8 +1069,9 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 					return false;
 				}
 			} catch (SQLException e2) {
-				this.log.trace(String.format(
-					"Exception caught attempting to avoid a race condition with dependency [%s::%s]", type.name(), id),
+				this.log.trace(
+					String.format("Exception caught attempting to avoid a race condition with dependency [%s::%s]",
+						type.name(), id),
 					e2);
 			}
 			throw new StorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id), e);
@@ -1130,8 +1117,8 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 							throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
 						}
 						final StoredValueSerializer deserializer = StoredValueSerializer.get(t);
-						if (deserializer == null) { throw new SQLException(String.format(
-							"Unsupported data type name for serialization: [%s]", type)); }
+						if (deserializer == null) { throw new SQLException(
+							String.format("Unsupported data type name for serialization: [%s]", type)); }
 						String value = rs.getString("value");
 						try {
 							return deserializer.deserialize(value);
@@ -1157,22 +1144,23 @@ public class JdbcObjectStore extends ObjectStore<Connection, JdbcOperation> {
 		try {
 			newValueString = serializer.serialize(newValue);
 		} catch (ParseException e) {
-			throw new StorageException(String.format("Failed to serialize the value [%s] for the store property [%s]",
-				newValue, property));
+			throw new StorageException(
+				String.format("Failed to serialize the value [%s] for the store property [%s]", newValue, property));
 		}
 		try {
 			if (oldValue != null) {
 				int n = JdbcObjectStore.getQueryRunner().update(c, JdbcObjectStore.UPDATE_STORE_PROPERTY_SQL,
 					newValueString, property);
-				if (n != 1) { throw new StorageException(String.format(
-					"Failed to properly update store property [%s] - updated %d values instead of just 1", property, n)); }
+				if (n != 1) { throw new StorageException(
+					String.format("Failed to properly update store property [%s] - updated %d values instead of just 1",
+						property, n)); }
 			} else {
 				JdbcObjectStore.getQueryRunner().insert(c, JdbcObjectStore.INSERT_STORE_PROPERTY_SQL,
 					JdbcObjectStore.HANDLER_NULL, property, newValue.getDataType().name(), newValueString);
 			}
 		} catch (SQLException e) {
-			throw new StorageException(String.format("Failed to set the value of store property [%s] to [%s]",
-				property, newValueString), e);
+			throw new StorageException(
+				String.format("Failed to set the value of store property [%s] to [%s]", property, newValueString), e);
 		}
 		return oldValue;
 	}
