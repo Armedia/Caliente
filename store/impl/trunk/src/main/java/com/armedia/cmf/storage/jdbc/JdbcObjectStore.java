@@ -420,14 +420,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected <V> int loadObjects(JdbcOperation operation, CmfAttributeTranslator<V> translator, final CmfType type,
 		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching)
 			throws CmfStorageException, CmfValueDecoderException {
-		Connection connection = null;
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
+		Connection connection = operation.getConnection();
 		try {
-			connection = this.dataSource.getConnection();
-
 			PreparedStatement objectPS = null;
 			PreparedStatement attributePS = null;
 			PreparedStatement attributeValuePS = null;
@@ -629,8 +627,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
-		} finally {
-			DbUtils.rollbackAndCloseQuietly(connection);
 		}
 	}
 
@@ -728,14 +724,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected boolean isStored(JdbcOperation operation, CmfType type, String objectId) throws CmfStorageException {
-		final Connection c;
 		try {
-			c = this.dataSource.getConnection();
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to connect to the object store's database", e);
-		}
-		try {
-			return isStored(c, type, objectId);
+			return isStored(operation.getConnection(), type, objectId);
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to check whether object [%s] was already serialized", objectId), e);
