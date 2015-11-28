@@ -33,31 +33,51 @@ public enum CLIParam {
 	threads(null, 1, "The number of threads to use while importing or exporting"),
 	non_recursive(null, 0, "Turn off counter recursion (i.e. to count a single folder without descending)"),
 	count_path(null, 1, "The path within which to count objects for"),
-	cmf_exclude_types(Setting.CMF_EXCLUDE_TYPES, -1,
+	cmf_exclude_types(
+		Setting.CMF_EXCLUDE_TYPES,
+		-1,
 		"The list of object types to be ignored during the operation (comma-separated)"),
-	cmf_import_target_location(Setting.CMF_IMPORT_TARGET_LOCATION, 1,
+	cmf_import_target_location(
+		Setting.CMF_IMPORT_TARGET_LOCATION,
+		1,
 		"The path location into which to import the contents"),
-	cmf_import_trim_prefix(Setting.CMF_IMPORT_TRIM_PREFIX, 1,
+	cmf_import_trim_prefix(
+		Setting.CMF_IMPORT_TRIM_PREFIX,
+		1,
 		"The number of leading path components to trim from the content being imported"),
-	special_users(Setting.SPECIAL_USERS, -1,
+	special_users(
+		Setting.SPECIAL_USERS,
+		-1,
 		"The special users that should not be imported into the target instance (comma-separated)"),
-	special_groups(Setting.SPECIAL_GROUPS, -1,
+	special_groups(
+		Setting.SPECIAL_GROUPS,
+		-1,
 		"The special users that should not be imported into the target instance (comma-separated)"),
-	special_types(Setting.SPECIAL_TYPES, -1,
+	special_types(
+		Setting.SPECIAL_TYPES,
+		-1,
 		"The special types that should not be imported into the target instance (comma-separated)"),
 	batch_size(Setting.EXPORT_BATCH_SIZE, 1, "The batch size to use when exporting objects from Documentum"),
 	post_process(Setting.POST_PROCESS_IMPORT, 0, "Whether to post-process the imported content"),
-	source(Setting.EXPORT_PREDICATE, 1,
+	source(
+		Setting.EXPORT_PREDICATE,
+		1,
 		"The DQL 'from-where' predicate, or the name of the Sharepoint site, to use for exporting"),
-	shpt_source_prefix(Setting.SHPT_SOURCE_PREFIX, 1,
+	shpt_source_prefix(
+		Setting.SHPT_SOURCE_PREFIX,
+		1,
 		"The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)"),
 	db(Setting.DB_DIRECTORY, 1, "The Database directory to use"),
 	db_type(Setting.DB_TYPE, 1, "The Database type to use"),
-	content(Setting.CONTENT_DIRECTORY, 1,
+	content(
+		Setting.CONTENT_DIRECTORY,
+		1,
 		"The Content directory to use (if omitted, it will be placed in the 'content' subdirectory of the Database directory)"),
 	attributes(Setting.OWNER_ATTRIBUTES, 1, "The attributes to check for"),
 	errorCount(Setting.IMPORT_MAX_ERRORS, 1, "The number of errors to accept before aborting an import"),
-	default_password(Setting.DEFAULT_USER_PASSWORD, 1,
+	default_password(
+		Setting.DEFAULT_USER_PASSWORD,
+		1,
 		"The default password to use for users being copied over (the default is to use the same login name)"),
 	manifest_types(Setting.MANIFEST_TYPES, 1, "The object types to include in the manifest (ALL = all types)"),
 	manifest_outcomes(Setting.MANIFEST_OUTCOMES, 1, "The outcomes to include in the manifest (ALL = all outcomes)"),
@@ -71,6 +91,7 @@ public enum CLIParam {
 	skip_content(null, 0, "Skip importing document contents (only create \"empty\" documents)"),
 	direct_fs(null, 0, "Export files to local FS duplicating the CMS's path"),
 	job_name(null, 1, "The name of the synchronization job this export is to define"),
+	reset_job(null, 0, "Reset any existing synchronization job settings with this export's"),
 	//
 	;
 

@@ -118,9 +118,8 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
 			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				AbstractCMSMFMain_export.this.log.warn(
-					String.format("Failed to register an additional listener class [%s]",
-						serviceClass.getCanonicalName()), t);
+				AbstractCMSMFMain_export.this.log.warn(String.format(
+					"Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()), t);
 			}
 		});
 		extraListeners.setHideErrors(false);
@@ -130,6 +129,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		}
 
 		final String jobName = CLIParam.job_name.getString();
+		final boolean resetJob = CLIParam.reset_job.isPresent();
 
 		validateState();
 		Map<String, Object> settings = new HashMap<String, Object>();
@@ -144,7 +144,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			prepareState(settings);
 
 			boolean loaded = false;
-			if (!StringUtils.isBlank(jobName)) {
+			if (!StringUtils.isBlank(jobName) && !resetJob) {
 				this.log.info(String.format("##### Loading settings for job [%s] #####", jobName));
 				Map<String, Object> m = loadSettings(jobName);
 				if (m != null) {
