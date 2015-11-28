@@ -39,6 +39,22 @@
 		</settings>
 	</contentstore>
 
+	<contentstore id="jdbc">
+		<name>jdbc</name>
+		<settings>
+			<setting name="location.type">pooled</setting>
+			<setting name="jdbc.url">jdbc:h2:${dir.metadata}/cmsmf-data;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
+			<setting name="jdbc.driver">org.h2.Driver</setting>
+			<!--
+			PostgreSQL:
+			<setting name="jdbc.url">jdbc:postgresql://${postgres.host}:${postgres.port}/${postrges.db}</setting>
+			<setting name="jdbc.driver">org.postgresql.Driver</setting>
+			<setting name="jdbc.user">cmsmf</setting>
+			<setting name="jdbc.password">cmsmf</setting>
+			-->
+		</settings>
+	</contentstore>
+
 	<contentstore id="direct">
 		<name>local</name>
 		<settings>
