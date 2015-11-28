@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-storage-jdbc</artifactId>
-	<version>1.2.5</version>
+	<version>1.2.6</version>
 	<name>CMF Storage JDBC Implementation</name>
 	<description>CMF Storage JDBC Implementation</description>
 	<packaging>bundle</packaging>
