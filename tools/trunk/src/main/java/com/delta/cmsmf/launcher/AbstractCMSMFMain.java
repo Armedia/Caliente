@@ -71,7 +71,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 			CmfStores.initializeConfigurations();
 
-			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("cmsmf");
+			// TODO: Add support for configurable store names
+			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("jdbc");
 			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
@@ -79,7 +80,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 			final boolean directFsExport = CLIParam.direct_fs.isPresent();
 
-			final String contentStoreName = (directFsExport ? "direct" : "cmsmf");
+			// TODO: Add support for JDBC content storage
+			final String contentStoreName = (directFsExport ? "direct" : "local");
 			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 			if (!directFsExport) {
 				String strategy = getContentStrategyName();
