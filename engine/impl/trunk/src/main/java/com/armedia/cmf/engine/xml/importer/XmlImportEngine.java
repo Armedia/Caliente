@@ -15,9 +15,8 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class XmlImportEngine
-extends
-ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory> {
+public class XmlImportEngine extends
+	ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -216,6 +215,7 @@ ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportCo
 			case USER:
 			case TYPE:
 			case ACL:
+			case FORMAT:
 				return XmlImportEngine.AGGREGATE_STRATEGY;
 
 			case GROUP:

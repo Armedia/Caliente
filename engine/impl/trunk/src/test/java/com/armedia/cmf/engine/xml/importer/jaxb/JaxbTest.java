@@ -73,11 +73,11 @@ public class JaxbTest {
 	public void testAll() throws Exception {
 		Class<?>[] k = {
 			AclsT.class, DocumentT.class, DocumentsT.class, FolderT.class, FoldersT.class, GroupsT.class, TypesT.class,
-			UsersT.class, DocumentIndexT.class, FolderIndexT.class
+			UsersT.class, DocumentIndexT.class, FolderIndexT.class, FormatsT.class
 		};
 		String[] s = {
 			"acls", "document", "documents", "folder", "folders", "groups", "types", "users", "documentIndex",
-			"folderIndex"
+			"folderIndex", "formats"
 		};
 
 		for (int i = 0; i < k.length; i++) {

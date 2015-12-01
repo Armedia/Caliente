@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<formats
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.armedia.com/ns/cmf/engines/xml/import"
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import platform:/resource/cmf-engine-xml/src/main/resources/import.xsd ">
+	<format>
+		<name>name</name>
+		<description>description</description>
+		<attributes>
+			<attribute dataType="BOOLEAN" name="xxx">
+				<value>value</value>
+			</attribute>
+		</attributes>
+		<properties>
+			<property dataType="BOOLEAN" name="yyy" repeating="true">
+				<value>value</value>
+			</property>
+		</properties>
+	</format>
+</formats>

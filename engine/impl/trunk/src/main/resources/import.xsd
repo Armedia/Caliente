@@ -286,6 +286,35 @@
 
 	<xsd:element name="groups" type="tns:groups.t" />
 
+	<xsd:complexType name="format.t">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="description" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="attributes" minOccurs="0" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="attribute" type="tns:attribute.t" minOccurs="0" maxOccurs="unbounded" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="properties" minOccurs="0" maxOccurs="1">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="property" type="tns:property.t" minOccurs="0" maxOccurs="unbounded" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="formats.t">
+		<xsd:sequence>
+			<xsd:element name="format" type="tns:format.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="formats" type="tns:formats.t" />
+
 	<xsd:complexType name="sysObject.t">
 		<xsd:sequence>
 			<xsd:element name="id" type="xsd:string" minOccurs="1" maxOccurs="1" />

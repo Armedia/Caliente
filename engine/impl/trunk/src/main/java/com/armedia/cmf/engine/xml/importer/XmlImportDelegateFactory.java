@@ -37,6 +37,7 @@ import com.armedia.cmf.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FolderIndexT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FoldersT;
+import com.armedia.cmf.engine.xml.importer.jaxb.FormatsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.GroupsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.TypesT;
 import com.armedia.cmf.engine.xml.importer.jaxb.UsersT;
@@ -218,10 +219,11 @@ public class XmlImportDelegateFactory
 		this.aggregateDocuments = configuration.getBoolean(XmlSessionFactory.AGGREGATE_DOCUMENTS, false);
 
 		Map<CmfType, AggregatorBase<?>> xml = new EnumMap<CmfType, AggregatorBase<?>>(CmfType.class);
-		xml.put(CmfType.TYPE, new TypesT());
 		xml.put(CmfType.USER, new UsersT());
 		xml.put(CmfType.GROUP, new GroupsT());
 		xml.put(CmfType.ACL, new AclsT());
+		xml.put(CmfType.TYPE, new TypesT());
+		xml.put(CmfType.FORMAT, new FormatsT());
 		xml.put(CmfType.FOLDER, (this.aggregateFolders ? new FoldersT() : new FolderIndexT()));
 		xml.put(CmfType.DOCUMENT, (this.aggregateDocuments ? new DocumentsT() : new DocumentIndexT()));
 		this.xml = xml;
@@ -265,6 +267,8 @@ public class XmlImportDelegateFactory
 				return new XmlAclImportDelegate(this, storedObject);
 			case TYPE:
 				return new XmlTypeImportDelegate(this, storedObject);
+			case FORMAT:
+				return new XmlFormatImportDelegate(this, storedObject);
 			case FOLDER:
 				if (this.aggregateFolders) {
 					return new XmlAggregateFoldersImportDelegate(this, storedObject);
