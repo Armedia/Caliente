@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.xml.importer.jaxb;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -59,7 +60,17 @@ public class GroupT implements Comparable<GroupT> {
 	@XmlTransient
 	protected Set<String> groupSet = new TreeSet<String>();
 
+	protected void sortAttributes() {
+		if (this.attributes != null) {
+			Collections.sort(this.attributes);
+		}
+		if (this.properties != null) {
+			Collections.sort(this.properties);
+		}
+	}
+
 	protected void beforeMarshal(Marshaller m) {
+		sortAttributes();
 		if ((this.users == null) && !this.userSet.isEmpty()) {
 			this.users = new ArrayList<String>();
 		}
@@ -77,6 +88,7 @@ public class GroupT implements Comparable<GroupT> {
 	}
 
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
+		sortAttributes();
 		if (this.userSet == null) {
 			this.userSet = new TreeSet<String>();
 		}
