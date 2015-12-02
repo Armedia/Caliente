@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,6 +64,8 @@ public class XmlImportDelegateFactory
 
 	private final ImportEngineListener documentListener = new DefaultImportEngineListener() {
 
+		private int filesWritten = 0;
+
 		@Override
 		public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
 			if (objectType != CmfType.DOCUMENT) { return; }
@@ -119,6 +122,7 @@ public class XmlImportDelegateFactory
 							this.log.error(String.format("Failed to write out the XML to [%s]:%n%s", tgt, xml), e);
 							return;
 						}
+						this.filesWritten++;
 						ok = true;
 					} catch (JAXBException e) {
 						this.log.error(String.format("Failed to marshal the XML for document [%s](%s) to [%s]",
@@ -182,6 +186,7 @@ public class XmlImportDelegateFactory
 							cmfType, f, xml), e);
 						return;
 					}
+					this.filesWritten++;
 					ok = true;
 				} catch (JAXBException e) {
 					this.log.error(String.format("Failed to generate the XML for %s", cmfType), e);
@@ -194,6 +199,49 @@ public class XmlImportDelegateFactory
 			} finally {
 				// Help the GC out
 				root.clear();
+			}
+		}
+
+		@Override
+		public void importFinished(Map<ImportResult, Integer> counters) {
+			super.importFinished(counters);
+			if (this.filesWritten > 0) {
+				final InputStream in = Thread.currentThread().getContextClassLoader()
+					.getResourceAsStream(XmlImportDelegateFactory.SCHEMA);
+				if (in == null) {
+					this.log.warn(String.format("Failed to load the schema from the resource '%s'",
+						XmlImportDelegateFactory.SCHEMA));
+					return;
+				}
+				final File schemaFile = new File(XmlImportDelegateFactory.this.db, XmlImportDelegateFactory.SCHEMA);
+				FileOutputStream out = null;
+				try {
+					out = new FileOutputStream(schemaFile);
+				} catch (FileNotFoundException e) {
+					IOUtils.closeQuietly(in);
+					if (this.log.isTraceEnabled()) {
+						this.log.warn(String.format("Failed to create the schema file at [%s]",
+							XmlImportDelegateFactory.SCHEMA, schemaFile), e);
+					} else {
+						this.log.warn(String.format("Failed to create the schema file at [%s]: %s",
+							XmlImportDelegateFactory.SCHEMA, schemaFile, e.getMessage()));
+					}
+				}
+
+				try {
+					IOUtils.copy(in, out);
+				} catch (IOException e) {
+					if (this.log.isTraceEnabled()) {
+						this.log.warn(String.format("Failed to copy the schema into the file at [%s]",
+							XmlImportDelegateFactory.SCHEMA, schemaFile), e);
+					} else {
+						this.log.warn(String.format("Failed to copy the schema into the file at [%s]: %s",
+							XmlImportDelegateFactory.SCHEMA, schemaFile, e.getMessage()));
+					}
+				} finally {
+					IOUtils.closeQuietly(out);
+					IOUtils.closeQuietly(in);
+				}
 			}
 		}
 	};
