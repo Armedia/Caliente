@@ -17,7 +17,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
+public enum IntermediateAttribute implements Mappable,CmfEncodeableName {
 	// CMIS attributes
 	OBJECT_ID(PropertyIds.OBJECT_ID, CmfDataType.ID),
 	BASE_TYPE_ID(PropertyIds.BASE_TYPE_ID, CmfDataType.STRING),
@@ -61,6 +61,7 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	ACL_NAME(CmfDataType.STRING),
 	DEFAULT_FOLDER(CmfDataType.STRING),
 	VERSION_ANTECEDENT_ID(CmfDataType.ID),
+	USER_SOURCE(CmfDataType.STRING),
 	//
 	;
 
@@ -102,8 +103,8 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 		if (IntermediateAttribute.MAPPINGS == null) {
 			synchronized (IntermediateAttribute.class) {
 				if (IntermediateAttribute.MAPPINGS == null) {
-					IntermediateAttribute.MAPPINGS = Tools.freezeMap(MappingManager.createMappings(
-						IntermediateAttribute.class, IntermediateAttribute.values()));
+					IntermediateAttribute.MAPPINGS = Tools.freezeMap(
+						MappingManager.createMappings(IntermediateAttribute.class, IntermediateAttribute.values()));
 				}
 			}
 		}
@@ -113,8 +114,8 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
 		IntermediateAttribute.initMappings();
 		IntermediateAttribute ret = IntermediateAttribute.MAPPINGS.get(name);
-		if (ret == null) { throw new IllegalArgumentException(String.format(
-			"Failed to decode [%s] into a valid intermediate attribute", name)); }
+		if (ret == null) { throw new IllegalArgumentException(
+			String.format("Failed to decode [%s] into a valid intermediate attribute", name)); }
 		return ret;
 	}
 }
