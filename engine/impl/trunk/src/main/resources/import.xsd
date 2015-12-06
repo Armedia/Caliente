@@ -211,6 +211,7 @@
 			<xsd:element name="defaultFolder" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="description" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="email" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="source" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="loginName" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="loginDomain" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="osName" type="xsd:string" minOccurs="1" maxOccurs="1" />

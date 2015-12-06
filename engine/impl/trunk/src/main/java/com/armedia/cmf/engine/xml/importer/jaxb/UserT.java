@@ -16,8 +16,8 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "user.t", propOrder = {
-	"name", "defaultFolder", "description", "email", "loginName", "loginDomain", "osName", "osDomain", "attributes",
-	"properties"
+	"name", "defaultFolder", "description", "email", "source", "loginName", "loginDomain", "osName", "osDomain",
+	"attributes", "properties"
 })
 public class UserT implements Comparable<UserT> {
 
@@ -32,6 +32,9 @@ public class UserT implements Comparable<UserT> {
 
 	@XmlElement(required = true)
 	protected String email;
+
+	@XmlElement(required = true)
+	protected String source;
 
 	@XmlElement(required = true)
 	protected String loginName;
@@ -114,6 +117,14 @@ public class UserT implements Comparable<UserT> {
 
 	public void setEmail(String value) {
 		this.email = value;
+	}
+
+	public String getSource() {
+		return this.source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
 	}
 
 	public String getLoginName() {

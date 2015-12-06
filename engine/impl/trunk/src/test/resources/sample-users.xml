@@ -8,6 +8,7 @@
 		<defaultFolder>defaultFolder</defaultFolder>
 		<description>description</description>
 		<email>email</email>
+		<source>source</source>
 		<loginName>loginName</loginName>
 		<loginDomain>loginDomain</loginDomain>
 		<osName>osName</osName>
