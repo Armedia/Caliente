@@ -61,7 +61,7 @@ public enum IntermediateAttribute implements Mappable,CmfEncodeableName {
 	ACL_NAME(CmfDataType.STRING),
 	DEFAULT_FOLDER(CmfDataType.STRING),
 	VERSION_ANTECEDENT_ID(CmfDataType.ID),
-	USER_SOURCE(CmfDataType.STRING),
+	USER_TYPE(CmfDataType.STRING),
 	//
 	;
 
