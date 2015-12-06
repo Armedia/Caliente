@@ -45,6 +45,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.USER_OS_NAME, IntermediateAttribute.OS_NAME);
 		am.put(DctmAttributes.USER_OS_DOMAIN, IntermediateAttribute.OS_REALM);
 		am.put(DctmAttributes.USER_ADDRESS, IntermediateAttribute.EMAIL);
+		am.put(DctmAttributes.USER_SOURCE, IntermediateAttribute.USER_SOURCE);
 		attributeMappings.put(CmfType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
@@ -209,8 +210,8 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 			}
 			if (att != null) { return att; }
 		}
-		if (attributeName.startsWith(DctmTranslator.DCTM_PREFIX)) { return attributeName
-			.substring(DctmTranslator.DCTM_PREFIX.length()); }
+		if (attributeName.startsWith(
+			DctmTranslator.DCTM_PREFIX)) { return attributeName.substring(DctmTranslator.DCTM_PREFIX.length()); }
 		return super.decodeAttributeName(type, attributeName);
 	}
 
