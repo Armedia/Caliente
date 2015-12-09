@@ -33,11 +33,15 @@ public abstract class XmlImportDelegate extends
 			if (att.getType() == CmfDataType.DATETIME) {
 				// Dump it out in XML format
 				for (CmfValue v : att) {
-					try {
-						attribute.getValue().add(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(v.asTime()));
-					} catch (ParseException e) {
-						throw new RuntimeException("Failed to produce a date value", e);
+					String V = "";
+					if (!v.isNull()) {
+						try {
+							V = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(v.asTime());
+						} catch (ParseException e) {
+							throw new RuntimeException("Failed to produce a date value", e);
+						}
 					}
+					attribute.getValue().add(V);
 				}
 			} else {
 				for (CmfValue v : att) {
@@ -80,11 +84,15 @@ public abstract class XmlImportDelegate extends
 			if (prop.getType() == CmfDataType.DATETIME) {
 				// Dump it out in XML format
 				for (CmfValue v : prop) {
-					try {
-						property.getValue().add(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(v.asTime()));
-					} catch (ParseException e) {
-						throw new RuntimeException("Failed to produce a date value", e);
+					String V = "";
+					if (!v.isNull()) {
+						try {
+							V = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(v.asTime());
+						} catch (ParseException e) {
+							throw new RuntimeException("Failed to produce a date value", e);
+						}
 					}
+					property.getValue().add(V);
 				}
 			} else {
 				for (CmfValue v : prop) {
