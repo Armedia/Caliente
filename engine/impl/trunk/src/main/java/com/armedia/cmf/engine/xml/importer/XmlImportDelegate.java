@@ -1,8 +1,11 @@
 package com.armedia.cmf.engine.xml.importer;
 
 import java.io.File;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
+
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
@@ -27,10 +30,20 @@ public abstract class XmlImportDelegate extends
 
 			attribute.setName(name);
 			attribute.setDataType(DataTypeT.convert(att.getType()));
-			for (CmfValue v : att) {
-				attribute.getValue().add(v.asString());
+			if (att.getType() == CmfDataType.DATETIME) {
+				// Dump it out in XML format
+				for (CmfValue v : att) {
+					try {
+						attribute.getValue().add(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(v.asTime()));
+					} catch (ParseException e) {
+						throw new RuntimeException("Failed to produce a date value", e);
+					}
+				}
+			} else {
+				for (CmfValue v : att) {
+					attribute.getValue().add(v.asString());
+				}
 			}
-
 			list.add(attribute);
 		}
 	}
@@ -64,8 +77,19 @@ public abstract class XmlImportDelegate extends
 			property.setName(name);
 			property.setDataType(DataTypeT.convert(prop.getType()));
 			property.setRepeating(prop.isRepeating());
-			for (CmfValue v : prop) {
-				property.getValue().add(v.asString());
+			if (prop.getType() == CmfDataType.DATETIME) {
+				// Dump it out in XML format
+				for (CmfValue v : prop) {
+					try {
+						property.getValue().add(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(v.asTime()));
+					} catch (ParseException e) {
+						throw new RuntimeException("Failed to produce a date value", e);
+					}
+				}
+			} else {
+				for (CmfValue v : prop) {
+					property.getValue().add(v.asString());
+				}
 			}
 
 			list.add(property);
