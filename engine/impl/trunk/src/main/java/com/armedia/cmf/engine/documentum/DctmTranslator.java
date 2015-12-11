@@ -45,7 +45,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.USER_OS_NAME, IntermediateAttribute.OS_NAME);
 		am.put(DctmAttributes.USER_OS_DOMAIN, IntermediateAttribute.OS_REALM);
 		am.put(DctmAttributes.USER_ADDRESS, IntermediateAttribute.EMAIL);
-		am.put(DctmAttributes.USER_SOURCE, IntermediateAttribute.USER_TYPE);
+		am.put(DctmAttributes.USER_SOURCE, IntermediateAttribute.USER_SOURCE);
 		attributeMappings.put(CmfType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<String, IntermediateAttribute>();
@@ -58,6 +58,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		am.put(DctmAttributes.OWNER_NAME, IntermediateAttribute.OWNER);
 		am.put(DctmAttributes.GROUP_ADDRESS, IntermediateAttribute.EMAIL);
+		am.put(DctmAttributes.GROUP_SOURCE, IntermediateAttribute.GROUP_SOURCE);
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(CmfType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
