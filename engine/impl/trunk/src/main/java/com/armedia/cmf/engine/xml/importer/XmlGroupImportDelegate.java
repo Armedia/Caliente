@@ -26,6 +26,7 @@ public class XmlGroupImportDelegate extends XmlAggregatedImportDelegate<GroupT, 
 		group.setAdministrator(getAttributeValue(IntermediateAttribute.ADMINISTRATOR).asString());
 		group.setDisplayName(getAttributeValue(IntermediateAttribute.ADMINISTRATOR).asString());
 		group.setEmail(getAttributeValue(IntermediateAttribute.EMAIL).asString());
+		group.setSource(getAttributeValue(IntermediateAttribute.GROUP_SOURCE).asString());
 		group.setType(getAttributeValue(IntermediateAttribute.GROUP_TYPE).asString());
 
 		for (CmfValue v : getAttributeValues("dctm:users_names")) {

@@ -7,6 +7,7 @@
 		<name>name</name>
 		<type>type</type>
 		<email>email</email>
+		<source>source</source>
 		<administrator>administrator</administrator>
 		<displayName>displayName</displayName>
 		<users>

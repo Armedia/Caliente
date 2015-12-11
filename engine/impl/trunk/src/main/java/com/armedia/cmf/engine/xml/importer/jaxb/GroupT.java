@@ -19,7 +19,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "group.t", propOrder = {
-	"name", "type", "email", "administrator", "displayName", "users", "groups", "attributes", "properties"
+	"name", "type", "email", "source", "administrator", "displayName", "users", "groups", "attributes", "properties"
 })
 public class GroupT implements Comparable<GroupT> {
 
@@ -31,6 +31,9 @@ public class GroupT implements Comparable<GroupT> {
 
 	@XmlElement(name = "email", required = true)
 	protected String email;
+
+	@XmlElement(name = "source", required = true)
+	protected String source;
 
 	@XmlElement(name = "administrator", required = true)
 	protected String administrator;
@@ -181,6 +184,14 @@ public class GroupT implements Comparable<GroupT> {
 
 	public void setEmail(String value) {
 		this.email = value;
+	}
+
+	public String getSource() {
+		return this.source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
 	}
 
 	public String getAdministrator() {
