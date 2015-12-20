@@ -280,6 +280,8 @@ public class XmlImportDelegateFactory
 			File f = calculateConsolidatedFile(t);
 			try {
 				FileUtils.forceDelete(f);
+			} catch (FileNotFoundException e) {
+				// Wasn't there...no problem!
 			} catch (IOException e) {
 				this.log.warn(String.format("Failed to delete the aggregate XML file at [%s]", f.getAbsolutePath()), e);
 			}
