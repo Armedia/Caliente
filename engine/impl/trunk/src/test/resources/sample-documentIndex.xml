@@ -8,6 +8,7 @@
 		<path>path</path>
 		<name>name</name>
 		<location>location</location>
+		<type>objectType</type>
 		<historyId>historyId</historyId>
 		<version>version</version>
 		<current>true</current>

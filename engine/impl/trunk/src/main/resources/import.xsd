@@ -368,6 +368,7 @@
 			<xsd:element name="path" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="location" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="type" type="xsd:string" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 

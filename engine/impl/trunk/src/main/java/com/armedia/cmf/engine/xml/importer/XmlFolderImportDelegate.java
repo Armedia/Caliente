@@ -92,6 +92,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		idx.setLocation(this.factory.relativizeXmlLocation(tgt.getAbsolutePath()));
 		idx.setName(f.getName());
 		idx.setPath(f.getSourcePath());
+		idx.setType(f.getType());
 		return idx;
 	}
 }

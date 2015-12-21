@@ -143,6 +143,7 @@ public class XmlImportDelegateFactory
 						idx.setLocation(relativizeXmlLocation(tgt.getAbsolutePath()));
 						idx.setName(v.getName());
 						idx.setPath(v.getSourcePath());
+						idx.setType(v.getType());
 						idx.setVersion(v.getVersion());
 						idx.setHistoryId(v.getHistoryId());
 						idx.setCurrent(v.isCurrent());

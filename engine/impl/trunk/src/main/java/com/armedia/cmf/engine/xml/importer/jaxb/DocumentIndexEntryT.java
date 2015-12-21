@@ -47,7 +47,7 @@ public class DocumentIndexEntryT extends FolderIndexEntryT {
 	@Override
 	public String toString() {
 		return String.format(
-			"DocumentIndexEntryT [id=%s, historyId=%s, version=%s, current=%s, path=%s, name=%s, location=%s]",
-			this.id, this.historyId, this.version, this.current, this.path, this.name, this.location);
+			"DocumentIndexEntryT [id=%s, path=%s, name=%s, location=%s, type=%s, historyId=%s, version=%s, current=%s]",
+			this.id, this.path, this.name, this.location, this.type, this.historyId, this.version, this.current);
 	}
 }

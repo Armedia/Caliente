@@ -8,5 +8,6 @@
 		<path>path</path>
 		<name>name</name>
 		<location>location</location>
+		<type>contentType</type>
 	</folder>
 </folderIndex>

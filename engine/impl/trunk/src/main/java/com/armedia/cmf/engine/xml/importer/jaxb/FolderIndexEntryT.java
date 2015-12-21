@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "folderIndexEntry.t", propOrder = {
-	"id", "path", "name", "location"
+	"id", "path", "name", "location", "type"
 })
 public class FolderIndexEntryT {
 
@@ -22,6 +22,9 @@ public class FolderIndexEntryT {
 
 	@XmlElement(name = "location", required = true)
 	protected String location;
+
+	@XmlElement(name = "type", required = true)
+	protected String type;
 
 	public String getId() {
 		return this.id;
@@ -55,9 +58,17 @@ public class FolderIndexEntryT {
 		this.location = location;
 	}
 
+	public String getType() {
+		return this.type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
 	@Override
 	public String toString() {
-		return String.format("DocumentIndexEntryT [id=%s, path=%s, name=%s, location=%s]", this.id, this.path,
-			this.name, this.location);
+		return String.format("FolderIndexEntryT [id=%s, path=%s, name=%s, location=%s, type=%s]", this.id, this.path,
+			this.name, this.location, this.type);
 	}
 }
