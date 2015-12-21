@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -52,7 +55,33 @@ import com.armedia.commons.utilities.XmlTools;
 public class XmlImportDelegateFactory
 	extends ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
-	static final String SCHEMA = "import.xsd";
+	private static final String SCHEMA_NAME = "import.xsd";
+
+	static final Schema SCHEMA;
+
+	static {
+		try {
+			SCHEMA = XmlTools.loadSchema(XmlImportDelegateFactory.SCHEMA_NAME);
+		} catch (JAXBException e) {
+			throw new RuntimeException(String.format("Failed to load the required schema resource [%s]",
+				XmlImportDelegateFactory.SCHEMA_NAME));
+		}
+	}
+
+	static void marshalXml(Object target, OutputStream out, boolean format) throws JAXBException {
+		if (target == null) { throw new IllegalArgumentException("Must supply an object to marshal"); }
+		if (out == null) { throw new IllegalArgumentException(
+			String.format("Nowhere to write %s to", target.getClass().getName())); }
+
+		Class<?> targetClass = target.getClass();
+		Marshaller m = JAXBContext.newInstance(targetClass).createMarshaller();
+		m.setSchema(XmlImportDelegateFactory.SCHEMA);
+		if (format) {
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		}
+		m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+		m.marshal(target, out);
+	}
 
 	private final Map<CmfType, AggregatorBase<?>> xml;
 	private final boolean aggregateFolders;
@@ -113,15 +142,8 @@ public class XmlImportDelegateFactory
 					}
 
 					boolean ok = false;
-					String xml = null;
 					try {
-						xml = XmlTools.marshal(doc, XmlImportDelegateFactory.SCHEMA, true);
-						try {
-							IOUtils.write(xml, out);
-						} catch (IOException e) {
-							this.log.error(String.format("Failed to write out the XML to [%s]:%n%s", tgt, xml), e);
-							return;
-						}
+						XmlImportDelegateFactory.marshalXml(doc, out, true);
 						this.filesWritten++;
 						ok = true;
 					} catch (JAXBException e) {
@@ -181,16 +203,8 @@ public class XmlImportDelegateFactory
 					return;
 				}
 				boolean ok = false;
-				String xml = null;
 				try {
-					xml = XmlTools.marshal(root, XmlImportDelegateFactory.SCHEMA, true);
-					try {
-						IOUtils.write(xml, out);
-					} catch (IOException e) {
-						this.log.error(String.format("Failed to write the generated XML for type %s at [%s]:%n%s",
-							cmfType, f, xml), e);
-						return;
-					}
+					XmlImportDelegateFactory.marshalXml(root, out, true);
 					this.filesWritten++;
 					ok = true;
 				} catch (JAXBException e) {
@@ -209,13 +223,13 @@ public class XmlImportDelegateFactory
 
 		private void writeSchema() {
 			final InputStream in = Thread.currentThread().getContextClassLoader()
-				.getResourceAsStream(XmlImportDelegateFactory.SCHEMA);
+				.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME);
 			if (in == null) {
 				this.log.warn(
 					String.format("Failed to load the schema from the resource '%s'", XmlImportDelegateFactory.SCHEMA));
 				return;
 			}
-			final File schemaFile = new File(XmlImportDelegateFactory.this.db, XmlImportDelegateFactory.SCHEMA);
+			final File schemaFile = new File(XmlImportDelegateFactory.this.db, XmlImportDelegateFactory.SCHEMA_NAME);
 			FileOutputStream out = null;
 			try {
 				out = new FileOutputStream(schemaFile);

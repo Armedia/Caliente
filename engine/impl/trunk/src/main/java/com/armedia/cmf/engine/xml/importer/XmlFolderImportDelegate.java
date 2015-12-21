@@ -21,7 +21,6 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
-import com.armedia.commons.utilities.XmlTools;
 
 public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderIndexEntryT, FolderIndexT> {
 
@@ -68,14 +67,8 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		}
 
 		boolean ok = false;
-		String xml = null;
 		try {
-			xml = XmlTools.marshal(f, XmlImportDelegateFactory.SCHEMA, true);
-			try {
-				IOUtils.write(xml, out);
-			} catch (IOException e) {
-				throw new ImportException(String.format("Failed to write out the XML to [%s]:%n%s", tgt, xml), e);
-			}
+			XmlImportDelegateFactory.marshalXml(f, out, ok);
 			ok = true;
 		} catch (JAXBException e) {
 			throw new ImportException(String.format("Failed to marshal the XML for folder [%s](%s) to [%s]",
