@@ -37,6 +37,7 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 			throw new ImportException(e);
 		}
 		GregorianCalendar gcal = new GregorianCalendar();
+		gcal.setTimeZone(XmlImportDelegate.TZUTC);
 
 		f.setId(this.cmfObject.getId());
 		f.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());

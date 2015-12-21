@@ -4,6 +4,7 @@ import java.io.File;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 
@@ -22,6 +23,8 @@ import com.armedia.cmf.storage.CmfValue;
 
 public abstract class XmlImportDelegate extends
 	ImportDelegate<File, XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportDelegateFactory, XmlImportEngine> {
+
+	protected static final TimeZone TZUTC = TimeZone.getTimeZone(("UTC"));
 
 	protected final void dumpAttributes(List<AttributeT> list) {
 		for (String name : this.cmfObject.getAttributeNames()) {

@@ -44,6 +44,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			throw new ImportException(e);
 		}
 		GregorianCalendar gcal = new GregorianCalendar();
+		gcal.setTimeZone(XmlImportDelegate.TZUTC);
 
 		v.setId(this.cmfObject.getId());
 		v.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
