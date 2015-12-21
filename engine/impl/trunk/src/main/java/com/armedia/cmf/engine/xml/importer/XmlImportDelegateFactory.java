@@ -68,7 +68,7 @@ public class XmlImportDelegateFactory
 		}
 	}
 
-	static void marshalXml(Object target, OutputStream out, boolean format) throws JAXBException {
+	static void marshalXml(Object target, OutputStream out) throws JAXBException {
 		if (target == null) { throw new IllegalArgumentException("Must supply an object to marshal"); }
 		if (out == null) { throw new IllegalArgumentException(
 			String.format("Nowhere to write %s to", target.getClass().getName())); }
@@ -76,9 +76,7 @@ public class XmlImportDelegateFactory
 		Class<?> targetClass = target.getClass();
 		Marshaller m = JAXBContext.newInstance(targetClass).createMarshaller();
 		m.setSchema(XmlImportDelegateFactory.SCHEMA);
-		if (format) {
-			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		}
+		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 		m.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
 		m.marshal(target, out);
 	}
@@ -143,7 +141,7 @@ public class XmlImportDelegateFactory
 
 					boolean ok = false;
 					try {
-						XmlImportDelegateFactory.marshalXml(doc, out, true);
+						XmlImportDelegateFactory.marshalXml(doc, out);
 						this.filesWritten++;
 						ok = true;
 					} catch (JAXBException e) {
@@ -204,7 +202,7 @@ public class XmlImportDelegateFactory
 				}
 				boolean ok = false;
 				try {
-					XmlImportDelegateFactory.marshalXml(root, out, true);
+					XmlImportDelegateFactory.marshalXml(root, out);
 					this.filesWritten++;
 					ok = true;
 				} catch (JAXBException e) {

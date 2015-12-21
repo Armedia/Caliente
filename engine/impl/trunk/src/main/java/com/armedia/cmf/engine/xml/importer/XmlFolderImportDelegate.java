@@ -68,7 +68,7 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 
 		boolean ok = false;
 		try {
-			XmlImportDelegateFactory.marshalXml(f, out, ok);
+			XmlImportDelegateFactory.marshalXml(f, out);
 			ok = true;
 		} catch (JAXBException e) {
 			throw new ImportException(String.format("Failed to marshal the XML for folder [%s](%s) to [%s]",
