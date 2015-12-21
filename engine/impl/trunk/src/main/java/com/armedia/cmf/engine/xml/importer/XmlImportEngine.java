@@ -174,7 +174,7 @@ public class XmlImportEngine extends
 
 		@Override
 		public boolean isParallelCapable() {
-			return true;
+			return false;
 		}
 
 		@Override
