@@ -2,6 +2,7 @@ package com.armedia.cmf.engine.xml.importer;
 
 import java.io.File;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.TimeZone;
@@ -38,11 +39,14 @@ public abstract class XmlImportDelegate extends
 				for (CmfValue v : att) {
 					String V = "";
 					if (!v.isNull()) {
+						Calendar gcal = Calendar.getInstance();
 						try {
-							V = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(v.asTime());
+							gcal.setTime(v.asTime());
 						} catch (ParseException e) {
 							throw new RuntimeException("Failed to produce a date value", e);
 						}
+						gcal.setTimeZone(XmlImportDelegate.TZUTC);
+						V = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(gcal.getTime());
 					}
 					attribute.getValue().add(V);
 				}
@@ -89,11 +93,14 @@ public abstract class XmlImportDelegate extends
 				for (CmfValue v : prop) {
 					String V = "";
 					if (!v.isNull()) {
+						Calendar gcal = Calendar.getInstance();
 						try {
-							V = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(v.asTime());
+							gcal.setTime(v.asTime());
 						} catch (ParseException e) {
 							throw new RuntimeException("Failed to produce a date value", e);
 						}
+						gcal.setTimeZone(XmlImportDelegate.TZUTC);
+						V = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(gcal.getTime());
 					}
 					property.getValue().add(V);
 				}
