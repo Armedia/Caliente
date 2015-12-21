@@ -37,17 +37,18 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 			throw new ImportException(e);
 		}
 		GregorianCalendar gcal = new GregorianCalendar();
-		gcal.setTimeZone(XmlImportDelegate.TZUTC);
 
 		f.setId(this.cmfObject.getId());
 		f.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
 
 		try {
 			gcal.setTime(getAttributeValue(IntermediateAttribute.CREATION_DATE).asTime());
+			gcal.setTimeZone(XmlImportDelegate.TZUTC);
 			f.setCreationDate(dtf.newXMLGregorianCalendar(gcal));
 			f.setCreator(getAttributeValue(IntermediateAttribute.CREATED_BY).asString());
 
 			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_MODIFICATION_DATE).asTime());
+			gcal.setTimeZone(XmlImportDelegate.TZUTC);
 			f.setModificationDate(dtf.newXMLGregorianCalendar(gcal));
 			f.setModifier(getAttributeValue(IntermediateAttribute.LAST_MODIFIED_BY).asString());
 		} catch (ParseException e) {

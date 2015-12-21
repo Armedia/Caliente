@@ -44,17 +44,18 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			throw new ImportException(e);
 		}
 		GregorianCalendar gcal = new GregorianCalendar();
-		gcal.setTimeZone(XmlImportDelegate.TZUTC);
 
 		v.setId(this.cmfObject.getId());
 		v.setAcl(getPropertyValue(IntermediateProperty.ACL_ID).asString());
 
 		try {
 			gcal.setTime(getAttributeValue(IntermediateAttribute.CREATION_DATE).asTime());
+			gcal.setTimeZone(XmlImportDelegate.TZUTC);
 			v.setCreationDate(dtf.newXMLGregorianCalendar(gcal));
 			v.setCreator(getAttributeValue(IntermediateAttribute.CREATED_BY).asString());
 
 			gcal.setTime(getAttributeValue(IntermediateAttribute.LAST_MODIFICATION_DATE).asTime());
+			gcal.setTimeZone(XmlImportDelegate.TZUTC);
 			v.setModificationDate(dtf.newXMLGregorianCalendar(gcal));
 			v.setModifier(getAttributeValue(IntermediateAttribute.LAST_MODIFIED_BY).asString());
 
