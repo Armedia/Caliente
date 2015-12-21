@@ -165,6 +165,10 @@ public class XmlImportDelegateFactory
 				return;
 			}
 			try {
+				if (this.filesWritten == 0) {
+					// Write the schema out with the first non-empty XML file
+					writeSchema();
+				}
 
 				// There is an aggregator, so write out its file
 				final File f = calculateConsolidatedFile(cmfType);
@@ -203,46 +207,42 @@ public class XmlImportDelegateFactory
 			}
 		}
 
-		@Override
-		public void importFinished(Map<ImportResult, Integer> counters) {
-			super.importFinished(counters);
-			if (this.filesWritten > 0) {
-				final InputStream in = Thread.currentThread().getContextClassLoader()
-					.getResourceAsStream(XmlImportDelegateFactory.SCHEMA);
-				if (in == null) {
-					this.log.warn(String.format("Failed to load the schema from the resource '%s'",
-						XmlImportDelegateFactory.SCHEMA));
-					return;
+		private void writeSchema() {
+			final InputStream in = Thread.currentThread().getContextClassLoader()
+				.getResourceAsStream(XmlImportDelegateFactory.SCHEMA);
+			if (in == null) {
+				this.log.warn(
+					String.format("Failed to load the schema from the resource '%s'", XmlImportDelegateFactory.SCHEMA));
+				return;
+			}
+			final File schemaFile = new File(XmlImportDelegateFactory.this.db, XmlImportDelegateFactory.SCHEMA);
+			FileOutputStream out = null;
+			try {
+				out = new FileOutputStream(schemaFile);
+			} catch (FileNotFoundException e) {
+				IOUtils.closeQuietly(in);
+				if (this.log.isTraceEnabled()) {
+					this.log.warn(String.format("Failed to create the schema file at [%s]",
+						XmlImportDelegateFactory.SCHEMA, schemaFile), e);
+				} else {
+					this.log.warn(String.format("Failed to create the schema file at [%s]: %s",
+						XmlImportDelegateFactory.SCHEMA, schemaFile, e.getMessage()));
 				}
-				final File schemaFile = new File(XmlImportDelegateFactory.this.db, XmlImportDelegateFactory.SCHEMA);
-				FileOutputStream out = null;
-				try {
-					out = new FileOutputStream(schemaFile);
-				} catch (FileNotFoundException e) {
-					IOUtils.closeQuietly(in);
-					if (this.log.isTraceEnabled()) {
-						this.log.warn(String.format("Failed to create the schema file at [%s]",
-							XmlImportDelegateFactory.SCHEMA, schemaFile), e);
-					} else {
-						this.log.warn(String.format("Failed to create the schema file at [%s]: %s",
-							XmlImportDelegateFactory.SCHEMA, schemaFile, e.getMessage()));
-					}
-				}
+			}
 
-				try {
-					IOUtils.copy(in, out);
-				} catch (IOException e) {
-					if (this.log.isTraceEnabled()) {
-						this.log.warn(String.format("Failed to copy the schema into the file at [%s]",
-							XmlImportDelegateFactory.SCHEMA, schemaFile), e);
-					} else {
-						this.log.warn(String.format("Failed to copy the schema into the file at [%s]: %s",
-							XmlImportDelegateFactory.SCHEMA, schemaFile, e.getMessage()));
-					}
-				} finally {
-					IOUtils.closeQuietly(out);
-					IOUtils.closeQuietly(in);
+			try {
+				IOUtils.copy(in, out);
+			} catch (IOException e) {
+				if (this.log.isTraceEnabled()) {
+					this.log.warn(String.format("Failed to copy the schema into the file at [%s]",
+						XmlImportDelegateFactory.SCHEMA, schemaFile), e);
+				} else {
+					this.log.warn(String.format("Failed to copy the schema into the file at [%s]: %s",
+						XmlImportDelegateFactory.SCHEMA, schemaFile, e.getMessage()));
 				}
+			} finally {
+				IOUtils.closeQuietly(out);
+				IOUtils.closeQuietly(in);
 			}
 		}
 	};
