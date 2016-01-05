@@ -166,7 +166,7 @@ public class LocalExportDelegate extends
 	}
 
 	@Override
-	protected List<CmfContentInfo> storeContent(LocalRoot session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(LocalExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		if (getType() != CmfType.DOCUMENT) { return null; }
 
