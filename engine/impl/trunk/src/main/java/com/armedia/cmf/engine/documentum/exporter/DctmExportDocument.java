@@ -17,6 +17,7 @@ import javax.activation.MimeType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
@@ -214,20 +215,21 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected List<CmfContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+	protected List<CmfContentInfo> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document,
 		CmfContentStore<?, ?, ?> streamStore) throws Exception {
-		if (isDfReference(document)) { return super.doStoreContent(session, translator, marshaled, referrent, document,
-			streamStore); }
+		if (isDfReference(
+			document)) { return super.doStoreContent(ctx, translator, marshaled, referrent, document, streamStore); }
 
 		// We export our contents...
-		String dql = "" //
+		final String dql = "" //
 			+ "select dcs.r_object_id " //
 			+ "  from dmr_content_r dcr, dmr_content_s dcs " //
 			+ " where dcr.r_object_id = dcs.r_object_id " //
 			+ "   and dcr.parent_id = '%s' " //
 			+ "   and dcr.page = %d " //
 			+ " order by dcs.rendition ";
+		final IDfSession session = ctx.getSession();
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
 		final String fileName = document.getObjectName();
@@ -240,7 +242,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					final IDfContent content = IDfContent.class
 						.cast(session.getObject(results.getId(DctmAttributes.R_OBJECT_ID)));
 					CmfContentStore<?, ?, ?>.Handle handle = storeContentStream(session, translator, marshaled,
-						document, content, streamStore);
+						document, content, streamStore, ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT));
 					CmfContentInfo info = new CmfContentInfo(handle.getQualifier());
 					IDfId formatId = content.getFormatId();
 					MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
@@ -271,7 +273,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	protected CmfContentStore<?, ?, ?>.Handle storeContentStream(IDfSession session,
 		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, IDfDocument document,
-		IDfContent content, CmfContentStore<?, ?, ?> streamStore) throws Exception {
+		IDfContent content, CmfContentStore<?, ?, ?> streamStore, boolean skipContent) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (document == null) { throw new Exception(String
 			.format("Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
@@ -286,8 +288,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 		// CmfStore the content in the filesystem
 		CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
-		final File targetFile = contentHandle.getFile();
-		if (targetFile != null) {
+		if (skipContent) { return contentHandle; }
+		if (contentHandle.getSourceStore().isSupportsFileAccess()) {
+			final File targetFile = contentHandle.getFile();
 			final File parent = targetFile.getParentFile();
 			// Deal with a race condition with multiple threads trying to export to the same folder
 			if (!parent.exists()) {

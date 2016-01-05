@@ -25,8 +25,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfValue;
 
-public abstract class DctmExportDelegate<T extends IDfPersistentObject>
-	extends
+public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	ExportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportDelegateFactory, DctmExportEngine> {
 
 	private final DctmObjectType dctmType;
@@ -100,9 +99,9 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 				final AttributeHandler handler = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
 				// Get the attribute handler
 				if (handler.includeInExport(this.object, attr)) {
-					CmfAttribute<IDfValue> attribute = new CmfAttribute<IDfValue>(attr.getName(), DctmDataType
-						.fromAttribute(attr).getStoredType(), attr.isRepeating(), handler.getExportableValues(
-						this.object, attr));
+					CmfAttribute<IDfValue> attribute = new CmfAttribute<IDfValue>(attr.getName(),
+						DctmDataType.fromAttribute(attr).getStoredType(), attr.isRepeating(),
+						handler.getExportableValues(this.object, attr));
 					object.setAttribute(attribute);
 				}
 			}
@@ -129,14 +128,15 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 	}
 
 	@Override
-	protected final List<CmfContentInfo> storeContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
-		return doStoreContent(session, translator, marshaled, referrent, castObject(this.object), streamStore);
+	protected final List<CmfContentInfo> storeContent(DctmExportContext ctx,
+		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, ExportTarget referrent,
+		CmfContentStore<?, ?, ?> streamStore) throws Exception {
+		return doStoreContent(ctx, translator, marshaled, referrent, castObject(this.object), streamStore);
 	}
 
-	protected List<CmfContentInfo> doStoreContent(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+	protected List<CmfContentInfo> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?, ?, ?> streamStore)
-		throws Exception {
+			throws Exception {
 		return null;
 	}
 
@@ -144,8 +144,8 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject>
 		throws ClassCastException {
 		if (klazz == null) { throw new IllegalArgumentException("Must provide a class to cast to"); }
 		if (p == null) { return null; }
-		if (!klazz.isInstance(p)) { throw new ClassCastException(String.format("Can't convert a [%s] into a [%s]", p
-			.getClass().getCanonicalName(), klazz.getCanonicalName())); }
+		if (!klazz.isInstance(p)) { throw new ClassCastException(String.format("Can't convert a [%s] into a [%s]",
+			p.getClass().getCanonicalName(), klazz.getCanonicalName())); }
 		return klazz.cast(p);
 	}
 }

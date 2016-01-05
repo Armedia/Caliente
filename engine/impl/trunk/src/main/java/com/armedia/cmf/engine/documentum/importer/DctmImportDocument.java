@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
@@ -20,7 +21,6 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.importer.ImportSetting;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
@@ -628,7 +628,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// References don't require any of this being done
 		if (isReference()) { return; }
 
-		if (!context.getSettings().getBoolean(ImportSetting.IGNORE_CONTENT)) {
+		if (!context.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT)) {
 			loadContent(document, newObject, context);
 		}
 	}
