@@ -21,8 +21,7 @@ import com.independentsoft.share.Folder;
 import com.independentsoft.share.Group;
 import com.independentsoft.share.User;
 
-public abstract class ShptExportDelegate<T>
-	extends
+public abstract class ShptExportDelegate<T> extends
 	ExportDelegate<T, ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
 
 	private static final Map<Class<?>, CmfType> TYPE_MAP;
@@ -58,7 +57,7 @@ public abstract class ShptExportDelegate<T>
 	}
 
 	@Override
-	protected List<CmfContentInfo> storeContent(ShptSession session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		return null;
 	}
