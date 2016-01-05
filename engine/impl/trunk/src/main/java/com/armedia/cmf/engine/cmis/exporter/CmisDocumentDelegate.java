@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Rendition;
-import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 
@@ -123,9 +122,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected List<CmfContentInfo> storeContent(Session session, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentInfo> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
-		List<CmfContentInfo> ret = super.storeContent(session, translator, marshalled, referrent, streamStore);
+		List<CmfContentInfo> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
 		CmfContentStore<?, ?, ?>.Handle mainHandle = storeContentStream(marshalled, translator, null, main,
 			streamStore);
