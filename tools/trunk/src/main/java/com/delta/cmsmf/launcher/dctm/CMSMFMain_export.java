@@ -40,7 +40,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	 * adhoc mode. In that case the from and where clauses are specified in the properties file.
 	 */
 	private static final String DEFAULT_PREDICATE = "dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
-		+ "and not folder('/System', descend)"; // and r_modify_date >= DATE('XX_PLACE_HOLDER_XX')";
+		+ "and not folder('/System', descend) and not folder('/Temp', descend) ";
 
 	private DfcSessionPool pool = null;
 	private IDfSession session = null;
@@ -119,12 +119,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 				try {
 					this.session.abortTrans();
 				} catch (DfException e) {
-					this.log
-						.error(
-							String
-								.format(
-									"Exception caught while rolling back the transaction for loading the export metadata for job [%s]",
-									jobName), e);
+					this.log.error(String.format(
+						"Exception caught while rolling back the transaction for loading the export metadata for job [%s]",
+						jobName), e);
 				}
 			}
 		} catch (Exception e) {
@@ -202,8 +199,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 						this.session.abortTrans();
 					}
 				} catch (DfException e) {
-					this.log.error(
-						"Exception caught while rolling back the transaction for saving the export metadata", e);
+					this.log.error("Exception caught while rolling back the transaction for saving the export metadata",
+						e);
 				}
 			}
 			return true;

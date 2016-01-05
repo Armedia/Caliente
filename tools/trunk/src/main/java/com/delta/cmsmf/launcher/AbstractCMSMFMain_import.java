@@ -32,8 +32,8 @@ import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.utils.CMSMFUtils;
 
-public abstract class AbstractCMSMFMain_import extends
-AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
+public abstract class AbstractCMSMFMain_import
+	extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
 
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
@@ -63,9 +63,8 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implemen
 		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
 			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				AbstractCMSMFMain_import.this.log.warn(
-					String.format("Failed to register an additional listener class [%s]",
-						serviceClass.getCanonicalName()), t);
+				AbstractCMSMFMain_import.this.log.warn(String.format(
+					"Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()), t);
 			}
 		});
 		extraListeners.setHideErrors(false);
@@ -78,9 +77,9 @@ AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implemen
 		Map<String, Object> settings = new HashMap<String, Object>();
 		customizeSettings(settings);
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
+		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), Setting.CMF_IMPORT_TARGET_LOCATION.getString("/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), Setting.CMF_IMPORT_TRIM_PREFIX.getInt(0));
-		settings.put(ImportSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 
 		final StringBuilder report = new StringBuilder();
 		Date start = new Date();
