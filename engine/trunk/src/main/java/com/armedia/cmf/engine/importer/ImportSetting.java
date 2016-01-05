@@ -4,9 +4,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum ImportSetting implements ConfigurationSetting {
 	//
-	TARGET_LOCATION("/"),
-	TRIM_PREFIX(0),
-	IGNORE_CONTENT(false),
+	TARGET_LOCATION("/"), TRIM_PREFIX(0),
 	//
 	;
 

@@ -4,7 +4,9 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum TransferSetting implements ConfigurationSetting {
 	//
-	EXCLUDE_TYPES;
+	EXCLUDE_TYPES, IGNORE_CONTENT(false),
+	//
+	;
 
 	private final String label;
 	private final Object defaultValue;

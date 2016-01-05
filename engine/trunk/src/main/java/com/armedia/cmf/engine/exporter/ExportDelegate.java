@@ -84,6 +84,6 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyDependents(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
-	protected abstract List<CmfContentInfo> storeContent(S session, CmfAttributeTranslator<V> translator,
+	protected abstract List<CmfContentInfo> storeContent(C ctx, CmfAttributeTranslator<V> translator,
 		CmfObject<V> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception;
 }

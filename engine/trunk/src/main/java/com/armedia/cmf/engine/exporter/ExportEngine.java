@@ -17,7 +17,6 @@ import com.armedia.cmf.engine.PooledWorkers;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
-import com.armedia.cmf.engine.importer.ImportSetting;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
@@ -147,8 +146,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
-		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException,
-		CmfValueEncoderException, UnsupportedCmfTypeException {
+		C ctx, ExportListenerDelegator listenerDelegator)
+			throws ExportException, CmfStorageException, CmfValueEncoderException, UnsupportedCmfTypeException {
 		try {
 			listenerDelegator.objectExportStarted(target.getType(), target.getId());
 			Result result = null;
@@ -176,8 +175,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private Result doExportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
-		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException,
-		CmfValueEncoderException, UnsupportedCmfTypeException {
+		C ctx, ExportListenerDelegator listenerDelegator)
+			throws ExportException, CmfStorageException, CmfValueEncoderException, UnsupportedCmfTypeException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
@@ -201,8 +200,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		try {
 			locked = objectStore.lockForStorage(type, id);
 		} catch (CmfStorageException e) {
-			throw new ExportException(String.format("Exception caught attempting to lock a %s for storage [%s](%s)",
-				type, label, id), e);
+			throw new ExportException(
+				String.format("Exception caught attempting to lock a %s for storage [%s](%s)", type, label, id), e);
 		}
 
 		if (!locked) {
@@ -220,8 +219,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		if (objectStore.isStored(type, id)) {
 			// Should be impossible, but still guard against it
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("%s was locked for storage by this thread, but is already stored...",
-					label));
+				this.log
+					.trace(String.format("%s was locked for storage by this thread, but is already stored...", label));
 			}
 			return new Result(ExportSkipReason.ALREADY_STORED);
 		}
@@ -269,19 +268,17 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				return new Result(ExportSkipReason.ALREADY_STORED);
 			}
 
-			if (!ctx.getSettings().getBoolean(ImportSetting.IGNORE_CONTENT)) {
-				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Executing supplemental storage for %s", label));
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Executing supplemental storage for %s", label));
+			}
+			try {
+				List<CmfContentInfo> cmfContentInfo = sourceObject.storeContent(ctx, getTranslator(), marshaled,
+					referrent, streamStore);
+				if ((cmfContentInfo != null) && !cmfContentInfo.isEmpty()) {
+					objectStore.setContentInfo(marshaled, cmfContentInfo);
 				}
-				try {
-					List<CmfContentInfo> cmfContentInfo = sourceObject.storeContent(ctx.getSession(), getTranslator(),
-						marshaled, referrent, streamStore);
-					if ((cmfContentInfo != null) && !cmfContentInfo.isEmpty()) {
-						objectStore.setContentInfo(marshaled, cmfContentInfo);
-					}
-				} catch (Exception e) {
-					throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
-				}
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
 			}
 
 			if (this.log.isDebugEnabled()) {
@@ -313,13 +310,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) throws ExportException, CmfStorageException {
+		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+			throws ExportException, CmfStorageException {
 		return runExport(output, objectStore, contentStore, settings, null);
 	}
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter)
-		throws ExportException, CmfStorageException {
+			throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -374,8 +372,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private CmfObjectCounter<ExportResult> runExportImpl(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter,
 		final CfgTools configuration, final SessionFactory<S> sessionFactory, final SessionWrapper<S> baseSession,
-		final ContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory) throws ExportException,
-		CmfStorageException {
+		final ContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory)
+			throws ExportException, CmfStorageException {
 		final int threadCount;
 		final int backlogSize;
 		// Ensure nobody changes this under our feet
@@ -456,9 +454,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							listenerDelegator);
 						if (result != null) {
 							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Exported %s [%s](%s) in position %d",
-									result.marshaled.getType(), result.marshaled.getLabel(), result.marshaled.getId(),
-									result.objectNumber));
+								this.log.debug(
+									String.format("Exported %s [%s](%s) in position %d", result.marshaled.getType(),
+										result.marshaled.getLabel(), result.marshaled.getId(), result.objectNumber));
 							}
 						}
 						ok = true;
