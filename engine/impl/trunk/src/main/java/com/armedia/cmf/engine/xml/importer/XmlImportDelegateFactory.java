@@ -129,7 +129,15 @@ public class XmlImportDelegateFactory
 					ContentInfoT content = first.getContents().get(0);
 					File tgt = new File(XmlImportDelegateFactory.this.content, content.getLocation());
 					File dir = tgt.getParentFile();
-					tgt = new File(dir, String.format("%s-document.xml", batchId));
+					if (dir != null) {
+						try {
+							FileUtils.forceMkdir(dir);
+						} catch (IOException e) {
+							this.log.error(String.format("Failed to create the parent directory at [%s]", dir), e);
+							return;
+						}
+					}
+					tgt = new File(dir, String.format("%s-document.xml", tgt.getName()));
 
 					final OutputStream out;
 					try {
@@ -157,6 +165,7 @@ public class XmlImportDelegateFactory
 
 					DocumentIndexT index = DocumentIndexT.class
 						.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT));
+					// TODO: Do all versions? or just the first (root) version?
 					for (DocumentVersionT v : l) {
 						DocumentIndexEntryT idx = new DocumentIndexEntryT();
 						idx.setId(v.getId());
