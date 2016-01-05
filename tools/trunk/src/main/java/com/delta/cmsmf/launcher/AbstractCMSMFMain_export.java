@@ -49,6 +49,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 
 	protected final void prepareSettings(Map<String, Object> settings) throws CMSMFException {
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
+		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 		if (this.user != null) {
 			settings.put(CmisSessionSetting.USER.getLabel(), this.user);
 		}
