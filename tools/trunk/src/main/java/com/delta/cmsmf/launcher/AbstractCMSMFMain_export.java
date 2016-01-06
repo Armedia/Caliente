@@ -151,7 +151,9 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 				if (m != null) {
 					this.log.info(String.format("##### Loaded settings for job [%s] #####", jobName));
 					for (String s : m.keySet()) {
-						this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
+						Object v = m.get(s);
+						this.log.info(String.format("\t[%s] = [%s]", s, v));
+						settings.put(s, v);
 					}
 					loaded = true;
 				}
