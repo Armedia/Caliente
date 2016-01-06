@@ -33,6 +33,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 
 	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss 'UTC'";
 
+	private static final String JOB_EXTENSION = "cmf.xml";
+
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
 	 * combine the select clause listed above with this from and where clauses to build the complete
@@ -83,7 +85,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	private String getJobQualification(String jobName, IDfFolder exportFolder) throws DfException {
-		final String fileName = String.format("%s.job", jobName.toLowerCase());
+		final String fileName = String.format("%s.%s", jobName.toLowerCase(), CMSMFMain_export.JOB_EXTENSION);
 		return String.format("dm_document where object_name = %s and folder(ID(%s))", DfUtils.quoteString(fileName),
 			DfUtils.quoteString(exportFolder.getObjectId().getId()));
 	}
@@ -170,7 +172,14 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 
 				Properties p = new Properties();
 				for (String s : m.keySet()) {
-					p.put(s, m.get(s));
+					if (s == null) {
+						continue;
+					}
+					Object v = m.get(s);
+					if (v == null) {
+						continue;
+					}
+					p.put(s, v.toString());
 				}
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -184,7 +193,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 				} else {
 					// Create a new one & save
 					doc = IDfDocument.class.cast(this.session.newObject("dm_document"));
-					doc.setObjectName(String.format("%s.job", jobName));
+					doc.setObjectName(String.format("%s.%s", jobName, CMSMFMain_export.JOB_EXTENSION));
 					doc.setContentType("xml");
 					doc.setContent(out);
 					doc.link(exportFolder.getObjectId().getId());
