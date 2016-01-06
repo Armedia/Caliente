@@ -149,7 +149,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 				this.log.info(String.format("##### Loading settings for job [%s] #####", jobName));
 				Map<String, Object> m = loadSettings(jobName);
 				if (m != null) {
-					this.log.info(String.format("##### Settings for job [%s] #####", jobName));
+					this.log.info(String.format("##### Loaded settings for job [%s] #####", jobName));
 					for (String s : m.keySet()) {
 						this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
 					}
