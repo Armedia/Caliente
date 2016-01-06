@@ -226,6 +226,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			Object startDate = settings.get(AbstractCMSMFMain_export.EXPORT_START);
 			if (startDate != null) {
 				Object basePred = settings.get(AbstractCMSMFMain_export.BASE_SELECTOR);
+				// TODO: Parse out the base selector
+				// TODO: inject the date restriction
+				// TODO:
 				final String dql = String.format("%s AND r_modify_date >= DATE(%s, %s)", basePred,
 					DfUtils.quoteString(startDate.toString()),
 					DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
