@@ -15,9 +15,9 @@ import java.util.regex.Pattern;
 
 import com.armedia.commons.utilities.Tools;
 
-public class DqlQuery {
+class DqlQuery {
 
-	public static class ClauseGenerator {
+	static class ClauseGenerator {
 		public String generate(int nestLevel, Clause clause, String data) {
 			if (clause == null) { return data; }
 			return String.format("%s %s", clause, data);
@@ -29,7 +29,7 @@ public class DqlQuery {
 		}
 	}
 
-	public static enum Keyword {
+	static enum Keyword {
 		//
 		SELECT,
 		FROM,
@@ -62,7 +62,7 @@ public class DqlQuery {
 		}
 	}
 
-	public static enum Clause {
+	static enum Clause {
 		//
 		SELECT, FROM, IN_DOCUMENT, IN_ASSEMBLY, SEARCH, IN_FTINDEX, WHERE, GROUP_BY, HAVING, UNION, ORDER_BY, ENABLE,
 		//
@@ -187,7 +187,7 @@ public class DqlQuery {
 	private final String leading;
 	private final Map<Clause, Object> clauses;
 
-	public DqlQuery(String dql) throws Exception {
+	DqlQuery(String dql) throws Exception {
 		this(dql, null);
 	}
 
