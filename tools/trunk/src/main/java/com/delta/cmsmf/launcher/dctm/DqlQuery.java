@@ -92,6 +92,8 @@ class DqlQuery {
 	}
 
 	private static Pattern WORD_FINDER = Pattern.compile("(?:\\b(\\w+)\\b)");
+	// private static Pattern SYMBOL_FINDER =
+	// Pattern.compile("(?:\\b(\\w+)\\b|([*][*]|''|[()'\"+-/*<>=!,]))");
 
 	private static final Map<String, Keyword> KEYWORDS;
 	private static final Map<String, Clause> CLAUSES;

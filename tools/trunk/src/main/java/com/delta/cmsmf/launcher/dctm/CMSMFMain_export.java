@@ -6,10 +6,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
 
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DocumentumOrganizationStrategy;
@@ -21,7 +24,6 @@ import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;
-import com.delta.cmsmf.launcher.dctm.DqlQuery.Clause;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -35,6 +37,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss 'UTC'";
 
 	private static final String JOB_EXTENSION = "cmf.xml";
+	private static final Pattern OBJECT_TYPE_FINDER = Pattern.compile("(?:\\bselect\\s+\\w+\\s+from\\s+(\\w+)\\b)",
+		Pattern.CASE_INSENSITIVE);
+	private static final String FIXED_PREDICATE = "select CMF_WRAP_${objectType}.r_object_id from ${objectType} CMF_WRAP_${objectType}, ( ${baseDql} ) CMF_SUBQ_${objectType} where CMF_WRAP_${objectType}.r_object_id = CMF_SUBQ_${objectType}.r_object_id and CMF_WRAP_${objectType}.${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
@@ -228,23 +233,22 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			final String dateColumnName = "r_modify_date";
 			final Object startDate = settings.get(AbstractCMSMFMain_export.EXPORT_START);
 			if (startDate != null) {
-				Object basePred = String.valueOf(settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
-				try {
-					DqlQuery query = new DqlQuery(basePred.toString());
-					String where = query.getClauseData(Clause.WHERE);
-					if (where == null) {
-						// This will make it easy to keep a single formatting mode below
-						where = String.format("%s IS NOT NULLDATE", dateColumnName);
-					}
-					where = String.format("( %s ) AND ( %s >= DATE(%s, %s) )", where, dateColumnName,
-						DfUtils.quoteString(startDate.toString()),
-						DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
-					final String dql = query.toString();
-
-					settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
-				} catch (Exception e) {
-					throw new CMSMFException(String.format("Failed to parse the stored DQL [%s]", basePred), e);
+				// Find the first word - that'll be our object type
+				String dql = String.valueOf(settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
+				Matcher m = CMSMFMain_export.OBJECT_TYPE_FINDER.matcher(dql.toString());
+				if (m.find()) {
+					// If we were able to find it, then we can certainly modify the query as
+					// required to safely apply the date filter
+					String objectType = m.group(1);
+					Map<String, Object> data = new HashMap<String, Object>();
+					data.put("objectType", objectType);
+					data.put("baseDql", dql);
+					data.put("dateColumn", dateColumnName);
+					data.put("dateValue", DfUtils.quoteString(startDate.toString()));
+					data.put("dateFormat", DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
+					dql = StrSubstitutor.replace(CMSMFMain_export.FIXED_PREDICATE, data);
 				}
+				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
 			} else {
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR,
 					settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
