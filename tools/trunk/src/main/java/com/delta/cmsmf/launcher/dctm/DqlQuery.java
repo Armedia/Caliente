@@ -272,6 +272,23 @@ class DqlQuery {
 		return toString(null);
 	}
 
+	public List<DqlQuery> getUnions() {
+		Object u = this.clauses.get(Clause.UNION);
+		if (u == null) { return null; }
+		@SuppressWarnings("unchecked")
+		List<DqlQuery> l = (List<DqlQuery>) u;
+		return l;
+	}
+
+	public String getClauseData(Clause clause) {
+		if (clause == null) { throw new IllegalArgumentException("Must provide a Clause to retrieve"); }
+		return Tools.toString(this.clauses.get(clause));
+	}
+
+	public String getLeading() {
+		return this.leading;
+	}
+
 	public String toString(ClauseGenerator generator) {
 		return toString(generator, 0);
 	}
