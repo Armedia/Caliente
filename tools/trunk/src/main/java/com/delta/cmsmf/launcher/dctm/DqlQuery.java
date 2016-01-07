@@ -91,7 +91,7 @@ class DqlQuery {
 		}
 	}
 
-	private static Pattern WORD_FINDER = Pattern.compile("\\G(?:\\s*\\b([a-zA-Z]+)\\s+)");
+	private static Pattern WORD_FINDER = Pattern.compile("(?:\\b(\\w+)\\b)");
 
 	private static final Map<String, Keyword> KEYWORDS;
 	private static final Map<String, Clause> CLAUSES;
