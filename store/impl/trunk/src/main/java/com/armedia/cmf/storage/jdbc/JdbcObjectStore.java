@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
@@ -54,6 +55,9 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
+
+	protected static final String DBNAME_H2 = "H2";
+	protected static final String DBNAME_POSTGRESQL = "POSTGRESQL";
 
 	private static final String PROPERTY_TABLE = "cmf_info";
 	private static final String SCHEMA_CHANGE_LOG = "db.changelog.xml";
@@ -220,6 +224,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
 	private final JdbcStorePropertyManager propertyManager;
+	protected final String dbName;
+	protected final String dbVersion;
+	protected final int dbMajor;
+	protected final int dbMinor;
 
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
 		throws CmfStorageException {
@@ -235,6 +243,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			c = this.dataSource.getConnection();
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to get a SQL Connection to validate the schema", e);
+		}
+
+		try {
+			DatabaseMetaData md = c.getMetaData();
+			this.dbName = md.getDatabaseProductName();
+			this.dbVersion = md.getDatabaseProductVersion();
+			this.dbMajor = md.getDatabaseMajorVersion();
+			this.dbMinor = md.getDatabaseMinorVersion();
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to get basic database information", e);
 		}
 
 		this.propertyManager = new JdbcStorePropertyManager(JdbcObjectStore.PROPERTY_TABLE);
@@ -863,18 +881,22 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	protected boolean optimizedClearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		String[] tables = {
-			"CMF_CONTENT_PROPERTY", "CMF_PROPERTY_VALUE", "CMF_ATTRIBUTE_VALUE", "CMF_MAPPER",
-			// "CMF_CONTENT", "CMF_PROPERTY", "CMF_ATTRIBUTE", "CMF_OBJECT",
-			// "CMF_EXPORT_PLAN", "CMF_INFO"
+			"CMF_CONTENT_PROPERTY", "CMF_PROPERTY_VALUE", "CMF_ATTRIBUTE_VALUE", "CMF_MAPPER", "CMF_CONTENT",
+			"CMF_PROPERTY", "CMF_ATTRIBUTE", "CMF_OBJECT", "CMF_EXPORT_PLAN", "CMF_INFO"
 		};
 		final Connection c = operation.getConnection();
 		try {
 			Statement s = c.createStatement();
+			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
 			try {
+				final String extraParam = Tools.coalesce(getTruncateExtraParam(operation), "");
 				for (String t : tables) {
-					s.executeUpdate(String.format("truncate table %s", t));
+					s.executeUpdate(String.format("truncate table %s %s", t, extraParam));
 				}
 			} finally {
+				if (referentialIntegrityOff) {
+					enableReferentialIntegrity(operation);
+				}
 				DbUtils.close(s);
 			}
 			return true;
@@ -1194,5 +1216,43 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			DbUtils.closeQuietly(pPS);
 			DbUtils.closeQuietly(cPS);
 		}
+	}
+
+	protected boolean disableReferentialIntegrity(JdbcOperation operation) throws CmfStorageException {
+		Connection c = operation.getConnection();
+		Statement s = null;
+		try {
+			s = c.createStatement();
+			if (StringUtils.equalsIgnoreCase(this.dbName, JdbcObjectStore.DBNAME_H2)) {
+				s.execute("set REFERENTIAL_INTEGRITY false");
+				return true;
+			}
+			return false;
+		} catch (SQLException e) {
+			this.log.trace("Failed to disable the referential integrity constraints", e);
+			return false;
+		} finally {
+			DbUtils.closeQuietly(s);
+		}
+	}
+
+	protected void enableReferentialIntegrity(JdbcOperation operation) throws CmfStorageException {
+		Connection c = operation.getConnection();
+		Statement s = null;
+		try {
+			s = c.createStatement();
+			if (StringUtils.equalsIgnoreCase(this.dbName, JdbcObjectStore.DBNAME_H2)) {
+				s.execute("set REFERENTIAL_INTEGRITY true");
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to re-enable the referential integrity constraints", e);
+		} finally {
+			DbUtils.closeQuietly(s);
+		}
+	}
+
+	protected String getTruncateExtraParam(JdbcOperation operation) throws CmfStorageException {
+		if (StringUtils.equalsIgnoreCase(this.dbName, JdbcObjectStore.DBNAME_POSTGRESQL)) { return "cascade"; }
+		return null;
 	}
 }
