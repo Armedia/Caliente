@@ -21,6 +21,8 @@ import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;
+import com.delta.cmsmf.launcher.dctm.DqlQuery.Clause;
+import com.delta.cmsmf.launcher.dctm.DqlQuery.ClauseGenerator;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -223,16 +225,44 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		if (loaded) {
 			// If there are previous settings, we need to look at BASE_SELECTOR and the dates given,
 			// and based on that construct the new FINAL_SELECTOR (dql)
-			Object startDate = settings.get(AbstractCMSMFMain_export.EXPORT_START);
+			// TODO: Eventually we may switch this out
+			final String dateColumnName = "r_modify_date";
+			final Object startDate = settings.get(AbstractCMSMFMain_export.EXPORT_START);
 			if (startDate != null) {
-				Object basePred = settings.get(AbstractCMSMFMain_export.BASE_SELECTOR);
-				// TODO: Parse out the base selector
-				// TODO: inject the date restriction
-				// TODO:
-				final String dql = String.format("%s AND r_modify_date >= DATE(%s, %s)", basePred,
-					DfUtils.quoteString(startDate.toString()),
-					DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
-				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
+				Object basePred = String.valueOf(settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
+				try {
+					DqlQuery query = new DqlQuery(basePred.toString());
+					// TODO: Cover the case where there is no WHERE clause
+					final String dql = query.toString(new ClauseGenerator() {
+
+						// TODO: set this to FALSE
+						private boolean supportsDateFilter = false;
+
+						@Override
+						public String generate(int nestLevel, Clause clause, String data) {
+							this.supportsDateFilter = true;
+							if (nestLevel == 0) {
+								if ((clause == null) || (clause == Clause.SELECT)) {
+									// TODO: Add code to only add this in case of dm_sysobject (or
+									// subclass), or dm_user... not supported for any other object
+									// types
+									// We do this by analyzing the "leading" text (clause-less) text
+									// that's part of the DQL
+								} else if ((clause == Clause.WHERE) && this.supportsDateFilter) {
+									// Add the date filter
+									return String.format("%s ( %s ) AND %s >= DATE(%s, %s)", clause, data,
+										dateColumnName, DfUtils.quoteString(startDate.toString()),
+										DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
+								}
+							}
+							return super.generate(nestLevel, clause, data);
+						}
+					});
+
+					settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
+				} catch (Exception e) {
+					throw new CMSMFException(String.format("Failed to parse the stored DQL [%s]", basePred), e);
+				}
 			} else {
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR,
 					settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
