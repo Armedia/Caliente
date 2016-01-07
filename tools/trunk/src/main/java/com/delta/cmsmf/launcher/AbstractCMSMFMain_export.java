@@ -89,7 +89,8 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		return false;
 	}
 
-	protected void processSettings(Map<String, Object> settings, boolean loaded) throws CMSMFException {
+	protected void processSettings(Map<String, Object> settings, boolean loaded, boolean resetJob)
+		throws CMSMFException {
 	}
 
 	protected void prepareState(Map<String, Object> settings) throws CMSMFException {
@@ -145,7 +146,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			prepareState(settings);
 
 			boolean loaded = false;
-			if (!StringUtils.isBlank(jobName) && !resetJob) {
+			if (!StringUtils.isBlank(jobName)) {
 				this.log.info(String.format("##### Loading settings for job [%s] #####", jobName));
 				Map<String, Object> m = loadSettings(jobName);
 				if (m != null) {
@@ -167,7 +168,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 				}
 			}
 
-			processSettings(settings, loaded);
+			processSettings(settings, loaded, resetJob);
 
 			start = new Date();
 			try {

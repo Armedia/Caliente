@@ -225,13 +225,15 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	@Override
-	protected void processSettings(Map<String, Object> settings, boolean loaded) throws CMSMFException {
+	protected void processSettings(Map<String, Object> settings, boolean loaded, boolean resetJob)
+		throws CMSMFException {
 		if (loaded) {
 			// If there are previous settings, we need to look at BASE_SELECTOR and the dates given,
 			// and based on that construct the new FINAL_SELECTOR (dql)
 			// TODO: Eventually we may switch this out
 			final String dateColumnName = "r_modify_date";
-			final Object startDate = settings.get(AbstractCMSMFMain_export.EXPORT_START);
+			// If we're resetting the job, we'll simply ignore the existing date markers
+			final Object startDate = (resetJob ? null : settings.get(AbstractCMSMFMain_export.EXPORT_START));
 			if (startDate != null) {
 				// Find the first word - that'll be our object type
 				String dql = String.valueOf(settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
@@ -251,7 +253,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
 			} else {
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR,
-					settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
+					String.valueOf(settings.get(AbstractCMSMFMain_export.BASE_SELECTOR)));
 			}
 		} else {
 			Object baseSel = settings.get(AbstractCMSMFMain_export.BASE_SELECTOR);
