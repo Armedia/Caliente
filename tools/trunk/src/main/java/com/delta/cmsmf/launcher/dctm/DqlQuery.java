@@ -184,7 +184,7 @@ class DqlQuery {
 		}
 	}
 
-	private final String leading;
+	private String leading = "";
 	private final Map<Clause, Object> clauses;
 
 	DqlQuery(String dql) throws Exception {
@@ -283,6 +283,18 @@ class DqlQuery {
 	public String getClauseData(Clause clause) {
 		if (clause == null) { throw new IllegalArgumentException("Must provide a Clause to retrieve"); }
 		return Tools.toString(this.clauses.get(clause));
+	}
+
+	public String setClauseData(Clause clause, String data) {
+		if (clause == Clause.UNION) { throw new IllegalArgumentException(
+			"Can't use this method to modify UNION clauses"); }
+		return Tools.toString(data == null ? this.clauses.remove(clause) : this.clauses.put(clause, data));
+	}
+
+	public String setLeading(String leading) {
+		String ret = this.leading;
+		this.leading = Tools.coalesce(leading, "");
+		return ret;
 	}
 
 	public String getLeading() {
