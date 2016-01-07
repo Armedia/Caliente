@@ -17,6 +17,18 @@ import com.armedia.commons.utilities.Tools;
 
 public class DqlQuery {
 
+	public static class ClauseGenerator {
+		public String generate(int nestLevel, Clause clause, String data) {
+			if (clause == null) { return data; }
+			return String.format("%s %s", clause, data);
+		}
+
+		public String generate(int nestLevel, Clause clause, DqlQuery nestedQuery) {
+			if (clause == null) { return nestedQuery.toString(this, nestLevel); }
+			return String.format("%s %s", clause, nestedQuery.toString(this, nestLevel));
+		}
+	}
+
 	public static enum Keyword {
 		//
 		SELECT,
@@ -52,23 +64,11 @@ public class DqlQuery {
 
 	public static enum Clause {
 		//
-		SELECT,
-		FROM,
-		IN_DOCUMENT,
-		IN_ASSEMBLY,
-		SEARCH,
-		IN_FTINDEX,
-		WHERE,
-		GROUP_BY,
-		HAVING,
-		UNION(true),
-		ORDER_BY,
-		ENABLE,
+		SELECT, FROM, IN_DOCUMENT, IN_ASSEMBLY, SEARCH, IN_FTINDEX, WHERE, GROUP_BY, HAVING, UNION, ORDER_BY, ENABLE,
 		//
 		;
 
 		private String string;
-		private boolean canRepeat;
 
 		private Clause() {
 			this(false);
@@ -110,6 +110,83 @@ public class DqlQuery {
 		CLAUSES = Tools.freezeMap(cl);
 	}
 
+	private static class ClausePosition {
+		private final Clause clause;
+		private final int clauseStart;
+		private final int dataStart;
+
+		private ClausePosition(Clause clause, int clauseStart, int dataStart) {
+			this.clause = clause;
+			this.clauseStart = clauseStart;
+			this.dataStart = dataStart;
+		}
+	}
+
+	private static class Parser {
+		private final Matcher m;
+		private int startPos = 0;
+
+		public Parser(String dql) {
+			this.m = DqlQuery.WORD_FINDER.matcher(dql);
+			this.startPos = 0;
+		}
+
+		/**
+		 * <p>
+		 * Will find the next {@link ClausePosition} in the string, or {@code null} if there are no
+		 * more.
+		 * </p>
+		 *
+		 * @return the next {@link ClausePosition} in the string, or {@code null} if there are no
+		 *         more.
+		 */
+		public ClausePosition findNextClause() throws Exception {
+			while (this.m.find(this.startPos)) {
+				final String w1 = this.m.group(1).toUpperCase();
+				int clauseStart = this.m.start(1);
+				int dataStart = this.m.end(1);
+				final Keyword kw = DqlQuery.KEYWORDS.get(w1);
+				if (kw == null) {
+					// Not a keyword
+					this.startPos = this.m.end(1);
+					continue;
+				}
+
+				final Clause clause;
+				if (kw.chasers.isEmpty()) {
+					// Single-word clause
+					clause = DqlQuery.CLAUSES.get(w1);
+				} else {
+					// Find the next word in the matched pattern, and use that
+					// to find the clause we're in so we can move the "start"
+					// pointer. If the next word isn't one of the expected
+					// KEYWORDS, then we ignore this instance and keep going
+					if (!this.m.find()) {
+						continue;
+					}
+					final String w2 = this.m.group(1).toUpperCase();
+					dataStart = this.m.end(1);
+					final Keyword kw2 = DqlQuery.KEYWORDS.get(w2);
+					if ((kw2 == null) || !kw.chasers.contains(kw2)) {
+						// This next keyword isn't one of the required chasers, and thus
+						// constitutes a syntax error
+						throw new Exception(String.format("The keyword %s (at index %d) must be followed by one of %s",
+							kw, this.m.start(1), kw.chasers));
+					}
+					clause = DqlQuery.CLAUSES.get(String.format("%s %s", w1, w2));
+				}
+
+				this.startPos = this.m.end(1);
+				if (clause != null) { return new ClausePosition(clause, clauseStart, dataStart); }
+			}
+			this.startPos = this.m.regionEnd();
+			return null;
+		}
+	}
+
+	private final String leading;
+	private final Map<Clause, Object> clauses;
+
 	public DqlQuery(String dql) throws Exception {
 		this(dql, null);
 	}
@@ -135,103 +212,101 @@ public class DqlQuery {
 
 		Map<Clause, Object> clauses = new EnumMap<Clause, Object>(Clause.class);
 
-		int startPos = 0;
-		Clause lastClause = null;
-		int lastStart = 0;
-		int lastData = 0;
-		Matcher m = DqlQuery.WORD_FINDER.matcher(dql);
 		String leading = "";
-		while (m.find(startPos)) {
-			final String w1 = m.group(1).toUpperCase();
-			int clauseStart = m.start(1);
-			int dataStart = m.end(1);
-			final Keyword kw = DqlQuery.KEYWORDS.get(w1);
-			if (kw == null) {
-				// Not a keyword
-				startPos = m.end(1);
-				continue;
-			}
-
-			final Clause clause;
-			if (kw.chasers.isEmpty()) {
-				// Single-word clause
-				clause = DqlQuery.CLAUSES.get(w1);
-			} else {
-				// Find the next word in the matched pattern, and use that
-				// to find the clause we're in so we can move the "start"
-				// pointer. If the next word isn't one of the expected
-				// KEYWORDS, then we ignore this instance and keep going
-				if (!m.find()) {
-					continue;
-				}
-				final String w2 = m.group(1).toUpperCase();
-				dataStart = m.end(1);
-				final Keyword kw2 = DqlQuery.KEYWORDS.get(w2);
-				if ((kw2 == null) || !kw.chasers.contains(kw2)) {
-					continue;
-				}
-				clause = DqlQuery.CLAUSES.get(String.format("%s %s", w1, w2));
-			}
-
-			if (clause == null) {
-				// Not a supported clause, so we ignore it and treat is as data
-				startPos = m.end(1);
-				continue;
-			}
-
-			int nextStartPos = m.end(1);
-			if (lastClause != null) {
-				Object data = null;
-				if (lastClause == Clause.UNION) {
-					// Special case: the UNION clause requires special handling - the text inside
-					// the union clause must be parsed as its own query until another UNION,
-					// ORDER BY or ENABLE clause is found, or the end is reached
-					AtomicInteger advance = new AtomicInteger(0);
-					List<DqlQuery> unions = null;
-					data = clauses.get(Clause.UNION);
-					if (data == null) {
-						unions = new ArrayList<DqlQuery>();
-						clauses.put(Clause.UNION, unions);
-					} else {
-						@SuppressWarnings("unchecked")
-						List<DqlQuery> u = (List<DqlQuery>) data;
-						unions = u;
-					}
-					unions.add(
-						new DqlQuery(dql.substring(lastData), advance, Clause.UNION, Clause.ORDER_BY, Clause.ENABLE));
-					nextStartPos = startPos + advance.get();
-				} else {
-					// Validate that this clause is occurring in the correct order with
-					// respect to the others
-					if (clause.ordinal() < lastClause.ordinal()) { throw new Exception(
-						String.format("The %s clause must be declared before the %s clause (at index %d)",
-							clause.string, lastClause.string, clauseStart)); }
-					// Validate that this clause allows repetition
-					if ((clause == lastClause) && !clause.canRepeat) { throw new Exception(
-						String.format("The %s clause can't be repeated (at index %d)", clause.string, clauseStart)); }
-
-					// We have a previous clause, so we must also have its previous start
-					// position, which means we can parse out its crap
-					data = dql.substring(lastData, clauseStart).trim();
-				}
-				clauses.put(lastClause, data);
-			} else {
-				leading = dql.substring(0, clauseStart);
-			}
-
-			// Advance the parser position
-			startPos = nextStartPos;
-			if (endClauses.contains(clause)) {
-				// we're done
-				startPos = clauseStart;
+		ClausePosition previousClause = null;
+		Parser p = new Parser(dql);
+		ClausePosition clause = p.findNextClause();
+		while (clause != null) {
+			if (endClauses.contains(clause.clause)) {
+				parseCount.set(clause.clauseStart);
 				break;
 			}
+			if (previousClause == null) {
+				leading = dql.substring(0, clause.clauseStart).trim();
+			}
 
-			// Now we have the clause. We make note of its start position
-			lastClause = clause;
-			lastStart = clauseStart;
-			lastData = dataStart;
+			ClausePosition nextClause = p.findNextClause();
+
+			Object data = null;
+			if (clause.clause == Clause.UNION) {
+				// This is a UNION clause, parse everything else
+				List<DqlQuery> unions = null;
+				data = clauses.get(clause.clause);
+				if (data == null) {
+					unions = new ArrayList<DqlQuery>();
+					data = unions;
+				} else {
+					@SuppressWarnings("unchecked")
+					List<DqlQuery> u = (List<DqlQuery>) data;
+					unions = u;
+				}
+				AtomicInteger advance = new AtomicInteger(0);
+				unions.add(new DqlQuery(dql.substring(clause.dataStart), advance, Clause.UNION, Clause.ORDER_BY,
+					Clause.ENABLE));
+				// "advance" contains the number of bytes the parser must be moved forward
+				p.startPos = clause.dataStart + advance.get();
+				nextClause = p.findNextClause();
+			} else if (nextClause == null) {
+				// The remaining text is the data for this clause
+				data = dql.substring(clause.dataStart).trim();
+			} else {
+				if (nextClause.clause.ordinal() < clause.clause.ordinal()) { throw new Exception(
+					String.format("SQL Clauses out of order: %s (at index %d) can't come before %s (at index %d)",
+						clause.clause, clause.clauseStart, nextClause.clause, nextClause.clauseStart)); }
+				data = dql.substring(clause.dataStart, nextClause.clauseStart).trim();
+			}
+			clauses.put(clause.clause, data);
+			previousClause = clause;
+			clause = nextClause;
 		}
-		parseCount.set(startPos);
+
+		if (previousClause == null) {
+			leading = dql.substring(0, p.startPos);
+		}
+		this.leading = leading;
+		this.clauses = clauses;
+	}
+
+	@Override
+	public String toString() {
+		return toString(null);
+	}
+
+	public String toString(ClauseGenerator generator) {
+		return toString(generator, 0);
+	}
+
+	private String toString(ClauseGenerator generator, int nestLevel) {
+		++nestLevel;
+		if (generator == null) {
+			generator = new ClauseGenerator();
+		}
+		StringBuilder b = new StringBuilder();
+		b.append(generator.generate(nestLevel, null, this.leading));
+		for (Clause c : this.clauses.keySet()) {
+			b.append(" ");
+			Object data = this.clauses.get(c);
+			if (data instanceof List) {
+				List<?> l = List.class.cast(data);
+				boolean first = true;
+				for (Object o : l) {
+					if (first) {
+						first = false;
+					} else {
+						b.append(" ");
+					}
+					String s = null;
+					if (o instanceof DqlQuery) {
+						s = generator.generate(nestLevel, c, DqlQuery.class.cast(o));
+					} else {
+						s = generator.generate(nestLevel, c, o.toString());
+					}
+					b.append(s);
+				}
+			} else {
+				b.append(generator.generate(nestLevel, c, data.toString()));
+			}
+		}
+		return b.toString().trim();
 	}
 }
