@@ -39,7 +39,7 @@ public enum Setting {
 	SPECIAL_TYPES("special.types"),
 	POST_PROCESS_IMPORT("import.postprocess"),
 	SHPT_SOURCE_PREFIX("shpt.source.prefix"),
-	STATE_CABINET("state.cabinet"),
+	STATE_FOLDER("state.folder"),
 	EXPORT_BATCH_SIZE("export.batch.size"),
 	JDBC_DRIVER("jdbc.driver"),
 	JDBC_URL("jdbc.url"),

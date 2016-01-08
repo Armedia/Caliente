@@ -27,6 +27,7 @@ import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfTime;
 
@@ -266,31 +267,27 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		settings.put("dql", settings.get(AbstractCMSMFMain_export.FINAL_SELECTOR));
 	}
 
-	private IDfFolder getCmsmfStateFolder(boolean createIfMissing) throws DfException {
-		final String targetDocbaseName = this.session.getDocbaseName();
-		final String cabinetName = Setting.STATE_CABINET.getString();
-		final String cabinetPath = String.format("/%s", cabinetName);
-		final String folderPath = String.format("%s/%s", cabinetPath, targetDocbaseName);
+	private IDfFolder getCmsmfStateFolder(boolean createIfMissing) throws DfException, CMSMFException {
+		final String stateFolderName = Setting.STATE_FOLDER.getString();
+		final IDfUser currentUser = this.session.getUser(this.session.getLoginUserName());
+
+		final String prefix = currentUser.getDefaultFolder();
+		final IDfFolder homeFolder = this.session.getFolderByPath(prefix);
+		if (homeFolder == null) { throw new CMSMFException(String.format(
+			"Could not locate the home folder at [%s] for user [%s] - please make sure it exists and is writable by the user",
+			prefix, currentUser.getUserName())); }
+
+		final String folderPath = String.format("%s/%s", prefix, stateFolderName);
 		IDfFolder lstExportFolder = IDfFolder.class.cast(this.session.getObjectByPath(folderPath));
 		if ((lstExportFolder == null) && createIfMissing) {
 			// Object does not exist, create one.
 			// try to locate a folder for a target repository and create one if it doesn't exist
 			// target folder does not exist, create one.
-			// try to locate the cmsmf_sync cabinet and create one if it doesn't exist
-			IDfFolder cmsmfSyncCabinet = this.session.getFolderByPath(cabinetPath);
-			if (cmsmfSyncCabinet == null) {
-				this.log.info(String.format("Creating cabinet [%s] in source repository", cabinetName));
-				// create the cabinet and folder underneath
-				cmsmfSyncCabinet = IDfFolder.class.cast(this.session.newObject("dm_cabinet"));
-				cmsmfSyncCabinet.setObjectName(cabinetName);
-				cmsmfSyncCabinet.setHidden(true);
-				cmsmfSyncCabinet.save();
-			}
 
 			// create a folder for a target repository in this cabinet.
 			lstExportFolder = IDfFolder.class.cast(this.session.newObject("dm_folder"));
-			lstExportFolder.setObjectName(targetDocbaseName);
-			lstExportFolder.link(cmsmfSyncCabinet.getObjectId().getId());
+			lstExportFolder.setObjectName(stateFolderName);
+			lstExportFolder.link(homeFolder.getObjectId().getId());
 			lstExportFolder.save();
 		}
 		return lstExportFolder;
