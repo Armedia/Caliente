@@ -41,6 +41,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	private static final Pattern OBJECT_TYPE_FINDER = Pattern.compile("(?:\\bselect\\s+\\w+\\s+from\\s+(\\w+)\\b)",
 		Pattern.CASE_INSENSITIVE);
 	private static final String FIXED_PREDICATE = "select CMF_WRAP_${objectType}.r_object_id from ${objectType} CMF_WRAP_${objectType}, ( ${baseDql} ) CMF_SUBQ_${objectType} where CMF_WRAP_${objectType}.r_object_id = CMF_SUBQ_${objectType}.r_object_id and CMF_WRAP_${objectType}.${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
+	/*
+	private static final String FIXED_PREDICATE = "select r_object_id from ${objectType} where r_object_id in ( ${baseDql} ) and ${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
+	*/
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
