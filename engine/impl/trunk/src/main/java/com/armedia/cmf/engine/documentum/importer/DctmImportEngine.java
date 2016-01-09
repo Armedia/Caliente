@@ -7,7 +7,7 @@ package com.armedia.cmf.engine.documentum.importer;
 import java.util.Collections;
 import java.util.Set;
 
-import com.armedia.cmf.engine.CMFCrypto;
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.documentum.DctmCrypto;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
@@ -71,9 +71,8 @@ public class DctmImportEngine extends
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
-	@Override
-	public CMFCrypto getCrypto() {
-		return new DctmCrypto();
+	public DctmImportEngine() {
+		super(new DctmCrypto());
 	}
 
 	@Override
@@ -99,8 +98,8 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected SessionFactory<IDfSession> newSessionFactory(CfgTools config) throws Exception {
-		return new DctmSessionFactory(config);
+	protected SessionFactory<IDfSession> newSessionFactory(CfgTools config, CmfCrypt crypto) throws Exception {
+		return new DctmSessionFactory(config, crypto);
 	}
 
 	@Override

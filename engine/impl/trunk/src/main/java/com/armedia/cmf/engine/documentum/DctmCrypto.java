@@ -1,23 +1,30 @@
 package com.armedia.cmf.engine.documentum;
 
-import com.armedia.cmf.engine.CMFCrypto;
+import com.armedia.cmf.engine.CmfCrypt;
 import com.documentum.fc.impl.util.RegistryPasswordUtils;
 
-public class DctmCrypto extends CMFCrypto {
+public class DctmCrypto extends CmfCrypt {
+
+	private static final Scheme DFC_SCHEME = new Scheme() {
+
+		@Override
+		public String decryptValue(String password) throws Exception {
+			return RegistryPasswordUtils.decrypt(password);
+		}
+
+		@Override
+		public String encryptValue(String password) throws Exception {
+			return RegistryPasswordUtils.encrypt(password);
+		}
+
+		@Override
+		public String getDescription() {
+			return "DFC-RegistryPasswordUtils";
+		}
+
+	};
 
 	public DctmCrypto() {
-		super(1);
-	}
-
-	@Override
-	protected String decryptPassword(int algorithm, String password) throws Exception {
-		if (algorithm != 0) { throw new IllegalArgumentException(
-			"Only a single supplementary algorithm is supported in this instance"); }
-		return RegistryPasswordUtils.decrypt(password);
-	}
-
-	@Override
-	protected String doEncryptPassword(String password) throws Exception {
-		return RegistryPasswordUtils.encrypt(password);
+		super(DctmCrypto.DFC_SCHEME, CmfCrypt.DEFAULT_SCHEME);
 	}
 }

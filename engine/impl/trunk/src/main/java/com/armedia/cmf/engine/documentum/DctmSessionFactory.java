@@ -7,6 +7,7 @@ package com.armedia.cmf.engine.documentum;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -24,13 +25,15 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 
 	private final DfcSessionFactory factory;
 
-	public DctmSessionFactory(CfgTools settings) throws DfException {
-		super(settings);
+	public DctmSessionFactory(CfgTools settings, CmfCrypt crypto) throws DfException {
+		super(settings, crypto);
 		String username = settings.getString(DctmSessionFactory.USERNAME);
 		String password = settings.getString(DctmSessionFactory.PASSWORD);
-		DctmCrypto crypto = new DctmCrypto();
-		password = crypto.decryptPassword(password);
-		password = crypto.encryptPassword(password);
+		try {
+			password = crypto.encrypt(crypto.decrypt(password));
+		} catch (Exception e) {
+			throw new DfException("Failed to re-encrypt the password", e);
+		}
 		String docbase = settings.getString(DctmSessionFactory.DOCBASE);
 		this.factory = new DfcSessionFactory(username, password, docbase);
 	}

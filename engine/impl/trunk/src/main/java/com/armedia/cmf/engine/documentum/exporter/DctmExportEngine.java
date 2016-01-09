@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
-import com.armedia.cmf.engine.CMFCrypto;
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.documentum.DctmCrypto;
 import com.armedia.cmf.engine.documentum.DctmSessionFactory;
@@ -37,11 +37,7 @@ public class DctmExportEngine extends
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
 	public DctmExportEngine() {
-	}
-
-	@Override
-	public CMFCrypto getCrypto() {
-		return new DctmCrypto();
+		super(new DctmCrypto());
 	}
 
 	@Override
@@ -62,8 +58,8 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected SessionFactory<IDfSession> newSessionFactory(CfgTools config) throws Exception {
-		return new DctmSessionFactory(config);
+	protected SessionFactory<IDfSession> newSessionFactory(CfgTools config, CmfCrypt crypto) throws Exception {
+		return new DctmSessionFactory(config, crypto);
 	}
 
 	@Override
