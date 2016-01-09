@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.cmf.engine.CMFCrypto;
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.CryptException;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -28,8 +28,8 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 	private final Map<String, String> parameters;
 	private final int defaultPageSize;
 
-	public CmisSessionFactory(CfgTools settings) throws CryptException {
-		super(settings);
+	public CmisSessionFactory(CfgTools settings, CmfCrypt crypto) throws CryptException {
+		super(settings, crypto);
 		Map<String, String> parameters = new HashMap<String, String>();
 
 		for (CmisSessionSetting s : CmisSessionSetting.values()) {
@@ -39,7 +39,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 			String v = settings.getString(s);
 			switch (s) {
 				case PASSWORD:
-					v = new CMFCrypto().decryptPassword(v);
+					v = this.crypto.decrypt(v);
 					break;
 				default:
 					break;

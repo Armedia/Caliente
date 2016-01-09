@@ -4,6 +4,7 @@ import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.Session;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.cmis.CmisCommon;
 import com.armedia.cmf.engine.cmis.CmisSessionFactory;
 import com.armedia.cmf.engine.cmis.CmisSessionWrapper;
@@ -16,9 +17,8 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class CmisImportEngine
-extends
-ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory> {
+public class CmisImportEngine extends
+	ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -135,6 +135,7 @@ ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImpor
 	};
 
 	public CmisImportEngine() {
+		super(new CmfCrypt());
 	}
 
 	@Override
@@ -161,8 +162,8 @@ ImportEngine<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImpor
 	}
 
 	@Override
-	protected CmisSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
-		return new CmisSessionFactory(cfg);
+	protected CmisSessionFactory newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception {
+		return new CmisSessionFactory(cfg, crypto);
 	}
 
 	@Override

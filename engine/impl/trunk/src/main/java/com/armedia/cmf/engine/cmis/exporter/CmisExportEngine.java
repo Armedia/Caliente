@@ -14,6 +14,7 @@ import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.cmis.CmisCommon;
 import com.armedia.cmf.engine.cmis.CmisPagingTransformerIterator;
 import com.armedia.cmf.engine.cmis.CmisRecursiveIterator;
@@ -31,8 +32,7 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public class CmisExportEngine
-	extends
+public class CmisExportEngine extends
 	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> transformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
@@ -41,6 +41,10 @@ public class CmisExportEngine
 			return newExportTarget(result);
 		}
 	};
+
+	public CmisExportEngine() {
+		super(new CmfCrypt());
+	}
 
 	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
 		PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
@@ -100,9 +104,10 @@ public class CmisExportEngine
 						try {
 							return new ExportTarget(decodeType(next.getType()), next.getId(), next.getId());
 						} catch (ExportException e) {
-							throw new RuntimeException(String.format(
-								"Failed to decode the object type [%s] for object [%s]", next.getType().getId(),
-								next.getId()), e);
+							throw new RuntimeException(
+								String.format("Failed to decode the object type [%s] for object [%s]",
+									next.getType().getId(), next.getId()),
+								e);
 						}
 					}
 
@@ -113,8 +118,9 @@ public class CmisExportEngine
 				};
 			} else {
 				try {
-					return Collections.singleton(
-						new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId())).iterator();
+					return Collections
+						.singleton(new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId()))
+						.iterator();
 				} catch (CmisObjectNotFoundException e) {
 					return null;
 				}
@@ -125,8 +131,8 @@ public class CmisExportEngine
 		if (query != null) {
 			final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 				.isAllVersionsSearchableSupported();
-			return new CmisPagingTransformerIterator<QueryResult, ExportTarget>(
-				session.query(query, searchAllVersions), this.transformer);
+			return new CmisPagingTransformerIterator<QueryResult, ExportTarget>(session.query(query, searchAllVersions),
+				this.transformer);
 		}
 		return null;
 	}
@@ -160,8 +166,8 @@ public class CmisExportEngine
 	}
 
 	@Override
-	protected CmisSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
-		return new CmisSessionFactory(cfg);
+	protected CmisSessionFactory newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception {
+		return new CmisSessionFactory(cfg, crypto);
 	}
 
 	@Override
