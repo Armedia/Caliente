@@ -4,8 +4,6 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +12,6 @@ import java.util.List;
 
 import javax.activation.MimeType;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.TransferSetting;
@@ -290,39 +287,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
 		if (skipContent) { return contentHandle; }
 		if (contentHandle.getSourceStore().isSupportsFileAccess()) {
-			final File targetFile = contentHandle.getFile();
-			final File parent = targetFile.getParentFile();
-			// Deal with a race condition with multiple threads trying to export to the same folder
-			if (!parent.exists()) {
-				IOException caught = null;
-				for (int i = 0; (i < 3); i++) {
-					if (i > 0) {
-						// Only sleep if this is a retry
-						try {
-							Thread.sleep(333);
-						} catch (InterruptedException e2) {
-							// Ignore...
-						}
-					}
-
-					try {
-						caught = null;
-						FileUtils.forceMkdir(parent);
-						break;
-					} catch (IOException e) {
-						// Something went wrong...
-						caught = e;
-					}
-				}
-				if (caught != null) { throw new ExportException(
-					String.format("Failed to create the parent content directory [%s]", parent.getAbsolutePath()),
-					caught); }
-			}
-
-			if (!parent.isDirectory()) { throw new ExportException(
-				String.format("The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
-
-			document.getFileEx2(targetFile.getAbsolutePath(), format, pageNumber, pageModifier, false);
+			document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, pageNumber, pageModifier, false);
 		} else {
 			// Doesn't support file-level, so we (sadly) use stream-level transfers
 			InputStream in = null;
