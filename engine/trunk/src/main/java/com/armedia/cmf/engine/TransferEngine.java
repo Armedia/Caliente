@@ -63,8 +63,8 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	protected static synchronized <E extends TransferEngine<?, ?, ?, ?, ?, ?>> E getTransferEngine(Class<E> subclass,
 		String targetName) {
 		if (subclass == null) { throw new IllegalArgumentException("Must provide a valid engine subclass"); }
-		if (StringUtils.isEmpty(targetName)) { throw new IllegalArgumentException(
-			"Must provide a non-empty, non-null target name"); }
+		if (StringUtils.isEmpty(
+			targetName)) { throw new IllegalArgumentException("Must provide a non-empty, non-null target name"); }
 		TransferEngine.registerSubclass(subclass);
 		Map<String, Object> m = TransferEngine.REGISTRY.get(subclass.getCanonicalName());
 		if (m == null) { return null; }
@@ -179,6 +179,10 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	protected abstract D newDelegateFactory(S session, CfgTools cfg) throws Exception;
 
 	protected abstract Set<String> getTargetNames();
+
+	public CMFCrypto getCrypto() {
+		return new CMFCrypto();
+	}
 
 	public final ExportTarget getReferrent(CmfObject<V> marshaled) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
