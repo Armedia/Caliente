@@ -193,7 +193,7 @@ public class LocalExportDelegate extends
 
 		if (this.factory.isCopyContent()) {
 			CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
-			File tgt = h.getFile();
+			File tgt = h.getFile(true);
 			if (tgt != null) {
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("Copying %d bytes from [%s] into [%s]", src.length(), src, tgt));
