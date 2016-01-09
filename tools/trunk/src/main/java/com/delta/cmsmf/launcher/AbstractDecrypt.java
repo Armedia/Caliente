@@ -5,11 +5,24 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.armedia.cmf.engine.Crypt;
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 
 public abstract class AbstractDecrypt implements CMSMFMain {
+
+	protected final CmfCrypt crypto;
+
+	protected AbstractDecrypt() {
+		this(null);
+	}
+
+	protected AbstractDecrypt(CmfCrypt crypto) {
+		if (crypto == null) {
+			crypto = new CmfCrypt();
+		}
+		this.crypto = crypto;
+	}
 
 	@Override
 	public CmfObjectStore<?, ?> getObjectStore() {
@@ -37,7 +50,7 @@ public abstract class AbstractDecrypt implements CMSMFMain {
 		}
 	}
 
-	protected String decrypt(String password) throws Exception {
-		return Crypt.decrypt(password);
+	protected final String decrypt(String password) {
+		return this.crypto.decrypt(password);
 	}
 }

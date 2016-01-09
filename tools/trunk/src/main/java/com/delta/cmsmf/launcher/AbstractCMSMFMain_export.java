@@ -13,6 +13,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.cmis.CmisSessionSetting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
@@ -171,12 +172,17 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			processSettings(settings, loaded, resetJob);
 			// Re-encrypt the password
 			String pass = Tools.toString(settings.get(DfcSessionFactory.PASSWORD));
+			CmfCrypt crypto = this.engine.getCrypto();
 			if (pass != null) {
-				pass = this.engine.getCrypto().decryptPassword(pass);
+				pass = crypto.decrypt(pass);
 			} else {
 				pass = "";
 			}
-			pass = this.engine.getCrypto().encryptPassword(pass);
+			try {
+				pass = crypto.encrypt(pass);
+			} catch (Exception e) {
+				// Ignore, use literal
+			}
 			settings.put(DfcSessionFactory.PASSWORD, pass);
 			start = new Date();
 			try {

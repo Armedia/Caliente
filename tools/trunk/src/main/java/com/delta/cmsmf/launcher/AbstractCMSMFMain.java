@@ -5,7 +5,7 @@ import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.engine.CMFCrypto;
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
 import com.armedia.cmf.storage.CmfContentStore;
@@ -108,8 +108,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		this.server = CLIParam.server.getString();
 		this.user = CLIParam.user.getString();
 		String pass = CLIParam.password.getString();
-		CMFCrypto crypto = this.engine.getCrypto();
-		this.password = crypto.encryptPassword(crypto.decryptPassword(pass));
+		CmfCrypt crypto = this.engine.getCrypto();
+		this.password = crypto.encrypt(crypto.decrypt(pass));
 		this.domain = CLIParam.domain.getString();
 	}
 

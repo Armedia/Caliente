@@ -5,7 +5,7 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.armedia.cmf.engine.Crypt;
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 
@@ -15,6 +15,19 @@ import com.delta.cmsmf.exception.CMSMFException;
  * @author Shridev Makim 6/15/2010
  */
 public abstract class AbstractEncrypt implements CMSMFMain {
+
+	protected final CmfCrypt crypto;
+
+	protected AbstractEncrypt() {
+		this(null);
+	}
+
+	protected AbstractEncrypt(CmfCrypt crypto) {
+		if (crypto == null) {
+			crypto = new CmfCrypt();
+		}
+		this.crypto = crypto;
+	}
 
 	@Override
 	public CmfObjectStore<?, ?> getObjectStore() {
@@ -45,7 +58,7 @@ public abstract class AbstractEncrypt implements CMSMFMain {
 		}
 	}
 
-	protected String encrypt(String password) throws Exception {
-		return Crypt.encrypt(password);
+	protected final String encrypt(String password) throws Exception {
+		return this.crypto.encrypt(password);
 	}
 }
