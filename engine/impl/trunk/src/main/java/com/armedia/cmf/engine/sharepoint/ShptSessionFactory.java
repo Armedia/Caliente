@@ -10,8 +10,7 @@ import java.net.URL;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.cmf.engine.Crypt;
-import com.armedia.cmf.engine.CryptException;
+import com.armedia.cmf.engine.CMFCrypto;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -35,13 +34,7 @@ public class ShptSessionFactory extends SessionFactory<ShptSession> {
 		super(settings);
 		this.url = new URL(settings.getString(Setting.BASE_URL));
 		this.user = settings.getString(Setting.USER);
-		String pass = settings.getString(Setting.PASSWORD);
-		try {
-			pass = Crypt.decrypt(pass);
-		} catch (CryptException e) {
-			// Do nothing, use as literal
-		}
-		this.password = pass;
+		this.password = new CMFCrypto().decryptPassword(settings.getString(Setting.PASSWORD));
 		this.domain = settings.getString(Setting.DOMAIN);
 	}
 
