@@ -35,6 +35,7 @@ public enum CmisSessionSetting implements ConfigurationSetting {
 	LOCALE_ISO3166_COUNTRY(SessionParameter.LOCALE_ISO3166_COUNTRY),
 	LOCALE_VARIANT(SessionParameter.LOCALE_VARIANT),
 	DEFAULT_PAGE_SIZE(null, 0),
+	DOMAIN(null, ""),
 	//
 	;
 

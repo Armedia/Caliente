@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.cmf.engine.Crypt;
+import com.armedia.cmf.engine.CMFCrypto;
 import com.armedia.cmf.engine.CryptException;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -39,22 +39,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 			String v = settings.getString(s);
 			switch (s) {
 				case PASSWORD:
-					// Decrypt the password
-					try {
-						String encrypted = v;
-						String decrypted = Crypt.decrypt(encrypted);
-						if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("Successfully decrypted the password from [%s]", encrypted));
-						}
-						v = decrypted;
-					} catch (CryptException e) {
-						String msg = "Failed to decrypt the password value, using it as literal";
-						if (this.log.isTraceEnabled()) {
-							this.log.warn(msg, e);
-						} else if (this.log.isDebugEnabled()) {
-							this.log.warn("Failed to decrypt the password value, using it as literal");
-						}
-					}
+					v = new CMFCrypto().decryptPassword(v);
 					break;
 				default:
 					break;
