@@ -3,6 +3,7 @@ package com.armedia.cmf.engine.local.exporter;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.local.common.LocalCommon;
@@ -15,9 +16,12 @@ import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalExportEngine
-	extends
+public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory> {
+
+	public LocalExportEngine() {
+		super(new CmfCrypt());
+	}
 
 	@Override
 	protected Iterator<ExportTarget> findExportResults(LocalRoot session, CfgTools configuration,
@@ -36,8 +40,8 @@ public class LocalExportEngine
 	}
 
 	@Override
-	protected LocalSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
-		return new LocalSessionFactory(cfg);
+	protected LocalSessionFactory newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception {
+		return new LocalSessionFactory(cfg, crypto);
 	}
 
 	@Override

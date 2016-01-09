@@ -2,6 +2,7 @@ package com.armedia.cmf.engine.local.importer;
 
 import java.util.Set;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.local.common.LocalCommon;
@@ -15,9 +16,12 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalImportEngine
-	extends
+public class LocalImportEngine extends
 	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory> {
+
+	public LocalImportEngine() {
+		super(new CmfCrypt());
+	}
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -156,8 +160,8 @@ public class LocalImportEngine
 	}
 
 	@Override
-	protected LocalSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
-		return new LocalSessionFactory(cfg);
+	protected LocalSessionFactory newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception {
+		return new LocalSessionFactory(cfg, crypto);
 	}
 
 	@Override
