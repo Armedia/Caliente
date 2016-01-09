@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
@@ -47,7 +48,7 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, CF>, CF extends ImportContextFactory<S, W, V, C, ?, ?>, DF extends ImportDelegateFactory<S, W, V, C, ?>>
-extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
+	extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
 	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
@@ -63,9 +64,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	private static enum BatchStatus {
 		//
-		PENDING,
-		PROCESSED,
-		ABORTED;
+		PENDING, PROCESSED, ABORTED;
 	}
 
 	private class Batch {
@@ -104,12 +103,10 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 		@Override
 		public String toString() {
-			return String
-				.format(
-					"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.batchingSupported=%s, strategy.batchingStrategy=%s, strategy.failRemainder=%s, contents=%s]",
-					this.type, this.id, this.status, this.strategy.isParallelCapable(),
-					this.strategy.isBatchingSupported(), this.strategy.getBatchItemStrategy(),
-					this.strategy.isBatchFailRemainder(), this.contents);
+			return String.format(
+				"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.batchingSupported=%s, strategy.batchingStrategy=%s, strategy.failRemainder=%s, contents=%s]",
+				this.type, this.id, this.status, this.strategy.isParallelCapable(), this.strategy.isBatchingSupported(),
+				this.strategy.getBatchItemStrategy(), this.strategy.isBatchFailRemainder(), this.contents);
 		}
 	}
 
@@ -251,6 +248,10 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 	}
 
+	protected ImportEngine(CmfCrypt crypto) {
+		super(crypto);
+	}
+
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
 
 	protected final CmfTypeMapper getTypeMapper(S session, CfgTools cfg) throws Exception {
@@ -277,7 +278,8 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 	}
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings) throws ImportException, CmfStorageException {
+		final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings)
+			throws ImportException, CmfStorageException {
 		return runImport(output, objectStore, streamStore, settings, null);
 	}
 
@@ -297,7 +299,7 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 		final SessionFactory<S> sessionFactory;
 		try {
-			sessionFactory = newSessionFactory(configuration);
+			sessionFactory = newSessionFactory(configuration, this.crypto);
 		} catch (Exception e) {
 			throw new ImportException("Failed to configure the session factory to carry out the import", e);
 		}
@@ -359,8 +361,8 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 	}
 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final Logger output,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore, final Map<String, ?> settings,
-		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
+		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
+		final Map<String, ?> settings, final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
 		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper)
 			throws ImportException, CmfStorageException {
@@ -424,8 +426,8 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 						try {
 							if (batch.contents.isEmpty()) {
 								// Shouldn't happen, but still
-								this.log.warn(String.format("An invalid value made it into the work queue somehow: %s",
-									batch));
+								this.log.warn(
+									String.format("An invalid value made it into the work queue somehow: %s", batch));
 								batch.markCompleted();
 								continue;
 							}
@@ -448,9 +450,9 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 							listenerDelegator.objectBatchImportStarted(batch.type, batch.id, batch.contents.size());
 							for (CmfObject<V> next : batch.contents) {
 								if (failBatch) {
-									this.log.error(String.format(
-										"Batch has been failed - will not process [%s](%s) (%s)", next.getLabel(),
-										next.getId(), ImportResult.SKIPPED.name()));
+									this.log
+										.error(String.format("Batch has been failed - will not process [%s](%s) (%s)",
+											next.getLabel(), next.getId(), ImportResult.SKIPPED.name()));
 									listenerDelegator.objectImportCompleted(next, ImportOutcome.SKIPPED);
 									continue;
 								}
@@ -470,8 +472,8 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 										// intermediate format into the target format
 										ImportDelegate<?, S, W, V, C, ?, ?> delegate = delegateFactory
 											.newImportDelegate(next);
-										final Collection<ImportOutcome> outcome = delegate.importObject(
-											getTranslator(), ctx);
+										final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
+											ctx);
 										outcomes.put(next.getId(), outcome);
 										for (ImportOutcome o : outcome) {
 											listenerDelegator.objectImportCompleted(next, o);
@@ -485,8 +487,8 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 														break;
 
 													case DUPLICATE:
-														msg = String.format("Found a duplicate of %s as [%s](%s)",
-															next, o.getNewId(), o.getNewLabel());
+														msg = String.format("Found a duplicate of %s as [%s](%s)", next,
+															o.getNewId(), o.getNewLabel());
 														break;
 
 													default:
@@ -510,11 +512,9 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 											// If we're supposed to kill the batch, fail all
 											// the other objects
 											failBatch = true;
-											this.log
-											.debug(String
-												.format(
-													"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-													storedType));
+											this.log.debug(String.format(
+												"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+												storedType));
 											batch.markAborted(t);
 											continue;
 										}
@@ -560,8 +560,8 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 
 			// Make sure we have a valid import strategy for every item
 			for (CmfType t : containedTypes.keySet()) {
-				if (getImportStrategy(t) == null) { throw new ImportException(String.format(
-					"No import strategy provided for available object type [%s]", t.name())); }
+				if (getImportStrategy(t) == null) { throw new ImportException(
+					String.format("No import strategy provided for available object type [%s]", t.name())); }
 			}
 
 			List<Future<?>> futures = new ArrayList<Future<?>>();
@@ -603,8 +603,8 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 				}
 
 				if (!contextFactory.isSupported(type)) {
-					this.log.debug(String.format("Ignoring %d objects of type %s due to engine configuration", total,
-						type));
+					this.log.debug(
+						String.format("Ignoring %d objects of type %s due to engine configuration", total, type));
 					continue;
 				}
 
@@ -653,7 +653,8 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 								Collection<CmfObject<V>> c = new ArrayList<CmfObject<V>>(1);
 								c.add(dataObject);
 								try {
-									workQueue.put(new Batch(dataObject.getType(), dataObject.getBatchId(), c, strategy));
+									workQueue
+										.put(new Batch(dataObject.getType(), dataObject.getBatchId(), c, strategy));
 								} catch (InterruptedException e) {
 									Thread.currentThread().interrupt();
 									String msg = String.format(
@@ -775,10 +776,9 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 										}
 									} catch (InterruptedException e) {
 										Thread.currentThread().interrupt();
-										String msg = String
-											.format(
-												"Thread interrupted while waiting for work to complete for batch %s containing [%s]",
-												this.batchId, this.contents);
+										String msg = String.format(
+											"Thread interrupted while waiting for work to complete for batch %s containing [%s]",
+											this.batchId, this.contents);
 										if (this.log.isDebugEnabled()) {
 											this.log.warn(msg, e);
 										} else {
@@ -852,9 +852,9 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 				final Map<ImportResult, Integer> results = listenerDelegator.getCounters(type);
 				final int errorCount = results.get(ImportResult.FAILED);
 				if (abortImport(type, errorCount)) {
-					this.log.info(String.format(
-						"Import aborted due to %d errors detected while importing objects of type %s", errorCount,
-						type.name()));
+					this.log.info(
+						String.format("Import aborted due to %d errors detected while importing objects of type %s",
+							errorCount, type.name()));
 					break;
 				}
 				this.log.info(String.format("Work on %s objects completed, continuing with the next object type...",
@@ -883,11 +883,9 @@ extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
 			int pending = activeCounter.get();
 			if (pending > 0) {
 				try {
-					this.log
-					.info(String
-						.format(
-							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-							pending));
+					this.log.info(String.format(
+						"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+						pending));
 					executor.awaitTermination(1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);

@@ -20,6 +20,7 @@ public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
 	private boolean open = true;
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
+	protected final CmfCrypt crypto;
 
 	protected static GenericObjectPoolConfig getDefaultPoolConfig(CfgTools settings) {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
@@ -38,7 +39,8 @@ public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
 		return config;
 	}
 
-	protected SessionFactory(CfgTools settings) {
+	protected SessionFactory(CfgTools settings, CmfCrypt crypto) {
+		this.crypto = crypto;
 		this.pool = new GenericObjectPool<S>(this);
 		this.pool.setConfig(getPoolConfig(settings));
 	}

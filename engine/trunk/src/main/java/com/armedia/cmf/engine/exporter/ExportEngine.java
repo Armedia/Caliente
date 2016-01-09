@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.ContextFactory;
 import com.armedia.cmf.engine.PooledWorkers;
 import com.armedia.cmf.engine.SessionFactory;
@@ -142,6 +143,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			}
 		}
+	}
+
+	protected ExportEngine(CmfCrypt crypto) {
+		super(crypto);
 	}
 
 	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
@@ -323,7 +328,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final CfgTools configuration = new CfgTools(settings);
 		final SessionFactory<S> sessionFactory;
 		try {
-			sessionFactory = newSessionFactory(configuration);
+			sessionFactory = newSessionFactory(configuration, this.crypto);
 		} catch (Exception e) {
 			throw new ExportException("Failed to configure the session factory to carry out the export", e);
 		}

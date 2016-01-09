@@ -113,15 +113,18 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	private int backlogSize = TransferEngine.DEFAULT_BACKLOG_SIZE;
 	private int threadCount = TransferEngine.DEFAULT_THREAD_COUNT;
 
-	public TransferEngine() {
-		this(TransferEngine.DEFAULT_THREAD_COUNT, TransferEngine.DEFAULT_BACKLOG_SIZE);
+	protected final CmfCrypt crypto;
+
+	public TransferEngine(CmfCrypt crypto) {
+		this(crypto, TransferEngine.DEFAULT_THREAD_COUNT, TransferEngine.DEFAULT_BACKLOG_SIZE);
 	}
 
-	public TransferEngine(int threadCount) {
-		this(threadCount, TransferEngine.DEFAULT_BACKLOG_SIZE);
+	public TransferEngine(CmfCrypt crypto, int threadCount) {
+		this(crypto, threadCount, TransferEngine.DEFAULT_BACKLOG_SIZE);
 	}
 
-	public TransferEngine(int threadCount, int backlogSize) {
+	public TransferEngine(CmfCrypt crypto, int threadCount, int backlogSize) {
+		this.crypto = crypto;
 		this.backlogSize = Tools.ensureBetween(TransferEngine.MIN_BACKLOG_SIZE, backlogSize,
 			TransferEngine.MAX_BACKLOG_SIZE);
 		this.threadCount = Tools.ensureBetween(TransferEngine.MIN_THREAD_COUNT, threadCount,
@@ -172,7 +175,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	protected abstract CmfAttributeTranslator<V> getTranslator();
 
-	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg) throws Exception;
+	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
 	protected abstract F newContextFactory(S session, CfgTools cfg) throws Exception;
 
@@ -180,8 +183,8 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	protected abstract Set<String> getTargetNames();
 
-	public CMFCrypto getCrypto() {
-		return new CMFCrypto();
+	public final CmfCrypt getCrypto() {
+		return this.crypto;
 	}
 
 	public final ExportTarget getReferrent(CmfObject<V> marshaled) {
