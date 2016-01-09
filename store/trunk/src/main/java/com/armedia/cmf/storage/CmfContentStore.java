@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
@@ -92,13 +93,48 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		 * ), except if the invocation raises an exception. In that event, the non-canonical
 		 * {@link File} will be returned.
 		 * </p>
+		 * <p>
+		 * This invocation is identical to calling {@link #getFile(boolean)} with a {@code false}
+		 * parameter.
+		 * </p>
 		 *
 		 * @return a {@link File} object that leads to the actual content file (existent or not), or
 		 *         {@code null} if this functionality is not supported.
 		 * @throws IOException
 		 */
 		public final File getFile() throws IOException {
-			return CmfContentStore.this.getFile(this.locator);
+			return getFile(false);
+		}
+
+		/**
+		 * <p>
+		 * Returns a {@link File} object that leads to the actual content file (existent or not),
+		 * and can be used to read from and write to it. If the underlying {@link CmfContentStore}
+		 * doesn't support this functionality, {@code null} is returned.
+		 * </p>
+		 * <p>
+		 * The {@code ensureParents} parameter controls whether or not the file's parent path will
+		 * be created if they don't exist (recursively). A value of {@code true} causes any missing
+		 * components of the file's parent path to be created, while {@code false} does nothing.
+		 * </p>
+		 * <p>
+		 * Whatever file is returned will already be canonical (via {@link File#getCanonicalFile()}
+		 * ), except if the invocation raises an exception. In that event, the non-canonical
+		 * {@link File} will be returned.
+		 * </p>
+		 *
+		 * @return a {@link File} object that leads to the actual content file (existent or not), or
+		 *         {@code null} if this functionality is not supported.
+		 * @param ensureParents
+		 *            whether or not to ensure the parent folders are created if they don't exist
+		 * @throws IOException
+		 */
+		public final File getFile(boolean ensureParents) throws IOException {
+			File f = CmfContentStore.this.getFile(this.locator);
+			if (ensureParents) {
+				ensureParentExists(f);
+			}
+			return f;
 		}
 
 		/**
@@ -268,6 +304,41 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 	}
 
+	private void ensureParentExists(File f) throws IOException {
+		if (f == null) { throw new IllegalArgumentException("Must provide a valid file to check against"); }
+		File parent = f.getParentFile();
+		if (parent == null) { return; }
+
+		if (!parent.exists()) {
+			IOException caught = null;
+			for (int i = 0; (i < 3); i++) {
+				if (i > 0) {
+					// Only sleep if this is a retry
+					try {
+						Thread.sleep(333);
+					} catch (InterruptedException e2) {
+						// Ignore...
+					}
+				}
+
+				try {
+					caught = null;
+					FileUtils.forceMkdir(parent);
+					break;
+				} catch (IOException e) {
+					// Something went wrong...
+					caught = e;
+				}
+			}
+			if (caught != null) { throw new IOException(
+				String.format("Failed to create the parent content directory [%s]", parent.getAbsolutePath()),
+				caught); }
+		}
+
+		if (!parent.isDirectory()) { throw new IOException(
+			String.format("The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
+	}
+
 	protected File doGetFile(L locator) throws IOException {
 		return null;
 	}
@@ -355,6 +426,12 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 				f = getFile(locator);
 			} catch (IOException e) {
 				throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator), e);
+			}
+			try {
+				ensureParentExists(f);
+			} catch (IOException e) {
+				throw new CmfStorageException(
+					String.format("Failed to create the requisite directory structure for locator [%s]", locator), e);
 			}
 			try {
 				OutputStream out = new FileOutputStream(f);
