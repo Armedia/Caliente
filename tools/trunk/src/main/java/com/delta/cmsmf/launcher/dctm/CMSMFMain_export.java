@@ -70,7 +70,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			settings.put(DfcSessionFactory.USERNAME, this.user);
 		}
 		if (this.password != null) {
-			settings.put(DfcSessionFactory.PASSWORD, DctmCrypt.decrypt(this.password));
+			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
 	}
 

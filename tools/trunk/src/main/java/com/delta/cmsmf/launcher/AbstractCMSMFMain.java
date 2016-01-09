@@ -5,6 +5,7 @@ import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.engine.CMFCrypto;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
 import com.armedia.cmf.storage.CmfContentStore;
@@ -40,7 +41,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 	protected AbstractCMSMFMain(E engine, boolean requiresStorage, boolean clearStorage) throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
-
 		this.engine = engine;
 
 		// If we have command-line parameters, these supersede all other configurations, even if
@@ -107,7 +107,9 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 		this.server = CLIParam.server.getString();
 		this.user = CLIParam.user.getString();
-		this.password = CLIParam.password.getString();
+		String pass = CLIParam.password.getString();
+		CMFCrypto crypto = this.engine.getCrypto();
+		this.password = crypto.encryptPassword(crypto.decryptPassword(pass));
 		this.domain = CLIParam.domain.getString();
 	}
 

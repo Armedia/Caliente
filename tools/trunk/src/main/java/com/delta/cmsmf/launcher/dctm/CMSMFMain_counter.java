@@ -46,16 +46,16 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		super(DctmExportEngine.getExportEngine(), false, false);
 	}
 
-	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest) throws CMSMFException,
-		DfException {
+	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest)
+		throws CMSMFException, DfException {
 		// If we're already traversed, we skip it
 		final String id = folder.getObjectId().getId();
 		if (!traversed.add(id)) { return; }
 		final IDfSession session = folder.getSession();
 		final String path = folder.getFolderPath(0);
 		IDfCollection result = null;
-		result = DfUtils
-			.executeQuery(session, String.format(CMSMFMain_counter.COUNTER, id), IDfQuery.DF_EXECREAD_QUERY);
+		result = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.COUNTER, id),
+			IDfQuery.DF_EXECREAD_QUERY);
 		if (!result.next()) { throw new CMSMFException("Counter query did not return any values"); }
 		final IDfValue count = result.getValueAt(0);
 		DfUtils.closeQuietly(result);
@@ -109,7 +109,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			settings.put(DfcSessionFactory.USERNAME, this.user);
 		}
 		if (this.password != null) {
-			settings.put(DfcSessionFactory.PASSWORD, DctmCrypt.decrypt(this.password));
+			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
 
 		final DfcSessionPool pool;
@@ -122,8 +122,8 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		try {
 			final Logger manifest = Logger.getLogger("manifest");
 			String folderPath = CLIParam.count_path.getString();
-			if (StringUtils.isEmpty(folderPath)) { throw new CMSMFException(
-				"Must provide a cabinet name to count the objects for"); }
+			if (StringUtils.isEmpty(
+				folderPath)) { throw new CMSMFException("Must provide a cabinet name to count the objects for"); }
 			try {
 				final IDfSession session = pool.acquireSession();
 				final Set<String> traversed = new HashSet<String>();
@@ -131,8 +131,8 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 				try {
 					session.beginTrans();
 					IDfFolder folder = session.getFolderByPath(folderPath);
-					if (folder == null) { throw new CMSMFException(String.format("Could not find the cabinet at [%s]",
-						folderPath)); }
+					if (folder == null) { throw new CMSMFException(
+						String.format("Could not find the cabinet at [%s]", folderPath)); }
 					this.console.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
 					this.log.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
 					String msg = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT";
@@ -152,8 +152,8 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			} catch (Throwable t) {
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
-				report.append(String.format("%n%nException caught while attempting an object count for [%s]%n%n",
-					folderPath));
+				report.append(
+					String.format("%n%nException caught while attempting an object count for [%s]%n%n", folderPath));
 				t.printStackTrace(pw);
 				exceptionReport = sw.toString();
 			} finally {

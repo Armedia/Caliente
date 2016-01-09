@@ -19,9 +19,9 @@ import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.engine.exporter.ExportSkipReason;
-import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
@@ -57,7 +57,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			settings.put(CmisSessionSetting.PASSWORD.getLabel(), this.password);
 		}
 		if (this.domain != null) {
-			settings.put(ShptSessionFactory.DOMAIN, this.domain);
+			settings.put(CmisSessionSetting.DOMAIN.getLabel(), this.domain);
 		}
 		customizeSettings(settings);
 	}
@@ -169,7 +169,15 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			}
 
 			processSettings(settings, loaded, resetJob);
-
+			// Re-encrypt the password
+			String pass = Tools.toString(settings.get(DfcSessionFactory.PASSWORD));
+			if (pass != null) {
+				pass = this.engine.getCrypto().decryptPassword(pass);
+			} else {
+				pass = "";
+			}
+			pass = this.engine.getCrypto().encryptPassword(pass);
+			settings.put(DfcSessionFactory.PASSWORD, pass);
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");

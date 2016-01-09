@@ -27,7 +27,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 			settings.put(DfcSessionFactory.USERNAME, this.user);
 		}
 		if (this.password != null) {
-			settings.put(DfcSessionFactory.PASSWORD, DctmCrypt.decrypt(this.password));
+			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
 
 		super.customizeSettings(settings);
