@@ -10,7 +10,7 @@ import java.net.URL;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.cmf.engine.CMFCrypto;
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -30,11 +30,11 @@ public class ShptSessionFactory extends SessionFactory<ShptSession> {
 	private final String password;
 	private final String domain;
 
-	public ShptSessionFactory(CfgTools settings) throws MalformedURLException {
-		super(settings);
+	public ShptSessionFactory(CfgTools settings, CmfCrypt crypto) throws MalformedURLException {
+		super(settings, crypto);
 		this.url = new URL(settings.getString(Setting.BASE_URL));
 		this.user = settings.getString(Setting.USER);
-		this.password = new CMFCrypto().decryptPassword(settings.getString(Setting.PASSWORD));
+		this.password = crypto.decrypt(settings.getString(Setting.PASSWORD));
 		this.domain = settings.getString(Setting.DOMAIN);
 	}
 

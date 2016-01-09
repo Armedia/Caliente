@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -27,9 +28,12 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public class ShptExportEngine
-	extends
+public class ShptExportEngine extends
 	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory> {
+
+	public ShptExportEngine() {
+		super(new CmfCrypt());
+	}
 
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
@@ -62,8 +66,8 @@ public class ShptExportEngine
 	}
 
 	@Override
-	protected ShptSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
-		return new ShptSessionFactory(cfg);
+	protected ShptSessionFactory newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception {
+		return new ShptSessionFactory(cfg, crypto);
 	}
 
 	@Override
