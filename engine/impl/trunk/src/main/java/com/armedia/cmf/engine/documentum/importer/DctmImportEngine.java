@@ -7,7 +7,9 @@ package com.armedia.cmf.engine.documentum.importer;
 import java.util.Collections;
 import java.util.Set;
 
+import com.armedia.cmf.engine.CMFCrypto;
 import com.armedia.cmf.engine.SessionFactory;
+import com.armedia.cmf.engine.documentum.DctmCrypto;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionFactory;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
@@ -27,8 +29,7 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmImportEngine
-	extends
+public class DctmImportEngine extends
 	ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
@@ -69,6 +70,11 @@ public class DctmImportEngine
 	};
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
+
+	@Override
+	public CMFCrypto getCrypto() {
+		return new DctmCrypto();
+	}
 
 	@Override
 	protected ImportStrategy getImportStrategy(CmfType type) {

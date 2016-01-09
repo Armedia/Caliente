@@ -8,7 +8,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
+import com.armedia.cmf.engine.CMFCrypto;
 import com.armedia.cmf.engine.SessionFactory;
+import com.armedia.cmf.engine.documentum.DctmCrypto;
 import com.armedia.cmf.engine.documentum.DctmSessionFactory;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.documentum.DctmTranslator;
@@ -29,13 +31,17 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportEngine
-	extends
+public class DctmExportEngine extends
 	ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportContextFactory, DctmExportDelegateFactory> {
 
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
 	public DctmExportEngine() {
+	}
+
+	@Override
+	public CMFCrypto getCrypto() {
+		return new DctmCrypto();
 	}
 
 	@Override
@@ -46,8 +52,8 @@ public class DctmExportEngine
 		String dql = configuration.getString(Setting.DQL);
 		if (dql == null) { throw new Exception("Must provide the DQL to query with"); }
 		final int batchSize = configuration.getInteger(Setting.EXPORT_BATCH_SIZE);
-		return new DctmExportTargetIterator(DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_EXECREAD_QUERY,
-			batchSize));
+		return new DctmExportTargetIterator(
+			DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_EXECREAD_QUERY, batchSize));
 	}
 
 	@Override
