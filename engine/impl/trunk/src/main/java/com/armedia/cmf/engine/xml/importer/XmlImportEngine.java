@@ -2,6 +2,7 @@ package com.armedia.cmf.engine.xml.importer;
 
 import java.util.Set;
 
+import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.engine.xml.common.XmlCommon;
@@ -208,6 +209,10 @@ public class XmlImportEngine extends
 		}
 	};
 
+	public XmlImportEngine() {
+		super(new CmfCrypt());
+	}
+
 	@Override
 	protected ImportStrategy getImportStrategy(CmfType type) {
 		switch (type) {
@@ -243,8 +248,8 @@ public class XmlImportEngine extends
 	}
 
 	@Override
-	protected XmlSessionFactory newSessionFactory(CfgTools cfg) throws Exception {
-		return new XmlSessionFactory(cfg);
+	protected XmlSessionFactory newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception {
+		return new XmlSessionFactory(cfg, crypto);
 	}
 
 	@Override
