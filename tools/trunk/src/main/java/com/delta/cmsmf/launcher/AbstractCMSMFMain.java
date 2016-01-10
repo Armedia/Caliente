@@ -109,7 +109,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		this.user = CLIParam.user.getString();
 		String pass = CLIParam.password.getString();
 		CmfCrypt crypto = this.engine.getCrypto();
-		this.password = crypto.encrypt(crypto.decrypt(pass));
+		this.password = (pass != null ? crypto.encrypt(crypto.decrypt(pass)) : null);
 		this.domain = CLIParam.domain.getString();
 	}
 
