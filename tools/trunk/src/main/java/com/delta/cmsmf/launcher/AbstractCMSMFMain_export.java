@@ -202,7 +202,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 						break;
 					}
 				}
-				if (!StringUtils.isBlank(jobName) && (!exportEmpty || resetJob)) {
+				if (!StringUtils.isBlank(jobName) && (!loaded || !exportEmpty || resetJob)) {
 					this.log.info(String.format("##### Storing settings for job [%s] #####", jobName));
 					for (String s : settings.keySet()) {
 						this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
