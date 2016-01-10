@@ -195,10 +195,10 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 				// First, check to see if anything was actually exported...if not, then there's no
 				// need
 				// to update the stored settings
-				boolean exportEmpty = false;
+				boolean exportEmpty = true;
 				for (CmfType t : summary.keySet()) {
 					if (summary.get(t) > 0) {
-						exportEmpty = true;
+						exportEmpty = false;
 						break;
 					}
 				}
