@@ -192,7 +192,17 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 				this.log.info("##### Export Process Finished #####");
 
 				summary = this.cmfObjectStore.getStoredObjectTypes();
-				if (!StringUtils.isBlank(jobName)) {
+				// First, check to see if anything was actually exported...if not, then there's no
+				// need
+				// to update the stored settings
+				boolean exportEmpty = false;
+				for (CmfType t : summary.keySet()) {
+					if (summary.get(t) > 0) {
+						exportEmpty = true;
+						break;
+					}
+				}
+				if (!StringUtils.isBlank(jobName) && (!exportEmpty || resetJob)) {
 					this.log.info(String.format("##### Storing settings for job [%s] #####", jobName));
 					for (String s : settings.keySet()) {
 						this.log.info(String.format("\t[%s] = [%s]", s, settings.get(s)));
