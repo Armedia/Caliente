@@ -34,29 +34,14 @@ public class CmfCrypt {
 	private static final Charset CHARSET = Charset.forName("UTF-8");
 	private static final String ENCODED_KEY = "6RBjZgfVO+KhuPU0qSqmdQ==";
 	private static final SecretKey KEY;
+	private static final String CIPHER_ALGORITHM = "AES";
+	private static final String CIPHER_SPEC = String.format("%s/ECB/PKCS5Padding", CmfCrypt.CIPHER_ALGORITHM);
 
 	protected static final Collection<Scheme> NO_SCHEMES = Collections.emptyList();
 
 	static {
 		final byte[] key = DatatypeConverter.parseBase64Binary(CmfCrypt.ENCODED_KEY);
-		KEY = new SecretKeySpec(key, "AES");
-		try {
-			CmfCrypt.getCipher(false);
-			CmfCrypt.getCipher(true);
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException("No Such Algorithm", e);
-		} catch (InvalidKeyException e) {
-			throw new RuntimeException("Invalid Key", e);
-		} catch (NoSuchPaddingException e) {
-			throw new RuntimeException("No Such Padding", e);
-		}
-	}
-
-	private static Cipher getCipher(boolean encrypt)
-		throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
-		Cipher ret = Cipher.getInstance(CmfCrypt.KEY.getAlgorithm());
-		ret.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, CmfCrypt.KEY);
-		return ret;
+		KEY = new SecretKeySpec(key, CmfCrypt.CIPHER_ALGORITHM);
 	}
 
 	public static byte[] decodeBase64(String value) throws CryptException {
@@ -79,33 +64,38 @@ public class CmfCrypt {
 		public String getDescription();
 	}
 
-	public static class AESScheme implements Scheme {
+	public static class BasicAESScheme implements Scheme {
 
 		private final SecretKey key;
 		private final String description;
 
-		public AESScheme() throws Exception {
+		public BasicAESScheme() throws Exception {
 			this(null);
 		}
 
-		public AESScheme(byte[] key) throws Exception {
+		public BasicAESScheme(byte[] key) throws Exception {
 			boolean pdk = false;
 			if (key == null) {
-				key = DatatypeConverter.parseBase64Binary(CmfCrypt.ENCODED_KEY);
+				this.key = CmfCrypt.KEY;
 				pdk = true;
-			} else if ((key.length != 16)
-				&& (key.length != 32)) { throw new IllegalArgumentException("The key must be either 128 or 256 bits"); }
-			this.key = new SecretKeySpec(key, "AES");
+				key = DatatypeConverter.parseBase64Binary(CmfCrypt.ENCODED_KEY);
+			} else {
+				if ((key.length != 16) && (key.length != 24)
+					&& (key.length != 32)) { throw new IllegalArgumentException(
+						"The key must be either 128, 192 or 256 bits"); }
+				this.key = new SecretKeySpec(key, CmfCrypt.CIPHER_ALGORITHM);
+			}
 			getCipher(this.key, false);
 			getCipher(this.key, true);
-			this.description = String.format("AES-%d-%s", key.length * 8,
+			this.description = String.format("%s-%d-%s", CmfCrypt.CIPHER_SPEC, key.length * 8,
 				(pdk ? "default" : DigestUtils.sha256Hex(key)));
 		}
 
 		protected Cipher getCipher(SecretKey key, boolean encrypt)
 			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
-			Cipher ret = Cipher.getInstance(key.getAlgorithm());
+			Cipher ret = Cipher.getInstance(CmfCrypt.CIPHER_SPEC);
 			ret.init(encrypt ? Cipher.ENCRYPT_MODE : Cipher.DECRYPT_MODE, key);
+			// , new IvParameterSpec(this.key.getEncoded(), 0, 16)
 			return ret;
 		}
 
@@ -113,7 +103,7 @@ public class CmfCrypt {
 		public String decryptValue(String value) throws Exception {
 			final byte[] data;
 			try {
-				data = CmfCrypt.getCipher(false).doFinal(CmfCrypt.decodeBase64(value));
+				data = getCipher(this.key, false).doFinal(CmfCrypt.decodeBase64(value));
 			} catch (Exception e) {
 				throw new CryptException("Failed to decrypt the given value", e);
 			}
@@ -124,7 +114,7 @@ public class CmfCrypt {
 		public String encryptValue(String value) throws Exception {
 			final byte[] data;
 			try {
-				data = CmfCrypt.getCipher(true).doFinal(value.getBytes(CmfCrypt.CHARSET));
+				data = getCipher(this.key, true).doFinal(value.getBytes(CmfCrypt.CHARSET));
 			} catch (Exception e) {
 				throw new CryptException("Failed to encrypt the given value", e);
 			}
@@ -141,7 +131,7 @@ public class CmfCrypt {
 
 	static {
 		try {
-			DEFAULT_SCHEME = new AESScheme();
+			DEFAULT_SCHEME = new BasicAESScheme();
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to initialize the default encryption scheme", e);
 		}
