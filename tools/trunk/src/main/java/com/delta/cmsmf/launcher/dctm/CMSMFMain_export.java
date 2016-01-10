@@ -2,6 +2,10 @@ package com.delta.cmsmf.launcher.dctm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,9 +14,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DocumentumOrganizationStrategy;
@@ -24,6 +28,7 @@ import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;
+import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -35,13 +40,16 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 
 	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
 
-	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss 'UTC'";
+	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss";
+	private static final String DATE_FORMAT_UTC = String.format("%s 'UTC'", CMSMFMain_export.DATE_FORMAT);
 
 	private static final String JOB_EXTENSION = "cmf.xml";
 	private static final Pattern OBJECT_TYPE_FINDER = Pattern.compile("(?:\\bselect\\s+\\w+\\s+from\\s+(\\w+)\\b)",
 		Pattern.CASE_INSENSITIVE);
 	private static final String FIXED_PREDICATE_6_6 = "select CMF_WRAP_${objectType}.r_object_id from ${objectType} CMF_WRAP_${objectType}, ( ${baseDql} ) CMF_SUBQ_${objectType} where CMF_WRAP_${objectType}.r_object_id = CMF_SUBQ_${objectType}.r_object_id and CMF_WRAP_${objectType}.${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
 	private static final String FIXED_PREDICATE_6 = "select r_object_id from ${objectType} where r_object_id in ( ${baseDql} ) and ${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
+	private static final String DATE_CHECK_DQL = "select date(now) from dm_server_config";
+	private static final long SECONDS = (60 * 1000);
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
@@ -174,9 +182,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 				}
 
 				m.put(AbstractCMSMFMain_export.EXPORT_START,
-					DateFormatUtils.formatUTC(exportStart, CMSMFMain_export.DATE_FORMAT));
+					DateFormatUtils.formatUTC(exportStart, CMSMFMain_export.DATE_FORMAT_UTC));
 				m.put(AbstractCMSMFMain_export.EXPORT_END,
-					DateFormatUtils.formatUTC(exportEnd, CMSMFMain_export.DATE_FORMAT));
+					DateFormatUtils.formatUTC(exportEnd, CMSMFMain_export.DATE_FORMAT_UTC));
 
 				Properties p = new Properties();
 				for (String s : m.keySet()) {
@@ -235,8 +243,19 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			// TODO: Eventually we may switch this out
 			final String dateColumnName = "r_modify_date";
 			// If we're resetting the job, we'll simply ignore the existing date markers
-			final Object startDate = (resetJob ? null : settings.get(AbstractCMSMFMain_export.EXPORT_START));
+			Object startDate = (resetJob ? null : settings.get(AbstractCMSMFMain_export.EXPORT_START));
 			if (startDate != null) {
+				// Ok...so some servers have broken configurations where their timezone info is
+				// completely borked because they're configured to run in UTC time, even though
+				// they're NOT on UTC time... so this is our fix for that...
+				try {
+					startDate = convertUTCDateToServerDate(startDate.toString());
+				} catch (DfException e) {
+					throw new CMSMFException(
+						"Failed to perform UTC date conversion (required to account for broken server configurations)",
+						e);
+				}
+
 				// Find the first word - that'll be our object type
 				String dql = String.valueOf(settings.get(AbstractCMSMFMain_export.BASE_SELECTOR));
 				Matcher m = CMSMFMain_export.OBJECT_TYPE_FINDER.matcher(dql.toString());
@@ -248,8 +267,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					data.put("objectType", objectType);
 					data.put("baseDql", dql);
 					data.put("dateColumn", dateColumnName);
-					data.put("dateValue", DfUtils.quoteString(startDate.toString()));
-					data.put("dateFormat", DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
+
 					final String wrapperPattern;
 					try {
 						String[] version = StringUtils.split(this.session.getServerVersion());
@@ -260,11 +278,15 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 						if (((major == 6) && (minor >= 6)) || (major > 6)) {
 							wrapperPattern = CMSMFMain_export.FIXED_PREDICATE_6_6;
 						} else {
+							// We have to use IN() instead of a subquery join because it's not
+							// supported in the older versions
 							wrapperPattern = CMSMFMain_export.FIXED_PREDICATE_6;
 						}
 					} catch (DfException e) {
 						throw new CMSMFException("Failed to determine the Documentum server version", e);
 					}
+					data.put("dateValue", DfUtils.quoteString(startDate.toString()));
+					data.put("dateFormat", DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
 					dql = StrSubstitutor.replace(wrapperPattern, data);
 				}
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
@@ -281,6 +303,42 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		}
 
 		settings.put("dql", settings.get(AbstractCMSMFMain_export.FINAL_SELECTOR));
+	}
+
+	private String convertUTCDateToServerDate(String utcDate) throws DfException {
+		// Query the server's current date...
+		IDfCollection c = DfUtils.executeQuery(this.session, CMSMFMain_export.DATE_CHECK_DQL);
+		try {
+			if (!c.next()) { throw new DfException("Failed to get the date check information from the server"); }
+			final Calendar localDate = Calendar.getInstance();
+			final long localOffset = localDate.getTimeZone().getRawOffset() / CMSMFMain_export.SECONDS;
+
+			final Calendar serverDate = Calendar.getInstance();
+			serverDate.setTime(c.getValueAt(0).asTime().getDate());
+			final long serverOffset = (localDate.getTimeInMillis() - serverDate.getTimeInMillis())
+				/ CMSMFMain_export.SECONDS;
+
+			// Ok we know our offset, and the server's offset relative to us, so with that
+			// we can deduce the server's true offset relative to UTC...
+			final long adjustmentMinutes = localOffset + serverOffset;
+
+			// And, with that, we make the adjustment
+			Calendar adjusted = Calendar.getInstance();
+			DateFormat df = new SimpleDateFormat(CMSMFMain_export.DATE_FORMAT_UTC);
+			try {
+				adjusted.setTime(df.parse(utcDate));
+			} catch (ParseException e) {
+				throw new DfException(String.format("Failed to parse the given date of [%s] with the format [%s]",
+					utcDate, CMSMFMain_export.DATE_FORMAT_UTC), e);
+			}
+
+			// We must subtract the server's UTC offset from this date, and we get our target. Since
+			// it's a subtraction, we must sign-flip the adjustment value
+			adjusted.add(Calendar.MINUTE, (int) adjustmentMinutes);
+			return DateFormatUtils.format(adjusted, CMSMFMain_export.DATE_FORMAT);
+		} finally {
+			DfUtils.closeQuietly(c);
+		}
 	}
 
 	private IDfFolder getCmsmfStateFolder(boolean createIfMissing) throws DfException, CMSMFException {
