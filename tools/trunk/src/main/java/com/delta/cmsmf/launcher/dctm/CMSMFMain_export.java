@@ -40,10 +40,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	private static final String JOB_EXTENSION = "cmf.xml";
 	private static final Pattern OBJECT_TYPE_FINDER = Pattern.compile("(?:\\bselect\\s+\\w+\\s+from\\s+(\\w+)\\b)",
 		Pattern.CASE_INSENSITIVE);
-	private static final String FIXED_PREDICATE = "select CMF_WRAP_${objectType}.r_object_id from ${objectType} CMF_WRAP_${objectType}, ( ${baseDql} ) CMF_SUBQ_${objectType} where CMF_WRAP_${objectType}.r_object_id = CMF_SUBQ_${objectType}.r_object_id and CMF_WRAP_${objectType}.${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
-	/*
-	private static final String FIXED_PREDICATE = "select r_object_id from ${objectType} where r_object_id in ( ${baseDql} ) and ${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
-	*/
+	private static final String FIXED_PREDICATE_6_6 = "select CMF_WRAP_${objectType}.r_object_id from ${objectType} CMF_WRAP_${objectType}, ( ${baseDql} ) CMF_SUBQ_${objectType} where CMF_WRAP_${objectType}.r_object_id = CMF_SUBQ_${objectType}.r_object_id and CMF_WRAP_${objectType}.${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
+	private static final String FIXED_PREDICATE_6 = "select r_object_id from ${objectType} where r_object_id in ( ${baseDql} ) and ${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
 
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
@@ -252,7 +250,22 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					data.put("dateColumn", dateColumnName);
 					data.put("dateValue", DfUtils.quoteString(startDate.toString()));
 					data.put("dateFormat", DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
-					dql = StrSubstitutor.replace(CMSMFMain_export.FIXED_PREDICATE, data);
+					final String wrapperPattern;
+					try {
+						String[] version = StringUtils.split(this.session.getServerVersion());
+						// Parse out the version number
+						String[] numbers = StringUtils.split(version[0], '.');
+						int major = Integer.valueOf(numbers[0]);
+						int minor = Integer.valueOf(numbers[1]);
+						if (((major == 6) && (minor >= 6)) || (major > 6)) {
+							wrapperPattern = CMSMFMain_export.FIXED_PREDICATE_6_6;
+						} else {
+							wrapperPattern = CMSMFMain_export.FIXED_PREDICATE_6;
+						}
+					} catch (DfException e) {
+						throw new CMSMFException("Failed to determine the Documentum server version", e);
+					}
+					dql = StrSubstitutor.replace(wrapperPattern, data);
 				}
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
 			} else {
