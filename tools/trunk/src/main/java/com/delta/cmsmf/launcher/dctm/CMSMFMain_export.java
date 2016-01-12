@@ -38,9 +38,8 @@ import com.documentum.fc.common.IDfTime;
 
 public class CMSMFMain_export extends AbstractCMSMFMain_export implements ExportEngineListener {
 
-	protected static final String LAST_EXPORT_DATETIME_PATTERN = IDfTime.DF_TIME_PATTERN26;
-
 	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss";
+	private static final String DATE_FORMAT_DQL = IDfTime.DF_TIME_PATTERN26; // DQL-friendly syntax
 	private static final String DATE_FORMAT_UTC = String.format("%s 'UTC'", CMSMFMain_export.DATE_FORMAT);
 
 	private static final String JOB_EXTENSION = "cmf.xml";
@@ -286,7 +285,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 						throw new CMSMFException("Failed to determine the Documentum server version", e);
 					}
 					data.put("dateValue", DfUtils.quoteString(startDate.toString()));
-					data.put("dateFormat", DfUtils.quoteString(CMSMFMain_export.LAST_EXPORT_DATETIME_PATTERN));
+					data.put("dateFormat", DfUtils.quoteString(CMSMFMain_export.DATE_FORMAT_DQL));
 					dql = StrSubstitutor.replace(wrapperPattern, data);
 				}
 				settings.put(AbstractCMSMFMain_export.FINAL_SELECTOR, dql);
