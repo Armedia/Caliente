@@ -507,8 +507,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug("Processing the located results...");
 				while ((results != null) && results.hasNext()) {
 					final ExportTarget target = results.next();
-					if (this.log.isTraceEnabled()) {
-						this.log.trace(String.format("Processing item %s", target));
+					if (this.log.isInfoEnabled()) {
+						this.log.info(String.format("Processing item %s", target));
 					}
 					try {
 						worker.addWorkItem(target);
