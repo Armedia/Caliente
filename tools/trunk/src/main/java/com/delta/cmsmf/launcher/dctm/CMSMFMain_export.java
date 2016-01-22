@@ -45,6 +45,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	private static final String JOB_EXTENSION = "cmf.xml";
 	private static final Pattern OBJECT_TYPE_FINDER = Pattern.compile("(?:\\bselect\\s+\\w+\\s+from\\s+(\\w+)\\b)",
 		Pattern.CASE_INSENSITIVE);
+	private static final Pattern ORDER_BY_FINDER = Pattern.compile("(?:\\border\\s+by\\b)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ENABLE_FINDER = Pattern.compile("(?:\\benable\\b)", Pattern.CASE_INSENSITIVE);
 	private static final String FIXED_PREDICATE_6_6 = "select CMF_WRAP_${objectType}.r_object_id from ${objectType} CMF_WRAP_${objectType}, ( ${baseDql} ) CMF_SUBQ_${objectType} where CMF_WRAP_${objectType}.r_object_id = CMF_SUBQ_${objectType}.r_object_id and CMF_WRAP_${objectType}.${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
 	private static final String FIXED_PREDICATE_6 = "select r_object_id from ${objectType} where r_object_id in ( ${baseDql} ) and ${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
 	private static final String DATE_CHECK_DQL = "select date(now) from dm_server_config";
@@ -264,8 +266,24 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					String objectType = m.group(1);
 					Map<String, Object> data = new HashMap<String, Object>();
 					data.put("objectType", objectType);
-					data.put("baseDql", dql);
 					data.put("dateColumn", dateColumnName);
+
+					// Make sure we remove any "order by" clauses that may bork up our stuff
+					Matcher ob = CMSMFMain_export.ORDER_BY_FINDER.matcher(dql);
+					if (ob.find()) {
+						this.log.warn(String.format(
+							"Stored DQL contains an 'ORDER BY' clause, and will need to be sanitized: [%s]", dql));
+						int obStart = ob.start();
+						String lead = dql.substring(0, obStart);
+						Matcher en = CMSMFMain_export.ENABLE_FINDER.matcher(dql);
+						if (en.find(obStart)) {
+							dql = String.format("%s %s", lead, dql.substring(en.start()));
+						} else {
+							dql = lead;
+						}
+						this.log.warn(String.format("Sanitized DQL: [%s]", dql));
+					}
+					data.put("baseDql", dql);
 
 					final String wrapperPattern;
 					try {
