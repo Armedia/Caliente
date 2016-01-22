@@ -507,8 +507,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug("Processing the located results...");
 				while ((results != null) && results.hasNext()) {
 					final ExportTarget target = results.next();
-					if (this.log.isInfoEnabled()) {
-						this.log.info(String.format("Processing item %s", target));
+					String msg = String.format("Processing item %s", target);
+					this.log.info(msg);
+					if (output != null) {
+						output.info(msg);
 					}
 					try {
 						worker.addWorkItem(target);
@@ -525,6 +527,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 				}
 				this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
+				if (output != null) {
+					output.info(String.format("Submitted the entire export workload (%d objects)", c));
+				}
 			} finally {
 				worker.waitForCompletion();
 			}
