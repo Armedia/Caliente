@@ -176,6 +176,11 @@ public class XmlImportDelegateFactory
 						idx.setVersion(v.getVersion());
 						idx.setHistoryId(v.getHistoryId());
 						idx.setCurrent(v.isCurrent());
+						long size = 0;
+						if (!v.getContents().isEmpty()) {
+							size = v.getContents().get(0).getSize();
+						}
+						idx.setSize(size);
 						index.add(idx);
 					}
 				}

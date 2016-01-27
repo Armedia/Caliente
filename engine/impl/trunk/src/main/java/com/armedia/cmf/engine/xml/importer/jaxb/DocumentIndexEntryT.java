@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "documentIndexEntry.t", propOrder = {
-	"historyId", "version", "current",
+	"historyId", "version", "current", "size"
 })
 public class DocumentIndexEntryT extends FolderIndexEntryT {
 
@@ -19,6 +19,9 @@ public class DocumentIndexEntryT extends FolderIndexEntryT {
 
 	@XmlElement(name = "current", required = true)
 	protected boolean current;
+
+	@XmlElement(name = "size", required = true)
+	protected long size;
 
 	public String getHistoryId() {
 		return this.historyId;
@@ -44,10 +47,19 @@ public class DocumentIndexEntryT extends FolderIndexEntryT {
 		this.current = value;
 	}
 
+	public long getSize() {
+		return this.size;
+	}
+
+	public void setSize(long size) {
+		this.size = size;
+	}
+
 	@Override
 	public String toString() {
 		return String.format(
-			"DocumentIndexEntryT [id=%s, path=%s, name=%s, location=%s, type=%s, historyId=%s, version=%s, current=%s]",
-			this.id, this.path, this.name, this.location, this.type, this.historyId, this.version, this.current);
+			"DocumentIndexEntryT [id=%s, path=%s, name=%s, location=%s, type=%s, historyId=%s, version=%s, current=%s, size=%d]",
+			this.id, this.path, this.name, this.location, this.type, this.historyId, this.version, this.current,
+			this.size);
 	}
 }

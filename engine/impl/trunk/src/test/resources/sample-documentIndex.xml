@@ -12,5 +12,6 @@
 		<historyId>historyId</historyId>
 		<version>version</version>
 		<current>true</current>
+		<size>10</size>
 	</document>
 </documentIndex>

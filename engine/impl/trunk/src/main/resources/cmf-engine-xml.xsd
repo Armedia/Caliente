@@ -460,6 +460,7 @@
 					<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="size" type="tns:nonNegativeLong.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
