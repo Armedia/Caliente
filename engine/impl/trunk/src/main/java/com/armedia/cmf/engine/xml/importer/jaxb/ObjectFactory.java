@@ -26,14 +26,14 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-	private final static QName _DocumentIndex_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import",
-		"documentIndex");
-	private final static QName _Types_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import", "types");
-	private final static QName _Groups_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import", "groups");
-	private final static QName _Folder_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import", "folder");
-	private final static QName _Users_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import", "users");
-	private final static QName _Document_QNAME = new QName("http://www.armedia.com/ns/cmf/engines/xml/import",
-		"document");
+	static final String NAMESPACE = "http://www.armedia.com/ns/cmf/engine/xml";
+
+	private final static QName _DocumentIndex_QNAME = new QName(ObjectFactory.NAMESPACE, "documentIndex");
+	private final static QName _Types_QNAME = new QName(ObjectFactory.NAMESPACE, "types");
+	private final static QName _Groups_QNAME = new QName(ObjectFactory.NAMESPACE, "groups");
+	private final static QName _Folder_QNAME = new QName(ObjectFactory.NAMESPACE, "folder");
+	private final static QName _Users_QNAME = new QName(ObjectFactory.NAMESPACE, "users");
+	private final static QName _Document_QNAME = new QName(ObjectFactory.NAMESPACE, "document");
 
 	/**
 	 * Create a new ObjectFactory that can be used to create new instances of schema derived classes
@@ -167,7 +167,7 @@ public class ObjectFactory {
 	 * Create an instance of {@link JAXBElement }{@code <}{@link DocumentIndexT }{@code >}
 	 *
 	 */
-	@XmlElementDecl(namespace = "http://www.armedia.com/ns/cmf/engines/xml/import", name = "documentIndex")
+	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "documentIndex")
 	public JAXBElement<DocumentIndexT> createDocumentIndex(DocumentIndexT value) {
 		return new JAXBElement<DocumentIndexT>(ObjectFactory._DocumentIndex_QNAME, DocumentIndexT.class, null, value);
 	}
@@ -176,7 +176,7 @@ public class ObjectFactory {
 	 * Create an instance of {@link JAXBElement }{@code <}{@link TypesT }{@code >}
 	 *
 	 */
-	@XmlElementDecl(namespace = "http://www.armedia.com/ns/cmf/engines/xml/import", name = "types")
+	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "types")
 	public JAXBElement<TypesT> createTypes(TypesT value) {
 		return new JAXBElement<TypesT>(ObjectFactory._Types_QNAME, TypesT.class, null, value);
 	}
@@ -185,7 +185,7 @@ public class ObjectFactory {
 	 * Create an instance of {@link JAXBElement }{@code <}{@link GroupsT }{@code >}
 	 *
 	 */
-	@XmlElementDecl(namespace = "http://www.armedia.com/ns/cmf/engines/xml/import", name = "groups")
+	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "groups")
 	public JAXBElement<GroupsT> createGroups(GroupsT value) {
 		return new JAXBElement<GroupsT>(ObjectFactory._Groups_QNAME, GroupsT.class, null, value);
 	}
@@ -194,7 +194,7 @@ public class ObjectFactory {
 	 * Create an instance of {@link JAXBElement }{@code <}{@link FolderT }{@code >}
 	 *
 	 */
-	@XmlElementDecl(namespace = "http://www.armedia.com/ns/cmf/engines/xml/import", name = "folder")
+	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "folder")
 	public JAXBElement<FolderT> createFolder(FolderT value) {
 		return new JAXBElement<FolderT>(ObjectFactory._Folder_QNAME, FolderT.class, null, value);
 	}
@@ -203,7 +203,7 @@ public class ObjectFactory {
 	 * Create an instance of {@link JAXBElement }{@code <}{@link UsersT }{@code >}
 	 *
 	 */
-	@XmlElementDecl(namespace = "http://www.armedia.com/ns/cmf/engines/xml/import", name = "users")
+	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "users")
 	public JAXBElement<UsersT> createUsers(UsersT value) {
 		return new JAXBElement<UsersT>(ObjectFactory._Users_QNAME, UsersT.class, null, value);
 	}
@@ -212,7 +212,7 @@ public class ObjectFactory {
 	 * Create an instance of {@link JAXBElement }{@code <}{@link DocumentT }{@code >}
 	 *
 	 */
-	@XmlElementDecl(namespace = "http://www.armedia.com/ns/cmf/engines/xml/import", name = "document")
+	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "document")
 	public JAXBElement<DocumentT> createDocument(DocumentT value) {
 		return new JAXBElement<DocumentT>(ObjectFactory._Document_QNAME, DocumentT.class, null, value);
 	}

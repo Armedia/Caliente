@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd" targetNamespace="http://www.armedia.com/ns/cmf/engines/xml/import"
-	xmlns:tns="http://www.armedia.com/ns/cmf/engines/xml/import" elementFormDefault="qualified" attributeFormDefault="unqualified"
+	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd" targetNamespace="http://www.armedia.com/ns/cmf/engine/xml"
+	xmlns:tns="http://www.armedia.com/ns/cmf/engine/xml" elementFormDefault="qualified" attributeFormDefault="unqualified"
 	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
 
 	<xsd:simpleType name="trimmed_string.t">

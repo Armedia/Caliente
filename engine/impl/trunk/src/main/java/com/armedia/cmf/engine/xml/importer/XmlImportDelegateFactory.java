@@ -55,7 +55,7 @@ import com.armedia.commons.utilities.XmlTools;
 public class XmlImportDelegateFactory
 	extends ImportDelegateFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine> {
 
-	private static final String SCHEMA_NAME = "import.xsd";
+	private static final String SCHEMA_NAME = "cmf-engine-xml.xsd";
 
 	static final Schema SCHEMA;
 

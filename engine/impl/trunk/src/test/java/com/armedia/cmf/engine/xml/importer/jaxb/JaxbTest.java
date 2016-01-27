@@ -26,7 +26,7 @@ public class JaxbTest {
 
 		protected void run() throws Exception {
 			InputStream in = null;
-			final String schema = "import.xsd";
+			final String schema = "cmf-engine-xml.xsd";
 
 			ClassLoader cl = Thread.currentThread().getContextClassLoader();
 

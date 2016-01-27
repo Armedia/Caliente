@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <folderIndex
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns="http://www.armedia.com/ns/cmf/engines/xml/import"
-	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engines/xml/import platform:/resource/cmf-engine-xml/src/main/resources/import.xsd ">
+	xmlns="http://www.armedia.com/ns/cmf/engine/xml"
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engine/xml platform:/resource/cmf-engine-xml/src/main/resources/cmf-engine-xml.xsd ">
 	<folder>
 		<id>id</id>
 		<path>path</path>
