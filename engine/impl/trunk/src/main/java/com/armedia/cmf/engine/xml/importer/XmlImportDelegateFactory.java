@@ -21,6 +21,7 @@ import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
 
 import com.armedia.cmf.engine.importer.DefaultImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
@@ -326,6 +327,16 @@ public class XmlImportDelegateFactory
 		if (l == null) { throw new ImportException(
 			String.format("Attempting to store version [%s] of history [%s], but no such history has been started: %s",
 				v.getVersion(), v.getHistoryId(), v)); }
+		DocumentT doc = new DocumentT();
+		doc.getVersion().add(v);
+		try {
+			XmlImportDelegateFactory.marshalXml(doc, new NullOutputStream());
+		} catch (JAXBException e) {
+			throw new ImportException(
+				String.format("Attempting to store version [%s] of history [%s], a marshalling error ocurred: %s",
+					v.getVersion(), v.getHistoryId(), v),
+				e);
+		}
 		l.add(v);
 	}
 
