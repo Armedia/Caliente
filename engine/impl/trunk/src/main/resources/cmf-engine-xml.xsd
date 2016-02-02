@@ -425,10 +425,10 @@
 					<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="antecedentId" type="xsd:string" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="contents">
+					<xsd:element name="contents" minOccurs="0" maxOccurs="1">
 						<xsd:complexType>
 							<xsd:sequence>
-								<xsd:element name="content" type="tns:contentInfo.t" minOccurs="1" maxOccurs="unbounded" />
+								<xsd:element name="content" type="tns:contentInfo.t" minOccurs="0" maxOccurs="unbounded" />
 							</xsd:sequence>
 						</xsd:complexType>
 					</xsd:element>

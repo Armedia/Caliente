@@ -36,7 +36,7 @@ public class DocumentVersionT extends SysObjectT {
 	@XmlElement(name = "antecedentId", required = true)
 	protected String antecedentId;
 
-	@XmlElementWrapper(name = "contents")
+	@XmlElementWrapper(name = "contents", required = false)
 	@XmlElement(name = "content", required = false)
 	protected List<ContentInfoT> contents;
 
