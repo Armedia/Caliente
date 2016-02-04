@@ -177,6 +177,7 @@ public class XmlImportDelegateFactory
 						idx.setVersion(v.getVersion());
 						idx.setHistoryId(v.getHistoryId());
 						idx.setCurrent(v.isCurrent());
+						idx.setFormat(v.getFormat());
 						long size = 0;
 						if (!v.getContents().isEmpty()) {
 							size = v.getContents().get(0).getSize();

@@ -13,9 +13,12 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "documentVersion.t", propOrder = {
-	"lastAccessDate", "lastAccessor", "historyId", "version", "current", "antecedentId", "contents"
+	"format", "lastAccessDate", "lastAccessor", "historyId", "version", "current", "antecedentId", "contents"
 })
 public class DocumentVersionT extends SysObjectT {
+
+	@XmlElement(name = "format", required = false)
+	protected String format;
 
 	@XmlElement(name = "lastAccessDate", required = false)
 	@XmlSchemaType(name = "dateTime")
@@ -39,6 +42,14 @@ public class DocumentVersionT extends SysObjectT {
 	@XmlElementWrapper(name = "contents", required = false)
 	@XmlElement(name = "content", required = false)
 	protected List<ContentInfoT> contents;
+
+	public String getFormat() {
+		return this.format;
+	}
+
+	public void setFormat(String format) {
+		this.format = format;
+	}
 
 	public XMLGregorianCalendar getLastAccessDate() {
 		return this.lastAccessDate;
@@ -98,9 +109,9 @@ public class DocumentVersionT extends SysObjectT {
 	@Override
 	public String toString() {
 		return String.format(
-			"DocumentVersionT [id=%s, parentId=%s, name=%s, type=%s, sourcePath=%s, creationDate=%s, creator=%s, modificationDate=%s, modifier=%s, lastAccessDate=%s, lastAccessor=%s, acl=%s, attributes=%s, historyId=%s, version=%s, current=%s, antecedentId=%s, contents=%s]",
+			"DocumentVersionT [id=%s, parentId=%s, name=%s, type=%s, sourcePath=%s, creationDate=%s, creator=%s, modificationDate=%s, modifier=%s, format=%s, lastAccessDate=%s, lastAccessor=%s, acl=%s, attributes=%s, historyId=%s, version=%s, current=%s, antecedentId=%s, contents=%s]",
 			this.id, this.parentId, this.name, this.type, this.sourcePath, this.creationDate, this.creator,
-			this.modificationDate, this.modifier, this.lastAccessDate, this.lastAccessor, this.acl, this.attributes,
-			this.historyId, this.version, this.current, this.antecedentId, this.contents);
+			this.modificationDate, this.modifier, this.format, this.lastAccessDate, this.lastAccessor, this.acl,
+			this.attributes, this.historyId, this.version, this.current, this.antecedentId, this.contents);
 	}
 }

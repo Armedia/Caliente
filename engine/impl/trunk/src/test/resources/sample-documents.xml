@@ -55,5 +55,57 @@
 				</content>
 			</contents>
 		</version>
+		<version>
+			<id>id</id>
+			<parentId>parentId</parentId>
+			<name>name</name>
+			<type>type</type>
+			<sourcePath>sourcePath</sourcePath>
+			<creationDate>2001-12-31T12:00:00</creationDate>
+			<creator>creator</creator>
+			<modificationDate>2001-12-31T12:00:00</modificationDate>
+			<modifier>modifier</modifier>
+			<acl>acl</acl>
+			<attributes>
+				<attribute dataType="BOOLEAN" name="xxx">
+					<value>value1</value>
+					<value>value2</value>
+					<value>value3</value>
+					<value>value4</value>
+					<value>value5</value>
+					<value>value6</value>
+				</attribute>
+			</attributes>
+			<properties>
+				<property dataType="BOOLEAN" name="xxx" repeating="true">
+					<value>value1</value>
+					<value>value2</value>
+					<value>value3</value>
+					<value>value4</value>
+					<value>value5</value>
+					<value>value6</value>
+				</property>
+			</properties>
+			<format>crapola</format>
+			<lastAccessDate>2001-12-31T12:00:00</lastAccessDate>
+			<lastAccessor>lastAccessor</lastAccessor>
+			<historyId>historyId</historyId>
+			<version>version</version>
+			<current>true</current>
+			<antecedentId>antecedentId</antecedentId>
+			<contents>
+				<content>
+					<qualifier></qualifier>
+					<size>1234</size>
+					<hash>MA==</hash>
+					<location>/ab//c/d/e</location>
+					<fileName>file.txt</fileName>
+					<mimeType>some/type</mimeType>
+					<properties>
+						<property name="a" value="b" />
+					</properties>
+				</content>
+			</contents>
+		</version>
 	</document>
 </documents>

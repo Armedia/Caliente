@@ -419,6 +419,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:sysObject.t">
 				<xsd:sequence>
+					<xsd:element name="format" type="xsd:string" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="lastAccessDate" type="xsd:dateTime" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="lastAccessor" type="xsd:string" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
@@ -460,6 +461,7 @@
 					<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="version" type="xsd:string" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="current" type="xsd:boolean" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="format" type="xsd:string" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="size" type="tns:nonNegativeLong.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>

@@ -77,7 +77,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		}
 		v.setSourcePath(path);
 		v.setType(getAttributeValue(IntermediateAttribute.OBJECT_TYPE_ID).asString());
-
+		v.setFormat(getAttributeValue(IntermediateAttribute.CONTENT_STREAM_MIME_TYPE).asString());
 		v.setHistoryId(getAttributeValue(IntermediateAttribute.VERSION_SERIES_ID).asString());
 		v.setAntecedentId(getAttributeValue(IntermediateAttribute.VERSION_ANTECEDENT_ID).asString());
 		v.setCurrent(getAttributeValue(IntermediateAttribute.IS_LAST_VERSION).asBoolean());

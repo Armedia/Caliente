@@ -12,6 +12,18 @@
 		<historyId>historyId</historyId>
 		<version>version</version>
 		<current>true</current>
+		<format>crap</format>
+		<size>10</size>
+	</document>
+	<document>
+		<id>id</id>
+		<path>path</path>
+		<name>name</name>
+		<location>location</location>
+		<type>objectType</type>
+		<historyId>historyId</historyId>
+		<version>version</version>
+		<current>true</current>
 		<size>10</size>
 	</document>
 </documentIndex>
