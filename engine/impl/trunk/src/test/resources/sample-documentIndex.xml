@@ -4,26 +4,34 @@
 	xmlns="http://www.armedia.com/ns/cmf/engine/xml"
 	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engine/xml platform:/resource/cmf-engine-xml/src/main/resources/cmf-engine-xml.xsd ">
 	<document>
-		<id>id</id>
-		<path>path</path>
-		<name>name</name>
-		<location>location</location>
-		<type>objectType</type>
-		<historyId>historyId</historyId>
-		<version>version</version>
-		<current>true</current>
-		<format>crap</format>
-		<size>10</size>
+		<historyId>id</historyId>
+		<count>1</count>
+		<version>
+			<id>id</id>
+			<path>path</path>
+			<name>name</name>
+			<location>location</location>
+			<type>objectType</type>
+			<historyId>historyId</historyId>
+			<version>version</version>
+			<current>true</current>
+			<format>crap</format>
+			<size>10</size>
+		</version>
 	</document>
 	<document>
-		<id>id</id>
-		<path>path</path>
-		<name>name</name>
-		<location>location</location>
-		<type>objectType</type>
-		<historyId>historyId</historyId>
-		<version>version</version>
-		<current>true</current>
-		<size>10</size>
+		<historyId>id</historyId>
+		<count>1</count>
+		<version>
+			<id>id</id>
+			<path>path</path>
+			<name>name</name>
+			<location>location</location>
+			<type>objectType</type>
+			<historyId>historyId</historyId>
+			<version>version</version>
+			<current>true</current>
+			<size>10</size>
+		</version>
 	</document>
 </documentIndex>

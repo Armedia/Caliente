@@ -1,5 +1,10 @@
 package com.armedia.cmf.engine.xml.importer.jaxb;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -7,24 +12,22 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "documentIndexEntry.t", propOrder = {
-	"historyId", "version", "current", "format", "size"
+	"historyId", "count", "versions"
 })
-public class DocumentIndexEntryT extends FolderIndexEntryT {
+public class DocumentIndexEntryT {
 
 	@XmlElement(name = "historyId", required = true)
 	protected String historyId;
 
+	@XmlElement(name = "count", required = true)
+	protected long count;
+
 	@XmlElement(name = "version", required = true)
-	protected String version;
+	protected List<DocumentIndexVersionT> versions;
 
-	@XmlElement(name = "current", required = true)
-	protected boolean current;
-
-	@XmlElement(name = "format", required = false)
-	protected String format;
-
-	@XmlElement(name = "size", required = true)
-	protected long size;
+	protected void beforeMarshal(Marshaller m) {
+		this.count = getVersions().size();
+	}
 
 	public String getHistoryId() {
 		return this.historyId;
@@ -34,43 +37,48 @@ public class DocumentIndexEntryT extends FolderIndexEntryT {
 		this.historyId = value;
 	}
 
-	public String getVersion() {
-		return this.version;
+	public long getCount() {
+		return getVersions().size();
 	}
 
-	public void setVersion(String value) {
-		this.version = value;
+	protected final List<DocumentIndexVersionT> getVersions() {
+		if (this.versions == null) {
+			this.versions = new ArrayList<DocumentIndexVersionT>();
+		}
+		return this.versions;
 	}
 
-	public boolean isCurrent() {
-		return this.current;
+	public boolean add(DocumentIndexVersionT v) {
+		return getVersions().add(v);
 	}
 
-	public void setCurrent(boolean value) {
-		this.current = value;
+	public boolean add(Collection<DocumentIndexVersionT> v) {
+		return getVersions().addAll(v);
 	}
 
-	public String getFormat() {
-		return this.format;
+	public boolean remove(DocumentIndexVersionT v) {
+		return getVersions().remove(v);
 	}
 
-	public void setFormat(String format) {
-		this.format = format;
+	public boolean remove(Collection<DocumentIndexVersionT> v) {
+		return getVersions().removeAll(v);
 	}
 
-	public long getSize() {
-		return this.size;
+	public boolean contains(DocumentIndexVersionT v) {
+		return getVersions().contains(v);
 	}
 
-	public void setSize(long size) {
-		this.size = size;
+	public boolean contains(Collection<DocumentIndexVersionT> v) {
+		return getVersions().containsAll(v);
+	}
+
+	public void clear() {
+		getVersions().clear();
 	}
 
 	@Override
 	public String toString() {
-		return String.format(
-			"DocumentIndexEntryT [id=%s, path=%s, name=%s, location=%s, type=%s, historyId=%s, version=%s, current=%s, format=%s, size=%d]",
-			this.id, this.path, this.name, this.location, this.type, this.historyId, this.version, this.current,
-			this.format, this.size);
+		return String.format("DocumentIndexEntryT [historyId=%s, count=%d, versions=%s]", this.historyId, getCount(),
+			this.versions);
 	}
 }

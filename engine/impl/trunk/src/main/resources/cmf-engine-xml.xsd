@@ -454,7 +454,7 @@
 
 	<xsd:element name="documents" type="tns:documents.t" />
 
-	<xsd:complexType name="documentIndexEntry.t">
+	<xsd:complexType name="documentIndexVersion.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:folderIndexEntry.t">
 				<xsd:sequence>
@@ -466,6 +466,14 @@
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="documentIndexEntry.t">
+		<xsd:sequence>
+			<xsd:element name="historyId" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="count" type="xsd:nonNegativeInteger" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="version" type="tns:documentIndexVersion.t" minOccurs="1" maxOccurs="unbounded" />
+		</xsd:sequence>
 	</xsd:complexType>
 
 	<xsd:complexType name="documentIndex.t">

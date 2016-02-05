@@ -37,6 +37,7 @@ import com.armedia.cmf.engine.xml.importer.jaxb.AggregatorBase;
 import com.armedia.cmf.engine.xml.importer.jaxb.ContentInfoT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentIndexEntryT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentIndexT;
+import com.armedia.cmf.engine.xml.importer.jaxb.DocumentIndexVersionT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.cmf.engine.xml.importer.jaxb.DocumentsT;
@@ -166,9 +167,9 @@ public class XmlImportDelegateFactory
 
 					DocumentIndexT index = DocumentIndexT.class
 						.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT));
-					// TODO: Do all versions? or just the first (root) version?
+					List<DocumentIndexVersionT> entries = new ArrayList<DocumentIndexVersionT>(l.size());
 					for (DocumentVersionT v : l) {
-						DocumentIndexEntryT idx = new DocumentIndexEntryT();
+						DocumentIndexVersionT idx = new DocumentIndexVersionT();
 						idx.setId(v.getId());
 						idx.setLocation(relativizeXmlLocation(tgt.getAbsolutePath()));
 						idx.setName(v.getName());
@@ -183,8 +184,13 @@ public class XmlImportDelegateFactory
 							size = v.getContents().get(0).getSize();
 						}
 						idx.setSize(size);
-						index.add(idx);
+						entries.add(idx);
 					}
+					// Make sure all entries go in one group, to ensure they're always together
+					DocumentIndexEntryT entry = new DocumentIndexEntryT();
+					entry.setHistoryId(first.getHistoryId());
+					entry.add(entries);
+					index.add(entry);
 				}
 			} finally {
 				// Some cleanup to facilitate garbage reclaiming
