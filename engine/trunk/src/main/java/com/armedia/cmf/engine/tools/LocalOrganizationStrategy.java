@@ -43,12 +43,14 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 		CmfProperty<?> paths = object.getProperty(IntermediateProperty.PATH);
 
 		List<String> ret = new ArrayList<String>();
-		for (String p : FileNameTools.tokenize(paths.getValue().toString(), '/')) {
-			ret.add(p);
+		if (paths.hasValues()) {
+			for (String p : FileNameTools.tokenize(paths.getValue().toString(), '/')) {
+				ret.add(p);
+			}
 		}
 
-		CmfAttribute<?> name = object.getAttribute(translator.decodeAttributeName(object.getType(),
-			IntermediateAttribute.NAME));
+		CmfAttribute<?> name = object
+			.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
 		ret.add(name.getValue().toString());
 		return ret;
 	}
