@@ -131,9 +131,16 @@ public class LocalExportDelegate extends
 			}
 
 			if (acl != null) {
-				// TODO: Marshal the ACL
+				/*
+				for (AclEntry e : acl.getAcl()) {
+					UserPrincipal principal = e.principal();
+					for (AclEntryFlag f : e.flags()) {
+					}
+					for (AclEntryPermission p : e.permissions()) {
+					}
+				}
+				*/
 			}
-
 		} catch (IOException e) {
 			throw new ExportException(String.format("Failed to collect the attribute information for [%s]", file), e);
 		}
