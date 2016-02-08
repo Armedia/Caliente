@@ -199,6 +199,12 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 				for (CmfType t : summary.keySet()) {
 					if (summary.get(t) > 0) {
 						exportEmpty = false;
+						// TODO: Add code to destroy anything created, where applicable, if the
+						// export is empty. This avoids the accumulation of garbage
+						/*
+						this.cmfObjectStore.destroyIfEmpty();
+						this.cmfContentStore.destroyIfEmpty();
+						*/
 						break;
 					}
 				}
