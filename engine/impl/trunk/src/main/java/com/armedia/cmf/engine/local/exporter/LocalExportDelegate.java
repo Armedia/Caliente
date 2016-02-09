@@ -59,7 +59,7 @@ public class LocalExportDelegate extends
 		File f = abs.getAbsolute();
 		String p = f.getParent();
 		if (p != null) {
-			File parent = new File(f.getParent());
+			File parent = new File(p);
 			if (!parent.equals(this.factory.getRoot().getFile())) {
 				ret.add(new LocalExportDelegate(this.factory, new LocalFile(this.factory.getRoot(), p)));
 			}
