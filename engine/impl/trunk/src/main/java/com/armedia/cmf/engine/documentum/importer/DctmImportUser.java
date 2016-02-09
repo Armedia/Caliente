@@ -56,8 +56,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 		final String userName = this.cmfObject.getAttribute(DctmAttributes.USER_NAME).getValue().asString();
 		final String loginName = this.cmfObject.getAttribute(DctmAttributes.USER_LOGIN_NAME).getValue().asString();
 		final CmfAttribute<IDfValue> domainAtt = this.cmfObject.getAttribute(DctmAttributes.USER_LOGIN_DOMAIN);
-		return DctmImportUser.locateExistingUser(ctx, userName, loginName, (domainAtt != null ? domainAtt.getValue()
-			.asString() : null));
+		return DctmImportUser.locateExistingUser(ctx, userName, loginName,
+			(domainAtt != null ? domainAtt.getValue().asString() : null));
 	}
 
 	protected static IDfUser getUserMapping(DctmImportContext ctx, String userName) throws DfException {
@@ -96,8 +96,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 					}
 					ret = session.getUser(c.getString(DctmAttributes.USER_NAME));
 				}
-				if (candidates != null) { throw new MultipleUserMatchesException(String.format(
-					"Found multiple candidate matches for login name [%s]: %s", loginName, candidates)); }
+				if (candidates != null) { throw new MultipleUserMatchesException(
+					String.format("Found multiple candidate matches for login name [%s]: %s", loginName, candidates)); }
 			} finally {
 				DfUtils.closeQuietly(c);
 			}
@@ -197,14 +197,15 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 			if ((att == null) || Tools.equals(DctmConstant.USER_SOURCE_INLINE_PASSWORD, userSource.asString())) {
 				// Default the password to the user's login name, if a specific value hasn't been
 				// selected for global use
-				final String inlinePasswordValue = ctx.getSettings().getString(
-					Setting.DEFAULT_USER_PASSWORD.getLabel(), userName);
+				final String inlinePasswordValue = ctx.getSettings().getString(Setting.DEFAULT_USER_PASSWORD.getLabel(),
+					userName);
 				setAttributeOnObject(DctmAttributes.USER_PASSWORD,
 					Collections.singletonList(DfValueFactory.newStringValue(inlinePasswordValue)), user);
 			}
 		}
 
 		// Next, set the home docbase
+		/*
 		final IDfValue newHomeDocbase = this.cmfObject.getAttribute(DctmAttributes.HOME_DOCBASE).getValue();
 		final String docbase = newHomeDocbase.asString();
 		if (newObject) {
@@ -215,5 +216,6 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 				user.changeHomeDocbase(docbase, true);
 			}
 		}
+		*/
 	}
 }
