@@ -42,6 +42,7 @@ import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.tools.MimeTools;
+import com.armedia.commons.utilities.Tools;
 
 public class LocalExportDelegate extends
 	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
@@ -147,21 +148,14 @@ public class LocalExportDelegate extends
 
 		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
 		CmfProperty<CmfValue> paths = new CmfProperty<CmfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true);
-		if (this.object.getPathCount() > 1) {
-			paths.setValue(new CmfValue(this.object.getPortablePath()));
-			String parentPath = this.object.getPath();
-			try {
-				parents.setValue(new CmfValue(new LocalFile(this.object.getRootPath(), parentPath).getPathHash()));
-			} catch (IOException e) {
-				throw new ExportException(String.format("Failed to calculate the parent's ID for [%s] (parent = [%s])",
-					this.object.getRelative(), parentPath));
-			}
-		}
+		final String pathsValue = this.object.getPortablePath();
+		paths.setValue(new CmfValue(pathsValue));
+		parents.setValue(new CmfValue(String.format("%08x", pathsValue.hashCode())));
 		object.setProperty(paths);
 		object.setProperty(parents);
 
 		att = new CmfAttribute<CmfValue>(IntermediateAttribute.PATH, CmfDataType.STRING, true);
-		att.setValue(new CmfValue(this.object.getPortablePath()));
+		att.setValue(new CmfValue(pathsValue));
 		object.setAttribute(att);
 		return true;
 	}
@@ -229,8 +223,10 @@ public class LocalExportDelegate extends
 	@Override
 	protected String calculateLabel(LocalFile object) throws Exception {
 		String path = object.getPortablePath();
-		if (path != null) { return String.format("%s/%s", path, object.getName()); }
-		return object.getName();
+		if (Tools.equals("/", path)) {
+			path = "";
+		}
+		return String.format("%s/%s", path, object.getName());
 	}
 
 	@Override

@@ -38,6 +38,7 @@ public class LocalFile {
 	private final File absoluteFile;
 	private final File relativeFile;
 	private final String safePath;
+	private final String fullPath;
 	private final String path;
 	private final String name;
 	private final int pathCount;
@@ -49,7 +50,8 @@ public class LocalFile {
 		this.absoluteFile = root.makeAbsolute(f);
 
 		List<String> r = new ArrayList<String>();
-		for (String s : FileNameTools.tokenize(this.relativeFile.getPath())) {
+		this.fullPath = this.relativeFile.getPath();
+		for (String s : FileNameTools.tokenize(this.fullPath)) {
 			r.add(LocalFile.makeSafe(s));
 		}
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
@@ -60,7 +62,11 @@ public class LocalFile {
 	}
 
 	public String getPathHash() {
-		return String.format("%08x", this.relativeFile.hashCode());
+		return String.format("%08x", this.fullPath.hashCode());
+	}
+
+	public String getFullPath() {
+		return this.fullPath;
 	}
 
 	public String getPath() {
@@ -77,7 +83,7 @@ public class LocalFile {
 
 	public String getPortablePath() {
 		String path = getPath();
-		if (path == null) { return null; }
+		if (path == null) { return "/"; }
 		return FileNameTools.reconstitute(FileNameTools.tokenize(path), true, false, '/');
 	}
 
