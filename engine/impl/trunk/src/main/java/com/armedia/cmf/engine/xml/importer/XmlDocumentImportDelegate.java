@@ -26,6 +26,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
+import com.armedia.cmf.storage.tools.MimeTools;
 
 public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
@@ -83,6 +84,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setCurrent(getAttributeValue(IntermediateAttribute.IS_LAST_VERSION).asBoolean());
 		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
 
+		int contents = 0;
 		for (CmfContentInfo info : ctx.getContentInfo(this.cmfObject)) {
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
 				info.getQualifier());
@@ -106,6 +108,31 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			for (String k : info.getPropertyNames()) {
 				xml.setProperty(k, info.getProperty(k));
 			}
+			v.getContents().add(xml);
+			contents++;
+		}
+
+		if (contents == 0) {
+			// Generate a placeholder, empty file
+			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
+			final File f;
+			try {
+				f = h.getFile();
+				f.createNewFile();
+			} catch (IOException e) {
+				// Failed to get the file, so we can't handle this
+				throw new CmfStorageException(
+					String.format("Failed to generate the placeholder content file for DOCUMENT (%s)[%s]",
+						this.cmfObject.getLabel(), this.cmfObject.getId()),
+					e);
+			}
+			ContentInfoT xml = new ContentInfoT();
+			xml.setFileName(v.getName());
+			// xml.setHash(null);
+			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
+			xml.setMimeType(MimeTools.DEFAULT_MIME_TYPE.toString());
+			xml.setQualifier("");
+			xml.setSize(0);
 			v.getContents().add(xml);
 		}
 
