@@ -8,11 +8,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -51,7 +49,6 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.XmlTools;
 
 public class XmlImportDelegateFactory
@@ -88,8 +85,8 @@ public class XmlImportDelegateFactory
 	private final boolean aggregateDocuments;
 	private final File db;
 	private final File content;
-	private final LockDispenser<String, Object> documentBatchLocks = LockDispenser.getBasic();
-	private final Map<String, List<DocumentVersionT>> documentBatches = new ConcurrentHashMap<String, List<DocumentVersionT>>();
+
+	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = new ThreadLocal<List<DocumentVersionT>>();
 
 	private final ImportEngineListener documentListener = new DefaultImportEngineListener() {
 
@@ -98,17 +95,7 @@ public class XmlImportDelegateFactory
 		@Override
 		public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
 			if (objectType != CmfType.DOCUMENT) { return; }
-			List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(batchId);
-			if (l == null) {
-				final Object lock = XmlImportDelegateFactory.this.documentBatchLocks.getLock(batchId);
-				synchronized (lock) {
-					l = XmlImportDelegateFactory.this.documentBatches.get(batchId);
-					if (l == null) {
-						l = Collections.synchronizedList(new ArrayList<DocumentVersionT>());
-						XmlImportDelegateFactory.this.documentBatches.put(batchId, l);
-					}
-				}
-			}
+			XmlImportDelegateFactory.this.threadedVersionList.set(new ArrayList<DocumentVersionT>());
 		}
 
 		@Override
@@ -116,7 +103,7 @@ public class XmlImportDelegateFactory
 			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 			if (objectType != CmfType.DOCUMENT) { return; }
 			if (failed) { return; }
-			List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(batchId);
+			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
 			if ((l == null) || l.isEmpty()) { return; }
 
 			try {
@@ -195,7 +182,6 @@ public class XmlImportDelegateFactory
 			} finally {
 				// Some cleanup to facilitate garbage reclaiming
 				l.clear();
-				XmlImportDelegateFactory.this.documentBatches.remove(batchId);
 			}
 		}
 
@@ -330,7 +316,7 @@ public class XmlImportDelegateFactory
 	}
 
 	protected void storeDocumentVersion(DocumentVersionT v) throws ImportException {
-		List<DocumentVersionT> l = XmlImportDelegateFactory.this.documentBatches.get(v.getHistoryId());
+		List<DocumentVersionT> l = this.threadedVersionList.get();
 		if (l == null) { throw new ImportException(
 			String.format("Attempting to store version [%s] of history [%s], but no such history has been started: %s",
 				v.getVersion(), v.getHistoryId(), v)); }
