@@ -95,7 +95,12 @@ public class XmlImportDelegateFactory
 		@Override
 		public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
 			if (objectType != CmfType.DOCUMENT) { return; }
-			XmlImportDelegateFactory.this.threadedVersionList.set(new ArrayList<DocumentVersionT>());
+			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
+			if (l == null) {
+				l = new ArrayList<DocumentVersionT>();
+				XmlImportDelegateFactory.this.threadedVersionList.set(l);
+			}
+			l.clear();
 		}
 
 		@Override
@@ -179,6 +184,8 @@ public class XmlImportDelegateFactory
 					entry.add(entries);
 					index.add(entry);
 				}
+			} catch (Throwable t) {
+				this.log.error(String.format("Exception caught while closing out batch ID [%s]", batchId), t);
 			} finally {
 				// Some cleanup to facilitate garbage reclaiming
 				l.clear();
@@ -221,6 +228,8 @@ public class XmlImportDelegateFactory
 						FileUtils.deleteQuietly(f);
 					}
 				}
+			} catch (Throwable t) {
+				this.log.error(String.format("Exception caught while closing out objects of type [%s]", cmfType), t);
 			} finally {
 				// Help the GC out
 				root.clear();
