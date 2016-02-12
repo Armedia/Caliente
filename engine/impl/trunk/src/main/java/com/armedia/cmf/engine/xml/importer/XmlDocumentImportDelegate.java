@@ -115,15 +115,17 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		if (contents == 0) {
 			// Generate a placeholder, empty file
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
-			final File f;
+			File f = null;
 			try {
-				f = h.getFile();
+				f = h.getFile(true);
+				if (f == null) { throw new CmfStorageException(
+					"The given content store doesn't support file-level access"); }
 				f.createNewFile();
 			} catch (IOException e) {
 				// Failed to get the file, so we can't handle this
 				throw new CmfStorageException(
-					String.format("Failed to generate the placeholder content file for DOCUMENT (%s)[%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId()),
+					String.format("Failed to generate the placeholder content file for DOCUMENT (%s)[%s] at [%s]",
+						this.cmfObject.getLabel(), this.cmfObject.getId(), f.getAbsolutePath()),
 					e);
 			}
 			ContentInfoT xml = new ContentInfoT();
