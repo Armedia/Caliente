@@ -1,8 +1,10 @@
 package com.armedia.cmf.storage.jdbc;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
-import org.apache.commons.dbutils.DbUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.CmfStorageException;
 
@@ -15,6 +17,8 @@ import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 
 class JdbcSchemaManager {
+
+	private static final Logger LOG = LoggerFactory.getLogger(JdbcSchemaManager.class);
 
 	static interface Callback {
 		void cleanData(JdbcOperation op) throws CmfStorageException;
@@ -38,27 +42,27 @@ class JdbcSchemaManager {
 			if (cleanData && (callback != null)) {
 				callback.cleanData(op);
 			}
+			if (!managedTx) {
+				c.commit();
+			}
 			ok = true;
 		} catch (DatabaseException e) {
 			throw new CmfStorageException(String.format(
 				"Failed to find a supported database for the given connection (changeLog = [%s])", changeLog), e);
 		} catch (LiquibaseException e) {
-			if (updateSchema) {
-				throw new CmfStorageException(
-					String.format("Failed to generate/update the SQL schema from changeLog [%s]", changeLog), e);
-			} else {
-				throw new CmfStorageException(
-					String.format("The SQL schema in changeLog [%s] is of the wrong version or structure", changeLog),
-					e);
-			}
+			String fmt = (updateSchema ? "Failed to generate/update the SQL schema from changeLog [%s]"
+				: "The SQL schema in changeLog [%s] is of the wrong version or structure");
+			throw new CmfStorageException(String.format(fmt, changeLog), e);
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Failed to commit the changes to the database from changelog [%s]", changeLog), e);
 		} finally {
-			if (managedTx) {
-				// We're not owning the transaction
-				DbUtils.closeQuietly(c);
-			} else if (ok) {
-				DbUtils.commitAndCloseQuietly(c);
-			} else {
-				DbUtils.rollbackAndCloseQuietly(c);
+			if (!managedTx && !ok) {
+				try {
+					c.rollback();
+				} catch (SQLException e) {
+					JdbcSchemaManager.LOG.error("Rollback failed", e);
+				}
 			}
 		}
 	}
