@@ -481,7 +481,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected boolean doClose() {
+	protected boolean doClose(boolean cleanupIfEmpty) {
 		if (this.modified.get()) {
 			try {
 				storeProperties();
@@ -490,7 +490,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 					this.propertiesFile.getAbsolutePath()), e);
 			}
 		}
-		return super.doClose();
+		return super.doClose(cleanupIfEmpty);
 	}
 
 	@Override
