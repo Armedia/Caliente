@@ -42,10 +42,14 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 	}
 
 	final boolean close() {
+		return close(false);
+	}
+
+	final boolean close(boolean cleanupIfEmpty) {
 		this.lock.writeLock().lock();
 		try {
 			if (!this.open) { return false; }
-			return doClose();
+			return doClose(cleanupIfEmpty);
 		} finally {
 			this.open = false;
 			this.lock.writeLock().unlock();
@@ -95,7 +99,7 @@ public abstract class CmfStore<C, O extends CmfStoreOperation<C>> {
 		}
 	}
 
-	protected boolean doClose() {
+	protected boolean doClose(boolean cleanupIfEmpty) {
 		return true;
 	}
 
