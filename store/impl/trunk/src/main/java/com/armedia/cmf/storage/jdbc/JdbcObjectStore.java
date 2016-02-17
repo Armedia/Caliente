@@ -228,6 +228,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected final String dbVersion;
 	protected final int dbMajor;
 	protected final int dbMinor;
+	protected final String loadObjectsById;
+	protected final String loadObjectsByIdBatched;
+	protected final boolean loadObjectsByIdWithArray;
 
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
 		throws CmfStorageException {
@@ -246,26 +249,72 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 
 		try {
-			DatabaseMetaData md = c.getMetaData();
-			this.dbName = md.getDatabaseProductName();
-			this.dbVersion = md.getDatabaseProductVersion();
-			this.dbMajor = md.getDatabaseMajorVersion();
-			this.dbMinor = md.getDatabaseMinorVersion();
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to get basic database information", e);
-		}
+			try {
+				DatabaseMetaData md = c.getMetaData();
+				this.dbName = md.getDatabaseProductName();
+				this.dbVersion = md.getDatabaseProductVersion();
+				this.dbMajor = md.getDatabaseMajorVersion();
+				this.dbMinor = md.getDatabaseMinorVersion();
+			} catch (SQLException e) {
+				throw new CmfStorageException("Failed to get basic database information", e);
+			}
 
-		this.propertyManager = new JdbcStorePropertyManager(JdbcObjectStore.PROPERTY_TABLE);
+			this.propertyManager = new JdbcStorePropertyManager(JdbcObjectStore.PROPERTY_TABLE);
 
-		JdbcSchemaManager.prepareSchema(JdbcObjectStore.SCHEMA_CHANGE_LOG, c, updateSchema, cleanData,
-			this.managedTransactions, new JdbcSchemaManager.Callback() {
-				@Override
-				public void cleanData(JdbcOperation op) throws CmfStorageException {
-					clearProperties(op);
-					clearAllObjects(op);
-					clearAttributeMappings(op);
+			JdbcSchemaManager.prepareSchema(JdbcObjectStore.SCHEMA_CHANGE_LOG, c, updateSchema, cleanData,
+				this.managedTransactions, new JdbcSchemaManager.Callback() {
+					@Override
+					public void cleanData(JdbcOperation op) throws CmfStorageException {
+						clearProperties(op);
+						clearAllObjects(op);
+						clearAttributeMappings(op);
+					}
+				});
+
+			String byId = null;
+			String byIdBatched = null;
+			boolean useArray = false;
+			try {
+				DbUtils.closeQuietly(c.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_BATCHED_SQL));
+				byIdBatched = JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_BATCHED_SQL;
+				DbUtils.closeQuietly(c.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL));
+				byId = JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL;
+				useArray = true;
+			} catch (SQLException e) {
+				String msg = String.format(
+					"DB Engine %s %s doesn't support ANY syntax for use in object retrieval by ID, will try the subquery 'IN' syntax",
+					this.dbName, this.dbVersion);
+				if (this.log.isTraceEnabled()) {
+					this.log.trace(msg, e);
+				} else {
+					this.log.debug(msg);
 				}
-			});
+				try {
+					DbUtils.closeQuietly(c.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_BATCHED_SQL));
+					byIdBatched = JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_BATCHED_SQL;
+					DbUtils.closeQuietly(c.prepareStatement(JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL));
+					byId = JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL;
+					useArray = false;
+				} catch (SQLException e2) {
+					msg = String.format(
+						"DB Engine %s %s doesn't support IN syntax for use in object retrieval by ID, cannot continue",
+						this.dbName, this.dbVersion);
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(msg, e);
+					} else {
+						this.log.debug(msg);
+					}
+					throw new CmfStorageException(String.format(
+						"The underlying DB %s %s doesn't support ANY or IN syntax for object retrieval by ID",
+						this.dbName, this.dbVersion));
+				}
+			}
+			this.loadObjectsById = byId;
+			this.loadObjectsByIdBatched = byIdBatched;
+			this.loadObjectsByIdWithArray = useArray;
+		} finally {
+			DbUtils.closeQuietly(c);
+		}
 	}
 
 	protected final DataSourceDescriptor<?> getDataSourceDescriptor() {
@@ -457,16 +506,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						batching ? JdbcObjectStore.LOAD_OBJECTS_BATCHED_SQL : JdbcObjectStore.LOAD_OBJECTS_SQL);
 				} else {
 					limitByIDs = true;
-					try {
-						objectPS = connection
-							.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_BATCHED_SQL
-								: JdbcObjectStore.LOAD_OBJECTS_BY_ID_ANY_SQL);
-						useSqlArray = true;
-					} catch (SQLException e) {
-						objectPS = connection
-							.prepareStatement(batching ? JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_BATCHED_SQL
-								: JdbcObjectStore.LOAD_OBJECTS_BY_ID_IN_SQL);
-					}
+					objectPS = connection
+						.prepareStatement(batching ? this.loadObjectsByIdBatched : this.loadObjectsById);
+					useSqlArray = this.loadObjectsByIdWithArray;
 				}
 
 				attributePS = connection.prepareStatement(JdbcObjectStore.LOAD_ATTRIBUTES_SQL);
