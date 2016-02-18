@@ -33,6 +33,10 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 		" order by batch_id, object_number" //
 		;
 
+	private static final String TRUNCATE_TABLE_FMT = //
+	"     truncate table %s cascade " //
+	;
+
 	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
 		super(EngineType.PostgreSQL, md);
 	}
@@ -54,6 +58,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_BATCHED:
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_BATCHED;
+			case TRUNCATE_TABLE_FMT:
+				return JdbcDialectPostgreSQL.TRUNCATE_TABLE_FMT;
 			default:
 				break;
 		}
