@@ -207,7 +207,7 @@ public abstract class JdbcDialect {
 		),
 
 		LOAD_OBJECT_TYPES( //
-			"       select object_type, count(*) as total " + //
+			"       select object_type, count(*) " + //
 				"     from cmf_object " + //
 				" group by object_type " + // ),
 				"   having total > 0 " + //

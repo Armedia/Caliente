@@ -604,13 +604,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					public Map<CmfType, Integer> handle(ResultSet rs) throws SQLException {
 						Map<CmfType, Integer> ret = new EnumMap<CmfType, Integer>(CmfType.class);
 						while (rs.next()) {
-							String t = rs.getString("object_type");
+							String t = rs.getString(1);
 							if ((t == null) || rs.wasNull()) {
 								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
 								continue;
 							}
 							try {
-								ret.put(CmfType.decodeString(t), rs.getInt("total"));
+								ret.put(CmfType.decodeString(t), rs.getInt(2));
 							} catch (IllegalArgumentException e) {
 								JdbcObjectStore.this.log
 									.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
