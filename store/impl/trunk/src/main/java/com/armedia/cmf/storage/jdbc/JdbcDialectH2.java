@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 import org.apache.commons.dbutils.ResultSetHandler;
 
-public class JdbcQueryResolverH2 extends JdbcQueryResolver {
+public class JdbcDialectH2 extends JdbcDialect {
 
 	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = new ResultSetHandler<Long>() {
 		@Override
@@ -40,7 +40,7 @@ public class JdbcQueryResolverH2 extends JdbcQueryResolver {
 	"          set REFERENTIAL_INTEGRITY false" //
 	;
 
-	public JdbcQueryResolverH2(DatabaseMetaData md) throws SQLException {
+	public JdbcDialectH2(DatabaseMetaData md) throws SQLException {
 		super(EngineType.H2, md);
 	}
 
@@ -50,24 +50,29 @@ public class JdbcQueryResolverH2 extends JdbcQueryResolver {
 	}
 
 	@Override
-	protected String doResolve(JdbcQuery sql) {
+	protected boolean isObjectNumberReturnedFromInsert() {
+		return true;
+	}
+
+	@Override
+	protected String doTranslate(JdbcQuery sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
-				return JdbcQueryResolverH2.LOAD_OBJECTS_BY_ID;
+				return JdbcDialectH2.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_BATCHED:
-				return JdbcQueryResolverH2.LOAD_OBJECTS_BY_ID_BATCHED;
+				return JdbcDialectH2.LOAD_OBJECTS_BY_ID_BATCHED;
 			case ENABLE_REFERENTIAL_INTEGRITY:
-				return JdbcQueryResolverH2.ENABLE_REFERENTIAL_INTEGRITY;
+				return JdbcDialectH2.ENABLE_REFERENTIAL_INTEGRITY;
 			case DISABLE_REFERENTIAL_INTEGRITY:
-				return JdbcQueryResolverH2.DISABLE_REFERENTIAL_INTEGRITY;
+				return JdbcDialectH2.DISABLE_REFERENTIAL_INTEGRITY;
 			default:
 				break;
 		}
-		return super.doResolve(sql);
+		return super.doTranslate(sql);
 	}
 
 	@Override
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
-		return JdbcQueryResolverH2.OBJECT_NUMBER_HANDLER;
+		return JdbcDialectH2.OBJECT_NUMBER_HANDLER;
 	}
 }

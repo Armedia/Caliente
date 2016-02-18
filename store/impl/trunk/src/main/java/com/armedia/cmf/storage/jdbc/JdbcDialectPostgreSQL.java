@@ -6,13 +6,13 @@ import java.sql.SQLException;
 
 import org.apache.commons.dbutils.ResultSetHandler;
 
-public class JdbcQueryResolverPostgreSQL extends JdbcQueryResolver {
+public class JdbcDialectPostgreSQL extends JdbcDialect {
 	private static final String OBJECT_NUMBER_COLUMN = "object_number";
 	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = new ResultSetHandler<Long>() {
 
 		@Override
 		public Long handle(ResultSet rs) throws SQLException {
-			if (rs.next()) { return rs.getLong(JdbcQueryResolverPostgreSQL.OBJECT_NUMBER_COLUMN); }
+			if (rs.next()) { return rs.getLong(JdbcDialectPostgreSQL.OBJECT_NUMBER_COLUMN); }
 			return null;
 		}
 	};
@@ -33,7 +33,7 @@ public class JdbcQueryResolverPostgreSQL extends JdbcQueryResolver {
 		" order by batch_id, object_number" //
 		;
 
-	public JdbcQueryResolverPostgreSQL(DatabaseMetaData md) throws SQLException {
+	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
 		super(EngineType.PostgreSQL, md);
 	}
 
@@ -43,20 +43,25 @@ public class JdbcQueryResolverPostgreSQL extends JdbcQueryResolver {
 	}
 
 	@Override
-	protected String doResolve(JdbcQuery sql) {
+	protected boolean isObjectNumberReturnedFromInsert() {
+		return true;
+	}
+
+	@Override
+	protected String doTranslate(JdbcQuery sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
-				return JdbcQueryResolverPostgreSQL.LOAD_OBJECTS_BY_ID;
+				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_BATCHED:
-				return JdbcQueryResolverPostgreSQL.LOAD_OBJECTS_BY_ID_BATCHED;
+				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_BATCHED;
 			default:
 				break;
 		}
-		return super.doResolve(sql);
+		return super.doTranslate(sql);
 	}
 
 	@Override
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
-		return JdbcQueryResolverPostgreSQL.OBJECT_NUMBER_HANDLER;
+		return JdbcDialectPostgreSQL.OBJECT_NUMBER_HANDLER;
 	}
 }

@@ -63,7 +63,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
 	private final JdbcStorePropertyManager propertyManager;
-	private final JdbcQueryResolver queryResolver;
+	private final JdbcDialect dialect;
 
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
 		throws CmfStorageException {
@@ -83,7 +83,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		try {
 			try {
-				this.queryResolver = JdbcQueryResolver.getResolver(c.getMetaData());
+				this.dialect = JdbcDialect.getDialect(c.getMetaData());
 			} catch (SQLException e) {
 				throw new CmfStorageException("Failed to initialize the query resolver", e);
 			}
@@ -234,24 +234,27 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 
 			// Do all the inserts in a row
-			Long ret = this.queryResolver.getNextObjectNumber(c);
-			if (ret == null) {
-				ret = qr.insert(c, resolveQuery(JdbcQuery.INSERT_OBJECT), this.queryResolver.getObjectNumberHandler(),
+			Long ret = null;
+			if (this.dialect.isObjectNumberReturnedFromInsert()) {
+				ret = qr.insert(c, translateQuery(JdbcQuery.INSERT_OBJECT), this.dialect.getObjectNumberHandler(),
 					objectId, object.getSearchKey(), objectType.name(),
 					Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(), object.getBatchId(),
 					object.getProductName(), object.getProductVersion());
 			} else {
-				qr.insert(c, resolveQuery(JdbcQuery.INSERT_OBJECT), JdbcTools.HANDLER_NULL, objectId,
+				ret = this.dialect.getNextObjectNumber(c);
+				if (ret == null) { throw new CmfStorageException(
+					String.format("Dialect %s failed to obtain a new object number", this.dialect)); }
+				qr.insert(c, translateQuery(JdbcQuery.INSERT_OBJECT), JdbcTools.HANDLER_NULL, ret, objectId,
 					object.getSearchKey(), objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()),
 					object.getLabel(), object.getBatchId(), object.getProductName(), object.getProductVersion());
 			}
-			qr.insertBatch(c, resolveQuery(JdbcQuery.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
+			qr.insertBatch(c, translateQuery(JdbcQuery.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
 				attributeParameters.toArray(JdbcTools.NO_PARAMS));
-			qr.insertBatch(c, resolveQuery(JdbcQuery.INSERT_ATTRIBUTE_VALUE), JdbcTools.HANDLER_NULL,
+			qr.insertBatch(c, translateQuery(JdbcQuery.INSERT_ATTRIBUTE_VALUE), JdbcTools.HANDLER_NULL,
 				attributeValueParameters.toArray(JdbcTools.NO_PARAMS));
-			qr.insertBatch(c, resolveQuery(JdbcQuery.INSERT_PROPERTY), JdbcTools.HANDLER_NULL,
+			qr.insertBatch(c, translateQuery(JdbcQuery.INSERT_PROPERTY), JdbcTools.HANDLER_NULL,
 				propertyParameters.toArray(JdbcTools.NO_PARAMS));
-			qr.insertBatch(c, resolveQuery(JdbcQuery.INSERT_PROPERTY_VALUE), JdbcTools.HANDLER_NULL,
+			qr.insertBatch(c, translateQuery(JdbcQuery.INSERT_PROPERTY_VALUE), JdbcTools.HANDLER_NULL,
 				propertyValueParameters.toArray(JdbcTools.NO_PARAMS));
 			// lockRS.updateBoolean(1, true);
 			// lockRS.updateRow();
@@ -297,17 +300,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				boolean limitByIDs = false;
 				if (ids == null) {
 					objectPS = connection.prepareStatement(
-						resolveQuery(batching ? JdbcQuery.LOAD_OBJECTS_BATCHED : JdbcQuery.LOAD_OBJECTS));
+						translateQuery(batching ? JdbcQuery.LOAD_OBJECTS_BATCHED : JdbcQuery.LOAD_OBJECTS));
 				} else {
 					limitByIDs = true;
 					objectPS = connection.prepareStatement(
-						resolveQuery(batching ? JdbcQuery.LOAD_OBJECTS_BY_ID_BATCHED : JdbcQuery.LOAD_OBJECTS_BY_ID));
+						translateQuery(batching ? JdbcQuery.LOAD_OBJECTS_BY_ID_BATCHED : JdbcQuery.LOAD_OBJECTS_BY_ID));
 				}
 
-				attributePS = connection.prepareStatement(resolveQuery(JdbcQuery.LOAD_ATTRIBUTES));
-				attributeValuePS = connection.prepareStatement(resolveQuery(JdbcQuery.LOAD_ATTRIBUTE_VALUES));
-				propertyPS = connection.prepareStatement(resolveQuery(JdbcQuery.LOAD_PROPERTIES));
-				propertyValuePS = connection.prepareStatement(resolveQuery(JdbcQuery.LOAD_PROPERTY_VALUES));
+				attributePS = connection.prepareStatement(translateQuery(JdbcQuery.LOAD_ATTRIBUTES));
+				attributeValuePS = connection.prepareStatement(translateQuery(JdbcQuery.LOAD_ATTRIBUTE_VALUES));
+				propertyPS = connection.prepareStatement(translateQuery(JdbcQuery.LOAD_PROPERTIES));
+				propertyValuePS = connection.prepareStatement(translateQuery(JdbcQuery.LOAD_PROPERTY_VALUES));
 
 				ResultSet objectRS = null;
 				ResultSet attributeRS = null;
@@ -322,7 +325,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					for (int i = 0; i < arr.length; i++) {
 						arr[i] = JdbcTools.composeDatabaseId(type, arr[i].toString());
 					}
-					if (this.queryResolver.isSupportsArrays()) {
+					if (this.dialect.isSupportsArrays()) {
 						objectPS.setString(1, type.name());
 						objectPS.setArray(2, connection.createArrayOf("text", arr));
 					} else {
@@ -497,8 +500,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		if ((targetValue == null) || (sourceValue == null)) {
 			// Delete instead
-			final String sql = (targetValue == null ? resolveQuery(JdbcQuery.DELETE_TARGET_MAPPING)
-				: resolveQuery(JdbcQuery.DELETE_SOURCE_MAPPING));
+			final String sql = (targetValue == null ? translateQuery(JdbcQuery.DELETE_TARGET_MAPPING)
+				: translateQuery(JdbcQuery.DELETE_SOURCE_MAPPING));
 			final String refValue = (targetValue == null ? sourceValue : targetValue);
 			int count = qr.update(c, sql, type.name(), name, refValue);
 			if (count > 0) {
@@ -510,7 +513,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		// This delete will clear out any potential conflicts in one fell swoop, while also allowing
 		// us to potentially avoid re-creating mappings that are already there.
-		int deleteCount = qr.update(c, resolveQuery(JdbcQuery.DELETE_BOTH_MAPPINGS), type.name(), name, sourceValue,
+		int deleteCount = qr.update(c, translateQuery(JdbcQuery.DELETE_BOTH_MAPPINGS), type.name(), name, sourceValue,
 			targetValue, sourceValue, targetValue);
 
 		// First, check to see if the exact mapping we're looking to create already exists...
@@ -518,15 +521,15 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		// or the exact mapping we wanted was already there. So if the deleteCount is not 0,
 		// we're already good to go on the insert. Otherwise, we have to check for an
 		// existing, identical mapping
-		if ((deleteCount > 0) || !qr.query(c, resolveQuery(JdbcQuery.FIND_EXACT_MAPPING), JdbcTools.HANDLER_EXISTS,
+		if ((deleteCount > 0) || !qr.query(c, translateQuery(JdbcQuery.FIND_EXACT_MAPPING), JdbcTools.HANDLER_EXISTS,
 			type.name(), name, sourceValue, targetValue)) {
 			// New mapping...so...we need to delete anything that points to this source, and
 			// anything that points to this target, since we don't accept duplicates on either
 			// column
 
 			// Now, add the new mapping...
-			qr.insert(c, resolveQuery(JdbcQuery.INSERT_MAPPING), JdbcTools.HANDLER_NULL, type.name(), name, sourceValue,
-				targetValue);
+			qr.insert(c, translateQuery(JdbcQuery.INSERT_MAPPING), JdbcTools.HANDLER_NULL, type.name(), name,
+				sourceValue, targetValue);
 			this.log
 				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
 		} else if (this.log.isDebugEnabled()) {
@@ -561,7 +564,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				return rs.getString(1);
 			}
 		};
-		final String sql = resolveQuery(source ? JdbcQuery.FIND_TARGET_MAPPING : JdbcQuery.FIND_SOURCE_MAPPING);
+		final String sql = translateQuery(source ? JdbcQuery.FIND_TARGET_MAPPING : JdbcQuery.FIND_SOURCE_MAPPING);
 		try {
 			return qr.query(sql, h, type.name(), name, value);
 		} catch (SQLException e) {
@@ -571,7 +574,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	private boolean isStored(Connection c, CmfType type, String objectId) throws SQLException {
-		return JdbcTools.getQueryRunner().query(c, resolveQuery(JdbcQuery.CHECK_IF_OBJECT_EXISTS),
+		return JdbcTools.getQueryRunner().query(c, translateQuery(JdbcQuery.CHECK_IF_OBJECT_EXISTS),
 			JdbcTools.HANDLER_EXISTS, JdbcTools.composeDatabaseId(type, objectId), type.name());
 	}
 
@@ -587,7 +590,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private Map<CmfType, Integer> getStoredObjectTypes(Connection c) throws CmfStorageException {
 		try {
-			return new QueryRunner().query(c, resolveQuery(JdbcQuery.LOAD_OBJECT_TYPES),
+			return new QueryRunner().query(c, translateQuery(JdbcQuery.LOAD_OBJECT_TYPES),
 				new ResultSetHandler<Map<CmfType, Integer>>() {
 					@Override
 					public Map<CmfType, Integer> handle(ResultSet rs) throws SQLException {
@@ -621,7 +624,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private int clearAttributeMappings(Connection c) throws CmfStorageException {
 		try {
-			return new QueryRunner().update(c, resolveQuery(JdbcQuery.CLEAR_ALL_MAPPINGS));
+			return new QueryRunner().update(c, translateQuery(JdbcQuery.CLEAR_ALL_MAPPINGS));
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to clear all the stored mappings", e);
 		}
@@ -653,7 +656,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 		};
 		try {
-			new QueryRunner().query(operation.getConnection(), resolveQuery(JdbcQuery.LOAD_ALL_MAPPINGS), h);
+			new QueryRunner().query(operation.getConnection(), translateQuery(JdbcQuery.LOAD_ALL_MAPPINGS), h);
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to retrieve the declared mapping types and names", e);
 		}
@@ -673,7 +676,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 		};
 		try {
-			new QueryRunner().query(operation.getConnection(), resolveQuery(JdbcQuery.LOAD_TYPE_MAPPINGS), h,
+			new QueryRunner().query(operation.getConnection(), translateQuery(JdbcQuery.LOAD_TYPE_MAPPINGS), h,
 				type.name());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
@@ -695,7 +698,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 		};
 		try {
-			new QueryRunner().query(operation.getConnection(), resolveQuery(JdbcQuery.LOAD_TYPE_NAME_MAPPINGS), h,
+			new QueryRunner().query(operation.getConnection(), translateQuery(JdbcQuery.LOAD_TYPE_NAME_MAPPINGS), h,
 				type.name(), name);
 		} catch (SQLException e) {
 			throw new RuntimeException(
@@ -725,7 +728,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			Statement s = c.createStatement();
 			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
 			try {
-				final String sqlFmt = resolveQuery(JdbcQuery.TRUNCATE_TABLE_FMT);
+				final String sqlFmt = translateQuery(JdbcQuery.TRUNCATE_TABLE_FMT);
 				for (String t : tables) {
 					s.executeUpdate(String.format(sqlFmt, t));
 				}
@@ -877,14 +880,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("ATTEMPTING TO PERSIST DEPENDENCY [%s::%s]", type.name(), id));
 			}
-			qr.insert(c, resolveQuery(JdbcQuery.INSERT_EXPORT_PLAN), JdbcTools.HANDLER_NULL, type.name(), dbid);
+			qr.insert(c, translateQuery(JdbcQuery.INSERT_EXPORT_PLAN), JdbcTools.HANDLER_NULL, type.name(), dbid);
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
 			}
 			return true;
 		} catch (SQLException e) {
 			try {
-				if (qr.query(c, resolveQuery(JdbcQuery.QUERY_EXPORT_PLAN_DUPE), JdbcTools.HANDLER_EXISTS, dbid)) {
+				if (qr.query(c, translateQuery(JdbcQuery.QUERY_EXPORT_PLAN_DUPE), JdbcTools.HANDLER_EXISTS, dbid)) {
 					// Duplicate dependency...we skip it
 					if (this.log.isTraceEnabled()) {
 						this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
@@ -937,7 +940,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		// Step 1: Delete what's there
 		try {
-			qr.update(c, resolveQuery(JdbcQuery.DELETE_CONTENT), objectId);
+			qr.update(c, translateQuery(JdbcQuery.DELETE_CONTENT), objectId);
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("Failed to delete the existing content records for %s [%s](%s)",
 				object.getType(), object.getLabel(), object.getId()), e);
@@ -977,9 +980,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		// Step 3: execute the batch inserts
 		try {
-			qr.insertBatch(c, resolveQuery(JdbcQuery.INSERT_CONTENT), JdbcTools.HANDLER_NULL,
+			qr.insertBatch(c, translateQuery(JdbcQuery.INSERT_CONTENT), JdbcTools.HANDLER_NULL,
 				contents.toArray(JdbcTools.NO_PARAMS));
-			qr.insertBatch(c, resolveQuery(JdbcQuery.INSERT_CONTENT_PROPERTY), JdbcTools.HANDLER_NULL,
+			qr.insertBatch(c, translateQuery(JdbcQuery.INSERT_CONTENT_PROPERTY), JdbcTools.HANDLER_NULL,
 				properties.toArray(JdbcTools.NO_PARAMS));
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("Failed to insert the new content records for %s [%s](%s)",
@@ -997,8 +1000,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		PreparedStatement pPS = null;
 
 		try {
-			cPS = c.prepareStatement(resolveQuery(JdbcQuery.LOAD_CONTENTS));
-			pPS = c.prepareStatement(resolveQuery(JdbcQuery.LOAD_CONTENT_PROPERTIES));
+			cPS = c.prepareStatement(translateQuery(JdbcQuery.LOAD_CONTENTS));
+			pPS = c.prepareStatement(translateQuery(JdbcQuery.LOAD_CONTENT_PROPERTIES));
 
 			// This one will simply gather up the properties for each content record
 			final ResultSetHandler<Map<String, String>> pHandler = new ResultSetHandler<Map<String, String>>() {
@@ -1030,7 +1033,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							info.setFileName(str);
 						}
 
-						Map<String, String> props = qr.query(c, resolveQuery(JdbcQuery.LOAD_CONTENT_PROPERTIES),
+						Map<String, String> props = qr.query(c, translateQuery(JdbcQuery.LOAD_CONTENT_PROPERTIES),
 							pHandler, objectId, info.getQualifier());
 						for (String s : props.keySet()) {
 							String v = props.get(s);
@@ -1044,7 +1047,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 			};
 
-			return new QueryRunner().query(c, resolveQuery(JdbcQuery.LOAD_CONTENTS), cHandler, objectId);
+			return new QueryRunner().query(c, translateQuery(JdbcQuery.LOAD_CONTENTS), cHandler, objectId);
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("Failed to load the content records for %s [%s](%s)",
 				object.getType(), object.getLabel(), object.getId()), e);
@@ -1055,7 +1058,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	protected boolean disableReferentialIntegrity(JdbcOperation operation) throws CmfStorageException {
-		String sql = resolveOptionalQuery(JdbcQuery.DISABLE_REFERENTIAL_INTEGRITY);
+		String sql = translateOptionalQuery(JdbcQuery.DISABLE_REFERENTIAL_INTEGRITY);
 		if (sql == null) { return false; }
 		Connection c = operation.getConnection();
 		Statement s = null;
@@ -1073,7 +1076,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	protected void enableReferentialIntegrity(JdbcOperation operation) throws CmfStorageException {
 		Connection c = operation.getConnection();
-		String sql = resolveOptionalQuery(JdbcQuery.ENABLE_REFERENTIAL_INTEGRITY);
+		String sql = translateOptionalQuery(JdbcQuery.ENABLE_REFERENTIAL_INTEGRITY);
 		if (sql == null) { return; }
 		Statement s = null;
 		try {
@@ -1086,13 +1089,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	protected String resolveOptionalQuery(JdbcQuery query) {
-		if (this.queryResolver == null) { return query.sql; }
-		return this.queryResolver.resolveSql(query, false);
+	protected String translateOptionalQuery(JdbcQuery query) {
+		if (this.dialect == null) { return query.sql; }
+		return this.dialect.translateQuery(query, false);
 	}
 
-	protected String resolveQuery(JdbcQuery query) {
-		if (this.queryResolver == null) { return query.sql; }
-		return this.queryResolver.resolveSql(query, true);
+	protected String translateQuery(JdbcQuery query) {
+		if (this.dialect == null) { return query.sql; }
+		return this.dialect.translateQuery(query, true);
 	}
 }

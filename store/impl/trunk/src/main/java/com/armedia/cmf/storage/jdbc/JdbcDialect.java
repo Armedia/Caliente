@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class JdbcQueryResolver {
+public abstract class JdbcDialect {
 
 	public static enum EngineType {
 		//
@@ -38,7 +38,7 @@ public abstract class JdbcQueryResolver {
 	public final String dbVersion;
 	public final EngineType engineType;
 
-	protected JdbcQueryResolver(EngineType engineType, DatabaseMetaData md) throws SQLException {
+	protected JdbcDialect(EngineType engineType, DatabaseMetaData md) throws SQLException {
 		this.engineType = engineType;
 		this.dbName = md.getDatabaseProductName();
 		this.dbVersion = md.getDatabaseProductVersion();
@@ -50,9 +50,9 @@ public abstract class JdbcQueryResolver {
 
 	protected abstract ResultSetHandler<Long> getObjectNumberHandler();
 
-	final String resolveSql(JdbcQuery query, boolean required) {
+	final String translateQuery(JdbcQuery query, boolean required) {
 		if (query == null) { throw new IllegalArgumentException("Must provide a SQL query to resolve"); }
-		String sql = doResolve(query);
+		String sql = doTranslate(query);
 		if (required) {
 			sql = Tools.coalesce(sql, query.sql);
 			if (sql == null) { throw new IllegalStateException(
@@ -61,25 +61,33 @@ public abstract class JdbcQueryResolver {
 		return sql;
 	}
 
+	protected abstract boolean isObjectNumberReturnedFromInsert();
+
 	protected Long getNextObjectNumber(Connection c) throws SQLException {
 		return null;
 	}
 
-	protected String doResolve(JdbcQuery sql) {
+	protected String doTranslate(JdbcQuery sql) {
 		return sql.sql;
 	}
 
-	public static JdbcQueryResolver getResolver(DatabaseMetaData md) throws CmfStorageException, SQLException {
+	public static JdbcDialect getDialect(DatabaseMetaData md) throws CmfStorageException, SQLException {
 		final String dbName = md.getDatabaseProductName();
 		EngineType type = EngineType.parse(dbName);
 
 		switch (type) {
 			case H2:
-				return new JdbcQueryResolverH2(md);
+				return new JdbcDialectH2(md);
 			case PostgreSQL:
-				return new JdbcQueryResolverPostgreSQL(md);
+				return new JdbcDialectPostgreSQL(md);
 			default:
 				throw new CmfStorageException(String.format("Unsupported DB type [%s]", dbName));
 		}
+	}
+
+	@Override
+	public final String toString() {
+		return String.format("%s [dbMajor=%s, dbMinor=%s, dbVersion=%s]", getClass().getSimpleName(), this.dbMajor,
+			this.dbMinor, this.dbVersion);
 	}
 }

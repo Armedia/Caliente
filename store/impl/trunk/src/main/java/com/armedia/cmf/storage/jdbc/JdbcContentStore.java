@@ -170,7 +170,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
 	private final JdbcStorePropertyManager propertyManager;
-	private final JdbcQueryResolver queryResolver;
+	private final JdbcDialect queryResolver;
 
 	private class JdbcHandle extends Handle {
 
@@ -197,7 +197,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 		try {
 			try {
-				this.queryResolver = JdbcQueryResolver.getResolver(c.getMetaData());
+				this.queryResolver = JdbcDialect.getDialect(c.getMetaData());
 			} catch (SQLException e) {
 				throw new CmfStorageException("Failed to initialize the query resolver", e);
 			}
@@ -354,11 +354,11 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 	protected String resolveOptionalQuery(JdbcQuery query) {
 		if (this.queryResolver == null) { return query.sql; }
-		return this.queryResolver.resolveSql(query, false);
+		return this.queryResolver.translateQuery(query, false);
 	}
 
 	protected String resolveQuery(JdbcQuery query) {
 		if (this.queryResolver == null) { return query.sql; }
-		return this.queryResolver.resolveSql(query, true);
+		return this.queryResolver.translateQuery(query, true);
 	}
 }
