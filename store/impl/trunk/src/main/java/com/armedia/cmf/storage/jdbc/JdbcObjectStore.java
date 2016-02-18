@@ -63,10 +63,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
 	private final JdbcStorePropertyManager propertyManager;
-	protected final String dbName;
-	protected final String dbVersion;
-	protected final int dbMajor;
-	protected final int dbMinor;
 	private final JdbcQueryResolver queryResolver;
 
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
@@ -87,16 +83,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		try {
 			try {
-				DatabaseMetaData md = c.getMetaData();
-				this.dbName = md.getDatabaseProductName();
-				this.dbVersion = md.getDatabaseProductVersion();
-				this.dbMajor = md.getDatabaseMajorVersion();
-				this.dbMinor = md.getDatabaseMinorVersion();
+				this.queryResolver = JdbcQueryResolver.getResolver(c.getMetaData());
 			} catch (SQLException e) {
-				throw new CmfStorageException("Failed to get basic database information", e);
+				throw new CmfStorageException("Failed to initialize the query resolver", e);
 			}
-
-			this.queryResolver = JdbcQueryResolver.getResolver(this.dbName, this.dbMajor, this.dbMinor, this.dbVersion);
 
 			this.propertyManager = new JdbcStorePropertyManager(JdbcObjectStore.PROPERTY_TABLE);
 
@@ -244,10 +234,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 
 			// Do all the inserts in a row
-			Long ret = qr.insert(c, resolveQuery(JdbcQuery.INSERT_OBJECT), this.queryResolver.getObjectNumberHandler(),
-				objectId, object.getSearchKey(), objectType.name(),
-				Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(), object.getBatchId(),
-				object.getProductName(), object.getProductVersion());
+			Long ret = this.queryResolver.getNextObjectNumber(c);
+			if (ret == null) {
+				ret = qr.insert(c, resolveQuery(JdbcQuery.INSERT_OBJECT), this.queryResolver.getObjectNumberHandler(),
+					objectId, object.getSearchKey(), objectType.name(),
+					Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(), object.getBatchId(),
+					object.getProductName(), object.getProductVersion());
+			} else {
+				qr.insert(c, resolveQuery(JdbcQuery.INSERT_OBJECT), JdbcTools.HANDLER_NULL, objectId,
+					object.getSearchKey(), objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()),
+					object.getLabel(), object.getBatchId(), object.getProductName(), object.getProductVersion());
+			}
 			qr.insertBatch(c, resolveQuery(JdbcQuery.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
 				attributeParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, resolveQuery(JdbcQuery.INSERT_ATTRIBUTE_VALUE), JdbcTools.HANDLER_NULL,

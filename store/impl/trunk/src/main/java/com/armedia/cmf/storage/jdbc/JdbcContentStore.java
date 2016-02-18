@@ -30,13 +30,6 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	private static final String PROPERTY_TABLE = "cmf_content_info";
 	private static final String SCHEMA_CHANGE_LOG = "db.changelog.content.xml";
 
-	private static final String DELETE_ALL_STREAMS_SQL = "delete from cmf_content_stream";
-	private static final String CHECK_EXISTS_SQL = "select object_id from cmf_content_stream where object_id = ? and qualifier = ?";
-	private static final String GET_STREAM_LENGTH_SQL = "select length from cmf_content_stream where object_id = ? and qualifier = ?";
-	private static final String GET_STREAM_SQL = "select length, data from cmf_content_stream where object_id = ? and qualifier = ?";
-	private static final String DELETE_STREAM_SQL = "delete from cmf_content_stream where object_id = ? and qualifier = ?";
-	private static final String INSERT_STREAM_SQL = "insert into cmf_content_stream (object_id, qualifier, length, data) values (?, ?, ?, ?)";
-
 	private static final ResultSetHandler<Long> HANDLER_LENGTH = new ResultSetHandler<Long>() {
 		@Override
 		public Long handle(ResultSet rs) throws SQLException {
@@ -64,7 +57,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				this.operation = beginConcurrentInvocation();
 				this.tx = this.operation.begin();
 
-				this.ps = this.operation.getConnection().prepareStatement(JdbcContentStore.GET_STREAM_SQL);
+				this.ps = this.operation.getConnection().prepareStatement(resolveQuery(JdbcQuery.GET_STREAM));
 				this.ps.setString(1, this.locator.getObjectId());
 				this.ps.setString(2, this.locator.getQualifier());
 				this.rs = this.ps.executeQuery();
@@ -177,6 +170,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
 	private final JdbcStorePropertyManager propertyManager;
+	private final JdbcQueryResolver queryResolver;
 
 	private class JdbcHandle extends Handle {
 
@@ -201,15 +195,25 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 			throw new CmfStorageException("Failed to get a SQL Connection to validate the schema", e);
 		}
 
-		this.propertyManager = new JdbcStorePropertyManager(JdbcContentStore.PROPERTY_TABLE);
+		try {
+			try {
+				this.queryResolver = JdbcQueryResolver.getResolver(c.getMetaData());
+			} catch (SQLException e) {
+				throw new CmfStorageException("Failed to initialize the query resolver", e);
+			}
 
-		JdbcSchemaManager.prepareSchema(JdbcContentStore.SCHEMA_CHANGE_LOG, c, updateSchema, cleanData,
-			this.managedTransactions, new JdbcSchemaManager.Callback() {
-				@Override
-				public void cleanData(JdbcOperation op) throws CmfStorageException {
-					clearProperties(op);
-				}
-			});
+			this.propertyManager = new JdbcStorePropertyManager(JdbcContentStore.PROPERTY_TABLE);
+
+			JdbcSchemaManager.prepareSchema(JdbcContentStore.SCHEMA_CHANGE_LOG, c, updateSchema, cleanData,
+				this.managedTransactions, new JdbcSchemaManager.Callback() {
+					@Override
+					public void cleanData(JdbcOperation op) throws CmfStorageException {
+						clearProperties(op);
+					}
+				});
+		} finally {
+			DbUtils.closeQuietly(c);
+		}
 	}
 
 	protected final DataSourceDescriptor<?> getDataSourceDescriptor() {
@@ -277,8 +281,8 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 					IOUtils.closeQuietly(out);
 				}
 				QueryRunner qr = JdbcTools.getQueryRunner();
-				qr.update(c, JdbcContentStore.DELETE_STREAM_SQL, locator.getObjectId(), locator.getQualifier());
-				qr.insert(c, JdbcContentStore.INSERT_STREAM_SQL, JdbcTools.HANDLER_NULL, locator.getObjectId(),
+				qr.update(c, resolveQuery(JdbcQuery.DELETE_STREAM), locator.getObjectId(), locator.getQualifier());
+				qr.insert(c, resolveQuery(JdbcQuery.INSERT_STREAM), JdbcTools.HANDLER_NULL, locator.getObjectId(),
 					locator.getQualifier(), blob.length(), blob);
 				return blob.length();
 			} finally {
@@ -292,8 +296,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	protected boolean isExists(JdbcOperation operation, JdbcContentLocator locator) throws CmfStorageException {
 		try {
-			return JdbcTools.getQueryRunner().query(operation.getConnection(), JdbcContentStore.CHECK_EXISTS_SQL,
-				JdbcTools.HANDLER_EXISTS, locator.getObjectId(), locator.getQualifier());
+			return JdbcTools.getQueryRunner().query(operation.getConnection(),
+				resolveQuery(JdbcQuery.CHECK_IF_CONTENT_EXISTS), JdbcTools.HANDLER_EXISTS, locator.getObjectId(),
+				locator.getQualifier());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to check whether a stream exists for locator [%s]", locator), e);
@@ -303,8 +308,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	protected long getStreamSize(JdbcOperation operation, JdbcContentLocator locator) throws CmfStorageException {
 		try {
-			return JdbcTools.getQueryRunner().query(operation.getConnection(), JdbcContentStore.GET_STREAM_LENGTH_SQL,
-				JdbcContentStore.HANDLER_LENGTH, locator.getObjectId(), locator.getQualifier());
+			return JdbcTools.getQueryRunner().query(operation.getConnection(),
+				resolveQuery(JdbcQuery.GET_STREAM_LENGTH), JdbcContentStore.HANDLER_LENGTH, locator.getObjectId(),
+				locator.getQualifier());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to check whether a stream exists for locator [%s]", locator), e);
@@ -314,7 +320,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	protected void clearAllStreams(JdbcOperation operation) throws CmfStorageException {
 		try {
-			JdbcTools.getQueryRunner().update(operation.getConnection(), JdbcContentStore.DELETE_ALL_STREAMS_SQL);
+			JdbcTools.getQueryRunner().update(operation.getConnection(), resolveQuery(JdbcQuery.DELETE_ALL_STREAMS));
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to delete all content streams", e);
 		}
@@ -344,5 +350,15 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	protected void clearProperties(JdbcOperation operation) throws CmfStorageException {
 		this.propertyManager.clearProperties(operation);
+	}
+
+	protected String resolveOptionalQuery(JdbcQuery query) {
+		if (this.queryResolver == null) { return query.sql; }
+		return this.queryResolver.resolveSql(query, false);
+	}
+
+	protected String resolveQuery(JdbcQuery query) {
+		if (this.queryResolver == null) { return query.sql; }
+		return this.queryResolver.resolveSql(query, true);
 	}
 }

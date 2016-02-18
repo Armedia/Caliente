@@ -1,5 +1,6 @@
 package com.armedia.cmf.storage.jdbc;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -32,8 +33,8 @@ public class JdbcQueryResolverPostgreSQL extends JdbcQueryResolver {
 		" order by batch_id, object_number" //
 		;
 
-	public JdbcQueryResolverPostgreSQL(String dbName, int dbMajor, int dbMinor, String dbVersion) {
-		super(EngineType.PostgreSQL, dbName, dbMajor, dbMinor, dbVersion);
+	public JdbcQueryResolverPostgreSQL(DatabaseMetaData md) throws SQLException {
+		super(EngineType.PostgreSQL, md);
 	}
 
 	@Override

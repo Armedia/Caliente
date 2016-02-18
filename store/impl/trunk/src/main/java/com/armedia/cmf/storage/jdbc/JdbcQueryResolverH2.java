@@ -1,5 +1,6 @@
 package com.armedia.cmf.storage.jdbc;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -39,8 +40,8 @@ public class JdbcQueryResolverH2 extends JdbcQueryResolver {
 	"          set REFERENTIAL_INTEGRITY false" //
 	;
 
-	public JdbcQueryResolverH2(String dbName, int dbMajor, int dbMinor, String dbVersion) {
-		super(EngineType.H2, dbName, dbMajor, dbMinor, dbVersion);
+	public JdbcQueryResolverH2(DatabaseMetaData md) throws SQLException {
+		super(EngineType.H2, md);
 	}
 
 	@Override

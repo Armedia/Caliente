@@ -250,6 +250,45 @@ public enum JdbcQuery {
 		null //
 	),
 
+	DELETE_ALL_STREAMS( //
+		"       delete from cmf_content_stream" //
+	),
+
+	CHECK_IF_CONTENT_EXISTS( //
+		"       select object_id " + //
+			"     from cmf_content_stream " + //
+			"    where object_id = ? " + //
+			"      and qualifier = ?" //
+	),
+
+	GET_STREAM_LENGTH( //
+		"       select length " + //
+			"     from cmf_content_stream " + //
+			"    where object_id = ? " + //
+			"      and qualifier = ?" //
+	),
+
+	GET_STREAM( //
+		"       select length, data " + //
+			"     from cmf_content_stream " + //
+			"    where object_id = ? " + //
+			"      and qualifier = ?" //
+	),
+
+	DELETE_STREAM( //
+		"       delete from cmf_content_stream " + //
+			"    where object_id = ? " + //
+			"      and qualifier = ?" //
+	),
+
+	INSERT_STREAM( //
+		"       insert into " + //
+			"          cmf_content_stream (" + //
+			"              object_id, qualifier, length, data" + //
+			"          ) " + //
+			"   values (?, ?, ?, ?)" //
+	),
+
 	TRUNCATE_TABLE_FMT(//
 		"     truncate table %s " //
 	),

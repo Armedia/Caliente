@@ -1,5 +1,9 @@
 package com.armedia.cmf.storage.jdbc;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 
@@ -34,12 +38,12 @@ public abstract class JdbcQueryResolver {
 	public final String dbVersion;
 	public final EngineType engineType;
 
-	protected JdbcQueryResolver(EngineType engineType, String dbName, int dbMajor, int dbMinor, String dbVersion) {
+	protected JdbcQueryResolver(EngineType engineType, DatabaseMetaData md) throws SQLException {
 		this.engineType = engineType;
-		this.dbName = dbName;
-		this.dbMajor = dbMajor;
-		this.dbMinor = dbMinor;
-		this.dbVersion = dbVersion;
+		this.dbName = md.getDatabaseProductName();
+		this.dbVersion = md.getDatabaseProductVersion();
+		this.dbMajor = md.getDatabaseMajorVersion();
+		this.dbMinor = md.getDatabaseMinorVersion();
 	}
 
 	protected abstract boolean isSupportsArrays();
@@ -57,19 +61,23 @@ public abstract class JdbcQueryResolver {
 		return sql;
 	}
 
+	protected Long getNextObjectNumber(Connection c) throws SQLException {
+		return null;
+	}
+
 	protected String doResolve(JdbcQuery sql) {
 		return sql.sql;
 	}
 
-	public static JdbcQueryResolver getResolver(String dbName, int dbMajor, int dbMinor, String dbVersion)
-		throws CmfStorageException {
+	public static JdbcQueryResolver getResolver(DatabaseMetaData md) throws CmfStorageException, SQLException {
+		final String dbName = md.getDatabaseProductName();
 		EngineType type = EngineType.parse(dbName);
 
 		switch (type) {
 			case H2:
-				return new JdbcQueryResolverH2(dbName, dbMajor, dbMinor, dbVersion);
+				return new JdbcQueryResolverH2(md);
 			case PostgreSQL:
-				return new JdbcQueryResolverPostgreSQL(dbName, dbMajor, dbMinor, dbVersion);
+				return new JdbcQueryResolverPostgreSQL(md);
 			default:
 				throw new CmfStorageException(String.format("Unsupported DB type [%s]", dbName));
 		}
