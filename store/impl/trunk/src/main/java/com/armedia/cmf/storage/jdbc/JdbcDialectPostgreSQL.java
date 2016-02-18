@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang3.StringUtils;
 
 public class JdbcDialectPostgreSQL extends JdbcDialect {
 
@@ -64,5 +65,10 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	@Override
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
 		return JdbcDialectPostgreSQL.OBJECT_NUMBER_HANDLER;
+	}
+
+	@Override
+	protected boolean isDuplicateKeyException(SQLException e) {
+		return StringUtils.equalsIgnoreCase(e.getSQLState(), "23505");
 	}
 }

@@ -117,7 +117,13 @@ public abstract class JdbcDialect {
 				"          cmf_export_plan (" + //
 				"              object_type, object_id" + //
 				"          ) " + //
-				"   values (?, ?)" //
+				"   select ?, ? " + //
+				"    where not exists ( " + //
+				"              select * " + //
+				"                from cmf_export_plan " + //
+				"               where object_type = ? " + //
+				"                 and object_id = ? " + //
+				"          ) " //
 		),
 
 		CLEAR_ALL_MAPPINGS( //
@@ -351,6 +357,8 @@ public abstract class JdbcDialect {
 	protected abstract boolean isSupportsArrays();
 
 	protected abstract ResultSetHandler<Long> getObjectNumberHandler();
+
+	protected abstract boolean isDuplicateKeyException(SQLException e);
 
 	final String translateQuery(Query query, boolean required) {
 		if (query == null) { throw new IllegalArgumentException("Must provide a SQL query to resolve"); }
