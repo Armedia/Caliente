@@ -163,6 +163,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.4.1207.jre6</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.documentum.dfc</groupId>
 			<artifactId>dfc-jars</artifactId>
 			<version>${dfc.version}</version>
