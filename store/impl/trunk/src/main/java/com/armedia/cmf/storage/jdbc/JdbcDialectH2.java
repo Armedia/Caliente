@@ -55,7 +55,7 @@ public class JdbcDialectH2 extends JdbcDialect {
 	}
 
 	@Override
-	protected String doTranslate(JdbcQuery sql) {
+	protected String doTranslate(Query sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
 				return JdbcDialectH2.LOAD_OBJECTS_BY_ID;

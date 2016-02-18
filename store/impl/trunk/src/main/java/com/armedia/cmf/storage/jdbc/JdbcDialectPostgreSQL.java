@@ -52,7 +52,7 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	}
 
 	@Override
-	protected String doTranslate(JdbcQuery sql) {
+	protected String doTranslate(Query sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID;
