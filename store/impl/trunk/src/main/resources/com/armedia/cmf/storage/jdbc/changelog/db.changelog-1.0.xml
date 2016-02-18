@@ -39,6 +39,7 @@
 		</createIndex>
 
 		<!-- The main objects table -->
+		<createSequence sequenceName="cmf_object_number" startValue="0" incrementBy="1" cycle="true"/>
 		<createTable tableName="cmf_object" remarks="The CMS objects">
 			<column name="object_id" type="varchar(96)" remarks="The object's ID">
 				<constraints nullable="false" />
@@ -90,7 +91,6 @@
 			<column name="object_subtype" />
 			<column name="search_key" />
 		</createIndex>
-		<addAutoIncrement tableName="cmf_object" columnName="object_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="cmf_attribute">

@@ -1,10 +1,8 @@
 package com.armedia.cmf.storage.jdbc;
 
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.storage.CmfStorageException;
@@ -14,7 +12,7 @@ public abstract class JdbcDialect {
 
 	public static enum EngineType {
 		//
-		H2, PostgreSQL,
+		H2, PostgreSQL, Oracle,
 		//
 		;
 
@@ -47,9 +45,9 @@ public abstract class JdbcDialect {
 				"          cmf_object (" + //
 				"              object_id, search_key, object_type, " + //
 				"              object_subtype, object_label, batch_id, " + //
-				"              product_name, product_version" + //
+				"              object_number, product_name, product_version" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
 		INSERT_ATTRIBUTE( //
@@ -321,8 +319,12 @@ public abstract class JdbcDialect {
 				"   values (?, ?, ?, ?)" //
 		),
 
-		TRUNCATE_TABLE_FMT(//
+		TRUNCATE_TABLE_FMT( //
 			"     truncate table %s " //
+		),
+
+		READ_NEXT_OBJECT_NUMBER( //
+			"       select nextval('cmf_object_number') " //
 		),
 		//
 
@@ -351,23 +353,12 @@ public abstract class JdbcDialect {
 
 	protected abstract boolean isSupportsArrays();
 
-	protected abstract ResultSetHandler<Long> getObjectNumberHandler();
-
 	final String translateQuery(Query query, boolean required) {
 		if (query == null) { throw new IllegalArgumentException("Must provide a SQL query to resolve"); }
-		String sql = doTranslate(query);
-		if (required) {
-			sql = Tools.coalesce(sql, query.sql);
-			if (sql == null) { throw new IllegalStateException(
-				String.format("Required query [%s] is missing", query)); }
-		}
+		String sql = Tools.coalesce(doTranslate(query), query.sql);
+		if (required && (sql == null)) { throw new IllegalStateException(
+			String.format("Required query [%s] is missing", query)); }
 		return sql;
-	}
-
-	protected abstract boolean isObjectNumberReturnedFromInsert();
-
-	protected Long getNextObjectNumber(Connection c) throws SQLException {
-		return null;
 	}
 
 	protected String doTranslate(Query sql) {
@@ -388,6 +379,8 @@ public abstract class JdbcDialect {
 				return new JdbcDialectH2(md);
 			case PostgreSQL:
 				return new JdbcDialectPostgreSQL(md);
+			case Oracle:
+				return new JdbcDialectOracle(md);
 			default:
 				throw new CmfStorageException(String.format("Unsupported DB type [%s]", dbName));
 		}

@@ -3,7 +3,7 @@ package com.armedia.cmf.storage.jdbc;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-public class JdbcDialectPostgreSQL extends JdbcDialect {
+public class JdbcDialectOracle extends JdbcDialect {
 
 	private static final String LOAD_OBJECTS_BY_ID = //
 	"       select * " + //
@@ -25,7 +25,7 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	"     truncate table %s cascade " //
 	;
 
-	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
+	public JdbcDialectOracle(DatabaseMetaData md) throws SQLException {
 		super(EngineType.PostgreSQL, md);
 	}
 
@@ -38,11 +38,11 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	protected String doTranslate(Query sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
-				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID;
+				return JdbcDialectOracle.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_BATCHED:
-				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_BATCHED;
+				return JdbcDialectOracle.LOAD_OBJECTS_BY_ID_BATCHED;
 			case TRUNCATE_TABLE_FMT:
-				return JdbcDialectPostgreSQL.TRUNCATE_TABLE_FMT;
+				return JdbcDialectOracle.TRUNCATE_TABLE_FMT;
 			default:
 				break;
 		}
