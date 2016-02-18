@@ -12,7 +12,7 @@ public abstract class JdbcDialect {
 
 	public static enum EngineType {
 		//
-		H2, PostgreSQL, Oracle,
+		H2, PostgreSQL,
 		//
 		;
 
@@ -379,8 +379,6 @@ public abstract class JdbcDialect {
 				return new JdbcDialectH2(md);
 			case PostgreSQL:
 				return new JdbcDialectPostgreSQL(md);
-			case Oracle:
-				return new JdbcDialectOracle(md);
 			default:
 				throw new CmfStorageException(String.format("Unsupported DB type [%s]", dbName));
 		}
