@@ -210,7 +210,7 @@ public abstract class JdbcDialect {
 			"       select object_type, count(*) " + //
 				"     from cmf_object " + //
 				" group by object_type " + // ),
-				"   having total > 0 " + //
+				"   having count(*) > 0 " + //
 				" order by object_type " //
 		),
 
