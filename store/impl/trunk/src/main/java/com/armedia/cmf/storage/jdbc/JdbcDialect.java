@@ -117,13 +117,7 @@ public abstract class JdbcDialect {
 				"          cmf_export_plan (" + //
 				"              object_type, object_id" + //
 				"          ) " + //
-				"   select ?, ? " + //
-				"    where not exists ( " + //
-				"              select * " + //
-				"                from cmf_export_plan " + //
-				"               where object_type = ? " + //
-				"                 and object_id = ? " + //
-				"          ) " //
+				"   values (?, ?) " //
 		),
 
 		CLEAR_ALL_MAPPINGS( //

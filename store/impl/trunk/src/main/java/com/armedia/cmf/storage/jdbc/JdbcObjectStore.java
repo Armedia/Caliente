@@ -888,21 +888,19 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("ATTEMPTING TO PERSIST DEPENDENCY [%s::%s]", type.name(), id));
 			}
-			boolean inserted = qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_EXPORT_PLAN),
-				JdbcTools.HANDLER_EXISTS, type.name(), dbid, type.name(), dbid);
-			if (inserted) {
-				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
-				}
-			} else {
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_EXPORT_PLAN), JdbcTools.HANDLER_NULL, type.name(),
+				dbid);
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
+			}
+			return true;
+		} catch (SQLException e) {
+			if (this.dialect.isDuplicateKeyException(e)) {
+				// We're good...ish... PostgreSQL will have invalidated the transaction, which can
+				// bring problems for other operations within this transaction
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
 				}
-			}
-			return inserted;
-		} catch (SQLException e) {
-			if (this.dialect.isDuplicateKeyException(e)) {
-				// We're good...ish...
 				return false;
 			}
 			throw new CmfStorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id),
