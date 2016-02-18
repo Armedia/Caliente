@@ -204,13 +204,29 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 			this.propertyManager = new JdbcStorePropertyManager(JdbcContentStore.PROPERTY_TABLE);
 
-			JdbcSchemaManager.prepareSchema(JdbcContentStore.SCHEMA_CHANGE_LOG, c, updateSchema, cleanData,
-				this.managedTransactions, new JdbcSchemaManager.Callback() {
-					@Override
-					public void cleanData(JdbcOperation op) throws CmfStorageException {
-						clearProperties(op);
+			JdbcOperation op = new JdbcOperation(c, this.managedTransactions);
+			boolean ok = false;
+			op.begin();
+			try {
+				JdbcSchemaManager.prepareSchema(JdbcContentStore.SCHEMA_CHANGE_LOG, op, updateSchema, cleanData,
+					this.managedTransactions, new JdbcSchemaManager.Callback() {
+						@Override
+						public void cleanData(JdbcOperation op) throws CmfStorageException {
+							clearProperties(op);
+						}
+					});
+				op.commit();
+				ok = true;
+			} finally {
+				if (!ok) {
+					try {
+						op.rollback();
+					} catch (CmfOperationException e) {
+						this.log.warn(
+							String.format("Rollback failed during schema preparation (dialect = %s)", this.dialect), e);
 					}
-				});
+				}
+			}
 		} finally {
 			DbUtils.closeQuietly(c);
 		}

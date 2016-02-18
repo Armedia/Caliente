@@ -36,6 +36,7 @@ import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfOperationException;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
@@ -99,15 +100,31 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 			this.propertyManager = new JdbcStorePropertyManager(JdbcObjectStore.PROPERTY_TABLE);
 
-			JdbcSchemaManager.prepareSchema(JdbcObjectStore.SCHEMA_CHANGE_LOG, c, updateSchema, cleanData,
-				this.managedTransactions, new JdbcSchemaManager.Callback() {
-					@Override
-					public void cleanData(JdbcOperation op) throws CmfStorageException {
-						clearProperties(op);
-						clearAllObjects(op);
-						clearAttributeMappings(op);
+			JdbcOperation op = new JdbcOperation(c, this.managedTransactions);
+			boolean ok = false;
+			op.begin();
+			try {
+				JdbcSchemaManager.prepareSchema(JdbcObjectStore.SCHEMA_CHANGE_LOG, op, updateSchema, cleanData,
+					this.managedTransactions, new JdbcSchemaManager.Callback() {
+						@Override
+						public void cleanData(JdbcOperation op) throws CmfStorageException {
+							clearProperties(op);
+							clearAllObjects(op);
+							clearAttributeMappings(op);
+						}
+					});
+				op.commit();
+				ok = true;
+			} finally {
+				if (!ok) {
+					try {
+						op.rollback();
+					} catch (CmfOperationException e) {
+						this.log.warn(
+							String.format("Rollback failed during schema preparation (dialect = %s)", this.dialect), e);
 					}
-				});
+				}
+			}
 		} finally {
 			DbUtils.closeQuietly(c);
 		}
