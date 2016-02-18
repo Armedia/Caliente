@@ -3,6 +3,7 @@ package com.armedia.cmf.storage.jdbc;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.storage.CmfStorageException;
@@ -45,9 +46,9 @@ public abstract class JdbcDialect {
 				"          cmf_object (" + //
 				"              object_id, search_key, object_type, " + //
 				"              object_subtype, object_label, batch_id, " + //
-				"              object_number, product_name, product_version" + //
+				"              product_name, product_version" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
 		INSERT_ATTRIBUTE( //
@@ -322,10 +323,6 @@ public abstract class JdbcDialect {
 		TRUNCATE_TABLE_FMT( //
 			"     truncate table %s " //
 		),
-
-		READ_NEXT_OBJECT_NUMBER( //
-			"       select nextval('cmf_object_number') " //
-		),
 		//
 
 		;
@@ -352,6 +349,8 @@ public abstract class JdbcDialect {
 	}
 
 	protected abstract boolean isSupportsArrays();
+
+	protected abstract ResultSetHandler<Long> getObjectNumberHandler();
 
 	final String translateQuery(Query query, boolean required) {
 		if (query == null) { throw new IllegalArgumentException("Must provide a SQL query to resolve"); }

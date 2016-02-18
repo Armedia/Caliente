@@ -45,7 +45,6 @@ import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.cmf.storage.CmfValueEncoderException;
 import com.armedia.cmf.storage.CmfValueSerializer;
-import com.armedia.cmf.storage.jdbc.JdbcDialect.Query;
 import com.armedia.cmf.storage.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
@@ -60,14 +59,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private static final String SCHEMA_CHANGE_LOG = "db.changelog.xml";
 
 	private static final String NULL = "{NULL-VALUE}";
-
-	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = new ResultSetHandler<Long>() {
-		@Override
-		public Long handle(ResultSet rs) throws SQLException {
-			if (rs.next()) { return rs.getLong(1); }
-			return null;
-		}
-	};
 
 	private final boolean managedTransactions;
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
@@ -260,12 +251,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 
 			// Do all the inserts in a row
-			final Long ret = getNextObjectNumber(c);
-			if (ret == null) { throw new CmfStorageException(
-				String.format("Dialect %s failed to obtain a new object number", this.dialect)); }
-			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT), JdbcTools.HANDLER_NULL, objectId,
-				object.getSearchKey(), objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()),
-				object.getLabel(), object.getBatchId(), ret, object.getProductName(), object.getProductVersion());
+			final Long ret = qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT),
+				this.dialect.getObjectNumberHandler(), objectId, object.getSearchKey(), objectType.name(),
+				Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(), object.getBatchId(),
+				object.getProductName(), object.getProductVersion());
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
 				attributeParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE_VALUE), JdbcTools.HANDLER_NULL,
@@ -297,11 +286,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			attValue = null;
 			propData = null;
 		}
-	}
-
-	protected final Long getNextObjectNumber(Connection c) throws SQLException {
-		String sql = translateQuery(Query.READ_NEXT_OBJECT_NUMBER);
-		return JdbcTools.getQueryRunner().query(c, sql, JdbcObjectStore.OBJECT_NUMBER_HANDLER);
 	}
 
 	@Override

@@ -1,9 +1,21 @@
 package com.armedia.cmf.storage.jdbc;
 
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.apache.commons.dbutils.ResultSetHandler;
+
 public class JdbcDialectPostgreSQL extends JdbcDialect {
+
+	private static final String OBJECT_COLUMN_NAME = "object_number";
+	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = new ResultSetHandler<Long>() {
+		@Override
+		public Long handle(ResultSet rs) throws SQLException {
+			if (rs.next()) { return rs.getLong(JdbcDialectPostgreSQL.OBJECT_COLUMN_NAME); }
+			return null;
+		}
+	};
 
 	private static final String LOAD_OBJECTS_BY_ID = //
 	"       select * " + //
@@ -47,5 +59,10 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				break;
 		}
 		return super.doTranslate(sql);
+	}
+
+	@Override
+	protected ResultSetHandler<Long> getObjectNumberHandler() {
+		return JdbcDialectPostgreSQL.OBJECT_NUMBER_HANDLER;
 	}
 }
