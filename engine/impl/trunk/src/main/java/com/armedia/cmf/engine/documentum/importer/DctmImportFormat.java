@@ -8,6 +8,7 @@ import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.storage.CmfObject;
 import com.documentum.fc.client.IDfFormat;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
@@ -33,6 +34,12 @@ public class DctmImportFormat extends DctmImportDelegate<IDfFormat> {
 		if (newObject) {
 			copyAttributeToObject(DctmAttributes.NAME, object);
 		}
+	}
+
+	@Override
+	protected String generateSystemAttributesSQL(CmfObject<IDfValue> stored, IDfPersistentObject object,
+		DctmImportContext ctx) throws DfException {
+		return null;
 	}
 
 	@Override
