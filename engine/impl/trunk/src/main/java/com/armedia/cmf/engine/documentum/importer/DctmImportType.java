@@ -12,6 +12,7 @@ import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
@@ -174,5 +175,11 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 	@Override
 	protected IDfType locateInCms(DctmImportContext ctx) throws DfException {
 		return ctx.getSession().getType(this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString());
+	}
+
+	@Override
+	protected String generateSystemAttributesSQL(CmfObject<IDfValue> stored, IDfPersistentObject object,
+		DctmImportContext ctx) throws DfException {
+		return null;
 	}
 }
