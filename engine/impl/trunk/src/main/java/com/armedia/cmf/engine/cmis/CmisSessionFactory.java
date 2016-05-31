@@ -1,9 +1,13 @@
 package com.armedia.cmf.engine.cmis;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.chemistry.opencmis.client.api.OperationContext;
+import org.apache.chemistry.opencmis.client.api.Repository;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.client.runtime.SessionFactoryImpl;
 import org.apache.chemistry.opencmis.commons.SessionParameter;
@@ -32,6 +36,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 		super(settings, crypto);
 		Map<String, String> parameters = new HashMap<String, String>();
 
+		String repoId = null;
 		for (CmisSessionSetting s : CmisSessionSetting.values()) {
 			if ((s.getSessionParameter() == null) || !settings.hasValue(s)) {
 				continue;
@@ -40,6 +45,9 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 			switch (s) {
 				case PASSWORD:
 					v = this.crypto.decrypt(v);
+					break;
+				case REPOSITORY_ID:
+					repoId = v;
 					break;
 				default:
 					break;
@@ -58,6 +66,35 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 		} else {
 			ps = Tools.ensureBetween(CmisSessionFactory.MIN_PAGE_SIZE, ps, CmisSessionFactory.MAX_PAGE_SIZE);
 		}
+		Repository repo = null;
+		List<Repository> repositories = this.factory.getRepositories(parameters);
+		if (repositories == null) {
+			repositories = Collections.emptyList(); // safety net
+		}
+		Map<String, String> ids = new TreeMap<String, String>();
+		for (Repository r : repositories) {
+			if ((repoId == null) || Tools.equals(repoId, r.getId())) {
+				repo = r;
+				break;
+			}
+			// If we don't have a match, keep track of what we've checked against
+			ids.put(r.getId(), r.getName());
+		}
+		if (repo == null) { throw new RuntimeException(String.format(
+			"No repository with ID [%s] was found - only found these repositories (id -> name): %s", repoId, ids)); }
+		parameters.put(CmisSessionSetting.REPOSITORY_ID.getSessionParameter(), repo.getId());
+
+		// Allow for Alfresco extensions to be used if available
+		if (StringUtils.equalsIgnoreCase(repo.getVendorName(), "Alfresco")) {
+			final String alfresco = "org.alfresco.cmis.client.impl.AlfrescoObjectFactoryImpl";
+			try {
+				Class.forName(alfresco);
+				parameters.put(SessionParameter.OBJECT_FACTORY_CLASS, alfresco);
+			} catch (ClassNotFoundException e) {
+				// Do nothing...no alfresco extensions available and we don't care
+			}
+		}
+
 		this.defaultPageSize = ps;
 		this.parameters = Tools.freezeMap(parameters);
 	}

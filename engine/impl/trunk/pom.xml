@@ -39,6 +39,11 @@
 			<url>https://project.armedia.com/nexus/content/groups/armedia/</url>
 			<layout>default</layout>
 		</repository>
+		<repository>
+			<id>maven.alfresco.com</id>
+			<name>Alfresco Maven Repository</name>
+			<url>http://maven.alfresco.com/nexus/content/groups/public/</url>
+		</repository>
 	</repositories>
 
 	<pluginRepositories>
@@ -61,6 +66,12 @@
 			<groupId>org.apache.chemistry.opencmis</groupId>
 			<artifactId>chemistry-opencmis-client-impl</artifactId>
 			<version>0.13.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.alfresco.cmis.client</groupId>
+			<artifactId>alfresco-opencmis-extension</artifactId>
+			<version>1.0</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
