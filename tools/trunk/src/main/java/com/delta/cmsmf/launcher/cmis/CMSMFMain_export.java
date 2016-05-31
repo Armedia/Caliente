@@ -7,11 +7,11 @@ import java.net.URL;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.cmis.CmisSessionSetting;
 import com.armedia.cmf.engine.cmis.CmisSetting;
 import com.armedia.cmf.engine.cmis.exporter.CmisExportEngine;
-import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;
@@ -27,7 +27,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export {
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later
 		try {
-			baseUri = new URI(String.format("%s/", this.server));
+			// baseUri = new URI(String.format("%s/", this.server));
+			baseUri = new URI(this.server);
 		} catch (URISyntaxException e) {
 			throw new CMSMFException(String.format("Bad URL for the the CMIS repository: [%s]", this.server), e);
 		}
@@ -49,8 +50,9 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export {
 		}
 
 		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(), baseUrl);
-		// TODO: Make this a CLI setting
-		String repoName = CLIParam.repository.getString("-default-");
-		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), Tools.coalesce(repoName, "-default-"));
+		String repoName = CLIParam.repository.getString();
+		if (!StringUtils.isBlank(repoName)) {
+			settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), repoName);
+		}
 	}
 }
