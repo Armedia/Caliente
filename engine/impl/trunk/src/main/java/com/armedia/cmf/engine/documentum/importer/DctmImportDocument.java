@@ -6,8 +6,12 @@ package com.armedia.cmf.engine.documentum.importer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.activation.MimeType;
+
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.TransferSetting;
@@ -426,6 +430,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		if (path == null) {
 			// If the content store doesn't support this, then we dump to a temp file and go from
 			// there
+			// TODO: Look into IDfSysObjectInternal for use of streams vs. using filesystem staging
 			try {
 				path = File.createTempFile("content", null);
 				contentHandle.writeFile(path);
@@ -557,38 +562,88 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 	}
 
-	protected String determineFormat(IDfSession session, String contentType) throws DfException {
-		String aContentType = contentType;
-		if (aContentType == null) {
-			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
-			if (att == null) { return DctmImportDocument.DEFAULT_BINARY_FORMAT; }
-			aContentType = att.getValue().asString();
-		}
-		if (Tools.equals(aContentType,
-			DctmImportDocument.DEFAULT_BINARY_MIME)) { return DctmImportDocument.DEFAULT_BINARY_FORMAT; }
-		IDfFormat format = null;
-		try {
-			format = session.getFormat(aContentType);
-			if (format != null) { return format.getName(); }
-		} catch (DfException e) {
-			// do nothing... :S
+	protected String identifyFormat(IDfSession session, String aContentType, String extension) throws DfException {
+		// We have a mime type or format name ... try a format name first
+		// Shortcut - avoid checking if it's the default binary type (application/octet-stream)
+		if (Tools.equals(aContentType, DctmImportDocument.DEFAULT_BINARY_MIME)) { return null; }
+
+		// Not a format...must be a mime type
+
+		if (extension != null) {
+			// We have an extension, so try to identify it based on mime type +
+			// extension...though this may hardly be unique...
+
+			String dql = "select distinct name from dm_format where mime_type = %s and dos_extension = %s";
+			IDfCollection result = null;
+			try {
+				result = DfUtils.executeQuery(session,
+					String.format(dql, DfUtils.quoteString(aContentType), DfUtils.quoteString(extension)),
+					IDfQuery.DF_EXECREAD_QUERY);
+				if (result.next()) { return result.getString("name"); }
+			} finally {
+				DfUtils.closeQuietly(result);
+			}
 		}
 
-		String dql = "select distinct name from dm_format where mime_type = '%s'";
+		String dql = "select distinct name from dm_format where mime_type = %s";
 		IDfCollection result = null;
 		try {
-			result = DfUtils.executeQuery(session, String.format(dql, aContentType), IDfQuery.DF_EXECREAD_QUERY);
-			aContentType = DctmImportDocument.DEFAULT_BINARY_FORMAT;
-			if (result.next()) {
-				aContentType = result.getString("name");
-			}
-		} catch (DfException e) {
-			// Default to a binary file... :S
-			aContentType = DctmImportDocument.DEFAULT_BINARY_FORMAT;
+			result = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(aContentType)),
+				IDfQuery.DF_EXECREAD_QUERY);
+			if (result.next()) { return result.getString("name"); }
 		} finally {
 			DfUtils.closeQuietly(result);
 		}
-		return aContentType;
+
+		return null;
+	}
+
+	protected String determineFormat(IDfSession session, MimeType fallbackType) throws DfException {
+		String extension = FilenameUtils
+			.getExtension(this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()).toLowerCase();
+		if (StringUtils.isBlank(extension)) {
+			extension = null;
+		}
+
+		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
+		String aContentType = ((att != null) && att.hasValues() ? att.getValue().asString() : null);
+
+		// Is this a format?
+		if (aContentType != null) {
+			IDfFormat format = session.getFormat(aContentType);
+			if (format != null) { return format.getName(); }
+		}
+
+		// Not a format, so it must be a mime type... so we use its declared type, and the
+		// type identified from the stream
+		List<String> mimeTypes = new ArrayList<String>();
+		if (aContentType != null) {
+			mimeTypes.add(aContentType);
+		}
+		if (fallbackType != null) {
+			mimeTypes.add(fallbackType.getBaseType());
+		}
+		for (String t : mimeTypes) {
+			String ret = identifyFormat(session, t, extension);
+			if (ret != null) { return ret; }
+		}
+
+		// If we got this far, it means we didn't get hits with the mime types with or without
+		// extension, so now we fall back to the extension if that's all we have
+		if (extension != null) {
+			String dql = "select distinct name from dm_format where dos_extension = %s";
+			IDfCollection result = null;
+			try {
+				result = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(extension)),
+					IDfQuery.DF_EXECREAD_QUERY);
+				if (result.next()) { return result.getString("name"); }
+			} finally {
+				DfUtils.closeQuietly(result);
+			}
+		}
+
+		// No hits...nothing to be done...
+		return DctmImportDocument.DEFAULT_BINARY_FORMAT;
 	}
 
 	protected boolean loadContent(final IDfDocument document, boolean newObject, final DctmImportContext context)
@@ -602,19 +657,21 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 		CmfContentStore<?, ?, ?> contentStore = context.getContentStore();
 		int i = 0;
-		final CmfAttribute<IDfValue> contentTypeAtt = this.cmfObject.getAttribute(DctmAttributes.A_CONTENT_TYPE);
-		final String contentType = determineFormat(context.getSession(),
-			(contentTypeAtt != null ? contentTypeAtt.getValue().toString() : null));
 		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
+		String contentType = null;
 		for (CmfContentInfo info : infoList) {
 			CmfContentStore<?, ?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info.getQualifier());
-
 			CfgTools cfg = info.getCfgTools();
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);
 			int page = cfg.getInteger(DctmAttributes.PAGE, 0);
 			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER,
 				DctmDataType.DF_STRING.getNull().asString());
 			int rendition = cfg.getInteger(DctmAttributes.RENDITION, 0);
+			if (contentType == null) {
+				// We only perform this determination for the first stream on the list, as
+				// this will determine the object's type
+				contentType = determineFormat(context.getSession(), info.getMimeType());
+			}
 
 			saveContentStream(context, document, info, h, contentType, fullFormat, page, rendition, pageModifier, ++i,
 				infoList.size());
