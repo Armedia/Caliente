@@ -42,7 +42,6 @@ import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.tools.MimeTools;
-import com.armedia.commons.utilities.Tools;
 
 public class LocalExportDelegate extends
 	ExportDelegate<LocalFile, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
@@ -146,17 +145,30 @@ public class LocalExportDelegate extends
 			throw new ExportException(String.format("Failed to collect the attribute information for [%s]", file), e);
 		}
 
-		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
-		CmfProperty<CmfValue> paths = new CmfProperty<CmfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true);
-		final String pathsValue = this.object.getPortablePath();
-		paths.setValue(new CmfValue(pathsValue));
-		parents.setValue(new CmfValue(String.format("%08x", pathsValue.hashCode())));
-		object.setProperty(paths);
-		object.setProperty(parents);
+		// The parent is always the parent folder
+		CmfProperty<CmfValue> prop = null;
 
-		att = new CmfAttribute<CmfValue>(IntermediateAttribute.PATH, CmfDataType.STRING, true);
-		att.setValue(new CmfValue(pathsValue));
+		String parentId = this.object.getParentId();
+		prop = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
+		att = new CmfAttribute<CmfValue>(IntermediateAttribute.PARENT_ID, CmfDataType.ID, true);
+		if (parentId != null) {
+			att.setValue(new CmfValue(parentId));
+			prop.setValue(att.getValue());
+		}
 		object.setAttribute(att);
+		object.setProperty(prop);
+
+		prop = new CmfProperty<CmfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true);
+		prop.setValue(new CmfValue(this.object.getPortableParentPath()));
+		object.setProperty(prop);
+
+		if (this.object.isFolder()) {
+			// If this is a folder, the path is set to its full, relative path
+			att = new CmfAttribute<CmfValue>(IntermediateAttribute.PATH, CmfDataType.STRING, true);
+			att.setValue(new CmfValue(this.object.getPortableFullPath()));
+			object.setAttribute(att);
+		}
+
 		return true;
 	}
 
@@ -222,16 +234,12 @@ public class LocalExportDelegate extends
 
 	@Override
 	protected String calculateLabel(LocalFile object) throws Exception {
-		String path = object.getPortablePath();
-		if (Tools.equals("/", path)) {
-			path = "";
-		}
-		return String.format("%s/%s", path, object.getName());
+		return object.getPortableFullPath();
 	}
 
 	@Override
 	protected String calculateObjectId(LocalFile object) throws Exception {
-		return object.getPathHash();
+		return object.getId();
 	}
 
 	@Override

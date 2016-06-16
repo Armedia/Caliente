@@ -39,9 +39,10 @@ public class LocalFile {
 	private final File relativeFile;
 	private final String safePath;
 	private final String fullPath;
-	private final String path;
+	private final String parentPath;
 	private final String name;
 	private final int pathCount;
+	private final boolean folder;
 
 	public LocalFile(LocalRoot root, String path) throws IOException {
 		this.root = root;
@@ -56,21 +57,32 @@ public class LocalFile {
 		}
 		this.safePath = FileNameTools.reconstitute(r, false, false, '/');
 		this.pathCount = r.size();
-		this.path = f.getParent();
+		File parentFile = f.getParentFile();
+		this.parentPath = (parentFile != null ? parentFile.getPath() : null);
 		this.name = f.getName();
-
+		this.folder = this.absoluteFile.isDirectory();
 	}
 
-	public String getPathHash() {
-		return String.format("%08x", this.fullPath.hashCode());
+	public String getId() {
+		return String.format("%08x", getPortableFullPath().hashCode());
+	}
+
+	public String getParentId() {
+		String pp = getPortableParentPath();
+		if (Tools.equals("/", pp)) { return null; }
+		return String.format("%08x", pp.hashCode());
+	}
+
+	public boolean isFolder() {
+		return this.folder;
 	}
 
 	public String getFullPath() {
 		return this.fullPath;
 	}
 
-	public String getPath() {
-		return this.path;
+	public String getParentPath() {
+		return this.parentPath;
 	}
 
 	public String getName() {
@@ -81,10 +93,14 @@ public class LocalFile {
 		return this.pathCount;
 	}
 
-	public String getPortablePath() {
-		String path = getPath();
+	public String getPortableParentPath() {
+		String path = getParentPath();
 		if (path == null) { return "/"; }
 		return FileNameTools.reconstitute(FileNameTools.tokenize(path), true, false, '/');
+	}
+
+	public String getPortableFullPath() {
+		return FileNameTools.reconstitute(FileNameTools.tokenize(getFullPath()), true, false, '/');
 	}
 
 	/**
@@ -131,7 +147,8 @@ public class LocalFile {
 	@Override
 	public String toString() {
 		return String.format(
-			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, safePath=%s, path=%s, name=%s, pathCount=%s]",
-			this.root, this.absoluteFile, this.relativeFile, this.safePath, this.path, this.name, this.pathCount);
+			"LocalFile [root=%s, absoluteFile=%s, relativeFile=%s, safePath=%s, fullPath=%s, parentPath=%s, name=%s, pathCount=%s]",
+			this.root, this.absoluteFile, this.relativeFile, this.safePath, this.fullPath, this.parentPath, this.name,
+			this.pathCount);
 	}
 }

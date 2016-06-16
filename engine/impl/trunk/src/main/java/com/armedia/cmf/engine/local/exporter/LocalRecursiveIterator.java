@@ -73,8 +73,8 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 					}
 
 					if (this.log.isTraceEnabled()) {
-						this.log.trace(String.format("Found %s [%s]", f.isFile() ? "FILE" : "FOLDER",
-							f.getAbsolutePath()));
+						this.log
+							.trace(String.format("Found %s [%s]", f.isFile() ? "FILE" : "FOLDER", f.getAbsolutePath()));
 					}
 
 					if (f.isDirectory()) {
@@ -89,8 +89,8 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 					try {
 						state.next = new LocalFile(this.root, f.getPath());
 					} catch (IOException e) {
-						throw new RuntimeException(String.format("Failed to relativize the path [%s] from [%s]", f,
-							this.root), e);
+						throw new RuntimeException(
+							String.format("Failed to relativize the path [%s] from [%s]", f, this.root), e);
 					}
 					state.fileCount++;
 					return true;
@@ -106,8 +106,8 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 					try {
 						state.next = new LocalFile(this.root, f.getPath());
 					} catch (IOException e) {
-						throw new RuntimeException(String.format("Failed to relativize the path [%s] from [%s]", f,
-							this.root), e);
+						throw new RuntimeException(
+							String.format("Failed to relativize the path [%s] from [%s]", f, this.root), e);
 					}
 					return true;
 				}
@@ -123,7 +123,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 		RecursiveState state = this.stateStack.peek();
 		LocalFile ret = state.next;
 		state.next = null;
-		return new ExportTarget(ret.getAbsolute().isFile() ? CmfType.DOCUMENT : CmfType.FOLDER, ret.getPathHash(),
+		return new ExportTarget(ret.getAbsolute().isFile() ? CmfType.DOCUMENT : CmfType.FOLDER, ret.getId(),
 			ret.getSafePath());
 	}
 
