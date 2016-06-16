@@ -410,7 +410,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, CmfContentInfo info,
 		CmfContentStore<?, ?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount)
-			throws DfException, ImportException {
+		throws DfException, ImportException {
 		// Step one: what's the content's path in the filesystem?
 		final IDfSession session = context.getSession();
 		File path;
@@ -575,9 +575,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 
 		String dql = "select distinct name from dm_format where mime_type = '%s'";
+		IDfCollection result = null;
 		try {
-			IDfCollection result = DfUtils.executeQuery(session, String.format(dql, aContentType),
-				IDfQuery.DF_EXECREAD_QUERY);
+			result = DfUtils.executeQuery(session, String.format(dql, aContentType), IDfQuery.DF_EXECREAD_QUERY);
 			aContentType = DctmImportDocument.DEFAULT_BINARY_FORMAT;
 			if (result.next()) {
 				aContentType = result.getString("name");
@@ -585,6 +585,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		} catch (DfException e) {
 			// Default to a binary file... :S
 			aContentType = DctmImportDocument.DEFAULT_BINARY_FORMAT;
+		} finally {
+			DfUtils.closeQuietly(result);
 		}
 		return aContentType;
 	}
