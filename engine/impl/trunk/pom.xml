@@ -4,7 +4,7 @@
 
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-engine-local</artifactId>
-	<version>1.0.1</version>
+	<version>1.0.0</version>
 	<name>CMF Engine for Local Filesystem Storage</name>
 	<description>CMF Engine for Local Filesystem Storage</description>
 	<packaging>bundle</packaging>
