@@ -145,7 +145,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected boolean skipImport(DctmImportContext ctx) throws DfException {
+	protected boolean skipImport(DctmImportContext ctx) throws DfException, ImportException {
 		CmfAttribute<IDfValue> groupAtt = this.cmfObject.getAttribute(DctmAttributes.R_IS_GROUP);
 		boolean group = ((groupAtt != null) && groupAtt.hasValues() && groupAtt.getValue().asBoolean());
 		if (group) { return true; }

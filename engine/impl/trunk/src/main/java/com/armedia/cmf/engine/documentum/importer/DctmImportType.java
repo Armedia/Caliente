@@ -160,7 +160,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 	}
 
 	@Override
-	protected boolean skipImport(DctmImportContext ctx) throws DfException {
+	protected boolean skipImport(DctmImportContext ctx) throws DfException, ImportException {
 		IDfValue typeNameValue = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
 		final String typeName = typeNameValue.asString();
 		if (ctx.isSpecialType(typeName)) {

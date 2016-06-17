@@ -69,10 +69,9 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				}
 				if (user == null) {
 					missingUsers.add(actualUser);
-					String msg = String
-						.format(
-							"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
-							actualUser, groupName.asString());
+					String msg = String.format(
+						"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
+						actualUser, groupName.asString());
 					if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 					continue;
@@ -91,9 +90,9 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 					if (user != null) {
 						group.setOwnerName(user.getUserName());
 					} else {
-						this.log.warn(String.format(
-							"Failed to set user [%s] as the owner for group [%s] - the user wasn't found", actualUser,
-							groupName.asString()));
+						this.log.warn(
+							String.format("Failed to set user [%s] as the owner for group [%s] - the user wasn't found",
+								actualUser, groupName.asString()));
 					}
 				} catch (ImportException e) {
 					this.log.warn(String.format("Failed to set user [%s] as the owner for group [%s] - %s", actualUser,
@@ -133,12 +132,9 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 					try {
 						group.addGroup(actualGroup);
 					} catch (DfException e) {
-						this.log
-							.warn(
-								String
-									.format(
-										"Failed to add group [%s] as a member of [%s] - the group wasn't found and couldn't be added by name",
-										actualGroup, groupName.asString()), e);
+						this.log.warn(String.format(
+							"Failed to add group [%s] as a member of [%s] - the group wasn't found and couldn't be added by name",
+							actualGroup, groupName.asString()), e);
 					}
 				} else {
 					group.addGroup(other.getGroupName());
@@ -178,10 +174,9 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				continue;
 			}
 			if (user == null) {
-				String msg = String
-					.format(
-						"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
-						groupName, actualUser);
+				String msg = String.format(
+					"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
+					groupName, actualUser);
 				if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
@@ -189,8 +184,8 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			if (Tools.equals(groupName, user.getUserGroupName())) {
 				continue;
 			}
-			this.log.info(String.format("Setting group [%s] as the default group for user [%s]", groupName,
-				user.getUserName()));
+			this.log.info(
+				String.format("Setting group [%s] as the default group for user [%s]", groupName, user.getUserName()));
 			DfUtils.lockObject(this.log, user);
 			user.fetch(null);
 			user.setUserGroupName(groupName);
@@ -199,18 +194,15 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			try {
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
-				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-								actualUser, group.getGroupName()), e);
+				this.log.warn(String.format(
+					"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
+					actualUser, group.getGroupName()), e);
 			}
 		}
 	}
 
 	@Override
-	protected boolean skipImport(DctmImportContext ctx) throws DfException {
+	protected boolean skipImport(DctmImportContext ctx) throws DfException, ImportException {
 		IDfValue groupNameValue = this.cmfObject.getAttribute(DctmAttributes.GROUP_NAME).getValue();
 		final String groupName = groupNameValue.asString();
 		if (ctx.isSpecialGroup(groupName)) { return true; }

@@ -7,6 +7,7 @@ package com.armedia.cmf.engine.documentum.importer;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.activation.MimeType;
@@ -66,6 +67,29 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 	protected DctmImportDocument(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfDocument.class, DctmObjectType.DOCUMENT, storedObject);
+	}
+
+	@Override
+	protected boolean skipImport(DctmImportContext ctx) throws ImportException, DfException {
+		// We can't import this document if the destination directory is "/"
+		CmfProperty<IDfValue> path = this.cmfObject.getProperty(IntermediateProperty.PATH);
+		if (path == null) { return true; }
+		for (Iterator<IDfValue> it = path.iterator(); it.hasNext();) {
+			IDfValue v = it.next();
+			final String tgt = ctx.getTargetPath(v.asString());
+			if (Tools.equals("", tgt)) {
+				it.remove();
+			}
+			if (Tools.equals("/", tgt)) {
+				it.remove();
+			}
+		}
+		if (!path.hasValues()) {
+			this.log.warn(String.format("Can't import %s [%s](%s) without a parent FOLDER or CABINET - skipping",
+				this.cmfObject.getLabel(), this.cmfObject.getId()));
+			return true;
+		}
+		return super.skipImport(ctx);
 	}
 
 	private String calculateVersionString(IDfDocument document, boolean full) throws DfException {
