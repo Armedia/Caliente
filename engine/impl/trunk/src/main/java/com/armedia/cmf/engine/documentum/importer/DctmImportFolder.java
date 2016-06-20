@@ -240,7 +240,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		}
 		path = ctx.getTargetPath(String.format("%s/%s", path, name));
 
-		if ("/".equals(FileNameTools.dirname(path))) {
+		if ("/".equals(FileNameTools.dirname(path, '/'))) {
 			IDfFolder newObject = castObject(ctx.getSession().newObject("dm_cabinet"));
 			setOwnerGroupACLData(newObject, ctx);
 			return newObject;
