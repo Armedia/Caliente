@@ -86,7 +86,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 		if (!path.hasValues()) {
 			this.log.warn(String.format("Can't import %s [%s](%s) without a parent FOLDER or CABINET - skipping",
-				this.cmfObject.getLabel(), this.cmfObject.getId()));
+				this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getId()));
 			return true;
 		}
 		return super.skipImport(ctx);
