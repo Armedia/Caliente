@@ -45,14 +45,15 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	protected void applyAcl(final CmisImportContext ctx, final T object) throws ImportException {
-
+		// Make sure that if ACL processing is disabled, we don't process it
+		if (!ctx.isSupported(CmfType.ACL)) { return; }
 		CmfProperty<CmfValue> aclIdAtt = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
 		if ((aclIdAtt == null) || !aclIdAtt.hasValues()) { return; }
 		CmfValue aclId = aclIdAtt.getValue();
 		if ((aclId == null) || aclId.isNull()) { return; }
 
-		final String permissionPropertyName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT, ctx
-			.getRepositoryInfo().getProductName().toLowerCase());
+		final String permissionPropertyName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT,
+			ctx.getRepositoryInfo().getProductName().toLowerCase());
 
 		CmfObjectHandler<CmfValue> handler = new DefaultCmfObjectHandler<CmfValue>() {
 
@@ -65,18 +66,17 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				CmfProperty<CmfValue> accessorActions = dataObject
 					.getProperty(IntermediateProperty.ACL_ACCESSOR_ACTIONS);
 
-				if ((accessorNames == null) || ((accessorActions == null) && (directPermissions == null))) { return false; }
+				if ((accessorNames == null)
+					|| ((accessorActions == null) && (directPermissions == null))) { return false; }
 
 				if (directPermissions != null) {
 					if (accessorNames.getValueCount() != directPermissions.getValueCount()) {
-						CmisFileableDelegate.this.log
-							.warn(String
-								.format(
-									"ACL accessors and directPermissions have different object counts (%s != %s) for %s [%s](%s)",
-									accessorNames.getValueCount(), accessorActions.getValueCount(),
-									CmisFileableDelegate.this.cmfObject.getType(),
-									CmisFileableDelegate.this.cmfObject.getLabel(),
-									CmisFileableDelegate.this.cmfObject.getId()));
+						CmisFileableDelegate.this.log.warn(String.format(
+							"ACL accessors and directPermissions have different object counts (%s != %s) for %s [%s](%s)",
+							accessorNames.getValueCount(), accessorActions.getValueCount(),
+							CmisFileableDelegate.this.cmfObject.getType(),
+							CmisFileableDelegate.this.cmfObject.getLabel(),
+							CmisFileableDelegate.this.cmfObject.getId()));
 					} else {
 						// Ok...we have explicit permissions for each accessor, so skip the actions
 						// mappings and simply apply them directly
@@ -120,8 +120,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 					if ((actions == null) || actions.isNull()) {
 						continue;
 					}
-					Set<String> permissions = ctx.convertAllowableActionsToPermissions(AclTools.decode(actions
-						.asString()));
+					Set<String> permissions = ctx
+						.convertAllowableActionsToPermissions(AclTools.decode(actions.asString()));
 					MutableAce ace = new AccessControlEntryImpl();
 					ace.setDirect(true);
 					ace.setPermissions(new ArrayList<String>(permissions));
@@ -138,11 +138,11 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
 			if (count == 0) { return; }
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)",
-				aclIdAtt, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclIdAtt,
+				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		} catch (CmfValueDecoderException e) {
-			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)",
-				aclIdAtt, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclIdAtt,
+				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 	}
 
@@ -246,8 +246,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (isVersionable(existing)) {
 			versionLabel = String.format("#%s", existing.getProperty(PropertyIds.VERSION_LABEL).getValueAsString());
 		}
-		if ((paths == null) || paths.isEmpty()) { return String.format("<unfiled>::%s%s", existing.getName(),
-			versionLabel); }
+		if ((paths == null)
+			|| paths.isEmpty()) { return String.format("<unfiled>::%s%s", existing.getName(), versionLabel); }
 		String path = paths.get(0);
 		return String.format("%s%s", path, versionLabel);
 	}
@@ -325,19 +325,19 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			applyAcl(ctx, existing);
 			linkToParents(ctx, existing, parents);
 			setMapping(ctx, existing);
-			return Collections.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(),
-				calculateNewLabel(existing)));
+			return Collections
+				.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing)));
 		}
 
-		if (isSameObject(existing)) { return Collections.singleton(new ImportOutcome(ImportResult.DUPLICATE, existing
-			.getId(), calculateNewLabel(existing))); }
+		if (isSameObject(existing)) { return Collections
+			.singleton(new ImportOutcome(ImportResult.DUPLICATE, existing.getId(), calculateNewLabel(existing))); }
 		if (isVersionable(existing)) {
 			existing = createNewVersion(ctx, existing, props);
 			applyAcl(ctx, existing);
 			linkToParents(ctx, existing, parents);
 			setMapping(ctx, existing);
-			return Collections.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(),
-				calculateNewLabel(existing)));
+			return Collections
+				.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing)));
 		}
 
 		// Not the same...we must update the properties and/or content
@@ -345,7 +345,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		applyAcl(ctx, existing);
 		linkToParents(ctx, existing, parents);
 		setMapping(ctx, existing);
-		return Collections.singleton(new ImportOutcome(ImportResult.UPDATED, existing.getId(),
-			calculateNewLabel(existing)));
+		return Collections
+			.singleton(new ImportOutcome(ImportResult.UPDATED, existing.getId(), calculateNewLabel(existing)));
 	}
 }

@@ -16,8 +16,8 @@ import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class CmisExportContextFactory extends
-	ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+public class CmisExportContextFactory
+	extends ExportContextFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
 	private final RepositoryInfo repositoryInfo;
 	private final PermissionMapper permissionMapper;
@@ -25,7 +25,11 @@ public class CmisExportContextFactory extends
 	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings) throws Exception {
 		super(engine, settings, session);
 		this.repositoryInfo = session.getRepositoryInfo();
-		this.permissionMapper = new PermissionMapper(session);
+		if (super.isSupported(CmfType.ACL)) {
+			this.permissionMapper = new PermissionMapper(session);
+		} else {
+			this.permissionMapper = null;
+		}
 	}
 
 	public final RepositoryInfo getRepositoryInfo() {
@@ -33,6 +37,7 @@ public class CmisExportContextFactory extends
 	}
 
 	public Set<String> convertPermissionToAllowableActions(String permission) {
+		if (this.permissionMapper == null) { return null; }
 		return this.permissionMapper.convertPermissionToAllowableActions(permission);
 	}
 
