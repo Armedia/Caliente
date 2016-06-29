@@ -5,7 +5,7 @@
 	<name>CMS Migration Framework</name>
 	<groupId>com.delta</groupId>
 	<artifactId>cmsmf</artifactId>
-	<version>3.3.0-beta33</version>
+	<version>3.3.0-beta34</version>
 	<packaging>jar</packaging>
 
 	<scm>
