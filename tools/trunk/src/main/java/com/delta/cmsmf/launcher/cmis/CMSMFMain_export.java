@@ -18,6 +18,8 @@ import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;
 
 public class CMSMFMain_export extends AbstractCMSMFMain_export {
 
+	private static final String ID_PREFIX = "id:";
+
 	public CMSMFMain_export() throws Throwable {
 		super(CmisExportEngine.getExportEngine());
 	}
@@ -41,11 +43,19 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export {
 		}
 
 		String srcPath = CLIParam.source.getString();
-		if (srcPath == null) { throw new CMSMFException("Must provide the CMIS source path or query"); }
+		if (StringUtils.isEmpty(srcPath)) { throw new CMSMFException("Must provide the CMIS source path or ID"); }
 
+		// If it has a leading slash, it's a path
 		if (srcPath.startsWith("/")) {
 			settings.put(CmisSetting.EXPORT_PATH.getLabel(), FilenameUtils.normalize(srcPath, true));
+		} else
+		// If it has a leading "id:", it's an object ID
+		if (srcPath.startsWith(CMSMFMain_export.ID_PREFIX)) {
+			srcPath = srcPath.substring(CMSMFMain_export.ID_PREFIX.length());
+			if (StringUtils.isEmpty(srcPath)) { throw new CMSMFException("Must provide a non-empty CMIS object ID"); }
+			settings.put(CmisSetting.EXPORT_ID.getLabel(), srcPath);
 		} else {
+			// If it's neither a path or an ID, it's a query
 			settings.put(CmisSetting.EXPORT_QUERY.getLabel(), srcPath);
 		}
 
