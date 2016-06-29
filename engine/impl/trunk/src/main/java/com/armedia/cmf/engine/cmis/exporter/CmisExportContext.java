@@ -15,8 +15,10 @@ public class CmisExportContext extends ExportContext<Session, CmfValue, CmisExpo
 
 	private final RepositoryInfo repositoryInfo;
 
-	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfType rootType, Session session, Logger output) {
+	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfType rootType, Session session,
+		Logger output) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output);
+		session.setDefaultContext(newOperationContext(session));
 		this.repositoryInfo = session.getRepositoryInfo();
 	}
 
@@ -28,13 +30,14 @@ public class CmisExportContext extends ExportContext<Session, CmfValue, CmisExpo
 		return getFactory().convertPermissionToAllowableActions(permission);
 	}
 
-	public OperationContext newOperationContext() {
-		OperationContext parent = getSession().getDefaultContext();
-		OperationContext ctx = getSession().createOperationContext();
+	public OperationContext newOperationContext(Session session) {
+		OperationContext parent = session.getDefaultContext();
+		OperationContext ctx = session.createOperationContext();
 		ctx.setCacheEnabled(parent.isCacheEnabled());
 		ctx.setFilter(parent.getFilter());
 		ctx.setFilterString(parent.getFilterString());
-		ctx.setIncludeAcls(parent.isIncludeAcls());
+		// Disable ACL retrieval if ACLs aren't supported
+		ctx.setIncludeAcls(getFactory().isSupported(CmfType.ACL) && parent.isIncludeAcls());
 		ctx.setIncludeAllowableActions(parent.isIncludeAllowableActions());
 		ctx.setIncludePathSegments(parent.isIncludePathSegments());
 		ctx.setIncludePolicies(parent.isIncludePolicies());
