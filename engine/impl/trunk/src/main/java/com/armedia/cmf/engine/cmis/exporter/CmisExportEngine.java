@@ -13,6 +13,7 @@ import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.cmis.CmisCommon;
@@ -81,14 +82,32 @@ public class CmisExportEngine extends
 	protected Iterator<ExportTarget> findExportResults(final Session session, CfgTools cfg,
 		CmisExportDelegateFactory factory) throws Exception {
 		String path = cfg.getString(CmisSetting.EXPORT_PATH);
-		if (path != null) {
+		if (StringUtils.isEmpty(path)) {
+			path = null;
+		}
+		String id = cfg.getString(CmisSetting.EXPORT_ID);
+		if (StringUtils.isEmpty(id)) {
+			id = null;
+		}
+		if ((path != null) || (id != null)) {
 			final CmisObject obj;
-			try {
-				obj = session.getObjectByPath(path);
-			} catch (CmisObjectNotFoundException e) {
-				return null;
+			if (id != null) {
+				try {
+					obj = session.getObject(id);
+				} catch (CmisObjectNotFoundException e) {
+					return null;
+				}
+			} else if (path != null) {
+				try {
+					obj = session.getObjectByPath(path);
+				} catch (CmisObjectNotFoundException e) {
+					return null;
+				}
+			} else {
+				throw new ExportException("Both the path and ID specifications were empty or null strings");
 			}
-			if (obj instanceof Folder) {
+
+			if (Folder.class.isInstance(obj)) {
 				return new Iterator<ExportTarget>() {
 					private final Iterator<CmisObject> it = new CmisRecursiveIterator(session, Folder.class.cast(obj),
 						true);

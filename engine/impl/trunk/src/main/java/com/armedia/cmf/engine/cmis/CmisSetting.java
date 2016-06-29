@@ -4,9 +4,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum CmisSetting implements ConfigurationSetting {
 	//
-	EXPORT_PATH(),
-	EXPORT_QUERY(),
-	EXPORT_PAGE_SIZE(100),
+	EXPORT_PATH(), EXPORT_ID(), EXPORT_QUERY(), EXPORT_PAGE_SIZE(100),
 	//
 	;
 
