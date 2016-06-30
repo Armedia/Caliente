@@ -436,7 +436,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 			try {
 				OutputStream out = new FileOutputStream(f);
 				try {
-					IOUtils.copyLarge(in, out);
+					return IOUtils.copyLarge(in, out);
 				} catch (IOException e) {
 					throw new CmfStorageException(
 						String.format("Failed to copy the content from the file [%s]", f.getAbsolutePath()), e);
