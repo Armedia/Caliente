@@ -34,7 +34,7 @@
 			<setting name="safe.filename.encoding">UTF-8</setting>
 			<setting name="fix.filenames">true</setting>
 			<setting name="fail.on.collisions">false</setting>
-			<setting name="ignore.extra.filename.info">true</setting>
+			<setting name="ignore.extra.filename.info">false</setting>
 			<setting name="use.windows.fix">true</setting>
 		</settings>
 	</contentstore>
