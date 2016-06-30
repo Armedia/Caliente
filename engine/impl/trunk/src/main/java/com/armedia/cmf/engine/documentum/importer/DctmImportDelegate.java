@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
@@ -24,7 +25,6 @@ import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
-import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.importer.ImportDelegate;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -242,7 +242,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 
 			if (updateVersionLabels) {
 				CmfAttribute<IDfValue> versionLabel = this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
-				CmfProperty<IDfValue> current = this.cmfObject.getProperty(DctmSysObject.CURRENT_VERSION);
+				CmfProperty<IDfValue> current = this.cmfObject.getProperty(IntermediateProperty.IS_LATEST_VERSION);
 				if ((current != null) && current.getValue().asBoolean()) {
 					// This is the current version...so double-check that it's not already in the
 					// attribute. If it isn't there, add it

@@ -15,6 +15,7 @@ import javax.activation.MimeType;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.TransferSetting;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
@@ -82,9 +83,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					DctmDataType.DF_ID.getStoredType(), false, patchAntecedent));
 			}
 
-			properties
-				.add(new CmfProperty<IDfValue>(DctmSysObject.CURRENT_VERSION, DctmDataType.DF_BOOLEAN.getStoredType(),
-					false, DfValueFactory.newBooleanValue(document.getHasFolder())));
+			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.IS_LATEST_VERSION,
+				DctmDataType.DF_BOOLEAN.getStoredType(), false,
+				DfValueFactory.newBooleanValue(document.getHasFolder())));
 			return;
 		}
 
