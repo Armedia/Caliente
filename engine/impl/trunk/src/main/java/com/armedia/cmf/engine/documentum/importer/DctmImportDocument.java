@@ -683,18 +683,35 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		int i = 0;
 		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		String contentType = null;
+		Boolean fromDctm = null;
 		for (CmfContentInfo info : infoList) {
 			CmfContentStore<?, ?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info.getQualifier());
 			CfgTools cfg = info.getCfgTools();
+
+			if (fromDctm == null) {
+				// This is the canary in my coal mine - if this is from Documentum, there will be a
+				// set_file property we can retrieve. If not, then there won't. We only check once.
+				fromDctm = cfg.hasValue(DctmAttributes.SET_FILE);
+			}
+
+			if (contentType == null) {
+				// We only perform this determination for the first stream on the list, as
+				// this will determine the object's type
+				contentType = determineFormat(context.getSession(), info.getMimeType());
+			}
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);
 			int page = cfg.getInteger(DctmAttributes.PAGE, 0);
 			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER,
 				DctmDataType.DF_STRING.getNull().asString());
 			int rendition = cfg.getInteger(DctmAttributes.RENDITION, 0);
-			if (contentType == null) {
-				// We only perform this determination for the first stream on the list, as
-				// this will determine the object's type
-				contentType = determineFormat(context.getSession(), info.getMimeType());
+
+			if (!fromDctm) {
+				// If this isn't a documentum stream, then the rendition number must be the current
+				// iteration, so that the main rendition is always the primary stream
+				rendition = i;
+				this.log.info(
+					String.format("Storing rendition #%d (q=[%s], id=%d) for %s [%s](%s)", i + 1, info.getQualifier(),
+						i, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()));
 			}
 
 			saveContentStream(context, document, info, h, contentType, fullFormat, page, rendition, pageModifier, ++i,
