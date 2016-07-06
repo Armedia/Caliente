@@ -25,7 +25,7 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfDataType.BOOLEAN),
 
 	// Non-CMIS properties
-	PARENT_TREE_IDS(CmfDataType.ID),
+	PARENT_TREE_IDS(CmfDataType.STRING),
 	ACL_ID(CmfDataType.ID),
 	ACL_OWNER(CmfDataType.STRING),
 	ACL_OBJECT_ID(CmfDataType.STRING),
