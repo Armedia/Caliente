@@ -357,7 +357,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	protected T newObject(DctmImportContext ctx) throws DfException, ImportException {
-		IDfType type = DctmTranslator.translateType(ctx.getSession(), this.cmfObject);
+		IDfType type = DctmTranslator.translateType(ctx, this.cmfObject);
 		if (type == null) { throw new ImportException(
 			String.format("Unsupported type [%s::%s]", this.cmfObject.getType(), this.cmfObject.getSubtype())); }
 		return castObject(ctx.getSession().newObject(type.getName()));

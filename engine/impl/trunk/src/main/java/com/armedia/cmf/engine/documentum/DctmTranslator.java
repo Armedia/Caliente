@@ -8,11 +8,11 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
-import com.armedia.cmf.engine.converter.IntermediateProperty;
+import com.armedia.cmf.engine.documentum.importer.DctmImportContext;
+import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
@@ -160,13 +160,17 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		}
 	}
 
-	public static IDfType translateType(IDfSession session, CmfObject<IDfValue> object) throws DfException {
-		String subType = object.getSubtype();
+	public static IDfType translateType(DctmImportContext ctx, CmfObject<IDfValue> object)
+		throws ImportException, DfException {
+		final IDfSession session = ctx.getSession();
+		final String subType = object.getSubtype();
 		IDfType type = session.getType(subType);
-		if (type != null) {
-			// TODO: Fix this kludge for something cleaner
-			CmfProperty<IDfValue> targetPaths = object.getProperty(IntermediateProperty.PATH);
-			if (Tools.equals("dm_cabinet", type.getName()) && targetPaths.hasValues()) {
+		if ((type != null) && type.isTypeOf("dm_cabinet")) {
+			// If our context is putting things other than the root, then we need to demote this
+			// into a folder...
+			// TODO: What about custom cabinet types? What do those get demoted as? Do we have to
+			// create a new folder subtype that adds the extra attributes?
+			if (ctx.isPathAltering()) {
 				type = type.getSuperType();
 			}
 			return type;

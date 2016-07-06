@@ -55,8 +55,8 @@ import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
-public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T> implements
-	DctmSysObject {
+public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmImportDelegate<T>
+	implements DctmSysObject {
 
 	// Disable, for now, since it messes up with version number copying
 	// private static final Pattern INTERNAL_VL = Pattern.compile("^\\d+(\\.\\d+)+$");
@@ -83,8 +83,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		private final Set<String> autoRemove;
 
 		public TemporaryPermission(IDfSysObject object, int newPermission, String... newXPermits) throws DfException {
-			this(object, newPermission, (newXPermits == null ? DctmImportSysObject.NO_PERMITS : Arrays
-				.asList(newXPermits)));
+			this(object, newPermission,
+				(newXPermits == null ? DctmImportSysObject.NO_PERMITS : Arrays.asList(newXPermits)));
 		}
 
 		public TemporaryPermission(IDfSysObject object, int newPermission, Collection<String> newXPermits)
@@ -141,9 +141,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
-			if (!Tools.equals(this.objectId, object.getObjectId().getId())) { throw new DfException(
-				String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId, object
-					.getObjectId().getId())); }
+			if (!Tools.equals(this.objectId,
+				object.getObjectId().getId())) { throw new DfException(
+					String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId,
+						object.getObjectId().getId())); }
 			boolean ret = false;
 			if (this.newPermit != null) {
 				IDfPermit toGrant = (grant ? this.newPermit : this.oldPermit);
@@ -193,8 +194,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				xperm.setPermitValue(p);
 
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("%s [%s] on [%s]", (grant ? "GRANTING" : "REVOKING"), p,
-						object.getObjectId()));
+					this.log.debug(
+						String.format("%s [%s] on [%s]", (grant ? "GRANTING" : "REVOKING"), p, object.getObjectId()));
 				}
 				if (grant) {
 					object.grantPermit(xperm);
@@ -255,8 +256,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.parent.save();
 			}
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("%sLINKING [%s] --> [%s]", this.link ? "" : "UN", child.getObjectId()
-					.getId(), this.parent.getObjectId().getId()));
+				this.log.debug(String.format("%sLINKING [%s] --> [%s]", this.link ? "" : "UN",
+					child.getObjectId().getId(), this.parent.getObjectId().getId()));
 			}
 			if (this.link) {
 				child.link(this.parentId);
@@ -401,8 +402,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	@Override
-	protected void prepareOperation(T sysObject, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	protected void prepareOperation(T sysObject, boolean newObject, DctmImportContext context)
+		throws DfException, ImportException {
 
 		if (!isTransitoryObject(sysObject)) {
 			this.existingTemporaryPermission = new TemporaryPermission(sysObject, IDfACL.DF_PERMIT_DELETE);
@@ -437,15 +438,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				}
 
 				// ACL or not, we're done here...
-				msg = String
-					.format(
-						"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (to %s), but the target ACL couldn't be found",
-						aclId.getId(), this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId()
-							.getId(), m.getTargetValue());
+				msg = String.format(
+					"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (to %s), but the target ACL couldn't be found",
+					aclId.getId(), this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
+					m.getTargetValue());
 			} else {
-				msg = String
-					.format("Failed to find the ACL [%s] for %s [%s](%s) - no mapping was found", aclId.getId(),
-						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId());
+				msg = String.format("Failed to find the ACL [%s] for %s [%s](%s) - no mapping was found", aclId.getId(),
+					this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId());
 			}
 
 			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
@@ -463,14 +462,14 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		restoreAcl(object, context);
 	}
 
-	protected void doFinalizeConstruction(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	protected void doFinalizeConstruction(T object, boolean newObject, DctmImportContext context)
+		throws DfException, ImportException {
 
 	}
 
 	@Override
-	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	protected boolean cleanupAfterSave(T object, boolean newObject, DctmImportContext context)
+		throws DfException, ImportException {
 		boolean ret = restoreMutability(object);
 		ret |= (this.existingTemporaryPermission != null) && this.existingTemporaryPermission.revoke(object);
 		return ret;
@@ -486,8 +485,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected IDfId persistNewVersion(T sysObject, String versionLabel, DctmImportContext context) throws DfException {
-		String vl = (versionLabel != null ? versionLabel : DfUtils.concatenateStrings(
-			this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL), ','));
+		String vl = (versionLabel != null ? versionLabel
+			: DfUtils.concatenateStrings(this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL), ','));
 		IDfValue branchMarker = context.getValue(DctmImportSysObject.BRANCH_MARKER);
 		final IDfId newId;
 		final String action;
@@ -643,8 +642,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String.format(
-			"No target paths specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String
+			.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
 		return p.getValues();
 	}
 
@@ -652,7 +651,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final IDfSession session = ctx.getSession();
 		final String documentName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 
-		IDfType type = DctmTranslator.translateType(session, this.cmfObject);
+		IDfType type = DctmTranslator.translateType(ctx, this.cmfObject);
 		if (type == null) { throw new ImportException(String.format(
 			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.cmfObject.getSubtype(),
 			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
@@ -688,8 +687,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// The target document's reference flag is different from ours...problem!
 				throw new ImportException(String.format(
 					"Reference flag mismatch between objects. The [%s] %s collides with a %sreference at [%s] (%s:%s)",
-					this.cmfObject.getLabel(), this.cmfObject.getSubtype(), (seeksReference ? "non-" : ""),
-					currentPath, current.getType().getName(), current.getObjectId().getId()));
+					this.cmfObject.getLabel(), this.cmfObject.getSubtype(), (seeksReference ? "non-" : ""), currentPath,
+					current.getType().getName(), current.getObjectId().getId()));
 			}
 
 			if (existing == null) {
@@ -706,10 +705,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 
 			// Not the same, this is a problem
-			throw new ImportException(String.format(
-				"Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
-				this.cmfObject.getLabel(), existing.getObjectId().getId(), existingPath, current.getObjectId().getId(),
-				currentPath));
+			throw new ImportException(
+				String.format("Found two different documents matching the [%s] document's paths: [%s@%s] and [%s@%s]",
+					this.cmfObject.getLabel(), existing.getObjectId().getId(), existingPath,
+					current.getObjectId().getId(), currentPath));
 		}
 
 		return existing;
@@ -874,11 +873,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				if (u != null) {
 					sysObject.setOwnerName(u.getUserName());
 				} else {
-					String msg = String
-						.format(
-							"Failed to set the owner for %s [%s](%s) to user [%s] - the user wasn't found - probably didn't need to be copied over",
-							this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
-							actualUser);
+					String msg = String.format(
+						"Failed to set the owner for %s [%s](%s) to user [%s] - the user wasn't found - probably didn't need to be copied over",
+						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
+						actualUser);
 					if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 				}
@@ -898,10 +896,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			if (g != null) {
 				sysObject.setGroupName(g.getGroupName());
 			} else {
-				String msg = String
-					.format(
-						"Failed to set the group for %s [%s](%s) to group [%s] - the group wasn't found - probably didn't need to be copied over",
-						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(), group);
+				String msg = String.format(
+					"Failed to set the group for %s [%s](%s) to group [%s] - the group wasn't found - probably didn't need to be copied over",
+					this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(), group);
 				if (ctx.isSupported(CmfType.GROUP)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 			}
