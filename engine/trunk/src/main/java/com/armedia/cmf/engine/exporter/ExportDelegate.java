@@ -17,6 +17,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected final ExportTarget exportTarget;
 	protected final String label;
 	protected final String batchId;
+	protected final String subType;
 
 	protected ExportDelegate(DF factory, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass);
@@ -28,6 +29,8 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 			calculateSearchKey(object));
 		this.label = calculateLabel(object);
 		this.batchId = calculateBatchId(object);
+		this.subType = calculateSubType(this.exportTarget.getType(), object);
+		if (this.subType == null) { throw new IllegalStateException("calculateSubType() may not return null"); }
 	}
 
 	public final ExportTarget getExportTarget() {
@@ -66,14 +69,21 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.batchId;
 	}
 
+	protected String calculateSubType(CmfType type, T object) throws Exception {
+		return type.name();
+	}
+
+	public final String getSubType() {
+		return this.subType;
+	}
+
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyRequirements(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
-		CmfType type = getType();
-
-		CmfObject<V> marshaled = new CmfObject<V>(this.factory.getTranslator(), type, getObjectId(), getSearchKey(),
-			getBatchId(), getLabel(), type.name(), ctx.getProductName(), ctx.getProductVersion(), null);
+		CmfObject<V> marshaled = new CmfObject<V>(this.factory.getTranslator(), this.exportTarget.getType(),
+			this.exportTarget.getId(), this.exportTarget.getSearchKey(), this.batchId, this.label, this.subType,
+			ctx.getProductName(), ctx.getProductVersion(), null);
 		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);
 		return marshaled;
