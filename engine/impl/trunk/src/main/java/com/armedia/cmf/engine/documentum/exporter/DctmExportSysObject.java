@@ -164,10 +164,6 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		marshaled.setProperty(parentTreeIds);
 		Set<String> ptid = new TreeSet<String>();
 
-		if (object.isInstanceOf("dm_cabinet")) {
-			ptid.hashCode();
-		}
-
 		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
 		for (int i = 0; i < parentCount; i++) {
 			final IDfValue folderId = this.object.getRepeatingValue(DctmAttributes.I_FOLDER_ID, i);
