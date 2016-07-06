@@ -6,10 +6,12 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -43,6 +45,10 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDelegate<T> implements DctmSysObject {
 
+	protected interface RecursionCalculator {
+		public String getValue(IDfSysObject o) throws DfException;
+	}
+
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
 	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
 	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
@@ -64,19 +70,19 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return ret;
 	}
 
-	protected final List<List<String>> calculateAllPaths(final IDfSysObject f, final Set<String> visited)
-		throws DfException {
+	protected final List<List<String>> calculateRecursions(final IDfSysObject f, final Set<String> visited,
+		final RecursionCalculator calc) throws DfException {
 		final String oid = f.getObjectId().getId();
-		if ((visited != null) && !visited.add(oid)) { throw new DfException(String.format(
-			"Visited node [%s] twice (history = %s)", oid, visited)); }
+		if ((visited != null) && !visited
+			.add(oid)) { throw new DfException(String.format("Visited node [%s] twice (history = %s)", oid, visited)); }
 		IDfSession session = f.getSession();
 		final int parentCount = f.getFolderIdCount();
 		List<List<String>> all = new ArrayList<List<String>>(parentCount);
 		for (int i = 0; i < parentCount; i++) {
 			final IDfId parentId = f.getFolderId(i);
 			final IDfSysObject parent = IDfSysObject.class.cast(session.getObject(parentId));
-			for (List<String> l : calculateAllPaths(parent, visited)) {
-				l.add(parent.getObjectName());
+			for (List<String> l : calculateRecursions(parent, visited, calc)) {
+				l.add(calc.getValue(parent));
 				all.add(l);
 			}
 		}
@@ -91,7 +97,21 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	protected final List<List<String>> calculateAllPaths(IDfSysObject f) throws DfException {
-		return calculateAllPaths(f, new LinkedHashSet<String>());
+		return calculateRecursions(f, new LinkedHashSet<String>(), new RecursionCalculator() {
+			@Override
+			public String getValue(IDfSysObject o) throws DfException {
+				return o.getObjectName();
+			}
+		});
+	}
+
+	protected final List<List<String>> calculateAllParentIds(IDfSysObject f) throws DfException {
+		return calculateRecursions(f, new LinkedHashSet<String>(), new RecursionCalculator() {
+			@Override
+			public String getValue(IDfSysObject o) throws DfException {
+				return o.getChronicleId().getId();
+			}
+		});
 	}
 
 	@Override
@@ -112,8 +132,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			try {
 				parent = session.getFolderBySpecification(folderId.asId().getId());
 			} catch (DfIdNotFoundException e) {
-				this.log.warn(String.format("%s [%s](%s) references non-existent folder [%s]", object.getType()
-					.getName(), object.getObjectName(), object.getObjectId().getId(), folderId.asString()));
+				this.log
+					.warn(String.format("%s [%s](%s) references non-existent folder [%s]", object.getType().getName(),
+						object.getObjectName(), object.getObjectId().getId(), folderId.asString()));
 				continue;
 			}
 			parents.addValue(folderId);
@@ -132,6 +153,37 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			aclId = aclObj.getObjectId();
 		}
 		acl.setValue(DfValueFactory.newIdValue(aclId));
+	}
+
+	@Override
+	protected void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled, T object)
+		throws ExportException, DfException {
+
+		CmfProperty<IDfValue> parentTreeIds = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_TREE_IDS,
+			DctmDataType.DF_STRING.getStoredType(), true);
+		marshaled.setProperty(parentTreeIds);
+		Set<String> ptid = new TreeSet<String>();
+
+		if (object.isInstanceOf("dm_cabinet")) {
+			ptid.hashCode();
+		}
+
+		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
+		for (int i = 0; i < parentCount; i++) {
+			final IDfValue folderId = this.object.getRepeatingValue(DctmAttributes.I_FOLDER_ID, i);
+			Set<String> parentIdPaths = this.factory.pathIdCache.get(folderId.asString());
+			if ((parentIdPaths != null) && !parentIdPaths.isEmpty()) {
+				for (String s : parentIdPaths) {
+					String S = String.format("%s/%s", s, folderId.asString());
+					ptid.add(S);
+					parentTreeIds.addValue(DfValueFactory.newStringValue(S));
+				}
+			} else {
+				ptid.add(folderId.asString());
+				parentTreeIds.addValue(DfValueFactory.newStringValue(folderId.asString()));
+			}
+		}
+		this.factory.pathIdCache.put(object.getObjectId().getId(), Collections.unmodifiableSet(ptid));
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
@@ -196,8 +248,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		try {
 			tree = new DctmVersionTree(session, chronicleId);
 		} catch (DctmException e) {
-			throw new ExportException(String.format("Failed to obtain the version tree for chronicle [%s]",
-				chronicleId.getId()), e);
+			throw new ExportException(
+				String.format("Failed to obtain the version tree for chronicle [%s]", chronicleId.getId()), e);
 		}
 		List<IDfValue> patches = new ArrayList<IDfValue>();
 		for (DctmVersionNumber versionNumber : tree.allVersions) {
@@ -253,13 +305,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			IDfId id = sysObject.getFolderId(i);
 			IDfFolder f = IDfFolder.class.cast(session.getFolderBySpecification(id.getId()));
 			if (f != null) {
-				String path = (f.getFolderPathCount() > 0 ? f.getFolderPath(0) : String.format("(unknown-folder:[%s])",
-					id.getId()));
+				String path = (f.getFolderPathCount() > 0 ? f.getFolderPath(0)
+					: String.format("(unknown-folder:[%s])", id.getId()));
 				return String.format("%s/%s [%s]", path, objectName, calculateVersionString(sysObject, true));
 			}
 		}
-		throw new DfException(String.format("None of the parent paths for object [%s] were found", sysObject
-			.getObjectId().getId()));
+		throw new DfException(
+			String.format("None of the parent paths for object [%s] were found", sysObject.getObjectId().getId()));
 	}
 
 	@Override

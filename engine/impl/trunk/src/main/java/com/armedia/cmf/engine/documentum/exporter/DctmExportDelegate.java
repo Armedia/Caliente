@@ -40,6 +40,23 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
+	protected final void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled)
+		throws ExportException {
+		super.prepareForStorage(ctx, marshaled);
+		try {
+			prepareForStorage(ctx, marshaled, this.object);
+		} catch (DfException e) {
+			throw new ExportException(String.format("Failed to prepare the %s [%s](%s) for storage",
+				marshaled.getType(), marshaled.getLabel(), marshaled.getId()), e);
+		}
+	}
+
+	protected void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled, T object)
+		throws ExportException, DfException {
+		// By default, do nothing
+	}
+
+	@Override
 	protected final CmfType calculateType(T object) throws Exception {
 		return DctmObjectType.decodeType(object).getStoredObjectType();
 	}
@@ -136,7 +153,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 	protected List<CmfContentInfo> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?, ?, ?> streamStore)
-			throws Exception {
+		throws Exception {
 		return null;
 	}
 

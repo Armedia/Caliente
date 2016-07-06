@@ -1,5 +1,10 @@
 package com.armedia.cmf.engine.documentum.exporter;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DctmSessionWrapper;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
@@ -12,11 +17,21 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfValue;
 
-public class DctmExportDelegateFactory extends
-	ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
+public class DctmExportDelegateFactory
+	extends ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
+
+	final Map<String, Set<String>> pathCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
+	final Map<String, Set<String>> pathIdCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
 
 	DctmExportDelegateFactory(DctmExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
+	}
+
+	@Override
+	public void close() {
+		this.pathCache.clear();
+		this.pathIdCache.clear();
+		super.close();
 	}
 
 	@Override
@@ -48,8 +63,8 @@ public class DctmExportDelegateFactory extends
 				dctmType = null;
 			}
 		}
-		if (dctmType == null) { throw new ExportException(String.format(
-			"Unsupported object type [%s] (objectId = [%s])", typeStr, object.getObjectId().getId())); }
+		if (dctmType == null) { throw new ExportException(
+			String.format("Unsupported object type [%s] (objectId = [%s])", typeStr, object.getObjectId().getId())); }
 
 		Class<? extends IDfPersistentObject> requiredClass = dctmType.getDfClass();
 		if (requiredClass.isInstance(object)) {
