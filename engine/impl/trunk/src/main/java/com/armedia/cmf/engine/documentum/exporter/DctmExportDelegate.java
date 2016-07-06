@@ -82,6 +82,11 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
+	protected final String calculateSubType(CmfType type, T object) throws Exception {
+		return object.getType().getName();
+	}
+
+	@Override
 	protected final Collection<DctmExportDelegate<?>> identifyRequirements(CmfObject<IDfValue> marshaled,
 		DctmExportContext ctx) throws Exception {
 		return findRequirements(ctx.getSession(), marshaled, castObject(this.object), ctx);
