@@ -44,6 +44,11 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		return null;
 	}
 
+	@Override
+	protected String calculateSubType(CmfType type, T obj) throws Exception {
+		return obj.getType().getId();
+	}
+
 	protected void marshalParentsAndPaths(CmisExportContext ctx, CmfObject<CmfValue> marshaled, T object)
 		throws ExportException {
 		CmfProperty<CmfValue> parents = new CmfProperty<CmfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
@@ -89,8 +94,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	protected final CmfType calculateType(T object) throws Exception {
 		if (Document.class.isInstance(object)) { return CmfType.DOCUMENT; }
 		if (Folder.class.isInstance(object)) { return CmfType.FOLDER; }
-		throw new Exception(String.format(
-			"Can't identify the type for object with ID [%s] of class [%s] and type [%s]", object.getId(), object
-				.getClass().getCanonicalName(), object.getType().getId()));
+		throw new Exception(String.format("Can't identify the type for object with ID [%s] of class [%s] and type [%s]",
+			object.getId(), object.getClass().getCanonicalName(), object.getType().getId()));
 	}
 }
