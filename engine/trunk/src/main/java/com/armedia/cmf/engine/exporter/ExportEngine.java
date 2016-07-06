@@ -152,7 +152,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
 		C ctx, ExportListenerDelegator listenerDelegator)
-			throws ExportException, CmfStorageException, CmfValueEncoderException, UnsupportedCmfTypeException {
+		throws ExportException, CmfStorageException, CmfValueEncoderException, UnsupportedCmfTypeException {
 		try {
 			listenerDelegator.objectExportStarted(target.getType(), target.getId());
 			Result result = null;
@@ -181,7 +181,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private Result doExportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
 		C ctx, ExportListenerDelegator listenerDelegator)
-			throws ExportException, CmfStorageException, CmfValueEncoderException, UnsupportedCmfTypeException {
+		throws ExportException, CmfStorageException, CmfValueEncoderException, UnsupportedCmfTypeException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
@@ -264,6 +264,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					listenerDelegator);
 			}
 
+			// Are there any last-minute properties/attributes to calculate prior to
+			// storing the object for posterity?
+			sourceObject.prepareForStorage(ctx, marshaled);
+
 			final Long ret = objectStore.storeObject(marshaled, getTranslator());
 			if (ret == null) {
 				// Should be impossible, but still guard against it
@@ -316,13 +320,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
-			throws ExportException, CmfStorageException {
+		throws ExportException, CmfStorageException {
 		return runExport(output, objectStore, contentStore, settings, null);
 	}
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter)
-			throws ExportException, CmfStorageException {
+		throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -378,7 +382,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter,
 		final CfgTools configuration, final SessionFactory<S> sessionFactory, final SessionWrapper<S> baseSession,
 		final ContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory)
-			throws ExportException, CmfStorageException {
+		throws ExportException, CmfStorageException {
 		final int threadCount;
 		final int backlogSize;
 		// Ensure nobody changes this under our feet

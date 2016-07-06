@@ -79,6 +79,10 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return marshaled;
 	}
 
+	protected void prepareForStorage(C ctx, CmfObject<V> object) throws ExportException {
+		// By default, do nothing.
+	}
+
 	protected abstract boolean marshal(C ctx, CmfObject<V> object) throws ExportException;
 
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyDependents(

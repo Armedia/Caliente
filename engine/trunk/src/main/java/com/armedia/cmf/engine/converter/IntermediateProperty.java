@@ -20,11 +20,12 @@ import com.armedia.commons.utilities.Tools;
 public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	// CMIS-inspired properties
 	PATH(PropertyIds.PATH, CmfDataType.STRING),
-	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.STRING),
+	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.ID),
 	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, CmfDataType.STRING),
 	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfDataType.BOOLEAN),
 
 	// Non-CMIS properties
+	PARENT_TREE_IDS(CmfDataType.ID),
 	ACL_ID(CmfDataType.ID),
 	ACL_OWNER(CmfDataType.STRING),
 	ACL_OBJECT_ID(CmfDataType.STRING),
@@ -78,8 +79,8 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 		if (IntermediateProperty.MAPPINGS == null) {
 			synchronized (IntermediateProperty.class) {
 				if (IntermediateProperty.MAPPINGS == null) {
-					IntermediateProperty.MAPPINGS = Tools.freezeMap(MappingManager.createMappings(
-						IntermediateProperty.class, IntermediateProperty.values()));
+					IntermediateProperty.MAPPINGS = Tools.freezeMap(
+						MappingManager.createMappings(IntermediateProperty.class, IntermediateProperty.values()));
 				}
 			}
 		}
@@ -89,8 +90,8 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
 		IntermediateProperty.initMappings();
 		IntermediateProperty ret = IntermediateProperty.MAPPINGS.get(name);
-		if (ret == null) { throw new IllegalArgumentException(String.format(
-			"Failed to decode [%s] into a valid intermediate property", name)); }
+		if (ret == null) { throw new IllegalArgumentException(
+			String.format("Failed to decode [%s] into a valid intermediate property", name)); }
 		return ret;
 	}
 }
