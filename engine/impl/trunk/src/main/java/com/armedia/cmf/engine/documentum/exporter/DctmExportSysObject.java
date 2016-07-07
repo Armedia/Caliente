@@ -11,7 +11,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -162,7 +161,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		CmfProperty<IDfValue> parentTreeIds = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_TREE_IDS,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		marshaled.setProperty(parentTreeIds);
-		Set<String> ptid = new TreeSet<String>();
+		Set<String> ptid = new LinkedHashSet<String>();
 
 		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
 		for (int i = 0; i < parentCount; i++) {
