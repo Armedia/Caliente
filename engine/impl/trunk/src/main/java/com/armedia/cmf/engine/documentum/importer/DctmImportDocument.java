@@ -435,7 +435,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 	}
 
-	protected boolean saveContentStream(DctmImportContext context, IDfDocument document, CmfContentInfo info,
+	protected void saveContentStream(DctmImportContext context, IDfDocument document, CmfContentInfo info,
 		CmfContentStore<?, ?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount)
 		throws DfException, ImportException {
@@ -498,6 +498,12 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 					e.getClass().getCanonicalName(), e.getMessage());
 				throw new ImportException(msg, e);
 			}
+		} else if (Tools.equals(contentType, fullFormat) && StringUtils.isEmpty(pageModifier)) {
+			// If the rendition is of the same format as the main content, then we MUST skip it
+			final String msg = String.format("Skipped a rendition for document [%s](%s) -> {%s/%s/%s/%s}",
+				this.cmfObject.getLabel(), this.cmfObject.getId(), absolutePath, fullFormat, pageNumber, pageModifier);
+			context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
+			return;
 		} else {
 			try {
 				document.addRenditionEx2(absolutePath, fullFormat, pageNumber, pageModifier, null, false, false, false);
@@ -575,7 +581,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				context.printf("\t%s (item %d of %d)", msg, currentContent, totalContentCount);
 				throw new ImportException(msg);
 			}
-			return true;
+			return;
 		} catch (DfException e) {
 			final String msg = String.format(
 				"Exception caught generating updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}",
