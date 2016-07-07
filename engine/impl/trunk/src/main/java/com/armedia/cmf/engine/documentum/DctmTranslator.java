@@ -165,12 +165,12 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		final IDfSession session = ctx.getSession();
 		final String subType = object.getSubtype();
 		IDfType type = session.getType(subType);
-		if ((type != null) && type.isTypeOf("dm_cabinet")) {
-			// If our context is putting things other than the root, then we need to demote this
-			// into a folder...
-			// TODO: What about custom cabinet types? What do those get demoted as? Do we have to
-			// create a new folder subtype that adds the extra attributes?
-			if (ctx.isPathAltering()) {
+		if (type != null) {
+			if (type.isTypeOf("dm_cabinet") && ctx.isPathAltering()) {
+				// If our context is putting things other than the root, then we need to demote this
+				// into a folder...
+				// TODO: What about custom cabinet types? What do those get demoted as? Do we have
+				// to create a new folder subtype that adds the extra attributes?
 				type = type.getSuperType();
 			}
 			return type;

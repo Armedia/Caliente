@@ -13,6 +13,7 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DctmTranslator;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmFolder;
@@ -26,6 +27,7 @@ import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
@@ -109,7 +111,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			.getProperty(DctmFolder.USERS_DEFAULT_FOLDER_PATHS);
 
 		if ((usersWithDefaultFolder == null) || (usersDefaultFolderPaths == null)
-			|| (usersWithDefaultFolder.getValueCount() == 0) || (usersDefaultFolderPaths.getValueCount() == 0)) { return; }
+			|| (usersWithDefaultFolder.getValueCount() == 0)
+			|| (usersDefaultFolderPaths.getValueCount() == 0)) { return; }
 
 		final int total = usersWithDefaultFolder.getValueCount();
 		Map<String, String> m = new TreeMap<String, String>();
@@ -142,10 +145,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				continue;
 			}
 			if (user == null) {
-				String msg = String
-					.format(
-						"Failed to link folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
-						this.cmfObject.getLabel(), folder.getObjectId().getId(), actualUser);
+				String msg = String.format(
+					"Failed to link folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
+					this.cmfObject.getLabel(), folder.getObjectId().getId(), actualUser);
 				if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
@@ -165,12 +167,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			try {
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
-				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-								actualUser, this.cmfObject.getLabel()), e);
+				this.log.warn(String.format(
+					"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
+					actualUser, this.cmfObject.getLabel()), e);
 			}
 		}
 
@@ -184,10 +183,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			for (String g : s) {
 				IDfGroup group = session.getGroup(g);
 				if (group == null) {
-					String msg = String
-						.format(
-							"Failed to link folder [%s](%s) to group [%s] as its default folder - the group wasn't found - probably didn't need to be copied over",
-							this.cmfObject.getLabel(), folder.getObjectId().getId(), g);
+					String msg = String.format(
+						"Failed to link folder [%s](%s) to group [%s] as its default folder - the group wasn't found - probably didn't need to be copied over",
+						this.cmfObject.getLabel(), folder.getObjectId().getId(), g);
 					if (context.isSupported(CmfType.GROUP)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 					continue;
@@ -203,12 +201,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				try {
 					updateSystemAttributes(group, context);
 				} catch (ImportException e) {
-					this.log
-						.warn(
-							String
-								.format(
-									"Failed to update the system attributes for group [%s] after assigning folder [%s] as its default folder",
-									g, this.cmfObject.getLabel()), e);
+					this.log.warn(String.format(
+						"Failed to update the system attributes for group [%s] after assigning folder [%s] as its default folder",
+						g, this.cmfObject.getLabel()), e);
 				}
 			}
 		}
@@ -222,8 +217,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
-			String path = String.format("/%s", this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue()
-				.asString());
+			String path = String.format("/%s",
+				this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
 			return session.getFolderByPath(ctx.getTargetPath(path));
 		}
 		return super.locateInCms(ctx);
@@ -241,7 +236,14 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		path = ctx.getTargetPath(String.format("%s/%s", path, name));
 
 		if ("/".equals(FileNameTools.dirname(path, '/'))) {
-			IDfFolder newObject = castObject(ctx.getSession().newObject("dm_cabinet"));
+			// TODO: Try to identify if the object's type is a cabinet subtype. If it is,
+			// then we don't need to modify it
+			String typeName = "dm_cabinet";
+			IDfType type = DctmTranslator.translateType(ctx, this.cmfObject);
+			if ((type != null) && type.isTypeOf("dm_cabinet")) {
+				typeName = type.getName();
+			}
+			IDfFolder newObject = castObject(ctx.getSession().newObject(typeName));
 			setOwnerGroupACLData(newObject, ctx);
 			return newObject;
 		}
