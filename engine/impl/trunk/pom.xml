@@ -3,10 +3,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.armedia.cmf</groupId>
-	<artifactId>cmf-import-api</artifactId>
-	<version>0.0.1</version>
-	<name>CMF Import API</name>
-	<description>CMF Import API</description>
+	<artifactId>cmf-engine-alfresco-bulk</artifactId>
+	<version>1.0.0</version>
+	<name>CMF Engine for Alfresco Bulk Import Generation</name>
+	<description>CMF Engine for Alfresco Bulk Import Generation</description>
 	<packaging>bundle</packaging>
 
 	<scm>
@@ -54,8 +54,61 @@
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine</artifactId>
-			<version>1.1.5</version>
+			<version>1.3.0</version>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.0</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.10</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.1.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-storage-local</artifactId>
+			<version>1.1.3</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.cmf</groupId>
+			<artifactId>cmf-storage-jdbc</artifactId>
+			<version>1.2.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>datasource-locator-pooled</artifactId>
+			<version>1.0.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.4.181</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

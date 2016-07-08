@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<users
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.armedia.com/ns/cmf/engine/xml"
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engine/xml platform:/resource/cmf-engine-xml/src/main/resources/cmf-engine-xml.xsd ">
+	<user>
+		<name>name</name>
+		<defaultFolder>defaultFolder</defaultFolder>
+		<description>description</description>
+		<email>email</email>
+		<source>source</source>
+		<loginName>loginName</loginName>
+		<loginDomain>loginDomain</loginDomain>
+		<osName>osName</osName>
+		<osDomain>osDomain</osDomain>
+		<attributes>
+			<attribute dataType="BOOLEAN" name="xxx">
+				<value>value1</value>
+				<value>value2</value>
+				<value>value3</value>
+				<value>value4</value>
+				<value>value5</value>
+				<value>value6</value>
+			</attribute>
+		</attributes>
+		<properties>
+			<property dataType="BOOLEAN" name="xxx" repeating="true">
+				<value>value1</value>
+				<value>value2</value>
+				<value>value3</value>
+				<value>value4</value>
+				<value>value5</value>
+				<value>value6</value>
+			</property>
+		</properties>
+	</user>
+</users>
