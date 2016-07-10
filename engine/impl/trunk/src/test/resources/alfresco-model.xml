@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/cmf-engine-alfresco-bulk/src/main/resources/alfresco-model.xsd ">
+	<description>dd:description</description>
+	<author>dd:author</author>
+	<published>2001-01-01</published>
+	<version>dd:version</version>
+	<imports>
+		<import prefix="" uri="" />
+	</imports>
+	<namespaces>
+		<namespace prefix="" uri="" />
+	</namespaces>
+	<data-types>
+		<data-type name="">
+			<analyser-class type="anyType" />
+			<java-class type="anyType" />
+		</data-type>
+	</data-types>
+	<constraints>
+		<constraint name="" ref="" type="">
+			<parameter name="" />
+		</constraint>
+	</constraints>
+	<types>
+		<type name="">
+			<parent>dd:parent</parent>
+			<archive>true</archive>
+			<includedInSuperTypeQuery>true</includedInSuperTypeQuery>
+			<properties>
+				<property name="">
+					<type>dd:type</type>
+					<protected>true</protected>
+					<mandatory enforced="true" />
+					<multiple>true</multiple>
+					<default type="anyType" />
+					<index enabled="true">
+						<atomic>true</atomic>
+						<stored>true</stored>
+						<tokenised>true</tokenised>
+						<facetable>true</facetable>
+					</index>
+					<constraints>
+						<constraint name="" ref="" type="">
+							<parameter name="" />
+						</constraint>
+					</constraints>
+					<encrypted>true</encrypted>
+				</property>
+			</properties>
+			<associations>
+				<association name="" type="dd:association">
+					<source>
+						<role>dd:role</role>
+						<mandatory>true</mandatory>
+						<many>true</many>
+					</source>
+					<target>
+						<class>dd:class</class>
+						<role>dd:role</role>
+						<mandatory enforced="true" />
+						<many>true</many>
+					</target>
+				</association>
+				<child-association name="">
+					<source>
+						<role>dd:role</role>
+						<mandatory>true</mandatory>
+						<many>true</many>
+					</source>
+					<target>
+						<class>dd:class</class>
+						<role>dd:role</role>
+						<mandatory enforced="true" />
+						<many>true</many>
+					</target>
+					<child-name>dd:child-name</child-name>
+					<duplicate>true</duplicate>
+					<propagateTimestamps>true</propagateTimestamps>
+				</child-association>
+			</associations>
+			<overrides>
+				<property name="">
+					<mandatory enforced="true" />
+					<default>dd:default</default>
+					<constraints>
+						<constraint name="" ref="" type="">
+							<parameter name="" />
+						</constraint>
+					</constraints>
+				</property>
+			</overrides>
+			<mandatory-aspects>
+				<aspect>dd:aspect</aspect>
+			</mandatory-aspects>
+		</type>
+	</types>
+	<aspects>
+		<aspect name="">
+			<parent>dd:parent</parent>
+			<archive>true</archive>
+			<includedInSuperTypeQuery>true</includedInSuperTypeQuery>
+			<properties>
+				<property name="">
+					<type>dd:type</type>
+					<protected>true</protected>
+					<mandatory enforced="true" />
+					<multiple>true</multiple>
+					<default type="anyType" />
+					<index enabled="true">
+						<atomic>true</atomic>
+						<stored>true</stored>
+						<tokenised>true</tokenised>
+						<facetable>true</facetable>
+					</index>
+					<constraints>
+						<constraint name="" ref="" type="">
+							<parameter name="" />
+						</constraint>
+					</constraints>
+					<encrypted>true</encrypted>
+				</property>
+			</properties>
+			<associations>
+				<association name="" type="dd:association">
+					<source>
+						<role>dd:role</role>
+						<mandatory>true</mandatory>
+						<many>true</many>
+					</source>
+					<target>
+						<class>dd:class</class>
+						<role>dd:role</role>
+						<mandatory enforced="true" />
+						<many>true</many>
+					</target>
+				</association>
+				<child-association name="">
+					<source>
+						<role>dd:role</role>
+						<mandatory>true</mandatory>
+						<many>true</many>
+					</source>
+					<target>
+						<class>dd:class</class>
+						<role>dd:role</role>
+						<mandatory enforced="true" />
+						<many>true</many>
+					</target>
+					<child-name>dd:child-name</child-name>
+					<duplicate>true</duplicate>
+					<propagateTimestamps>true</propagateTimestamps>
+				</child-association>
+			</associations>
+			<overrides>
+				<property name="">
+					<mandatory enforced="true" />
+					<default>dd:default</default>
+					<constraints>
+						<constraint name="" ref="" type="">
+							<parameter name="" />
+						</constraint>
+					</constraints>
+				</property>
+			</overrides>
+			<mandatory-aspects>
+				<aspect>dd:aspect</aspect>
+			</mandatory-aspects>
+		</aspect>
+	</aspects>
+</model>

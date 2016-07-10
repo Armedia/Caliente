@@ -10,17 +10,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.AclsT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.DocumentIndexT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.DocumentT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.DocumentsT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.FolderIndexT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.FolderT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.FoldersT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.FormatsT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.GroupsT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.TypesT;
-import com.armedia.cmf.engine.alfresco.bulk.importer.jaxb.UsersT;
 import com.armedia.commons.utilities.XmlTools;
 
 public class JaxbTest {
@@ -82,10 +71,7 @@ public class JaxbTest {
 
 	@Test
 	public void testAll() throws Exception {
-		Class<?>[] k = {
-			AclsT.class, DocumentT.class, DocumentsT.class, FolderT.class, FoldersT.class, GroupsT.class, TypesT.class,
-			UsersT.class, DocumentIndexT.class, FolderIndexT.class, FormatsT.class
-		};
+		Class<?>[] k = {};
 		String[] s = {
 			"acls", "document", "documents", "folder", "folders", "groups", "types", "users", "documentIndex",
 			"folderIndex", "formats"
