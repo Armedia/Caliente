@@ -1,6 +1,9 @@
 
 package com.armedia.cmf.engine.alfresco.bulk.importer.jaxb;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlRegistry;
 
 /**
@@ -27,22 +30,6 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link Model.Types }
-	 *
-	 */
-	public Model.Types createModelTypes() {
-		return new Model.Types();
-	}
-
-	/**
-	 * Create an instance of {@link Type }
-	 *
-	 */
-	public Type createType() {
-		return new Type();
-	}
-
-	/**
 	 * Create an instance of {@link ChildAssociation }
 	 *
 	 */
@@ -51,35 +38,19 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link Model.DataTypes.DataType }
+	 * Create an instance of {@link DataType }
 	 *
 	 */
-	public Model.DataTypes.DataType createModelDataTypesDataType() {
-		return new Model.DataTypes.DataType();
+	public DataType createModelDataTypesDataType() {
+		return new DataType();
 	}
 
 	/**
-	 * Create an instance of {@link Model.Namespaces.Namespace }
+	 * Create an instance of {@link Namespace }
 	 *
 	 */
-	public Model.Namespaces.Namespace createModelNamespacesNamespace() {
-		return new Model.Namespaces.Namespace();
-	}
-
-	/**
-	 * Create an instance of {@link Model.DataTypes }
-	 *
-	 */
-	public Model.DataTypes createModelDataTypes() {
-		return new Model.DataTypes();
-	}
-
-	/**
-	 * Create an instance of {@link Model.Imports }
-	 *
-	 */
-	public Model.Imports createModelImports() {
-		return new Model.Imports();
+	public Namespace createModelNamespacesNamespace() {
+		return new Namespace();
 	}
 
 	/**
@@ -107,14 +78,6 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link Model.Imports.Import }
-	 *
-	 */
-	public Model.Imports.Import createModelImportsImport() {
-		return new Model.Imports.Import();
-	}
-
-	/**
 	 * Create an instance of {@link Association.Source }
 	 *
 	 */
@@ -131,51 +94,11 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link NamedValue.List }
-	 *
-	 */
-	public NamedValue.List createNamedValueList() {
-		return new NamedValue.List();
-	}
-
-	/**
-	 * Create an instance of {@link Aspect }
-	 *
-	 */
-	public Aspect createAspect() {
-		return new Aspect();
-	}
-
-	/**
-	 * Create an instance of {@link Model.Namespaces }
-	 *
-	 */
-	public Model.Namespaces createModelNamespaces() {
-		return new Model.Namespaces();
-	}
-
-	/**
-	 * Create an instance of {@link Property.Constraints }
-	 *
-	 */
-	public Property.Constraints createPropertyConstraints() {
-		return new Property.Constraints();
-	}
-
-	/**
 	 * Create an instance of {@link PropertyOverride }
 	 *
 	 */
 	public PropertyOverride createPropertyOverride() {
 		return new PropertyOverride();
-	}
-
-	/**
-	 * Create an instance of {@link PropertyOverride.Constraints }
-	 *
-	 */
-	public PropertyOverride.Constraints createPropertyOverrideConstraints() {
-		return new PropertyOverride.Constraints();
 	}
 
 	/**
@@ -203,38 +126,6 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link ClassElement.Overrides }
-	 *
-	 */
-	public ClassElement.Overrides createClassOverrides() {
-		return new ClassElement.Overrides();
-	}
-
-	/**
-	 * Create an instance of {@link Model.Constraints }
-	 *
-	 */
-	public Model.Constraints createModelConstraints() {
-		return new Model.Constraints();
-	}
-
-	/**
-	 * Create an instance of {@link ClassElement.MandatoryAspects }
-	 *
-	 */
-	public ClassElement.MandatoryAspects createClassMandatoryAspects() {
-		return new ClassElement.MandatoryAspects();
-	}
-
-	/**
-	 * Create an instance of {@link Model.Aspects }
-	 *
-	 */
-	public Model.Aspects createModelAspects() {
-		return new Model.Aspects();
-	}
-
-	/**
 	 * Create an instance of {@link Model }
 	 *
 	 */
@@ -243,27 +134,15 @@ public class ObjectFactory {
 	}
 
 	/**
-	 * Create an instance of {@link ClassElement.Properties }
+	 * Create an instance of {@link Constraint.Parameter }
 	 *
 	 */
-	public ClassElement.Properties createClassProperties() {
-		return new ClassElement.Properties();
+	public Constraint.Parameter createNamedValue() {
+		return new Constraint.Parameter();
 	}
 
-	/**
-	 * Create an instance of {@link NamedValue }
-	 *
-	 */
-	public NamedValue createNamedValue() {
-		return new NamedValue();
+	public static <T> List<T> getList(List<T> l) {
+		if (l == null) { return new ArrayList<T>(); }
+		return l;
 	}
-
-	/**
-	 * Create an instance of {@link ClassElement }
-	 *
-	 */
-	public ClassElement createClass() {
-		return new ClassElement();
-	}
-
 }

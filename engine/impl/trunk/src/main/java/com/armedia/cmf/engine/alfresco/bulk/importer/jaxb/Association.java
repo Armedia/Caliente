@@ -66,13 +66,20 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class Association {
 
-	protected String title;
-	protected String description;
-	protected Association.Source source;
-	@XmlElement(required = true)
-	protected Association.Target target;
 	@XmlAttribute(required = true)
 	protected String name;
+
+	@XmlElement
+	protected String title;
+
+	@XmlElement
+	protected String description;
+
+	@XmlElement
+	protected Association.Source source;
+
+	@XmlElement(required = true)
+	protected Association.Target target;
 
 	/**
 	 * Gets the value of the title property.
@@ -208,8 +215,13 @@ public class Association {
 	})
 	public static class Source {
 
+		@XmlElement
 		protected String role;
+
+		@XmlElement
 		protected Boolean mandatory;
+
+		@XmlElement
 		protected Boolean many;
 
 		/**
@@ -274,7 +286,6 @@ public class Association {
 		public void setMany(Boolean value) {
 			this.many = value;
 		}
-
 	}
 
 	/**
@@ -309,8 +320,14 @@ public class Association {
 
 		@XmlElement(name = "class", required = true)
 		protected String clazz;
+
+		@XmlElement
 		protected String role;
+
+		@XmlElement
 		protected MandatoryDef mandatory;
+
+		@XmlElement
 		protected Boolean many;
 
 		/**
@@ -398,5 +415,4 @@ public class Association {
 		}
 
 	}
-
 }

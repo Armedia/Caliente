@@ -1,13 +1,13 @@
 
 package com.armedia.cmf.engine.alfresco.bulk.importer.jaxb;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 /**
@@ -79,19 +79,37 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class Property {
 
+	@XmlElement
 	protected String title;
+
+	@XmlElement
 	protected String description;
+
 	@XmlElement(required = true)
 	protected String type;
+
 	@XmlElement(name = "protected")
 	protected Boolean _protected;
+
+	@XmlElement
 	protected MandatoryDef mandatory;
+
+	@XmlElement
 	protected Boolean multiple;
+
 	@XmlElement(name = "default")
 	protected Object _default;
+
+	@XmlElement
 	protected Property.Index index;
-	protected Property.Constraints constraints;
+
+	@XmlElementWrapper(name = "constraints")
+	@XmlElement(name = "constraint")
+	protected List<Constraint> constraints;
+
+	@XmlElement
 	protected Boolean encrypted;
+
 	@XmlAttribute(required = true)
 	protected String name;
 
@@ -263,25 +281,8 @@ public class Property {
 		this.index = value;
 	}
 
-	/**
-	 * Gets the value of the constraints property.
-	 *
-	 * @return possible object is {@link Property.Constraints }
-	 *
-	 */
-	public Property.Constraints getConstraints() {
-		return this.constraints;
-	}
-
-	/**
-	 * Sets the value of the constraints property.
-	 *
-	 * @param value
-	 *            allowed object is {@link Property.Constraints }
-	 *
-	 */
-	public void setConstraints(Property.Constraints value) {
-		this.constraints = value;
+	public List<Constraint> getConstraints() {
+		return this.constraints = ObjectFactory.getList(this.constraints);
 	}
 
 	/**
@@ -338,66 +339,6 @@ public class Property {
 	 *   &lt;complexContent>
 	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
 	 *       &lt;sequence>
-	 *         &lt;element name="constraint" type="{http://www.alfresco.org/model/dictionary/1.0}constraint" maxOccurs="unbounded"/>
-	 *       &lt;/sequence>
-	 *     &lt;/restriction>
-	 *   &lt;/complexContent>
-	 * &lt;/complexType>
-	 * </pre>
-	 *
-	 *
-	 */
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "", propOrder = {
-		"constraint"
-	})
-	public static class Constraints {
-
-		@XmlElement(required = true)
-		protected List<Constraint> constraint;
-
-		/**
-		 * Gets the value of the constraint property.
-		 *
-		 * <p>
-		 * This accessor method returns a reference to the live list, not a snapshot. Therefore any
-		 * modification you make to the returned list will be present inside the JAXB object. This
-		 * is why there is not a <CODE>set</CODE> method for the constraint property.
-		 *
-		 * <p>
-		 * For example, to add a new item, do as follows:
-		 *
-		 * <pre>
-		 * getConstraint().add(newItem);
-		 * </pre>
-		 *
-		 *
-		 * <p>
-		 * Objects of the following type(s) are allowed in the list {@link Constraint }
-		 *
-		 *
-		 */
-		public List<Constraint> getConstraint() {
-			if (this.constraint == null) {
-				this.constraint = new ArrayList<Constraint>();
-			}
-			return this.constraint;
-		}
-
-	}
-
-	/**
-	 * <p>
-	 * Java class for anonymous complex type.
-	 *
-	 * <p>
-	 * The following schema fragment specifies the expected content contained within this class.
-	 *
-	 * <pre>
-	 * &lt;complexType>
-	 *   &lt;complexContent>
-	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-	 *       &lt;sequence>
 	 *         &lt;element name="atomic" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
 	 *         &lt;element name="stored" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
 	 *         &lt;element name="tokenised" minOccurs="0">
@@ -425,10 +366,18 @@ public class Property {
 	})
 	public static class Index {
 
+		@XmlElement
 		protected Boolean atomic;
+
+		@XmlElement
 		protected Boolean stored;
+
+		@XmlElement
 		protected String tokenised;
+
+		@XmlElement
 		protected Boolean facetable;
+
 		@XmlAttribute(required = true)
 		protected boolean enabled;
 

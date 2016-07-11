@@ -1,14 +1,13 @@
 
 package com.armedia.cmf.engine.alfresco.bulk.importer.jaxb;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 /**
@@ -86,23 +85,40 @@ import javax.xml.bind.annotation.XmlType;
 	"title", "description", "parent", "archive", "includedInSuperTypeQuery", "properties", "associations", "overrides",
 	"mandatoryAspects"
 })
-@XmlSeeAlso({
-	Aspect.class, Type.class
-})
 public class ClassElement {
 
-	protected String title;
-	protected String description;
-	protected String parent;
-	protected Boolean archive;
-	protected Boolean includedInSuperTypeQuery;
-	protected ClassElement.Properties properties;
-	protected ClassElement.Associations associations;
-	protected ClassElement.Overrides overrides;
-	@XmlElement(name = "mandatory-aspects")
-	protected ClassElement.MandatoryAspects mandatoryAspects;
 	@XmlAttribute(required = true)
 	protected String name;
+
+	@XmlElement
+	protected String title;
+
+	@XmlElement
+	protected String description;
+
+	@XmlElement
+	protected String parent;
+
+	@XmlElement
+	protected Boolean archive;
+
+	@XmlElement
+	protected Boolean includedInSuperTypeQuery;
+
+	@XmlElementWrapper(name = "properties")
+	@XmlElement(name = "property", required = true)
+	protected List<Property> properties;
+
+	@XmlElement
+	protected ClassElement.Associations associations;
+
+	@XmlElementWrapper(name = "overrides")
+	@XmlElement(name = "property", required = true)
+	protected List<PropertyOverride> overrides;
+
+	@XmlElementWrapper(name = "mandatory-aspects")
+	@XmlElement(name = "aspect", required = true)
+	protected List<String> mandatoryAspects;
 
 	/**
 	 * Gets the value of the title property.
@@ -209,25 +225,8 @@ public class ClassElement {
 		this.includedInSuperTypeQuery = value;
 	}
 
-	/**
-	 * Gets the value of the properties property.
-	 *
-	 * @return possible object is {@link ClassElement.Properties }
-	 *
-	 */
-	public ClassElement.Properties getProperties() {
-		return this.properties;
-	}
-
-	/**
-	 * Sets the value of the properties property.
-	 *
-	 * @param value
-	 *            allowed object is {@link ClassElement.Properties }
-	 *
-	 */
-	public void setProperties(ClassElement.Properties value) {
-		this.properties = value;
+	public List<Property> getProperties() {
+		return this.properties = ObjectFactory.getList(this.properties);
 	}
 
 	/**
@@ -251,46 +250,12 @@ public class ClassElement {
 		this.associations = value;
 	}
 
-	/**
-	 * Gets the value of the overrides property.
-	 *
-	 * @return possible object is {@link ClassElement.Overrides }
-	 *
-	 */
-	public ClassElement.Overrides getOverrides() {
-		return this.overrides;
+	public List<PropertyOverride> getOverrides() {
+		return this.overrides = ObjectFactory.getList(this.overrides);
 	}
 
-	/**
-	 * Sets the value of the overrides property.
-	 *
-	 * @param value
-	 *            allowed object is {@link ClassElement.Overrides }
-	 *
-	 */
-	public void setOverrides(ClassElement.Overrides value) {
-		this.overrides = value;
-	}
-
-	/**
-	 * Gets the value of the mandatoryAspects property.
-	 *
-	 * @return possible object is {@link ClassElement.MandatoryAspects }
-	 *
-	 */
-	public ClassElement.MandatoryAspects getMandatoryAspects() {
-		return this.mandatoryAspects;
-	}
-
-	/**
-	 * Sets the value of the mandatoryAspects property.
-	 *
-	 * @param value
-	 *            allowed object is {@link ClassElement.MandatoryAspects }
-	 *
-	 */
-	public void setMandatoryAspects(ClassElement.MandatoryAspects value) {
-		this.mandatoryAspects = value;
+	public List<String> getMandatoryAspects() {
+		return this.mandatoryAspects = ObjectFactory.getList(this.mandatoryAspects);
 	}
 
 	/**
@@ -342,7 +307,9 @@ public class ClassElement {
 	})
 	public static class Associations {
 
+		@XmlElement
 		protected List<Association> association;
+
 		@XmlElement(name = "child-association")
 		protected List<ChildAssociation> childAssociation;
 
@@ -368,10 +335,7 @@ public class ClassElement {
 		 *
 		 */
 		public List<Association> getAssociation() {
-			if (this.association == null) {
-				this.association = new ArrayList<Association>();
-			}
-			return this.association;
+			return this.association = ObjectFactory.getList(this.association);
 		}
 
 		/**
@@ -396,191 +360,7 @@ public class ClassElement {
 		 *
 		 */
 		public List<ChildAssociation> getChildAssociation() {
-			if (this.childAssociation == null) {
-				this.childAssociation = new ArrayList<ChildAssociation>();
-			}
-			return this.childAssociation;
+			return this.childAssociation = ObjectFactory.getList(this.childAssociation);
 		}
-
 	}
-
-	/**
-	 * <p>
-	 * Java class for anonymous complex type.
-	 *
-	 * <p>
-	 * The following schema fragment specifies the expected content contained within this class.
-	 *
-	 * <pre>
-	 * &lt;complexType>
-	 *   &lt;complexContent>
-	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-	 *       &lt;sequence>
-	 *         &lt;element name="aspect" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded"/>
-	 *       &lt;/sequence>
-	 *     &lt;/restriction>
-	 *   &lt;/complexContent>
-	 * &lt;/complexType>
-	 * </pre>
-	 *
-	 *
-	 */
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "", propOrder = {
-		"aspect"
-	})
-	public static class MandatoryAspects {
-
-		@XmlElement(required = true)
-		protected List<String> aspect;
-
-		/**
-		 * Gets the value of the aspect property.
-		 *
-		 * <p>
-		 * This accessor method returns a reference to the live list, not a snapshot. Therefore any
-		 * modification you make to the returned list will be present inside the JAXB object. This
-		 * is why there is not a <CODE>set</CODE> method for the aspect property.
-		 *
-		 * <p>
-		 * For example, to add a new item, do as follows:
-		 *
-		 * <pre>
-		 * getAspect().add(newItem);
-		 * </pre>
-		 *
-		 *
-		 * <p>
-		 * Objects of the following type(s) are allowed in the list {@link String }
-		 *
-		 *
-		 */
-		public List<String> getAspect() {
-			if (this.aspect == null) {
-				this.aspect = new ArrayList<String>();
-			}
-			return this.aspect;
-		}
-
-	}
-
-	/**
-	 * <p>
-	 * Java class for anonymous complex type.
-	 *
-	 * <p>
-	 * The following schema fragment specifies the expected content contained within this class.
-	 *
-	 * <pre>
-	 * &lt;complexType>
-	 *   &lt;complexContent>
-	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-	 *       &lt;sequence>
-	 *         &lt;element name="property" type="{http://www.alfresco.org/model/dictionary/1.0}propertyOverride" maxOccurs="unbounded"/>
-	 *       &lt;/sequence>
-	 *     &lt;/restriction>
-	 *   &lt;/complexContent>
-	 * &lt;/complexType>
-	 * </pre>
-	 *
-	 *
-	 */
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "", propOrder = {
-		"property"
-	})
-	public static class Overrides {
-
-		@XmlElement(required = true)
-		protected List<PropertyOverride> property;
-
-		/**
-		 * Gets the value of the property property.
-		 *
-		 * <p>
-		 * This accessor method returns a reference to the live list, not a snapshot. Therefore any
-		 * modification you make to the returned list will be present inside the JAXB object. This
-		 * is why there is not a <CODE>set</CODE> method for the property property.
-		 *
-		 * <p>
-		 * For example, to add a new item, do as follows:
-		 *
-		 * <pre>
-		 * getProperty().add(newItem);
-		 * </pre>
-		 *
-		 *
-		 * <p>
-		 * Objects of the following type(s) are allowed in the list {@link PropertyOverride }
-		 *
-		 *
-		 */
-		public List<PropertyOverride> getProperty() {
-			if (this.property == null) {
-				this.property = new ArrayList<PropertyOverride>();
-			}
-			return this.property;
-		}
-
-	}
-
-	/**
-	 * <p>
-	 * Java class for anonymous complex type.
-	 *
-	 * <p>
-	 * The following schema fragment specifies the expected content contained within this class.
-	 *
-	 * <pre>
-	 * &lt;complexType>
-	 *   &lt;complexContent>
-	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-	 *       &lt;sequence>
-	 *         &lt;element name="property" type="{http://www.alfresco.org/model/dictionary/1.0}property" maxOccurs="unbounded" minOccurs="0"/>
-	 *       &lt;/sequence>
-	 *     &lt;/restriction>
-	 *   &lt;/complexContent>
-	 * &lt;/complexType>
-	 * </pre>
-	 *
-	 *
-	 */
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "", propOrder = {
-		"property"
-	})
-	public static class Properties {
-
-		protected List<Property> property;
-
-		/**
-		 * Gets the value of the property property.
-		 *
-		 * <p>
-		 * This accessor method returns a reference to the live list, not a snapshot. Therefore any
-		 * modification you make to the returned list will be present inside the JAXB object. This
-		 * is why there is not a <CODE>set</CODE> method for the property property.
-		 *
-		 * <p>
-		 * For example, to add a new item, do as follows:
-		 *
-		 * <pre>
-		 * getProperty().add(newItem);
-		 * </pre>
-		 *
-		 *
-		 * <p>
-		 * Objects of the following type(s) are allowed in the list {@link Property }
-		 *
-		 *
-		 */
-		public List<Property> getProperty() {
-			if (this.property == null) {
-				this.property = new ArrayList<Property>();
-			}
-			return this.property;
-		}
-
-	}
-
 }

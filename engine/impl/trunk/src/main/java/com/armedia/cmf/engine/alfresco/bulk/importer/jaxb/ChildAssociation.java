@@ -37,7 +37,11 @@ public class ChildAssociation extends Association {
 
 	@XmlElement(name = "child-name")
 	protected String childName;
+
+	@XmlElement
 	protected Boolean duplicate;
+
+	@XmlElement
 	protected Boolean propagateTimestamps;
 
 	/**
