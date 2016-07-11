@@ -32,7 +32,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"title", "description", "analyserClass", "javaClass"
+	"title", "description", "defaultAnalyserClass", "javaClass"
 })
 public class DataType {
 
@@ -42,11 +42,11 @@ public class DataType {
 	@XmlElement
 	protected String description;
 
-	@XmlElement(name = "analyser-class")
-	protected Object analyserClass;
+	@XmlElement(name = "default-analyser-class")
+	protected String defaultAnalyserClass;
 
 	@XmlElement(name = "java-class")
-	protected Object javaClass;
+	protected String javaClass;
 
 	@XmlAttribute(required = true)
 	protected String name;
@@ -99,8 +99,8 @@ public class DataType {
 	 * @return possible object is {@link Object }
 	 *
 	 */
-	public Object getAnalyserClass() {
-		return this.analyserClass;
+	public String getAnalyserClass() {
+		return this.defaultAnalyserClass;
 	}
 
 	/**
@@ -110,8 +110,8 @@ public class DataType {
 	 *            allowed object is {@link Object }
 	 *
 	 */
-	public void setAnalyserClass(Object value) {
-		this.analyserClass = value;
+	public void setAnalyserClass(String value) {
+		this.defaultAnalyserClass = value;
 	}
 
 	/**
@@ -120,7 +120,7 @@ public class DataType {
 	 * @return possible object is {@link Object }
 	 *
 	 */
-	public Object getJavaClass() {
+	public String getJavaClass() {
 		return this.javaClass;
 	}
 
@@ -131,7 +131,7 @@ public class DataType {
 	 *            allowed object is {@link Object }
 	 *
 	 */
-	public void setJavaClass(Object value) {
+	public void setJavaClass(String value) {
 		this.javaClass = value;
 	}
 

@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer.jaxb;
 
 import java.io.InputStream;
+import java.net.URL;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -17,22 +18,20 @@ public class JaxbTest {
 	protected static class XmlTest<T> {
 
 		private final Class<T> c;
-		private final String suffix;
+		private final URL resource;
 
-		protected XmlTest(Class<T> c, String suffix) {
+		protected XmlTest(Class<T> c, String resource) {
 			this.c = c;
-			this.suffix = suffix;
+			this.resource = Thread.currentThread().getContextClassLoader().getResource(resource);
 		}
 
 		protected void run() throws Exception {
 			InputStream in = null;
-			final String schema = "cmf-engine-xml.xsd";
-
-			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			final String schema = "alfresco-model.xsd";
 
 			T obj = null;
 			try {
-				in = cl.getResourceAsStream(String.format("sample-%s.xml", this.suffix));
+				in = this.resource.openStream();
 				obj = XmlTools.unmarshal(this.c, schema, in);
 				Assert.assertNotNull(obj);
 			} finally {
@@ -71,21 +70,19 @@ public class JaxbTest {
 
 	@Test
 	public void testAll() throws Exception {
-		Class<?>[] k = {};
 		String[] s = {
-			"acls", "document", "documents", "folder", "folders", "groups", "types", "users", "documentIndex",
-			"folderIndex", "formats"
+			"contentModel.xml", "alfresco-model.xml", "cmisModel.xml"
 		};
 
-		for (int i = 0; i < k.length; i++) {
+		for (String xml : s) {
 			@SuppressWarnings({
 				"unchecked", "rawtypes"
 			})
-			XmlTest<?> xmlTest = new XmlTest(k[i], s[i]);
+			XmlTest<?> xmlTest = new XmlTest(Model.class, xml);
 			try {
 				xmlTest.run();
 			} catch (Throwable t) {
-				throw new Exception(String.format("Failed while processing [%s, %s]", k[i].getSimpleName(), s[i]), t);
+				throw new Exception(String.format("Failed while processing [%s]", xml), t);
 			}
 		}
 	}

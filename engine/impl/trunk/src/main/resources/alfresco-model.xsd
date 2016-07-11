@@ -55,7 +55,7 @@
                         <xs:complexType>
                            <xs:sequence>
                               <xs:group ref="dd:TextualDescription" />
-                              <xs:element name="analyser-class"
+                              <xs:element name="default-analyser-class"
                                  maxOccurs="1" minOccurs="0" />
                               <xs:element name="java-class"
                                  maxOccurs="1" minOccurs="0" />
@@ -65,7 +65,7 @@
                      </xs:element>
                   </xs:sequence>
                </xs:complexType>
-            </xs:element> 
+            </xs:element>
             <xs:element name="constraints" maxOccurs="1"
                minOccurs="0">
                <xs:complexType>
@@ -126,7 +126,7 @@
                </xs:sequence>
             </xs:complexType>
          </xs:element>
-         
+
          <xs:element name="overrides" maxOccurs="1"
             minOccurs="0">
             <xs:complexType>
@@ -157,7 +157,7 @@
          <xs:element name="type" type="xs:string"/>
          <xs:element name="protected" type="xs:boolean"
             maxOccurs="1" minOccurs="0" />
-         <xs:element name="mandatory" 
+         <xs:element name="mandatory"
             maxOccurs="1" minOccurs="0" type="dd:mandatoryDef" >
          </xs:element>
          <xs:element name="multiple" type="xs:boolean"
@@ -171,7 +171,7 @@
                      maxOccurs="1" minOccurs="0" />
                   <xs:element name="stored" type="xs:boolean"
                      maxOccurs="1" minOccurs="0" />
-                  <xs:element name="tokenised" 
+                  <xs:element name="tokenised"
                      maxOccurs="1" minOccurs="0" >
                         <xs:simpleType>
                            <xs:restriction base="xs:string">
@@ -198,7 +198,7 @@
                </xs:sequence>
             </xs:complexType>
          </xs:element>
-         
+
          <xs:element name="encrypted" maxOccurs="1" minOccurs="0" type="xs:boolean">
          </xs:element>
       </xs:sequence>
@@ -211,7 +211,7 @@
          </xs:extension>
       </xs:complexContent>
    </xs:complexType>
-   
+
 
 
    <xs:complexType name="aspect">
@@ -219,28 +219,28 @@
          <xs:extension base="dd:class"></xs:extension>
       </xs:complexContent>
    </xs:complexType>
-   
-    <xs:complexType name="constraint"> 
+
+    <xs:complexType name="constraint">
        <xs:annotation>
          <xs:documentation>Constraint for Alfresco M2Model
          </xs:documentation>
-        </xs:annotation>  
+        </xs:annotation>
       <xs:sequence>
          <xs:element name="parameter" maxOccurs="unbounded" type="dd:namedValue"
             minOccurs="0">
                    <xs:annotation>
          <xs:documentation>Parameter for Alfresco M2Model
          </xs:documentation>
-        </xs:annotation>  
+        </xs:annotation>
          </xs:element>
-      </xs:sequence>   
+      </xs:sequence>
       <xs:attribute name="type" use="optional">
          <xs:simpleType>
             <xs:restriction base="xs:string">
             </xs:restriction>
          </xs:simpleType>
       </xs:attribute>
-                    
+
       <xs:attribute name="ref" use="optional" type="xs:string" />
       <xs:attribute name="name" use="optional" type="xs:string" />
    </xs:complexType>
@@ -343,9 +343,9 @@
             maxOccurs="1" minOccurs="0" />
       </xs:sequence>
    </xs:group>
-   
+
    <xs:complexType name="mandatoryDef" mixed="true">
-      <xs:attribute name="enforced" use="optional" type="xs:boolean"/>     
+      <xs:attribute name="enforced" use="optional" type="xs:boolean"/>
    </xs:complexType>
 
 </xs:schema>
