@@ -1,14 +1,11 @@
-options{  static = false;}PARSER_BEGIN(BooleanGrammar)package com.armedia.cmf.engine.tools.grammar;import com.armedia.cmf.engine.tools.*;
-import java.util.*;
+options{ 	static = false;}PARSER_BEGIN(BooleanGrammar)package com.armedia.cmf.engine.tools.grammar;import com.armedia.cmf.engine.tools.*;
+import java.util.*;@SuppressWarnings({ "unused", "serial" })
 public abstract class BooleanGrammar{	public final BooleanExpression parse() throws ParseException	{		return expression();	}	protected abstract BooleanExpression buildNamedExpression(String name);}PARSER_END(BooleanGrammar)SKIP : { " " | "\t" }TOKEN : /* OPERATORS */{	< AND : "&" >|	< OR : "|" >|	< XOR : "^" >
 |	< NOT : "!" >|	< SEP : ":" >
 |	< LP : "(" >
 |	< RP : ")" >
-}TOKEN :{	< NUMBER : (< DIGIT >)+ >|	< #DIGIT : [ "0"-"9" ] >}TOKEN :
-{
-	< ID: < IDSTART > (< IDPART >)* >
-|
-	< QID: (< ID > < SEP >)? < ID > >|	< #IDSTART:
+}TOKEN :{	< NUMBER : (< DIGIT >)+ >|	< #DIGIT : [ "0"-"9" ] >|	< ID: < IDSTART > (< IDPART >)* >
+|	< QID: (< ID > < SEP >)? < ID > >|	< #IDSTART:
 		[  // all chars for which Character.isIdentifierStart is true
 			"$",
 			"A"-"Z",
@@ -282,8 +279,7 @@ public abstract class BooleanGrammar{	public final BooleanExpression parse() 
 			"\uffe5"-"\uffe6"
 		]
 	>
-|
-	< #IDPART:
+|	< #IDPART:
 		[  // all chars for which Character.isIdentifierPart is true
 			"\u0000"-"\u0008",
 			"\u000e"-"\u001b",
