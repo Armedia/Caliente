@@ -174,8 +174,6 @@
 							<jdkVersion>${project.build.target}</jdkVersion>
 							<javadocFriendlyComments>true</javadocFriendlyComments>
 							<packageName>org.javacc.parser</packageName>
-							<sourceDirectory>src/main/java/com/armedia/cmf/engine/tools/grammar</sourceDirectory>
-							<outputDirectory>${project.build.directory}/generated-sources/javacc1</outputDirectory>
 						</configuration>
 					</execution>
 				</executions>
