@@ -1,6 +1,6 @@
 options{ 	static = false;}PARSER_BEGIN(BooleanGrammar)package com.armedia.cmf.engine.tools.grammar;import com.armedia.cmf.engine.tools.*;
 import java.util.*;@SuppressWarnings({ "unused", "serial" })
-public abstract class BooleanGrammar{	public final BooleanExpression parse() throws ParseException	{		return expression();	}	protected abstract BooleanExpression buildNamedExpression(String name);}PARSER_END(BooleanGrammar)SKIP : { " " | "\t" }TOKEN : /* OPERATORS */{	< AND : "&" >|	< OR : "|" >|	< XOR : "^" >
+public abstract class BooleanGrammar{	public final BooleanExpression parse() throws ParseException	{		return expression();	}	protected abstract BooleanExpression buildNamedExpression(String name);}PARSER_END(BooleanGrammar)SKIP : { " " | "\t" }TOKEN : /* OPERATORS */{	< AND : "&" >|	< OR : "|" >|	< XOR : "^" >
 |	< NOT : "!" >|	< SEP : ":" >
 |	< LP : "(" >
 |	< RP : ")" >
