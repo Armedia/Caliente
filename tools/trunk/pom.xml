@@ -128,12 +128,14 @@
 			<scope>compile</scope>
 		</dependency>
 
+		<!--
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-alfresco-bulk</artifactId>
 			<version>1.0.0</version>
 			<scope>compile</scope>
 		</dependency>
+		-->
 
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
