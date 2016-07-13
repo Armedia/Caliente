@@ -3,8 +3,8 @@ package com.delta.cmsmf.launcher.alfresco;
 import java.io.File;
 import java.util.Map;
 
+import com.armedia.cmf.engine.alfresco.bulk.importer.AlfImportEngine;
 import com.armedia.cmf.engine.xml.common.XmlSessionFactory;
-import com.armedia.cmf.engine.xml.importer.XmlImportEngine;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
@@ -15,7 +15,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 	private final File targetDir;
 
 	public CMSMFMain_import() throws Throwable {
-		super(XmlImportEngine.getImportEngine());
+		super(AlfImportEngine.getImportEngine());
 		String target = CLIParam.repository.getString();
 		if (target == null) {
 			target = ".";

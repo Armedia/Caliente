@@ -5,7 +5,7 @@
 	<name>CMS Migration Framework</name>
 	<groupId>com.delta</groupId>
 	<artifactId>cmsmf</artifactId>
-	<version>3.3.0-beta36</version>
+	<version>3.3.0-beta37</version>
 	<packaging>jar</packaging>
 
 	<scm>
@@ -128,14 +128,12 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<!--
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-alfresco-bulk</artifactId>
 			<version>1.0.0</version>
 			<scope>compile</scope>
 		</dependency>
-		-->
 
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
