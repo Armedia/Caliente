@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.tools;
 
-public class NegatedExpression implements BooleanExpression {
+public final class NegatedExpression implements BooleanExpression {
 
 	private final BooleanExpression expression;
 
@@ -14,4 +14,8 @@ public class NegatedExpression implements BooleanExpression {
 		return !this.expression.evaluate(c);
 	}
 
+	@Override
+	public final String toString() {
+		return String.format("NOT[%s]", this.expression);
+	}
 }
