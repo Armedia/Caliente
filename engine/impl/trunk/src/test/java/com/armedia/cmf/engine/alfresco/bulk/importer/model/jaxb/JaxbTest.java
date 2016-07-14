@@ -1,4 +1,4 @@
-package com.armedia.cmf.engine.alfresco.bulk.importer.jaxb;
+package com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb.Model;
 import com.armedia.commons.utilities.XmlTools;
 
 public class JaxbTest {

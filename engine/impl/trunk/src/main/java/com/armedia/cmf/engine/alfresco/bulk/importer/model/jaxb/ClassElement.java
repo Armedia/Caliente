@@ -1,5 +1,5 @@
 
-package com.armedia.cmf.engine.alfresco.bulk.importer.jaxb;
+package com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb;
 
 import java.util.List;
 

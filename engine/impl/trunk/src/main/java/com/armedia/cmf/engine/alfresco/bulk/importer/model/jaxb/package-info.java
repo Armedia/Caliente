@@ -1,0 +1,2 @@
+@javax.xml.bind.annotation.XmlSchema(namespace = com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb.ObjectFactory.NAMESPACE, elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
+package com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb;

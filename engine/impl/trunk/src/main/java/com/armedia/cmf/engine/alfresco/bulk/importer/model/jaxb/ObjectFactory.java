@@ -1,5 +1,5 @@
 
-package com.armedia.cmf.engine.alfresco.bulk.importer.jaxb;
+package com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlRegistry;
 
 /**
  * This object contains factory methods for each Java content interface and Java element interface
- * generated in the com.armedia.cmf.engine.alfresco.bulk.importer.jaxb package.
+ * generated in the com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb package.
  * <p>
  * An ObjectFactory allows you to programatically construct new instances of the Java representation
  * for XML content. The Java representation of XML content can consist of schema derived interfaces
@@ -23,7 +23,7 @@ public class ObjectFactory {
 
 	/**
 	 * Create a new ObjectFactory that can be used to create new instances of schema derived classes
-	 * for package: com.armedia.cmf.engine.alfresco.bulk.importer.jaxb
+	 * for package: com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb
 	 *
 	 */
 	public ObjectFactory() {
