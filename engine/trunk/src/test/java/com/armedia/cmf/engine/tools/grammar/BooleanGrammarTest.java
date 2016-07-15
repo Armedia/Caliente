@@ -45,7 +45,7 @@ public class BooleanGrammarTest {
 	}
 
 	@Test
-	public void testParse() throws Exception {
+	public void testNot() throws Exception {
 		String[] expressions = {
 			"Alpha", "!Alpha", "!   Alpha     ", "    !  Alpha      ",
 		};
