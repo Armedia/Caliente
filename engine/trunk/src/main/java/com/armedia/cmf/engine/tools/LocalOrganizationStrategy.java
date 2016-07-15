@@ -22,6 +22,10 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 		super(LocalOrganizationStrategy.NAME);
 	}
 
+	protected LocalOrganizationStrategy(String name) {
+		super(name);
+	}
+
 	@Override
 	public String calculateAddendum(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
 		final String attName = translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL);
