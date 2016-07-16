@@ -1,7 +1,8 @@
 package com.armedia.cmf.engine.tools.grammar;
 
 import java.io.StringReader;
-import java.util.Random;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -13,6 +14,7 @@ import com.armedia.cmf.engine.tools.BooleanExpression;
 import com.armedia.cmf.engine.tools.BooleanExpressionFactory;
 import com.armedia.cmf.engine.tools.BooleanUtils;
 import com.armedia.cmf.engine.tools.NameExistsExpression;
+import com.armedia.commons.utilities.Tools;
 
 public class BooleanGrammarTest {
 
@@ -23,16 +25,6 @@ public class BooleanGrammarTest {
 			return Boolean.valueOf(name.toLowerCase()) ? BooleanUtils.getTrue() : BooleanUtils.getFalse();
 		}
 	}
-
-	private static class NamedFactory implements BooleanExpressionFactory<BooleanContext> {
-		@Override
-		public BooleanExpression<BooleanContext> buildExpression(String name) {
-			Assert.assertNotNull(name);
-			return new NameExistsExpression<BooleanContext>(name);
-		}
-	}
-
-	private static final Random RANDOM = new Random(System.currentTimeMillis());
 
 	@Before
 	public void setUp() throws Exception {
@@ -237,12 +229,30 @@ public class BooleanGrammarTest {
 			}
 		};
 
-		BooleanExpressionFactory<BooleanContext> f = new NamedFactory();
+		final BooleanExpressionFactory<BooleanContext> f = new BooleanExpressionFactory<BooleanContext>() {
+			@Override
+			public BooleanExpression<BooleanContext> buildExpression(String name) {
+				Assert.assertNotNull(name);
+				return new NameExistsExpression<BooleanContext>(name) {
+					@Override
+					public boolean evaluate(BooleanContext c) {
+						return super.evaluate(c) && Boolean.valueOf(Tools.toString(c.getValue(getName())));
+					}
+				};
+			}
+		};
+
 		BooleanExpression<BooleanContext> e1 = new BooleanGrammar<BooleanContext>(new StringReader(ex1)).parse(f);
 		BooleanExpression<BooleanContext> e2 = new BooleanGrammar<BooleanContext>(new StringReader(ex2)).parse(f);
 
+		Map<String, Object> m = new TreeMap<String, Object>();
 		for (boolean[] t : tests) {
-
+			m.put("A", t[0]);
+			m.put("B", t[1]);
+			m.put("C", t[2]);
+			final BooleanContext c = new BooleanContext(m);
+			Assert.assertEquals(String.format("E=[%s] S=%s", ex1, m), t[3], e1.evaluate(c));
+			Assert.assertEquals(String.format("E=[%s] S=%s", ex2, m), t[4], e2.evaluate(c));
 		}
 	}
 }
