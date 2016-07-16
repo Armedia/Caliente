@@ -1,14 +1,14 @@
 package com.armedia.cmf.engine.tools;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class BooleanContext {
-	private final Map<String, Object> values;
+	protected final Map<String, Object> values;
 
 	public BooleanContext(Map<String, Object> values) {
-		this.values = Collections.unmodifiableMap(values);
+		this.values = new HashMap<String, Object>(values);
 	}
 
 	public Set<String> getValueNames() {

@@ -8,20 +8,20 @@ import java.util.List;
 public enum BooleanOperator {
 
 	//
-	AND(2) {
+	AND {
 		@Override
-		public boolean evaluate(Collection<BooleanExpression> terms, BooleanContext c) {
-			for (BooleanExpression e : terms) {
+		public <C extends BooleanContext> boolean evaluate(Collection<BooleanExpression<C>> terms, C c) {
+			for (BooleanExpression<C> e : terms) {
 				if (!e.evaluate(c)) { return false; }
 			}
 			return true;
 		}
 	},
-	XOR(2) {
+	XOR {
 		@Override
-		public boolean evaluate(Collection<BooleanExpression> terms, BooleanContext c) {
+		public <C extends BooleanContext> boolean evaluate(Collection<BooleanExpression<C>> terms, C c) {
 			int count = 0;
-			for (BooleanExpression e : terms) {
+			for (BooleanExpression<C> e : terms) {
 				if (e.evaluate(c)) {
 					count++;
 				}
@@ -29,10 +29,10 @@ public enum BooleanOperator {
 			return ((count % 2) != 0);
 		}
 	},
-	OR(2) {
+	OR {
 		@Override
-		public boolean evaluate(Collection<BooleanExpression> terms, BooleanContext c) {
-			for (BooleanExpression e : terms) {
+		public <C extends BooleanContext> boolean evaluate(Collection<BooleanExpression<C>> terms, C c) {
+			for (BooleanExpression<C> e : terms) {
 				if (e.evaluate(c)) { return true; }
 			}
 			return false;
@@ -41,26 +41,21 @@ public enum BooleanOperator {
 	//
 	;
 
-	private final int min;
+	public abstract <C extends BooleanContext> boolean evaluate(Collection<BooleanExpression<C>> terms, C c);
 
-	private BooleanOperator(int min) {
-		this.min = Math.max(1, min);
+	public final <C extends BooleanContext> BooleanExpression<C> construct(Collection<BooleanExpression<C>> terms) {
+		return new Group<C>(this, terms);
 	}
 
-	public abstract boolean evaluate(Collection<BooleanExpression> terms, BooleanContext c);
-
-	public final BooleanExpression construct(Collection<BooleanExpression> terms) {
-		return new Group(this, terms);
-	}
-
-	public final BooleanExpression construct(BooleanExpression a, BooleanExpression b, BooleanExpression... c) {
+	public final <C extends BooleanContext> BooleanExpression<C> construct(BooleanExpression<C> a,
+		BooleanExpression<C> b, BooleanExpression<C>... c) {
 		if (a == null) { throw new IllegalArgumentException("Must provide the first term"); }
 		if (b == null) { throw new IllegalArgumentException("Must provide the second term"); }
-		List<BooleanExpression> terms = new ArrayList<BooleanExpression>();
+		List<BooleanExpression<C>> terms = new ArrayList<BooleanExpression<C>>();
 		terms.add(a);
 		terms.add(b);
 		if (c != null) {
-			for (BooleanExpression e : c) {
+			for (BooleanExpression<C> e : c) {
 				if (e == null) { throw new IllegalArgumentException("May not provide null terms"); }
 				terms.add(e);
 			}
@@ -68,19 +63,19 @@ public enum BooleanOperator {
 		return construct(terms);
 	}
 
-	private static class Group implements BooleanExpression {
+	private static class Group<C extends BooleanContext> implements BooleanExpression<C> {
 
 		private final BooleanOperator op;
-		protected final List<BooleanExpression> terms;
+		protected final List<BooleanExpression<C>> terms;
 
-		private Group(BooleanOperator op, Collection<BooleanExpression> terms) {
+		private Group(BooleanOperator op, Collection<BooleanExpression<C>> terms) {
 			if (op == null) { throw new IllegalArgumentException("Must provide an operator to evaluate with"); }
 			if (terms == null) { throw new IllegalArgumentException("Must provide a valid set of terms"); }
-			if (terms.size() < op.min) { throw new IllegalArgumentException(
-				String.format("Must include at least %d terms for %s (got %d)", op.min, op.name(), terms.size())); }
+			if (terms.size() < 2) { throw new IllegalArgumentException(
+				String.format("Must include at least 2 terms for %s (got %d)", op.name(), terms.size())); }
 			this.op = op;
-			List<BooleanExpression> t = new ArrayList<BooleanExpression>(terms.size());
-			for (BooleanExpression e : terms) {
+			List<BooleanExpression<C>> t = new ArrayList<BooleanExpression<C>>(terms.size());
+			for (BooleanExpression<C> e : terms) {
 				if (e == null) { throw new IllegalArgumentException("May not include null terms"); }
 				t.add(e);
 			}
@@ -88,7 +83,7 @@ public enum BooleanOperator {
 		}
 
 		@Override
-		public final boolean evaluate(BooleanContext c) {
+		public final boolean evaluate(C c) {
 			return this.op.evaluate(this.terms, c);
 		}
 

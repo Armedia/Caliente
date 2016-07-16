@@ -2,7 +2,7 @@ package com.armedia.cmf.engine.tools;
 
 import com.armedia.commons.utilities.Tools;
 
-public class ValueEqualsExpression implements BooleanExpression {
+public class ValueEqualsExpression<C extends BooleanContext> implements BooleanExpression<C> {
 
 	private final String string;
 	private final Object value;
@@ -13,7 +13,7 @@ public class ValueEqualsExpression implements BooleanExpression {
 	}
 
 	@Override
-	public boolean evaluate(BooleanContext c) {
+	public boolean evaluate(C c) {
 		return Tools.equals(this.value, c.getValue(this.string));
 	}
 }

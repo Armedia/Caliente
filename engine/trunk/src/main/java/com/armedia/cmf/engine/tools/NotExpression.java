@@ -1,16 +1,16 @@
 package com.armedia.cmf.engine.tools;
 
-public final class NegatedExpression implements BooleanExpression {
+public final class NotExpression<C extends BooleanContext> implements BooleanExpression<C> {
 
-	private final BooleanExpression expression;
+	private final BooleanExpression<C> expression;
 
-	public NegatedExpression(BooleanExpression expression) {
+	public NotExpression(BooleanExpression<C> expression) {
 		if (expression == null) { throw new IllegalArgumentException("Must provide a non-null expression to negate"); }
 		this.expression = expression;
 	}
 
 	@Override
-	public boolean evaluate(BooleanContext c) {
+	public boolean evaluate(C c) {
 		return !this.expression.evaluate(c);
 	}
 

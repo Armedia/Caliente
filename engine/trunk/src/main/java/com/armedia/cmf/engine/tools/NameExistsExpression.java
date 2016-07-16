@@ -1,6 +1,6 @@
 package com.armedia.cmf.engine.tools;
 
-public class NameExistsExpression implements BooleanExpression {
+public class NameExistsExpression<C extends BooleanContext> implements BooleanExpression<C> {
 
 	private final String string;
 
@@ -9,7 +9,7 @@ public class NameExistsExpression implements BooleanExpression {
 	}
 
 	@Override
-	public boolean evaluate(BooleanContext c) {
+	public boolean evaluate(C c) {
 		return c.hasName(this.string);
 	}
 }
