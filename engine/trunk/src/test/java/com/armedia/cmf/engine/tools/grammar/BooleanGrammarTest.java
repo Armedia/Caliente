@@ -54,7 +54,47 @@ public class BooleanGrammarTest {
 		}
 	}
 
-	// @Test
+	@Test
+	public void testGroup() throws Exception {
+		Object[][] tests = {
+			{
+				"false*(false+false)", false
+			}, {
+				"false*(false+true)", false
+			}, {
+				"false*(true+false)", false
+			}, {
+				"false*(true+true)", false
+			}, {
+				"true*(false+false)", false
+			}, {
+				"true*(false+true)", true
+			}, {
+				"true*(true+false)", true
+			}, {
+				"true*(true+true)", true
+			}, {
+				"(false*false)+false", false
+			}, {
+				"(false*false)+true", true
+			}, {
+				"(false*true)+false", false
+			}, {
+				"(false*true)+true", true
+			}, {
+				"(true*false)+false", false
+			}, {
+				"(true*false)+true", true
+			}, {
+				"(true*true)+false", true
+			}, {
+				"(true*true)+true", true
+			}
+		};
+		test(tests);
+	}
+
+	@Test
 	public void testNOT() throws Exception {
 		Object[][] tests = {
 			{
@@ -64,13 +104,15 @@ public class BooleanGrammarTest {
 			}, {
 				"!(!true)", true
 			}, {
-				"!!false", true
+				"!!true", true
 			}, {
 				"!(!(!(!(true))))", true
 			}, {
 				"(!(!(!(!(true)))))", true
 			}, {
 				"!false", true
+			}, {
+				"!!false", false
 			}, {
 				"!(false)", true
 			}, {
