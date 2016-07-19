@@ -135,7 +135,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	}
 
 	protected final int getBacklogSize(Map<String, ?> settings) {
-		Object bl = settings.get(TransferSetting.BACKLOG_SIZE);
+		Object bl = settings.get(TransferSetting.BACKLOG_SIZE.getLabel());
 		if (!Number.class.isInstance(bl)) {
 			if (bl == null) {
 				bl = TransferEngine.DEFAULT_BACKLOG_SIZE;
@@ -148,7 +148,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	}
 
 	protected final int getThreadCount(Map<String, ?> settings) {
-		Object tc = settings.get(TransferSetting.THREAD_COUNT);
+		Object tc = settings.get(TransferSetting.THREAD_COUNT.getLabel());
 		if (!Number.class.isInstance(tc)) {
 			if (tc == null) {
 				tc = TransferEngine.DEFAULT_THREAD_COUNT;
