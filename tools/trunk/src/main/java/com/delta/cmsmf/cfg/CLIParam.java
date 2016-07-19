@@ -30,7 +30,7 @@ public enum CLIParam {
 	domain(null, 1, "The domain the user belongs to"),
 	log_name(null, 1, "The base name of the log file to use instead of the default (cmsmf-${action})"),
 	log4j(null, 1, "The Log4j configuration (XML format) to use instead of the default (overrides --log_name)"),
-	threads(null, 1, "The number of threads to use while importing or exporting"),
+	threads(Setting.THREADS, 1, "The number of threads to use while importing or exporting"),
 	non_recursive(null, 0, "Turn off counter recursion (i.e. to count a single folder without descending)"),
 	count_path(null, 1, "The path within which to count objects for"),
 	cmf_exclude_types(
