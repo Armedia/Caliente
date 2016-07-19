@@ -22,6 +22,7 @@ public enum Setting {
 		}
 
 	},
+	CONTENT_ORGANIZATION("content.organization"),
 	DB_DIRECTORY("db.directory"),
 	DB_TYPE("db.type"),
 	DEFAULT_USER_PASSWORD("default.user.password"),

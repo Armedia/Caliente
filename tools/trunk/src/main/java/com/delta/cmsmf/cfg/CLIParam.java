@@ -73,6 +73,10 @@ public enum CLIParam {
 		Setting.CONTENT_DIRECTORY,
 		1,
 		"The Content directory to use (if omitted, it will be placed in the 'content' subdirectory of the Database directory)"),
+	content_org(
+		Setting.CONTENT_ORGANIZATION,
+		1,
+		"The name of the organization strategy to use in the Content directory (specific engines may use their own defaults)"),
 	attributes(Setting.OWNER_ATTRIBUTES, 1, "The attributes to check for"),
 	errorCount(Setting.IMPORT_MAX_ERRORS, 1, "The number of errors to accept before aborting an import"),
 	default_password(

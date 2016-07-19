@@ -2,6 +2,7 @@ package com.delta.cmsmf.launcher;
 
 import java.io.File;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,8 +85,11 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			final String contentStoreName = (directFsExport ? "direct" : "local");
 			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 			if (!directFsExport) {
-				String strategy = getContentStrategyName();
-				if (strategy != null) {
+				String strategy = CLIParam.content_org.getString();
+				if (StringUtils.isBlank(strategy)) {
+					strategy = getContentStrategyName();
+				}
+				if (!StringUtils.isBlank(strategy)) {
 					cfg.getSettings().put("dir.content.strategy", strategy);
 				}
 			}
