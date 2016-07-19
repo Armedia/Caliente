@@ -263,6 +263,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			}
 		}
 
+		boolean substituteRoot = false;
 		if (antecedentVersion == null) {
 			Mapping mapping = null;
 			if (antecedentId != null) {
@@ -278,18 +279,13 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				antecedentVersion
 					.setObjectName(this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
 
-				// Link to prospective parents
-				// TODO: Mess with parents' permissions?
-				linkToParents(antecedentVersion, context);
-
 				// Create the chronicle mapping
 				// TODO: How do we revert this if the transaction fails later on?
 				context.getAttributeMapper().setMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
 					sourceChronicleId, antecedentVersion.getChronicleId().getId());
 
-				// And...finally...
-				// TODO: Need a "simple" way to modify the r_modify_date for the document
-				updateSystemAttributes(antecedentVersion, context);
+				// And...finally...use this object moving forward
+				substituteRoot = true;
 			} else {
 				IDfId id = new DfId(mapping.getTargetValue());
 				session.flushObject(id);
@@ -310,6 +306,11 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				// actually proceed with the rest of the algorithm...
 				final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(DctmAttributes.R_VERSION_LABEL,
 					CmfDataType.STRING, false, DfValueFactory.newStringValue(p.toString()));
+				if (substituteRoot) {
+					antecedentVersion.save();
+					// Don't need to do this again...
+					substituteRoot = false;
+				}
 				IDfDocument patchDocument = createSuccessorVersion(antecedentVersion, prop, context);
 				IDfId checkinId = persistNewVersion(patchDocument, p.asString(), context);
 				cleanUpTemporaryPermissions(session);
@@ -333,6 +334,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			if (newVersion.isSuccessorOf(lastVersion)) {
 				antecedentVersion = lastAntecedent;
 			}
+		} else if (substituteRoot) {
+			// If there were no gaps to patch up, then this is the valid starting point
+			// for the history hierarchy.
+			return antecedentVersion;
 		}
 
 		return createSuccessorVersion(antecedentVersion, null, context);
