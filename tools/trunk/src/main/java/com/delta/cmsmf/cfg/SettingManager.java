@@ -44,8 +44,8 @@ public class SettingManager {
 			try {
 				def.load(url);
 			} catch (ConfigurationException e) {
-				throw new RuntimeException(String.format("Failed to load the property defaults from [%s]",
-					SettingManager.DEFAULT_PROPERTIES));
+				throw new RuntimeException(
+					String.format("Failed to load the property defaults from [%s]", SettingManager.DEFAULT_PROPERTIES));
 			}
 		}
 		// Load the defaults
@@ -158,7 +158,7 @@ public class SettingManager {
 	 */
 	static Integer getInteger(String propName, Integer defaultValue) {
 		SettingManager.ensureInitialized();
-		return SettingManager.CFG.getInt(propName, defaultValue);
+		return SettingManager.CFG.getInteger(propName, defaultValue);
 	}
 
 	static Integer getInteger(String propName) {
