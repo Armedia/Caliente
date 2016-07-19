@@ -387,8 +387,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final int backlogSize;
 		// Ensure nobody changes this under our feet
 		synchronized (this) {
-			threadCount = getThreadCount();
-			backlogSize = getBacklogSize();
+			threadCount = getThreadCount(settings);
+			backlogSize = getBacklogSize(settings);
 		}
 
 		if (counter == null) {

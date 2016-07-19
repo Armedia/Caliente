@@ -100,35 +100,20 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private static final int DEFAULT_THREAD_COUNT = 16;
 	private static final int MIN_THREAD_COUNT = 1;
-	private static final int MAX_THREAD_COUNT = 32;
+	private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors() * 2;
+	private static final int MAX_THREAD_COUNT = Runtime.getRuntime().availableProcessors() * 3;
 
-	private static final int DEFAULT_BACKLOG_SIZE = 1000;
 	private static final int MIN_BACKLOG_SIZE = 10;
+	private static final int DEFAULT_BACKLOG_SIZE = 1000;
 	private static final int MAX_BACKLOG_SIZE = 100000;
 
 	private final List<L> listeners = new ArrayList<L>();
 
-	private int backlogSize = TransferEngine.DEFAULT_BACKLOG_SIZE;
-	private int threadCount = TransferEngine.DEFAULT_THREAD_COUNT;
-
 	protected final CmfCrypt crypto;
 
 	public TransferEngine(CmfCrypt crypto) {
-		this(crypto, TransferEngine.DEFAULT_THREAD_COUNT, TransferEngine.DEFAULT_BACKLOG_SIZE);
-	}
-
-	public TransferEngine(CmfCrypt crypto, int threadCount) {
-		this(crypto, threadCount, TransferEngine.DEFAULT_BACKLOG_SIZE);
-	}
-
-	public TransferEngine(CmfCrypt crypto, int threadCount, int backlogSize) {
 		this.crypto = crypto;
-		this.backlogSize = Tools.ensureBetween(TransferEngine.MIN_BACKLOG_SIZE, backlogSize,
-			TransferEngine.MAX_BACKLOG_SIZE);
-		this.threadCount = Tools.ensureBetween(TransferEngine.MIN_THREAD_COUNT, threadCount,
-			TransferEngine.MAX_THREAD_COUNT);
 	}
 
 	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
@@ -149,26 +134,30 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		return new ArrayList<L>(this.listeners);
 	}
 
-	protected final synchronized int getBacklogSize() {
-		return this.backlogSize;
-	}
-
-	protected final synchronized int setBacklogSize(int backlogSize) {
-		int old = this.backlogSize;
-		this.backlogSize = Tools.ensureBetween(TransferEngine.MIN_BACKLOG_SIZE, backlogSize,
+	protected final int getBacklogSize(Map<String, ?> settings) {
+		Object bl = settings.get(TransferSetting.BACKLOG_SIZE);
+		if (!Number.class.isInstance(bl)) {
+			if (bl == null) {
+				bl = TransferEngine.DEFAULT_BACKLOG_SIZE;
+			} else {
+				bl = Integer.valueOf(bl.toString());
+			}
+		}
+		return Tools.ensureBetween(TransferEngine.MIN_BACKLOG_SIZE, Number.class.cast(bl).intValue(),
 			TransferEngine.MAX_BACKLOG_SIZE);
-		return old;
 	}
 
-	protected final synchronized int getThreadCount() {
-		return this.threadCount;
-	}
-
-	protected final synchronized int setThreadCount(int threadCount) {
-		int old = this.threadCount;
-		this.threadCount = Tools.ensureBetween(TransferEngine.MIN_THREAD_COUNT, threadCount,
+	protected final int getThreadCount(Map<String, ?> settings) {
+		Object tc = settings.get(TransferSetting.THREAD_COUNT);
+		if (!Number.class.isInstance(tc)) {
+			if (tc == null) {
+				tc = TransferEngine.DEFAULT_THREAD_COUNT;
+			} else {
+				tc = Integer.valueOf(tc.toString());
+			}
+		}
+		return Tools.ensureBetween(TransferEngine.MIN_THREAD_COUNT, Number.class.cast(tc).intValue(),
 			TransferEngine.MAX_THREAD_COUNT);
-		return old;
 	}
 
 	protected abstract V getValue(CmfDataType type, Object value);

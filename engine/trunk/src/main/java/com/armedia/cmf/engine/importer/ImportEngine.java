@@ -279,13 +279,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings)
-			throws ImportException, CmfStorageException {
+		throws ImportException, CmfStorageException {
 		return runImport(output, objectStore, streamStore, settings, null);
 	}
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
 		final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
-			throws ImportException, CmfStorageException {
+		throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -365,12 +365,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final Map<String, ?> settings, final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
 		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper)
-			throws ImportException, CmfStorageException {
+		throws ImportException, CmfStorageException {
 		final int threadCount;
 		final int backlogSize;
 		synchronized (this) {
-			threadCount = getThreadCount();
-			backlogSize = getBacklogSize();
+			threadCount = getThreadCount(settings);
+			backlogSize = getBacklogSize(settings);
 		}
 
 		final AtomicInteger activeCounter = new AtomicInteger(0);
