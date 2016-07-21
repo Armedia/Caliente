@@ -45,8 +45,6 @@ import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.client.IDfSysObject;
-import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
@@ -197,73 +195,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// If we're a reference, and there's something there already, we don't import...
 		if (isReference()) { return true; }
 		return super.isSameObject(object);
-	}
-
-	protected IDfDocument newReference(DctmImportContext context) throws DfException, ImportException {
-		IDfSysObject target = null;
-		final IDfSession session = context.getSession();
-		IDfValue bindingCondition = this.cmfObject.getProperty(DctmAttributes.BINDING_CONDITION).getValue();
-		IDfValue bindingLabel = this.cmfObject.getProperty(DctmAttributes.BINDING_LABEL).getValue();
-		IDfValue referenceById = this.cmfObject.getProperty(DctmAttributes.REFERENCE_BY_ID).getValue();
-
-		// First, try to map the ID...
-		Mapping m = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
-			referenceById.asString());
-		if (m != null) {
-			referenceById = DfValueFactory.newIdValue(m.getTargetValue());
-		}
-
-		target = IDfSysObject.class.cast(session.getObject(referenceById.asId()));
-		if (!(target instanceof IDfSysObject)) { throw new ImportException(
-			String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
-				this.cmfObject.getLabel(), referenceById.asString())); }
-
-		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
-		IDfId mainFolderId = getMappedParentId(context);
-		if (mainFolderId == null) {
-			mainFolderId = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID).getValue().asId();
-			throw new ImportException(
-				String.format("Reference [%s] mapping for its parent folder [%s->???] could not be found",
-					this.cmfObject.getLabel(), mainFolderId.getId()));
-		}
-		final IDfId newId = targetSysObj.addReference(mainFolderId, bindingCondition.asString(),
-			bindingLabel.asString());
-		IDfCollection c = null;
-		final IDfReference ref;
-		try {
-			c = DfUtils.executeQuery(session,
-				String.format("select r_object_id from dm_reference_s where r_mirror_object_id = %s",
-					DfUtils.quoteString(newId.getId())));
-			if (!c.next()) {
-				// ERROR!
-				throw new ImportException(String.format("Reference [%s] could not be found with its new ID [%s]",
-					this.cmfObject.getLabel(), newId.getId()));
-			}
-			ref = IDfReference.class.cast(session.getObject(c.getId("r_object_id")));
-			ref.dump();
-		} finally {
-			DfUtils.closeQuietly(c);
-		}
-		CmfProperty<IDfValue> p = null;
-		p = this.cmfObject.getProperty(DctmAttributes.REFRESH_INTERVAL);
-		if ((p != null) && p.hasValues()) {
-			ref.setRefreshInterval(p.getValue().asInteger());
-		}
-		/*
-		p = this.cmfObject.getProperty(DctmAttributes.REFERENCE_DB_NAME);
-		if ((p != null) && p.hasValues()) {
-			ref.setReferenceDbName(p.getValue().asString());
-		}
-		p = this.cmfObject.getProperty(DctmAttributes.LOCAL_FOLDER_LINK);
-		if ((p != null) && p.hasValues()) {
-			ref.setReferenceDbName(p.getValue().asString());
-		}
-		p = this.cmfObject.getProperty(DctmAttributes.REFERENCE_BY_NAME);
-		if ((p != null) && p.hasValues()) {
-			ref.setReferenceDbName(p.getValue().asString());
-		}
-		*/
-		return castObject(session.getObject(newId));
 	}
 
 	@Override

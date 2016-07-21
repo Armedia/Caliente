@@ -41,7 +41,6 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.content.IDfContent;
-import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
@@ -66,29 +65,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfDocument document) throws DfException, ExportException {
 		if (!super.getDataProperties(ctx, properties, document)) { return false; }
-
-		IDfReference ref = getReferenceFor(document);
-		if (ref != null) {
-			properties
-				.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING.getStoredType(),
-					false, DfValueFactory.newStringValue(ref.getBindingCondition())));
-			properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_LABEL,
-				DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingLabel())));
-			properties
-				.add(new CmfProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING.getStoredType(),
-					false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
-			properties
-				.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING.getStoredType(),
-					false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
-			properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(),
-				false, DfValueFactory.newIdValue(ref.getReferenceById())));
-			properties
-				.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME, DctmDataType.DF_STRING.getStoredType(),
-					false, DfValueFactory.newStringValue(ref.getReferenceByName())));
-			properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL,
-				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
-			return false;
-		}
 
 		getVersionHistory(ctx, document);
 		List<IDfValue> patches = getVersionPatches(document, ctx);

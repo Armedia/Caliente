@@ -147,6 +147,29 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			}
 		}
 
+		IDfReference ref = getReferenceFor(object);
+		if (ref != null) {
+			properties
+				.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING.getStoredType(),
+					false, DfValueFactory.newStringValue(ref.getBindingCondition())));
+			properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_LABEL,
+				DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingLabel())));
+			properties
+				.add(new CmfProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING.getStoredType(),
+					false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
+			properties
+				.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING.getStoredType(),
+					false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
+			properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(),
+				false, DfValueFactory.newIdValue(ref.getReferenceById())));
+			properties
+				.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME, DctmDataType.DF_STRING.getStoredType(),
+					false, DfValueFactory.newStringValue(ref.getReferenceByName())));
+			properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL,
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
+			return false;
+		}
+
 		CmfProperty<IDfValue> acl = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ID,
 			DctmDataType.DF_ID.getStoredType(), false);
 		properties.add(acl);
@@ -345,6 +368,23 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			} else {
 				this.log.warn("SysObject {} refers to missing store [{}]", marshaled.getLabel(), storeName);
 			}
+		}
+
+		IDfReference ref = getReferenceFor(sysObject);
+		if (ref != null) {
+			IDfId referrentId = ref.getReferenceById();
+			if (Tools.equals(referrentId.getDocbaseId(), sysObject.getObjectId().getDocbaseId())) {
+				// The object is from the same docbase, so we make sure it's listed as a requirement
+				// to ensure it gets copied AFTER the referrent gets copied
+				DctmExportDelegate<?> delegate = this.factory.newExportDelegate(session.getObject(referrentId));
+				if (delegate == null) { throw new ExportException(String.format(
+					"The %s [%s](%s) is a reference to an object with ID (%s), but that object is not supported to be exported",
+					marshaled.getType(), marshaled.getLabel(), marshaled.getId(), referrentId.getId())); }
+				req.add(delegate);
+			}
+
+			// For references, we stop here
+			return req;
 		}
 
 		// Export the ACL requirements

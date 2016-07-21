@@ -226,6 +226,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 
 	@Override
 	protected IDfFolder newObject(DctmImportContext ctx) throws DfException, ImportException {
+		if (isReference()) { return newReference(ctx); }
+
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		CmfAttribute<IDfValue> a = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
 		String path = "";
