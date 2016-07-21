@@ -145,8 +145,9 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 		}
 	}
 
-	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
+	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
+		return true;
 	}
 
 	@Override

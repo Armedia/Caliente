@@ -15,6 +15,7 @@ import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmGroup;
+import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
@@ -53,8 +54,8 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		final IDfSession session = group.getSession();
 		// If the group has already been visited, we have a loop...so let's explode loudly
 		final IDfId groupId = group.getObjectId();
-		if (visited.contains(groupId.getId())) { throw new DfException(String.format(
-			"Group loop detected, element [%s] exists twice: %s", groupId.getId(), visited.toString())); }
+		if (visited.contains(groupId.getId())) { throw new DfException(
+			String.format("Group loop detected, element [%s] exists twice: %s", groupId.getId(), visited.toString())); }
 		visited.add(groupId.getId());
 
 		try {
@@ -105,8 +106,9 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, IDfGroup group)
-		throws DfException {
+	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
+		IDfGroup group) throws DfException, ExportException {
+		if (!super.getDataProperties(ctx, properties, group)) { return false; }
 		// CmfStore all the users that have this group as their default group
 		CmfProperty<IDfValue> property = new CmfProperty<IDfValue>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
@@ -127,6 +129,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
+		return true;
 	}
 
 	@Override
@@ -137,9 +140,9 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		String groupOwner = group.getOwnerName();
 		if (!DctmMappingUtils.isMappableUser(session, groupOwner) && !ctx.isSpecialUser(groupOwner)) {
 			IDfUser owner = session.getUser(groupOwner);
-			if (owner == null) { throw new Exception(String.format(
-				"Missing dependency for group [%s] - user [%s] not found (as group owner)", group.getGroupName(),
-				groupOwner)); }
+			if (owner == null) { throw new Exception(
+				String.format("Missing dependency for group [%s] - user [%s] not found (as group owner)",
+					group.getGroupName(), groupOwner)); }
 			ret.add(this.factory.newExportDelegate(owner));
 		} else {
 			this.log.warn(String.format("Skipping export of special user [%s] as the owner of group [%s]", groupOwner,
@@ -149,9 +152,9 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		String groupAdmin = group.getGroupAdmin();
 		if (!DctmMappingUtils.isMappableUser(session, groupAdmin) && !ctx.isSpecialUser(groupAdmin)) {
 			IDfUser admin = session.getUser(groupAdmin);
-			if (admin == null) { throw new Exception(String.format(
-				"Missing dependency for group [%s] - user [%s] not found (as group admin)", group.getGroupName(),
-				groupAdmin)); }
+			if (admin == null) { throw new Exception(
+				String.format("Missing dependency for group [%s] - user [%s] not found (as group admin)",
+					group.getGroupName(), groupAdmin)); }
 			ret.add(this.factory.newExportDelegate(admin));
 		} else {
 			this.log.warn(String.format("Skipping export of special user [%s] as the admin of group [%s]", groupAdmin,
@@ -206,9 +209,9 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 				}
 				if (!DctmMappingUtils.SPECIAL_NAMES.contains(groupName)) {
 					// Make sure to explode because this is a group that's expected to exist
-					throw new Exception(String.format(
-						"Missing dependency for group [%s] - group [%s] not found (as group member)",
-						group.getGroupName(), groupName));
+					throw new Exception(
+						String.format("Missing dependency for group [%s] - group [%s] not found (as group member)",
+							group.getGroupName(), groupName));
 				}
 			}
 		}
@@ -222,18 +225,18 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 
 		// Avoid calling DQL twice
 		CmfProperty<IDfValue> property = marshaled.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
-		if (property == null) { throw new Exception(String.format(
-			"The export for group [%s] does not contain the critical property [%s]", marshaled.getLabel(),
-			DctmGroup.USERS_WITH_DEFAULT_GROUP)); }
+		if (property == null) { throw new Exception(
+			String.format("The export for group [%s] does not contain the critical property [%s]", marshaled.getLabel(),
+				DctmGroup.USERS_WITH_DEFAULT_GROUP)); }
 
 		for (IDfValue v : property) {
 			IDfUser user = session.getUser(v.asString());
 			if (user == null) {
 				// in theory, this should be impossible as we just got the list via a direct query
 				// to dm_user, and thus the users listed do exist
-				throw new Exception(String.format(
-					"Missing dependent for group [%s] - user [%s] not found (as default group)", group.getGroupName(),
-					v.asString()));
+				throw new Exception(
+					String.format("Missing dependent for group [%s] - user [%s] not found (as default group)",
+						group.getGroupName(), v.asString()));
 			}
 			ret.add(this.factory.newExportDelegate(user));
 		}

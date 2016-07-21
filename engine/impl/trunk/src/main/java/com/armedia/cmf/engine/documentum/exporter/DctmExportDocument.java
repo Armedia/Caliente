@@ -42,7 +42,6 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.client.distributed.IDfReference;
-import com.documentum.fc.client.distributed.impl.ReferenceFinder;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
@@ -64,47 +63,48 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
+	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfDocument document) throws DfException, ExportException {
-		super.getDataProperties(ctx, properties, document);
+		if (!super.getDataProperties(ctx, properties, document)) { return false; }
 
-		final IDfSession session = ctx.getSession();
-
-		if (!isDfReference(document)) {
-			getVersionHistory(ctx, document);
-			List<IDfValue> patches = getVersionPatches(document, ctx);
-			if ((patches != null) && !patches.isEmpty()) {
-				properties.add(new CmfProperty<IDfValue>(DctmSysObject.VERSION_PATCHES,
-					DctmDataType.DF_STRING.getStoredType(), true, patches));
-			}
-			IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
-			if (patchAntecedent != null) {
-				properties.add(new CmfProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT,
-					DctmDataType.DF_ID.getStoredType(), false, patchAntecedent));
-			}
-
-			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.IS_LATEST_VERSION,
-				DctmDataType.DF_BOOLEAN.getStoredType(), false,
-				DfValueFactory.newBooleanValue(document.getHasFolder())));
-			return;
+		IDfReference ref = getReferenceFor(document);
+		if (ref != null) {
+			properties
+				.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING.getStoredType(),
+					false, DfValueFactory.newStringValue(ref.getBindingCondition())));
+			properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_LABEL,
+				DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingLabel())));
+			properties
+				.add(new CmfProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK, DctmDataType.DF_STRING.getStoredType(),
+					false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
+			properties
+				.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME, DctmDataType.DF_STRING.getStoredType(),
+					false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
+			properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(),
+				false, DfValueFactory.newIdValue(ref.getReferenceById())));
+			properties
+				.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME, DctmDataType.DF_STRING.getStoredType(),
+					false, DfValueFactory.newStringValue(ref.getReferenceByName())));
+			properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL,
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
+			return false;
 		}
 
-		// TODO: this is untidy - using an undocumented API??
-		IDfReference ref = ReferenceFinder.getForMirrorId(document.getObjectId(), session);
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_CONDITION,
-			DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getBindingCondition())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING.getStoredType(),
-			false, DfValueFactory.newStringValue(ref.getBindingLabel())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.LOCAL_FOLDER_LINK,
-			DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getLocalFolderLink())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_DB_NAME,
-			DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceDbName())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_ID, DctmDataType.DF_ID.getStoredType(),
-			false, DfValueFactory.newIdValue(ref.getReferenceById())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFERENCE_BY_NAME,
-			DctmDataType.DF_STRING.getStoredType(), false, DfValueFactory.newStringValue(ref.getReferenceByName())));
-		properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL,
-			DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
+		getVersionHistory(ctx, document);
+		List<IDfValue> patches = getVersionPatches(document, ctx);
+		if ((patches != null) && !patches.isEmpty()) {
+			properties.add(new CmfProperty<IDfValue>(DctmSysObject.VERSION_PATCHES,
+				DctmDataType.DF_STRING.getStoredType(), true, patches));
+		}
+		IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
+		if (patchAntecedent != null) {
+			properties.add(new CmfProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID.getStoredType(),
+				false, patchAntecedent));
+		}
+
+		properties.add(new CmfProperty<IDfValue>(IntermediateProperty.IS_LATEST_VERSION,
+			DctmDataType.DF_BOOLEAN.getStoredType(), false, DfValueFactory.newBooleanValue(document.getHasFolder())));
+		return true;
 	}
 
 	private List<IDfDocument> getVersions(DctmExportContext ctx, boolean prior, IDfDocument document)

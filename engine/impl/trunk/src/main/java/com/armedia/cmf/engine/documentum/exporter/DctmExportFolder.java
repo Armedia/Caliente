@@ -59,8 +59,8 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 
 	private int calculateDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
 		// If the folder has already been visited, we have a loop...so let's explode loudly
-		if (visited.contains(folderId.getId())) { throw new DfException(String.format(
-			"Folder loop detected, element [%s] exists twice: %s", folderId.getId(), visited.toString())); }
+		if (visited.contains(folderId.getId())) { throw new DfException(String
+			.format("Folder loop detected, element [%s] exists twice: %s", folderId.getId(), visited.toString())); }
 		visited.add(folderId.getId());
 		try {
 			int depth = 0;
@@ -97,9 +97,9 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
+	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfFolder folder) throws DfException, ExportException {
-		super.getDataProperties(ctx, properties, folder);
+		if (!super.getDataProperties(ctx, properties, folder)) { return false; }
 		final String folderId = folder.getObjectId().getId();
 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
@@ -111,7 +111,8 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 				DctmFolder.USERS_DEFAULT_FOLDER_PATHS, DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				IDfValue v = resultCol.getValueAt(0);
-				if (DctmMappingUtils.isMappableUser(ctx.getSession(), v.asString()) || ctx.isSpecialUser(v.asString())) {
+				if (DctmMappingUtils.isMappableUser(ctx.getSession(), v.asString())
+					|| ctx.isSpecialUser(v.asString())) {
 					// We don't modify the home directory for mappable users or special users...
 					continue;
 				}
@@ -143,6 +144,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		} finally {
 			DfUtils.closeQuietly(resultCol);
 		}
+		return true;
 	}
 
 	@Override
@@ -172,17 +174,17 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		}
 
 		CmfProperty<IDfValue> usersWithDefaultFolder = marshaled.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
-		if (usersWithDefaultFolder == null) { throw new Exception(String.format(
-			"The export for folder [%s] does not contain the critical property [%s]", marshaled.getLabel(),
-			DctmFolder.USERS_WITH_DEFAULT_FOLDER)); }
+		if (usersWithDefaultFolder == null) { throw new Exception(
+			String.format("The export for folder [%s] does not contain the critical property [%s]",
+				marshaled.getLabel(), DctmFolder.USERS_WITH_DEFAULT_FOLDER)); }
 		for (IDfValue v : usersWithDefaultFolder) {
 			IDfUser user = session.getUser(v.asString());
 			if (user == null) {
 				// in theory, this should be impossible as we just got the list via a direct query
 				// to dm_user, and thus the users listed do exist
-				throw new Exception(String.format(
-					"Missing dependent for folder [%s] - user [%s] not found (as default folder)",
-					marshaled.getLabel(), v.asString()));
+				throw new Exception(
+					String.format("Missing dependent for folder [%s] - user [%s] not found (as default folder)",
+						marshaled.getLabel(), v.asString()));
 			}
 			ret.add(this.factory.newExportDelegate(user));
 		}

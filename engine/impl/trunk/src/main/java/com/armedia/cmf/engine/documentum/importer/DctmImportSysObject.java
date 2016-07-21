@@ -621,17 +621,12 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected boolean isReference() {
-		// TODO: No reference support...yet...uncomment this when testing
-		// the reference support
-		// return getAttribute(CmsAttributes.I_IS_REFERENCE).getValue().asBoolean();
-		return false;
+		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.I_IS_REFERENCE);
+		return ((att != null) && att.hasValues() && att.getValue().asBoolean());
 	}
 
 	protected boolean isDfReference(T object) throws DfException {
-		// TODO: No reference support...yet...uncomment this when testing
-		// the reference support
-		// return object.isReference();
-		return false;
+		return object.isReference();
 	}
 
 	@Override

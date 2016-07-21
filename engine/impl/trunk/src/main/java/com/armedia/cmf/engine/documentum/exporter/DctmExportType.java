@@ -62,37 +62,39 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, IDfType object)
-		throws DfException, ExportException {
-		String typeName = object.getString(DctmAttributes.NAME);
-		IDfType dfType = object.getSession().getType(typeName);
+	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
+		IDfType type) throws DfException, ExportException {
+		if (!super.getDataProperties(ctx, properties, type)) { return false; }
+		String typeName = type.getString(DctmAttributes.NAME);
+		IDfType dfType = type.getSession().getType(typeName);
 		// If there's no dfType, then we clearly have an issue
 		if (dfType == null) { throw new ExportException(String.format(
 			"Could not locate the type object for [%s] even though its definition is being exported", typeName)); }
-		DctmObjectType type;
+		DctmObjectType dctmTypeObjectType;
 		try {
-			type = DctmObjectType.decodeType(dfType);
+			dctmTypeObjectType = DctmObjectType.decodeType(dfType);
 		} catch (UnsupportedDctmObjectTypeException e) {
 			// if this isn't a type we support (because it's a supertype that doesn't map to
 			// a concrete type), then we simply skip adding the "target" marker property
-			return;
+			return false;
 		}
 
-		final int attCount = object.getValueCount(DctmAttributes.ATTR_NAME);
+		final int attCount = type.getValueCount(DctmAttributes.ATTR_NAME);
 		// We map the name for every attribute, just to be safe
 		final CmfAttributeTranslator<IDfValue> translator = this.factory.getTranslator();
 		CmfProperty<IDfValue> orig = new CmfProperty<IDfValue>(IntermediateProperty.ORIG_ATTR_NAME, CmfDataType.STRING);
 		CmfProperty<IDfValue> mapped = new CmfProperty<IDfValue>(IntermediateProperty.MAPPED_ATTR_NAME,
 			CmfDataType.STRING);
 		for (int i = 0; i < attCount; i++) {
-			IDfValue o = object.getRepeatingValue(DctmAttributes.ATTR_NAME, i);
-			IDfValue m = DfValueFactory.newStringValue(translator.encodeAttributeName(type.getStoredObjectType(),
-				o.asString()));
+			IDfValue o = type.getRepeatingValue(DctmAttributes.ATTR_NAME, i);
+			IDfValue m = DfValueFactory
+				.newStringValue(translator.encodeAttributeName(dctmTypeObjectType.getStoredObjectType(), o.asString()));
 			orig.addValue(o);
 			mapped.addValue(m);
 		}
 		properties.add(orig);
 		properties.add(mapped);
+		return true;
 	}
 
 	@Override

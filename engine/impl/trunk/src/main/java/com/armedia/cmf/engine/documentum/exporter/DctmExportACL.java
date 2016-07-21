@@ -65,7 +65,8 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
-			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL, DctmDataType.DF_STRING.getStoredType());
+			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL,
+				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				property.addValue(resultCol.getValueAt(0));
 			}
@@ -104,9 +105,8 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessor)) {
 				// Accessor not there, skip it...
 				if (!missingAccessors.contains(accessor)) {
-					this.log.warn(String.format(
-						"Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)", getLabel(),
-						(group ? "group" : "user"), accessor));
+					this.log.warn(String.format("Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)",
+						getLabel(), (group ? "group" : "user"), accessor));
 					missingAccessors.add(accessor);
 				}
 				continue;
@@ -122,10 +122,12 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, IDfACL acl)
+	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, IDfACL acl)
 		throws DfException, ExportException {
+		if (!super.getDataProperties(ctx, properties, acl)) { return false; }
 		getDataPropertiesForDocumentum(ctx, properties, acl);
 		DctmCmisACLTools.calculateCmisActions(acl, properties);
+		return true;
 	}
 
 	@Override
@@ -171,9 +173,9 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			this.log.warn(String.format("Skipping export of special user [%s]", owner));
 		} else {
 			IDfUser user = session.getUser(owner);
-			if (user == null) { throw new Exception(String.format(
-				"Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner, acl.getObjectName(),
-				owner)); }
+			if (user == null) { throw new Exception(
+				String.format("Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner,
+					acl.getObjectName(), owner)); }
 			ret.add(this.factory.newExportDelegate(user));
 		}
 		return ret;

@@ -29,10 +29,12 @@ import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfACL;
+import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.content.IDfStore;
+import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -114,8 +116,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected void getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
+	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
+		if (!super.getDataProperties(ctx, properties, object)) { return false; }
+
 		IDfSession session = object.getSession();
 		CmfProperty<IDfValue> paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH,
 			DctmDataType.DF_STRING.getStoredType(), true);
@@ -152,6 +156,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			aclId = aclObj.getObjectId();
 		}
 		acl.setValue(DfValueFactory.newIdValue(aclId));
+		return true;
 	}
 
 	@Override
@@ -315,10 +320,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	protected boolean isDfReference(T object) throws DfException {
-		// TODO: No reference support...yet...uncomment this when testing
-		// the reference support
-		// return object.isReference();
-		return false;
+		return object.isReference();
 	}
 
 	@Override
@@ -348,5 +350,20 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		// Export the ACL requirements
 		req.add(this.factory.newExportDelegate(sysObject.getACL()));
 		return req;
+	}
+
+	protected IDfReference getReferenceFor(T object) throws DfException {
+		if ((object == null) || !object.isReference()) { return null; }
+		IDfCollection c = null;
+		final IDfSession s = object.getSession();
+		try {
+			c = DfUtils.executeQuery(s,
+				String.format("select r_object_id from dm_reference_s where r_mirror_object_id = %s",
+					DfUtils.quoteString(object.getObjectId().getId())));
+			if (!c.next()) { return null; }
+			return IDfReference.class.cast(s.getObject(c.getId("r_object_id")));
+		} finally {
+			DfUtils.closeQuietly(c);
+		}
 	}
 }
