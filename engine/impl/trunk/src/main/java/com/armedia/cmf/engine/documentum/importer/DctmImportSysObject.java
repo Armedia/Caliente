@@ -462,7 +462,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		doFinalizeConstruction(object, newObject, context);
 		// Now, link to the parent folders
 		linkToParents(object, context);
-		restoreAcl(object, context);
+		if (!isReference()) {
+			restoreAcl(object, context);
+		}
 	}
 
 	protected void doFinalizeConstruction(T object, boolean newObject, DctmImportContext context)

@@ -70,7 +70,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		throws DfException, ImportException {
 
 		final String folderName;
-		if (newObject) {
+		if (newObject && !isDfReference(folder)) {
 			CmfAttribute<IDfValue> objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
 			IDfValue newValue = objectName.getValue();
 			folderName = newValue.toString().trim();
