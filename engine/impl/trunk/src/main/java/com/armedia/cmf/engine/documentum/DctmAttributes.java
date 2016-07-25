@@ -120,6 +120,12 @@ public class DctmAttributes {
 	/** The title attribute of dm_sysobject */
 	public static final String TITLE = "title";
 
+	/** The r_is_virutal_doc attribute of dm_sysobject. */
+	public static final String R_IS_VIRTUAL_DOC = "r_is_virtual_doc";
+
+	/** The r_link_cnt attribute of dm_sysobject. */
+	public static final String R_LINK_CNT = "r_link_cnt";
+
 	// dm_folder Attributes
 	/** The r_folder_path attribute of dm_folder. */
 	public static final String R_FOLDER_PATH = "r_folder_path";

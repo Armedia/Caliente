@@ -40,6 +40,8 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
+import com.documentum.fc.client.IDfVirtualDocument;
+import com.documentum.fc.client.IDfVirtualDocumentNode;
 import com.documentum.fc.client.content.IDfContent;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
@@ -80,6 +82,21 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 		properties.add(new CmfProperty<IDfValue>(IntermediateProperty.IS_LATEST_VERSION,
 			DctmDataType.DF_BOOLEAN.getStoredType(), false, DfValueFactory.newBooleanValue(document.getHasFolder())));
+
+		// If this is a virtual document, we export the document's components first
+		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {
+			CmfProperty<IDfValue> p = new CmfProperty<IDfValue>(IntermediateProperty.VDOC_MEMBER,
+				IntermediateProperty.VDOC_MEMBER.type);
+			properties.add(p);
+			final IDfVirtualDocument vDoc = document.asVirtualDocument("CURRENT", false);
+			final IDfVirtualDocumentNode root = vDoc.getRootNode();
+			final int members = root.getChildCount();
+			for (int i = 0; i < members; i++) {
+				final IDfVirtualDocumentNode child = root.getChild(i);
+				p.addValue(DfValueFactory.newStringValue(String.format("%s|%s|%s|%s", child.getChronId().getId(),
+					child.getBinding(), child.getFollowAssembly(), child.getOverrideLateBindingValue())));
+			}
+		}
 		return true;
 	}
 
@@ -144,21 +161,41 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			req.add(this.factory.newExportDelegate(group));
 		}
 
+		// If this is a virtual document, we export the document's components first
+		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {
+			IDfVirtualDocument vDoc = document.asVirtualDocument("CURRENT", false);
+			int components = vDoc.getUniqueObjectIdCount();
+			for (int i = 0; i < components; i++) {
+				req.add(this.factory.newExportDelegate(session.getObject(vDoc.getUniqueObjectId(i))));
+			}
+		}
+
 		// We only export versions if we're the root object of the context operation
 		// There is no actual harm done, since the export engine is smart enough to
 		// not duplicate, but doing it like this helps us avoid o(n^2) performance
 		// which is BAAAD
+		boolean rootObject = false;
 		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
+			int previousCount = 0;
 			for (IDfDocument versionDoc : getVersions(ctx, true, document)) {
 				if (this.log.isDebugEnabled()) {
 					this.log
 						.debug(String.format("Adding prior version [%s]", calculateVersionString(versionDoc, false)));
 				}
 				req.add(this.factory.newExportDelegate(versionDoc));
+				previousCount++;
+			}
+			rootObject = (previousCount == 0);
+		} else {
+			// If we're the first object in the version history, we mark ourselves as such.
+			for (IDfDocument d : getVersionHistory(ctx, document)) {
+				rootObject = (Tools.equals(d.getObjectId(), document.getObjectId()));
+				break;
 			}
 		}
-
+		marshaled.setProperty(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+			IntermediateProperty.VERSION_TREE_ROOT.type, DfValueFactory.newBooleanValue(rootObject)));
 		return req;
 	}
 

@@ -35,6 +35,7 @@ import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -45,6 +46,9 @@ import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfSysObject;
+import com.documentum.fc.client.IDfVirtualDocument;
+import com.documentum.fc.client.IDfVirtualDocumentNode;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
@@ -178,7 +182,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 	@Override
 	protected boolean isVersionable(IDfDocument object) throws DfException {
-		// TODO: Are references versionable, per-se?
 		return true;
 	}
 
@@ -400,9 +403,11 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		throws DfException {
 
 		// Is root?
+		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.VERSION_TREE_ROOT);
 		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
 		String sourceChronicleId = (att != null ? att.getValue().asId().getId() : null);
-		final boolean root = ((sourceChronicleId == null) || Tools.equals(this.cmfObject.getId(), sourceChronicleId));
+		final boolean root = (((p != null) && p.hasValues() && p.getValue().asBoolean()) || (sourceChronicleId == null)
+			|| Tools.equals(this.cmfObject.getId(), sourceChronicleId));
 		if (!root && !newObject) {
 			this.antecedentTemporaryPermission = new TemporaryPermission(document, IDfACL.DF_PERMIT_VERSION);
 			if (this.antecedentTemporaryPermission.grant(document)) {
@@ -706,12 +711,65 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		return false;
 	}
 
+	protected void handleVirtualDocumentMembers(final IDfDocument document, final DctmImportContext context)
+		throws DfException, ImportException {
+		final boolean vdocFlag;
+		final boolean addVdocMembers;
+		final CmfAttribute<IDfValue> a = this.cmfObject.getAttribute(DctmAttributes.R_IS_VIRTUAL_DOC);
+		if (a.hasValues()) {
+			vdocFlag = a.getValue().asBoolean();
+			if (a.getValue().asBoolean()) {
+				addVdocMembers = true;
+			} else {
+				CmfAttribute<IDfValue> b = this.cmfObject.getAttribute(DctmAttributes.R_LINK_CNT);
+				addVdocMembers = ((b != null) && b.hasValues() && (b.getValue().asInteger() > 0));
+			}
+		} else {
+			vdocFlag = false;
+			addVdocMembers = false;
+		}
+
+		if (vdocFlag != document.isVirtualDocument()) {
+			document.setIsVirtualDocument(vdocFlag);
+		}
+		if (document.isCheckedOut() && addVdocMembers) {
+			// We can only add virtual document members if the document is checked out
+			// TODO: How to select the binding label?
+			// TODO: How to select the root assembly flag?
+			IDfVirtualDocument vdoc = document.asVirtualDocument("CURRENT", false);
+			IDfVirtualDocumentNode root = vdoc.getRootNode();
+			IDfVirtualDocumentNode prev = null;
+			CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
+			if (p != null) {
+				for (IDfValue v : p) {
+					String[] s = v.asString().split("\\|");
+					Mapping m = context.getAttributeMapper().getTargetMapping(CmfType.DOCUMENT,
+						DctmAttributes.R_OBJECT_ID, s[0]);
+					if (m == null) { throw new ImportException(String.format(
+						"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",
+						this.cmfObject.getLabel(), this.cmfObject.getId(), v.asString())); }
+					final IDfId childId = new DfId(m.getTargetValue());
+					IDfSysObject so = IDfSysObject.class.cast(context.getSession().getObject(childId));
+
+					final String childBinding = (StringUtils.isBlank(s[1]) ? "CURRENT" : s[1]);
+					final boolean childIsVirtualDoc = (so.isVirtualDocument() || (so.getLinkCount() > 0));
+					final boolean followAssembly = childIsVirtualDoc ? Boolean.valueOf(s[2]) : false;
+					final boolean overrideLateBinding = childIsVirtualDoc ? Boolean.valueOf(s[3]) : false;
+
+					prev = vdoc.addNode(root, prev, childId, childBinding, followAssembly, overrideLateBinding);
+				}
+			}
+		}
+	}
+
 	@Override
 	protected void doFinalizeConstruction(final IDfDocument document, boolean newObject,
 		final DctmImportContext context) throws DfException, ImportException {
 
 		// References don't require any of this being done
 		if (isReference()) { return; }
+
+		// handleVirtualDocumentMembers(document, context);
 
 		if (!context.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT)) {
 			loadContent(document, newObject, context);
