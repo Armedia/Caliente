@@ -741,7 +741,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (addVdocMembers && document.isCheckedOut()) {
 			CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
-			if (p != null) {
+			if ((p != null) && p.hasValues()) {
 				IDfVirtualDocument vdoc = document.asVirtualDocument("CURRENT", false);
 				IDfVirtualDocumentNode root = vdoc.getRootNode();
 				IDfVirtualDocumentNode prev = null;
