@@ -206,18 +206,24 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		if (isReference()) { return newReference(context); }
 
 		final CmfAttribute<IDfValue> sourceChronicleAtt = this.cmfObject.getAttribute(DctmAttributes.I_CHRONICLE_ID);
-		final CmfAttribute<IDfValue> antecedentAtt = this.cmfObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
 		final String sourceChronicleId = (sourceChronicleAtt != null ? sourceChronicleAtt.getValue().asString() : null);
 
 		// If we have no chronicle info to look for, we don't try to...
-		final boolean root = ((sourceChronicleId == null) || (antecedentAtt == null)
-			|| Tools.equals(this.cmfObject.getId(), sourceChronicleId));
-		if (root) { return super.newObject(context); }
+		final CmfProperty<IDfValue> rootProp = this.cmfObject.getProperty(IntermediateProperty.VERSION_TREE_ROOT);
+		final boolean root = ((rootProp != null) && rootProp.hasValues() && rootProp.getValue().asBoolean());
+		if (root) {
+			// This is the start of a new chronicle
+			final IDfDocument newDoc = super.newObject(context);
+			context.getAttributeMapper().setMapping(this.cmfObject.getType(), DctmAttributes.I_CHRONICLE_ID,
+				sourceChronicleId, newDoc.getChronicleId().getId());
+			return newDoc;
+		}
 
 		final IDfSession session = context.getSession();
 
 		final IDfId antecedentId;
 		IDfDocument antecedentVersion = null;
+		final CmfAttribute<IDfValue> antecedentAtt = this.cmfObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
 		final CmfProperty<IDfValue> antecedentProperty = this.cmfObject.getProperty(DctmSysObject.PATCH_ANTECEDENT);
 		if (antecedentProperty == null) {
 			antecedentId = (antecedentAtt != null ? antecedentAtt.getValue().asId() : DfId.DF_NULLID);
@@ -255,11 +261,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				// Set the name
 				antecedentVersion
 					.setObjectName(this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
-
-				// Create the chronicle mapping
-				// TODO: How do we revert this if the transaction fails later on?
-				context.getAttributeMapper().setMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
-					sourceChronicleId, antecedentVersion.getChronicleId().getId());
 
 				// And...finally...use this object moving forward
 				substituteRoot = true;
@@ -744,19 +745,23 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				for (IDfValue v : p) {
 					String[] s = v.asString().split("\\|");
 					Mapping m = context.getAttributeMapper().getTargetMapping(CmfType.DOCUMENT,
-						DctmAttributes.R_OBJECT_ID, s[0]);
+						DctmAttributes.I_CHRONICLE_ID, s[0]);
 					if (m == null) { throw new ImportException(String.format(
 						"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",
 						this.cmfObject.getLabel(), this.cmfObject.getId(), v.asString())); }
-					final IDfId childId = new DfId(m.getTargetValue());
-					IDfSysObject so = IDfSysObject.class.cast(context.getSession().getObject(childId));
+					IDfSysObject so = IDfSysObject.class.cast(context.getSession().getObjectByQualification(String
+						.format("dm_sysobject where i_chronicle_id = %s", DfUtils.quoteString(m.getTargetValue()))));
+					if (so == null) { throw new ImportException(String.format(
+						"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",
+						this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue())); }
 
 					final String childBinding = (StringUtils.isBlank(s[1]) ? "CURRENT" : s[1]);
 					final boolean childIsVirtualDoc = (so.isVirtualDocument() || (so.getLinkCount() > 0));
 					final boolean followAssembly = childIsVirtualDoc ? Boolean.valueOf(s[2]) : false;
 					final boolean overrideLateBinding = childIsVirtualDoc ? Boolean.valueOf(s[3]) : false;
 
-					prev = vdoc.addNode(root, prev, childId, childBinding, followAssembly, overrideLateBinding);
+					prev = vdoc.addNode(root, prev, so.getChronicleId(), childBinding, followAssembly,
+						overrideLateBinding);
 				}
 			}
 		}
@@ -769,7 +774,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// References don't require any of this being done
 		if (isReference()) { return; }
 
-		// handleVirtualDocumentMembers(document, context);
+		handleVirtualDocumentMembers(document, context);
 
 		if (!context.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT)) {
 			loadContent(document, newObject, context);
