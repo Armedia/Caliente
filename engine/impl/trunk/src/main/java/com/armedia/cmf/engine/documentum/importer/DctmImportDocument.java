@@ -366,6 +366,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			this.branchTemporaryPermission = null;
 			antecedentVersion.checkout();
 			setVirtualDocumentFlag(antecedentVersion);
+			handleVirtualDocumentMembers(antecedentVersion, context);
 			antecedentVersion.fetch(null);
 		}
 		setOwnerGroupACLData(antecedentVersion, context);
@@ -776,10 +777,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		// References don't require any of this being done
 		if (isReference()) { return; }
-
-		if (document.isVirtualDocument()) {
-			handleVirtualDocumentMembers(document, context);
-		}
 
 		if (!context.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT)) {
 			loadContent(document, newObject, context);
