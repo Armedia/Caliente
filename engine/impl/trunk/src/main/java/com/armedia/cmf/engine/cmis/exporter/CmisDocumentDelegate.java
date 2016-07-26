@@ -129,6 +129,11 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		current.setValue(new CmfValue(this.object.isLatestVersion()));
 		object.setProperty(current);
 
+		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<CmfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+			CmfDataType.BOOLEAN, false);
+		current.setValue(new CmfValue(this.antecedentId == null));
+		object.setProperty(versionTreeRoot);
+
 		if (!this.object.isLatestVersion()) {
 			marshalParentsAndPaths(ctx, object, this.object.getObjectOfLatestVersion(false));
 		}
