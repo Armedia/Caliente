@@ -109,6 +109,12 @@ public class LocalExportDelegate extends
 					false);
 				att.setValue(new CmfValue(basicAtts.size()));
 				object.setAttribute(att);
+
+				// All documents are roots...
+				CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<CmfValue>(
+					IntermediateProperty.VERSION_TREE_ROOT, CmfDataType.BOOLEAN, false);
+				versionTreeRoot.setValue(new CmfValue(true));
+				object.setProperty(versionTreeRoot);
 			}
 
 			if (owner != null) {
