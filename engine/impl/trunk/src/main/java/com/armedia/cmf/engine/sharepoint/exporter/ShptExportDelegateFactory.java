@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.sharepoint.exporter;
 
 import com.armedia.cmf.engine.exporter.ExportDelegateFactory;
+import com.armedia.cmf.engine.sharepoint.Setting;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.cmf.storage.CmfType;
@@ -8,11 +9,20 @@ import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public class ShptExportDelegateFactory extends
-	ExportDelegateFactory<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportEngine> {
+public class ShptExportDelegateFactory
+	extends ExportDelegateFactory<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportEngine> {
 
 	protected ShptExportDelegateFactory(ShptExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
+	}
+
+	String getRelativePath(String relativeUrl) {
+		String exportPath = String.format("%s/", getConfiguration().getString(Setting.PATH));
+		if (relativeUrl.startsWith(exportPath)) {
+			// The -1 is to account for the leading slash we want to preserve
+			relativeUrl = relativeUrl.substring(exportPath.length() - 1);
+		}
+		return relativeUrl;
 	}
 
 	@Override

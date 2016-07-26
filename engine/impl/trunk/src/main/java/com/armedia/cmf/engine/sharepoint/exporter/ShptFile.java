@@ -169,7 +169,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 	@Override
 	public String calculateLabel(ShptVersion file) {
-		return String.format("%s#%s", file.getName(), file.getVersionNumber().toString());
+		return String.format("%s#%s", this.factory.getRelativePath(file.getServerRelativeUrl()),
+			file.getVersionNumber().toString());
 	}
 
 	@Override
@@ -196,9 +197,11 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		current.setValue(new CmfValue((this.version == null) || this.version.isCurrentVersion()));
 		object.setProperty(current);
 
+		final boolean isRoot;
 		if (this.version != null) {
 			this.predecessors = Collections.emptyList();
 			this.successors = Collections.emptyList();
+			isRoot = (this.antecedentId == null);
 			if (this.antecedentId != null) {
 				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID, false,
 					Collections.singleton(new CmfValue(this.antecedentId))));
@@ -271,11 +274,17 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 					object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID,
 						false, Collections.singleton(new CmfValue(antecedentId))));
 				}
+				isRoot = (antecedentId == null);
 			} catch (ShptSessionException e) {
 				throw new ExportException(
 					String.format("Failed to retrieve file versions for [%s]", this.object.getServerRelativeUrl()), e);
 			}
 		}
+
+		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<CmfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+			CmfDataType.BOOLEAN, false);
+		versionTreeRoot.setValue(new CmfValue(isRoot));
+		object.setProperty(versionTreeRoot);
 
 		object.setAttribute(
 			new CmfAttribute<CmfValue>(ShptAttributes.VERSION.name, CmfDataType.STRING, true, versionNames));
