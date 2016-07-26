@@ -16,6 +16,7 @@ import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
@@ -23,8 +24,8 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.Tools;
@@ -108,11 +109,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				try {
 					newVersion.cancelCheckOut();
 				} catch (Exception e) {
-					this.log.warn(
-						String.format(
-							"Failed to cancel the checkout for [%s], checked out from [%s] (for object [%s](%s))",
-							newVersion.getId(), existing.getId(), this.cmfObject.getLabel(), this.cmfObject.getId()),
-						e);
+					this.log.warn(String.format(
+						"Failed to cancel the checkout for [%s], checked out from [%s] (for object [%s](%s))",
+						newVersion.getId(), existing.getId(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 				}
 			}
 		}
@@ -124,9 +123,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		if ((versionSeriesId != null) && versionSeriesId.hasValues()) {
 			CmfValue vsi = versionSeriesId.getValue();
 			if (!vsi.isNull()) {
-				if (!Tools.equals(this.cmfObject.getId(), vsi.asString())) {
-					Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.DOCUMENT, PropertyIds.OBJECT_ID,
-						vsi.asString());
+				CmfProperty<CmfValue> rootProp = this.cmfObject.getProperty(IntermediateProperty.VERSION_TREE_ROOT);
+				if ((rootProp == null) || !rootProp.hasValues() || !rootProp.getValue().asBoolean()) {
+					Mapping m = ctx.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
+						PropertyIds.VERSION_SERIES_ID, vsi.asString());
 					if (m != null) {
 						String seriesId = m.getTargetValue();
 						try {
@@ -176,7 +176,13 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ContentStream content = getContentStream(ctx);
 		try {
 			VersioningState state = (this.major ? VersioningState.MAJOR : VersioningState.MINOR);
-			return parent.createDocument(properties, content, state);
+			Document document = parent.createDocument(properties, content, state);
+			CmfAttribute<CmfValue> versionSeriesId = this.cmfObject.getAttribute(PropertyIds.VERSION_SERIES_ID);
+			if ((versionSeriesId != null) && versionSeriesId.hasValues()) {
+				ctx.getAttributeMapper().setMapping(this.cmfObject.getType(), PropertyIds.VERSION_SERIES_ID,
+					versionSeriesId.getValue().asString(), document.getVersionSeriesId());
+			}
+			return document;
 		} finally {
 			IOUtils.closeQuietly(content);
 		}

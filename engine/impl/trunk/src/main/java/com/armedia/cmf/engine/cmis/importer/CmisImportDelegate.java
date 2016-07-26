@@ -28,8 +28,7 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public abstract class CmisImportDelegate<T>
-	extends
+public abstract class CmisImportDelegate<T> extends
 	ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
 
 	protected CmisImportDelegate(CmisImportDelegateFactory factory, Class<T> objectClass,
@@ -113,7 +112,8 @@ public abstract class CmisImportDelegate<T>
 					break;
 			}
 
-			if (value != null) {
+			// Only put the property in if it hasn't already been put in...
+			if ((value != null) && !properties.containsKey(def.getId())) {
 				properties.put(def.getId(), value);
 			}
 		}
