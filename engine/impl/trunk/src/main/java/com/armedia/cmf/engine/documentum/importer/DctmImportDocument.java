@@ -141,7 +141,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			String sourceChronicleId = chronicleAtt.getValue().asId().getId();
 			// Map to the new chronicle ID, from the old one...try for the quick win
 			chronicleMapping = ctx.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
-				DctmAttributes.R_OBJECT_ID, sourceChronicleId);
+				DctmAttributes.I_CHRONICLE_ID, sourceChronicleId);
 		} else {
 			chronicleMapping = null;
 		}
@@ -240,7 +240,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			} else {
 				antecedentId = null;
 				Mapping mapping = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
-					DctmAttributes.R_OBJECT_ID, sourceChronicleId);
+					DctmAttributes.I_CHRONICLE_ID, sourceChronicleId);
 				if (mapping != null) {
 					// Find the antecedent using the expected antecedent version number, which
 					// by now *should* exist as part of the normal import...
