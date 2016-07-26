@@ -742,10 +742,28 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (addVdocMembers && document.isCheckedOut()) {
 			CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
+			IDfVirtualDocument vdoc = document.asVirtualDocument("CURRENT", false);
+			IDfVirtualDocumentNode root = vdoc.getRootNode();
+
+			// First, remove all the existing nodes
+			int childCount = root.getChildCount();
+			if (childCount > 0) {
+				for (int i = 0; i < childCount; i++) {
+					// Always fetch the first node
+					vdoc.removeNode(root.getChild(0));
+				}
+			}
+
+			// Now, add all the "new" nodes. The alternative is to run a complex comparison
+			// algorithm that checks to see which nodes are new, where they should be inserted,
+			// reordered, etc. That's too much work, and we expect it would achieve the same
+			// result, but with less effort and complexity
 			if ((p != null) && p.hasValues()) {
-				IDfVirtualDocument vdoc = document.asVirtualDocument("CURRENT", false);
-				IDfVirtualDocumentNode root = vdoc.getRootNode();
 				IDfVirtualDocumentNode prev = null;
+				childCount = p.getValueCount();
+				int i = 1;
+				context.printf("\tAdding %d Virtual Document child nodes for [%s](%s)", childCount,
+					this.cmfObject.getLabel(), this.cmfObject.getId());
 				for (IDfValue v : p) {
 					String[] s = v.asString().split("\\|");
 					Mapping m = context.getAttributeMapper().getTargetMapping(CmfType.DOCUMENT,
@@ -764,9 +782,18 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 					final boolean followAssembly = childIsVirtualDoc ? Boolean.valueOf(s[2]) : false;
 					final boolean overrideLateBinding = childIsVirtualDoc ? Boolean.valueOf(s[3]) : false;
 
+					context.printf("\t\tAdding child node #%d (of %d) to VDoc [%s](%s) (%s|%s|%s|%s)", i, childCount,
+						this.cmfObject.getLabel(), this.cmfObject.getId(), so.getChronicleId().getId(), childBinding,
+						followAssembly, overrideLateBinding);
 					prev = vdoc.addNode(root, prev, so.getChronicleId(), childBinding, followAssembly,
 						overrideLateBinding);
+					i++;
 				}
+			}
+
+			if (root.getChildCount() == 0) {
+				// Revert the virtual document flag
+				document.setIsVirtualDocument(false);
 			}
 		}
 	}
