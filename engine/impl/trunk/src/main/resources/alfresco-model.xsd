@@ -345,7 +345,11 @@
    </xs:group>
 
    <xs:complexType name="mandatoryDef" mixed="true">
-      <xs:attribute name="enforced" use="optional" type="xs:boolean"/>
+      <xs:simpleContent>
+         <xs:extension base="xs:string">
+            <xs:attribute name="enforced" use="optional" type="xs:boolean"/>
+         </xs:extension>
+      </xs:simpleContent>
    </xs:complexType>
 
 </xs:schema>
