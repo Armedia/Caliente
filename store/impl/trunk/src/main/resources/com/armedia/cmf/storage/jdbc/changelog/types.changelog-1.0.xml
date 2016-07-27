@@ -143,5 +143,36 @@
 			baseTableName="cmf_type_attribute" baseColumnNames="type_id"
 			referencedTableName="cmf_type" referencedColumnNames="type_id"
 			onDelete="CASCADE" onUpdate="CASCADE" />
+
+
+		<!-- The content stream properties -->
+		<createTable tableName="cmf_type_att_constraint">
+			<column name="type_id" type="varchar(96)" remarks="The type ID this attribute belongs to">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar(96)" remarks="The name of the attribute">
+				<constraints nullable="false" />
+			</column>
+			<column name="constraint_id" type="number">
+				<constraints nullable="false" />
+			</column>
+			<column name="constraint_type" type="varchar(16)" remarks="The type of constraint">
+				<constraints nullable="true" />
+			</column>
+			<column name="constraint_metadata" type="text" remarks="Metadata describing the constraint's data">
+				<constraints nullable="true" />
+			</column>
+			<column name="constraint_data" type="text" remarks="The data associated with the constraint">
+				<constraints nullable="true" />
+			</column>
+			<column name="description" type="text" remarks="This is an optional attribute containing a description of the property">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_type_att_constraint" columnNames="type_id, name, constraint_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_type_att_constraint_type"
+			baseTableName="cmf_type_att_constraint" baseColumnNames="type_id, name"
+			referencedTableName="cmf_type_attribute" referencedColumnNames="type_id, name"
+			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>
