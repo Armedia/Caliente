@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 /**
@@ -186,34 +187,8 @@ public class Association {
 		this.name = value;
 	}
 
-	/**
-	 * <p>
-	 * Java class for anonymous complex type.
-	 *
-	 * <p>
-	 * The following schema fragment specifies the expected content contained within this class.
-	 *
-	 * <pre>
-	 * &lt;complexType>
-	 *   &lt;complexContent>
-	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-	 *       &lt;sequence>
-	 *         &lt;element name="role" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
-	 *         &lt;element name="mandatory" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
-	 *         &lt;element name="many" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
-	 *       &lt;/sequence>
-	 *     &lt;/restriction>
-	 *   &lt;/complexContent>
-	 * &lt;/complexType>
-	 * </pre>
-	 *
-	 *
-	 */
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@XmlType(name = "", propOrder = {
-		"role", "mandatory", "many"
-	})
-	public static class Source {
+	@XmlTransient
+	private static class Endpoint {
 
 		@XmlElement
 		protected String role;
@@ -300,6 +275,36 @@ public class Association {
 	 *   &lt;complexContent>
 	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
 	 *       &lt;sequence>
+	 *         &lt;element name="role" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
+	 *         &lt;element name="mandatory" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+	 *         &lt;element name="many" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
+	 *       &lt;/sequence>
+	 *     &lt;/restriction>
+	 *   &lt;/complexContent>
+	 * &lt;/complexType>
+	 * </pre>
+	 *
+	 *
+	 */
+	@XmlAccessorType(XmlAccessType.FIELD)
+	@XmlType(name = "", propOrder = {
+		"role", "mandatory", "many"
+	})
+	public static class Source extends Endpoint {
+	}
+
+	/**
+	 * <p>
+	 * Java class for anonymous complex type.
+	 *
+	 * <p>
+	 * The following schema fragment specifies the expected content contained within this class.
+	 *
+	 * <pre>
+	 * &lt;complexType>
+	 *   &lt;complexContent>
+	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+	 *       &lt;sequence>
 	 *         &lt;element name="class" type="{http://www.w3.org/2001/XMLSchema}string"/>
 	 *         &lt;element name="role" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
 	 *         &lt;element name="mandatory" type="{http://www.alfresco.org/model/dictionary/1.0}mandatoryDef" minOccurs="0"/>
@@ -316,19 +321,10 @@ public class Association {
 	@XmlType(name = "", propOrder = {
 		"clazz", "role", "mandatory", "many"
 	})
-	public static class Target {
+	public static class Target extends Endpoint {
 
 		@XmlElement(name = "class", required = true)
 		protected String clazz;
-
-		@XmlElement
-		protected String role;
-
-		@XmlElement
-		protected MandatoryDef mandatory;
-
-		@XmlElement
-		protected Boolean many;
 
 		/**
 		 * Gets the value of the clazz property.
@@ -350,69 +346,5 @@ public class Association {
 		public void setClazz(String value) {
 			this.clazz = value;
 		}
-
-		/**
-		 * Gets the value of the role property.
-		 *
-		 * @return possible object is {@link String }
-		 *
-		 */
-		public String getRole() {
-			return this.role;
-		}
-
-		/**
-		 * Sets the value of the role property.
-		 *
-		 * @param value
-		 *            allowed object is {@link String }
-		 *
-		 */
-		public void setRole(String value) {
-			this.role = value;
-		}
-
-		/**
-		 * Gets the value of the mandatory property.
-		 *
-		 * @return possible object is {@link MandatoryDef }
-		 *
-		 */
-		public MandatoryDef getMandatory() {
-			return this.mandatory;
-		}
-
-		/**
-		 * Sets the value of the mandatory property.
-		 *
-		 * @param value
-		 *            allowed object is {@link MandatoryDef }
-		 *
-		 */
-		public void setMandatory(MandatoryDef value) {
-			this.mandatory = value;
-		}
-
-		/**
-		 * Gets the value of the many property.
-		 *
-		 * @return possible object is {@link Boolean }
-		 *
-		 */
-		public Boolean getMany() {
-			return this.many;
-		}
-
-		/**
-		 * Sets the value of the many property.
-		 *
-		 * @param value
-		 *            allowed object is {@link Boolean }
-		 *
-		 */
-		public void setMany(Boolean value) {
-			this.many = value;
-		}
-
 	}
 }
