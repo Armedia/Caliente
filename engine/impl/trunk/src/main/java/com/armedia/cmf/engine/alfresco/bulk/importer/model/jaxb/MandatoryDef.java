@@ -5,6 +5,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
+
+import com.armedia.commons.utilities.Tools;
 
 /**
  * <p>
@@ -26,11 +29,16 @@ import javax.xml.bind.annotation.XmlType;
  *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "mandatoryDef", propOrder = {})
+@XmlType(name = "mandatoryDef", propOrder = {
+	"value"
+})
 public class MandatoryDef {
 
 	@XmlAttribute
-	protected Boolean enforced;
+	protected Boolean enforced = Boolean.FALSE;
+
+	@XmlValue
+	protected String value = Boolean.FALSE.toString();
 
 	/**
 	 * Gets the value of the enforced property.
@@ -50,6 +58,14 @@ public class MandatoryDef {
 	 *
 	 */
 	public void setEnforced(Boolean value) {
-		this.enforced = value;
+		this.enforced = Tools.coalesce(value, Boolean.FALSE);
+	}
+
+	public Boolean getValue() {
+		return Boolean.valueOf(this.value);
+	}
+
+	public void setValue(Boolean value) {
+		this.value = Tools.coalesce(value, Boolean.FALSE).toString();
 	}
 }
