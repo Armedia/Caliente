@@ -133,82 +133,6 @@ public class AlfImportEngine extends
 		}
 	};
 
-	private static final ImportStrategy GROUP_STRATEGY = new ImportStrategy() {
-
-		@Override
-		public boolean isParallelCapable() {
-			return false;
-		}
-
-		@Override
-		public boolean isIgnored() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchIndependent() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchFailRemainder() {
-			return true;
-		}
-
-		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_SERIALIZED;
-		}
-
-		@Override
-		public boolean isSupportsTransactions() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
-			return true;
-		}
-	};
-
-	private static final ImportStrategy AGGREGATE_STRATEGY = new ImportStrategy() {
-
-		@Override
-		public boolean isParallelCapable() {
-			return false;
-		}
-
-		@Override
-		public boolean isIgnored() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchIndependent() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchFailRemainder() {
-			return true;
-		}
-
-		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_SERIALIZED;
-		}
-
-		@Override
-		public boolean isSupportsTransactions() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
-			return true;
-		}
-	};
-
 	public AlfImportEngine() {
 		super(new CmfCrypt());
 	}
@@ -216,16 +140,6 @@ public class AlfImportEngine extends
 	@Override
 	protected ImportStrategy getImportStrategy(CmfType type) {
 		switch (type) {
-
-			case USER:
-			case TYPE:
-			case ACL:
-			case FORMAT:
-				return AlfImportEngine.AGGREGATE_STRATEGY;
-
-			case GROUP:
-				return AlfImportEngine.GROUP_STRATEGY;
-
 			case FOLDER:
 				return AlfImportEngine.FOLDER_STRATEGY;
 
