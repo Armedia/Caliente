@@ -4,10 +4,10 @@
       <attribute name="package" value="com.armedia.cmf.engine.alfresco.bulk.importer.model.jaxb"/>
     </node>
     <node name="libprov">
-      <attribute name="provider-id" value="jaxb-no-op-library-provider"/>
+      <attribute name="provider-id" value="jaxb-jre-library-provider"/>
     </node>
     <node name="platform">
-      <attribute name="platform-id" value="generic_2_2"/>
+      <attribute name="platform-id" value="generic_2_1"/>
     </node>
     <node name="schemas">
       <node name="schema-1">

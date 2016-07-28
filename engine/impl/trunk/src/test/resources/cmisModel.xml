@@ -1,4 +1,5 @@
-<model name="cmis:cmismodel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+<model name="cmis:cmismodel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/cmf-engine-alfresco-bulk/src/main/resources/alfresco-model.xsd ">
 
   <description>CMIS Model Definitions</description>
   <version>1.0</version>
@@ -419,7 +420,7 @@
       <properties>
       </properties>
     </type>
-    
+
     <type name="cmis:item">
       <title>Item Type</title>
       <description>CMIS Item</description>
@@ -427,13 +428,13 @@
       <properties>
       </properties>
     </type>
-    
+
     <type name="cmisext:aspects">
       <title>Aspects</title>
       <description>Aspects Type</description>
       <parent>cmis:policy</parent>
     </type>
-    
+
   </types>
 
 </model>
