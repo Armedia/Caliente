@@ -188,7 +188,7 @@ public class Association {
 	}
 
 	@XmlTransient
-	private static class Endpoint {
+	protected static class Endpoint {
 
 		@XmlElement
 		protected String role;
