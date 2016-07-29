@@ -133,19 +133,17 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		List<CmfContentInfo> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
 		CmfContentInfo mainInfo = new CmfContentInfo();
-		long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo);
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
-		mainInfo.setLength(length);
 		String name = main.getFileName();
 		mainInfo.setFileName(name);
 		mainInfo.setExtension(FilenameUtils.getExtension(name));
+		long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo);
+		mainInfo.setLength(length);
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
 			CmfContentInfo info = new CmfContentInfo(r.getKind());
 			ContentStream cs = r.getContentStream();
-			length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
 			info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
-			info.setLength(length);
 			name = cs.getFileName();
 			info.setFileName(name);
 			info.setExtension(FilenameUtils.getExtension(name));
@@ -155,6 +153,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			info.setProperty("title", r.getTitle());
 			info.setProperty("height", String.valueOf(r.getHeight()));
 			info.setProperty("width", String.valueOf(r.getWidth()));
+			length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
+			info.setLength(length);
 			ret.add(info);
 		}
 		return ret;
