@@ -64,7 +64,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		if ((info == null) || info.isEmpty()) { return null; }
 		CmfContentInfo content = info.get(0);
 		CmfContentStore<?, ?, ?>.Handle h = store.getHandle(this.factory.getEngine().getTranslator(), this.cmfObject,
-			content.getQualifier());
+			content);
 
 		String fileName = content.getFileName();
 		// String size = content.getProperty(ContentProperty.SIZE);
@@ -74,7 +74,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getStreamSize()), mimeType, h.openInput());
 		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to access the [%s] content for DOCUMENT [%s](%s)",
-				h.getQualifier(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+				h.getInfo(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 	}
 

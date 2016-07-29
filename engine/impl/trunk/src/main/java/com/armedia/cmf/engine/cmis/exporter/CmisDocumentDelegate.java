@@ -29,20 +29,6 @@ import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
-	private static class StorageResult {
-		private final CmfContentStore<?, ?, ?>.Handle handle;
-		private final long length;
-
-		/**
-		 * @param handle
-		 * @param length
-		 */
-		private StorageResult(CmfContentStore<?, ?, ?>.Handle handle, long length) {
-			this.handle = handle;
-			this.length = length;
-		}
-	}
-
 	private final String antecedentId;
 	private final List<Document> previous;
 	private final List<Document> successors;
@@ -145,18 +131,18 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		List<CmfContentInfo> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore);
 		ContentStream main = this.object.getContentStream();
-		StorageResult result = storeContentStream(marshalled, translator, null, main, streamStore);
-		CmfContentInfo mainInfo = new CmfContentInfo(result.handle.getQualifier());
+		CmfContentInfo mainInfo = new CmfContentInfo();
+		long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo);
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
-		mainInfo.setLength(result.length);
+		mainInfo.setLength(length);
 		mainInfo.setFileName(main.getFileName());
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
+			CmfContentInfo info = new CmfContentInfo(r.getKind());
 			ContentStream cs = r.getContentStream();
-			result = storeContentStream(marshalled, translator, r, cs, streamStore);
-			CmfContentInfo info = new CmfContentInfo(result.handle.getQualifier());
+			length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
 			info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
-			info.setLength(result.length);
+			info.setLength(length);
 			info.setFileName(cs.getFileName());
 			info.setProperty("kind", r.getKind());
 			info.setProperty("docId", r.getRenditionDocumentId());
@@ -169,13 +155,12 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		return ret;
 	}
 
-	protected StorageResult storeContentStream(CmfObject<CmfValue> marshalled,
-		CmfAttributeTranslator<CmfValue> translator, Rendition r, ContentStream cs,
-		CmfContentStore<?, ?, ?> streamStore) throws Exception {
-		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, r != null ? r.getKind() : "");
+	protected long storeContentStream(CmfObject<CmfValue> marshalled, CmfAttributeTranslator<CmfValue> translator,
+		Rendition r, ContentStream cs, CmfContentStore<?, ?, ?> streamStore, CmfContentInfo info) throws Exception {
+		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
 		InputStream src = cs.getStream();
 		try {
-			return new StorageResult(h, h.setContents(src));
+			return h.setContents(src);
 		} finally {
 			IOUtils.closeQuietly(src);
 		}
