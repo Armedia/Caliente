@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 import javax.activation.MimeType;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.engine.converter.IntermediateProperty;
@@ -379,7 +380,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		final ShptSession session = ctx.getSession();
 		CmfContentInfo info = new CmfContentInfo();
-		info.setFileName(this.object.getName());
+		final String name = this.object.getName();
+		info.setFileName(name);
+		info.setExtension(FilenameUtils.getExtension(name));
 		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshaled, info);
 		InputStream in = null;
 		if (this.version == null) {
