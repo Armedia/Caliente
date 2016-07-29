@@ -265,39 +265,6 @@ public class Property {
 		this.name = value;
 	}
 
-	/**
-	 * <p>
-	 * Java class for anonymous complex type.
-	 *
-	 * <p>
-	 * The following schema fragment specifies the expected content contained within this class.
-	 *
-	 * <pre>
-	 * &lt;complexType>
-	 *   &lt;complexContent>
-	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-	 *       &lt;sequence>
-	 *         &lt;element name="atomic" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
-	 *         &lt;element name="stored" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
-	 *         &lt;element name="tokenised" minOccurs="0">
-	 *           &lt;simpleType>
-	 *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
-	 *               &lt;enumeration value="true"/>
-	 *               &lt;enumeration value="false"/>
-	 *               &lt;enumeration value="both"/>
-	 *             &lt;/restriction>
-	 *           &lt;/simpleType>
-	 *         &lt;/element>
-	 *         &lt;element name="facetable" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/>
-	 *       &lt;/sequence>
-	 *       &lt;attribute name="enabled" use="required" type="{http://www.w3.org/2001/XMLSchema}boolean" />
-	 *     &lt;/restriction>
-	 *   &lt;/complexContent>
-	 * &lt;/complexType>
-	 * </pre>
-	 *
-	 *
-	 */
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@XmlType(name = "", propOrder = {
 		"atomic", "stored", "tokenised", "facetable"

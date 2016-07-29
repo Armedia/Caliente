@@ -120,39 +120,6 @@ public class Constraint {
 		this.name = value;
 	}
 
-	/**
-	 * <p>
-	 * Java class for namedValue complex type.
-	 *
-	 * <p>
-	 * The following schema fragment specifies the expected content contained within this class.
-	 *
-	 * <pre>
-	 * &lt;complexType name="namedValue">
-	 *   &lt;complexContent>
-	 *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-	 *       &lt;choice>
-	 *         &lt;element name="value" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
-	 *         &lt;element name="list" minOccurs="0">
-	 *           &lt;complexType>
-	 *             &lt;complexContent>
-	 *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
-	 *                 &lt;sequence>
-	 *                   &lt;element name="value" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/>
-	 *                 &lt;/sequence>
-	 *               &lt;/restriction>
-	 *             &lt;/complexContent>
-	 *           &lt;/complexType>
-	 *         &lt;/element>
-	 *       &lt;/choice>
-	 *       &lt;attGroup ref="{http://www.alfresco.org/model/dictionary/1.0}name"/>
-	 *     &lt;/restriction>
-	 *   &lt;/complexContent>
-	 * &lt;/complexType>
-	 * </pre>
-	 *
-	 *
-	 */
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@XmlType(name = "namedValue", propOrder = {
 		"value", "list"
