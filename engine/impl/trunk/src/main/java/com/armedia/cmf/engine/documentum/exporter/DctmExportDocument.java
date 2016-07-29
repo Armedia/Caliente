@@ -53,8 +53,6 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportDocument extends DctmExportSysObject<IDfDocument> implements DctmDocument {
 
-	private static final String QUALIFIER_FMT = "[%08x]%s.%s";
-
 	protected DctmExportDocument(DctmExportDelegateFactory factory, IDfDocument document) throws Exception {
 		super(factory, IDfDocument.class, document);
 	}
@@ -239,11 +237,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			+ " where dcr.r_object_id = dcs.r_object_id " //
 			+ "   and dcr.parent_id = '%s' " //
 			+ "   and dcr.page = %d " //
-			+ " order by dcs.rendition ";
+			+ " order by dcs.rendition, dcr.page ";
 		final IDfSession session = ctx.getSession();
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
-		final String fileName = document.getObjectName();
 		List<CmfContentInfo> cmfContentInfo = new ArrayList<CmfContentInfo>();
 		for (int i = 0; i < pageCount; i++) {
 			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
@@ -252,27 +249,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				while (results.next()) {
 					final IDfContent content = IDfContent.class
 						.cast(session.getObject(results.getId(DctmAttributes.R_OBJECT_ID)));
-					CmfContentStore<?, ?, ?>.Handle handle = storeContentStream(session, translator, marshaled,
-						document, content, streamStore, ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT));
-					CmfContentInfo info = new CmfContentInfo(handle.getQualifier());
-					IDfId formatId = content.getFormatId();
-					MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
-					if (!formatId.isNull()) {
-						IDfFormat format = IDfFormat.class.cast(session.getObject(formatId));
-						mimeType = MimeTools.resolveMimeType(format.getMIMEType());
-					}
-					info.setMimeType(mimeType);
-					info.setFileName(fileName);
-					info.setLength(content.getContentSize());
-
-					info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
-					info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
-					info.setProperty(DctmAttributes.SET_TIME,
-						content.getTime(DctmAttributes.SET_TIME).asString(DctmDocument.CONTENT_SET_TIME_PATTERN));
-					info.setProperty(DctmAttributes.FULL_FORMAT, content.getString(DctmAttributes.FULL_FORMAT));
-					info.setProperty(DctmAttributes.PAGE_MODIFIER, content.getString(DctmAttributes.PAGE_MODIFIER));
-					info.setProperty(DctmAttributes.PAGE, content.getString(DctmAttributes.PAGE));
-					info.setProperty(DctmAttributes.RENDITION, content.getString(DctmAttributes.RENDITION));
+					CmfContentInfo info = storeContentStream(session, translator, marshaled, document, content,
+						streamStore, ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT));
 					cmfContentInfo.add(info);
 				}
 			} finally {
@@ -282,9 +260,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		return cmfContentInfo;
 	}
 
-	protected CmfContentStore<?, ?, ?>.Handle storeContentStream(IDfSession session,
-		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, IDfDocument document,
-		IDfContent content, CmfContentStore<?, ?, ?> streamStore, boolean skipContent) throws Exception {
+	protected CmfContentInfo storeContentStream(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+		CmfObject<IDfValue> marshaled, IDfDocument document, IDfContent content, CmfContentStore<?, ?, ?> streamStore,
+		boolean skipContent) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (document == null) { throw new Exception(String
 			.format("Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
@@ -295,24 +273,46 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		if (pageModifier == null) {
 			pageModifier = "";
 		}
-		String qualifier = String.format(DctmExportDocument.QUALIFIER_FMT, pageNumber, pageModifier, format);
+
+		CmfContentInfo info = new CmfContentInfo(String.format("%08x", content.getRendition()), pageNumber);
+		IDfId formatId = content.getFormatId();
+		MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
+		if (!formatId.isNull()) {
+			IDfFormat formatObj = IDfFormat.class.cast(session.getObject(formatId));
+			info.setExtension(formatObj.getDOSExtension());
+			mimeType = MimeTools.resolveMimeType(formatObj.getMIMEType());
+		}
+		info.setMimeType(mimeType);
+		info.setFileName(document.getObjectName());
+		info.setLength(content.getContentSize());
+
+		info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
+		info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
+		info.setProperty(DctmAttributes.SET_TIME,
+			content.getTime(DctmAttributes.SET_TIME).asString(DctmDocument.CONTENT_SET_TIME_PATTERN));
+		info.setProperty(DctmAttributes.FULL_FORMAT, content.getString(DctmAttributes.FULL_FORMAT));
+		info.setProperty(DctmAttributes.PAGE_MODIFIER, content.getString(DctmAttributes.PAGE_MODIFIER));
+		info.setProperty(DctmAttributes.PAGE, content.getString(DctmAttributes.PAGE));
+		info.setProperty(DctmAttributes.RENDITION, content.getString(DctmAttributes.RENDITION));
 
 		// CmfStore the content in the filesystem
-		CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, qualifier);
-		if (skipContent) { return contentHandle; }
-		if (contentHandle.getSourceStore().isSupportsFileAccess()) {
-			document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, pageNumber, pageModifier, false);
-		} else {
-			// Doesn't support file-level, so we (sadly) use stream-level transfers
-			InputStream in = null;
-			try {
-				// Don't pull the content until we're sure we can put it somewhere...
-				in = document.getContentEx3(format, pageNumber, pageModifier, false);
-				contentHandle.setContents(in);
-			} finally {
-				IOUtils.closeQuietly(in);
+		CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
+		if (!skipContent) {
+			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
+				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, pageNumber, pageModifier,
+					false);
+			} else {
+				// Doesn't support file-level, so we (sadly) use stream-level transfers
+				InputStream in = null;
+				try {
+					// Don't pull the content until we're sure we can put it somewhere...
+					in = document.getContentEx3(format, pageNumber, pageModifier, false);
+					contentHandle.setContents(in);
+				} finally {
+					IOUtils.closeQuietly(in);
+				}
 			}
 		}
-		return contentHandle;
+		return info;
 	}
 }

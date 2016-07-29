@@ -441,7 +441,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		} catch (IOException e) {
 			throw new ImportException(
 				String.format("Failed to get the content file for DOCUMENT (%s)[%s], qualifier [%s]",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getQualifier()),
+					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()),
 				e);
 		}
 
@@ -459,14 +459,14 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				}
 				throw new ImportException(String.format(
 					"Failed to create and write the temporary content file for DOCUMENT (%s)[%s], qualifier [%s]",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getQualifier()), e);
+					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()), e);
 			} catch (CmfStorageException e) {
 				if (path != null) {
 					path.delete();
 				}
 				throw new ImportException(
 					String.format("Failed to get the content stream for DOCUMENT (%s)[%s], qualifier [%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getQualifier()),
+						this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()),
 					e);
 			}
 		}
@@ -685,7 +685,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		String contentType = null;
 		Boolean fromDctm = null;
 		for (CmfContentInfo info : infoList) {
-			CmfContentStore<?, ?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info.getQualifier());
+			CmfContentStore<?, ?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info);
 			CfgTools cfg = info.getCfgTools();
 
 			if (fromDctm == null) {
@@ -700,18 +700,21 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				contentType = determineFormat(context.getSession(), info.getMimeType());
 			}
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);
-			int page = cfg.getInteger(DctmAttributes.PAGE, 0);
+			int rendition = i;
+			int page = 0;
 			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER,
 				DctmDataType.DF_STRING.getNull().asString());
-			int rendition = cfg.getInteger(DctmAttributes.RENDITION, 0);
 
-			if (!fromDctm) {
+			if (fromDctm) {
+				// Parse out the rendition number for this one...
+				rendition = Integer.valueOf(info.getRenditionIdentifier(), 16);
+				page = info.getRenditionPage();
+			} else {
 				// If this isn't a documentum stream, then the rendition number must be the current
 				// iteration, so that the main rendition is always the primary stream
-				rendition = i;
-				this.log.info(
-					String.format("Storing rendition #%d (q=[%s], id=%d) for %s [%s](%s)", i + 1, info.getQualifier(),
-						i, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()));
+				this.log.info(String.format("Storing rendition #%d (r=[%s], p=%d, i=%d) for %s [%s](%s)", i + 1,
+					info.getRenditionIdentifier(), info.getRenditionPage(), i, this.cmfObject.getType(),
+					this.cmfObject.getLabel(), this.cmfObject.getId()));
 			}
 
 			saveContentStream(context, document, info, h, contentType, fullFormat, page, rendition, pageModifier, ++i,
