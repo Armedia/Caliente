@@ -18,6 +18,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -99,7 +100,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	@Override
 	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfFolder folder) throws DfException, ExportException {
-		if (!super.getDataProperties(ctx, properties, folder)) { return false; }
+		super.getDataProperties(ctx, properties, folder);
 		final String folderId = folder.getObjectId().getId();
 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
@@ -187,6 +188,22 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 						marshaled.getLabel(), v.asString()));
 			}
 			ret.add(this.factory.newExportDelegate(user));
+		}
+
+		CmfProperty<IDfValue> groupsWithDefaultFolder = marshaled.getProperty(DctmFolder.GROUPS_WITH_DEFAULT_FOLDER);
+		if (groupsWithDefaultFolder == null) { throw new Exception(
+			String.format("The export for folder [%s] does not contain the critical property [%s]",
+				marshaled.getLabel(), DctmFolder.GROUPS_WITH_DEFAULT_FOLDER)); }
+		for (IDfValue v : groupsWithDefaultFolder) {
+			IDfGroup group = session.getGroup(v.asString());
+			if (group == null) {
+				// in theory, this should be impossible as we just got the list via a direct query
+				// to dm_group, and thus the groups listed do exist
+				throw new Exception(
+					String.format("Missing dependent for folder [%s] - group [%s] not found (as default folder)",
+						marshaled.getLabel(), v.asString()));
+			}
+			ret.add(this.factory.newExportDelegate(group));
 		}
 
 		// Export the object type
