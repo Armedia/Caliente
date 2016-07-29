@@ -89,15 +89,14 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 
 		if (!contents.isEmpty()) {
 			CmfContentInfo info = contents.get(0);
-			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
-				info.getQualifier());
+			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
 			final File src;
 			try {
 				src = h.getFile();
 			} catch (IOException e) {
 				throw new ImportException(
 					String.format("Failed to obtain the content file for DOCUMENT (%s)[%s], content [%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), info.getQualifier()),
+						this.cmfObject.getLabel(), this.cmfObject.getId(), info),
 					e);
 			}
 			if (src != null) {

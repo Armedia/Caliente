@@ -211,7 +211,7 @@ public class LocalExportDelegate extends
 		ret.add(info);
 
 		if (this.factory.isCopyContent()) {
-			CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info.getQualifier());
+			CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
 			File tgt = h.getFile(true);
 			if (tgt != null) {
 				if (this.log.isDebugEnabled()) {
