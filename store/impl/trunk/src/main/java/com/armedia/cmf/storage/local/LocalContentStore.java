@@ -88,7 +88,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	private final Charset safeFilenameEncoding;
 	private final boolean fixFilenames;
 	private final boolean failOnCollisions;
-	private final boolean ignoreFragment;
+	private final boolean ignoreDescriptor;
 	protected final boolean propertiesLoaded;
 	private final boolean useWindowsFix;
 
@@ -160,8 +160,8 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		v = this.properties.get(Setting.FAIL_ON_COLLISIONS.getLabel());
 		this.failOnCollisions = ((v != null) && v.asBoolean());
 
-		v = this.properties.get(Setting.IGNORE_EXTRA_FILENAME_INFO.getLabel());
-		this.ignoreFragment = ((v != null) && v.asBoolean());
+		v = this.properties.get(Setting.IGNORE_DESCRIPTOR.getLabel());
+		this.ignoreDescriptor = ((v != null) && v.asBoolean());
 
 		v = this.properties.get(Setting.USE_WINDOWS_FIX.getLabel());
 		this.useWindowsFix = ((v != null) && v.asBoolean());
@@ -186,7 +186,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			fixFilenames = this.settings.getBoolean(Setting.FIX_FILENAMES);
 		}
 		final boolean failOnCollisions = this.settings.getBoolean(Setting.FAIL_ON_COLLISIONS);
-		final boolean ignoreFragment = this.settings.getBoolean(Setting.IGNORE_EXTRA_FILENAME_INFO);
+		final boolean ignoreFragment = this.settings.getBoolean(Setting.IGNORE_DESCRIPTOR);
 		final boolean useWindowsFix = this.settings.getBoolean(Setting.USE_WINDOWS_FIX);
 
 		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
@@ -195,7 +195,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		}
 		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
 		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));
-		this.properties.put(Setting.IGNORE_EXTRA_FILENAME_INFO.getLabel(), new CmfValue(ignoreFragment));
+		this.properties.put(Setting.IGNORE_DESCRIPTOR.getLabel(), new CmfValue(ignoreFragment));
 		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(),
 			new CmfValue(useWindowsFix || SystemUtils.IS_OS_WINDOWS));
 	}
@@ -222,32 +222,62 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		return str;
 	}
 
+	private String constructFileName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		String baseName = this.strategy.getBaseName(translator, object, info);
+		String descriptor;
+		String ext = StringUtils.isEmpty(info.getExtension()) ? "" : String.format(".%s", info.getExtension());
+		String appendix = this.strategy.getAppendix(translator, object, info);
+
+		if (!this.ignoreDescriptor) {
+			descriptor = this.strategy.calculateDescriptor(translator, object, info);
+		} else {
+			descriptor = "";
+		}
+
+		if (StringUtils.isEmpty(baseName)) {
+			baseName = "";
+		}
+
+		if (!StringUtils.isEmpty(ext) && baseName.endsWith(ext)) {
+			// Remove the extension so it's the last thing on the filename
+			baseName = baseName.substring(0, baseName.length() - ext.length());
+			if (StringUtils.isEmpty(baseName) && !this.ignoreDescriptor) {
+				baseName = "$CMF$";
+			}
+		}
+
+		if (!StringUtils.isEmpty(descriptor)) {
+			descriptor = String.format("[%s]", descriptor);
+		} else {
+			descriptor = "";
+		}
+
+		if (!StringUtils.isEmpty(appendix)) {
+			appendix = String.format(".%s", appendix);
+		} else {
+			appendix = "";
+		}
+
+		return String.format("%s%s%s%s", baseName, descriptor, ext, appendix);
+	}
+
 	@Override
 	protected URI doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
-		final List<String> rawPath = this.strategy.getPath(translator, object);
-		final String rawFragment;
-		final String rawExt = StringUtils.isEmpty(info.getExtension()) ? "" : String.format(".%s", info.getExtension());
-		if (!this.ignoreFragment) {
-			rawFragment = this.strategy.calculateAddendum(translator, object, info);
-		} else {
-			rawFragment = "";
-		}
-		final String ext;
-		final String ssp;
-		final String fragment;
+		final List<String> rawPath = this.strategy.getPath(translator, object, info);
+		rawPath.add(constructFileName(translator, object, info));
+
 		final String scheme;
+		final String ssp;
 		if (this.forceSafeFilenames || this.fixFilenames) {
 			boolean fixed = false;
 			List<String> sspParts = new ArrayList<String>();
 			for (String s : rawPath) {
 				String S = safeEncode(s);
-				fixed = fixed || !Tools.equals(s, S);
+				fixed |= !Tools.equals(s, S);
 				sspParts.add(S);
 			}
 			ssp = FileNameTools.reconstitute(sspParts, false, false, '/');
-			fragment = safeEncode(rawFragment);
-			ext = safeEncode(rawExt);
-			fixed = fixed || !Tools.equals(rawFragment, fragment);
+
 			if (fixed) {
 				if (this.forceSafeFilenames) {
 					scheme = LocalContentStore.SCHEME_SAFE;
@@ -260,12 +290,12 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		} else {
 			scheme = LocalContentStore.SCHEME_RAW;
 			ssp = FileNameTools.reconstitute(rawPath, false, false, '/');
-			fragment = rawFragment;
-			ext = rawExt;
 		}
 
 		try {
-			return new URI(scheme, ssp, String.format("%s%s", fragment, ext));
+			URI uri = new URI(scheme, ssp, null);
+			this.log.info(String.format("Generated URI %s", uri));
+			return uri;
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(
 				String.format("Failed to allocate a handle ID for %s[%s]", object.getType(), object.getId()), e);
@@ -274,13 +304,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	@Override
 	protected final File doGetFile(URI locator) {
-		String ssp = locator.getSchemeSpecificPart();
-		String frag = (!this.ignoreFragment ? locator.getFragment() : "");
-		String path = ssp;
-		if (!this.ignoreFragment && !StringUtils.isBlank(frag)) {
-			path = (frag != null ? String.format("%s#%s", ssp, frag) : ssp);
-		}
-		return new File(this.baseDir, path);
+		return new File(this.baseDir, locator.getSchemeSpecificPart());
 	}
 
 	@Override

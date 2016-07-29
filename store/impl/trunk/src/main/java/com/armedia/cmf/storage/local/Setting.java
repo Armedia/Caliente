@@ -10,7 +10,7 @@ public enum Setting implements ConfigurationSetting {
 	SAFE_FILENAME_ENCODING("UTF-8"),
 	FIX_FILENAMES(false),
 	FAIL_ON_COLLISIONS(false),
-	IGNORE_EXTRA_FILENAME_INFO(false),
+	IGNORE_DESCRIPTOR(false),
 	USE_WINDOWS_FIX(false),
 	//
 	;
