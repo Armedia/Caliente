@@ -24,17 +24,17 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 	public abstract class Handle {
 		private final CmfType objectType;
 		private final String objectId;
-		private final String qualifier;
+		private final CmfContentInfo info;
 		private final L locator;
 
-		protected Handle(CmfObject<?> object, String qualifier, L locator) {
+		protected Handle(CmfObject<?> object, CmfContentInfo info, L locator) {
 			if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
-			if (qualifier == null) { throw new IllegalArgumentException("Must provide a content qualifier"); }
+			if (info == null) { throw new IllegalArgumentException("Must provide a content info"); }
 			if (locator == null) { throw new IllegalArgumentException(
 				"Must provide a locator string to identify the content within the store"); }
 			this.objectType = object.getType();
 			this.objectId = object.getId();
-			this.qualifier = qualifier;
+			this.info = info;
 			this.locator = locator;
 		}
 
@@ -67,8 +67,8 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		 *
 		 * @return the qualifier for this content stream
 		 */
-		public final String getQualifier() {
-			return this.qualifier;
+		public final CmfContentInfo getInfo() {
+			return this.info;
 		}
 
 		/**
@@ -350,27 +350,27 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 				getClass().getCanonicalName())); }
 	}
 
-	protected abstract Handle constructHandle(CmfObject<?> object, String qualifier, L locator);
+	protected abstract Handle constructHandle(CmfObject<?> object, CmfContentInfo info, L locator);
 
 	protected final L extractLocator(Handle handle) {
 		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose locator to extract"); }
 		return handle.locator;
 	}
 
-	public final Handle getHandle(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
+	public final Handle getHandle(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
-		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
-		return constructHandle(object, qualifier, calculateLocator(translator, object, qualifier));
+		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
+		return constructHandle(object, info, calculateLocator(translator, object, info));
 	}
 
-	protected final L calculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
+	protected final L calculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
-		if (qualifier == null) { throw new IllegalArgumentException("Must provide content qualifier"); }
-		return doCalculateLocator(translator, object, qualifier);
+		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
+		return doCalculateLocator(translator, object, info);
 	}
 
 	protected abstract L doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object,
-		String qualifier);
+		CmfContentInfo info);
 
 	protected final InputStream openInput(L locator) throws CmfStorageException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }

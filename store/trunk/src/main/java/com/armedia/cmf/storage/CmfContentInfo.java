@@ -7,24 +7,64 @@ import java.util.Set;
 
 import javax.activation.MimeType;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
-public final class CmfContentInfo {
+public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 
-	private final String qualifier;
+	public static final String DEFAULT_RENDITION = "$main$";
+
+	private final String renditionIdentifier;
+	private final int renditionPage;
+
 	private long length = 0;
 	private MimeType mimeType = null;
+	private String extension = null;
 	private String fileName = null;
 
 	private final Map<String, String> properties = new HashMap<String, String>();
 	private final CfgTools cfg = new CfgTools(this.properties);
 
-	public CmfContentInfo(String qualifier) {
-		this.qualifier = qualifier;
+	public CmfContentInfo() {
+		this(null, 0);
 	}
 
-	public String getQualifier() {
-		return this.qualifier;
+	public CmfContentInfo(String renditionIdentifier) {
+		this(renditionIdentifier, 0);
+	}
+
+	public CmfContentInfo(int renditionPage) {
+		this(null, renditionPage);
+	}
+
+	public CmfContentInfo(String renditionIdentifier, int renditionPage) {
+		this.renditionIdentifier = Tools.coalesce(renditionIdentifier, CmfContentInfo.DEFAULT_RENDITION);
+		this.renditionPage = renditionPage;
+	}
+
+	public boolean isDefaultRendition() {
+		return Tools.equals(CmfContentInfo.DEFAULT_RENDITION, this.renditionIdentifier);
+	}
+
+	public String getRenditionIdentifier() {
+		return this.renditionIdentifier;
+	}
+
+	public int getRenditionPage() {
+		return this.renditionPage;
+	}
+
+	public String getExtension() {
+		return this.extension;
+	}
+
+	public void setExtension(String extension) {
+		if (StringUtils.isEmpty(extension)) {
+			extension = null;
+		}
+		this.extension = extension;
 	}
 
 	public long getLength() {
@@ -97,5 +137,37 @@ public final class CmfContentInfo {
 
 	public Set<String> getPropertyNames() {
 		return new HashSet<String>(this.properties.keySet());
+	}
+
+	@Override
+	public String toString() {
+		return String.format(
+			"CmfContentInfo [renditionIdentifier=%s, renditionPage=%s, length=%s, mimeType=%s, fileName=%s]",
+			this.renditionIdentifier, this.renditionPage, this.length, this.mimeType, this.fileName);
+	}
+
+	@Override
+	public int compareTo(CmfContentInfo o) {
+		if (o == null) { return 1; }
+		int r = 0;
+		r = Tools.compare(this.renditionIdentifier, o.renditionIdentifier);
+		if (r != 0) { return r; }
+		r = Tools.compare(this.renditionPage, o.renditionPage);
+		if (r != 0) { return r; }
+		return 0;
+	}
+
+	@Override
+	public int hashCode() {
+		return Tools.hashTool(this, null, this.renditionIdentifier, this.renditionPage);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!Tools.baseEquals(this, obj)) { return false; }
+		CmfContentInfo other = CmfContentInfo.class.cast(obj);
+		if (!Tools.equals(this.renditionIdentifier, other.renditionIdentifier)) { return false; }
+		if (this.renditionPage != other.renditionPage) { return false; }
+		return true;
 	}
 }

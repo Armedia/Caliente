@@ -1,6 +1,7 @@
 package com.armedia.cmf.storage;
 
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,16 +17,51 @@ public class CmfContentInfoTest {
 	}
 
 	@Test
-	public void testGetQualifier() {
+	public void testGetRenditionIdentifier() {
 		CmfContentInfo a = null;
 		String q = null;
 
 		a = new CmfContentInfo(null);
-		Assert.assertNull(a.getQualifier());
+		Assert.assertNotNull(a.getRenditionIdentifier());
+		Assert.assertEquals(CmfContentInfo.DEFAULT_RENDITION, a.getRenditionIdentifier());
 
 		q = UUID.randomUUID().toString();
 		a = new CmfContentInfo(q);
-		Assert.assertEquals(q, a.getQualifier());
+		Assert.assertEquals(q, a.getRenditionIdentifier());
+	}
+
+	@Test
+	public void testGetRenditionPage() {
+		CmfContentInfo a = null;
+		int v = -1;
+
+		Random r = new Random(System.currentTimeMillis());
+		for (int i = 0; i < 100; i++) {
+			v = r.nextInt(100000);
+			a = new CmfContentInfo(v);
+			Assert.assertEquals(v, a.getRenditionPage());
+		}
+	}
+
+	@Test
+	public void testGetRenditionIdAndPage() {
+		CmfContentInfo a = null;
+		String id = null;
+		int page = -1;
+
+		Random r = new Random(System.currentTimeMillis());
+		for (int i = 0; i < 100; i++) {
+			page = r.nextInt(100000);
+			a = new CmfContentInfo(null, page);
+			Assert.assertNotNull(a.getRenditionIdentifier());
+			Assert.assertEquals(CmfContentInfo.DEFAULT_RENDITION, a.getRenditionIdentifier());
+			Assert.assertEquals(page, a.getRenditionPage());
+
+			id = UUID.randomUUID().toString();
+			a = new CmfContentInfo(id, page);
+			Assert.assertEquals(id, a.getRenditionIdentifier());
+			Assert.assertEquals(page, a.getRenditionPage());
+		}
 	}
 
 	@Test

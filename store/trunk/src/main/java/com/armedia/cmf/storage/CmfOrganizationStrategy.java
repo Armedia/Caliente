@@ -40,22 +40,20 @@ public abstract class CmfOrganizationStrategy {
 		for (CmfOrganizationStrategy s : l) {
 			String name = s.getName();
 			if (name == null) {
-				CmfOrganizationStrategy.LOG.warn(String.format(
-					"Path Strategy [%s] did not provide a name, so it won't be registered", s.getClass()
-						.getCanonicalName()));
+				CmfOrganizationStrategy.LOG
+					.warn(String.format("Path Strategy [%s] did not provide a name, so it won't be registered",
+						s.getClass().getCanonicalName()));
 				continue;
 			}
 			CmfOrganizationStrategy old = strategies.get(name);
 			if (old != null) {
-				CmfOrganizationStrategy.LOG
-					.warn(String
-						.format(
-							"CmfOrganizationStrategy [%s] provides the name [%s], but this collides with already-registered strategy [%s]. The newcomer will be ignored.",
-							s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
+				CmfOrganizationStrategy.LOG.warn(String.format(
+					"CmfOrganizationStrategy [%s] provides the name [%s], but this collides with already-registered strategy [%s]. The newcomer will be ignored.",
+					s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
 				continue;
 			}
-			CmfOrganizationStrategy.LOG.debug("Registering CmfOrganizationStrategy [{}] as [{}]", s.getClass()
-				.getCanonicalName(), name);
+			CmfOrganizationStrategy.LOG.debug("Registering CmfOrganizationStrategy [{}] as [{}]",
+				s.getClass().getCanonicalName(), name);
 			strategies.put(name, s);
 		}
 		STRATEGIES = Tools.freezeMap(strategies);
@@ -75,8 +73,8 @@ public abstract class CmfOrganizationStrategy {
 	}
 
 	protected CmfOrganizationStrategy(String name) {
-		if (!CmfOrganizationStrategy.isValidName(name)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not valid for a strategy name", name)); }
+		if (!CmfOrganizationStrategy.isValidName(name)) { throw new IllegalArgumentException(
+			String.format("The string [%s] is not valid for a strategy name", name)); }
 		this.name = name;
 	}
 
@@ -84,8 +82,8 @@ public abstract class CmfOrganizationStrategy {
 		return this.name;
 	}
 
-	public String calculateAddendum(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
-		return qualifier;
+	public String calculateAddendum(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		return String.format("[%s.%08x]", info.getRenditionIdentifier(), info.getRenditionPage());
 	}
 
 	protected abstract List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object);
