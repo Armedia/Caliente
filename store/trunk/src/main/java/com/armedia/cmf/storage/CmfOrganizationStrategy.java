@@ -19,8 +19,24 @@ public abstract class CmfOrganizationStrategy {
 	private static final CmfOrganizationStrategy DEFAULT_STRATEGY = new CmfOrganizationStrategy() {
 
 		@Override
-		public List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object) {
-			return null;
+		public List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+			CmfContentInfo info) {
+			List<String> ssp = new ArrayList<String>(3);
+			ssp.add(object.getType().name());
+			ssp.add(object.getSubtype());
+			return ssp;
+		}
+
+		@Override
+		protected String calculateBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+			CmfContentInfo info) {
+			return object.getId();
+		}
+
+		@Override
+		protected String calculateAppendix(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+			CmfContentInfo info) {
+			return "";
 		}
 	};
 
@@ -82,24 +98,38 @@ public abstract class CmfOrganizationStrategy {
 		return this.name;
 	}
 
-	public String calculateAddendum(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
-		return String.format("[%s.%08x]", info.getRenditionIdentifier(), info.getRenditionPage());
+	public String calculateDescriptor(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		return String.format("%s.%08x", info.getRenditionIdentifier(), info.getRenditionPage());
 	}
 
-	protected abstract List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object);
+	protected abstract List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		CmfContentInfo info);
 
-	protected final List<String> getDefaultPath(CmfObject<?> object) {
-		List<String> ret = new ArrayList<String>(2);
-		ret.add(object.getType().name());
-		ret.add(object.getId());
-		return ret;
+	public final List<String> getPath(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
+		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
+		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
+		return calculatePath(translator, object, info);
 	}
 
-	public final List<String> getPath(CmfAttributeTranslator<?> translator, CmfObject<?> object) {
-		List<String> ssp = calculatePath(translator, object);
-		if ((ssp == null) || ssp.isEmpty()) {
-			ssp = getDefaultPath(object);
-		}
-		return ssp;
+	protected abstract String calculateBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		CmfContentInfo info);
+
+	public final String getBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
+		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
+		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
+		return calculateBaseName(translator, object, info);
+	}
+
+	protected String calculateAppendix(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		return null;
+	}
+
+	public final String getAppendix(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
+		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
+		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
+		return calculateAppendix(translator, object, info);
 	}
 }
