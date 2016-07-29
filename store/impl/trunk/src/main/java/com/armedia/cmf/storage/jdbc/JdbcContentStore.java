@@ -18,6 +18,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.io.IOUtils;
 
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfOperationException;
@@ -59,7 +60,8 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 				this.ps = this.operation.getConnection().prepareStatement(resolveQuery(JdbcDialect.Query.GET_STREAM));
 				this.ps.setString(1, this.locator.getObjectId());
-				this.ps.setString(2, this.locator.getQualifier());
+				this.ps.setString(2, this.locator.getInfo().getRenditionIdentifier());
+				this.ps.setInt(3, this.locator.getInfo().getRenditionPage());
 				this.rs = this.ps.executeQuery();
 				if (!this.rs.next()) { throw new CmfStorageException(
 					String.format("No data stream found for locator [%s]", this.locator)); }
@@ -174,8 +176,8 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 	private class JdbcHandle extends Handle {
 
-		protected JdbcHandle(CmfObject<?> object, String qualifier, JdbcContentLocator locator) {
-			super(object, qualifier, locator);
+		protected JdbcHandle(CmfObject<?> object, CmfContentInfo info, JdbcContentLocator locator) {
+			super(object, info, locator);
 		}
 
 	}
@@ -256,14 +258,14 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	}
 
 	@Override
-	protected JdbcHandle constructHandle(CmfObject<?> object, String qualifier, JdbcContentLocator locator) {
-		return new JdbcHandle(object, qualifier, locator);
+	protected JdbcHandle constructHandle(CmfObject<?> object, CmfContentInfo info, JdbcContentLocator locator) {
+		return new JdbcHandle(object, info, locator);
 	}
 
 	@Override
 	protected JdbcContentLocator doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object,
-		String qualifier) {
-		return new JdbcContentLocator(object.getId(), qualifier);
+		CmfContentInfo info) {
+		return new JdbcContentLocator(object.getId(), info);
 	}
 
 	@Override
@@ -297,10 +299,11 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 					IOUtils.closeQuietly(out);
 				}
 				QueryRunner qr = JdbcTools.getQueryRunner();
+				CmfContentInfo info = locator.getInfo();
 				qr.update(c, resolveQuery(JdbcDialect.Query.DELETE_STREAM), locator.getObjectId(),
-					locator.getQualifier());
+					info.getRenditionIdentifier(), info.getRenditionPage());
 				qr.insert(c, resolveQuery(JdbcDialect.Query.INSERT_STREAM), JdbcTools.HANDLER_NULL,
-					locator.getObjectId(), locator.getQualifier(), blob.length(), blob);
+					locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage(), blob.length(), blob);
 				return blob.length();
 			} finally {
 				blob.free();
@@ -313,9 +316,10 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	protected boolean isExists(JdbcOperation operation, JdbcContentLocator locator) throws CmfStorageException {
 		try {
+			CmfContentInfo info = locator.getInfo();
 			return JdbcTools.getQueryRunner().query(operation.getConnection(),
 				resolveQuery(JdbcDialect.Query.CHECK_IF_CONTENT_EXISTS), JdbcTools.HANDLER_EXISTS,
-				locator.getObjectId(), locator.getQualifier());
+				locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to check whether a stream exists for locator [%s]", locator), e);
@@ -325,9 +329,10 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	protected long getStreamSize(JdbcOperation operation, JdbcContentLocator locator) throws CmfStorageException {
 		try {
+			CmfContentInfo info = locator.getInfo();
 			return JdbcTools.getQueryRunner().query(operation.getConnection(),
 				resolveQuery(JdbcDialect.Query.GET_STREAM_LENGTH), JdbcContentStore.HANDLER_LENGTH,
-				locator.getObjectId(), locator.getQualifier());
+				locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to check whether a stream exists for locator [%s]", locator), e);

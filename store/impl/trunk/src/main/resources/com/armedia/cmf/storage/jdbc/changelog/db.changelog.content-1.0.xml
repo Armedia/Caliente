@@ -23,7 +23,10 @@
 			<column name="object_id" type="varchar(96)" remarks="The object whose content this is">
 				<constraints nullable="false" />
 			</column>
-			<column name="qualifier" type="varchar(64)" remarks="The content's qualifier string">
+			<column name="rendition_id" type="varchar(64)" remarks="The content's rendition identifier">
+				<constraints nullable="false" />
+			</column>
+			<column name="rendition_page" type="number" remarks="The content's rendition page number">
 				<constraints nullable="false" />
 			</column>
 			<column name="length" type="bigint" remarks="The content stream's length">
@@ -33,6 +36,6 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, qualifier" />
+		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, rendition_id, rendition_page" />
 	</changeSet>
 </databaseChangeLog>

@@ -2,31 +2,33 @@ package com.armedia.cmf.storage.jdbc;
 
 import java.io.Serializable;
 
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.commons.utilities.Tools;
 
 public class JdbcContentLocator implements Serializable, Comparable<JdbcContentLocator> {
 	private static final long serialVersionUID = 1L;
 
 	private final String objectId;
-	private final String qualifier;
+	private final CmfContentInfo info;
 
-	JdbcContentLocator(String objectId, String qualifier) {
+	JdbcContentLocator(String objectId, CmfContentInfo info) {
 		if (objectId == null) { throw new IllegalArgumentException("Must provide a non-null object ID"); }
+		if (info == null) { throw new IllegalArgumentException("Must provide a non-null content info object"); }
 		this.objectId = objectId;
-		this.qualifier = Tools.coalesce(qualifier, "");
+		this.info = info;
 	}
 
 	public String getObjectId() {
 		return this.objectId;
 	}
 
-	public String getQualifier() {
-		return this.qualifier;
+	public CmfContentInfo getInfo() {
+		return this.info;
 	}
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.objectId, this.qualifier);
+		return Tools.hashTool(this, null, this.objectId, this.info);
 	}
 
 	@Override
@@ -34,13 +36,13 @@ public class JdbcContentLocator implements Serializable, Comparable<JdbcContentL
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		JdbcContentLocator other = JdbcContentLocator.class.cast(obj);
 		if (!Tools.equals(this.objectId, other.objectId)) { return false; }
-		if (!Tools.equals(this.qualifier, other.qualifier)) { return false; }
+		if (!Tools.equals(this.info, other.info)) { return false; }
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("JdbcContentLocator [objectId=%s, qualifier=%s]", this.objectId, this.qualifier);
+		return String.format("JdbcContentLocator [objectId=%s, qualifier=%s]", this.objectId, this.info);
 	}
 
 	@Override
@@ -49,7 +51,7 @@ public class JdbcContentLocator implements Serializable, Comparable<JdbcContentL
 		if (o == this) { return 0; }
 		int r = Tools.compare(this.objectId, o.objectId);
 		if (r != 0) { return r; }
-		r = Tools.compare(this.qualifier, o.qualifier);
+		r = Tools.compare(this.info, o.info);
 		if (r != 0) { return r; }
 		return r;
 	}

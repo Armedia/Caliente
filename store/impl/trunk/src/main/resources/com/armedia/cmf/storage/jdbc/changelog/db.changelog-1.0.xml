@@ -216,8 +216,14 @@
 			<column name="object_id" type="varchar(96)" remarks="The object whose content this is">
 				<constraints nullable="false" />
 			</column>
-			<column name="qualifier" type="varchar(64)" remarks="The content's qualifier string">
+			<column name="rendition_id" type="varchar(64)" remarks="The content's rendition identifier">
 				<constraints nullable="false" />
+			</column>
+			<column name="rendition_page" type="number" remarks="The content's rendition page number">
+				<constraints nullable="false" />
+			</column>
+			<column name="extension" type="varchar(64)" remarks="The content's DOS extension, if any">
+				<constraints nullable="true" />
 			</column>
 			<column name="content_number" type="bigint" remarks="The number of item within the object's content list">
 				<constraints nullable="false" />
@@ -232,7 +238,7 @@
 				<constraints nullable="true" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content" columnNames="object_id, qualifier" />
+		<addPrimaryKey tableName="cmf_content" columnNames="object_id, rendition_id, rendition_page" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_object"
 			baseTableName="cmf_content" baseColumnNames="object_id"
 			referencedTableName="cmf_object" referencedColumnNames="object_id"
@@ -243,7 +249,10 @@
 			<column name="object_id" type="varchar(96)" remarks="The object whose content this is">
 				<constraints nullable="false" />
 			</column>
-			<column name="qualifier" type="varchar(64)" remarks="The content's qualifier string">
+			<column name="rendition_id" type="varchar(64)" remarks="The content's rendition identifier">
+				<constraints nullable="false" />
+			</column>
+			<column name="rendition_page" type="number" remarks="The content's rendition page number">
 				<constraints nullable="false" />
 			</column>
 			<column name="name" type="varchar(64)" remarks="The property's name">
@@ -253,10 +262,10 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, qualifier, name" />
+		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, rendition_id, rendition_page, name" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_property_content"
-			baseTableName="cmf_content_property" baseColumnNames="object_id, qualifier"
-			referencedTableName="cmf_content" referencedColumnNames="object_id, qualifier"
+			baseTableName="cmf_content_property" baseColumnNames="object_id, rendition_id, rendition_page"
+			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>

@@ -28,6 +28,7 @@ import javax.sql.DataSource;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
@@ -291,7 +292,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected <V> int loadObjects(JdbcOperation operation, CmfAttributeTranslator<V> translator, final CmfType type,
 		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException, CmfValueDecoderException {
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
@@ -952,29 +953,32 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		// Step 2: prepare the new content records and properties
 		List<Object[]> contents = new ArrayList<Object[]>();
 		List<Object[]> properties = new ArrayList<Object[]>();
-		Object[] cArr = new Object[6];
-		Object[] pArr = new Object[4];
+		Object[] cArr = new Object[8];
+		Object[] pArr = new Object[5];
 		int pos = 0;
 		for (CmfContentInfo i : content) {
 			// First, the content record...
 			cArr[0] = objectId;
-			cArr[1] = i.getQualifier();
-			cArr[2] = pos++;
-			cArr[3] = i.getLength();
-			cArr[4] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
-			cArr[5] = i.getFileName();
+			cArr[1] = i.getRenditionIdentifier();
+			cArr[2] = i.getRenditionPage();
+			cArr[3] = i.getExtension();
+			cArr[4] = pos++;
+			cArr[5] = i.getLength();
+			cArr[6] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
+			cArr[7] = i.getFileName();
 			contents.add(cArr.clone());
 
 			// Then, the properties...
 			pArr[0] = objectId;
-			pArr[1] = i.getQualifier();
+			pArr[1] = i.getRenditionIdentifier();
+			pArr[2] = i.getRenditionPage();
 			for (String s : i.getPropertyNames()) {
 				if (s == null) {
 					continue;
 				}
-				pArr[2] = s;
-				pArr[3] = i.getProperty(s);
-				if (pArr[3] == null) {
+				pArr[3] = s;
+				pArr[4] = i.getProperty(s);
+				if (pArr[4] == null) {
 					continue;
 				}
 				properties.add(pArr.clone());
@@ -1025,8 +1029,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					final List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>();
 					final QueryRunner qr = new QueryRunner();
 					while (rs.next()) {
-						final CmfContentInfo info = new CmfContentInfo(rs.getString("qualifier"));
+						final CmfContentInfo info = new CmfContentInfo(rs.getString("rendition_id"),
+							rs.getInt("rendition_page"));
 						info.setLength(rs.getLong("stream_length"));
+						String ext = rs.getString("extension");
+						if (rs.wasNull() || StringUtils.isEmpty(ext)) {
+							ext = null;
+						}
+						info.setExtension(ext);
 						String str = rs.getString("mime_type");
 						if ((str != null) && !rs.wasNull()) {
 							info.setMimeType(MimeTools.resolveMimeType(str));
@@ -1038,7 +1048,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 						Map<String, String> props = qr.query(c,
 							translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES), pHandler, objectId,
-							info.getQualifier());
+							info.getRenditionIdentifier(), info.getRenditionPage());
 						for (String s : props.keySet()) {
 							String v = props.get(s);
 							if ((s != null) && (v != null)) {
