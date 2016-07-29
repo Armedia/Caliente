@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfOrganizationStrategy;
 
@@ -17,7 +18,8 @@ public class DocumentumOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object) {
+	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		CmfContentInfo info) {
 		final String objectId = object.getId();
 		if (objectId.length() != 16) { return null; }
 
@@ -38,8 +40,12 @@ public class DocumentumOrganizationStrategy extends CmfOrganizationStrategy {
 			objectId.substring(2, 8), // The docbase ID
 			uniqueId.substring(0, 3), // The first 3 characters of the unique object ID
 			uniqueId.substring(3, 6), // The 2nd 3 characters of the unique object ID
-			objectId
 		};
 		return new ArrayList<String>(Arrays.asList(components));
+	}
+
+	@Override
+	protected String calculateBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		return object.getId();
 	}
 }
