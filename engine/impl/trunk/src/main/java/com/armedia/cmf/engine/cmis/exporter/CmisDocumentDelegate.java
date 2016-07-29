@@ -11,6 +11,7 @@ import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Rendition;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
@@ -135,7 +136,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo);
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
 		mainInfo.setLength(length);
-		mainInfo.setFileName(main.getFileName());
+		String name = main.getFileName();
+		mainInfo.setFileName(name);
+		mainInfo.setExtension(FilenameUtils.getExtension(name));
 		ret.add(mainInfo);
 		for (Rendition r : this.object.getRenditions()) {
 			CmfContentInfo info = new CmfContentInfo(r.getKind());
@@ -143,7 +146,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
 			info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
 			info.setLength(length);
-			info.setFileName(cs.getFileName());
+			name = cs.getFileName();
+			info.setFileName(name);
+			info.setExtension(FilenameUtils.getExtension(name));
 			info.setProperty("kind", r.getKind());
 			info.setProperty("docId", r.getRenditionDocumentId());
 			info.setProperty("streamId", r.getStreamId());
