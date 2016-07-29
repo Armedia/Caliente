@@ -28,21 +28,22 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	public String calculateAddendum(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	public String calculateDescriptor(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
 		final String attName = translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL);
 		final CmfAttribute<?> versionLabelAtt = object.getAttribute(attName);
-		String oldFrag = super.calculateAddendum(translator, object, info);
+		String oldFrag = super.calculateDescriptor(translator, object, info);
 		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {
 			final String versionLabel = versionLabelAtt.getValue().toString();
 			if (StringUtils.isBlank(versionLabel)) { return oldFrag; }
 			if (StringUtils.isBlank(oldFrag)) { return versionLabel; }
-			return String.format("%s_%s", oldFrag, versionLabel);
+			return String.format("%s@%s", oldFrag, versionLabel);
 		}
 		return oldFrag;
 	}
 
 	@Override
-	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object) {
+	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		CmfContentInfo info) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
 		CmfProperty<?> paths = object.getProperty(IntermediateProperty.PATH);
@@ -53,10 +54,13 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 				ret.add(p);
 			}
 		}
+		return ret;
+	}
 
+	@Override
+	protected String calculateBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
 		CmfAttribute<?> name = object
 			.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
-		ret.add(name.getValue().toString());
-		return ret;
+		return name.getValue().toString();
 	}
 }
