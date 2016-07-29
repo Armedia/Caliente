@@ -65,7 +65,7 @@
 			<setting name="fix.filenames">true</setting>
 			<setting name="use.windows.fix">true</setting>
 			<setting name="fail.on.collisions">false</setting>
-			<setting name="ignore.extra.filename.info">true</setting>
+			<setting name="ignore.descriptor">true</setting>
 		</settings>
 	</contentstore>
 </stores>
