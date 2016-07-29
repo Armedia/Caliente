@@ -19,12 +19,15 @@ import org.apache.commons.lang3.StringUtils;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "contentInfo.t", propOrder = {
-	"qualifier", "size", "hash", "location", "fileName", "mimeType", "properties"
+	"renditionId", "renditionPage", "size", "hash", "location", "fileName", "mimeType", "properties"
 })
 public class ContentInfoT {
 
-	@XmlElement(name = "qualifier", required = true)
-	protected String qualifier;
+	@XmlElement(name = "renditionId", required = true)
+	protected String renditionId;
+
+	@XmlElement(name = "renditionPage", required = true)
+	protected int renditionPage;
 
 	@XmlElement(name = "size", required = true)
 	protected long size;
@@ -68,12 +71,20 @@ public class ContentInfoT {
 		}
 	}
 
-	public String getQualifier() {
-		return this.qualifier;
+	public String getRenditionId() {
+		return this.renditionId;
 	}
 
-	public void setQualifier(String qualifier) {
-		this.qualifier = qualifier;
+	public void setRenditionId(String renditionId) {
+		this.renditionId = renditionId;
+	}
+
+	public int getRenditionPage() {
+		return this.renditionPage;
+	}
+
+	public void setRenditionPage(int renditionPage) {
+		this.renditionPage = renditionPage;
 	}
 
 	public long getSize() {
@@ -142,8 +153,8 @@ public class ContentInfoT {
 	@Override
 	public String toString() {
 		return String.format(
-			"ContentInfoT [qualifier=%s, size=%s, hash=%s, location=%s, fileName=%s, mimeType=%s, properties=%s]",
-			this.qualifier, this.size, Arrays.toString(this.hash), this.location, this.fileName, this.mimeType,
-			this.props);
+			"ContentInfoT [renditionId=%s, renditionPage=%d, size=%s, hash=%s, location=%s, fileName=%s, mimeType=%s, properties=%s]",
+			this.renditionId, this.renditionPage, this.size, Arrays.toString(this.hash), this.location, this.fileName,
+			this.mimeType, this.props);
 	}
 }

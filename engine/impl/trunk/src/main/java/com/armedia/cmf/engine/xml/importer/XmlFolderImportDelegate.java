@@ -16,6 +16,7 @@ import com.armedia.cmf.engine.xml.importer.jaxb.FolderIndexEntryT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FolderIndexT;
 import com.armedia.cmf.engine.xml.importer.jaxb.FolderT;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
@@ -37,7 +38,8 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 		throws ImportException, CmfStorageException, CmfValueDecoderException {
 
 		FolderT f = this.delegate.createItem(translator, ctx);
-		CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
+		CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
+			new CmfContentInfo());
 		if (!h.getSourceStore().isSupportsFileAccess()) { return null; }
 		File tgt = null;
 		try {

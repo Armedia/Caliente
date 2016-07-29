@@ -86,8 +86,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		int contents = 0;
 		for (CmfContentInfo info : ctx.getContentInfo(this.cmfObject)) {
-			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject,
-				info.getQualifier());
+			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
 			final File f;
 			try {
 				f = h.getFile();
@@ -95,7 +94,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 				// Failed to get the file, so we can't handle this
 				throw new CmfStorageException(
 					String.format("Failed to locate the content file for DOCUMENT (%s)[%s], content qualifier [%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), info.getQualifier()),
+						this.cmfObject.getLabel(), this.cmfObject.getId(), info),
 					e);
 			}
 			ContentInfoT xml = new ContentInfoT();
@@ -103,7 +102,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			// xml.setHash(null);
 			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
 			xml.setMimeType(info.getMimeType().getBaseType());
-			xml.setQualifier(info.getQualifier());
+			xml.setRenditionId(info.getRenditionIdentifier());
+			xml.setRenditionPage(info.getRenditionPage());
 			xml.setSize(info.getLength());
 			for (String k : info.getPropertyNames()) {
 				xml.setProperty(k, info.getProperty(k));
@@ -114,7 +114,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		if (contents == 0) {
 			// Generate a placeholder, empty file
-			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, "");
+			CmfContentInfo info = new CmfContentInfo();
+			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
 			File f = null;
 			try {
 				f = h.getFile(true);
@@ -133,7 +134,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			// xml.setHash(null);
 			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
 			xml.setMimeType(MimeTools.DEFAULT_MIME_TYPE.toString());
-			xml.setQualifier("");
+			xml.setRenditionId(info.getRenditionIdentifier());
+			xml.setRenditionPage(info.getRenditionPage());
 			xml.setSize(0);
 			v.getContents().add(xml);
 		}
