@@ -707,7 +707,14 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 			if (fromDctm) {
 				// Parse out the rendition number for this one...
-				rendition = Integer.valueOf(info.getRenditionIdentifier(), 16);
+				rendition = (info.isDefaultRendition() ? 0 : Integer.valueOf(info.getRenditionIdentifier(), 16));
+				if ((rendition == 0) && !info.isDefaultRendition()) {
+					this.log.warn(String.format(
+						"%s %s [%s](%s) has a non-default rendition with an ID of 0, which is not allowed (%s)",
+						this.cmfObject.getSubtype(), this.cmfObject.getType(), this.cmfObject.getLabel(),
+						this.cmfObject.getId(), info));
+					continue;
+				}
 				page = info.getRenditionPage();
 			} else {
 				// If this isn't a documentum stream, then the rendition number must be the current

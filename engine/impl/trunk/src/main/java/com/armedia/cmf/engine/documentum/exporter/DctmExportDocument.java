@@ -274,7 +274,13 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			pageModifier = "";
 		}
 
-		CmfContentInfo info = new CmfContentInfo(String.format("%08x", content.getRendition()), pageNumber);
+		String renditionId = null;
+		if (content.getRendition() != 0) {
+			renditionId = String.format("%08x", content.getRendition());
+		} else {
+			renditionId = null;
+		}
+		CmfContentInfo info = new CmfContentInfo(renditionId, pageNumber);
 		IDfId formatId = content.getFormatId();
 		MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
 		if (!formatId.isNull()) {
