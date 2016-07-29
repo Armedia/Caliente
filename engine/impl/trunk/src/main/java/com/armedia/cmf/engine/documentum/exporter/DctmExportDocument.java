@@ -12,7 +12,9 @@ import java.util.List;
 
 import javax.activation.MimeType;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
@@ -285,7 +287,11 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
 		if (!formatId.isNull()) {
 			IDfFormat formatObj = IDfFormat.class.cast(session.getObject(formatId));
-			info.setExtension(formatObj.getDOSExtension());
+			String ext = FilenameUtils.getExtension(document.getObjectName());
+			if (StringUtils.isEmpty(ext)) {
+				ext = formatObj.getDOSExtension();
+			}
+			info.setExtension(ext);
 			mimeType = MimeTools.resolveMimeType(formatObj.getMIMEType());
 		}
 		info.setMimeType(mimeType);
