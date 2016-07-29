@@ -378,8 +378,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	protected List<CmfContentInfo> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
 		final ShptSession session = ctx.getSession();
-		// TODO: We NEED to use something other than the object ID here...
-		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshaled, "");
+		CmfContentInfo info = new CmfContentInfo();
+		info.setFileName(this.object.getName());
+		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshaled, info);
 		InputStream in = null;
 		if (this.version == null) {
 			in = session.getFileStream(this.object.getServerRelativeUrl());
@@ -403,13 +404,12 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		} catch (Exception e) {
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
+
 		marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CONTENT_TYPE.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(type.getBaseType()))));
-		List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>();
-		CmfContentInfo info = new CmfContentInfo(h.getQualifier());
 		info.setMimeType(MimeTools.resolveMimeType(type.getBaseType()));
 		info.setLength(buf.getCurrentSize());
-		info.setFileName(this.object.getName());
+		List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>();
 		ret.add(info);
 		return ret;
 	}
