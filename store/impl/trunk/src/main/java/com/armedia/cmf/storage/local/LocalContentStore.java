@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfOrganizationStrategy;
@@ -69,8 +70,8 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	private class LocalHandle extends Handle {
 
-		protected LocalHandle(CmfObject<?> object, String qualifier, URI locator) {
-			super(object, qualifier, locator);
+		protected LocalHandle(CmfObject<?> object, CmfContentInfo info, URI locator) {
+			super(object, info, locator);
 		}
 
 	}
@@ -222,14 +223,16 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected URI doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, String qualifier) {
+	protected URI doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
 		final List<String> rawPath = this.strategy.getPath(translator, object);
 		final String rawFragment;
+		final String rawExt = StringUtils.isEmpty(info.getExtension()) ? "" : String.format(".%s", info.getExtension());
 		if (!this.ignoreFragment) {
-			rawFragment = this.strategy.calculateAddendum(translator, object, qualifier);
+			rawFragment = this.strategy.calculateAddendum(translator, object, info);
 		} else {
 			rawFragment = "";
 		}
+		final String ext;
 		final String ssp;
 		final String fragment;
 		final String scheme;
@@ -243,6 +246,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			}
 			ssp = FileNameTools.reconstitute(sspParts, false, false, '/');
 			fragment = safeEncode(rawFragment);
+			ext = safeEncode(rawExt);
 			fixed = fixed || !Tools.equals(rawFragment, fragment);
 			if (fixed) {
 				if (this.forceSafeFilenames) {
@@ -257,10 +261,11 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			scheme = LocalContentStore.SCHEME_RAW;
 			ssp = FileNameTools.reconstitute(rawPath, false, false, '/');
 			fragment = rawFragment;
+			ext = rawExt;
 		}
 
 		try {
-			return new URI(scheme, ssp, fragment);
+			return new URI(scheme, ssp, String.format("%s%s", fragment, ext));
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(
 				String.format("Failed to allocate a handle ID for %s[%s]", object.getType(), object.getId()), e);
@@ -494,7 +499,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected LocalHandle constructHandle(CmfObject<?> object, String qualifier, URI locator) {
-		return new LocalHandle(object, qualifier, locator);
+	protected LocalHandle constructHandle(CmfObject<?> object, CmfContentInfo info, URI locator) {
+		return new LocalHandle(object, info, locator);
 	}
 }
