@@ -76,6 +76,11 @@ public class DctmVersionTree {
 	public final Map<DctmVersionNumber, DctmVersionNumber> alternateAntecedent;
 
 	/**
+	 * Flag to indicate if the tree contains branches or not.
+	 */
+	private final boolean branched;
+
+	/**
 	 *
 	 * @param session
 	 *            the session through which to perform the analysis
@@ -122,22 +127,28 @@ public class DctmVersionTree {
 		// This can only happen if there is nothing in the chronicle
 		if (all.isEmpty()) { throw new DfIdNotFoundException(chronicle); }
 
+		boolean branched = false;
 		for (final IDfId sysObjectId : all) {
 			final String sysObjectIdStr = sysObjectId.getId();
 			final IDfSysObject sysObject = IDfSysObject.class.cast(session.getObject(sysObjectId));
 			final DctmVersionNumber versionNumber = new DctmVersionNumber(sysObject.getImplicitVersionLabel());
 			final IDfSysObject duplicate = sysObjectsByVersionNumber.put(versionNumber, sysObject);
-			if (duplicate != null) { throw new DctmException(String.format(
-				"Duplicate version number [%s] between documents [%s] and [%s]", versionNumber, sysObjectIdStr,
-				duplicate.getObjectId().getId())); }
+			if (duplicate != null) { throw new DctmException(
+				String.format("Duplicate version number [%s] between documents [%s] and [%s]", versionNumber,
+					sysObjectIdStr, duplicate.getObjectId().getId())); }
 			if (versionNumber.getComponentCount() == 2) {
 				trunkVersions.add(versionNumber);
 			}
+			// If the version number contains more than two components, it's definitely
+			// a branch...
+			branched |= (versionNumber.getComponentCount() > 2);
 			indexByVersionNumber.put(versionNumber, sysObjectIdStr);
 			allVersions.add(versionNumber);
 
 			indexById.put(sysObjectIdStr, versionNumber);
 		}
+
+		this.branched = branched;
 
 		// So...at this point, if we were to walk by the indexByVersionNumber, we would be able to
 		// construct the tree in correct version order, since we know for a fact that the versions
@@ -163,9 +174,9 @@ public class DctmVersionTree {
 				if (rootNode != null) {
 					// If we already have a root node, then this is an error condition with invalid
 					// data, and we can't continue
-					throw new DctmException(String.format(
-						"Found a second object [%s] in chronicle [%s] that has a null antecedent id",
-						sysObjectId.getId(), chronicleId));
+					throw new DctmException(
+						String.format("Found a second object [%s] in chronicle [%s] that has a null antecedent id",
+							sysObjectId.getId(), chronicleId));
 				}
 
 				// If there is no antecedent, and the antecedent ID is the null ID
@@ -173,11 +184,9 @@ public class DctmVersionTree {
 				if (!Tools.equals(chronicleId, sysObject.getObjectId().getId())) {
 					// If this is not the chronicle root, this is an error condition from invalid
 					// data, and we can't continue
-					throw new DctmException(
-						String
-							.format(
-								"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
-								sysObjectId.getId(), chronicleId));
+					throw new DctmException(String.format(
+						"Object with ID [%s] returned the null ID for its antecedent, but it's not the chronicle root for [%s]",
+						sysObjectId.getId(), chronicleId));
 				}
 				continue;
 			}
@@ -337,5 +346,9 @@ public class DctmVersionTree {
 			}
 		}
 		return l;
+	}
+
+	public boolean isBranched() {
+		return this.branched;
 	}
 }

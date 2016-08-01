@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.commons.utilities.Tools;
@@ -42,6 +43,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	}
 
 	public DctmVersionNumber(String version) {
+		if (StringUtils.isBlank(version)) { throw new IllegalArgumentException("Illegal blank version label"); }
 		StrTokenizer tok = new StrTokenizer(version, '.');
 		List<String> l = tok.getTokenList();
 		this.numbers = new int[l.size()];
@@ -147,7 +149,8 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	}
 
 	public boolean isSuccessorOf(DctmVersionNumber other) {
-		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
+		if (other == null) { throw new IllegalArgumentException(
+			"Must provide another version number to check against"); }
 		final int length = getComponentCount();
 		if (length != other.getComponentCount()) { return false; }
 		if (length == 2) {
@@ -162,7 +165,8 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	}
 
 	public boolean isAntecedentOf(DctmVersionNumber other) {
-		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
+		if (other == null) { throw new IllegalArgumentException(
+			"Must provide another version number to check against"); }
 		final int length = getComponentCount();
 		if (length != other.getComponentCount()) { return false; }
 		if (length == 2) {
@@ -177,21 +181,24 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	}
 
 	public boolean isAncestorOf(DctmVersionNumber other) {
-		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
+		if (other == null) { throw new IllegalArgumentException(
+			"Must provide another version number to check against"); }
 		int len = getComponentCount();
 		if (len >= other.getComponentCount()) { return false; }
 		return equals(other, len);
 	}
 
 	public boolean isDescendantOf(DctmVersionNumber other) {
-		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
+		if (other == null) { throw new IllegalArgumentException(
+			"Must provide another version number to check against"); }
 		int len = other.getComponentCount();
 		if (getComponentCount() <= len) { return false; }
 		return equals(other, len);
 	}
 
 	public int getDepthInCommon(DctmVersionNumber other) {
-		if (other == null) { throw new IllegalArgumentException("Must provide another version number to check against"); }
+		if (other == null) { throw new IllegalArgumentException(
+			"Must provide another version number to check against"); }
 		final int length = getComponentCount();
 		final int otherLength = other.getComponentCount();
 		for (int i = 0; i < length; i++) {

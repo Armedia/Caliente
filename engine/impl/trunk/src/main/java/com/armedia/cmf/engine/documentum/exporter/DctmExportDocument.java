@@ -108,7 +108,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		final List<IDfDocument> ret = new LinkedList<IDfDocument>();
 
 		boolean add = prior;
-		for (IDfDocument doc : getVersionHistory(ctx, document)) {
+		for (Version<IDfDocument> version : getVersionHistory(ctx, document)) {
+			IDfDocument doc = version.object;
 			final IDfId id = doc.getObjectId();
 			if (Tools.equals(id.getId(), document.getObjectId().getId())) {
 				// Once we've found the "reference" object in the history, we skip adding it
@@ -189,8 +190,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			rootObject = (previousCount == 0);
 		} else {
 			// If we're the first object in the version history, we mark ourselves as such.
-			for (IDfDocument d : getVersionHistory(ctx, document)) {
-				rootObject = (Tools.equals(d.getObjectId(), document.getObjectId()));
+			for (Version<IDfDocument> v : getVersionHistory(ctx, document)) {
+				rootObject = (Tools.equals(v.object.getObjectId(), document.getObjectId()));
 				break;
 			}
 		}
