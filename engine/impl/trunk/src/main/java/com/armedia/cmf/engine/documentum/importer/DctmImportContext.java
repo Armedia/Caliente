@@ -29,8 +29,9 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfValue, DctmI
 
 	DctmImportContext(DctmImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
 		IDfSession session, Logger output, CmfTypeMapper typeMapper, CmfAttributeTranslator<IDfValue> translator,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore) {
-		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
+		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore,
+			batchPosition);
 		this.specialValues = factory.getSpecialValues();
 	}
 
