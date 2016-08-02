@@ -152,6 +152,18 @@ public class AlfImportEngine extends
 	}
 
 	@Override
+	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
+		switch (type) {
+			case FOLDER:
+			case DOCUMENT:
+				return super.checkSupported(excludes, type);
+			default:
+				break;
+		}
+		return false;
+	}
+
+	@Override
 	protected CmfValue getValue(CmfDataType type, Object value) {
 		return CmfValue.newValue(type, value);
 	}

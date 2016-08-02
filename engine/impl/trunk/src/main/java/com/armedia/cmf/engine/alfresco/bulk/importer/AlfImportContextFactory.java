@@ -14,8 +14,8 @@ import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class AlfImportContextFactory extends
-ImportContextFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine, File> {
+public class AlfImportContextFactory
+	extends ImportContextFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine, File> {
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root) throws Exception {
 		super(engine, settings, root);
@@ -39,14 +39,15 @@ ImportContextFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, Alf
 
 	@Override
 	protected AlfImportContext constructContext(String rootId, CmfType rootType, AlfRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
-		return new AlfImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper, getEngine()
-			.getTranslator(), objectStore, contentStore);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		int batchPosition) {
+		return new AlfImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper,
+			getEngine().getTranslator(), objectStore, contentStore, batchPosition);
 	}
 
 	@Override
 	protected String calculateProductName(AlfRoot session) throws Exception {
-		return "XmlMetadata";
+		return "AlfrescoBulkImport";
 	}
 
 	@Override

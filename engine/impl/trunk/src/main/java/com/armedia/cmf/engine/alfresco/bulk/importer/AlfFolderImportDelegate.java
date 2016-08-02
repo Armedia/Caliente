@@ -10,16 +10,11 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 
-public class AlfDocumentImportDelegate extends AlfImportDelegate {
+public class AlfFolderImportDelegate extends AlfImportDelegate {
 
-	private final int major;
-	private final int minor;
-
-	public AlfDocumentImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject, int major,
-		int minor) throws Exception {
+	public AlfFolderImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
+		throws Exception {
 		super(factory, storedObject);
-		this.major = major;
-		this.minor = minor;
 	}
 
 	@Override
