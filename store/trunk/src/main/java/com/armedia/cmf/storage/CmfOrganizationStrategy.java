@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,6 +121,18 @@ public abstract class CmfOrganizationStrategy {
 		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
 		return calculateBaseName(translator, object, info);
+	}
+
+	protected String calculateExtension(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		CmfContentInfo info) {
+		return StringUtils.isEmpty(info.getExtension()) ? "" : String.format(".%s", info.getExtension());
+	}
+
+	public final String getExtension(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
+		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
+		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
+		return calculateExtension(translator, object, info);
 	}
 
 	protected String calculateAppendix(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
