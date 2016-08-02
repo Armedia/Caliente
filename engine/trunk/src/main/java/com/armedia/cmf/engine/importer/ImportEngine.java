@@ -448,6 +448,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							}
 
 							listenerDelegator.objectBatchImportStarted(batch.type, batch.id, batch.contents.size());
+							int i = 0;
 							for (CmfObject<V> next : batch.contents) {
 								if (failBatch) {
 									this.log
@@ -458,7 +459,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								}
 
 								final C ctx = contextFactory.newContext(next.getId(), next.getType(),
-									session.getWrapped(), output, objectStore, streamStore, typeMapper);
+									session.getWrapped(), output, objectStore, streamStore, typeMapper, i);
 								try {
 									initContext(ctx);
 									final CmfType storedType = next.getType();
@@ -501,6 +502,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 										if (useTx) {
 											session.commit();
 										}
+										i++;
 									} catch (Throwable t) {
 										if (useTx) {
 											session.rollback();

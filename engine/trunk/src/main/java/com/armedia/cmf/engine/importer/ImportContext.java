@@ -20,25 +20,31 @@ import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>> extends
-	TransferContext<S, V, CF> {
+public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>>
+	extends TransferContext<S, V, CF> {
 
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
 	private final CmfAttributeTranslator<V> translator;
 	private final CmfTypeMapper typeMapper;
 	private final CmfContentStore<?, ?, ?> streamStore;
+	private final int batchPosition;
 
 	public <C extends ImportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
 		CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore) {
+		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
 		super(factory, settings, rootId, rootType, session, output);
 		this.factory = factory;
 		this.translator = translator;
 		this.cmfObjectStore = objectStore;
 		this.streamStore = streamStore;
 		this.typeMapper = typeMapper;
+		this.batchPosition = batchPosition;
+	}
+
+	public final int getBatchPosition() {
+		return this.batchPosition;
 	}
 
 	public final CmfAttributeMapper getAttributeMapper() {
@@ -69,8 +75,8 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		try {
 			return this.cmfObjectStore.getContentInfo(object);
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
+			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)", object.getType(),
+				object.getLabel(), object.getId()), e);
 		}
 	}
 }

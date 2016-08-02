@@ -456,7 +456,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					// The type mapper parameter is null here because it's only useful
 					// for imports
 					final C ctx = contextFactory.newContext(nextId, nextType, s, output, objectStore, contentStore,
-						null);
+						null, 0);
 					try {
 						initContext(ctx);
 						Result result = exportObject(objectStore, contentStore, null, next, exportDelegate, ctx,

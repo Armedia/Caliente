@@ -65,7 +65,8 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	private final String productVersion;
 
 	protected ContextFactory(E engine, CfgTools settings, S session) throws Exception {
-		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to which this factory is tied"); }
+		if (engine == null) { throw new IllegalArgumentException(
+			"Must provide an engine to which this factory is tied"); }
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
 		Set<CmfType> excludes = EnumSet.noneOf(CmfType.class);
@@ -76,8 +77,8 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 			}
 		}
 		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Excluded types for this context factory instance (%s): %s", getClass()
-				.getSimpleName(), excludes));
+			this.log.debug(String.format("Excluded types for this context factory instance (%s): %s",
+				getClass().getSimpleName(), excludes));
 		}
 		this.excludes = Tools.freezeSet(excludes);
 		this.productName = calculateProductName(session);
@@ -130,16 +131,19 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	}
 
 	public final C newContext(String rootId, CmfType rootType, S session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		int batchPosition) {
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
-			return constructContext(rootId, rootType, session, output, objectStore, contentStore, typeMapper);
+			return constructContext(rootId, rootType, session, output, objectStore, contentStore, typeMapper,
+				batchPosition);
 		} finally {
 			this.lock.readLock().unlock();
 		}
 	}
 
 	protected abstract C constructContext(String rootId, CmfType rootType, S session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		int batchPosition);
 }
