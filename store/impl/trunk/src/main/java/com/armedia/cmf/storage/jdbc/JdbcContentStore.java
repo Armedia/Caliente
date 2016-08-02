@@ -263,7 +263,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	}
 
 	@Override
-	protected JdbcContentLocator doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+	protected <T> JdbcContentLocator doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		return new JdbcContentLocator(object.getId(), info);
 	}
