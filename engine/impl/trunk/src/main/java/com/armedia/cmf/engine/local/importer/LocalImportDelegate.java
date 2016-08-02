@@ -57,7 +57,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
 
-		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LAST_VERSION);
+		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LATEST_VERSION);
 		if ((att != null) && att.hasValues()) {
 			CmfValue v = att.getValue();
 			if (!v.isNull() && !v.asBoolean() && !this.factory.isIncludeAllVersions()) {
