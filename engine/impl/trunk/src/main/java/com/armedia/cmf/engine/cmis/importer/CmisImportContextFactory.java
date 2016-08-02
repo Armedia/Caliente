@@ -52,9 +52,10 @@ public class CmisImportContextFactory
 
 	@Override
 	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper,
+		int batchPosition) {
 		return new CmisImportContext(this, rootId, rootType, session, output, typeMapper, getEngine().getTranslator(),
-			objectStore, streamStore);
+			objectStore, streamStore, batchPosition);
 	}
 
 	private boolean isFolderType(ObjectType type) {

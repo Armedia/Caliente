@@ -17,11 +17,11 @@ import com.armedia.cmf.storage.CmfValue;
 
 public class CmisImportContext extends ImportContext<Session, CmfValue, CmisImportContextFactory> {
 
-	CmisImportContext(CmisImportContextFactory factory, String rootId, CmfType rootType, Session session,
-		Logger output, CmfTypeMapper typeMapper, CmfAttributeTranslator<CmfValue> translator,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore) {
+	CmisImportContext(CmisImportContextFactory factory, String rootId, CmfType rootType, Session session, Logger output,
+		CmfTypeMapper typeMapper, CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output, typeMapper, translator, objectStore,
-			streamStore);
+			streamStore, batchPosition);
 	}
 
 	public Set<String> convertAllowableActionsToPermissions(Collection<String> allowableActions) {
