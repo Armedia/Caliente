@@ -357,19 +357,20 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		return handle.locator;
 	}
 
-	public final Handle getHandle(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	public final <T> Handle getHandle(CmfAttributeTranslator<T> translator, CmfObject<T> object, CmfContentInfo info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
 		return constructHandle(object, info, calculateLocator(translator, object, info));
 	}
 
-	protected final L calculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	protected final <T> L calculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
 		return doCalculateLocator(translator, object, info);
 	}
 
-	protected abstract L doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+	protected abstract <T> L doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info);
 
 	protected final InputStream openInput(L locator) throws CmfStorageException {

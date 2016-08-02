@@ -20,7 +20,7 @@ public abstract class CmfOrganizationStrategy {
 	private static final CmfOrganizationStrategy DEFAULT_STRATEGY = new CmfOrganizationStrategy() {
 
 		@Override
-		public List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		public <T> List<String> calculatePath(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 			CmfContentInfo info) {
 			List<String> ssp = new ArrayList<String>(3);
 			ssp.add(object.getType().name());
@@ -29,13 +29,13 @@ public abstract class CmfOrganizationStrategy {
 		}
 
 		@Override
-		protected String calculateBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 			CmfContentInfo info) {
 			return object.getId();
 		}
 
 		@Override
-		protected String calculateAppendix(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+		protected <T> String calculateAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 			CmfContentInfo info) {
 			return "";
 		}
@@ -99,47 +99,61 @@ public abstract class CmfOrganizationStrategy {
 		return this.name;
 	}
 
-	public String calculateDescriptor(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		return String.format("%s.%08x", info.getRenditionIdentifier(), info.getRenditionPage());
 	}
 
-	protected abstract List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+	public final <T> String getDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
+		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
+		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
+		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
+		return calculateDescriptor(translator, object, info);
+	}
+
+	protected abstract <T> List<String> calculatePath(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info);
 
-	public final List<String> getPath(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	public final <T> List<String> getPath(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
 		return calculatePath(translator, object, info);
 	}
 
-	protected abstract String calculateBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+	protected abstract <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info);
 
-	public final String getBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	public final <T> String getBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
 		return calculateBaseName(translator, object, info);
 	}
 
-	protected String calculateExtension(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+	protected <T> String calculateExtension(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		return StringUtils.isEmpty(info.getExtension()) ? "" : String.format(".%s", info.getExtension());
 	}
 
-	public final String getExtension(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	public final <T> String getExtension(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
 		return calculateExtension(translator, object, info);
 	}
 
-	protected String calculateAppendix(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	protected <T> String calculateAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		return null;
 	}
 
-	public final String getAppendix(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	public final <T> String getAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }
