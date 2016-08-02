@@ -28,7 +28,8 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	public String calculateDescriptor(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		final String attName = translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL);
 		final CmfAttribute<?> versionLabelAtt = object.getAttribute(attName);
 		String oldFrag = super.calculateDescriptor(translator, object, info);
@@ -42,7 +43,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+	protected <T> List<String> calculatePath(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
@@ -58,7 +59,8 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	protected String calculateBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		CmfAttribute<?> name = object
 			.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
 		return name.getValue().toString();
