@@ -32,7 +32,7 @@ public enum IntermediateAttribute implements Mappable,CmfEncodeableName {
 	LAST_MODIFIED_BY(PropertyIds.LAST_MODIFIED_BY, CmfDataType.STRING),
 	LAST_MODIFICATION_DATE(PropertyIds.LAST_MODIFICATION_DATE, CmfDataType.DATETIME),
 	IS_IMMUTABLE(PropertyIds.IS_IMMUTABLE, CmfDataType.BOOLEAN),
-	IS_LAST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfDataType.BOOLEAN),
+	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfDataType.BOOLEAN),
 	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.ID, true),
 	PATH(PropertyIds.PATH, CmfDataType.STRING, true),
 	SOURCE_ID(PropertyIds.SOURCE_ID, CmfDataType.ID),
