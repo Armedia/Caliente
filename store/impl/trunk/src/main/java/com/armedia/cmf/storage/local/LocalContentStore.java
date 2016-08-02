@@ -222,14 +222,15 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		return str;
 	}
 
-	private String constructFileName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	private <T> String constructFileName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		String baseName = this.strategy.getBaseName(translator, object, info);
 		String descriptor;
 		String ext = this.strategy.getExtension(translator, object, info);
 		String appendix = this.strategy.getAppendix(translator, object, info);
 
 		if (!this.ignoreDescriptor) {
-			descriptor = this.strategy.calculateDescriptor(translator, object, info);
+			descriptor = this.strategy.getDescriptor(translator, object, info);
 		} else {
 			descriptor = "";
 		}
@@ -266,7 +267,8 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected URI doCalculateLocator(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	protected <T> URI doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		final List<String> rawPath = this.strategy.getPath(translator, object, info);
 		rawPath.add(constructFileName(translator, object, info));
 
