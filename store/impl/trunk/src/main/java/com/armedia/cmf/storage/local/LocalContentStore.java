@@ -225,7 +225,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	private String constructFileName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
 		String baseName = this.strategy.getBaseName(translator, object, info);
 		String descriptor;
-		String ext = StringUtils.isEmpty(info.getExtension()) ? "" : String.format(".%s", info.getExtension());
+		String ext = this.strategy.getExtension(translator, object, info);
 		String appendix = this.strategy.getAppendix(translator, object, info);
 
 		if (!this.ignoreDescriptor) {
@@ -236,6 +236,10 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 		if (StringUtils.isEmpty(baseName)) {
 			baseName = "";
+		}
+
+		if (StringUtils.isEmpty(ext)) {
+			ext = "";
 		}
 
 		if (!StringUtils.isEmpty(ext) && baseName.endsWith(ext)) {
