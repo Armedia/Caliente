@@ -14,8 +14,8 @@ import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class XmlImportContextFactory extends
-ImportContextFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine, File> {
+public class XmlImportContextFactory
+	extends ImportContextFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine, File> {
 
 	protected XmlImportContextFactory(XmlImportEngine engine, CfgTools settings, XmlRoot root) throws Exception {
 		super(engine, settings, root);
@@ -39,9 +39,10 @@ ImportContextFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, Xml
 
 	@Override
 	protected XmlImportContext constructContext(String rootId, CmfType rootType, XmlRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
-		return new XmlImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper, getEngine()
-			.getTranslator(), objectStore, contentStore);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		int batchPosition) {
+		return new XmlImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper,
+			getEngine().getTranslator(), objectStore, contentStore, batchPosition);
 	}
 
 	@Override
