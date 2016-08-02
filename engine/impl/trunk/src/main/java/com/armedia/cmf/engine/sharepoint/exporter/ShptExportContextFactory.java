@@ -20,8 +20,8 @@ import com.armedia.commons.utilities.CfgTools;
  * @author diego
  *
  */
-public class ShptExportContextFactory extends
-	ExportContextFactory<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportEngine> {
+public class ShptExportContextFactory
+	extends ExportContextFactory<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportEngine> {
 
 	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings, ShptSession session) throws Exception {
 		super(engine, settings, session);
@@ -29,7 +29,8 @@ public class ShptExportContextFactory extends
 
 	@Override
 	protected ShptExportContext constructContext(String rootId, CmfType rootType, ShptSession session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		int batchPosition) {
 		return new ShptExportContext(this, getSettings(), rootId, rootType, session, output);
 	}
 
