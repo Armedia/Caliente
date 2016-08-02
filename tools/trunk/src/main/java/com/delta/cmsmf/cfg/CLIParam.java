@@ -73,7 +73,7 @@ public enum CLIParam {
 		Setting.CONTENT_DIRECTORY,
 		1,
 		"The Content directory to use (if omitted, it will be placed in the 'content' subdirectory of the Database directory)"),
-	content_org(
+	content_strategy(
 		Setting.CONTENT_ORGANIZATION,
 		1,
 		"The name of the organization strategy to use in the Content directory (specific engines may use their own defaults)"),

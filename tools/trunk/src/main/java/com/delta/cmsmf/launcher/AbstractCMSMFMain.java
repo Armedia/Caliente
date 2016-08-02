@@ -85,7 +85,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			final String contentStoreName = (directFsExport ? "direct" : "local");
 			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 			if (!directFsExport) {
-				String strategy = CLIParam.content_org.getString();
+				String strategy = CLIParam.content_strategy.getString();
 				if (StringUtils.isBlank(strategy)) {
 					strategy = getContentStrategyName();
 				}
