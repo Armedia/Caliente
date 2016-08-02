@@ -18,7 +18,7 @@ public class DocumentumOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	protected List<String> calculatePath(CmfAttributeTranslator<?> translator, CmfObject<?> object,
+	protected <T> List<String> calculatePath(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		final String objectId = object.getId();
 		if (objectId.length() != 16) { return null; }
@@ -45,7 +45,8 @@ public class DocumentumOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	protected String calculateBaseName(CmfAttributeTranslator<?> translator, CmfObject<?> object, CmfContentInfo info) {
+	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
 		return object.getId();
 	}
 }
