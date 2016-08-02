@@ -143,7 +143,7 @@ public class AlfImportDelegateFactory
 				return new AlfFolderImportDelegate(this, storedObject);
 			case DOCUMENT:
 				// TODO: How to determine the minor counter
-				return new AlfDocumentImportDelegate(this, storedObject, getCounter(storedObject).incrementAndGet(), 0);
+				return new AlfDocumentImportDelegate(this, storedObject);
 			default:
 				break;
 		}
