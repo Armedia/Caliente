@@ -12,8 +12,8 @@ import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalExportContextFactory extends
-	ExportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportEngine> {
+public class LocalExportContextFactory
+	extends ExportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportEngine> {
 
 	protected LocalExportContextFactory(LocalExportEngine engine, CfgTools settings, LocalRoot session)
 		throws Exception {
@@ -22,7 +22,8 @@ public class LocalExportContextFactory extends
 
 	@Override
 	protected LocalExportContext constructContext(String rootId, CmfType rootType, LocalRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		int batchPosition) {
 		return new LocalExportContext(this, getSettings(), rootId, rootType, session, output);
 	}
 

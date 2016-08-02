@@ -16,7 +16,8 @@ public class LocalImportContext extends ImportContext<LocalRoot, CmfValue, Local
 
 	public LocalImportContext(LocalImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
 		LocalRoot session, Logger output, CmfTypeMapper typeMapper, CmfAttributeTranslator<CmfValue> translator,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore) {
-		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
+		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore,
+			batchPosition);
 	}
 }
