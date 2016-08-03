@@ -20,7 +20,6 @@ import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public class LocalDocumentImportDelegate extends LocalImportDelegate {
 
@@ -31,7 +30,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 
 	@Override
 	protected Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
-		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
+		LocalImportContext ctx) throws ImportException, CmfStorageException {
 		File targetFile;
 		try {
 			targetFile = getTargetFile(ctx);

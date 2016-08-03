@@ -35,14 +35,12 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.cmf.storage.tools.FilenameFixer;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class LocalImportDelegate
-extends
-ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
+public abstract class LocalImportDelegate extends
+	ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportDelegateFactory, LocalImportEngine> {
 
 	protected LocalImportDelegate(LocalImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -55,7 +53,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
-		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException {
+		LocalImportContext ctx) throws ImportException, CmfStorageException {
 
 		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LATEST_VERSION);
 		if ((att != null) && att.hasValues()) {
@@ -75,7 +73,7 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 	}
 
 	protected abstract Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
-		LocalImportContext ctx) throws ImportException, CmfStorageException, CmfValueDecoderException;
+		LocalImportContext ctx) throws ImportException, CmfStorageException;
 
 	protected final File getTargetFile(LocalImportContext ctx) throws ImportException, IOException {
 		final CmfAttributeTranslator<CmfValue> translator = this.factory.getEngine().getTranslator();
@@ -99,8 +97,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 			tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
 		}
 
-		CmfAttribute<CmfValue> nameAtt = this.cmfObject.getAttribute(translator.decodeAttributeName(
-			this.cmfObject.getType(), IntermediateAttribute.NAME));
+		CmfAttribute<CmfValue> nameAtt = this.cmfObject
+			.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.NAME));
 
 		// We always fix the file's name, since it's not part of the path and may also need fixing.
 		// Same dilemma as above, though - need to know "when" to use windows mode...
@@ -138,8 +136,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 				continue;
 			}
 
-			CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(translator.decodeAttributeName(
-				this.cmfObject.getType(), att));
+			CmfAttribute<CmfValue> v = this.cmfObject
+				.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(), att));
 			if ((v == null) || !v.hasValues()) {
 				continue;
 			}
@@ -154,8 +152,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 		if (ownerView != null) {
 			UserPrincipal local = ownerView.getOwner();
 			if (local != null) {
-				CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(translator.decodeAttributeName(
-					this.cmfObject.getType(), IntermediateAttribute.GROUP));
+				CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(
+					translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
 				if ((v != null) && v.hasValues()) {
 					CmfValue sv = v.getValue();
 					if (!sv.isNull()) {
@@ -173,8 +171,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 		if (posixView != null) {
 			GroupPrincipal local = posixView.readAttributes().group();
 			if (local != null) {
-				CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(translator.decodeAttributeName(
-					this.cmfObject.getType(), IntermediateAttribute.GROUP));
+				CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(
+					translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
 				if ((v != null) && v.hasValues()) {
 					CmfValue sv = v.getValue();
 					if (!sv.isNull()) {
@@ -192,8 +190,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 		return true;
 	}
 
-	protected void applyAttributes(File targetFile, CmfAttributeTranslator<CmfValue> translator) throws IOException,
-	ParseException {
+	protected void applyAttributes(File targetFile, CmfAttributeTranslator<CmfValue> translator)
+		throws IOException, ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
 
@@ -223,8 +221,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 		// if not all the data came from the CMS, then we fill in
 		// the blanks assuming the logical order of C<=M<=A (C = creation
 		// date, M = modification date, A = last access date).
-		v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-			IntermediateAttribute.LAST_ACCESS_DATE));
+		v = this.cmfObject.getAttribute(
+			translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.LAST_ACCESS_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -233,8 +231,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 			}
 		}
 
-		v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-			IntermediateAttribute.LAST_MODIFICATION_DATE));
+		v = this.cmfObject.getAttribute(
+			translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.LAST_MODIFICATION_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -243,8 +241,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 			}
 		}
 
-		v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-			IntermediateAttribute.CREATION_DATE));
+		v = this.cmfObject.getAttribute(
+			translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.CREATION_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -296,8 +294,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 
 		if (posixView != null) {
 			// Set the group
-			v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-				IntermediateAttribute.GROUP));
+			v = this.cmfObject
+				.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
 			if ((v != null) && v.hasValues()) {
 				CmfValue sv = v.getValue();
 				if (!sv.isNull()) {
@@ -313,8 +311,8 @@ ImportDelegate<File, LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContex
 
 		if (ownerView != null) {
 			// Set the owner
-			v = this.cmfObject.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(),
-				IntermediateAttribute.OWNER));
+			v = this.cmfObject
+				.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.OWNER));
 			if ((v != null) && v.hasValues()) {
 				CmfValue sv = v.getValue();
 				if (!sv.isNull()) {
