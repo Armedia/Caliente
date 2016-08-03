@@ -17,7 +17,6 @@ import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfTypeMapper;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>>
@@ -52,7 +51,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 	}
 
 	public final int loadObjects(CmfType type, Set<String> ids, CmfObjectHandler<V> handler)
-		throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException {
 		ImportStrategy strategy = this.factory.getEngine().getImportStrategy(type);
 		return this.cmfObjectStore.loadObjects(this.typeMapper, this.translator, type, ids, handler,
 			strategy.isBatchingSupported());

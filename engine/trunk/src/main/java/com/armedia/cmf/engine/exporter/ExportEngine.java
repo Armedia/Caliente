@@ -25,8 +25,6 @@ import com.armedia.cmf.storage.CmfObjectCounter;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
-import com.armedia.cmf.storage.CmfValueEncoderException;
-import com.armedia.cmf.storage.UnsupportedCmfTypeException;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -151,8 +149,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
-		C ctx, ExportListenerDelegator listenerDelegator)
-		throws ExportException, CmfStorageException, CmfValueEncoderException, UnsupportedCmfTypeException {
+		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException {
 		try {
 			listenerDelegator.objectExportStarted(target.getType(), target.getId());
 			Result result = null;
@@ -172,16 +169,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			listenerDelegator.objectExportFailed(target.getType(), target.getId(), e);
 			if (e instanceof ExportException) { throw ExportException.class.cast(e); }
 			if (e instanceof CmfStorageException) { throw CmfStorageException.class.cast(e); }
-			if (e instanceof CmfValueEncoderException) { throw CmfValueEncoderException.class.cast(e); }
-			if (e instanceof UnsupportedCmfTypeException) { throw UnsupportedCmfTypeException.class.cast(e); }
 			throw RuntimeException.class.cast(e);
 		}
 	}
 
 	private Result doExportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
-		C ctx, ExportListenerDelegator listenerDelegator)
-		throws ExportException, CmfStorageException, CmfValueEncoderException, UnsupportedCmfTypeException {
+		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
