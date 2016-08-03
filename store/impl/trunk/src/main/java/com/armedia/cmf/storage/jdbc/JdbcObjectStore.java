@@ -43,8 +43,6 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueCodec;
-import com.armedia.cmf.storage.CmfValueDecoderException;
-import com.armedia.cmf.storage.CmfValueEncoderException;
 import com.armedia.cmf.storage.CmfValueSerializer;
 import com.armedia.cmf.storage.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
@@ -128,7 +126,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <V> Long storeObject(JdbcOperation operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException, CmfValueEncoderException {
+		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final CmfType objectType = object.getType();
 		final String objectId = JdbcTools.composeDatabaseId(object);
@@ -188,7 +186,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							try {
 								attValue[4] = serializer.serialize(encoded);
 							} catch (ParseException e) {
-								throw new CmfValueEncoderException(
+								throw new CmfStorageException(
 									String.format("Failed to encode value #%d for attribute [%s::%s]: %s", v,
 										attValue[0], attValue[1], encoded),
 									e);
@@ -237,7 +235,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							try {
 								attValue[4] = serializer.serialize(encoded);
 							} catch (ParseException e) {
-								throw new CmfValueEncoderException(
+								throw new CmfStorageException(
 									String.format("Failed to encode value #%d for property [%s::%s]: %s", v,
 										attValue[0], attValue[1], encoded),
 									e);
@@ -291,8 +289,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <V> int loadObjects(JdbcOperation operation, CmfAttributeTranslator<V> translator, final CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching)
-		throws CmfStorageException, CmfValueDecoderException {
+		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException {
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
@@ -808,7 +805,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
-		throws SQLException, CmfValueDecoderException {
+		throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
 		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
@@ -817,7 +814,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	private <V> CmfAttribute<V> loadAttribute(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
-		throws SQLException, CmfValueDecoderException {
+		throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = translator.decodeAttributeName(objectType, rs.getString("name"));
 		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
@@ -826,7 +823,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	private <V> void loadValues(CmfValueCodec<V> codec, CmfValueSerializer deserializer, ResultSet rs,
-		CmfProperty<V> property) throws SQLException, CmfValueDecoderException {
+		CmfProperty<V> property) throws SQLException, CmfStorageException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		List<V> values = new LinkedList<V>();
 		while (rs.next()) {
@@ -840,7 +837,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					v = deserializer.deserialize(data);
 				}
 			} catch (ParseException e) {
-				throw new CmfValueDecoderException(
+				throw new CmfStorageException(
 					String.format("Failed to deserialize value [%s] as a %s", data, property.getType()), e);
 			}
 			values.add(codec.decodeValue(v));
@@ -852,7 +849,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	private <V> void loadAttributes(CmfAttributeTranslator<V> translator, ResultSet rs, CmfObject<V> obj)
-		throws SQLException, CmfValueDecoderException {
+		throws SQLException {
 		List<CmfAttribute<V>> attributes = new LinkedList<CmfAttribute<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
@@ -862,7 +859,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	private <V> void loadProperties(CmfAttributeTranslator<V> translator, ResultSet rs, CmfObject<V> obj)
-		throws SQLException, CmfValueDecoderException {
+		throws SQLException {
 		List<CmfProperty<V>> properties = new LinkedList<CmfProperty<V>>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
