@@ -36,7 +36,6 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
@@ -123,7 +122,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<IDfValue> translator,
-		DctmImportContext context) throws ImportException, CmfStorageException, CmfValueDecoderException {
+		DctmImportContext context) throws ImportException, CmfStorageException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		try {
 			List<ImportOutcome> ret = new ArrayList<ImportOutcome>(1);
