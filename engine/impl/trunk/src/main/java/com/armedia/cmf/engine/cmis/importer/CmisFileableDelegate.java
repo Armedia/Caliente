@@ -34,7 +34,6 @@ import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisImportDelegate<T> {
@@ -138,9 +137,6 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
 			if (count == 0) { return; }
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclIdAtt,
-				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
-		} catch (CmfValueDecoderException e) {
 			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclIdAtt,
 				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
@@ -307,7 +303,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 	@Override
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 
 		Map<String, Object> props = prepareProperties(translator, ctx);
 		props.remove(PropertyIds.PATH);

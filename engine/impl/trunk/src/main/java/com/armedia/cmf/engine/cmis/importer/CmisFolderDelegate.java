@@ -18,7 +18,6 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
@@ -39,7 +38,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
 	@Override
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 
 		Map<String, Object> props = super.prepareProperties(translator, ctx);
 		props.remove(PropertyIds.PATH);
@@ -48,13 +47,13 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		List<Folder> parents = getParentFolders(ctx);
 		List<ImportOutcome> outcomes = new ArrayList<ImportOutcome>(parents.size());
 		CmfAttribute<CmfValue> nameAtt = this.cmfObject.getAttribute(PropertyIds.NAME);
-		if ((nameAtt == null) || !nameAtt.hasValues()) { throw new ImportException(String.format(
-			"No %s attribute found for %s [%s](%s)", PropertyIds.NAME, this.cmfObject.getType(),
-			this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if ((nameAtt == null)
+			|| !nameAtt.hasValues()) { throw new ImportException(String.format("No %s attribute found for %s [%s](%s)",
+				PropertyIds.NAME, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
 		final CmfValue nameValue = nameAtt.getValue();
-		if (nameValue.isNull()) { throw new ImportException(String.format(
-			"%s attribute has a null value for %s [%s](%s)", PropertyIds.NAME, this.cmfObject.getType(),
-			this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if (nameValue
+			.isNull()) { throw new ImportException(String.format("%s attribute has a null value for %s [%s](%s)",
+				PropertyIds.NAME, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
 		final String name = nameValue.asString();
 		for (Folder f : getParentFolders(ctx)) {
 			String path = String.format("%s/%s", f.getPath(), name);

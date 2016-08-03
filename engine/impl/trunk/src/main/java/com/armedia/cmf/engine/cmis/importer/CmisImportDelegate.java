@@ -26,7 +26,6 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public abstract class CmisImportDelegate<T> extends
 	ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
@@ -38,7 +37,7 @@ public abstract class CmisImportDelegate<T> extends
 
 	@Override
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		return null;
 	}
 
@@ -47,7 +46,7 @@ public abstract class CmisImportDelegate<T> extends
 	}
 
 	protected Map<String, Object> prepareProperties(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
-		throws ImportException, CmfValueDecoderException {
+		throws ImportException {
 		final Session session = ctx.getSession();
 		final String typeName = this.cmfObject.getSubtype();
 
