@@ -18,8 +18,6 @@ import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
-import com.armedia.cmf.storage.CmfValueEncoderException;
 
 /**
  * @author diego
@@ -49,7 +47,7 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 
 	@Override
 	protected <V> Long storeObject(LocalStoreOperation operation, CmfObject<V> object,
-		CmfAttributeTranslator<V> translator) throws CmfStorageException, CmfValueEncoderException {
+		CmfAttributeTranslator<V> translator) throws CmfStorageException {
 		return null;
 	}
 
@@ -65,7 +63,8 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	}
 
 	@Override
-	protected boolean isStored(LocalStoreOperation operation, CmfType type, String objectId) throws CmfStorageException {
+	protected boolean isStored(LocalStoreOperation operation, CmfType type, String objectId)
+		throws CmfStorageException {
 		return false;
 	}
 
@@ -79,7 +78,7 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	@Override
 	protected <V> int loadObjects(LocalStoreOperation operation, CmfAttributeTranslator<V> translator,
 		final CmfType type, Collection<String> ids, CmfObjectHandler<V> handler, boolean batching)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException {
 		return 0;
 	}
 
