@@ -12,7 +12,6 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public class AlfFolderImportDelegate extends AlfImportDelegate {
 
@@ -23,7 +22,7 @@ public class AlfFolderImportDelegate extends AlfImportDelegate {
 
 	@Override
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, AlfImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		String path = null;
 		CmfProperty<CmfValue> pathProp = this.cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 		if (pathProp == null) { throw new ImportException(String.format(
