@@ -155,7 +155,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	public final <V> Long storeObject(CmfObject<V> object, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException, CmfValueEncoderException {
+		throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
@@ -187,7 +187,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> Long storeObject(O operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException, CmfValueEncoderException;
+		throws CmfStorageException;
 
 	public final <V> void setContentInfo(CmfObject<V> object, Collection<CmfContentInfo> content)
 		throws CmfStorageException {
@@ -316,13 +316,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator, CmfType type, boolean batching, String... ids)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException {
 		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null), batching);
 	}
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException {
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -345,7 +345,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
@@ -394,14 +394,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	public final <V> int loadObjects(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
-		final CmfType type, CmfObjectHandler<V> handler, boolean batching)
-			throws CmfStorageException, CmfValueDecoderException {
+		final CmfType type, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException {
 		return loadObjects(typeMapper, translator, type, null, handler, batching);
 	}
 
 	public final <V> int loadObjects(final CmfTypeMapper typeMapper, final CmfAttributeTranslator<V> translator,
 		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler, boolean batching)
-			throws CmfStorageException, CmfValueDecoderException {
+		throws CmfStorageException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
@@ -447,8 +446,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching)
-			throws CmfStorageException, CmfValueDecoderException;
+		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException;
 
 	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }

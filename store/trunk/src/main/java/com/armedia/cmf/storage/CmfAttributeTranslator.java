@@ -22,12 +22,12 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 
 		@Override
-		public CmfValue encodeValue(CmfValue value) throws CmfValueEncoderException {
+		public CmfValue encodeValue(CmfValue value) {
 			return Tools.coalesce(value, this.nullValue);
 		}
 
 		@Override
-		public CmfValue decodeValue(CmfValue value) throws CmfValueDecoderException {
+		public CmfValue decodeValue(CmfValue value) {
 			return Tools.coalesce(value, this.nullValue);
 		}
 

@@ -8,7 +8,7 @@ package com.armedia.cmf.storage;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class UnsupportedCmfTypeException extends Exception {
+public class UnsupportedCmfTypeException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	UnsupportedCmfTypeException(String type) {

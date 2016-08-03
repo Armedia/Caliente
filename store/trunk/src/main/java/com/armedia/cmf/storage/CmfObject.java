@@ -241,14 +241,14 @@ public class CmfObject<V> {
 		}
 	}
 
-	public final CmfObject<CmfValue> getEncodedVersion() throws CmfValueEncoderException {
+	public final CmfObject<CmfValue> getEncodedVersion() {
 		if (this.translator == null) { return null; }
 		CmfObject<CmfValue> encoded = new CmfObject<CmfValue>(null, this.type, this.id, this.searchKey, this.batchId,
 			this.label, this.subtype, this.productName, this.productVersion, this.number);
 		for (CmfAttribute<V> att : this.attributes.values()) {
 			final CmfValueCodec<V> codec = this.translator.getCodec(att.getType());
-			CmfAttribute<CmfValue> newAtt = new CmfAttribute<CmfValue>(this.translator.encodeAttributeName(this.type,
-				att.getName()), att.getType(), att.isRepeating());
+			CmfAttribute<CmfValue> newAtt = new CmfAttribute<CmfValue>(
+				this.translator.encodeAttributeName(this.type, att.getName()), att.getType(), att.isRepeating());
 			for (V v : att) {
 				newAtt.addValue(codec.encodeValue(v));
 			}
@@ -256,8 +256,8 @@ public class CmfObject<V> {
 		}
 		for (CmfProperty<V> prop : this.properties.values()) {
 			final CmfValueCodec<V> codec = this.translator.getCodec(prop.getType());
-			CmfProperty<CmfValue> newProp = new CmfProperty<CmfValue>(this.translator.encodeAttributeName(this.type,
-				prop.getName()), prop.getType(), prop.isRepeating());
+			CmfProperty<CmfValue> newProp = new CmfProperty<CmfValue>(
+				this.translator.encodeAttributeName(this.type, prop.getName()), prop.getType(), prop.isRepeating());
 			for (V v : prop) {
 				newProp.addValue(codec.encodeValue(v));
 			}
@@ -274,8 +274,8 @@ public class CmfObject<V> {
 	public final String toString() {
 		final String trailer = toStringTrailer();
 		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
-		return String.format("%s [type=%s, subtype=%s, id=%s, searchKey=%s, batchId=%s, label=%s%s%s]", getClass()
-			.getSimpleName(), this.type, this.subtype, this.id, this.searchKey, this.batchId, this.label, trailerSep,
-			trailer);
+		return String.format("%s [type=%s, subtype=%s, id=%s, searchKey=%s, batchId=%s, label=%s%s%s]",
+			getClass().getSimpleName(), this.type, this.subtype, this.id, this.searchKey, this.batchId, this.label,
+			trailerSep, trailer);
 	}
 }

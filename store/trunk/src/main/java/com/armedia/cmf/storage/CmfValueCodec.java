@@ -10,9 +10,9 @@ package com.armedia.cmf.storage;
  */
 public interface CmfValueCodec<V> {
 
-	public CmfValue encodeValue(V value) throws CmfValueEncoderException;
+	public CmfValue encodeValue(V value);
 
-	public V decodeValue(CmfValue value) throws CmfValueDecoderException;
+	public V decodeValue(CmfValue value);
 
 	public boolean isNull(V value);
 
