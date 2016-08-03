@@ -14,7 +14,6 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.Tools;
 
 public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, AclsT> {
@@ -39,7 +38,7 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 
 	@Override
 	protected AclT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		AclT acl = new AclT();
 
 		acl.setId(this.cmfObject.getId());

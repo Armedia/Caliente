@@ -8,7 +8,6 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public class XmlUserImportDelegate extends XmlAggregatedImportDelegate<UserT, UsersT> {
 
@@ -19,7 +18,7 @@ public class XmlUserImportDelegate extends XmlAggregatedImportDelegate<UserT, Us
 
 	@Override
 	protected UserT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		UserT user = new UserT();
 
 		user.setName(getAttributeValue(IntermediateAttribute.NAME).asString());

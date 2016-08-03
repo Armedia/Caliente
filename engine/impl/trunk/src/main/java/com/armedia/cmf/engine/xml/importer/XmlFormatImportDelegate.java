@@ -8,7 +8,6 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public class XmlFormatImportDelegate extends XmlAggregatedImportDelegate<FormatT, FormatsT> {
 
@@ -19,7 +18,7 @@ public class XmlFormatImportDelegate extends XmlAggregatedImportDelegate<FormatT
 
 	@Override
 	protected FormatT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		FormatT format = new FormatT();
 
 		format.setName(getAttributeValue(IntermediateAttribute.NAME).asString());

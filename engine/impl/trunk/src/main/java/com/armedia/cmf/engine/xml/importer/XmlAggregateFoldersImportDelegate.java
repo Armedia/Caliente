@@ -17,7 +17,6 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelegate<FolderT, FoldersT> {
 
@@ -28,7 +27,7 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 
 	@Override
 	protected FolderT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		FolderT f = new FolderT();
 		DatatypeFactory dtf;
 		try {
@@ -52,7 +51,7 @@ public class XmlAggregateFoldersImportDelegate extends XmlAggregatedImportDelega
 			f.setModificationDate(dtf.newXMLGregorianCalendar(gcal));
 			f.setModifier(getAttributeValue(IntermediateAttribute.LAST_MODIFIED_BY).asString());
 		} catch (ParseException e) {
-			throw new CmfValueDecoderException("Failed to parse a date value", e);
+			throw new ImportException("Failed to parse a date value", e);
 		}
 
 		f.setName(getAttributeValue(IntermediateAttribute.NAME).asString());

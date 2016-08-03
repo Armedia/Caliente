@@ -18,7 +18,6 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.commons.utilities.Tools;
 
 public class XmlTypeImportDelegate extends XmlAggregatedImportDelegate<TypeT, TypesT> {
@@ -30,7 +29,7 @@ public class XmlTypeImportDelegate extends XmlAggregatedImportDelegate<TypeT, Ty
 
 	@Override
 	protected TypeT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		TypeT type = new TypeT();
 
 		type.setName(getAttributeValue(IntermediateAttribute.NAME).asString());

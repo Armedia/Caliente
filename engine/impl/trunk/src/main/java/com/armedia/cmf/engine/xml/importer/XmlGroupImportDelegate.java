@@ -8,7 +8,6 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 
 public class XmlGroupImportDelegate extends XmlAggregatedImportDelegate<GroupT, GroupsT> {
 
@@ -19,7 +18,7 @@ public class XmlGroupImportDelegate extends XmlAggregatedImportDelegate<GroupT, 
 
 	@Override
 	protected GroupT createItem(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		GroupT group = new GroupT();
 
 		group.setName(getAttributeValue(IntermediateAttribute.NAME).asString());

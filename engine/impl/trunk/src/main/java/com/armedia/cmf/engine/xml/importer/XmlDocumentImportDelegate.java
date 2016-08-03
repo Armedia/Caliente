@@ -25,7 +25,6 @@ import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
-import com.armedia.cmf.storage.CmfValueDecoderException;
 import com.armedia.cmf.storage.tools.MimeTools;
 
 public class XmlDocumentImportDelegate extends XmlImportDelegate {
@@ -36,7 +35,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 	}
 
 	protected DocumentVersionT createVersion(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		DocumentVersionT v = new DocumentVersionT();
 		DatatypeFactory dtf;
 		try {
@@ -67,7 +66,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			}
 			v.setLastAccessor(getAttributeValue(IntermediateAttribute.LAST_ACCESSED_BY).asString());
 		} catch (ParseException e) {
-			throw new CmfValueDecoderException("Failed to parse a date value", e);
+			throw new ImportException("Failed to parse a date value", e);
 		}
 
 		v.setName(getAttributeValue(IntermediateAttribute.NAME).asString());
@@ -150,7 +149,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 	@Override
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
-		throws ImportException, CmfStorageException, CmfValueDecoderException {
+		throws ImportException, CmfStorageException {
 		ImportOutcome outcome = ImportOutcome.SKIPPED;
 		DocumentVersionT v = createVersion(translator, ctx);
 		if (v != null) {
