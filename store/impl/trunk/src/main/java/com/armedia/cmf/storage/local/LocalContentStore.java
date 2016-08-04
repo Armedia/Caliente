@@ -37,6 +37,7 @@ import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfOrganizationStrategy;
+import com.armedia.cmf.storage.CmfOrganizationStrategy.Location;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueSerializer;
@@ -222,24 +223,19 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		return str;
 	}
 
-	private <T> String constructFileName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
-		String baseName = this.strategy.getBaseName(translator, object, info);
-		String descriptor;
-		String ext = this.strategy.getExtension(translator, object, info);
-		String appendix = this.strategy.getAppendix(translator, object, info);
-
-		if (!this.ignoreDescriptor) {
-			descriptor = this.strategy.getDescriptor(translator, object, info);
-		} else {
-			descriptor = "";
-		}
+	private <T> String constructFileName(Location loc) {
+		String baseName = loc.baseName;
+		String descriptor = (this.ignoreDescriptor ? "" : loc.descriptor);
+		String ext = loc.extension;
+		String appendix = loc.appendix;
 
 		if (StringUtils.isEmpty(baseName)) {
 			baseName = "";
 		}
 
-		if (StringUtils.isEmpty(ext)) {
+		if (!StringUtils.isEmpty(ext)) {
+			ext = String.format(".%s", ext);
+		} else {
 			ext = "";
 		}
 
@@ -269,8 +265,9 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	@Override
 	protected <T> URI doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
-		final List<String> rawPath = this.strategy.getPath(translator, object, info);
-		rawPath.add(constructFileName(translator, object, info));
+		final Location location = this.strategy.getLocation(translator, object, info);
+		final List<String> rawPath = new ArrayList<String>(location.containerSpec);
+		rawPath.add(constructFileName(location));
 
 		final String scheme;
 		final String ssp;
