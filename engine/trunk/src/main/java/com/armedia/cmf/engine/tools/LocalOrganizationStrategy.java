@@ -28,26 +28,21 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
-		final String attName = translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL);
-		final CmfAttribute<?> versionLabelAtt = object.getAttribute(attName);
-		String oldFrag = super.calculateDescriptor(translator, object, info);
-		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {
-			final String versionLabel = versionLabelAtt.getValue().toString();
-			if (StringUtils.isBlank(versionLabel)) { return oldFrag; }
-			if (StringUtils.isBlank(oldFrag)) { return versionLabel; }
-			return String.format("%s@%s", oldFrag, versionLabel);
-		}
-		return oldFrag;
+		final List<String> containerSpec = calculateContainerSpec(translator, object, info);
+		final String baseName = calculateBaseName(translator, object, info);
+		final String descriptor = calculateDescriptor(translator, object, info);
+		final String extension = calculateExtension(translator, object, info);
+		final String appendix = calculateAppendix(translator, object, info);
+		return newLocation(containerSpec, baseName, extension, descriptor, appendix);
 	}
 
-	@Override
-	protected <T> List<String> calculatePath(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <T> List<String> calculateContainerSpec(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
-		CmfProperty<?> paths = object.getProperty(IntermediateProperty.PATH);
+		CmfProperty<T> paths = object.getProperty(IntermediateProperty.PATH);
 
 		List<String> ret = new ArrayList<String>();
 		if (paths.hasValues()) {
@@ -58,11 +53,34 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 		return ret;
 	}
 
-	@Override
 	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		CmfAttribute<?> name = object
 			.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
 		return name.getValue().toString();
+	}
+
+	protected <T> String calculateExtension(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
+		return info.getExtension();
+	}
+
+	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
+		final String attName = translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL);
+		final CmfAttribute<?> versionLabelAtt = object.getAttribute(attName);
+		String oldFrag = String.format("%s.%08x", info.getRenditionIdentifier(), info.getRenditionPage());
+		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {
+			final String versionLabel = versionLabelAtt.getValue().toString();
+			if (StringUtils.isBlank(versionLabel)) { return oldFrag; }
+			if (StringUtils.isBlank(oldFrag)) { return versionLabel; }
+			return String.format("%s@%s", oldFrag, versionLabel);
+		}
+		return oldFrag;
+	}
+
+	protected <T> String calculateAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
+		return "";
 	}
 }
