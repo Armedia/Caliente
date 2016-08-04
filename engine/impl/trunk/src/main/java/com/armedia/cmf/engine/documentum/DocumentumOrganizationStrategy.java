@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfOrganizationStrategy;
 
-public class DocumentumOrganizationStrategy extends CmfOrganizationStrategy {
+public class DocumentumOrganizationStrategy extends LocalOrganizationStrategy {
 
 	public static final String NAME = "documentum";
 
@@ -18,7 +18,7 @@ public class DocumentumOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	@Override
-	protected <T> List<String> calculatePath(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+	protected <T> List<String> calculateContainerSpec(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		final String objectId = object.getId();
 		if (objectId.length() != 16) { return null; }
@@ -48,5 +48,11 @@ public class DocumentumOrganizationStrategy extends CmfOrganizationStrategy {
 	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		return object.getId();
+	}
+
+	@Override
+	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info) {
+		return String.format("%s.%08x", info.getRenditionIdentifier(), info.getRenditionPage());
 	}
 }
