@@ -56,32 +56,43 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 			default:
 				break;
 		}
+		CmfAttribute<T> latestVersionAtt = object
+			.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
+		final boolean isHeadVersion = ((latestVersionAtt != null) && latestVersionAtt.hasValues()
+			&& translator.getCodec(latestVersionAtt.getType()).encodeValue(latestVersionAtt.getValue()).asBoolean());
 
 		CmfProperty<T> vCounter = object.getProperty(IntermediateProperty.VERSION_COUNT);
 		CmfProperty<T> vIndex = object.getProperty(IntermediateProperty.VERSION_INDEX);
 		String appendix = null;
-		if ((vCounter != null) && (vIndex != null) && vCounter.hasValues() && vIndex.hasValues()) {
-			// Use the version index counter
-			CmfValueCodec<T> vCounterCodec = translator.getCodec(vCounter.getType());
-			CmfValueCodec<T> vIndexCodec = translator.getCodec(vIndex.getType());
-
-			final int counter = vCounterCodec.encodeValue(vCounter.getValue()).asInteger();
-			final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
-			final int width = String.format("%d", counter).length();
-
-			String format = "v0.%d";
-			if (width > 1) {
-				format = String.format("v0.%%0%dd", width);
-			}
-			appendix = String.format(format, index);
+		final String versionPrefix = "0.";
+		if (!primaryContent) {
+			appendix = "";
 		} else {
-			// Use the version string
-			CmfAttribute<T> versionString = object
-				.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
-			if ((versionString != null) && versionString.hasValues()) {
-				final String v = translator.getCodec(versionString.getType()).encodeValue(versionString.getValue())
-					.asString();
-				appendix = String.format("v%s", v);
+			if ((vCounter != null) && (vIndex != null) && vCounter.hasValues() && vIndex.hasValues()) {
+				// Use the version index counter
+				CmfValueCodec<T> vCounterCodec = translator.getCodec(vCounter.getType());
+				CmfValueCodec<T> vIndexCodec = translator.getCodec(vIndex.getType());
+
+				final int counter = vCounterCodec.encodeValue(vCounter.getValue()).asInteger();
+				final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
+				if ((index < (counter - 1)) || !isHeadVersion) {
+					final int width = String.format("%d", counter).length();
+
+					String format = "v%s%d";
+					if (width > 1) {
+						format = String.format("v%%s%%0%dd", width);
+					}
+					appendix = String.format(format, versionPrefix, index);
+				}
+			} else {
+				// Use the version string
+				CmfAttribute<T> versionString = object.getAttribute(
+					translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
+				if ((versionString != null) && versionString.hasValues()) {
+					final String v = translator.getCodec(versionString.getType()).encodeValue(versionString.getValue())
+						.asString();
+					appendix = String.format("v%s", v);
+				}
 			}
 		}
 		return newLocation(paths, baseName, null, null, appendix);
