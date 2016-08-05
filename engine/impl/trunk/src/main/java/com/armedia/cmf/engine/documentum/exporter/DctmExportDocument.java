@@ -68,7 +68,15 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		IDfDocument document) throws DfException, ExportException {
 		if (!super.getDataProperties(ctx, properties, document)) { return false; }
 
-		getVersionHistory(ctx, document);
+		List<Version<IDfDocument>> history = getVersionHistory(ctx, document);
+		properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_COUNT,
+			DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(history.size())));
+		Integer historyIndex = getVersionIndex(document, ctx);
+		if (historyIndex != null) {
+			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_INDEX,
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(historyIndex)));
+		}
+
 		List<IDfValue> patches = getVersionPatches(document, ctx);
 		if ((patches != null) && !patches.isEmpty()) {
 			properties.add(new CmfProperty<IDfValue>(DctmSysObject.VERSION_PATCHES,

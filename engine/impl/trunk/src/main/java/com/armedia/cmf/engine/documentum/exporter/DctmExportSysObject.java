@@ -7,9 +7,11 @@ package com.armedia.cmf.engine.documentum.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -109,6 +111,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
 	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
+	private static final String CTX_VERSION_INDEXES = "VERSION_INDEXES_%S";
 	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
 
 	protected DctmExportSysObject(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
@@ -317,7 +320,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
 		final IDfSession session = object.getSession();
 		final IDfId chronicleId = object.getChronicleId();
-		final String historyObject = String.format(DctmExportSysObject.CTX_VERSION_HISTORY, chronicleId.toString());
+		final String historyObject = String.format(DctmExportSysObject.CTX_VERSION_HISTORY, chronicleId.getId());
 
 		@SuppressWarnings("unchecked")
 		List<Version<T>> history = (List<Version<T>>) ctx.getObject(historyObject);
@@ -381,6 +384,17 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		// Only put this in the context when it's needed
 		history = Tools.freezeList(history);
 		ctx.setObject(historyObject, history);
+
+		// Now, we make sure we write down the index position for each version within the history
+		String indexesName = String.format(DctmExportSysObject.CTX_VERSION_INDEXES, chronicleId.getId());
+		Map<String, Integer> m = new HashMap<String, Integer>(history.size());
+		int i = 0;
+		for (Version<T> v : history) {
+			m.put(v.id.getId(), ++i);
+		}
+		m = Tools.freezeMap(m);
+		ctx.setObject(indexesName, m);
+
 		return history;
 	}
 
@@ -390,6 +404,15 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		@SuppressWarnings("unchecked")
 		List<IDfValue> l = (List<IDfValue>) o;
 		return l;
+	}
+
+	protected final Integer getVersionIndex(T object, DctmExportContext ctx) throws DfException {
+		Object o = ctx
+			.getObject(String.format(DctmExportSysObject.CTX_VERSION_INDEXES, object.getChronicleId().getId()));
+		if (o == null) { return null; }
+		@SuppressWarnings("unchecked")
+		Map<String, Integer> m = (Map<String, Integer>) o;
+		return m.get(object.getObjectId().getId());
 	}
 
 	protected final IDfValue getPatchAntecedent(T object, DctmExportContext ctx) throws DfException {
