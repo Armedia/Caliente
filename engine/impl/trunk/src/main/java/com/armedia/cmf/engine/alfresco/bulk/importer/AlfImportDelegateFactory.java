@@ -126,6 +126,10 @@ public class AlfImportDelegateFactory
 		return absolutePath.substring(base.length());
 	}
 
+	File getLocation(String relativePath) {
+		return new File(this.content, relativePath);
+	}
+
 	private final AtomicInteger getCounter(CmfObject<?> storedObject) {
 		if (storedObject == null) { throw new IllegalArgumentException(
 			"Must provide a CMF object to get the counter for"); }

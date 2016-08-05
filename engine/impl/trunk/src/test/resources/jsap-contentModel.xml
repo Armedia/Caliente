@@ -1,0 +1,3813 @@
+<model name="jsap:contentModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/cmf-engine-alfresco-bulk/src/main/resources/alfresco-model.xsd ">
+	<description>JSAP-N Object Model</description>
+	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
+	<version>1.0</version>
+
+	<imports>
+		<!--  Import Alfresco Dictionary Definitions  -->
+		<import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d" />
+
+		<!--  Import Alfresco Content Domain Model Definitions  -->
+		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+	</imports>
+
+	<namespaces>
+		<namespace uri="http://gov.edtrm.jsapn/model/content/1.0" prefix="jsap" />
+		<namespace uri="http://gov.edtrm.jsapn/model/documentum/1.0" prefix="dctm" />
+		<namespace uri="http://gov.edtrm.jsapn/model/armedia/1.0" prefix="arm" />
+	</namespaces>
+
+	<types>
+		<!--
+			BEGIN jsap:content
+		-->
+		<type name="jsap:content">
+			<title>JSAP-N Base Content Object</title>
+			<parent>cm:content</parent>
+			<mandatory-aspects>
+				<aspect>dctm:dm_sysobject</aspect>
+			</mandatory-aspects>
+		</type>
+		<!--
+			END jsap:folder
+		-->
+
+		<!--
+			BEGIN jsap:folder
+		-->
+		<type name="jsap:folder">
+			<title>JSAP-N Base Folder Object</title>
+			<parent>cm:folder</parent>
+			<mandatory-aspects>
+				<aspect>dctm:dm_sysobject</aspect>
+			</mandatory-aspects>
+		</type>
+		<!--
+			END jsap:folder
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_award
+		-->
+		<type name="jsap:jcoa_award">
+			<title>jcoa_award</title>
+			<parent>jsap:jcoa_sysobj</parent>
+		</type>
+		<!--
+			END jsap:jcoa_award
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_brief
+		-->
+		<type name="jsap:jcoa_brief">
+			<title>jcoa_brief</title>
+			<parent>jsap:jcoa_sysobj</parent>
+		</type>
+		<!--
+			END jsap:jcoa_brief
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_doc
+		-->
+		<type name="jsap:jcoa_doc">
+			<title>jcoa_doc</title>
+			<parent>jsap:js_doc</parent>
+			<properties>
+				<property name="jsap:governingauthority2">
+					<title>Governing Authority</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:releaseability">
+					<title>Releaseability</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:sharewith2">
+					<title>Share With</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:jcoa_doc
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_finding
+		-->
+		<type name="jsap:jcoa_finding">
+			<title>jcoa_finding</title>
+			<parent>jsap:jcoa_sysobj</parent>
+		</type>
+		<!--
+			END jsap:jcoa_finding
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_interview
+		-->
+		<type name="jsap:jcoa_interview">
+			<title>jcoa_interview</title>
+			<parent>jsap:jcoa_sysobj</parent>
+			<properties>
+				<property name="jsap:interviewee_name">
+					<title>Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interviewee_rank">
+					<title>Rank</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interviewee_paygrade">
+					<title>Paygrade</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interviewee_service">
+					<title>Service</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interviewee_country">
+					<title>Country</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interviewee_component">
+					<title>Component</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interviewee_title">
+					<title>Title</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interviewee_command">
+					<title>Command</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interview_date">
+					<title>Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:interviewer">
+					<title>Interviewer</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:vetted_date">
+					<title>vetted_date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:jcoa_interview
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_issue
+		-->
+		<type name="jsap:jcoa_issue">
+			<title>jcoa_issue</title>
+			<parent>jsap:jcoa_sysobj</parent>
+		</type>
+		<!--
+			END jsap:jcoa_issue
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_reference_08
+		-->
+		<type name="jsap:jcoa_reference_08">
+			<title>jcoa_reference_08</title>
+			<parent>jsap:jcoa_reference</parent>
+			<properties>
+				<property name="jsap:pub_date">
+					<title>Date Published</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:doc_type">
+					<title>Document Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:file_type">
+					<title>File Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:study_name">
+					<title>Study Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:findings">
+					<title>Findings Supported</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:jcoa_reference_08
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_reference
+		-->
+		<type name="jsap:jcoa_reference">
+			<title>jcoa_reference</title>
+			<parent>jsap:jcoa_sysobj</parent>
+		</type>
+		<!--
+			END jsap:jcoa_reference
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_report
+		-->
+		<type name="jsap:jcoa_report">
+			<title>jcoa_report</title>
+			<parent>jsap:jcoa_sysobj</parent>
+		</type>
+		<!--
+			END jsap:jcoa_report
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_sysobj
+		-->
+		<type name="jsap:jcoa_sysobj">
+			<title>jcoa_sysobj</title>
+			<parent>jsap:content</parent>
+			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_document aspect -->
+			<properties>
+				<property name="jsap:classification">
+					<title>classification</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:gov_auth">
+					<title>gov_auth</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:jfcom_coi">
+					<title>jfcom_coi</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:ujt_r">
+					<title>ujt_r</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:reviewed">
+					<title>reviewed</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:share_with">
+					<title>share_with</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:class_rvw_by">
+					<title>class_rvw_by</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:class_rvw_date">
+					<title>class_rvw_date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:release_to">
+					<title>Release To</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:jcoa_sysobj
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_trdv_finding
+		-->
+		<type name="jsap:jcoa_trdv_finding">
+			<title>jcoa_trdv_finding</title>
+			<parent>jsap:jcoa_sysobj</parent>
+			<properties>
+				<property name="jsap:associated">
+					<title>Associated</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:owner_url">
+					<title>Owner URL</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:owner_org">
+					<title>Owner Organization</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:process_status">
+					<title>Release by JFCOM</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:released">
+					<title>Release by JFCOM</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:retained">
+					<title>Retained as Resource</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:submitted_jroc">
+					<title>Submitted to JROC</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:jcoa_trdv_finding
+		-->
+
+		<!--
+			BEGIN jsap:jcoa_unknown
+		-->
+		<type name="jsap:jcoa_unknown">
+			<title>jcoa_unknown</title>
+			<parent>jsap:jcoa_sysobj</parent>
+		</type>
+		<!--
+			END jsap:jcoa_unknown
+		-->
+
+		<!--
+			BEGIN jsap:js_doc
+		-->
+		<type name="jsap:js_doc">
+			<title>js_doc</title>
+			<parent>jsap:content</parent>
+			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_document aspect -->
+			<properties>
+				<property name="jsap:subject_">
+					<title>Subject</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:retain">
+					<title>Retain</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+					<default>3 years - Working and Collaboration Papers/Office Administrative Matters</default>
+				</property>
+				<property name="jsap:originatingorganization">
+					<title>Originating Organization</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:specialhandlingrequired">
+					<title>Special Handling Required</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:privacyact">
+					<title>Privacy Act</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:securityclassification">
+					<title>Security Classification</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:lifecyclestatus">
+					<title>Lifecycle Status</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+					<default>Rough - Initial authoring, creation and editing.</default>
+				</property>
+				<property name="jsap:enterprisekeywords">
+					<title>Enterprise Keywords</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:orgkeywords">
+					<title>Organization Keywords</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:originatingauthor">
+					<title>Originating Author</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:temporalstart">
+					<title>Temporal Coverage Start Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:temporalend">
+					<title>Temporal Coverage End Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:geospatial">
+					<title>Geospatial Coverage</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:js_doc
+		-->
+
+		<!--
+			BEGIN jsap:js_document
+		-->
+		<type name="jsap:js_document">
+			<title>js_document</title>
+			<parent>jsap:content</parent>
+			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_document aspect -->
+			<properties>
+				<property name="jsap:js_application_format">
+					<title>Application Format</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>doc</value>
+									<value>pdf</value>
+									<value>xls</value>
+									<value>txt</value>
+									<value>jpg</value>
+									<value>tif</value>
+									<value>msg</value>
+									<value>ppt</value>
+									<value>mdb</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_attrib_marking_selection">
+					<title>Project Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_cjcs_has_seen">
+					<title>CJCS Has Seen</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>0</value>
+									<value>1</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_classified_by">
+					<title>Classified By</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>cjcs</value>
+									<value>vcjcs</value>
+									<value>acjcs</value>
+									<value>acngm</value>
+									<value>djs</value>
+									<value>vdjs</value>
+									<value>dj1</value>
+									<value>vdj1</value>
+									<value>dj2</value>
+									<value>dj3</value>
+									<value>vdj3</value>
+									<value>ddnso</value>
+									<value>ddso</value>
+									<value>ddro</value>
+									<value>ddat_fp</value>
+									<value>ddgo</value>
+									<value>ddio</value>
+									<value>dj4</value>
+									<value>vdj4</value>
+									<value>dj5</value>
+									<value>vdj5</value>
+									<value>cos</value>
+									<value>ddjsa</value>
+									<value>ddgsp</value>
+									<value>ddpma_asia</value>
+									<value>ddpma_euro</value>
+									<value>ddpma_me</value>
+									<value>ddpma_west</value>
+									<value>ddsp</value>
+									<value>ddwt</value>
+									<value>dj6</value>
+									<value>vdj6</value>
+									<value>dj7</value>
+									<value>vdj7</value>
+									<value>cjed</value>
+									<value>cjdetd</value>
+									<value>ccwpd</value>
+									<value>cjvtd</value>
+									<value>dj8</value>
+									<value>vdj8</value>
+									<value>ddra</value>
+									<value>ddfa</value>
+									<value>ddfm</value>
+									<value>ddfp</value>
+									<value>dcio</value>
+									<value>djsso</value>
+									<value>sjs</value>
+									<value>cjssso</value>
+									<value>jsc</value>
+									<value>sjs_cad</value>
+									<value>sjs_cimd</value>
+									<value>other</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_classifying_agency">
+					<title>Classifying Agency</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>agriculture</value>
+									<value>centcom</value>
+									<value>cia</value>
+									<value>commerce</value>
+									<value>dhs</value>
+									<value>dod</value>
+									<value>doe</value>
+									<value>doj</value>
+									<value>dos</value>
+									<value>dot</value>
+									<value>education</value>
+									<value>epa</value>
+									<value>eucom</value>
+									<value>fcc</value>
+									<value>ferc</value>
+									<value>gsa</value>
+									<value>hhs</value>
+									<value>hud</value>
+									<value>interior</value>
+									<value>jcs</value>
+									<value>jfcom</value>
+									<value>labor</value>
+									<value>nasa</value>
+									<value>nato</value>
+									<value>ncc</value>
+									<value>nctc</value>
+									<value>nga</value>
+									<value>northcom</value>
+									<value>nrc</value>
+									<value>nro</value>
+									<value>nsa_css</value>
+									<value>nsc</value>
+									<value>nsf</value>
+									<value>opm</value>
+									<value>pacom</value>
+									<value>socom</value>
+									<value>southcom</value>
+									<value>ssa</value>
+									<value>stratcom</value>
+									<value>transcom</value>
+									<value>treasury</value>
+									<value>unknown</value>
+									<value>usa</value>
+									<value>usaf</value>
+									<value>usaid</value>
+									<value>uns</value>
+									<value>usmc</value>
+									<value>usps</value>
+									<value>va</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_nato_classification">
+					<title>NATO Classification</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>nato_secret</value>
+									<value>nato_confidential</value>
+									<value>nato_restricted</value>
+									<value>nato_unclassified</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_security_classification">
+					<title>Security Classification</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_declassify_on_date">
+					<title>Declassify On Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_declassify_on_event">
+					<title>Declassify On Event</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_derived_from">
+					<title>Derived From</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>other_sources</value>
+									<value>none</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_description">
+					<title>Description</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_directorate">
+					<title>Directorate</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>ALL</value>
+									<value>OCJCS SEA</value>
+									<value>OCJCS AG</value>
+									<value>OCJCS RESERVE</value>
+									<value>OCJCS JHO</value>
+									<value>OCJCS LA</value>
+									<value>OCJCS LC</value>
+									<value>OCJCS PROT</value>
+									<value>OCJCS PA</value>
+									<value>OCJCS RA</value>
+									<value>OCJCS GOFO</value>
+									<value>OCJCS SAJM</value>
+									<value>OCJCS SCS</value>
+									<value>DOM</value>
+									<value>AD</value>
+									<value>DCIO</value>
+									<value>IMD</value>
+									<value>JSSO</value>
+									<value>JSSSO</value>
+									<value>J-1</value>
+									<value>J-2</value>
+									<value>J-3</value>
+									<value>J-4</value>
+									<value>J-5</value>
+									<value>J-6</value>
+									<value>J-7</value>
+									<value>J-8</value>
+									<value>OCJCS</value>
+									<value>COMPTROLLER</value>
+									<value>OSD (LOCAL)</value>
+									<value>TOP5</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_dissemination_control">
+					<title>Dissemination Control</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>balk</value>
+									<value>bohemia</value>
+									<value>cnwdi</value>
+									<value>dcni_or_ecni</value>
+									<value>dsen</value>
+									<value>eyes</value>
+									<value>fisa</value>
+									<value>fouo</value>
+									<value>frd</value>
+									<value>fronto</value>
+									<value>imc</value>
+									<value>keyrut</value>
+									<value>nc2_esi</value>
+									<value>nca</value>
+									<value>nf</value>
+									<value>nsat</value>
+									<value>oc</value>
+									<value>propin</value>
+									<value>rd</value>
+									<value>rel_to</value>
+									<value>relido</value>
+									<value>rs</value>
+									<value>sami</value>
+									<value>seaboot</value>
+									<value>settee</value>
+									<value>sg</value>
+									<value>un_restricted</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_downgrade_instructions">
+					<title>Downgrade Instructions</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_downgrade_on">
+					<title>Downgrade On</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>date</value>
+									<value>event</value>
+									<value>date_and_event</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_downgrade_on_date">
+					<title>Downgrade On Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_downgrade_on_event">
+					<title>Downgrade On Event</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_exemption_category">
+					<title>Exemption Category</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>X1</value>
+									<value>X2</value>
+									<value>X3</value>
+									<value>X4</value>
+									<value>X5</value>
+									<value>X6</value>
+									<value>X7</value>
+									<value>X8</value>
+									<value>MR</value>
+									<value>Exempt</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_exemption_category_ext">
+					<title>Exemption Category Extend</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>25X1</value>
+									<value>25X2</value>
+									<value>25X3</value>
+									<value>25X4</value>
+									<value>25X5</value>
+									<value>25X6</value>
+									<value>25X7</value>
+									<value>25X8</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_filed_as_record">
+					<title>Filed as Record</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_geospatial_coverage">
+					<title>Geospatial Coverage</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_how_completed">
+					<title>How Completed</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_identifier">
+					<title>Identifier</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_language">
+					<title>Language</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_media_type">
+					<title>Media Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>electronic</default>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>electronic</value>
+									<value>physical</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_organization">
+					<title>Organization</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_originating_org">
+					<title>Originating Organization</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+					<default>Joint Staff</default>
+				</property>
+				<property name="jsap:js_other_addressee">
+					<title>Other Addressees</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_other_sources">
+					<title>Other Sources</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>classguide_sourcedoc</value>
+									<value>derivative_source</value>
+									<value>external_organization</value>
+									<value>multiple_sources</value>
+									<value>source_document</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_physical_location">
+					<title>Physical Location</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_primary_addressee">
+					<title>Primary Addressees</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_publication_date">
+					<title>Publication Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_publisher">
+					<title>Publisher</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_reasons_for_class">
+					<title>Reasons for Classification</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>1.4(a)</value>
+									<value>1.4(b)</value>
+									<value>1.4(c)</value>
+									<value>1.4(d)</value>
+									<value>1.4(e)</value>
+									<value>1.4(f)</value>
+									<value>1.4(g)</value>
+									<value>1.4(h)</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_received_date">
+					<title>Received Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_record_candidate">
+					<title>Record Candidate</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_record_series_identifier">
+					<title>Record Series Identifier</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_referenced_by_tasker">
+					<title>Referenced By Tasker</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_rights">
+					<title>Rights</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>copyrighted</value>
+									<value>intellectual_property</value>
+									<value>privacy_act</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_security_markings">
+					<title>Security Markings</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_smart_folder_identifier">
+					<title>Smart Folder Identifier</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>action_officer</value>
+									<value>senior_leadership</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_source">
+					<title>Source</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_special_access">
+					<title>Special Access</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>accm</value>
+									<value>close_hold</value>
+									<value>cui</value>
+									<value>exdis</value>
+									<value>eyes_only</value>
+									<value>limdis</value>
+									<value>nodis</value>
+									<value>nsc</value>
+									<value>other</value>
+									<value>personal_p4</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_special_access_notes">
+					<title>Special Access Notes</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_supplemental_marking">
+					<title>Supplemental Marking</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_target_downgrade_level">
+					<title>Target Downgrade Level</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_tasker_created_date">
+					<title>Date Tasker Created</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_tasker_completed_date">
+					<title>Date Tasker Completed</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_tasker_number">
+					<title>Tasker Number</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_tasker_subject">
+					<title>Tasker Subject</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_temp_cov_end_date">
+					<title>Temporal Coverage (End Date)</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_temp_cov_start_date">
+					<title>Temporal Coverage (Start Date)</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_type">
+					<title>Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_valid_record">
+					<title>Valid Record</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_vcjcs_has_seen">
+					<title>VCJCS Has Seen</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>0</value>
+									<value>1</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_virtual_coverage">
+					<title>Virtual Coverage</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_content_type">
+					<title>Content Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>5x8</value>
+									<value>5x8_daybook</value>
+									<value>awards</value>
+									<value>chairmans_memo</value>
+									<value>chairmans_note</value>
+									<value>chod_cover_sheet</value>
+									<value>dd_form_173_mt</value>
+									<value>defense_acquisition_bfs</value>
+									<value>desk_note</value>
+									<value>desk_note_ACJCS</value>
+									<value>desk_note_DJS</value>
+									<value>desk_note_VDJS</value>
+									<value>green_sheet</value>
+									<value>information_paper</value>
+									<value>insert_for_record</value>
+									<value>instruct_man_notice</value>
+									<value>js_form_005</value>
+									<value>js_form_005a</value>
+									<value>js_form_008</value>
+									<value>js_form_009</value>
+									<value>js_form_031</value>
+									<value>js_form_034</value>
+									<value>js_form_048</value>
+									<value>js_form_055</value>
+									<value>js_form_063</value>
+									<value>js_form_064</value>
+									<value>js_form_114</value>
+									<value>js_form_120</value>
+									<value>js_form_136</value>
+									<value>js_form_136_apf</value>
+									<value>js_form_136_foia_pa</value>
+									<value>js_form_136_tm</value>
+									<value>js_form_136_tp</value>
+									<value>js_form_137</value>
+									<value>js_hand_receipt</value>
+									<value>js_washfax_coversheet</value>
+									<value>la_letter_ocjcs</value>
+									<value>la_letter_odjs</value>
+									<value>legislative_assist_memo</value>
+									<value>memo_acjcs</value>
+									<value>memo_chairmans_name</value>
+									<value>memo_dod_seal</value>
+									<value>notice_of_dcid</value>
+									<value>ocio_150</value>
+									<value>official_letter_cjcs</value>
+									<value>official_letter_djs</value>
+									<value>other</value>
+									<value>personal_letter</value>
+									<value>position_paper</value>
+									<value>question_for_record</value>
+									<value>request_to_schedule</value>
+									<value>sd_form_472_with</value>
+									<value>sd_form_472_without</value>
+									<value>secdef_action_info_memo</value>
+									<value>secdef_letter</value>
+									<value>secdef_memo</value>
+									<value>trip_book</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_contributor">
+					<title>Contributor</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_declassification_code">
+					<title>Declassification Code</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_declassify_on">
+					<title>Declassify On</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>date</value>
+									<value>event</value>
+									<value>date_and_event</value>
+									<value>exemption_category</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_classified_by_name">
+					<title>Classified By Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_dissemination_ctrl_notes">
+					<title>Dissemination Control Notes</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_rel_to">
+					<title>REL To</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>usa_aus_can_gbr</value>
+									<value>usa_aus_gbr</value>
+									<value>usa_aus</value>
+									<value>usa_can</value>
+									<value>usa_gbr</value>
+									<value>usa_acgu</value>
+									<value>usa_apfs</value>
+									<value>usa_bwcs</value>
+									<value>usa_cfck</value>
+									<value>usa_cmfc</value>
+									<value>usa_cmfp</value>
+									<value>usa_cpmt</value>
+									<value>usa_cwcs</value>
+									<value>usa_ectf</value>
+									<value>usa_efor</value>
+									<value>usa_fvey</value>
+									<value>usa_gctf</value>
+									<value>usa_gmif</value>
+									<value>usa_iesc</value>
+									<value>usa_isaf</value>
+									<value>usa_kfor</value>
+									<value>usa_mcfi</value>
+									<value>usa_mifh</value>
+									<value>usa_nact</value>
+									<value>usa_nato</value>
+									<value>usa_osag</value>
+									<value>usa_unck</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_derivative_source">
+					<title>Derivative/Multiple Source</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_externally_discoverable">
+					<title>Externally Discoverable</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>false</default>
+				</property>
+				<property name="jsap:js_supersedes">
+					<title>Supersedes</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_legacy_document">
+					<title>Legacy Document</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>false</default>
+				</property>
+				<property name="jsap:js_classguide_sourcedoc">
+					<title>Class Guide/Source Doc</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:js_document
+		-->
+
+		<!--
+			BEGIN jsap:js_folder
+		-->
+		<type name="jsap:js_folder">
+			<title>js_folder</title>
+			<parent>jsap:folder</parent>
+			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_folder aspect -->
+		</type>
+		<!--
+			END jsap:js_folder
+		-->
+
+		<!--
+			BEGIN jsap:js_gen_folder
+		-->
+		<type name="jsap:js_gen_folder">
+			<title>js_gen_folder</title>
+			<parent>jsap:js_folder</parent>
+		</type>
+		<!--
+			END jsap:js_gen_folder
+		-->
+
+		<!--
+			BEGIN jsap:js_jsapm_document
+		-->
+		<type name="jsap:js_jsapm_document">
+			<title>js_jsapm_document</title>
+			<parent>jsap:js_document</parent>
+			<properties>
+				<property name="jsap:js_action_category">
+					<title>Action Category</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>CCC</value>
+									<value>CHODs</value>
+									<value>COCOMs</value>
+									<value>CPC</value>
+									<value>Cabinet</value>
+									<value>Congress</value>
+									<value>DEP</value>
+									<value>Daybook</value>
+									<value>Directive</value>
+									<value>FOIA</value>
+									<value>Green Sheet</value>
+									<value>J-DIR</value>
+									<value>JROC</value>
+									<value>Legislative Affairs</value>
+									<value>MDR</value>
+									<value>OSD/CCD</value>
+									<value>Offsite Actions</value>
+									<value>Other</value>
+									<value>Sec Def Note</value>
+									<value>Sec Review</value>
+									<value>Service Chiefs</value>
+									<value>Test</value>
+									<value>Top 5</value>
+									<value>Tripbook</value>
+									<value>WH</value>
+									<value>Dep Sec Def</value>
+									<value>Sec Def</value>
+									<value>Review Request</value>
+									<value>Search Request</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_how_referred">
+					<title>How Referred</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>AA</value>
+									<value>ACJCS INFO</value>
+									<value>ACJCS REPLY/APPROVAL</value>
+									<value>CI</value>
+									<value>CJCS INFO</value>
+									<value>CJCS REPLY/APPROVAL</value>
+									<value>CW</value>
+									<value>DIRECT REPLY</value>
+									<value>DJS INFO</value>
+									<value>DJS REPLY/APPROVAL</value>
+									<value>FILE</value>
+									<value>SJS INFO</value>
+									<value>SJS REPLY/APPROVAL</value>
+									<value>VCJCS INFO</value>
+									<value>VCJCS REPLY/APPROVAL</value>
+									<value>VDJS INFO</value>
+									<value>VDJS REPLY/APPROVAL</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_masterdoc_designator">
+					<title>Master Doc Designator</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_originator_code">
+					<title>Originator Code</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>ACJCS</value>
+									<value>AF PLNR</value>
+									<value>AFDEPOPDEP</value>
+									<value>AFOPDEP</value>
+									<value>AFSC</value>
+									<value>ARDEPOPDEP</value>
+									<value>ARMY PLNR</value>
+									<value>AROPDEP</value>
+									<value>ARPA</value>
+									<value>AWC</value>
+									<value>BMDO</value>
+									<value>CINCSAC</value>
+									<value>CINCSPACE</value>
+									<value>CINCSTRAT</value>
+									<value>CINCTRANS</value>
+									<value>CINCUNC</value>
+									<value>CIO</value>
+									<value>CJCS</value>
+									<value>CMC</value>
+									<value>CNO</value>
+									<value>CSA</value>
+									<value>CSAF</value>
+									<value>DIA</value>
+									<value>DIRM</value>
+									<value>DIS</value>
+									<value>DISA</value>
+									<value>DJS</value>
+									<value>DLA</value>
+									<value>DMA</value>
+									<value>DNA</value>
+									<value>DSAA</value>
+									<value>ENERGY</value>
+									<value>ICAF</value>
+									<value>J-1</value>
+									<value>J-2</value>
+									<value>J-3</value>
+									<value>J-4</value>
+									<value>J-5</value>
+									<value>J-6</value>
+									<value>J-7</value>
+									<value>J-8</value>
+									<value>JEWC</value>
+									<value>JSOCIO</value>
+									<value>JSTPS</value>
+									<value>JTC3A</value>
+									<value>JWC</value>
+									<value>JWFC</value>
+									<value>MC PLNR</value>
+									<value>MCDEPOPDEP</value>
+									<value>MCEB</value>
+									<value>MCOPDEP</value>
+									<value>NADEPOPDEP</value>
+									<value>NAVOPDEP</value>
+									<value>NAVY PLNR</value>
+									<value>NDU</value>
+									<value>NORAD</value>
+									<value>NSA</value>
+									<value>NSC</value>
+									<value>NWC</value>
+									<value>OCJCS/LA</value>
+									<value>OCJCS/LC</value>
+									<value>OCJCS/PA</value>
+									<value>OCJCS/PROT</value>
+									<value>OFOI/WHS</value>
+									<value>OSD/ADM</value>
+									<value>OSD/C3I</value>
+									<value>OSD/COM</value>
+									<value>OSD/DARO</value>
+									<value>OSD/DEP</value>
+									<value>OSD/DPR</value>
+									<value>OSD/DRE</value>
+									<value>OSD/DSD</value>
+									<value>OSD/ECS</value>
+									<value>OSD/ES</value>
+									<value>OSD/GC</value>
+									<value>OSD/HA</value>
+									<value>OSD/IGA</value>
+									<value>OSD/ISA</value>
+									<value>OSD/ISP</value>
+									<value>OSD/LA</value>
+									<value>OSD/LRS</value>
+									<value>OSD/NSC</value>
+									<value>OSD/OFOI</value>
+									<value>OSD/OTE</value>
+									<value>OSD/PA</value>
+									<value>OSD/PAE</value>
+									<value>OSD/RA</value>
+									<value>OSD/SD</value>
+									<value>OSD/SOL</value>
+									<value>OSD/SRA</value>
+									<value>OSD/TSA</value>
+									<value>OSD/UPR</value>
+									<value>OSD/USA</value>
+									<value>OSD/USP</value>
+									<value>SACEUR</value>
+									<value>SACLANT</value>
+									<value>SDIO</value>
+									<value>SECAF</value>
+									<value>SECARMY</value>
+									<value>SECNAV</value>
+									<value>SHAPE</value>
+									<value>SJS</value>
+									<value>SJS/IMD</value>
+									<value>STATE</value>
+									<value>TRANS</value>
+									<value>TREAS</value>
+									<value>USCINCACOM</value>
+									<value>USCINCCENT</value>
+									<value>USCINCEUR</value>
+									<value>USCINCPAC</value>
+									<value>USCINCSO</value>
+									<value>USCINCSOC</value>
+									<value>USDELMC</value>
+									<value>VCJCS</value>
+									<value>VDJS</value>
+									<value>WH</value>
+									<value>WHS</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_originator_date">
+					<title>Originator Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_originator_number">
+					<title>Originator Number</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_process_type">
+					<title>Process Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_signed">
+					<title>Signed</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>ACJCS</value>
+									<value>CJCS</value>
+									<value>DJS</value>
+									<value>N/A</value>
+									<value>SJS</value>
+									<value>VCJCS</value>
+									<value>VDJS</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_suspense_date">
+					<title>Suspense Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_action_officer">
+					<title>Action Officer</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_distribution">
+					<title>Distribution</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_division_assigned">
+					<title>Division Assigned</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_document_number">
+					<title>Document Number</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_document_type">
+					<title>Document Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_external_suspense_date">
+					<title>External (Originator) Suspense Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:js_jsapm_document
+		-->
+
+		<!--
+			BEGIN jsap:js_jsapm_message_archive
+		-->
+		<type name="jsap:js_jsapm_message_archive">
+			<title>js_jsapm_message_archive</title>
+			<parent>jsap:js_message_archive</parent>
+			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_message_archive aspect -->
+			<properties>
+				<property name="jsap:js_action_category">
+					<title>Action Category</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>CCC</value>
+									<value>CHODs</value>
+									<value>COCOMs</value>
+									<value>CPC</value>
+									<value>Cabinet</value>
+									<value>Congress</value>
+									<value>DEP</value>
+									<value>Daybook</value>
+									<value>Directive</value>
+									<value>FOIA</value>
+									<value>Green Sheet</value>
+									<value>J-DIR</value>
+									<value>JROC</value>
+									<value>Legislative Affairs</value>
+									<value>MDR</value>
+									<value>OSD/CCD</value>
+									<value>Offsite Actions</value>
+									<value>Other</value>
+									<value>Sec Def Note</value>
+									<value>Sec Review</value>
+									<value>Service Chiefs</value>
+									<value>Test</value>
+									<value>Top 5</value>
+									<value>Tripbook</value>
+									<value>WH</value>
+									<value>Dep Sec Def</value>
+									<value>Sec Def</value>
+									<value>Review Request</value>
+									<value>Search Request</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_action_officer">
+					<title>Action Officer</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_distribution">
+					<title>Distribution</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_division_assigned">
+					<title>Division Assigned</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_document_number">
+					<title>Document Number</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_document_type">
+					<title>Document Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_external_suspense_date">
+					<title>External (Originator) Suspense Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_how_referred">
+					<title>How Referred</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>AA</value>
+									<value>ACJCS INFO</value>
+									<value>ACJCS REPLY/APPROVAL</value>
+									<value>CI</value>
+									<value>CJCS INFO</value>
+									<value>CJCS REPLY/APPROVAL</value>
+									<value>CW</value>
+									<value>DIRECT REPLY</value>
+									<value>DJS INFO</value>
+									<value>DJS REPLY/APPROVAL</value>
+									<value>FILE</value>
+									<value>SJS INFO</value>
+									<value>SJS REPLY/APPROVAL</value>
+									<value>VCJCS INFO</value>
+									<value>VCJCS REPLY/APPROVAL</value>
+									<value>VDJS INFO</value>
+									<value>VDJS REPLY/APPROVAL</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_masterdoc_designator">
+					<title>Master Doc Designator</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_originator_code">
+					<title>Originator Code</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>ACJCS</value>
+									<value>AF PLNR</value>
+									<value>AFDEPOPDEP</value>
+									<value>AFOPDEP</value>
+									<value>AFSC</value>
+									<value>ARDEPOPDEP</value>
+									<value>ARMY PLNR</value>
+									<value>AROPDEP</value>
+									<value>ARPA</value>
+									<value>AWC</value>
+									<value>BMDO</value>
+									<value>CINCSAC</value>
+									<value>CINCSPACE</value>
+									<value>CINCSTRAT</value>
+									<value>CINCTRANS</value>
+									<value>CINCUNC</value>
+									<value>CIO</value>
+									<value>CJCS</value>
+									<value>CMC</value>
+									<value>CNO</value>
+									<value>CSA</value>
+									<value>CSAF</value>
+									<value>DIA</value>
+									<value>DIRM</value>
+									<value>DIS</value>
+									<value>DISA</value>
+									<value>DJS</value>
+									<value>DLA</value>
+									<value>DMA</value>
+									<value>DNA</value>
+									<value>DSAA</value>
+									<value>ENERGY</value>
+									<value>ICAF</value>
+									<value>J-1</value>
+									<value>J-2</value>
+									<value>J-3</value>
+									<value>J-4</value>
+									<value>J-5</value>
+									<value>J-6</value>
+									<value>J-7</value>
+									<value>J-8</value>
+									<value>JEWC</value>
+									<value>JSOCIO</value>
+									<value>JSTPS</value>
+									<value>JTC3A</value>
+									<value>JWC</value>
+									<value>JWFC</value>
+									<value>MC PLNR</value>
+									<value>MCDEPOPDEP</value>
+									<value>MCEB</value>
+									<value>MCOPDEP</value>
+									<value>NADEPOPDEP</value>
+									<value>NAVOPDEP</value>
+									<value>NAVY PLNR</value>
+									<value>NDU</value>
+									<value>NORAD</value>
+									<value>NSA</value>
+									<value>NSC</value>
+									<value>NWC</value>
+									<value>OCJCS/LA</value>
+									<value>OCJCS/LC</value>
+									<value>OCJCS/PA</value>
+									<value>OCJCS/PROT</value>
+									<value>OFOI/WHS</value>
+									<value>OSD/ADM</value>
+									<value>OSD/C3I</value>
+									<value>OSD/COM</value>
+									<value>OSD/DARO</value>
+									<value>OSD/DEP</value>
+									<value>OSD/DPR</value>
+									<value>OSD/DRE</value>
+									<value>OSD/DSD</value>
+									<value>OSD/ECS</value>
+									<value>OSD/ES</value>
+									<value>OSD/GC</value>
+									<value>OSD/HA</value>
+									<value>OSD/IGA</value>
+									<value>OSD/ISA</value>
+									<value>OSD/ISP</value>
+									<value>OSD/LA</value>
+									<value>OSD/LRS</value>
+									<value>OSD/NSC</value>
+									<value>OSD/OFOI</value>
+									<value>OSD/OTE</value>
+									<value>OSD/PA</value>
+									<value>OSD/PAE</value>
+									<value>OSD/RA</value>
+									<value>OSD/SD</value>
+									<value>OSD/SOL</value>
+									<value>OSD/SRA</value>
+									<value>OSD/TSA</value>
+									<value>OSD/UPR</value>
+									<value>OSD/USA</value>
+									<value>OSD/USP</value>
+									<value>SACEUR</value>
+									<value>SACLANT</value>
+									<value>SDIO</value>
+									<value>SECAF</value>
+									<value>SECARMY</value>
+									<value>SECNAV</value>
+									<value>SHAPE</value>
+									<value>SJS</value>
+									<value>SJS/IMD</value>
+									<value>STATE</value>
+									<value>TRANS</value>
+									<value>TREAS</value>
+									<value>USCINCACOM</value>
+									<value>USCINCCENT</value>
+									<value>USCINCEUR</value>
+									<value>USCINCPAC</value>
+									<value>USCINCSO</value>
+									<value>USCINCSOC</value>
+									<value>USDELMC</value>
+									<value>VCJCS</value>
+									<value>VDJS</value>
+									<value>WH</value>
+									<value>WHS</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_originator_date">
+					<title>Originator Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_originator_number">
+					<title>Originator Number</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_process_type">
+					<title>Process Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_signed">
+					<title>Signed</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>ACJCS</value>
+									<value>CJCS</value>
+									<value>DJS</value>
+									<value>N/A</value>
+									<value>SJS</value>
+									<value>VCJCS</value>
+									<value>VDJS</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_suspense_date">
+					<title>Suspense Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:js_jsapm_message_archive
+		-->
+
+		<!--
+			BEGIN jsap:js_message_archive
+		-->
+		<type name="jsap:js_message_archive">
+			<title>js_message_archive</title>
+			<parent>cm:content</parent>
+			<properties>
+				<property name="jsap:js_attrib_marking_selection">
+					<title>Project Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_cjcs_has_seen">
+					<title>CJCS Has Seen</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>0</default>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>0</value>
+									<value>1</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_classified_by">
+					<title>Classified By</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>cjcs</value>
+									<value>vcjcs</value>
+									<value>acjcs</value>
+									<value>acngm</value>
+									<value>djs</value>
+									<value>vdjs</value>
+									<value>dj1</value>
+									<value>vdj1</value>
+									<value>dj2</value>
+									<value>dj3</value>
+									<value>vdj3</value>
+									<value>ddnso</value>
+									<value>ddso</value>
+									<value>ddro</value>
+									<value>ddat_fp</value>
+									<value>ddgo</value>
+									<value>ddio</value>
+									<value>dj4</value>
+									<value>vdj4</value>
+									<value>dj5</value>
+									<value>vdj5</value>
+									<value>cos</value>
+									<value>ddgsa</value>
+									<value>ddgsp</value>
+									<value>ddpma_asia</value>
+									<value>ddpma_euro</value>
+									<value>ddpma_me</value>
+									<value>ddpma_west</value>
+									<value>ddsp</value>
+									<value>ddwt</value>
+									<value>dj6</value>
+									<value>vdj6</value>
+									<value>dj7</value>
+									<value>vdj7</value>
+									<value>cjed</value>
+									<value>cjdetd</value>
+									<value>ccwpd</value>
+									<value>cjvtd</value>
+									<value>dj8</value>
+									<value>vdj8</value>
+									<value>ddra</value>
+									<value>ddfa</value>
+									<value>ddfm</value>
+									<value>ddfp</value>
+									<value>dcio</value>
+									<value>djsso</value>
+									<value>sjs</value>
+									<value>cjssso</value>
+									<value>jsc</value>
+									<value>sjs_cad</value>
+									<value>sjs_cimd</value>
+									<value>other</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_classified_by_name">
+					<title>Classified By Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_classifying_agency">
+					<title>Classifying Agency</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>agriculture</value>
+									<value>centcom</value>
+									<value>cia</value>
+									<value>commerce</value>
+									<value>dhs</value>
+									<value>dod</value>
+									<value>doe</value>
+									<value>doj</value>
+									<value>dos</value>
+									<value>dot</value>
+									<value>education</value>
+									<value>epa</value>
+									<value>eucom</value>
+									<value>fcc</value>
+									<value>ferc</value>
+									<value>gsa</value>
+									<value>hhs</value>
+									<value>hud</value>
+									<value>interior</value>
+									<value>jcs</value>
+									<value>jfcom</value>
+									<value>labor</value>
+									<value>nasa</value>
+									<value>nato</value>
+									<value>ncc</value>
+									<value>nctc</value>
+									<value>northcom</value>
+									<value>nrc</value>
+									<value>nro</value>
+									<value>nsa_css</value>
+									<value>nsc</value>
+									<value>nsf</value>
+									<value>opm</value>
+									<value>pacom</value>
+									<value>socom</value>
+									<value>southcom</value>
+									<value>ssa</value>
+									<value>stratcom</value>
+									<value>transcom</value>
+									<value>treasury</value>
+									<value>unknown</value>
+									<value>usa</value>
+									<value>usaf</value>
+									<value>usaid</value>
+									<value>uns</value>
+									<value>usmc</value>
+									<value>usps</value>
+									<value>va</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_declassification_code">
+					<title>Declassification Code</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_declassify_on">
+					<title>Declassify On</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>date</value>
+									<value>event</value>
+									<value>date_and_event</value>
+									<value>exemption_category</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_declassify_on_date">
+					<title>Declassify On Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_declassify_on_event">
+					<title>Declassify On Event</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_derived_from">
+					<title>Derived From</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>other_sources</value>
+									<value>none</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_derivative_source">
+					<title>Derivative/Multiple Source</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_directorate">
+					<title>Directorate</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>ALL</value>
+									<value>OCJCS SEA</value>
+									<value>OCJCS AG</value>
+									<value>OCJCS RESERVE</value>
+									<value>OCJCS JHO</value>
+									<value>OCJCS LA</value>
+									<value>OCJCS LC</value>
+									<value>OCJCS PROT</value>
+									<value>OCJCS PA</value>
+									<value>OCJCS RA</value>
+									<value>OCJCS GOFO</value>
+									<value>OCJCS SAJM</value>
+									<value>OCJCS SCS</value>
+									<value>DOM</value>
+									<value>AD</value>
+									<value>DCIO</value>
+									<value>IMD</value>
+									<value>JSSO</value>
+									<value>JSSSO</value>
+									<value>J-1</value>
+									<value>J-2</value>
+									<value>J-3</value>
+									<value>J-4</value>
+									<value>J-5</value>
+									<value>J-6</value>
+									<value>J-7</value>
+									<value>J-8</value>
+									<value>OCJCS</value>
+									<value>COMPTROLLER</value>
+									<value>OSD (LOCAL)</value>
+									<value>TOP5</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_dissemination_control">
+					<title>Dissemination Control</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>balk</value>
+									<value>bohemia</value>
+									<value>cnwdi</value>
+									<value>cts</value>
+									<value>ctsa</value>
+									<value>dcni_or_ecni</value>
+									<value>dsen</value>
+									<value>eyes</value>
+									<value>fisa</value>
+									<value>fouo</value>
+									<value>frd</value>
+									<value>fronto</value>
+									<value>imc</value>
+									<value>keyrut</value>
+									<value>nc2_esi</value>
+									<value>nca</value>
+									<value>nf</value>
+									<value>nsat</value>
+									<value>oc</value>
+									<value>propin</value>
+									<value>rd</value>
+									<value>rel_to</value>
+									<value>relido</value>
+									<value>rs</value>
+									<value>sami</value>
+									<value>seaboot</value>
+									<value>settee</value>
+									<value>sg</value>
+									<value>un_restricted</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_dissemination_ctrl_notes">
+					<title>Dissemination Control Notes</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_downgrade_instructions">
+					<title>Downgrade Instructions</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_downgrade_on">
+					<title>Downgrade On</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>date</value>
+									<value>event</value>
+									<value>date_and_event</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_downgrade_on_date">
+					<title>Downgrade On Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_downgrade_on_event">
+					<title>Downgrade On Event</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_exemption_category">
+					<title>Exemption Category</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>X1</value>
+									<value>X2</value>
+									<value>X3</value>
+									<value>X4</value>
+									<value>X5</value>
+									<value>X6</value>
+									<value>X7</value>
+									<value>X8</value>
+									<value>MR</value>
+									<value>Exempt</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_exemption_category_ext">
+					<title>Exemption Category Extend</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>25X1</value>
+									<value>25X2</value>
+									<value>25X3</value>
+									<value>25X4</value>
+									<value>25X5</value>
+									<value>25X6</value>
+									<value>25X7</value>
+									<value>25X8</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_externally_discoverable">
+					<title>Externally Discoverable</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>false</default>
+				</property>
+				<property name="jsap:js_filed_as_record">
+					<title>Filed as Record</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>false</default>
+				</property>
+				<property name="jsap:js_how_completed">
+					<title>How Completed</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_legacy_document">
+					<title>Legacy Document</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>true</default>
+				</property>
+				<property name="jsap:js_mail_author">
+					<title>Mail Author</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_media_type">
+					<title>Media Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>electronic</default>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>electronic</value>
+									<value>physical</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_nato_classification">
+					<title>NATO Classification</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>nato_secret</value>
+									<value>nato_confidential</value>
+									<value>nato_restricted</value>
+									<value>nato_unclassified</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_organization">
+					<title>Organization</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_originating_org">
+					<title>Originating Organization</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+					<default>Joint Staff</default>
+				</property>
+				<property name="jsap:js_other_addressee">
+					<title>Other Addressees</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_other_sources">
+					<title>Other Sources</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>classguide_sourcedoc</value>
+									<value>derivative_source</value>
+									<value>external_organization</value>
+									<value>multiple_sources</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_physical_location">
+					<title>Physical Location</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_primary_addressee">
+					<title>Primary Addressees</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_publication_date">
+					<title>Publication Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_reasons_for_class">
+					<title>Reasons for Classification</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>1.4(a)</value>
+									<value>1.4(b)</value>
+									<value>1.4(c)</value>
+									<value>1.4(d)</value>
+									<value>1.4(e)</value>
+									<value>1.4(f)</value>
+									<value>1.4(g)</value>
+									<value>1.4(h)</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_received_date">
+					<title>Received Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_record_candidate">
+					<title>Record Candidate</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>true</default>
+				</property>
+				<property name="jsap:js_record_series_identifier">
+					<title>Record Series Identifier</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_referenced_by_tasker">
+					<title>Referenced By Tasker</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_rel_to">
+					<title>REL To</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>usa_aus_can_gbr</value>
+									<value>usa_aus_gbr</value>
+									<value>usa_aus</value>
+									<value>usa_can</value>
+									<value>usa_gbr</value>
+									<value>usa_acgu</value>
+									<value>usa_apfs</value>
+									<value>usa_bwcs</value>
+									<value>usa_cfck</value>
+									<value>usa_cmfc</value>
+									<value>usa_cmfp</value>
+									<value>usa_cpmt</value>
+									<value>usa_cwcs</value>
+									<value>usa_ectf</value>
+									<value>usa_efor</value>
+									<value>usa_fvey</value>
+									<value>usa_gctf</value>
+									<value>usa_gmif</value>
+									<value>usa_iesc</value>
+									<value>usa_isaf</value>
+									<value>usa_kfor</value>
+									<value>usa_mcfi</value>
+									<value>usa_mifh</value>
+									<value>usa_nact</value>
+									<value>usa_nato</value>
+									<value>usa_osag</value>
+									<value>usa_unck</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_security_classification">
+					<title>Security Classification</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_security_markings">
+					<title>Security Markings</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_special_access">
+					<title>Special Access</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>accm</value>
+									<value>close_hold</value>
+									<value>cui</value>
+									<value>exdis</value>
+									<value>eyes_only</value>
+									<value>limdis</value>
+									<value>nodis</value>
+									<value>nsc</value>
+									<value>other</value>
+									<value>personal_p4</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_special_access_notes">
+					<title>Special Access Notes</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_supersedes">
+					<title>Supersedes</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_supplemental_marking">
+					<title>Supplemental Marking</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="jsap:js_target_downgrade_level">
+					<title>Target Downgrade Level</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_tasker_created_date">
+					<title>Date Tasker Created</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_tasker_completed_date">
+					<title>Date Tasker Completed</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_tasker_number">
+					<title>Tasker Number</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_tasker_subject">
+					<title>Tasker Subject</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_vcjcs_has_seen">
+					<title>VCJCS Has Seen</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<default>0</default>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>0</value>
+									<value>1</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+				<property name="jsap:js_classguide_sourcedoc">
+					<title>Class Guide/Source Doc</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:js_message_archive
+		-->
+
+		<!--
+			BEGIN jsap:js_message_attachment
+		-->
+		<type name="jsap:js_message_attachment">
+			<title>js_message_attachment</title>
+			<parent>jsap:js_document</parent>
+		</type>
+		<!--
+			END jsap:js_message_attachment
+		-->
+
+		<!--
+			BEGIN jsap:js_nr_folder
+		-->
+		<type name="jsap:js_nr_folder">
+			<title>js_nr_folder</title>
+			<parent>jsap:js_folder</parent>
+		</type>
+		<!--
+			END jsap:js_nr_folder
+		-->
+
+		<!--
+			BEGIN jsap:js_rm_folder
+		-->
+		<type name="jsap:js_rm_folder">
+			<title>js_rm_folder</title>
+			<parent>jsap:folder</parent>
+			<!-- IMPORTANT: migrated instances *must* also have the dctm:dmc_rm_formal_rec_folder aspect -->
+			<properties>
+				<property name="jsap:js_archive_record_series">
+					<title>Record Series</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_archive_filing_location">
+					<title>Filing Location</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_archive_directorate">
+					<title>Archiving Directorate</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_rmfolder_description">
+					<title>Description</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_retention_period">
+					<title>Retention Period</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END jsap:js_rm_folder
+		-->
+
+		<!--
+			BEGIN jsap:js_sa_folder
+		-->
+		<type name="jsap:js_sa_folder">
+			<title>js_sa_folder</title>
+			<parent>jsap:js_folder</parent>
+		</type>
+		<!--
+			END jsap:js_sa_folder
+		-->
+	</types>
+
+	<aspects>
+		<!--
+			BEGIN dctm:dm_sysobject
+		-->
+		<aspect name="dctm:dm_sysobject">
+			<title>Documentum Migrated Object</title>
+			<properties>
+				<property name="dctm:r_object_id">
+					<!-- preserve -->
+					<title>Documentum Object ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_folder_id">
+					<!-- preserve -->
+					<title>Parent Folder IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:object_name">
+					<!-- preserved, and converted into cmis:name -->
+					<title>Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_object_type">
+					<!-- preserved, and converted into cmis:objectTypeId and cmis:baseTypeId -->
+					<title>Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:title">
+					<!-- map to cm:title -->
+					<title>Title</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:subject">
+					<!-- map to cmis:description -->
+					<title>Subject</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:authors">
+					<!-- map to cm:author -->
+					<title>Authors</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:keywords">
+					<!-- preserve -->
+					<title>Keywords</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_application_type">
+					<!-- preserve -->
+					<title>Application Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_status">
+					<!-- preserve -->
+					<title>Status</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_creation_date">
+					<!-- map to cmis:creationDate -->
+					<title>Created</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_modify_date">
+					<!-- map to cmis:lastModificationDate -->
+					<title>Modified</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_modifier">
+					<!-- map to cmis:lastModifiedBy -->
+					<title>Modified By</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_access_date">
+					<!-- map to cm:accessed -->
+					<title>Accessed</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_is_hidden">
+					<!-- preserve -->
+					<title>Hidden</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_is_deleted">
+					<!-- preserve -->
+					<title>Root Deleted</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_retention_date">
+					<!-- preserve -->
+					<title>Retained</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_archive">
+					<!-- preserve -->
+					<title>Archive</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_compound_architecture">
+					<!-- preserve -->
+					<title>Compound Architecture</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_link_resolved">
+					<!-- preserve -->
+					<title>Link Resolved</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_reference_cnt">
+					<!-- preserve -->
+					<title>Reference Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_has_folder">
+					<!-- preserve -->
+					<title>In Folder</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_composite_id">
+					<!-- preserve -->
+					<title>Composite IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_composite_label">
+					<!-- preserve -->
+					<title>Composite Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_component_label">
+					<!-- preserve -->
+					<title>Component Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_order_no">
+					<!-- preserve -->
+					<title>Position</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_link_cnt">
+					<!-- preserve -->
+					<title>Link Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_link_high_cnt">
+					<!-- preserve -->
+					<title>Maximum Link Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_assembled_from_id">
+					<!-- preserve -->
+					<title>Assembled From</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_frzn_assembly_cnt">
+					<!-- preserve -->
+					<title>Frozen Assembly Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_has_frzn_assembly">
+					<!-- preserve -->
+					<title>Has Frozen Assembly</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:resolution_label">
+					<!-- preserve -->
+					<title>Resolution Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_is_virtual_doc">
+					<!-- preserve -->
+					<title>Virtual Document</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_contents_id">
+					<!-- preserve -->
+					<title>Content ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_content_type">
+					<!-- convert into cmis:contentStreamMimeType -->
+					<title>Format</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_page_cnt">
+					<!-- preserve -->
+					<title>Content File Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_content_size">
+					<!-- preserve -->
+					<title>Size</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_full_text">
+					<!-- preserve -->
+					<title>Full Text Indexed</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_storage_type">
+					<!-- preserve -->
+					<title>Storage Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_cabinet_id">
+					<!-- preserve -->
+					<title>Primary Cabinet</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:owner_name">
+					<!-- map to cm:owner -->
+					<title>Owner Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:owner_permit">
+					<!-- preserve -->
+					<title>Owner Permission</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:group_name">
+					<!-- preserve -->
+					<title>Group Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:group_permit">
+					<!-- preserve -->
+					<title>Group Permit</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:world_permit">
+					<!-- preserve -->
+					<title>World Permissions</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_antecedent_id">
+					<!-- preserve -->
+					<title>Parent Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_chronicle_id">
+					<!-- preserve -->
+					<title>Version Tree Root Object</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_latest_flag">
+					<!-- map to cmis:isLatestMajorVersion -->
+					<title>Latest Version on Branch</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_lock_owner">
+					<!-- preserve -->
+					<title>Checked Out By</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_lock_date">
+					<!-- preserve -->
+					<title>Checkout Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_lock_machine">
+					<!-- preserve -->
+					<title>Lock Owner's Host</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:log_entry">
+					<!-- map to cmis:checkinComment -->
+					<title>User Comments</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_version_label">
+					<!-- preserve -->
+					<title>Version Label</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:i_branch_cnt">
+					<!-- preserve -->
+					<title>Branch Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_direct_dsc">
+					<!-- preserve -->
+					<title>Has Versions</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_immutable_flag">
+					<!-- map to cmis:isImmutable -->
+					<title>Is Immutable</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_frozen_flag">
+					<!-- preserve -->
+					<title>Frozen</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_has_events">
+					<!-- preserve -->
+					<title>Has Events</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:acl_domain">
+					<!-- preserve -->
+					<title>ACL Domain</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:acl_name">
+					<!-- preserve -->
+					<title>ACL Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_special_app">
+					<!-- preserve -->
+					<title>Special Application</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_is_reference">
+					<!-- preserve -->
+					<title>Reference</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_creator_name">
+					<!-- map to cmis:createdBy -->
+					<title>Creator Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_is_public">
+					<!-- preserve -->
+					<title>Public</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_policy_id">
+					<!-- preserve -->
+					<title>Lifecycle ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_resume_state">
+					<!-- preserve -->
+					<title>Resume to state</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_current_state">
+					<!-- preserve -->
+					<title>Current State</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_alias_set_id">
+					<!-- preserve -->
+					<title>Alias Set</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_effective_date">
+					<!-- preserve -->
+					<title>Effective Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_expiration_date">
+					<!-- preserve -->
+					<title>Expiration Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_publish_formats">
+					<!-- preserve -->
+					<title>Publish Formats</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_effective_label">
+					<!-- preserve -->
+					<title>Effective Label</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_effective_flag">
+					<!-- preserve -->
+					<title>Effective Flag</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_category">
+					<!-- preserve -->
+					<title>Category</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:language_code">
+					<!-- preserve -->
+					<title>Language Code</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_is_template">
+					<!-- preserve -->
+					<title>Template</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_controlling_app">
+					<!-- preserve -->
+					<title>Controlling Application</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_full_content_size">
+					<!-- map to cmis:contentStreamLength -->
+					<title>Full Content Size</title>
+					<type>d:double</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_extended_properties">
+					<!-- preserve -->
+					<title>Extended Properties</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_is_signed">
+					<!-- preserve -->
+					<title>Is Signed</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_last_review_date">
+					<!-- preserve -->
+					<title>Last Review Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_retain_until">
+					<!-- preserve -->
+					<title>Retain Content Until</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_aspect_name">
+					<!-- preserve -->
+					<title>Aspect Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:i_retainer_id">
+					<!-- preserve -->
+					<title>Retainer ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:i_partition">
+					<!-- preserve -->
+					<title>i_partition</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_is_replica">
+					<!-- preserve -->
+					<title>Is Replica</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_vstamp">
+					<!-- preserve -->
+					<title>Version Stamp</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_parent_paths">
+					<!-- preserve from source paths -->
+					<title>Parent Paths</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_parent_path_ids">
+					<!-- preserve from source id-paths -->
+					<title>Parent Path IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+			<mandatory-aspects>
+				<aspect>cm:ownable</aspect>
+				<aspect>cm:auditable</aspect>
+				<aspect>cm:author</aspect>
+				<aspect>cm:titled</aspect>
+			</mandatory-aspects>
+		</aspect>
+		<!--
+			END dctm:dm_sysobject
+		-->
+
+		<!--
+			BEGIN dctm:dm_document
+		-->
+		<aspect name="dctm:dm_document">
+			<title>Documentum Migrated Document</title>
+			<parent>dctm:dm_sysobject</parent>
+		</aspect>
+		<!--
+			END dctm:dm_document
+		-->
+
+		<!--
+			BEGIN dctm:dm_folder
+		-->
+		<aspect name="dctm:dm_folder">
+			<title>Documentum Migrated Folder</title>
+			<parent>dctm:dm_sysobject</parent>
+			<properties>
+				<property name="dctm:r_folder_path">
+					<!-- map to cmis:path -->
+					<title>Folder Path</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:i_ancestor_id">
+					<!-- preserve -->
+					<title>Containing Folders</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END dctm:dm_folder
+		-->
+
+		<!--
+			BEGIN dctm:dm_message_container
+		-->
+		<aspect name="dctm:dm_message_container">
+			<title>dm_message_container</title>
+			<parent>dctm:dm_document</parent>
+			<properties>
+				<property name="dctm:is_archive_message">
+					<!-- preserve -->
+					<title>Is archive message</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_class">
+					<!-- preserve -->
+					<title>Message Class</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_doctype">
+					<!-- preserve -->
+					<title>Message Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:datamodel_version">
+					<!-- preserve -->
+					<title>Data Model Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_sharing_type">
+					<!-- preserve -->
+					<title>Sharing Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_orig_parent">
+					<!-- preserve -->
+					<title>Original Parent</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:allow_propagating_changes">
+					<!-- preserve -->
+					<title>Allow Propagating Changes</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:retention_start_date">
+					<!-- preserve -->
+					<title>Retention Start Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END dctm:dm_message_container
+		-->
+
+		<!--
+			BEGIN dctm:dm_message_archive
+		-->
+		<aspect name="dctm:dm_message_archive">
+			<title>dm_message_archive</title>
+			<parent>dctm:dm_message_container</parent>
+			<properties>
+				<property name="dctm:message_id">
+					<!-- preserved -->
+					<title>Message ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_subject">
+					<!-- map to cm:subjectline -->
+					<title>Message subject</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_size">
+					<!-- preserve -->
+					<title>Message Size</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_link_count">
+					<!-- preserve -->
+					<title>Message Link Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:sent_date">
+					<!-- map to cm:sentdate -->
+					<title>Sent</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:receive_date">
+					<!-- preserve -->
+					<title>Received</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_sensitivity">
+					<!-- preserve -->
+					<title>Message Sensitivity</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_importance">
+					<!-- preserve -->
+					<title>Message Importance</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:attachment_count">
+					<!-- preserve -->
+					<title>Total Attachments</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:parent_message_id">
+					<!-- preserve -->
+					<title>Parent Message ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:tracking_id">
+					<!-- preserve -->
+					<title>Tracking ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:conversation_id">
+					<!-- preserve -->
+					<title>Conversation ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_id_timestamp">
+					<!-- preserve -->
+					<title>Message ID Time Stamp</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:is_encrypted">
+					<!-- preserve -->
+					<title>Is Encrypted</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_sharing_parent">
+					<!-- preserve -->
+					<title>Sharing Parent</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+			<mandatory-aspects>
+				<aspect>cm:emailed</aspect>
+			</mandatory-aspects>
+		</aspect>
+		<!--
+			END dctm:dm_message_archive
+		-->
+
+		<!--
+			BEGIN dctm:dmc_rm_formal_rec_folder
+		-->
+		<aspect name="dctm:dmc_rm_formal_rec_folder">
+			<title>dmc_rm_formal_rec_folder</title>
+			<parent>dctm:dm_folder</parent>
+		</aspect>
+		<!--
+			END dctm:dmc_rm_formal_rec_folder
+		-->
+
+		<!--
+			BEGIN dctm:vdoc
+		-->
+		<aspect name="dctm:vdoc">
+			<title>Virtual Document Metadata</title>
+			<properties>
+				<property name="dctm:memberChronicleId">
+					<title>VDoc Member Chronicle IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:memberVersion">
+					<title>VDoc Member Versions</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END dctm:vdoc
+		-->
+
+		<!--
+			BEGIN arm:caliente
+		-->
+		<aspect name="arm:caliente">
+			<title>Armedia Caliente</title>
+			<properties>
+				<property name="arm:dmAcl">
+					<!-- The object's Documentum ACL                           -->
+					<!-- strings in the format (g|u|r)|${name}|(N|B|R|L|V|W|D) -->
+					<!-- Where g|u|r -> group|user|role                        -->
+					<!--       ${name} -> accessor name                        -->
+					<!--       N|B|R|L|V|W|D -> None, Browse, Read, reLate,    -->
+					<!--                        Version, Write, Delete         -->
+					<title>Documentum ACL</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="arm:aspects">
+					<!-- The list of aspects that were added to preserve metadata -->
+					<title>Extra Aspects</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END arm:caliente
+		-->
+
+		<!--
+			BEGIN arm:calienteRendition
+		-->
+		<aspect name="arm:calienteRendition">
+			<title>Armedia Caliente Extra Rendition</title>
+			<properties>
+				<property name="arm:renditionObjectId">
+					<title>Rendition's Parent Object's R_OBJECT_ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionNumber">
+					<title>Rendition's Number</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionPage">
+					<title>Rendition's Page Number</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionFormat">
+					<title>Rendition's MIME type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END arm:calienteRendition
+		-->
+	</aspects>
+</model>
