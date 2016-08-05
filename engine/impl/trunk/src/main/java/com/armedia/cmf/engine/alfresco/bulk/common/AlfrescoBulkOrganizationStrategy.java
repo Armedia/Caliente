@@ -6,10 +6,12 @@ import java.util.List;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
+import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.commons.utilities.FileNameTools;
 
 public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy {
@@ -54,19 +56,34 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 			default:
 				break;
 		}
-		return newLocation(paths, baseName, null, null, calculateAppendix(translator, object, info));
-	}
 
-	@Override
-	protected <T> String calculateAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
-		CmfProperty<T> prop = object
-			.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
-		if ((prop != null) && prop.hasValues()) {
-			// TODO: Sequential numbers? How?
-			final String versionString = translator.getCodec(prop.getType()).encodeValue(prop.getValue()).asString();
-			return String.format("v%s", versionString);
+		CmfProperty<T> vCounter = object.getProperty(IntermediateProperty.VERSION_COUNT);
+		CmfProperty<T> vIndex = object.getProperty(IntermediateProperty.VERSION_INDEX);
+		String appendix = null;
+		if ((vCounter != null) && (vIndex != null) && vCounter.hasValues() && vIndex.hasValues()) {
+			// Use the version index counter
+			CmfValueCodec<T> vCounterCodec = translator.getCodec(vCounter.getType());
+			CmfValueCodec<T> vIndexCodec = translator.getCodec(vIndex.getType());
+
+			final int counter = vCounterCodec.encodeValue(vCounter.getValue()).asInteger();
+			final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
+			final int width = String.format("%d", counter).length();
+
+			String format = "v0.%d";
+			if (width > 1) {
+				format = String.format("v0.%%0%dd", width);
+			}
+			appendix = String.format(format, index);
+		} else {
+			// Use the version string
+			CmfAttribute<T> versionString = object
+				.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
+			if ((versionString != null) && versionString.hasValues()) {
+				final String v = translator.getCodec(versionString.getType()).encodeValue(versionString.getValue())
+					.asString();
+				appendix = String.format("v%s", v);
+			}
 		}
-		return "";
+		return newLocation(paths, baseName, null, null, appendix);
 	}
 }
