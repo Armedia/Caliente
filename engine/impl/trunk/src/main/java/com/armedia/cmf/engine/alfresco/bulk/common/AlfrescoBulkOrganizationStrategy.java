@@ -29,7 +29,10 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 	@Override
 	protected <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
-		CmfProperty<T> pathProp = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+		CmfProperty<T> pathProp = object.getProperty(IntermediateProperty.JSAP_PARENT_TREE_IDS);
+		if (pathProp == null) {
+			pathProp = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+		}
 		if (pathProp == null) { return super.calculateLocation(translator, object, info); }
 
 		final boolean primaryContent = (info.isDefaultRendition() && (info.getRenditionPage() == 0));
