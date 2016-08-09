@@ -89,9 +89,11 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 		return this.values.containsKey(name);
 	}
 
-	public final Object getObject(String name) {
+	public final <T> T getObject(String name) {
 		assertValidName(name);
-		return this.objects.get(name);
+		@SuppressWarnings("unchecked")
+		T t = (T) this.objects.get(name);
+		return t;
 	}
 
 	public final Object setObject(String name, Object value) {

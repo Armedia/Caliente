@@ -42,6 +42,11 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	ORIG_ATTR_NAME(CmfDataType.STRING),
 	MAPPED_ATTR_NAME(CmfDataType.STRING),
 	VDOC_MEMBER(CmfDataType.STRING),
+
+	// I swore never to do this again, but no choice here...
+	// A kludge for JSAP...
+	JSAP_PARENT_TREE_IDS(CmfDataType.STRING),
+
 	//
 	;
 
