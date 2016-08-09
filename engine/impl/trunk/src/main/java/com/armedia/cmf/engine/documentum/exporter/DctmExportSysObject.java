@@ -112,7 +112,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
 	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
 	private static final String CTX_VERSION_INDEXES = "VERSION_INDEXES_%S";
+	private static final String CTX_VERSION_CURRENT = "VERSION_CURRENT_%S";
 	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
+
+	private static final String JSAP_HISTORY_PATH_IDS = "JSAP_HISTORY_PATH_IDS_%S";
 
 	protected DctmExportSysObject(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass, object);
@@ -242,15 +245,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return true;
 	}
 
-	@Override
-	protected void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled, T object)
-		throws ExportException, DfException {
-
-		CmfProperty<IDfValue> parentTreeIds = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_TREE_IDS,
-			DctmDataType.DF_STRING.getStoredType(), true);
-		marshaled.setProperty(parentTreeIds);
+	protected Set<String> calculateParentTreeIds(T object) throws DfException {
 		Set<String> ptid = new LinkedHashSet<String>();
-
 		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
 		for (int i = 0; i < parentCount; i++) {
 			final IDfValue folderId = this.object.getRepeatingValue(DctmAttributes.I_FOLDER_ID, i);
@@ -259,14 +255,36 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				for (String s : parentIdPaths) {
 					String S = String.format("%s/%s", s, folderId.asString());
 					ptid.add(S);
-					parentTreeIds.addValue(DfValueFactory.newStringValue(S));
 				}
 			} else {
 				ptid.add(folderId.asString());
-				parentTreeIds.addValue(DfValueFactory.newStringValue(folderId.asString()));
 			}
 		}
+		return ptid;
+	}
+
+	@Override
+	protected void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled, T object)
+		throws ExportException, DfException {
+		CmfProperty<IDfValue> parentTreeIds = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_TREE_IDS,
+			DctmDataType.DF_STRING.getStoredType(), true);
+		marshaled.setProperty(parentTreeIds);
+		Set<String> ptid = calculateParentTreeIds(object);
+		for (String s : ptid) {
+			parentTreeIds.addValue(DfValueFactory.newStringValue(s));
+		}
 		this.factory.pathIdCache.put(object.getObjectId().getId(), Collections.unmodifiableSet(ptid));
+
+		String marker = String.format(DctmExportSysObject.JSAP_HISTORY_PATH_IDS, object.getChronicleId().getId());
+		ptid = ctx.getObject(marker);
+		if (ptid != null) {
+			parentTreeIds = new CmfProperty<IDfValue>(IntermediateProperty.JSAP_PARENT_TREE_IDS,
+				DctmDataType.DF_STRING.getStoredType(), true);
+			marshaled.setProperty(parentTreeIds);
+			for (String s : ptid) {
+				parentTreeIds.addValue(DfValueFactory.newStringValue(s));
+			}
+		}
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
@@ -322,9 +340,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		final IDfId chronicleId = object.getChronicleId();
 		final String historyObject = String.format(DctmExportSysObject.CTX_VERSION_HISTORY, chronicleId.getId());
 
-		@SuppressWarnings("unchecked")
-		List<Version<T>> history = (List<Version<T>>) ctx.getObject(historyObject);
+		List<Version<T>> history = ctx.getObject(historyObject);
 		if (history != null) { return history; }
+
+		T currentObject = null;
 
 		// No existing history, we must calculate it
 		history = new LinkedList<Version<T>>();
@@ -343,7 +362,11 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			}
 
 			final IDfId id = new DfId(tree.indexByVersionNumber.get(versionNumber));
-			final Version<T> entry = new Version<T>(versionNumber, castObject(session.getObject(id)));
+			final T obj = castObject(session.getObject(id));
+			if (obj.getHasFolder()) {
+				currentObject = obj;
+			}
+			final Version<T> entry = new Version<T>(versionNumber, obj);
 			history.add(entry);
 			if (!patches.isEmpty()) {
 				patches = Tools.freezeList(patches);
@@ -395,23 +418,25 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		m = Tools.freezeMap(m);
 		ctx.setObject(indexesName, m);
 
+		if (currentObject != null) {
+			String markerName = String.format(DctmExportSysObject.CTX_VERSION_CURRENT, chronicleId.getId());
+			ctx.setObject(markerName, currentObject.getObjectId().getId());
+
+			markerName = String.format(DctmExportSysObject.JSAP_HISTORY_PATH_IDS, chronicleId.getId());
+			ctx.setObject(markerName, calculateParentTreeIds(currentObject));
+		}
+
 		return history;
 	}
 
 	protected final List<IDfValue> getVersionPatches(T object, DctmExportContext ctx) throws DfException {
-		Object o = ctx.getObject(String.format(DctmExportSysObject.CTX_VERSION_PATCHES, object.getObjectId().getId()));
-		if (o == null) { return null; }
-		@SuppressWarnings("unchecked")
-		List<IDfValue> l = (List<IDfValue>) o;
-		return l;
+		return ctx.getObject(String.format(DctmExportSysObject.CTX_VERSION_PATCHES, object.getObjectId().getId()));
 	}
 
 	protected final Integer getVersionIndex(T object, DctmExportContext ctx) throws DfException {
-		Object o = ctx
+		Map<String, Integer> m = ctx
 			.getObject(String.format(DctmExportSysObject.CTX_VERSION_INDEXES, object.getChronicleId().getId()));
-		if (o == null) { return null; }
-		@SuppressWarnings("unchecked")
-		Map<String, Integer> m = (Map<String, Integer>) o;
+		if (m == null) { return null; }
 		return m.get(object.getObjectId().getId());
 	}
 
