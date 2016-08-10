@@ -40,8 +40,8 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 
 			// No dupes, add the attribute
 			Boolean mult = Tools.coalesce(property.getMultiple(), Boolean.FALSE);
-			SchemaAttribute schemaAttribute = new SchemaAttribute(name, AlfrescoDataType.decode(property.getType()),
-				mult.booleanValue());
+			SchemaAttribute schemaAttribute = new SchemaAttribute(this, name,
+				AlfrescoDataType.decode(property.getType()), mult.booleanValue());
 			localAttributes.put(schemaAttribute.name, schemaAttribute);
 		}
 

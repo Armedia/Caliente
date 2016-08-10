@@ -52,8 +52,9 @@ public class AlfrescoSchemaTest {
 			}
 			for (String attributeName : aspect.getAllAttributeNames()) {
 				SchemaAttribute attribute = aspect.getAttribute(attributeName);
-				System.out.printf("\t\t[%s]=[%s:%s]%n", attribute.name, attribute.multiple ? "R" : "S",
-					attribute.type.name());
+				System.out.printf("\t\t[%s]=[%s:%s] from %s [%s]%n", attribute.name, attribute.multiple ? "R" : "S",
+					attribute.type.name(), attribute.declaration.getClass().getSimpleName().toLowerCase(),
+					attribute.declaration.name);
 			}
 		}
 		System.out.printf("Types%n");
@@ -67,8 +68,9 @@ public class AlfrescoSchemaTest {
 			}
 			for (String attributeName : type.getAllAttributeNames()) {
 				SchemaAttribute attribute = type.getAttribute(attributeName);
-				System.out.printf("\t\t[%s]=[%s:%s]%n", attribute.name, attribute.multiple ? "R" : "S",
-					attribute.type.name());
+				System.out.printf("\t\t[%s]=[%s:%s] from %s [%s]%n", attribute.name, attribute.multiple ? "R" : "S",
+					attribute.type.name(), attribute.declaration.getClass().getSimpleName().toLowerCase(),
+					attribute.declaration.name);
 			}
 		}
 	}
