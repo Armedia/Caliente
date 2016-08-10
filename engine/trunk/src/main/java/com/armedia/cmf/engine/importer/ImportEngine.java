@@ -562,7 +562,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			// Make sure we have a valid import strategy for every item
 			for (CmfType t : containedTypes.keySet()) {
-				if (getImportStrategy(t) == null) { throw new ImportException(
+				// If the type is supported, and we have no strategy, it's a problem...
+				if (contextFactory.isSupported(t) && (getImportStrategy(t) == null)) { throw new ImportException(
 					String.format("No import strategy provided for available object type [%s]", t.name())); }
 			}
 
