@@ -1,6 +1,8 @@
 package com.armedia.cmf.engine.exporter;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import com.armedia.cmf.engine.SessionWrapper;
@@ -9,7 +11,9 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectRef;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, ?>, DF extends ExportDelegateFactory<S, W, V, C, E>, E extends ExportEngine<S, W, V, C, ?, DF>>
 	extends TransferDelegate<T, S, V, C, DF, E> {
@@ -17,6 +21,8 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected final ExportTarget exportTarget;
 	protected final String label;
 	protected final String batchId;
+	protected final String name;
+	protected final Collection<CmfObjectRef<V>> parentIds;
 	protected final String subType;
 
 	protected ExportDelegate(DF factory, Class<T> objectClass, T object) throws Exception {
@@ -30,6 +36,13 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.label = calculateLabel(object);
 		this.batchId = calculateBatchId(object);
 		this.subType = calculateSubType(this.exportTarget.getType(), object);
+		if (factory.getEngine().isSupportsDuplicateNames(this.exportTarget.getType())) {
+			// We only calculate parent IDs
+			this.parentIds = Tools.freezeList(new ArrayList<CmfObjectRef<V>>(calculateParentIds(object)));
+		} else {
+			this.parentIds = Collections.emptyList();
+		}
+		this.name = calculateName(object);
 		if (this.subType == null) { throw new IllegalStateException("calculateSubType() may not return null"); }
 	}
 
@@ -61,6 +74,20 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.exportTarget.getSearchKey();
 	}
 
+	protected abstract String calculateName(T object) throws Exception;
+
+	public final String getName() {
+		return this.name;
+	}
+
+	protected Collection<CmfObjectRef<V>> calculateParentIds(T object) throws Exception {
+		return null;
+	}
+
+	public final Collection<CmfObjectRef<V>> getParentIds() {
+		return this.parentIds;
+	}
+
 	protected String calculateBatchId(T object) throws Exception {
 		return null;
 	}
@@ -82,8 +109,8 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
 		CmfObject<V> marshaled = new CmfObject<V>(this.factory.getTranslator(), this.exportTarget.getType(),
-			this.exportTarget.getId(), this.exportTarget.getSearchKey(), this.batchId, this.label, this.subType,
-			ctx.getProductName(), ctx.getProductVersion(), null);
+			this.exportTarget.getId(), this.name, this.parentIds, this.exportTarget.getSearchKey(), this.batchId,
+			this.label, this.subType, ctx.getProductName(), ctx.getProductVersion(), null);
 		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);
 		return marshaled;

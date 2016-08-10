@@ -564,4 +564,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
 	}
+
+	public boolean isSupportsDuplicateNames(CmfType type) {
+		return false;
+	}
 }
