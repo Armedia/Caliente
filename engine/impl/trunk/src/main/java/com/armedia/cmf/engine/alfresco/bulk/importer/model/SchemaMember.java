@@ -26,11 +26,11 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		this.parent = parent;
 		this.name = e.getName();
 
-		Map<String, SchemaAttribute> schemaAttributes = new TreeMap<String, SchemaAttribute>();
+		Map<String, SchemaAttribute> localAttributes = new TreeMap<String, SchemaAttribute>();
 		for (Property property : e.getProperties()) {
 			String name = property.getName();
 			// Is this a duplicate at this level?
-			if (schemaAttributes.containsKey(name)) { throw new IllegalStateException(
+			if (localAttributes.containsKey(name)) { throw new IllegalStateException(
 				String.format("Duplicate attribute name [%s] on type [%s]", name, this.name)); }
 
 			// Is this a duplicate at my parent's level?
@@ -42,9 +42,10 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 			Boolean mult = Tools.coalesce(property.getMultiple(), Boolean.FALSE);
 			SchemaAttribute schemaAttribute = new SchemaAttribute(name, AlfrescoDataType.decode(property.getType()),
 				mult.booleanValue());
-			schemaAttributes.put(schemaAttribute.name, schemaAttribute);
+			localAttributes.put(schemaAttribute.name, schemaAttribute);
 		}
 
+		// Next, apply the attributes from the mandatory aspects as our own
 		Set<String> ma = new LinkedHashSet<String>();
 		for (Aspect aspect : mandatoryAspects) {
 			ma.add(aspect.name);
@@ -54,19 +55,22 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 				SchemaAttribute attribute = aspect.getAttribute(attributeName);
 				// If this attribute isn't declared on this type, or it's not decalred in a
 				// parent type, or it's not declared in another mandatory aspect, we add it...
-				if (!schemaAttributes.containsKey(attributeName)) {
-					schemaAttributes.put(attributeName, attribute);
+				if (!localAttributes.containsKey(attributeName)) {
+					localAttributes.put(attributeName, attribute);
 				}
 			}
 		}
+
 		this.mandatoryAspects = Tools.freezeSet(ma);
-		this.localAttributes = Tools.freezeMap(new LinkedHashMap<String, SchemaAttribute>(schemaAttributes));
-		Set<String> attributeNames = new TreeSet<String>();
-		attributeNames.addAll(this.localAttributes.keySet());
+		this.localAttributes = Tools.freezeMap(new LinkedHashMap<String, SchemaAttribute>(localAttributes));
+
+		// Finally, create the list of all the attributes this object supports
+		Set<String> allAttributeNames = new TreeSet<String>();
+		allAttributeNames.addAll(this.localAttributes.keySet());
 		if (parent != null) {
-			attributeNames.addAll(parent.getAttributeNames());
+			allAttributeNames.addAll(parent.getAllAttributeNames());
 		}
-		this.allAttributeNames = Tools.freezeSet(attributeNames);
+		this.allAttributeNames = Tools.freezeSet(allAttributeNames);
 	}
 
 	public T getParent() {
