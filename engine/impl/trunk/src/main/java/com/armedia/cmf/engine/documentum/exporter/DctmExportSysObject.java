@@ -547,4 +547,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 		return ret;
 	}
+
+	@Override
+	protected boolean calculateBatchHead(T sysObject) throws Exception {
+		return sysObject.getHasFolder();
+	}
 }
