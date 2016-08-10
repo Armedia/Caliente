@@ -425,4 +425,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	protected String calculateName(ShptVersion version) throws Exception {
 		return version.getName();
 	}
+
+	@Override
+	protected boolean calculateBatchHead(ShptVersion version) throws Exception {
+		return version.isCurrentVersion();
+	}
 }
