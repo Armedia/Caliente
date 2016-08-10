@@ -25,12 +25,9 @@
 		<type name="jsap:content">
 			<title>JSAP-N Base Content Object</title>
 			<parent>cm:content</parent>
-			<mandatory-aspects>
-				<aspect>dctm:dm_sysobject</aspect>
-			</mandatory-aspects>
 		</type>
 		<!--
-			END jsap:folder
+			END jsap:content
 		-->
 
 		<!--
@@ -39,9 +36,6 @@
 		<type name="jsap:folder">
 			<title>JSAP-N Base Folder Object</title>
 			<parent>cm:folder</parent>
-			<mandatory-aspects>
-				<aspect>dctm:dm_sysobject</aspect>
-			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:folder
@@ -272,7 +266,6 @@
 		<type name="jsap:jcoa_sysobj">
 			<title>jcoa_sysobj</title>
 			<parent>jsap:content</parent>
-			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_document aspect -->
 			<properties>
 				<property name="jsap:classification">
 					<title>classification</title>
@@ -329,6 +322,9 @@
 					<multiple>false</multiple>
 				</property>
 			</properties>
+			<mandatory-aspects>
+				<aspect>dctm:dm_document</aspect>
+			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:jcoa_sysobj
@@ -406,7 +402,6 @@
 		<type name="jsap:js_doc">
 			<title>js_doc</title>
 			<parent>jsap:content</parent>
-			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_document aspect -->
 			<properties>
 				<property name="jsap:subject_">
 					<title>Subject</title>
@@ -489,6 +484,9 @@
 					<multiple>false</multiple>
 				</property>
 			</properties>
+			<mandatory-aspects>
+				<aspect>dctm:dm_document</aspect>
+			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:js_doc
@@ -500,7 +498,6 @@
 		<type name="jsap:js_document">
 			<title>js_document</title>
 			<parent>jsap:content</parent>
-			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_document aspect -->
 			<properties>
 				<property name="jsap:js_application_format">
 					<title>Application Format</title>
@@ -1400,6 +1397,9 @@
 					<multiple>true</multiple>
 				</property>
 			</properties>
+			<mandatory-aspects>
+				<aspect>dctm:dm_document</aspect>
+			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:js_document
@@ -1411,7 +1411,9 @@
 		<type name="jsap:js_folder">
 			<title>js_folder</title>
 			<parent>jsap:folder</parent>
-			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_folder aspect -->
+			<mandatory-aspects>
+				<aspect>dctm:dm_folder</aspect>
+			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:js_folder
@@ -1739,7 +1741,6 @@
 		<type name="jsap:js_jsapm_message_archive">
 			<title>js_jsapm_message_archive</title>
 			<parent>jsap:js_message_archive</parent>
-			<!-- IMPORTANT: migrated instances *must* also have the dctm:dm_message_archive aspect -->
 			<properties>
 				<property name="jsap:js_action_category">
 					<title>Action Category</title>
@@ -2034,6 +2035,9 @@
 					<multiple>false</multiple>
 				</property>
 			</properties>
+			<mandatory-aspects>
+				<aspect>dctm:dm_message_archive</aspect>
+			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:js_jsapm_message_archive
@@ -2788,7 +2792,6 @@
 		<type name="jsap:js_rm_folder">
 			<title>js_rm_folder</title>
 			<parent>jsap:folder</parent>
-			<!-- IMPORTANT: migrated instances *must* also have the dctm:dmc_rm_formal_rec_folder aspect -->
 			<properties>
 				<property name="jsap:js_archive_record_series">
 					<title>Record Series</title>
@@ -2821,6 +2824,9 @@
 					<multiple>false</multiple>
 				</property>
 			</properties>
+			<mandatory-aspects>
+				<aspect>dctm:dmc_rm_formal_rec_folder</aspect>
+			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:js_rm_folder
