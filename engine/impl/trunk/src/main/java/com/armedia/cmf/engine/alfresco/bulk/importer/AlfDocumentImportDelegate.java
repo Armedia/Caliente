@@ -257,15 +257,15 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		}
 
 		// Now, do the mappings as copies of what has already been copied over, except when the
-		// target attribute isn't repeating and the source is. In that case, only copy the first
-		// value over
+		// source attribute is repeating. In that case, we may have to perform repairs and
+		// mangling, so we do them here.
 		for (String m : AlfDocumentImportDelegate.COPIER.keySet()) {
 			String v = p.getProperty(m);
 			if (StringUtils.isEmpty(v)) {
 				continue;
 			}
 
-			String newName = AlfDocumentImportDelegate.COPIER.get(m);
+			String tgtName = AlfDocumentImportDelegate.COPIER.get(m);
 			String srcName = AlfDocumentImportDelegate.MAPPER.get(m);
 			if (srcName == null) {
 				continue;
@@ -276,17 +276,21 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 				continue;
 			}
 
-			SchemaAttribute tgtAtt = targetType.getAttribute(newName);
+			SchemaAttribute tgtAtt = targetType.getAttribute(tgtName);
 			if (tgtAtt == null) {
-				targetType.getAttribute(newName);
 				continue;
 			}
 
-			if (srcAtt.isRepeating() && !tgtAtt.multiple) {
+			AttributeFixer f = AttributeFixer.decode(tgtName);
+			if (f != null) {
+				// Attribute needs fixing...
+			} else if (srcAtt.isRepeating() && !tgtAtt.multiple) {
 				v = srcAtt.getValue(0).asString();
 			}
 
-			p.put(newName, v);
+			// Now, check to see if the attribute needs fixing
+
+			p.put(tgtName, v);
 		}
 
 		// Now handle the special properties
