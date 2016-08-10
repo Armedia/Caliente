@@ -49,6 +49,9 @@
 			<column name="batch_id" type="varchar(96)" remarks="The batch identifier that links multiple related objects together to be imported in order">
 				<constraints nullable="false" unique="false"/>
 			</column>
+			<column name="batch_head" type="boolean" remarks="Is this object the head version?">
+				<constraints nullable="false" />
+			</column>
 			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
 				<constraints nullable="false" />
 			</column>

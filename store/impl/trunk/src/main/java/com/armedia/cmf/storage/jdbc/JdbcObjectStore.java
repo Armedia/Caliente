@@ -269,7 +269,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			final Long ret = qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT),
 				this.dialect.getObjectNumberHandler(), objectId, object.getName(), object.getSearchKey(),
 				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
-				object.getBatchId(), object.getProductName(), object.getProductVersion());
+				object.getBatchId(), object.isBatchHead(), object.getProductName(), object.getProductVersion());
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
 				parentParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
@@ -827,6 +827,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			number = null;
 		}
 		String batchId = objectRS.getString("batch_id");
+		boolean batchHead = objectRS.getBoolean("batch_head");
 		String label = objectRS.getString("object_label");
 		String subtype = objectRS.getString("object_subtype");
 		String productName = objectRS.getString("product_name");
@@ -847,8 +848,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			parentIds = Collections.emptyList();
 		}
 
-		return new CmfObject<V>(translator, type, id, name, parentIds, searchKey, batchId, label, subtype, productName,
-			productVersion, number);
+		return new CmfObject<V>(translator, type, id, name, parentIds, searchKey, batchId, batchHead, label, subtype,
+			productName, productVersion, number);
 	}
 
 	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)

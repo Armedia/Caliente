@@ -45,10 +45,10 @@ public abstract class JdbcDialect {
 			"       insert into " + //
 				"          cmf_object (" + //
 				"              object_id, object_name, search_key, object_type, " + //
-				"              object_subtype, object_label, batch_id, " + //
+				"              object_subtype, object_label, batch_id, batch_head, " + //
 				"              product_name, product_version" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
 		INSERT_OBJECT_PARENTS( //
