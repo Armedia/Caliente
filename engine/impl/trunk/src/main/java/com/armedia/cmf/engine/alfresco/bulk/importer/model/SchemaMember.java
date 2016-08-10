@@ -70,7 +70,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		if (parent != null) {
 			allAttributeNames.addAll(parent.getAllAttributeNames());
 		}
-		this.allAttributeNames = Tools.freezeSet(allAttributeNames);
+		this.allAttributeNames = Tools.freezeSet(new LinkedHashSet<String>(allAttributeNames));
 	}
 
 	public T getParent() {

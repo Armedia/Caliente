@@ -6,6 +6,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +42,8 @@ public class AlfrescoContentModel {
 
 	private AlfrescoContentModel(String name, Map<String, Type> types, Map<String, Aspect> aspects) {
 		this.name = name;
-		this.aspects = Tools.freezeMap(aspects);
-		this.types = Tools.freezeMap(types);
+		this.aspects = Tools.freezeMap(new LinkedHashMap<String, Aspect>(aspects));
+		this.types = Tools.freezeMap(new LinkedHashMap<String, Type>(types));
 	}
 
 	public String getName() {
