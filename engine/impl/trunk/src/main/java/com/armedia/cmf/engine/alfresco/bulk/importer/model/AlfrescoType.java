@@ -35,7 +35,10 @@ public class AlfrescoType {
 				}
 			}
 		}
-		this.attributes = Tools.freezeCopy(new LinkedHashMap<String, SchemaMember<?>>(attributes));
+		this.attributes = new LinkedHashMap<String, SchemaMember<?>>();
+		for (String att : attributes.keySet()) {
+			this.attributes.put(att, attributes.get(att));
+		}
 		this.aspects = Tools.freezeSet(aspects);
 	}
 

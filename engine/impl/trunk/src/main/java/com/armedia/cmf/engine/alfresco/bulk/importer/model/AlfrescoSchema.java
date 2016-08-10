@@ -1,7 +1,7 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer.model;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,11 +19,11 @@ public class AlfrescoSchema {
 	private final Map<String, SchemaMember<?>> typeIndex;
 	private final Map<String, SchemaMember<?>> aspectIndex;
 
-	public AlfrescoSchema(Collection<URL> modelFiles) throws IOException, JAXBException {
+	public AlfrescoSchema(Collection<URI> modelFiles) throws IOException, JAXBException {
 		List<AlfrescoContentModel> models = new ArrayList<AlfrescoContentModel>();
 		Map<String, SchemaMember<?>> typeIndex = new TreeMap<String, SchemaMember<?>>();
 		Map<String, SchemaMember<?>> aspectIndex = new TreeMap<String, SchemaMember<?>>();
-		for (URL f : modelFiles) {
+		for (URI f : modelFiles) {
 			AlfrescoContentModel model = AlfrescoContentModel.newModel(f, models);
 			for (String typeName : model.getTypeNames()) {
 				typeIndex.put(typeName, model.getType(typeName));

@@ -2,7 +2,7 @@ package com.armedia.cmf.engine.alfresco.bulk.importer.model;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,13 +65,13 @@ public class AlfrescoContentModel {
 		return this.types.keySet();
 	}
 
-	public static AlfrescoContentModel newModel(URL model, Collection<AlfrescoContentModel> references)
+	public static AlfrescoContentModel newModel(URI model, Collection<AlfrescoContentModel> references)
 		throws IOException, JAXBException {
 		if (references == null) {
 			references = Collections.emptyList();
 		}
 
-		InputStream in = model.openStream();
+		InputStream in = model.toURL().openStream();
 		final Model m;
 		try {
 			m = XmlTools.unmarshal(Model.class, "alfresco-model.xsd", in);

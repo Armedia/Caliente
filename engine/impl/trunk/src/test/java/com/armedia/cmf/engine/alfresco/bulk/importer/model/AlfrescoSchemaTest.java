@@ -1,7 +1,8 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer.model;
 
+import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.After;
@@ -35,7 +36,10 @@ public class AlfrescoSchemaTest {
 			cl.getResource("systemModel.xml"), cl.getResource("contentModel.xml"), cl.getResource("cmisModel.xml"),
 			cl.getResource("jsap-contentModel.xml"),
 		};
-		List<URL> urlList = Arrays.asList(urls);
+		List<URI> urlList = new ArrayList<URI>();
+		for (URL u : urls) {
+			urlList.add(u.toURI());
+		}
 		new AlfrescoSchema(urlList);
 	}
 

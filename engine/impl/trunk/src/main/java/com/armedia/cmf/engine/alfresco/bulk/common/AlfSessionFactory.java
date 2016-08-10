@@ -15,8 +15,7 @@ public class AlfSessionFactory extends SessionFactory<AlfRoot> {
 	public static final String ROOT = "root";
 	public static final String DB = "db";
 	public static final String CONTENT = "content";
-	public static final String AGGREGATE_FOLDERS = "individualFolders";
-	public static final String AGGREGATE_DOCUMENTS = "individualDocuments";
+	public static final String CONTENT_MODEL = "contentModel";
 
 	private final AlfRoot root;
 

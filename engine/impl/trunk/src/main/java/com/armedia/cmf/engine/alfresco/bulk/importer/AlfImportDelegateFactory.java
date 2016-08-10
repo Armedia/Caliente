@@ -1,8 +1,12 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
+import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -101,7 +106,9 @@ public class AlfImportDelegateFactory
 	private final File db;
 	private final File content;
 
-	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration) throws IOException {
+	protected final AlfrescoSchema schema;
+
+	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration) throws IOException, JAXBException {
 		super(engine, configuration);
 		engine.addListener(this.listener);
 		String db = configuration.getString(AlfSessionFactory.DB);
@@ -118,6 +125,23 @@ public class AlfImportDelegateFactory
 			this.content = new File(db, "content").getCanonicalFile();
 		}
 		FileUtils.forceMkdir(this.content);
+
+		String contentModels = configuration.getString(AlfSessionFactory.CONTENT_MODEL);
+		if (contentModels == null) { throw new IllegalStateException(
+			"Must provide a valid set of content model XML files"); }
+
+		List<URI> modelUrls = new ArrayList<URI>();
+		for (String s : contentModels.split(",")) {
+			File f = new File(s).getCanonicalFile();
+			if (!f.exists()) { throw new FileNotFoundException(f.getAbsolutePath()); }
+			if (!f.isFile()) { throw new IOException(
+				String.format("File [%s] is not a regular file", f.getAbsolutePath())); }
+			if (!f
+				.canRead()) { throw new IOException(String.format("File [%s] is not readable", f.getAbsolutePath())); }
+			modelUrls.add(f.toURI());
+		}
+
+		this.schema = new AlfrescoSchema(modelUrls);
 	}
 
 	String relativizeXmlLocation(String absolutePath) {
