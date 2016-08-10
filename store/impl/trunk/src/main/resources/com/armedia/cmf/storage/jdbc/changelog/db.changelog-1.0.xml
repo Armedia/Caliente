@@ -110,7 +110,7 @@
 		<addPrimaryKey tableName="cmf_object_tree" columnNames="object_id, parent_id" />
 		<addForeignKeyConstraint constraintName="fk_cmf_object_tree_object"
 			baseTableName="cmf_object_tree" baseColumnNames="object_id"
-			referencedTableName="cmf_export_plan" referencedColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 		<addForeignKeyConstraint constraintName="fk_cmf_object_tree_parent"
 			baseTableName="cmf_object_tree" baseColumnNames="parent_id"
