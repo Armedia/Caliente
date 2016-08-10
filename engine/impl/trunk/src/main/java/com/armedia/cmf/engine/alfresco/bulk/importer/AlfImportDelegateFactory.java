@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,6 +22,7 @@ import com.armedia.cmf.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoSchema;
+import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -28,6 +31,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
 public class AlfImportDelegateFactory
@@ -107,6 +111,7 @@ public class AlfImportDelegateFactory
 	private final File content;
 
 	protected final AlfrescoSchema schema;
+	private final Map<String, AlfrescoType> defaultTypes;
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration) throws IOException, JAXBException {
 		super(engine, configuration);
@@ -142,6 +147,22 @@ public class AlfImportDelegateFactory
 		}
 
 		this.schema = new AlfrescoSchema(modelUrls);
+
+		Map<String, AlfrescoType> m = new TreeMap<String, AlfrescoType>();
+		for (String t : this.schema.getTypeNames()) {
+			m.put(t, this.schema.buildType(t));
+		}
+		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<String, AlfrescoType>(m));
+	}
+
+	protected AlfrescoType getType(String name, String... aspects) {
+		if ((aspects == null) || (aspects.length == 0)) { return this.defaultTypes.get(name); }
+		return this.schema.buildType(name, aspects);
+	}
+
+	protected AlfrescoType getType(String name, Collection<String> aspects) {
+		if ((aspects == null) || aspects.isEmpty()) { return this.defaultTypes.get(name); }
+		return this.schema.buildType(name, aspects);
 	}
 
 	String relativizeXmlLocation(String absolutePath) {

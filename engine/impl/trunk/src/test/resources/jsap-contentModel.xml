@@ -20,14 +20,32 @@
 
 	<types>
 		<!--
-			BEGIN jsap:content
+			BEGIN jsap:document
 		-->
-		<type name="jsap:content">
-			<title>JSAP-N Base Content Object</title>
+		<type name="jsap:document">
+			<title>JSAP-N Base Document Object</title>
 			<parent>cm:content</parent>
+			<mandatory-aspects>
+				<aspect>dctm:dm_document</aspect>
+				<aspect>arm:caliente</aspect>
+			</mandatory-aspects>
 		</type>
 		<!--
-			END jsap:content
+			END jsap:document
+		-->
+
+		<!--
+			BEGIN jsap:rendition
+		-->
+		<type name="jsap:rendition">
+			<title>JSAP-N Base Rendition Object</title>
+			<parent>cm:content</parent>
+			<mandatory-aspects>
+				<aspect>arm:calienteRendition</aspect>
+			</mandatory-aspects>
+		</type>
+		<!--
+			END jsap:rendition
 		-->
 
 		<!--
@@ -36,6 +54,10 @@
 		<type name="jsap:folder">
 			<title>JSAP-N Base Folder Object</title>
 			<parent>cm:folder</parent>
+			<mandatory-aspects>
+				<aspect>dctm:dm_folder</aspect>
+				<aspect>arm:caliente</aspect>
+			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:folder
@@ -265,7 +287,7 @@
 		-->
 		<type name="jsap:jcoa_sysobj">
 			<title>jcoa_sysobj</title>
-			<parent>jsap:content</parent>
+			<parent>jsap:document</parent>
 			<properties>
 				<property name="jsap:classification">
 					<title>classification</title>
@@ -322,9 +344,6 @@
 					<multiple>false</multiple>
 				</property>
 			</properties>
-			<mandatory-aspects>
-				<aspect>dctm:dm_document</aspect>
-			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:jcoa_sysobj
@@ -401,7 +420,7 @@
 		-->
 		<type name="jsap:js_doc">
 			<title>js_doc</title>
-			<parent>jsap:content</parent>
+			<parent>jsap:document</parent>
 			<properties>
 				<property name="jsap:subject_">
 					<title>Subject</title>
@@ -484,9 +503,6 @@
 					<multiple>false</multiple>
 				</property>
 			</properties>
-			<mandatory-aspects>
-				<aspect>dctm:dm_document</aspect>
-			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:js_doc
@@ -497,7 +513,7 @@
 		-->
 		<type name="jsap:js_document">
 			<title>js_document</title>
-			<parent>jsap:content</parent>
+			<parent>jsap:document</parent>
 			<properties>
 				<property name="jsap:js_application_format">
 					<title>Application Format</title>
@@ -1397,9 +1413,6 @@
 					<multiple>true</multiple>
 				</property>
 			</properties>
-			<mandatory-aspects>
-				<aspect>dctm:dm_document</aspect>
-			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:js_document
@@ -1411,9 +1424,6 @@
 		<type name="jsap:js_folder">
 			<title>js_folder</title>
 			<parent>jsap:folder</parent>
-			<mandatory-aspects>
-				<aspect>dctm:dm_folder</aspect>
-			</mandatory-aspects>
 		</type>
 		<!--
 			END jsap:js_folder

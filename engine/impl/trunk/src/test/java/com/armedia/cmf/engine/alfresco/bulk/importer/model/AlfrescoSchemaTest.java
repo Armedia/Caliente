@@ -44,7 +44,12 @@ public class AlfrescoSchemaTest {
 		System.out.printf("Aspects%n");
 		for (String aspectName : schema.getAspectNames()) {
 			SchemaMember<?> aspect = schema.getAspect(aspectName);
-			System.out.printf("\tAttributes for aspect [%s]%n", aspectName);
+			SchemaMember<?> parent = aspect.getParent();
+			String parentStr = (parent == null ? "" : String.format(" extends [%s]", parent.name));
+			System.out.printf("\tAttributes for aspect [%s]%s%n", aspectName, parentStr);
+			if (!aspect.getMandatoryAspects().isEmpty()) {
+				System.out.printf("\t\tMandatory Aspects : %s%n", aspect.getMandatoryAspects());
+			}
 			for (String attributeName : aspect.getAllAttributeNames()) {
 				SchemaAttribute attribute = aspect.getAttribute(attributeName);
 				System.out.printf("\t\t[%s]=[%s:%s]%n", attribute.name, attribute.multiple ? "R" : "S",

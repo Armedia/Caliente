@@ -3,6 +3,7 @@ package com.armedia.cmf.engine.alfresco.bulk.importer.model;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -16,6 +17,7 @@ import javax.xml.bind.JAXBException;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfrescoSchema {
+	private static final String[] NO_ASPECTS = {};
 
 	private final Map<String, SchemaMember<?>> typeIndex;
 	private final Map<String, SchemaMember<?>> aspectIndex;
@@ -38,8 +40,19 @@ public class AlfrescoSchema {
 		this.aspectIndex = Tools.freezeCopy(new LinkedHashMap<String, SchemaMember<?>>(aspectIndex));
 	}
 
-	public AlfrescoType buildType(String typeName) {
-		return buildType(typeName, null);
+	public boolean hasType(String typeName) {
+		return this.typeIndex.containsKey(typeName);
+	}
+
+	public boolean hasAspect(String aspectName) {
+		return this.aspectIndex.containsKey(aspectName);
+	}
+
+	public AlfrescoType buildType(String typeName, String... aspectNames) {
+		if (aspectNames == null) {
+			aspectNames = AlfrescoSchema.NO_ASPECTS;
+		}
+		return buildType(typeName, Arrays.asList(aspectNames));
 	}
 
 	public AlfrescoType buildType(String typeName, Collection<String> aspectNames) {

@@ -54,8 +54,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 				SchemaAttribute attribute = aspect.getAttribute(attributeName);
 				// If this attribute isn't declared on this type, or it's not decalred in a
 				// parent type, or it's not declared in another mandatory aspect, we add it...
-				if (!schemaAttributes.containsKey(attributeName)
-					&& ((parent == null) || (parent.getAttribute(attributeName) == null))) {
+				if (!schemaAttributes.containsKey(attributeName)) {
 					schemaAttributes.put(attributeName, attribute);
 				}
 			}
