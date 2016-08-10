@@ -26,6 +26,7 @@ public class CmfObject<V> {
 	private final Collection<CmfObjectRef<V>> parentIds;
 	private final String searchKey;
 	private final String batchId;
+	private final boolean batchHead;
 	private final String label;
 	private final String subtype;
 	private final String productName;
@@ -49,6 +50,7 @@ public class CmfObject<V> {
 		this.parentIds = pattern.parentIds;
 		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
+		this.batchHead = pattern.batchHead;
 		this.label = pattern.getLabel();
 		this.subtype = pattern.getSubtype();
 		this.productName = pattern.getProductName();
@@ -80,6 +82,7 @@ public class CmfObject<V> {
 		this.parentIds = pattern.parentIds;
 		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
+		this.batchHead = pattern.batchHead;
 		this.label = pattern.getLabel();
 		this.productName = pattern.getProductName();
 		this.productVersion = pattern.getProductVersion();
@@ -93,14 +96,15 @@ public class CmfObject<V> {
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
-		Collection<CmfObjectRef<V>> parentIds, String batchId, String label, String subtype, String productName,
-		String productVersion, Long number) {
-		this(translator, type, id, name, parentIds, id, batchId, label, subtype, productName, productVersion, number);
+		Collection<CmfObjectRef<V>> parentIds, String batchId, boolean batchHead, String label, String subtype,
+		String productName, String productVersion, Long number) {
+		this(translator, type, id, name, parentIds, id, batchId, batchHead, label, subtype, productName, productVersion,
+			number);
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
-		Collection<CmfObjectRef<V>> parentIds, String searchKey, String batchId, String label, String subtype,
-		String productName, String productVersion, Long number) {
+		Collection<CmfObjectRef<V>> parentIds, String searchKey, String batchId, boolean batchHead, String label,
+		String subtype, String productName, String productVersion, Long number) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
@@ -118,6 +122,7 @@ public class CmfObject<V> {
 		this.parentIds = parentIds;
 		this.searchKey = Tools.coalesce(searchKey, id);
 		this.batchId = Tools.coalesce(batchId, id);
+		this.batchHead = (batchId == null ? true : batchHead);
 		this.label = label;
 		this.subtype = subtype;
 		this.productName = productName;
@@ -161,6 +166,10 @@ public class CmfObject<V> {
 
 	public final String getBatchId() {
 		return this.batchId;
+	}
+
+	public final boolean isBatchHead() {
+		return this.batchHead;
 	}
 
 	public final String getLabel() {
@@ -271,8 +280,9 @@ public class CmfObject<V> {
 	public final String toString() {
 		final String trailer = toStringTrailer();
 		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
-		return String.format("%s [type=%s, subtype=%s, id=%s, searchKey=%s, batchId=%s, label=%s%s%s]",
-			getClass().getSimpleName(), this.type, this.subtype, this.id, this.searchKey, this.batchId, this.label,
-			trailerSep, trailer);
+		return String.format(
+			"%s [type=%s, subtype=%s, id=%s, name=%s, searchKey=%s, batchId=%s, batchHead=%s, label=%s%s%s]",
+			getClass().getSimpleName(), this.type, this.subtype, this.id, this.name, this.searchKey, this.batchId,
+			this.batchHead, this.label, trailerSep, trailer);
 	}
 }
