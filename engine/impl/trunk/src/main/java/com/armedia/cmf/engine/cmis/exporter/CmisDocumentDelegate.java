@@ -187,4 +187,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected String calculateName(Document document) throws Exception {
 		return document.getName();
 	}
+
+	@Override
+	protected boolean calculateBatchHead(Document document) throws Exception {
+		return document.isLatestVersion();
+	}
 }
