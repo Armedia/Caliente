@@ -22,6 +22,8 @@ public class CmfObject<V> {
 
 	private Long number = null;
 	private final String id;
+	private final String name;
+	private final Collection<CmfObjectRef<V>> parentIds;
 	private final String searchKey;
 	private final String batchId;
 	private final String label;
@@ -43,6 +45,8 @@ public class CmfObject<V> {
 		this.number = pattern.number;
 		this.type = pattern.getType();
 		this.id = pattern.getId();
+		this.name = pattern.name;
+		this.parentIds = pattern.parentIds;
 		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
 		this.label = pattern.getLabel();
@@ -72,6 +76,8 @@ public class CmfObject<V> {
 		this.type = pattern.getType();
 		this.subtype = altSubType;
 		this.id = pattern.getId();
+		this.name = pattern.name;
+		this.parentIds = pattern.parentIds;
 		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
 		this.label = pattern.getLabel();
@@ -86,22 +92,30 @@ public class CmfObject<V> {
 		this.translator = pattern.translator;
 	}
 
-	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String batchId, String label,
-		String subtype, String productName, String productVersion, Long number) {
-		this(translator, type, id, id, batchId, label, subtype, productName, productVersion, number);
+	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
+		Collection<CmfObjectRef<V>> parentIds, String batchId, String label, String subtype, String productName,
+		String productVersion, Long number) {
+		this(translator, type, id, name, parentIds, id, batchId, label, subtype, productName, productVersion, number);
 	}
 
-	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String searchKey, String batchId,
-		String label, String subtype, String productName, String productVersion, Long number) {
+	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
+		Collection<CmfObjectRef<V>> parentIds, String searchKey, String batchId, String label, String subtype,
+		String productName, String productVersion, Long number) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
+		if (name == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }
 		if (subtype == null) { throw new IllegalArgumentException("Must provide a valid object subtype"); }
 		if (productName == null) { throw new IllegalArgumentException("Must provide a valid product name"); }
 		if (productVersion == null) { throw new IllegalArgumentException("Must provide a valid product version"); }
+		if (parentIds == null) {
+			parentIds = Collections.emptyList();
+		}
 		this.number = number;
 		this.type = type;
 		this.id = id;
+		this.name = name;
+		this.parentIds = parentIds;
 		this.searchKey = Tools.coalesce(searchKey, id);
 		this.batchId = Tools.coalesce(batchId, id);
 		this.label = label;
@@ -115,6 +129,14 @@ public class CmfObject<V> {
 		if (number == null) { throw new IllegalArgumentException("Must provide a number to set"); }
 		if (this.number != null) { throw new IllegalStateException("A number has already been set, can't change it"); }
 		this.number = number;
+	}
+
+	public final String getName() {
+		return this.name;
+	}
+
+	public final Collection<CmfObjectRef<V>> getParentIds() {
+		return this.parentIds;
 	}
 
 	public final Long getNumber() {
@@ -239,31 +261,6 @@ public class CmfObject<V> {
 		for (CmfProperty<V> prop : properties) {
 			setProperty(prop);
 		}
-	}
-
-	public final CmfObject<CmfValue> getEncodedVersion() {
-		if (this.translator == null) { return null; }
-		CmfObject<CmfValue> encoded = new CmfObject<CmfValue>(null, this.type, this.id, this.searchKey, this.batchId,
-			this.label, this.subtype, this.productName, this.productVersion, this.number);
-		for (CmfAttribute<V> att : this.attributes.values()) {
-			final CmfValueCodec<V> codec = this.translator.getCodec(att.getType());
-			CmfAttribute<CmfValue> newAtt = new CmfAttribute<CmfValue>(
-				this.translator.encodeAttributeName(this.type, att.getName()), att.getType(), att.isRepeating());
-			for (V v : att) {
-				newAtt.addValue(codec.encodeValue(v));
-			}
-			encoded.setAttribute(newAtt);
-		}
-		for (CmfProperty<V> prop : this.properties.values()) {
-			final CmfValueCodec<V> codec = this.translator.getCodec(prop.getType());
-			CmfProperty<CmfValue> newProp = new CmfProperty<CmfValue>(
-				this.translator.encodeAttributeName(this.type, prop.getName()), prop.getType(), prop.isRepeating());
-			for (V v : prop) {
-				newProp.addValue(codec.encodeValue(v));
-			}
-			encoded.setProperty(newProp);
-		}
-		return encoded;
 	}
 
 	protected String toStringTrailer() {
