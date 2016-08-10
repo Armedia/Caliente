@@ -33,6 +33,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 		settings.put(AlfSessionFactory.ROOT, this.targetDir.getAbsolutePath());
 		settings.put(AlfSessionFactory.DB, Setting.DB_DIRECTORY.getString());
 		settings.put(AlfSessionFactory.CONTENT, Setting.CONTENT_DIRECTORY.getString());
+		settings.put(AlfSessionFactory.CONTENT_MODEL, CLIParam.content_model.getString());
 		super.customizeSettings(settings);
 	}
 }

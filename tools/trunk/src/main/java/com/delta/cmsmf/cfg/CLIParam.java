@@ -96,6 +96,7 @@ public enum CLIParam {
 	direct_fs(null, 0, "Export files to local FS duplicating the CMS's path"),
 	job_name(null, 1, "The name of the synchronization job this export is to define"),
 	reset_job(null, 0, "Reset any existing synchronization job settings with this export's"),
+	content_model(null, -1, "The list of XML files that make up the Alfresco content model to use on import"),
 	//
 	;
 
