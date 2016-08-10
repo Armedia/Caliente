@@ -263,4 +263,10 @@ public class LocalExportDelegate extends
 	protected String calculateName(LocalFile object) throws Exception {
 		return object.getName();
 	}
+
+	@Override
+	protected boolean calculateBatchHead(LocalFile object) throws Exception {
+		// Always true
+		return true;
+	}
 }
