@@ -9,6 +9,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectRef;
 import com.armedia.cmf.storage.CmfType;
 
 class JdbcTools {
@@ -57,5 +58,20 @@ class JdbcTools {
 
 	static String composeDatabaseId(CmfObject<?> obj) {
 		return JdbcTools.composeDatabaseId(obj.getType(), obj.getId());
+	}
+
+	static CmfObjectRef<String> decodeDatabaseId(String id) {
+		if (id == null) { throw new IllegalArgumentException("Must provide an ID to parse"); }
+		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
+		if (!m.matches()) { throw new IllegalArgumentException(
+			String.format("The string [%s] is not a valid object ID", id)); }
+		// Parse out the ID value
+		final CmfType type;
+		try {
+			type = CmfType.values()[Integer.valueOf(m.group(1), 16)];
+		} catch (Exception e) {
+			throw new IllegalArgumentException(String.format("The object type [%s] is not a valid object type", id), e);
+		}
+		return new CmfObjectRef<String>(type, m.group(2));
 	}
 }

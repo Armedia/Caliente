@@ -40,11 +40,14 @@
 
 		<!-- The main objects table -->
 		<createTable tableName="cmf_object" remarks="The CMS objects">
+			<column name="object_number" type="bigint" remarks="The export ordinal number of the object (import will be done in this order as well)">
+				<constraints nullable="false" unique="true"/>
+			</column>
 			<column name="object_id" type="varchar(96)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="search_key" type="varchar(1024)" remarks="The object's Search Key">
-				<constraints nullable="false" />
+			<column name="batch_id" type="varchar(96)" remarks="The batch identifier that links multiple related objects together to be imported in order">
+				<constraints nullable="false" unique="false"/>
 			</column>
 			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
 				<constraints nullable="false" />
@@ -52,11 +55,11 @@
 			<column name="object_subtype" type="varchar(64)" remarks="The exact type of CMS object">
 				<constraints nullable="false" />
 			</column>
-			<column name="batch_id" type="varchar(96)" remarks="The batch identifier that links multiple related objects together to be imported in order">
-				<constraints nullable="false" unique="false"/>
+			<column name="object_name" type="text" remarks="The object's name">
+				<constraints nullable="false" />
 			</column>
-			<column name="object_number" type="bigint" remarks="The export ordinal number of the object (import will be done in this order as well)">
-				<constraints nullable="false" unique="true"/>
+			<column name="search_key" type="varchar(1024)" remarks="The object's Search Key">
+				<constraints nullable="false" />
 			</column>
 			<column name="object_label" type="text" remarks="A label to quickly identify the object">
 				<constraints nullable="false" />
@@ -91,6 +94,32 @@
 			<column name="search_key" />
 		</createIndex>
 		<addAutoIncrement tableName="cmf_object" columnName="object_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
+
+		<!-- The objects hierarchy table -->
+		<createTable tableName="cmf_object_tree" remarks="The CMS object tree">
+			<column name="object_id" type="varchar(96)" remarks="The object's ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="parent_pos" type="int" remarks="The parent's position on the list">
+				<constraints nullable="false" />
+			</column>
+			<column name="parent_id" type="varchar(96)" remarks="The parent object's ID">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_object_tree" columnNames="object_id, parent_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_object_tree_object"
+			baseTableName="cmf_object_tree" baseColumnNames="object_id"
+			referencedTableName="cmf_export_plan" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addForeignKeyConstraint constraintName="fk_cmf_object_tree_parent"
+			baseTableName="cmf_object_tree" baseColumnNames="parent_id"
+			referencedTableName="cmf_export_plan" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="cmf_object_tree" indexName="idx_cmf_object_tree_number" unique="true">
+			<column name="object_id" />
+			<column name="parent_pos" />
+		</createIndex>
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="cmf_attribute">

@@ -44,11 +44,19 @@ public abstract class JdbcDialect {
 		INSERT_OBJECT( //
 			"       insert into " + //
 				"          cmf_object (" + //
-				"              object_id, search_key, object_type, " + //
+				"              object_id, object_name, search_key, object_type, " + //
 				"              object_subtype, object_label, batch_id, " + //
 				"              product_name, product_version" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
+		),
+
+		INSERT_OBJECT_PARENTS( //
+			"       insert into " + //
+				"          cmf_object_tree (" + //
+				"              object_id, parent_pos, parent_id " + //
+				"          ) " + //
+				"   values (?, ?, ?)" //
 		),
 
 		INSERT_ATTRIBUTE( //
@@ -234,6 +242,13 @@ public abstract class JdbcDialect {
 
 		LOAD_OBJECTS_BY_ID_BATCHED( //
 			null),
+
+		LOAD_PARENT_IDS( //
+			"       select parent_id " + //
+				"     from cmf_object_tree " + //
+				"    where object_id = ? " + //
+				" order by parent_pos " //
+		),
 
 		LOAD_ATTRIBUTES( //
 			"       select * " + //

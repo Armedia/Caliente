@@ -13,6 +13,7 @@ import java.sql.Statement;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -36,6 +37,7 @@ import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
+import com.armedia.cmf.storage.CmfObjectRef;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfOperationException;
 import com.armedia.cmf.storage.CmfProperty;
@@ -135,12 +137,26 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
 		Collection<Object[]> propertyParameters = new ArrayList<Object[]>();
 		Collection<Object[]> propertyValueParameters = new ArrayList<Object[]>();
+		Collection<Object[]> parentParameters = new ArrayList<Object[]>();
 		Object[] attData = new Object[7];
 		Object[] attValue = new Object[5];
 		Object[] propData = new Object[4];
+		Object[] parentData = new Object[3];
 
 		try {
 			QueryRunner qr = JdbcTools.getQueryRunner();
+
+			// First, set up the parents
+			parentData[0] = objectId;
+			int i = 0;
+			CmfValueCodec<V> parentCodec = translator.getCodec(CmfDataType.ID);
+			for (CmfObjectRef<V> parent : object.getParentIds()) {
+				parentData[1] = i;
+				CmfValue parentId = parentCodec.encodeValue(parent.getId());
+				parentData[2] = JdbcTools.composeDatabaseId(parent.getType(), parentId.asString());
+				parentParameters.add(parentData.clone());
+				i++;
+			}
 
 			// Then, insert its attributes
 			attData[0] = objectId; // This should never change within the loop
@@ -251,9 +267,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 			// Do all the inserts in a row
 			final Long ret = qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT),
-				this.dialect.getObjectNumberHandler(), objectId, object.getSearchKey(), objectType.name(),
-				Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(), object.getBatchId(),
-				object.getProductName(), object.getProductVersion());
+				this.dialect.getObjectNumberHandler(), objectId, object.getName(), object.getSearchKey(),
+				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
+				object.getBatchId(), object.getProductName(), object.getProductVersion());
+			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
+				parentParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
 				attributeParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE_VALUE), JdbcTools.HANDLER_NULL,
@@ -273,6 +291,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} finally {
 			// Help the GC along...not strictly necessary, but should help manage the memory
 			// footprint long-term
+			parentParameters.clear();
+			parentParameters = null;
 			attributeParameters.clear();
 			attributeParameters = null;
 			attributeValueParameters.clear();
@@ -284,6 +304,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			attData = null;
 			attValue = null;
 			propData = null;
+			parentData = null;
 		}
 	}
 
@@ -301,6 +322,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			PreparedStatement attributeValuePS = null;
 			PreparedStatement propertyPS = null;
 			PreparedStatement propertyValuePS = null;
+			PreparedStatement parentsPS = null;
 			try {
 				boolean limitByIDs = false;
 				if (ids == null) {
@@ -316,11 +338,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				attributeValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTE_VALUES));
 				propertyPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTIES));
 				propertyValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTY_VALUES));
+				parentsPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PARENT_IDS));
 
 				ResultSet objectRS = null;
 				ResultSet attributeRS = null;
 				ResultSet propertyRS = null;
 				ResultSet valueRS = null;
+				ResultSet parentsRS = null;
 
 				if (!limitByIDs) {
 					objectPS.setString(1, type.name());
@@ -388,7 +412,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									objLabel, objId));
 							}
 
-							obj = loadObject(translator, objectRS);
+							parentsPS.setString(1, objId);
+							parentsRS = parentsPS.executeQuery();
+
+							obj = loadObject(translator, objectRS, parentsRS);
 							if (this.log.isTraceEnabled()) {
 								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 							} else if (this.log.isDebugEnabled()) {
@@ -477,8 +504,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						}
 					}
 					DbUtils.closeQuietly(objectRS);
+					DbUtils.closeQuietly(parentsRS);
 				}
 			} finally {
+				DbUtils.closeQuietly(parentsPS);
 				DbUtils.closeQuietly(propertyValuePS);
 				DbUtils.closeQuietly(propertyPS);
 				DbUtils.closeQuietly(attributeValuePS);
@@ -778,30 +807,48 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	private <V> CmfObject<V> loadObject(CmfAttributeTranslator<V> translator, ResultSet rs) throws SQLException {
-		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		CmfType type = CmfType.decodeString(rs.getString("object_type"));
-		String id = rs.getString("object_id");
+	private <V> CmfObject<V> loadObject(CmfAttributeTranslator<V> translator, ResultSet objectRS, ResultSet parentsRS)
+		throws SQLException {
+		if (objectRS == null) { throw new IllegalArgumentException(
+			"Must provide a ResultSet to load the structure from"); }
+		CmfType type = CmfType.decodeString(objectRS.getString("object_type"));
+		String id = objectRS.getString("object_id");
+		String name = objectRS.getString("name");
 		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
 		if (m.matches()) {
 			id = m.group(1);
 		}
-		String searchKey = rs.getString("search_key");
-		if (rs.wasNull()) {
+		String searchKey = objectRS.getString("search_key");
+		if (objectRS.wasNull()) {
 			searchKey = id;
 		}
-		Long number = rs.getLong("object_number");
-		if (rs.wasNull()) {
+		Long number = objectRS.getLong("object_number");
+		if (objectRS.wasNull()) {
 			number = null;
 		}
-		String batchId = rs.getString("batch_id");
-		String label = rs.getString("object_label");
-		String subtype = rs.getString("object_subtype");
-		String productName = rs.getString("product_name");
-		String productVersion = rs.getString("product_version");
+		String batchId = objectRS.getString("batch_id");
+		String label = objectRS.getString("object_label");
+		String subtype = objectRS.getString("object_subtype");
+		String productName = objectRS.getString("product_name");
+		String productVersion = objectRS.getString("product_version");
 
-		return new CmfObject<V>(translator, type, id, searchKey, batchId, label, subtype, productName, productVersion,
-			number);
+		// Load the parent IDs
+		CmfValueCodec<V> codec = translator.getCodec(CmfDataType.ID);
+		List<CmfObjectRef<V>> parentIds = new ArrayList<CmfObjectRef<V>>();
+		while (parentsRS.next()) {
+			String parentId = parentsRS.getString("parent_id");
+			if (parentsRS.wasNull()) {
+				continue;
+			}
+			CmfObjectRef<String> ref = JdbcTools.decodeDatabaseId(parentId);
+			parentIds.add(new CmfObjectRef<V>(ref.getType(), codec.decodeValue(new CmfValue(ref.getId()))));
+		}
+		if (parentIds.isEmpty()) {
+			parentIds = Collections.emptyList();
+		}
+
+		return new CmfObject<V>(translator, type, id, name, parentIds, searchKey, batchId, label, subtype, productName,
+			productVersion, number);
 	}
 
 	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
