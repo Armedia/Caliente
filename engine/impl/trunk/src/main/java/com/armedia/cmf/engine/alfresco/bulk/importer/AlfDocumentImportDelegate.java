@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -134,8 +135,8 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 				"dctm:log_entry", "cmis:checkinComment"
 			}, {
 				"dctm:r_immutable_flag", "cmis:isImmutable"
-			}, {
-				"dctm:r_full_content_size", "cmis:contentStreamLength"
+			// }, {
+			// "dctm:r_full_content_size", "cmis:contentStreamLength"
 			}, {
 				"dctm:r_folder_path", "cmis:path"
 			},
@@ -162,24 +163,27 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 	protected AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
 		AlfrescoType type = null;
 		if (!content.isDefaultRendition() || (content.getRenditionPage() > 0)) {
-			type = this.factory.schema.getType("jsap:content", Collections.singleton("arm:calienteRendition"));
+			type = this.factory.schema.buildType("jsap:content", Collections.singleton("arm:calienteRendition"));
 		} else {
 
 			String srcTypeName = this.cmfObject.getSubtype().toLowerCase();
+			Set<String> aspects = null;
 			if (!srcTypeName.startsWith("jcoa_") && !srcTypeName.startsWith("js_")) {
 				switch (this.cmfObject.getType()) {
 					case DOCUMENT:
 						srcTypeName = "content";
+						aspects = Collections.singleton("dctm:dm_document");
 						break;
 					case FOLDER:
 						srcTypeName = "folder";
+						aspects = Collections.singleton("dctm:dm_folder");
 						break;
 					default:
 						throw new ImportException(
 							String.format("Unsupported import archetype [%s]", this.cmfObject.getType()));
 				}
 			}
-			type = this.factory.schema.getType(String.format("jsap:%s", srcTypeName));
+			type = this.factory.schema.buildType(String.format("jsap:%s", srcTypeName), aspects);
 		}
 		if (type == null) { throw new ImportException(String.format(
 			"Failed to find a proper type mapping for %s of type [%s] (%s rendition, page #%d)",
@@ -217,9 +221,12 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 
 			if (tgtAtt == null) {
 				// ERROR! No mapping!
-				throw new ImportException(String.format(
-					"Failed to find a mapping for attribute [%s] from source type [%s] into target type [%s] with aspects %s",
-					s, this.cmfObject.getSubtype(), targetType.getName(), targetType.getAspects()));
+				if (this.log.isDebugEnabled()) {
+					this.log.warn(String.format(
+						"Failed to find a mapping for attribute [%s] from source type [%s] into target type [%s] with aspects %s",
+						s, this.cmfObject.getSubtype(), targetType.getName(), targetType.getAspects()));
+				}
+				continue;
 			}
 
 			final String value;

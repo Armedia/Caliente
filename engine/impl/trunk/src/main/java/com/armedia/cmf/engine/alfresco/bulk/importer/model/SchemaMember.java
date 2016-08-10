@@ -19,8 +19,8 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	protected final String name;
 
 	protected final Set<String> mandatoryAspects;
-	protected final Set<String> attributeNames;
-	protected final Map<String, SchemaAttribute> schemaAttributes;
+	protected final Map<String, SchemaAttribute> localAttributes;
+	protected final Set<String> allAttributeNames;
 
 	SchemaMember(T parent, ClassElement e, Collection<Aspect> mandatoryAspects) {
 		this.parent = parent;
@@ -50,39 +50,56 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 			ma.add(aspect.name);
 
 			// Add the aspect's attributes
-			for (SchemaAttribute schemaAttribute : aspect.schemaAttributes.values()) {
+			for (String attributeName : aspect.allAttributeNames) {
+				SchemaAttribute attribute = aspect.getAttribute(attributeName);
 				// If this attribute isn't declared on this type, or it's not decalred in a
 				// parent type, or it's not declared in another mandatory aspect, we add it...
-				if (!schemaAttributes.containsKey(schemaAttribute.name)
-					&& ((parent == null) || (parent.getAttribute(schemaAttribute.name) == null))) {
-					schemaAttributes.put(schemaAttribute.name, schemaAttribute);
+				if (!schemaAttributes.containsKey(attributeName)
+					&& ((parent == null) || (parent.getAttribute(attributeName) == null))) {
+					schemaAttributes.put(attributeName, attribute);
 				}
 			}
 		}
 		this.mandatoryAspects = Tools.freezeSet(ma);
-		this.schemaAttributes = Tools.freezeMap(new LinkedHashMap<String, SchemaAttribute>(schemaAttributes));
+		this.localAttributes = Tools.freezeMap(new LinkedHashMap<String, SchemaAttribute>(schemaAttributes));
 		Set<String> attributeNames = new TreeSet<String>();
-		attributeNames.addAll(this.schemaAttributes.keySet());
+		attributeNames.addAll(this.localAttributes.keySet());
 		if (parent != null) {
 			attributeNames.addAll(parent.getAttributeNames());
 		}
-		this.attributeNames = Tools.freezeSet(attributeNames);
+		this.allAttributeNames = Tools.freezeSet(attributeNames);
+	}
+
+	public T getParent() {
+		return this.parent;
+	}
+
+	public Set<String> getMandatoryAspects() {
+		return this.mandatoryAspects;
 	}
 
 	public SchemaAttribute getAttribute(String name) {
-		if (!this.attributeNames.contains(name)) { return null; }
-		SchemaAttribute schemaAttribute = this.schemaAttributes.get(name);
-		if ((schemaAttribute == null) && (this.parent != null)) {
+		if (!this.allAttributeNames.contains(name)) { return null; }
+		SchemaAttribute schemaAttribute = this.localAttributes.get(name);
+		if (schemaAttribute == null) {
 			schemaAttribute = this.parent.getAttribute(name);
 		}
 		return schemaAttribute;
 	}
 
 	public Set<String> getAttributeNames() {
-		return this.attributeNames;
+		return this.localAttributes.keySet();
 	}
 
 	public int getAttributeCount() {
-		return this.attributeNames.size();
+		return this.localAttributes.size();
+	}
+
+	public Set<String> getAllAttributeNames() {
+		return this.allAttributeNames;
+	}
+
+	public int getAllAttributeCount() {
+		return this.allAttributeNames.size();
 	}
 }

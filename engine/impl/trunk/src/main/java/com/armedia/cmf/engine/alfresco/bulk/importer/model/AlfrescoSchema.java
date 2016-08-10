@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.xml.bind.JAXBException;
@@ -37,11 +38,11 @@ public class AlfrescoSchema {
 		this.aspectIndex = Tools.freezeCopy(new LinkedHashMap<String, SchemaMember<?>>(aspectIndex));
 	}
 
-	public AlfrescoType getType(String typeName) {
-		return getType(typeName, null);
+	public AlfrescoType buildType(String typeName) {
+		return buildType(typeName, null);
 	}
 
-	public AlfrescoType getType(String typeName, Collection<String> aspectNames) {
+	public AlfrescoType buildType(String typeName, Collection<String> aspectNames) {
 		if (typeName == null) { throw new IllegalArgumentException("Must provide a non-null type name"); }
 		if (aspectNames == null) {
 			aspectNames = Collections.emptyList();
@@ -60,5 +61,21 @@ public class AlfrescoSchema {
 		}
 
 		return new AlfrescoType(baseType, aspects);
+	}
+
+	public Set<String> getTypeNames() {
+		return this.typeIndex.keySet();
+	}
+
+	public SchemaMember<?> getType(String name) {
+		return this.typeIndex.get(name);
+	}
+
+	public Set<String> getAspectNames() {
+		return this.aspectIndex.keySet();
+	}
+
+	public SchemaMember<?> getAspect(String name) {
+		return this.aspectIndex.get(name);
 	}
 }

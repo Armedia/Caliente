@@ -24,12 +24,12 @@ public class AlfrescoType {
 		Set<String> aspects = new LinkedHashSet<String>(type.mandatoryAspects);
 
 		Map<String, SchemaMember<?>> attributes = new TreeMap<String, SchemaMember<?>>();
-		for (String attribute : type.getAttributeNames()) {
+		for (String attribute : type.getAllAttributeNames()) {
 			attributes.put(attribute, type);
 		}
 		for (SchemaMember<?> aspect : appliedAspects) {
 			aspects.add(aspect.name);
-			for (String attribute : aspect.getAttributeNames()) {
+			for (String attribute : aspect.getAllAttributeNames()) {
 				if (!attributes.containsKey(attribute)) {
 					attributes.put(attribute, aspect);
 				}
