@@ -39,11 +39,6 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	public String getName() {
-		return this.object.getLoginName();
-	}
-
-	@Override
 	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		// UserID
@@ -55,9 +50,9 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			Collections.singleton(new CmfValue(this.object.getLoginName()))));
 
 		// AutoAcceptMembershipRequest
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name,
-			CmfDataType.BOOLEAN, false,
-			Collections.singleton(new CmfValue(this.object.isAutoAcceptRequestToJoinLeave()))));
+		object.setAttribute(
+			new CmfAttribute<CmfValue>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name, CmfDataType.BOOLEAN, false,
+				Collections.singleton(new CmfValue(this.object.isAutoAcceptRequestToJoinLeave()))));
 
 		// AllowMembershipRequest
 		object
@@ -65,9 +60,9 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 				false, Collections.singleton(new CmfValue(this.object.isRequestToJoinLeaveAllowed()))));
 
 		// AllowMembersEditMembership
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name,
-			CmfDataType.BOOLEAN, false,
-			Collections.singleton(new CmfValue(this.object.isMembersEditMembershipAllowed()))));
+		object.setAttribute(
+			new CmfAttribute<CmfValue>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name, CmfDataType.BOOLEAN, false,
+				Collections.singleton(new CmfValue(this.object.isMembersEditMembershipAllowed()))));
 
 		// PrincipalType
 		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.PRINCIPAL_TYPE.name, CmfDataType.STRING, false,
@@ -98,8 +93,8 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
 				this.object.getLoginName(), this.object.getId()), e);
 		}
-		CmfAttribute<CmfValue> users = new CmfAttribute<CmfValue>(ShptAttributes.GROUP_MEMBERS.name,
-			CmfDataType.STRING, true);
+		CmfAttribute<CmfValue> users = new CmfAttribute<CmfValue>(ShptAttributes.GROUP_MEMBERS.name, CmfDataType.STRING,
+			true);
 		object.setAttribute(users);
 		if ((l != null) && !l.isEmpty()) {
 			for (User u : l) {
@@ -165,13 +160,18 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 				}
 			}
 		} catch (ShptSessionException e) {
-			this.log.warn(String.format("Failed to find the owner for group [%s] (ID[%d])", getLabel(),
-				this.object.getId()));
+			this.log.warn(
+				String.format("Failed to find the owner for group [%s] (ID[%d])", getLabel(), this.object.getId()));
 		}
 		if (owner != null) {
 			ret.add(owner);
 		}
 
 		return ret;
+	}
+
+	@Override
+	protected String calculateName(Group group) throws Exception {
+		return group.getLoginName();
 	}
 }

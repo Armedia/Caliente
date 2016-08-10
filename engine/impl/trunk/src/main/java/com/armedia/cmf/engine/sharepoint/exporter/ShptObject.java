@@ -39,8 +39,6 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 		super(factory, objectClass, object);
 	}
 
-	public abstract String getName();
-
 	@Override
 	protected String calculateSearchKey(T object) throws Exception {
 		return calculateObjectId(object);

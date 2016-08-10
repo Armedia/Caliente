@@ -35,11 +35,6 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	public String getName() {
-		return this.object.getName();
-	}
-
-	@Override
 	public Date getCreatedTime() {
 		return this.object.getCreatedTime();
 	}
@@ -127,5 +122,10 @@ public class ShptFolder extends ShptFSObject<Folder> {
 
 	static String doCalculateSearchKey(Folder object) {
 		return object.getServerRelativeUrl();
+	}
+
+	@Override
+	protected String calculateName(Folder folder) throws Exception {
+		return folder.getName();
 	}
 }

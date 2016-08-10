@@ -68,8 +68,8 @@ public class ShptUser extends ShptSecurityObject<User> {
 	@Override
 	public String calculateObjectId(User user) throws Exception {
 		UserId uid = user.getUserId();
-		if (uid == null) { throw new IncompleteDataException(String.format(
-			"No userId information available for user [%s\\%s]", this.userDomain, this.userName)); }
+		if (uid == null) { throw new IncompleteDataException(
+			String.format("No userId information available for user [%s\\%s]", this.userDomain, this.userName)); }
 		return String.format("%08X",
 			Tools.hashTool(this, null, uid.getNameId().toLowerCase(), uid.getNameIdIssuer().toLowerCase()));
 	}
@@ -106,11 +106,6 @@ public class ShptUser extends ShptSecurityObject<User> {
 
 	public Collection<Role> getRoles() {
 		return this.roles;
-	}
-
-	@Override
-	public String getName() {
-		return this.userName;
 	}
 
 	public String getDomain() {
@@ -205,5 +200,23 @@ public class ShptUser extends ShptSecurityObject<User> {
 		}
 		 */
 		return ret;
+	}
+
+	@Override
+	protected String calculateName(User user) throws Exception {
+		String loginName = user.getLoginName();
+		if (loginName == null) { throw new IncompleteDataException(String.format(
+			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }
+		final int backslash = loginName.indexOf('\\');
+		final int atSign = loginName.indexOf('@');
+		if (backslash >= 0) {
+			// 1) ^.*|domain\\user$
+			return loginName.substring(backslash + 1);
+		} else if (atSign >= 0) {
+			// 2) ^.*|user@domain$
+			return loginName.substring(loginName.indexOf('|') + 1, atSign);
+		} else {
+			return loginName;
+		}
 	}
 }

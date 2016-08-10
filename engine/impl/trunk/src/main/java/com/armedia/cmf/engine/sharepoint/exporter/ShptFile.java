@@ -87,11 +87,6 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	public String getName() {
-		return this.object.getName();
-	}
-
-	@Override
 	public String calculateServerRelativeUrl(ShptVersion file) {
 		return file.getFile().getServerRelativeUrl();
 	}
@@ -424,5 +419,10 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 	static String doCalculateSearchKey(File object) {
 		return object.getServerRelativeUrl();
+	}
+
+	@Override
+	protected String calculateName(ShptVersion version) throws Exception {
+		return version.getName();
 	}
 }
