@@ -242,4 +242,9 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		}
 		return ret;
 	}
+
+	@Override
+	protected String calculateName(IDfGroup group) throws Exception {
+		return group.getGroupName();
+	}
 }

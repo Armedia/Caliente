@@ -61,4 +61,9 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 
 		return ret;
 	}
+
+	@Override
+	protected String calculateName(IDfUser user) throws Exception {
+		return user.getUserLoginName();
+	}
 }

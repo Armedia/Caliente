@@ -28,7 +28,9 @@ import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmSysObject;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectRef;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfACL;
@@ -530,5 +532,19 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		} finally {
 			DfUtils.closeQuietly(c);
 		}
+	}
+
+	@Override
+	protected String calculateName(T sysObject) throws Exception {
+		return sysObject.getObjectName();
+	}
+
+	@Override
+	protected Collection<CmfObjectRef<IDfValue>> calculateParentIds(T sysObject) throws Exception {
+		List<CmfObjectRef<IDfValue>> ret = new ArrayList<CmfObjectRef<IDfValue>>();
+		for (IDfValue v : DfValueFactory.getAllRepeatingValues(DctmAttributes.I_FOLDER_ID, sysObject)) {
+			ret.add(new CmfObjectRef<IDfValue>(CmfType.FOLDER, v));
+		}
+		return ret;
 	}
 }

@@ -180,4 +180,9 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		}
 		return ret;
 	}
+
+	@Override
+	protected String calculateName(IDfACL acl) throws Exception {
+		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
+	}
 }

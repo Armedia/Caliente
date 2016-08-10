@@ -171,4 +171,9 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 		}
 		return ret;
 	}
+
+	@Override
+	protected String calculateName(IDfType type) throws Exception {
+		return type.getName();
+	}
 }
