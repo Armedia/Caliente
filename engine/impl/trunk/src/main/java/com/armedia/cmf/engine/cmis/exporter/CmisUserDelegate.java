@@ -45,4 +45,9 @@ public class CmisUserDelegate extends CmisExportDelegate<FileableCmisObject> {
 		userName.setValue(new CmfValue(this.object.getCreatedBy()));
 		return true;
 	}
+
+	@Override
+	protected String calculateName(FileableCmisObject object) throws Exception {
+		return object.getCreatedBy();
+	}
 }

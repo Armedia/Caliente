@@ -75,13 +75,13 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 		name.setValue(new CmfValue(this.object.getId()));
 
 		if (acl != null) {
-			String permissionsName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT, ctx.getRepositoryInfo()
-				.getProductName().toLowerCase());
+			String permissionsName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT,
+				ctx.getRepositoryInfo().getProductName().toLowerCase());
 			CmfProperty<CmfValue> accessors = new CmfProperty<CmfValue>(IntermediateProperty.ACL_ACCESSOR_NAME,
 				CmfDataType.STRING, true);
 			CmfProperty<CmfValue> permissions = new CmfProperty<CmfValue>(permissionsName, CmfDataType.STRING, true);
-			CmfProperty<CmfValue> accessorActions = new CmfProperty<CmfValue>(
-				IntermediateProperty.ACL_ACCESSOR_ACTIONS, CmfDataType.STRING, true);
+			CmfProperty<CmfValue> accessorActions = new CmfProperty<CmfValue>(IntermediateProperty.ACL_ACCESSOR_ACTIONS,
+				CmfDataType.STRING, true);
 
 			for (Ace ace : acl.getAces()) {
 				// Only export directly-applied ACEs
@@ -110,5 +110,10 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 		object.setProperty(owner);
 		object.setProperty(name);
 		return true;
+	}
+
+	@Override
+	protected String calculateName(FileableCmisObject aclObject) throws Exception {
+		return aclObject.getId();
 	}
 }

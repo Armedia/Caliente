@@ -34,9 +34,10 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 	}
 
 	protected int calculateDepth(ObjectType objectType, final Set<String> visited) throws Exception {
-		if (objectType == null) { throw new IllegalArgumentException("Must provide a folder whose depth to calculate"); }
-		if (!visited.add(objectType.getId())) { throw new IllegalStateException(String.format(
-			"ObjectType [%s] was visited twice - visited set: %s", objectType.getId(), visited)); }
+		if (objectType == null) { throw new IllegalArgumentException(
+			"Must provide a folder whose depth to calculate"); }
+		if (!visited.add(objectType.getId())) { throw new IllegalStateException(
+			String.format("ObjectType [%s] was visited twice - visited set: %s", objectType.getId(), visited)); }
 		try {
 			if (objectType.isBaseType()) { return 0; }
 			return calculateDepth(objectType.getParentType(), visited) + 1;
@@ -78,6 +79,11 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 
 	@Override
 	protected String calculateSearchKey(ObjectType object) throws Exception {
+		return object.getId();
+	}
+
+	@Override
+	protected String calculateName(ObjectType object) throws Exception {
 		return object.getId();
 	}
 }

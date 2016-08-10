@@ -182,4 +182,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		}
 		return ret;
 	}
+
+	@Override
+	protected String calculateName(Document document) throws Exception {
+		return document.getName();
+	}
 }

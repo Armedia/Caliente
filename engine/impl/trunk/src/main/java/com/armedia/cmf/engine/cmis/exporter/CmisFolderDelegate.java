@@ -30,8 +30,8 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
 	protected int calculateDepth(Folder f, final Set<String> visited) throws Exception {
 		if (f == null) { throw new IllegalArgumentException("Must provide a folder whose depth to calculate"); }
-		if (!visited.add(f.getId())) { throw new IllegalStateException(String.format(
-			"Folder [%s] was visited twice - visited set: %s", f.getId(), visited)); }
+		if (!visited.add(f.getId())) { throw new IllegalStateException(
+			String.format("Folder [%s] was visited twice - visited set: %s", f.getId(), visited)); }
 		try {
 			if (f.isRootFolder()) { return 0; }
 			List<Folder> parents = f.getParents();
@@ -51,8 +51,8 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled, CmisExportContext ctx)
-		throws Exception {
+	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
+		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
 		// We will only include the folder's contents if the referencing object is NOT one of our
 		// children
@@ -80,5 +80,10 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 			ret.add(d);
 		}
 		return ret;
+	}
+
+	@Override
+	protected String calculateName(Folder folder) throws Exception {
+		return folder.getName();
 	}
 }
