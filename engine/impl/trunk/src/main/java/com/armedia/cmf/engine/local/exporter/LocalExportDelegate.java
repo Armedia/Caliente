@@ -258,4 +258,9 @@ public class LocalExportDelegate extends
 	protected String calculateSearchKey(LocalFile object) throws Exception {
 		return object.getSafePath();
 	}
+
+	@Override
+	protected String calculateName(LocalFile object) throws Exception {
+		return object.getName();
+	}
 }
