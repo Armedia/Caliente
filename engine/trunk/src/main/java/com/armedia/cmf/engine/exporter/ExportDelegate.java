@@ -23,7 +23,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected final String batchId;
 	protected final boolean batchHead;
 	protected final String name;
-	protected final Collection<CmfObjectRef<V>> parentIds;
+	protected final Collection<CmfObjectRef> parentIds;
 	protected final String subType;
 
 	protected ExportDelegate(DF factory, Class<T> objectClass, T object) throws Exception {
@@ -40,7 +40,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.subType = calculateSubType(this.exportTarget.getType(), object);
 		if (factory.getEngine().isSupportsDuplicateNames(this.exportTarget.getType())) {
 			// We only calculate parent IDs
-			this.parentIds = Tools.freezeList(new ArrayList<CmfObjectRef<V>>(calculateParentIds(object)));
+			this.parentIds = Tools.freezeList(new ArrayList<CmfObjectRef>(calculateParentIds(object)));
 		} else {
 			this.parentIds = Collections.emptyList();
 		}
@@ -82,11 +82,11 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.name;
 	}
 
-	protected Collection<CmfObjectRef<V>> calculateParentIds(T object) throws Exception {
+	protected Collection<CmfObjectRef> calculateParentIds(T object) throws Exception {
 		return null;
 	}
 
-	public final Collection<CmfObjectRef<V>> getParentIds() {
+	public final Collection<CmfObjectRef> getParentIds() {
 		return this.parentIds;
 	}
 
