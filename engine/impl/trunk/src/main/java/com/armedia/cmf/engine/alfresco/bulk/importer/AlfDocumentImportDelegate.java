@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
+import com.armedia.cmf.storage.CmfValueSerializer;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfDocumentImportDelegate extends AlfImportDelegate {
@@ -190,10 +192,12 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 	}
 
 	protected void populatePrimaryAttributes(Properties p, AlfrescoType targetType, CmfContentInfo content)
-		throws ImportException {
+		throws ImportException, ParseException {
 
 		for (String s : this.cmfObject.getAttributeNames()) {
 			CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(s);
+
+			final CmfValueSerializer serializer = CmfValueSerializer.get(srcAtt.getType());
 
 			// Easy mode: direct mapping
 			SchemaAttribute tgtAtt = targetType.getAttribute(srcAtt.getName());
@@ -236,13 +240,13 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 					if (i > 0) {
 						sb.append(separator);
 					}
-					sb.append(v.asString());
+					sb.append(serializer.serialize(v));
 					i++;
 				}
 				value = sb.toString();
 			} else {
 				// Write out the single value
-				value = srcAtt.getValue().asString();
+				value = serializer.serialize(srcAtt.getValue());
 			}
 
 			if (!StringUtils.isEmpty(value)) {
@@ -274,12 +278,9 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 			if (tgtAtt == null) {
 				continue;
 			}
-
-			AttributeFixer f = AttributeFixer.decode(tgtName);
-			if (f != null) {
-				// Attribute needs fixing...
-			} else if (srcAtt.isRepeating() && !tgtAtt.multiple) {
-				v = srcAtt.getValue(0).asString();
+			final CmfValueSerializer serializer = CmfValueSerializer.get(srcAtt.getType());
+			if (srcAtt.isRepeating() && !tgtAtt.multiple) {
+				v = serializer.serialize(srcAtt.getValue(0));
 			}
 
 			// Now, check to see if the attribute needs fixing
@@ -318,7 +319,7 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 
 		p.setProperty("dctm:r_object_id", this.cmfObject.getId());
 		p.setProperty("dctm:i_chronicle_id", this.cmfObject.getBatchId());
-		// p.setProperty("cmis:isLatestVersion", String.valueOf(this.head));
+		p.setProperty("cm:name", this.cmfObject.getName());
 	}
 
 	protected void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentInfo content)
@@ -369,15 +370,26 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 
 			// Ok...so...now that we know where the metadata properties must go, we write them out
 			Properties p = new Properties();
-
-			if (content.isDefaultRendition() && (content.getRenditionPage() == 0)) {
-				// First page of the default rendition gets ALL the metadata. Everything else
-				// only gets supplementary metadata
-				populatePrimaryAttributes(p, targetType, content);
-			} else {
-				// This is a supplementary rendition, and thus will need some minimal
-				// metadata set on it
-				populateRenditionAttributes(p, targetType, content);
+			boolean primary = false;
+			try {
+				if (content.isDefaultRendition() && (content.getRenditionPage() == 0)) {
+					// First page of the default rendition gets ALL the metadata. Everything else
+					// only gets supplementary metadata
+					primary = true;
+					populatePrimaryAttributes(p, targetType, content);
+				} else {
+					// This is a supplementary rendition, and thus will need some minimal
+					// metadata set on it
+					populateRenditionAttributes(p, targetType, content);
+				}
+			} catch (ParseException e) {
+				String renditionSpec = "primary rendition";
+				if (!primary) {
+					renditionSpec = String.format("rendition [%s], page # %d", content.getRenditionIdentifier(),
+						content.getRenditionPage());
+				}
+				throw new ImportException(String.format("Failed to serialize the attributes for %s [%s](%s), %s",
+					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId(), renditionSpec), e);
 			}
 
 			final OutputStream out;

@@ -20,6 +20,30 @@ import com.armedia.commons.utilities.Tools;
 
 public class AlfTranslator extends CmfAttributeTranslator<CmfValue> {
 
+	private static final CmfValueCodec<CmfValue> DATETIME_CODEC = new CmfValueCodec<CmfValue>() {
+
+		@Override
+		public CmfValue encodeValue(CmfValue value) {
+			// Encode the value into a string
+			return null;
+		}
+
+		@Override
+		public CmfValue decodeValue(CmfValue value) {
+			return null;
+		}
+
+		@Override
+		public boolean isNull(CmfValue value) {
+			return false;
+		}
+
+		@Override
+		public CmfValue getNull() {
+			return null;
+		}
+	};
+
 	private static final Map<PropertyType, CmfDataType> DATA_TYPES;
 	private static final Map<CmfDataType, PropertyType> DATA_TYPES_REV;
 
@@ -112,6 +136,10 @@ public class AlfTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	@Override
 	public CmfValueCodec<CmfValue> getCodec(CmfDataType type) {
+		switch (type) {
+			case DATETIME:
+				return AlfTranslator.DATETIME_CODEC;
+		}
 		return CmfAttributeTranslator.getStoredValueCodec(type);
 	}
 
