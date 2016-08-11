@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -572,6 +573,38 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract Map<CmfType, Integer> getStoredObjectTypes(O operation) throws CmfStorageException;
+
+	public final <V> boolean hasNameCollision(CmfObject<V> object) throws CmfStorageException {
+		return (getFirstUniqueName(object) == null);
+	}
+
+	public final <V> String getFirstUniqueName(CmfObject<V> object, String... names) throws CmfStorageException {
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				if (names != null) {
+					for (String s : names) {
+						if (StringUtils.isEmpty(s)) { throw new IllegalArgumentException(String.format(
+							"May not use null or empty string values as potential names to check against: %s",
+							Arrays.toString(names))); }
+					}
+				}
+				if ((names == null)
+					|| (names.length == 0)) { return getFirstUniqueName(operation, object, object.getName()); }
+				return getFirstUniqueName(operation, object, names);
+			} finally {
+				if (tx) {
+					operation.rollback();
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract <V> String getFirstUniqueName(O operation, CmfObject<V> object, String... names)
+		throws CmfStorageException;
 
 	public final CmfAttributeMapper getAttributeMapper() {
 		return this.mapper;

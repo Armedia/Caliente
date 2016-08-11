@@ -23,7 +23,7 @@ public class CmfObject<V> {
 	private Long number = null;
 	private final String id;
 	private final String name;
-	private final Collection<CmfObjectRef<V>> parentIds;
+	private final Collection<CmfObjectRef> parentIds;
 	private final String searchKey;
 	private final String batchId;
 	private final boolean batchHead;
@@ -96,14 +96,14 @@ public class CmfObject<V> {
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
-		Collection<CmfObjectRef<V>> parentIds, String batchId, boolean batchHead, String label, String subtype,
+		Collection<CmfObjectRef> parentIds, String batchId, boolean batchHead, String label, String subtype,
 		String productName, String productVersion, Long number) {
 		this(translator, type, id, name, parentIds, id, batchId, batchHead, label, subtype, productName, productVersion,
 			number);
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
-		Collection<CmfObjectRef<V>> parentIds, String searchKey, String batchId, boolean batchHead, String label,
+		Collection<CmfObjectRef> parentIds, String searchKey, String batchId, boolean batchHead, String label,
 		String subtype, String productName, String productVersion, Long number) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
@@ -140,7 +140,7 @@ public class CmfObject<V> {
 		return this.name;
 	}
 
-	public final Collection<CmfObjectRef<V>> getParentIds() {
+	public final Collection<CmfObjectRef> getParentReferences() {
 		return this.parentIds;
 	}
 
