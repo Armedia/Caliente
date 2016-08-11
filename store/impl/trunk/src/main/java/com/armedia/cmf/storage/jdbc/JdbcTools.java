@@ -31,7 +31,7 @@ class JdbcTools {
 		}
 	};
 
-	static final Pattern OBJECT_ID_PARSER = Pattern.compile("^\\{(?:[\\da-fA-F][\\da-fA-F])+-(.*)\\}$");
+	static final Pattern OBJECT_ID_PARSER = Pattern.compile("^\\{([\\da-fA-F]{1,8})-(.*)\\}$");
 
 	static final Object[][] NO_PARAMS = new Object[0][0];
 
