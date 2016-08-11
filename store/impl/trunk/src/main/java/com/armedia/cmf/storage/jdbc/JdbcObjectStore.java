@@ -668,9 +668,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							CmfObjectRef ref = new CmfObjectRef(obj);
 							int updateCount = qr.update(connection, translateQuery(JdbcDialect.Query.UPDATE_ALT_NAME),
 								newName, JdbcTools.composeDatabaseId(ref), obj.getName());
-							if (updateCount != 1) { throw new CmfStorageException(String.format(
-								"Failed to update the name for %s [%s](%s) from [%s] to [%s] - updated %d records, expected exactly 1",
-								obj.getType(), obj.getLabel(), obj.getId(), obj.getName(), newName, updateCount)); }
+							if (updateCount != 1) {
+								//
+								throw new CmfStorageException(String.format(
+									"Failed to update the name for %s [%s](%s) from [%s] to [%s] - updated %d records, expected exactly 1",
+									obj.getType(), obj.getLabel(), obj.getId(), obj.getName(), newName, updateCount));
+							}
 						}
 					}
 				} finally {
@@ -987,7 +990,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		String name = objectRS.getString("object_name");
 		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
 		if (m.matches()) {
-			id = m.group(1);
+			id = m.group(2);
 		}
 		String searchKey = objectRS.getString("search_key");
 		if (objectRS.wasNull()) {
