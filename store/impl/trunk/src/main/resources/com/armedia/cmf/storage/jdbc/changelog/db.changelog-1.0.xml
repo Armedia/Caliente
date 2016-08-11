@@ -124,6 +124,25 @@
 			<column name="parent_pos" />
 		</createIndex>
 
+		<!-- This view will let us figure out any name collisions we may be experiencing here -->
+		<createView viewName="cmf_name_collision">
+			   select sq.parent_id, co.object_id, co.object_name, co.object_number
+			     from cmf_object co, cmf_object_tree ct, (
+							select t.parent_id, o.object_name, count(*)
+							  from cmf_object_tree t, cmf_object o, cmf_object p
+							 where t.object_id = o.object_id
+							   and t.parent_id = p.object_id
+							   and p.batch_head = true
+							   and o.batch_head = true
+						  group by t.parent_id, o.object_name
+							having count(*) > 1
+					  ) sq
+				where co.object_id = ct.object_id
+				  and ct.parent_id = sq.parent_id
+				  and co.object_name = sq.object_name
+ 			 order by sq.parent_id, co.object_name, co.object_number
+ 		</createView>
+
 		<!-- The attribute descriptor table -->
 		<createTable tableName="cmf_attribute">
 			<column name="object_id" type="varchar(96)" remarks="The object the attribute is for">
