@@ -269,11 +269,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				this.dialect.getObjectNumberHandler(), objectId, object.getName(), object.getSearchKey(),
 				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
 				object.getBatchId(), object.isBatchHead(), object.getProductName(), object.getProductVersion());
-			if (object.isBatchHead()) {
-				// Small optimization, to accelerate queries
-				qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_ALT_NAME), JdbcTools.HANDLER_NULL, objectId,
-					object.getName());
-			}
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_ALT_NAME), JdbcTools.HANDLER_NULL, objectId,
+				object.getName());
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
 				parentParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
@@ -562,7 +559,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				ResultSet valueRS = null;
 				ResultSet parentsRS = null;
 
-				QueryRunner qr = null;
+				QueryRunner qr = JdbcTools.getQueryRunner();
 
 				if (!limitByIDs) {
 					objectPS.setString(1, type.name());
@@ -662,9 +659,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						String newName = nameFixer.fixName(obj);
 						if ((newName != null) && !Tools.equals(newName, obj.getName())) {
 							// Update the name in the alt_names table
-							if (qr == null) {
-								qr = new QueryRunner();
-							}
 							CmfObjectRef ref = new CmfObjectRef(obj);
 							int updateCount = qr.update(connection, translateQuery(JdbcDialect.Query.UPDATE_ALT_NAME),
 								newName, JdbcTools.composeDatabaseId(ref), obj.getName());
@@ -987,7 +981,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			"Must provide a ResultSet to load the structure from"); }
 		CmfType type = CmfType.decodeString(objectRS.getString("object_type"));
 		String id = objectRS.getString("object_id");
-		String name = objectRS.getString("object_name");
+		String name = objectRS.getString("new_name");
 		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
 		if (m.matches()) {
 			id = m.group(2);
@@ -1381,5 +1375,19 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	protected String translateQuery(JdbcDialect.Query query) {
 		return this.dialect.translateQuery(query, true);
+	}
+
+	@Override
+	protected void resetAltNames(JdbcOperation operation) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		try {
+			int count = qr.update(c, translateQuery(JdbcDialect.Query.RESET_ALT_NAME));
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Reset %d alternate name mappings", count));
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to reset the alt names table", e);
+		}
 	}
 }

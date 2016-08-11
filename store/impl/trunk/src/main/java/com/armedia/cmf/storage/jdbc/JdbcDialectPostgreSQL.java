@@ -19,28 +19,31 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	};
 
 	private static final String LOAD_OBJECTS_BY_ID = //
-		"       select * " + //
-			"     from cmf_object " + //
-			"    where object_type = ? " + //
-			"      and object_id = any ( ? ) " + //
-			" order by object_number" //
+		"       select o.*, n.new_name " + //
+			"     from cmf_object o, cmf_alt_name n " + //
+			"    where o.object_id = n.object_id " + //
+			"      and o.object_type = ? " + //
+			"      and o.object_id = any ( ? ) " + //
+			" order by o.object_number" //
 	;
 
 	private static final String LOAD_OBJECTS_BY_ID_HEAD = //
-		"       select * " + //
-			"     from cmf_object " + //
-			"    where object_type = ? " + //
-			"      and object_id = any ( ? ) " + //
-			"      and batch_head = true " + //
-			" order by object_number" //
+		"       select o.*, n.new_name " + //
+			"     from cmf_object o, cmf_alt_name n " + //
+			"    where o.object_id = n.object_id " + //
+			"      and o.object_type = ? " + //
+			"      and o.object_id = any ( ? ) " + //
+			"      and o.batch_head = true " + //
+			" order by o.object_number" //
 	;
 
 	private static final String LOAD_OBJECTS_BY_ID_BATCHED = //
-		"       select * " + //
-			"     from cmf_object " + //
-			"    where object_type = ? " + //
-			"      and object_id = any ( ? ) " + //
-			" order by batch_id, object_number" //
+		"       select o.*, n.new_name " + //
+			"     from cmf_object o " + //
+			"    where o.object_id = n.object_id " + //
+			"      and o.object_type = ? " + //
+			"      and o.object_id = any ( ? ) " + //
+			" order by o.batch_id, o.object_number" //
 	;
 
 	private static final String TRUNCATE_TABLE_FMT = //

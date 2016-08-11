@@ -54,16 +54,25 @@ public abstract class JdbcDialect {
 		INSERT_ALT_NAME( //
 			"       insert into " + //
 				"          cmf_alt_name (" + //
-				"              object_id, object_name " + //
+				"              object_id, new_name " + //
 				"          ) " + //
 				"   values (?, ?)" //
 		),
 
 		UPDATE_ALT_NAME( //
 			"       update cmf_alt_name " + //
-				"      set object_name = ? " + //
+				"      set new_name = ? " + //
 				"    where object_id = ? " + //
-				"      and object_name = ? " //
+				"      and new_name = ? " //
+		),
+
+		RESET_ALT_NAME( //
+			"       update cmf_alt_name n " + //
+				"      set n.new_name = ( " + //
+				"              select o.object_name " + //
+				"                from cmf_object o " + //
+				"               where o.object_id = n.object_id " + //
+				"          ) " //
 		),
 
 		INSERT_OBJECT_PARENTS( //
@@ -239,25 +248,28 @@ public abstract class JdbcDialect {
 		),
 
 		LOAD_OBJECTS( //
-			"       select * " + //
-				"     from cmf_object " + //
-				"    where object_type = ? " + //
-				" order by object_number" //
+			"       select o.*, n.new_name " + //
+				"     from cmf_object o, cmf_alt_name n" + //
+				"    where o.object_id = n.object_id " + //
+				"      and o.object_type = ? " + //
+				" order by o.object_number" //
 		),
 
 		LOAD_OBJECTS_HEAD( //
-			"       select * " + //
-				"     from cmf_object " + //
-				"    where object_type = ? " + //
-				"      and batch_head = true " + //
-				" order by object_number" //
+			"       select o.*, n.new_name " + //
+				"     from cmf_object o, cmf_alt_name n" + //
+				"    where o.object_id = n.object_id " + //
+				"      and o.object_type = ? " + //
+				"      and o.batch_head = true " + //
+				" order by o.object_number" //
 		),
 
 		LOAD_OBJECTS_BATCHED( //
-			"       select * " + //
-				"     from cmf_object " + //
-				"    where object_type = ? " + //
-				" order by batch_id, object_number" //
+			"       select o.*, n.new_name " + //
+				"     from cmf_object o, cmf_alt_name n" + //
+				"    where o.object_id = n.object_id " + //
+				"      and o.object_type = ? " + //
+				" order by o.batch_id, o.object_number" //
 		),
 
 		LOAD_OBJECTS_BY_ID( //
@@ -321,7 +333,7 @@ public abstract class JdbcDialect {
 				"    where o.object_id = t.object_id " + //
 				"      and o.object_id = n.object_id " + //
 				"      and t.parent_id = ? " + //
-				"      and n.alternate_name = ? " + //
+				"      and n.new_name = ? " + //
 				" order by o.object_number, o.object_id " //
 		),
 

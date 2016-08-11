@@ -17,27 +17,30 @@ public class JdbcDialectH2 extends JdbcDialect {
 	};
 
 	private static final String LOAD_OBJECTS_BY_ID = //
-		"       select o.* " + //
+		"       select o.*, n.new_name " + //
 			"     from cmf_object o, table(x varchar=?) t " + //
-			"    where o.object_type = ? " + //
+			"    where o.object_id = n.object_id " + //
 			"      and o.object_id = t.x " + //
+			"      and o.object_type = ? " + //
 			" order by o.object_number" //
 	;
 
 	private static final String LOAD_OBJECTS_BY_ID_HEAD = //
-		"       select o.* " + //
-			"     from cmf_object o, table(x varchar=?) t " + //
-			"    where o.object_type = ? " + //
+		"       select o.*, n.new_name " + //
+			"     from cmf_object o, cmf_alt_name n, table(x varchar=?) t " + //
+			"    where o.object_id = n.object_id " + //
 			"      and o.object_id = t.x " + //
 			"      and o.batch_head = true " + //
+			"      and o.object_type = ? " + //
 			" order by o.object_number" //
 	;
 
 	private static final String LOAD_OBJECTS_BY_ID_BATCHED = //
-		"       select o.* " + //
-			"     from cmf_object o, table(x varchar=?) t " + //
-			"    where o.object_type = ? " + //
+		"       select o.*, n.new_name " + //
+			"     from cmf_object o, cmf_alt_name n, table(x varchar=?) t " + //
+			"    where o.object_id = n.object_id " + //
 			"      and o.object_id = t.x " + //
+			"      and o.object_type = ? " + //
 			" order by o.batch_id, o.object_number" //
 	;
 

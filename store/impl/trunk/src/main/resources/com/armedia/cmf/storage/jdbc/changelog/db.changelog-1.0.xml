@@ -129,7 +129,7 @@
 			<column name="object_id" type="varchar(96)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="object_name" type="varchar(2048)" remarks="The object's alternate name">
+			<column name="new_name" type="varchar(2048)" remarks="The object's alternate name">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -139,29 +139,29 @@
 			referencedTableName="cmf_object" referencedColumnNames="object_id"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 		<createIndex tableName="cmf_alt_name" indexName="idx_cmf_alt_name_name" unique="false">
-			<column name="object_name" />
+			<column name="new_name" />
 			<column name="object_id" />
 		</createIndex>
 
 		<!-- This view will let us figure out any name collisions we may be experiencing here -->
 		<createView viewName="cmf_name_collision">
-			   select sq.parent_id, co.object_id, cn.object_name, co.object_number
+			   select sq.parent_id, co.object_id, cn.new_name, co.object_number
 			     from cmf_object co, cmf_object_tree ct, cmf_alt_name cn, (
-							select t.parent_id, n.object_name, count(*)
+							select t.parent_id, n.new_name, count(*)
 							  from cmf_object_tree t, cmf_object o, cmf_object p, cmf_alt_name n
 							 where t.object_id = o.object_id
 							   and t.object_id = n.object_id
 							   and t.parent_id = p.object_id
 							   and p.batch_head = true
 							   and o.batch_head = true
-						  group by t.parent_id, n.object_name
+						  group by t.parent_id, n.new_name
 							having count(*) > 1
 					  ) sq
 				where co.object_id = ct.object_id
 				  and ct.parent_id = sq.parent_id
 				  and co.object_id = cn.object_id
-				  and cn.object_name = sq.object_name
- 			 order by sq.parent_id, cn.object_name, co.object_number
+				  and cn.new_name = sq.new_name
+ 			 order by sq.parent_id, cn.new_name, co.object_number
  		</createView>
 
 		<!-- The attribute descriptor table -->
