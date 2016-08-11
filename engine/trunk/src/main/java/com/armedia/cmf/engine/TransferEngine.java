@@ -210,4 +210,8 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 			}
 		}
 	}
+
+	public boolean isSupportsDuplicateNames(CmfType type) {
+		return false;
+	}
 }

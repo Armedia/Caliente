@@ -34,6 +34,7 @@ import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfNameFixer;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectCounter;
 import com.armedia.cmf.storage.CmfObjectHandler;
@@ -622,6 +623,18 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 				listenerDelegator.objectTypeImportStarted(type, total);
 
+				final CmfNameFixer<V> nameFixer = getNameFixer(type);
+				if (nameFixer != null) {
+					this.log
+						.info(String.format("Performing object name repairs for %d %s objects", total, type.name()));
+					objectStore.fixObjectNames(getTranslator(), type, nameFixer);
+				}
+
+				if (!isSupportsDuplicateNames(type)) {
+					// TODO: Fix naming collisions for the given type...this is tougher than
+					// it sounds...
+				}
+
 				// Start the workers
 				futures.clear();
 				// If we don't support parallelization at any level, then we simply use a
@@ -901,6 +914,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	protected boolean abortImport(CmfType type, int errors) {
 		return false;
+	}
+
+	protected CmfNameFixer<V> getNameFixer(CmfType type) {
+		return null;
 	}
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine(String targetName) {
