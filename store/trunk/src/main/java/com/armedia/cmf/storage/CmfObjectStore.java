@@ -449,6 +449,48 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
 		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException;
 
+	public final <V> void fixObjectNames(CmfAttributeTranslator<V> translator, final CmfType type,
+		CmfNameFixer<V> nameFixer) throws CmfStorageException {
+		fixObjectNames(translator, type, null, nameFixer);
+	}
+
+	public final <V> void fixObjectNames(CmfAttributeTranslator<V> translator, CmfType type, CmfNameFixer<V> nameFixer,
+		String... ids) throws CmfStorageException {
+		fixObjectNames(translator, type, (ids != null ? Arrays.asList(ids) : null), nameFixer);
+	}
+
+	public final <V> void fixObjectNames(CmfAttributeTranslator<V> translator, final CmfType type,
+		Collection<String> ids, CmfNameFixer<V> nameFixer) throws CmfStorageException {
+		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
+		if (nameFixer == null) { throw new IllegalArgumentException(
+			"Must provide name fixer to fix the object names"); }
+		O operation = beginConcurrentInvocation();
+		boolean ok = false;
+		try {
+			final boolean tx = operation.begin();
+			try {
+				fixObjectNames(operation, translator, type, ids, nameFixer);
+				operation.commit();
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(
+							String.format("Failed to rollback the transaction for loading %s : %s", type, ids), e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract <V> void fixObjectNames(O operation, CmfAttributeTranslator<V> translator, final CmfType type,
+		Collection<String> ids, CmfNameFixer<V> nameFixer) throws CmfStorageException;
+
 	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
