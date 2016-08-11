@@ -150,4 +150,9 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 		return null;
 	}
 
+	@Override
+	protected <V> String getFirstUniqueName(LocalStoreOperation operation, CmfObject<V> object, String... names)
+		throws CmfStorageException {
+		return null;
+	}
 }
