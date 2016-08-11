@@ -19,23 +19,32 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	};
 
 	private static final String LOAD_OBJECTS_BY_ID = //
-	"       select * " + //
-		"     from cmf_object " + //
-		"    where object_type = ? " + //
-		"      and object_id = any ( ? ) " + //
-		" order by object_number" //
-		;
+		"       select * " + //
+			"     from cmf_object " + //
+			"    where object_type = ? " + //
+			"      and object_id = any ( ? ) " + //
+			" order by object_number" //
+	;
+
+	private static final String LOAD_OBJECTS_BY_ID_HEAD = //
+		"       select * " + //
+			"     from cmf_object " + //
+			"    where object_type = ? " + //
+			"      and object_id = any ( ? ) " + //
+			"      and batch_head = true " + //
+			" order by object_number" //
+	;
 
 	private static final String LOAD_OBJECTS_BY_ID_BATCHED = //
-	"       select * " + //
-		"     from cmf_object " + //
-		"    where object_type = ? " + //
-		"      and object_id = any ( ? ) " + //
-		" order by batch_id, object_number" //
-		;
+		"       select * " + //
+			"     from cmf_object " + //
+			"    where object_type = ? " + //
+			"      and object_id = any ( ? ) " + //
+			" order by batch_id, object_number" //
+	;
 
 	private static final String TRUNCATE_TABLE_FMT = //
-	"     truncate table %s cascade " //
+		"     truncate table %s cascade " //
 	;
 
 	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
@@ -54,6 +63,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_BATCHED:
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_BATCHED;
+			case LOAD_OBJECTS_BY_ID_HEAD:
+				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_HEAD;
 			case TRUNCATE_TABLE_FMT:
 				return JdbcDialectPostgreSQL.TRUNCATE_TABLE_FMT;
 			default:

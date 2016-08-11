@@ -59,6 +59,13 @@ public abstract class JdbcDialect {
 				"   values (?, ?)" //
 		),
 
+		UPDATE_ALT_NAME( //
+			"       update cmf_alt_name " + //
+				"      set object_name = ? " + //
+				"    where object_id = ? " + //
+				"      and object_name = ? " //
+		),
+
 		INSERT_OBJECT_PARENTS( //
 			"       insert into " + //
 				"          cmf_object_tree (" + //
@@ -238,6 +245,14 @@ public abstract class JdbcDialect {
 				" order by object_number" //
 		),
 
+		LOAD_OBJECTS_HEAD( //
+			"       select * " + //
+				"     from cmf_object " + //
+				"    where object_type = ? " + //
+				"      and batch_head = true " + //
+				" order by object_number" //
+		),
+
 		LOAD_OBJECTS_BATCHED( //
 			"       select * " + //
 				"     from cmf_object " + //
@@ -246,6 +261,9 @@ public abstract class JdbcDialect {
 		),
 
 		LOAD_OBJECTS_BY_ID( //
+			null),
+
+		LOAD_OBJECTS_BY_ID_HEAD( //
 			null),
 
 		LOAD_OBJECTS_BY_ID_BATCHED( //

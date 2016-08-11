@@ -17,27 +17,36 @@ public class JdbcDialectH2 extends JdbcDialect {
 	};
 
 	private static final String LOAD_OBJECTS_BY_ID = //
-	"       select o.* " + //
-		"     from cmf_object o, table(x varchar=?) t " + //
-		"    where o.object_type = ? " + //
-		"      and o.object_id = t.x " + //
-		" order by o.object_number" //
-		;
+		"       select o.* " + //
+			"     from cmf_object o, table(x varchar=?) t " + //
+			"    where o.object_type = ? " + //
+			"      and o.object_id = t.x " + //
+			" order by o.object_number" //
+	;
+
+	private static final String LOAD_OBJECTS_BY_ID_HEAD = //
+		"       select o.* " + //
+			"     from cmf_object o, table(x varchar=?) t " + //
+			"    where o.object_type = ? " + //
+			"      and o.object_id = t.x " + //
+			"      and o.batch_head = true " + //
+			" order by o.object_number" //
+	;
 
 	private static final String LOAD_OBJECTS_BY_ID_BATCHED = //
-	"       select o.* " + //
-		"     from cmf_object o, table(x varchar=?) t " + //
-		"    where o.object_type = ? " + //
-		"      and o.object_id = t.x " + //
-		" order by o.batch_id, o.object_number" //
-		;
+		"       select o.* " + //
+			"     from cmf_object o, table(x varchar=?) t " + //
+			"    where o.object_type = ? " + //
+			"      and o.object_id = t.x " + //
+			" order by o.batch_id, o.object_number" //
+	;
 
 	private static final String ENABLE_REFERENTIAL_INTEGRITY = //
-	"          set REFERENTIAL_INTEGRITY true" //
+		"          set REFERENTIAL_INTEGRITY true" //
 	;
 
 	private static final String DISABLE_REFERENTIAL_INTEGRITY = //
-	"          set REFERENTIAL_INTEGRITY false" //
+		"          set REFERENTIAL_INTEGRITY false" //
 	;
 
 	public JdbcDialectH2(DatabaseMetaData md) throws SQLException {
@@ -56,6 +65,8 @@ public class JdbcDialectH2 extends JdbcDialect {
 				return JdbcDialectH2.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_BATCHED:
 				return JdbcDialectH2.LOAD_OBJECTS_BY_ID_BATCHED;
+			case LOAD_OBJECTS_BY_ID_HEAD:
+				return JdbcDialectH2.LOAD_OBJECTS_BY_ID_HEAD;
 			case ENABLE_REFERENTIAL_INTEGRITY:
 				return JdbcDialectH2.ENABLE_REFERENTIAL_INTEGRITY;
 			case DISABLE_REFERENTIAL_INTEGRITY:
