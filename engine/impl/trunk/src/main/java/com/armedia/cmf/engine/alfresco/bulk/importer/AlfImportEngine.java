@@ -12,12 +12,41 @@ import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
+import com.armedia.cmf.storage.CmfNameFixer;
+import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class AlfImportEngine extends
 	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory> {
+
+	private static final CmfNameFixer<CmfValue> NAME_FIXER = new CmfNameFixer<CmfValue>() {
+
+		private final String forbidden = "[*\\><?/:]";
+
+		@Override
+		public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+			String newName = dataObject.getName();
+
+			// File names may not contain any of the following characters: "*\><?/:|
+			newName = newName.replaceAll(this.forbidden, "_");
+
+			// File names may not end in one or more dots (.)
+			newName = newName.replaceAll("\\.$", "_");
+
+			// File names may not end in one or more spaces
+			newName = newName.replaceAll("\\s$", "_");
+
+			return newName;
+		}
+
+		@Override
+		public boolean handleException(Exception e) {
+			return false;
+		}
+	};
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -186,6 +215,18 @@ public class AlfImportEngine extends
 	@Override
 	protected AlfImportDelegateFactory newDelegateFactory(AlfRoot root, CfgTools cfg) throws Exception {
 		return new AlfImportDelegateFactory(this, cfg);
+	}
+
+	@Override
+	protected CmfNameFixer<CmfValue> getNameFixer(CmfType type) {
+		switch (type) {
+			case DOCUMENT:
+			case FOLDER:
+				return AlfImportEngine.NAME_FIXER;
+			default:
+				break;
+		}
+		return super.getNameFixer(type);
 	}
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
