@@ -593,6 +593,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			}
 
+			// Reset all alternate names, to ensure we're not using already-processed names
+			objectStore.resetAltNames();
+
 			final CmfAttributeTranslator<V> translator = getTranslator();
 			for (final CmfType type : CmfType.values()) {
 				final Integer total = containedTypes.get(type);
