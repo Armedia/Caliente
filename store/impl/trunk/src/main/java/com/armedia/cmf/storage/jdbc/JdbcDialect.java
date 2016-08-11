@@ -51,6 +51,14 @@ public abstract class JdbcDialect {
 				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
+		INSERT_ALT_NAME( //
+			"       insert into " + //
+				"          cmf_alt_name (" + //
+				"              object_id, object_name " + //
+				"          ) " + //
+				"   values (?, ?)" //
+		),
+
 		INSERT_OBJECT_PARENTS( //
 			"       insert into " + //
 				"          cmf_object_tree (" + //
@@ -289,13 +297,14 @@ public abstract class JdbcDialect {
 				" order by name" //
 		),
 
-		GET_NAME_COLLISIONS( //
+		CHECK_FOR_NAME_COLLISIONS( //
 			"       select o.object_number, o.object_id " + //
-				"     from cmf_object o, cmf_object_tree t " + //
+				"     from cmf_object o, cmf_object_tree t, cmf_alt_name n " + //
 				"    where o.object_id = t.object_id " + //
+				"      and o.object_id = n.object_id " + //
 				"      and t.parent_id = ? " + //
-				"      and o.object_name = ? " + //
-				" order by o.object_number " //
+				"      and n.alternate_name = ? " + //
+				" order by o.object_number, o.object_id " //
 		),
 
 		DISABLE_REFERENTIAL_INTEGRITY(//

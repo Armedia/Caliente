@@ -268,6 +268,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				this.dialect.getObjectNumberHandler(), objectId, object.getName(), object.getSearchKey(),
 				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
 				object.getBatchId(), object.isBatchHead(), object.getProductName(), object.getProductVersion());
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_ALT_NAME), JdbcTools.HANDLER_NULL, objectId,
+				object.getName());
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
 				parentParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
@@ -1119,24 +1121,46 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final String objectId = JdbcTools.composeDatabaseId(object);
 
 		PreparedStatement parentPS = null;
-
+		String winner = null;
 		try {
-			parentPS = c.prepareStatement(translateQuery(JdbcDialect.Query.GET_NAME_COLLISIONS));
-			for (CmfObjectRef r : object.getParentReferences()) {
+			parentPS = c.prepareStatement(translateQuery(JdbcDialect.Query.CHECK_FOR_NAME_COLLISIONS));
+			nextName: for (String tentativeName : names) {
 				parentPS.clearParameters();
-				parentPS.setString(1, JdbcTools.composeDatabaseId(r));
-				for (String tentativeName : names) {
-					parentPS.setString(2, tentativeName);
+				parentPS.setString(2, tentativeName);
+
+				// Check to see if this tentative name is unique within each parent. Uniqueness
+				// is a "funny" thing: a name is unique if and only if the object ID for the lowest
+				// object number for a given parent, belongs to the object being checked against,
+				// for every parent that this test is applied to
+				winner = tentativeName;
+				nextParent: for (CmfObjectRef r : object.getParentReferences()) {
+					// Set the parent
+					parentPS.setString(1, JdbcTools.composeDatabaseId(r));
 					ResultSet rs = parentPS.executeQuery();
 					try {
+						// If there were no hits, then we try the next parent right away!
+						if (!rs.next()) {
+							continue nextParent;
+						}
 
+						// There's a hit - is it this same object? If it's not, then it means
+						// that another object has priority over this name, and so we must
+						// try again.
+						String otherId = rs.getString("object_id");
+						if (rs.wasNull()) {
+							continue;
+						}
+						if (Tools.equals(otherId, objectId)) {
+							// Ok so we check out on this parent...
+							continue nextParent;
+						}
+						continue nextName;
 					} finally {
 						DbUtils.closeQuietly(rs);
 					}
-
 				}
 			}
-			return null;
+			return winner;
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("Failed to perform the name collision checks for %s [%s](%s)",
 				object.getType(), object.getLabel(), object.getId()), e);

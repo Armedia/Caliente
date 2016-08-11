@@ -17,9 +17,9 @@ class JdbcTools {
 	private JdbcTools() {
 	}
 
-	static final ResultSetHandler<Object> HANDLER_NULL = new ResultSetHandler<Object>() {
+	static final ResultSetHandler<Void> HANDLER_NULL = new ResultSetHandler<Void>() {
 		@Override
-		public Object handle(ResultSet rs) throws SQLException {
+		public Void handle(ResultSet rs) throws SQLException {
 			return null;
 		}
 	};
