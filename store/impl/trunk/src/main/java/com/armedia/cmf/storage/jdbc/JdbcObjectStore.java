@@ -655,8 +655,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							}
 						} catch (SQLException e) {
 							if (!nameFixer.handleException(e)) { throw new CmfStorageException(
-								"Exception raised while loading objects - ObjectHandler did not handle the exception",
-								e); }
+								"Exception raised while loading objects - NameFixer did not handle the exception", e); }
 							continue;
 						}
 
