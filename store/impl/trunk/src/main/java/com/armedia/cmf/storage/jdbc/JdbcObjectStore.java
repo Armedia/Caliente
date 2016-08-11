@@ -984,7 +984,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			"Must provide a ResultSet to load the structure from"); }
 		CmfType type = CmfType.decodeString(objectRS.getString("object_type"));
 		String id = objectRS.getString("object_id");
-		String name = objectRS.getString("name");
+		String name = objectRS.getString("object_name");
 		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
 		if (m.matches()) {
 			id = m.group(1);
