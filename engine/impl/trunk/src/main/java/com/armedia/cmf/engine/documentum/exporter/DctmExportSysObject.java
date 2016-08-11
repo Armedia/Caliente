@@ -540,10 +540,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected Collection<CmfObjectRef<IDfValue>> calculateParentIds(T sysObject) throws Exception {
-		List<CmfObjectRef<IDfValue>> ret = new ArrayList<CmfObjectRef<IDfValue>>();
+	protected Collection<CmfObjectRef> calculateParentIds(T sysObject) throws Exception {
+		List<CmfObjectRef> ret = new ArrayList<CmfObjectRef>();
 		for (IDfValue v : DfValueFactory.getAllRepeatingValues(DctmAttributes.I_FOLDER_ID, sysObject)) {
-			ret.add(new CmfObjectRef<IDfValue>(CmfType.FOLDER, v));
+			ret.add(new CmfObjectRef(CmfType.FOLDER, v.asId().getId()));
 		}
 		return ret;
 	}
