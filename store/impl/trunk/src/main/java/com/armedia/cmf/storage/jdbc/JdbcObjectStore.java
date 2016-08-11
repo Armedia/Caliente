@@ -268,8 +268,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				this.dialect.getObjectNumberHandler(), objectId, object.getName(), object.getSearchKey(),
 				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
 				object.getBatchId(), object.isBatchHead(), object.getProductName(), object.getProductVersion());
-			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_ALT_NAME), JdbcTools.HANDLER_NULL, objectId,
-				object.getName());
+			if (object.isBatchHead()) {
+				// Small optimization, to accelerate queries
+				qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_ALT_NAME), JdbcTools.HANDLER_NULL, objectId,
+					object.getName());
+			}
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
 				parentParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
