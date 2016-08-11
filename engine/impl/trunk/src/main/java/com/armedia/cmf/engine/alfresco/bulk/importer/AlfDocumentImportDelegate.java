@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.SchemaAttribute;
-import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -144,14 +143,9 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 
 	private static final Pattern SUFFIX = Pattern.compile("^.*(\\.v\\d+(?:\\.\\d+)?)$");
 
-	private final boolean head;
-
 	public AlfDocumentImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(factory, storedObject);
-		CmfAttribute<CmfValue> isLatestVersionAtt = storedObject.getAttribute(IntermediateAttribute.IS_LATEST_VERSION);
-		this.head = ((isLatestVersionAtt != null) && isLatestVersionAtt.hasValues()
-			&& isLatestVersionAtt.getValue().asBoolean());
 	}
 
 	protected AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
