@@ -58,7 +58,7 @@
 			<column name="object_subtype" type="varchar(64)" remarks="The exact type of CMS object">
 				<constraints nullable="false" />
 			</column>
-			<column name="object_name" type="text" remarks="The object's name">
+			<column name="object_name" type="varchar(2048)" remarks="The object's name">
 				<constraints nullable="false" />
 			</column>
 			<column name="search_key" type="varchar(1024)" remarks="The object's Search Key">
@@ -122,6 +122,25 @@
 		<createIndex tableName="cmf_object_tree" indexName="idx_cmf_object_tree_number" unique="true">
 			<column name="object_id" />
 			<column name="parent_pos" />
+		</createIndex>
+
+		<!-- The objects alternate name table -->
+		<createTable tableName="cmf_alt_name" remarks="The CMS alternate names table">
+			<column name="object_id" type="varchar(96)" remarks="The object's ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="alternate_name" type="varchar(2048)" remarks="The object's alternate name">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_alt_name" columnNames="object_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_alt_name_object"
+			baseTableName="cmf_alt_name" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="cmf_alt_name" indexName="idx_cmf_alt_name_name" unique="false">
+			<column name="alternate_name" />
+			<column name="object_id" />
 		</createIndex>
 
 		<!-- This view will let us figure out any name collisions we may be experiencing here -->
