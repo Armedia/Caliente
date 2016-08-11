@@ -149,11 +149,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			// First, set up the parents
 			parentData[0] = objectId;
 			int i = 0;
-			CmfValueCodec<V> parentCodec = translator.getCodec(CmfDataType.ID);
-			for (CmfObjectRef<V> parent : object.getParentIds()) {
+			for (CmfObjectRef parent : object.getParentReferences()) {
 				parentData[1] = i;
-				CmfValue parentId = parentCodec.encodeValue(parent.getId());
-				parentData[2] = JdbcTools.composeDatabaseId(parent.getType(), parentId.asString());
+				parentData[2] = JdbcTools.composeDatabaseId(parent);
 				parentParameters.add(parentData.clone());
 				i++;
 			}
@@ -834,15 +832,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		String productVersion = objectRS.getString("product_version");
 
 		// Load the parent IDs
-		CmfValueCodec<V> codec = translator.getCodec(CmfDataType.ID);
-		List<CmfObjectRef<V>> parentIds = new ArrayList<CmfObjectRef<V>>();
+		List<CmfObjectRef> parentIds = new ArrayList<CmfObjectRef>();
 		while (parentsRS.next()) {
 			String parentId = parentsRS.getString("parent_id");
 			if (parentsRS.wasNull()) {
 				continue;
 			}
-			CmfObjectRef<String> ref = JdbcTools.decodeDatabaseId(parentId);
-			parentIds.add(new CmfObjectRef<V>(ref.getType(), codec.decodeValue(new CmfValue(ref.getId()))));
+			parentIds.add(JdbcTools.decodeDatabaseId(parentId));
 		}
 		if (parentIds.isEmpty()) {
 			parentIds = Collections.emptyList();
@@ -1113,6 +1109,39 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} finally {
 			DbUtils.closeQuietly(pPS);
 			DbUtils.closeQuietly(cPS);
+		}
+	}
+
+	@Override
+	public final <V> String getFirstUniqueName(JdbcOperation operation, CmfObject<V> object, String... names)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final String objectId = JdbcTools.composeDatabaseId(object);
+
+		PreparedStatement parentPS = null;
+
+		try {
+			parentPS = c.prepareStatement(translateQuery(JdbcDialect.Query.GET_NAME_COLLISIONS));
+			for (CmfObjectRef r : object.getParentReferences()) {
+				parentPS.clearParameters();
+				parentPS.setString(1, JdbcTools.composeDatabaseId(r));
+				for (String tentativeName : names) {
+					parentPS.setString(2, tentativeName);
+					ResultSet rs = parentPS.executeQuery();
+					try {
+
+					} finally {
+						DbUtils.closeQuietly(rs);
+					}
+
+				}
+			}
+			return null;
+		} catch (SQLException e) {
+			throw new CmfStorageException(String.format("Failed to perform the name collision checks for %s [%s](%s)",
+				object.getType(), object.getLabel(), object.getId()), e);
+		} finally {
+			DbUtils.closeQuietly(parentPS);
 		}
 	}
 

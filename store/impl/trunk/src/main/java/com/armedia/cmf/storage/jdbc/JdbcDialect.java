@@ -289,6 +289,15 @@ public abstract class JdbcDialect {
 				" order by name" //
 		),
 
+		GET_NAME_COLLISIONS( //
+			"       select o.object_number, o.object_id " + //
+				"     from cmf_object o, cmf_object_tree t " + //
+				"    where o.object_id = t.object_id " + //
+				"      and t.parent_id = ? " + //
+				"      and o.object_name = ? " + //
+				" order by o.object_number " //
+		),
+
 		DISABLE_REFERENTIAL_INTEGRITY(//
 			null //
 		),

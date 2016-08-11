@@ -56,11 +56,15 @@ class JdbcTools {
 		return String.format("{%02x-%s}", type.ordinal(), id);
 	}
 
+	static String composeDatabaseId(CmfObjectRef objectRef) {
+		return JdbcTools.composeDatabaseId(objectRef.getType(), objectRef.getId());
+	}
+
 	static String composeDatabaseId(CmfObject<?> obj) {
 		return JdbcTools.composeDatabaseId(obj.getType(), obj.getId());
 	}
 
-	static CmfObjectRef<String> decodeDatabaseId(String id) {
+	static CmfObjectRef decodeDatabaseId(String id) {
 		if (id == null) { throw new IllegalArgumentException("Must provide an ID to parse"); }
 		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
 		if (!m.matches()) { throw new IllegalArgumentException(
@@ -72,6 +76,6 @@ class JdbcTools {
 		} catch (Exception e) {
 			throw new IllegalArgumentException(String.format("The object type [%s] is not a valid object type", id), e);
 		}
-		return new CmfObjectRef<String>(type, m.group(2));
+		return new CmfObjectRef(type, m.group(2));
 	}
 }
