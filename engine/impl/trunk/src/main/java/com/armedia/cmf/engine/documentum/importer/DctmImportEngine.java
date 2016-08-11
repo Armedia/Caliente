@@ -121,6 +121,17 @@ public class DctmImportEngine extends
 		return super.abortImport(type, errors);
 	}
 
+	@Override
+	public boolean isSupportsDuplicateNames(CmfType type) {
+		switch (type) {
+			case DOCUMENT:
+			case FOLDER:
+				return true;
+			default:
+				return super.isSupportsDuplicateNames(type);
+		}
+	}
+
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(DctmCommon.TARGET_NAME);
 	}
