@@ -471,7 +471,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			final boolean tx = operation.begin();
 			try {
 				fixObjectNames(operation, translator, type, ids, nameFixer);
-				operation.commit();
+				if (tx) {
+					operation.commit();
+				}
 				ok = true;
 			} finally {
 				if (tx && !ok) {
@@ -655,6 +657,35 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected final CmfAttributeMapper getAttributeMapper(O operation) {
 		return new Mapper(operation);
 	}
+
+	public final void resetAltNames() throws CmfStorageException {
+		O operation = beginExclusiveInvocation();
+		try {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				resetAltNames(operation);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					if (tx && !ok) {
+						try {
+							operation.rollback();
+						} catch (CmfStorageException e) {
+							this.log.warn("Failed to rollback the transaction for resetting the alternate names", e);
+						}
+					}
+				}
+			}
+		} finally {
+			endExclusiveInvocation(operation);
+		}
+	}
+
+	protected abstract void resetAltNames(O operation) throws CmfStorageException;
 
 	public final int clearAttributeMappings() throws CmfStorageException {
 		O operation = beginExclusiveInvocation();
