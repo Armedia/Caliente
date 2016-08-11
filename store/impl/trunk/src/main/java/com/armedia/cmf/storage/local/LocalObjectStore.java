@@ -12,6 +12,7 @@ import java.util.Set;
 
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
+import com.armedia.cmf.storage.CmfNameFixer;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfObjectStore;
@@ -154,5 +155,10 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	protected <V> String getFirstUniqueName(LocalStoreOperation operation, CmfObject<V> object, String... names)
 		throws CmfStorageException {
 		return null;
+	}
+
+	@Override
+	protected <V> void fixObjectNames(LocalStoreOperation operation, CmfAttributeTranslator<V> translator, CmfType type,
+		Collection<String> ids, CmfNameFixer<V> nameFixer) throws CmfStorageException {
 	}
 }
