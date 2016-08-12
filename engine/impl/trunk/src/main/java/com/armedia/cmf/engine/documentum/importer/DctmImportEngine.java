@@ -72,7 +72,7 @@ public class DctmImportEngine extends
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
 	public DctmImportEngine() {
-		super(new DctmCrypto());
+		super(new DctmCrypto(), true);
 	}
 
 	@Override
@@ -119,17 +119,6 @@ public class DctmImportEngine extends
 			return (errors > 0);
 		}
 		return super.abortImport(type, errors);
-	}
-
-	@Override
-	public boolean isSupportsDuplicateNames(CmfType type) {
-		switch (type) {
-			case DOCUMENT:
-			case FOLDER:
-				return true;
-			default:
-				return super.isSupportsDuplicateNames(type);
-		}
 	}
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {

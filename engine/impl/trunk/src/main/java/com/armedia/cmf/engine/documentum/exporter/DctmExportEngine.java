@@ -22,7 +22,6 @@ import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -38,7 +37,7 @@ public class DctmExportEngine extends
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
 	public DctmExportEngine() {
-		super(new DctmCrypto());
+		super(new DctmCrypto(), true);
 	}
 
 	@Override
@@ -81,17 +80,6 @@ public class DctmExportEngine extends
 	@Override
 	protected IDfValue getValue(CmfDataType type, Object value) {
 		return DfValueFactory.newValue(type, value);
-	}
-
-	@Override
-	public boolean isSupportsDuplicateNames(CmfType type) {
-		switch (type) {
-			case DOCUMENT:
-			case FOLDER:
-				return true;
-			default:
-				return super.isSupportsDuplicateNames(type);
-		}
 	}
 
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
