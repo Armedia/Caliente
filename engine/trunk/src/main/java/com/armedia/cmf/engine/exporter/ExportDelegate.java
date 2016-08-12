@@ -38,7 +38,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.batchId = calculateBatchId(object);
 		this.batchHead = calculateBatchHead(object);
 		this.subType = calculateSubType(this.exportTarget.getType(), object);
-		if (factory.getEngine().isSupportsDuplicateNames()) {
+		if (factory.getEngine().isSupportsDuplicateFileNames()) {
 			// We only calculate parent IDs
 			this.parentIds = Tools.freezeList(new ArrayList<CmfObjectRef>(calculateParentIds(object)));
 		} else {

@@ -25,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.CmfCrypt;
@@ -43,6 +45,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
@@ -600,7 +603,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			// Reset all alternate names, to ensure we're not using already-processed names
 			output.info("Resetting object names to the source values...");
 			objectStore.resetAltNames();
-			CmfNameFixer<V> nameFixer = getNameFixer();
+			final CmfNameFixer<V> nameFixer = getNameFixer();
 			if (nameFixer != null) {
 				output.info("Fixing object names...");
 				final int fixes = objectStore.fixObjectNames(getTranslator(), getNameFixer());
@@ -609,10 +612,35 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				output.info("Object names will be kept as-is");
 			}
 
-			if (!isSupportsDuplicateNames()) {
-				// TODO: Handle deduplication globally as well, since we may have cross-type
-				// collisions
-
+			if (!isSupportsDuplicateFileNames()) {
+				// Handle deduplication globally as well, since we may have cross-type collisions
+				int pass = 0;
+				outer: for (;;) {
+					Collection<CmfObject<V>> collidingObjects = objectStore
+						.getObjectsWithFileNameCollisions(getTranslator());
+					if (collidingObjects.isEmpty()) {
+						break;
+					}
+					output.info(String.format("Resolving the next filename collision (%d total remaining, pass #%d)",
+						collidingObjects.size(), ++pass));
+					for (CmfObject<V> object : collidingObjects) {
+						String newName = object.getName();
+						String id = object.getId();
+						String ext = "";
+						if (object.getType() == CmfType.DOCUMENT) {
+							id = object.getBatchId();
+							ext = Tools.coalesce(FilenameUtils.getExtension(newName), ext);
+							if (!StringUtils.isEmpty(ext)) {
+								ext = String.format(".%s", ext);
+								newName = newName.substring(0, newName.length() - ext.length());
+							}
+						}
+						newName = String.format("%s_%s%s", newName, id, ext);
+						objectStore.renameObject(object, newName);
+						continue outer;
+					}
+					break outer;
+				}
 			}
 
 			final CmfAttributeTranslator<V> translator = getTranslator();

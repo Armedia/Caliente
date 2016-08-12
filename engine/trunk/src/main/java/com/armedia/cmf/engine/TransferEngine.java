@@ -112,7 +112,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	protected final CmfCrypt crypto;
 
-	private final boolean supportsDuplicateNames;
+	private final boolean supportsDuplicateFileNames;
 
 	public TransferEngine(CmfCrypt crypto) {
 		this(crypto, false);
@@ -120,7 +120,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	public TransferEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
 		this.crypto = crypto;
-		this.supportsDuplicateNames = supportsDuplicateNames;
+		this.supportsDuplicateFileNames = supportsDuplicateNames;
 	}
 
 	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
@@ -218,7 +218,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		}
 	}
 
-	public final boolean isSupportsDuplicateNames() {
-		return this.supportsDuplicateNames;
+	public final boolean isSupportsDuplicateFileNames() {
+		return this.supportsDuplicateFileNames;
 	}
 }
