@@ -46,6 +46,17 @@ public class AlfImportEngine extends
 		public boolean handleException(Exception e) {
 			return false;
 		}
+
+		@Override
+		public boolean supportsType(CmfType type) {
+			switch (type) {
+				case DOCUMENT:
+				case FOLDER:
+					return true;
+				default:
+					return false;
+			}
+		}
 	};
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
@@ -218,15 +229,8 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected CmfNameFixer<CmfValue> getNameFixer(CmfType type) {
-		switch (type) {
-			case DOCUMENT:
-			case FOLDER:
-				return AlfImportEngine.NAME_FIXER;
-			default:
-				break;
-		}
-		return super.getNameFixer(type);
+	protected CmfNameFixer<CmfValue> getNameFixer() {
+		return AlfImportEngine.NAME_FIXER;
 	}
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
