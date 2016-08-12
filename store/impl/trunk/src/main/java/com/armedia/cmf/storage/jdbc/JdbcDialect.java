@@ -288,6 +288,11 @@ public abstract class JdbcDialect {
 				" order by parent_pos " //
 		),
 
+		LOAD_NAME_COLLISIONS( //
+			"       select * " + //
+				"     from cmf_name_collision " //
+		),
+
 		LOAD_ATTRIBUTES( //
 			"       select * " + //
 				"     from cmf_attribute " + //

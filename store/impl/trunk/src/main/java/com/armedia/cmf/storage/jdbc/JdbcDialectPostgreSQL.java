@@ -39,7 +39,7 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 
 	private static final String LOAD_OBJECTS_BY_ID_BATCHED = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o " + //
+			"     from cmf_object o, cmf_alt_name n " + //
 			"    where o.object_id = n.object_id " + //
 			"      and o.object_type = ? " + //
 			"      and o.object_id = any ( ? ) " + //

@@ -14,8 +14,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,7 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.cmf.storage.CmfValueSerializer;
+import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 import com.armedia.cmf.storage.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
@@ -525,8 +528,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected <V> int fixObjectNames(final JdbcOperation operation, CmfAttributeTranslator<V> translator,
 		final CmfNameFixer<V> nameFixer) throws CmfStorageException {
-		final Connection connection = operation.getConnection();
-		final QueryRunner qr = JdbcTools.getQueryRunner();
 		final AtomicInteger result = new AtomicInteger(0);
 		for (CmfType type : CmfType.values()) {
 			if (!nameFixer.supportsType(type)) {
@@ -544,23 +545,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				public boolean handleObject(CmfObject<V> obj) throws CmfStorageException {
 					String newName = nameFixer.fixName(obj);
 					if ((newName != null) && !Tools.equals(newName, obj.getName())) {
-						// Update the name in the alt_names table
-						CmfObjectRef ref = new CmfObjectRef(obj);
-						int updateCount;
-						try {
-							updateCount = qr.update(connection, translateQuery(JdbcDialect.Query.UPDATE_ALT_NAME),
-								newName, JdbcTools.composeDatabaseId(ref), obj.getName());
-						} catch (SQLException e) {
-							throw new CmfStorageException(String.format(
-								"Failed to update the alternate name for %s [%s](%s): old = [%s] new = [%s]",
-								obj.getType(), obj.getLabel(), obj.getId(), obj.getName(), newName), e);
-						}
-						if (updateCount != 1) {
-							//
-							throw new CmfStorageException(String.format(
-								"Failed to update the name for %s [%s](%s) from [%s] to [%s] - updated %d records, expected exactly 1",
-								obj.getType(), obj.getLabel(), obj.getId(), obj.getName(), newName, updateCount));
-						}
+						renameObject(operation, obj, newName);
 						result.incrementAndGet();
 					}
 					return true;
@@ -579,6 +564,24 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		}
 		return result.get();
+	}
+
+	@Override
+	protected <V> void renameObject(final JdbcOperation operation, final CmfObject<V> object, final String newName)
+		throws CmfStorageException {
+		final Connection connection = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		final String objectId = JdbcTools.composeDatabaseId(object);
+		try {
+			int updateCount = qr.update(connection, translateQuery(JdbcDialect.Query.UPDATE_ALT_NAME), newName,
+				objectId, object.getName());
+			if (updateCount != 1) { throw new CmfStorageException(String.format(
+				"Failed to update the name for %s [%s](%s) from [%s] to [%s] - updated %d records, expected exactly 1",
+				object.getType(), object.getLabel(), object.getId(), object.getName(), newName, updateCount)); }
+		} catch (SQLException e) {
+			throw new CmfStorageException(String.format("Failed to change the name for %s [%s](%s) from [%s] to [%s]",
+				object.getType(), object.getLabel(), object.getId(), object.getName(), newName), e);
+		}
 	}
 
 	/**
@@ -1176,58 +1179,85 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	public final <V> String getFirstUniqueName(JdbcOperation operation, CmfObject<V> object, String... names)
-		throws CmfStorageException {
+	protected void resetAltNames(JdbcOperation operation) throws CmfStorageException {
 		final Connection c = operation.getConnection();
-		final String objectId = JdbcTools.composeDatabaseId(object);
-
-		PreparedStatement parentPS = null;
-		String winner = null;
+		QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
-			parentPS = c.prepareStatement(translateQuery(JdbcDialect.Query.CHECK_FOR_NAME_COLLISIONS));
-			nextName: for (String tentativeName : names) {
-				parentPS.clearParameters();
-				parentPS.setString(2, tentativeName);
+			int count = qr.update(c, translateQuery(JdbcDialect.Query.RESET_ALT_NAME));
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("Reset %d alternate name mappings", count));
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to reset the alt names table", e);
+		}
+	}
 
-				// Check to see if this tentative name is unique within each parent. Uniqueness
-				// is a "funny" thing: a name is unique if and only if the object ID for the lowest
-				// object number for a given parent, belongs to the object being checked against,
-				// for every parent that this test is applied to
-				winner = tentativeName;
-				nextParent: for (CmfObjectRef r : object.getParentReferences()) {
-					// Set the parent
-					parentPS.setString(1, JdbcTools.composeDatabaseId(r));
-					ResultSet rs = parentPS.executeQuery();
-					try {
-						// If there were no hits, then we try the next parent right away!
-						if (!rs.next()) {
-							continue nextParent;
-						}
+	@Override
+	protected <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(JdbcOperation operation,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException {
 
-						// There's a hit - is it this same object? If it's not, then it means
-						// that another object has priority over this name, and so we must
-						// try again.
-						String otherId = rs.getString("object_id");
+		final Connection c = operation.getConnection();
+		final Map<CmfType, Collection<String>> bucket = new EnumMap<CmfType, Collection<String>>(CmfType.class);
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		final AtomicInteger counter = new AtomicInteger(0);
+		try {
+			qr.query(c, translateQuery(JdbcDialect.Query.LOAD_NAME_COLLISIONS), new ResultSetHandler<Void>() {
+				@Override
+				public Void handle(ResultSet rs) throws SQLException {
+					while (rs.next()) {
+						final String objectId = rs.getString("object_id");
 						if (rs.wasNull()) {
 							continue;
 						}
-						if (Tools.equals(otherId, objectId)) {
-							// Ok so we check out on this parent...
-							continue nextParent;
+						CmfObjectRef ref = JdbcTools.decodeDatabaseId(objectId);
+						Collection<String> c = bucket.get(ref.getType());
+						if (c == null) {
+							c = new HashSet<String>();
+							bucket.put(ref.getType(), c);
 						}
-						continue nextName;
-					} finally {
-						DbUtils.closeQuietly(rs);
+						c.add(ref.getId());
+						counter.incrementAndGet();
 					}
+					return null;
 				}
-			}
-			return winner;
+			});
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to perform the name collision checks for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
-		} finally {
-			DbUtils.closeQuietly(parentPS);
+			throw new CmfStorageException("Failed to load the name collision records", e);
 		}
+
+		final List<CmfObject<V>> ret = new ArrayList<CmfObject<V>>(counter.get());
+		for (CmfType type : bucket.keySet()) {
+			Collection<String> ids = bucket.get(type);
+			loadObjects(operation, translator, type, ids, new DefaultCmfObjectHandler<V>() {
+				@Override
+				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
+					ret.add(dataObject);
+					return super.handleObject(dataObject);
+				}
+			}, false);
+		}
+
+		Collections.sort(ret, new Comparator<CmfObject<V>>() {
+			@Override
+			public int compare(CmfObject<V> a, CmfObject<V> b) {
+				if (a == b) { return 0; }
+				if (a == null) { return -1; }
+				if (b == null) { return 1; }
+
+				int aP = a.getParentReferences().size();
+				int bP = b.getParentReferences().size();
+				if (aP != bP) { return Tools.compare(aP, bP); }
+
+				long aN = a.getNumber();
+				long bN = b.getNumber();
+
+				// This is reverse-ordered, earliest object last
+				if (aN != bN) { return (Tools.compare(aN, bN) * -1); }
+				return 0;
+			}
+		});
+
+		return ret;
 	}
 
 	protected boolean disableReferentialIntegrity(JdbcOperation operation) throws CmfStorageException {
@@ -1268,19 +1298,5 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	protected String translateQuery(JdbcDialect.Query query) {
 		return this.dialect.translateQuery(query, true);
-	}
-
-	@Override
-	protected void resetAltNames(JdbcOperation operation) throws CmfStorageException {
-		final Connection c = operation.getConnection();
-		QueryRunner qr = JdbcTools.getQueryRunner();
-		try {
-			int count = qr.update(c, translateQuery(JdbcDialect.Query.RESET_ALT_NAME));
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Reset %d alternate name mappings", count));
-			}
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to reset the alt names table", e);
-		}
 	}
 }
