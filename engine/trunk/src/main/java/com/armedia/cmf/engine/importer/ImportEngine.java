@@ -594,7 +594,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			// Reset all alternate names, to ensure we're not using already-processed names
+			output.info("Resetting object names to the source values...");
 			objectStore.resetAltNames();
+			output.info("Fixing object names...");
+			final int fixes = objectStore.fixObjectNames(getTranslator(), getNameFixer());
+			output.info(String.format("Fixed the names of %d objects", fixes));
+			// TODO: Handle deduplication globally as well, since we may have cross-type collisions
 
 			final CmfAttributeTranslator<V> translator = getTranslator();
 			for (final CmfType type : CmfType.values()) {
@@ -625,18 +630,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					continue;
 				}
 				listenerDelegator.objectTypeImportStarted(type, total);
-
-				final CmfNameFixer<V> nameFixer = getNameFixer(type);
-				if (nameFixer != null) {
-					this.log
-						.info(String.format("Performing object name repairs for %d %s objects", total, type.name()));
-					objectStore.fixObjectNames(getTranslator(), type, nameFixer);
-				}
-
-				if (!isSupportsDuplicateNames(type)) {
-					// TODO: Fix naming collisions for the given type...this is tougher than
-					// it sounds...
-				}
 
 				// Start the workers
 				futures.clear();
@@ -919,7 +912,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		return false;
 	}
 
-	protected CmfNameFixer<V> getNameFixer(CmfType type) {
+	protected CmfNameFixer<V> getNameFixer() {
 		return null;
 	}
 
