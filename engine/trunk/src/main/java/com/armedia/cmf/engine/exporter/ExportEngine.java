@@ -147,6 +147,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		super(crypto);
 	}
 
+	protected ExportEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
+		super(crypto, supportsDuplicateNames);
+	}
+
 	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
 		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
 		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException {

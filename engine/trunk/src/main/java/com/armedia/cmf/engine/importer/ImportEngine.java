@@ -253,6 +253,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		super(crypto);
 	}
 
+	protected ImportEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
+		super(crypto, supportsDuplicateNames);
+	}
+
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
 
 	protected final CmfTypeMapper getTypeMapper(S session, CfgTools cfg) throws Exception {
@@ -605,7 +609,11 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				output.info("Object names will be kept as-is");
 			}
 
-			// TODO: Handle deduplication globally as well, since we may have cross-type collisions
+			if (!isSupportsDuplicateNames()) {
+				// TODO: Handle deduplication globally as well, since we may have cross-type
+				// collisions
+
+			}
 
 			final CmfAttributeTranslator<V> translator = getTranslator();
 			for (final CmfType type : CmfType.values()) {
