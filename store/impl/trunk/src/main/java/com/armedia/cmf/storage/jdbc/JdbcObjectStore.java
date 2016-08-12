@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 
 import javax.sql.DataSource;
@@ -522,170 +523,62 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> void fixObjectNames(JdbcOperation operation, CmfAttributeTranslator<V> translator, final CmfType type,
-		Collection<String> ids, CmfNameFixer<V> nameFixer) throws CmfStorageException {
-
-		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
-		if ((ids != null) && ids.isEmpty()) { return; }
-
-		Connection connection = operation.getConnection();
-		try {
-			PreparedStatement objectPS = null;
-			PreparedStatement attributePS = null;
-			PreparedStatement attributeValuePS = null;
-			PreparedStatement propertyPS = null;
-			PreparedStatement propertyValuePS = null;
-			PreparedStatement parentsPS = null;
-			try {
-				boolean limitByIDs = false;
-				final String query;
-				if (ids == null) {
-					query = translateQuery(JdbcDialect.Query.LOAD_OBJECTS_HEAD);
-				} else {
-					limitByIDs = true;
-					query = translateQuery(JdbcDialect.Query.LOAD_OBJECTS_BY_ID_HEAD);
-				}
-				objectPS = connection.prepareStatement(query);
-
-				attributePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTES));
-				attributeValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTE_VALUES));
-				propertyPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTIES));
-				propertyValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTY_VALUES));
-				parentsPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PARENT_IDS));
-
-				ResultSet objectRS = null;
-				ResultSet attributeRS = null;
-				ResultSet propertyRS = null;
-				ResultSet valueRS = null;
-				ResultSet parentsRS = null;
-
-				QueryRunner qr = JdbcTools.getQueryRunner();
-
-				if (!limitByIDs) {
-					objectPS.setString(1, type.name());
-				} else {
-					// Process the IDs
-					Object[] arr = ids.toArray();
-					for (int i = 0; i < arr.length; i++) {
-						arr[i] = JdbcTools.composeDatabaseId(type, arr[i].toString());
-					}
-					if (this.dialect.isSupportsArrays()) {
-						objectPS.setString(1, type.name());
-						objectPS.setArray(2, connection.createArrayOf("text", arr));
-					} else {
-						objectPS.setObject(1, arr);
-						objectPS.setString(2, type.name());
-					}
-				}
-				objectRS = objectPS.executeQuery();
-				try {
-					while (objectRS.next()) {
-						final CmfObject<V> obj;
-						try {
-							final int objNum = objectRS.getInt("object_number");
-
-							final String objId = objectRS.getString("object_id");
-							final String objLabel = objectRS.getString("object_label");
-
-							if (this.log.isInfoEnabled()) {
-								this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
-									objLabel, objId));
-							}
-
-							parentsPS.setString(1, objId);
-							parentsRS = parentsPS.executeQuery();
-
-							obj = loadObject(translator, objectRS, parentsRS);
-							if (this.log.isTraceEnabled()) {
-								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
-							} else if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("De-serialized %s object #%d [%s](%s)", type, objNum,
-									objLabel, objId));
-							}
-
-							attributePS.clearParameters();
-							attributePS.setString(1, objId);
-							attributeRS = attributePS.executeQuery();
-							try {
-								loadAttributes(translator, attributeRS, obj);
-							} finally {
-								DbUtils.closeQuietly(attributeRS);
-							}
-
-							attributeValuePS.clearParameters();
-							attributeValuePS.setString(1, objId);
-							for (CmfAttribute<V> att : obj.getAttributes()) {
-								// We need to re-encode, since that's the value that will be
-								// referenced in the DB
-								attributeValuePS.setString(2, translator.encodeAttributeName(type, att.getName()));
-								valueRS = attributeValuePS.executeQuery();
-								try {
-									loadValues(translator.getCodec(att.getType()),
-										CmfValueSerializer.get(att.getType()), valueRS, att);
-								} finally {
-									DbUtils.closeQuietly(valueRS);
-								}
-							}
-
-							propertyPS.clearParameters();
-							propertyPS.setString(1, objId);
-							propertyRS = propertyPS.executeQuery();
-							try {
-								loadProperties(translator, propertyRS, obj);
-							} finally {
-								DbUtils.closeQuietly(propertyRS);
-							}
-
-							propertyValuePS.clearParameters();
-							propertyValuePS.setString(1, objId);
-							for (CmfProperty<V> prop : obj.getProperties()) {
-								// We need to re-encode, since that's the value that will be
-								// referenced in the DB
-								propertyValuePS.setString(2, prop.getName());
-								valueRS = propertyValuePS.executeQuery();
-								try {
-									loadValues(translator.getCodec(prop.getType()),
-										CmfValueSerializer.get(prop.getType()), valueRS, prop);
-								} finally {
-									DbUtils.closeQuietly(valueRS);
-								}
-							}
-						} catch (SQLException e) {
-							if (!nameFixer.handleException(e)) { throw new CmfStorageException(
-								"Exception raised while loading objects - NameFixer did not handle the exception", e); }
-							continue;
-						}
-
-						String newName = nameFixer.fixName(obj);
-						if ((newName != null) && !Tools.equals(newName, obj.getName())) {
-							// Update the name in the alt_names table
-							CmfObjectRef ref = new CmfObjectRef(obj);
-							int updateCount = qr.update(connection, translateQuery(JdbcDialect.Query.UPDATE_ALT_NAME),
-								newName, JdbcTools.composeDatabaseId(ref), obj.getName());
-							if (updateCount != 1) {
-								//
-								throw new CmfStorageException(String.format(
-									"Failed to update the name for %s [%s](%s) from [%s] to [%s] - updated %d records, expected exactly 1",
-									obj.getType(), obj.getLabel(), obj.getId(), obj.getName(), newName, updateCount));
-							}
-						}
-					}
-				} finally {
-					DbUtils.closeQuietly(objectRS);
-					DbUtils.closeQuietly(parentsRS);
-				}
-			} finally {
-				DbUtils.closeQuietly(parentsPS);
-				DbUtils.closeQuietly(propertyValuePS);
-				DbUtils.closeQuietly(propertyPS);
-				DbUtils.closeQuietly(attributeValuePS);
-				DbUtils.closeQuietly(attributePS);
-				DbUtils.closeQuietly(objectPS);
+	protected <V> int fixObjectNames(final JdbcOperation operation, CmfAttributeTranslator<V> translator,
+		final CmfNameFixer<V> nameFixer) throws CmfStorageException {
+		final Connection connection = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		final AtomicInteger result = new AtomicInteger(0);
+		for (CmfType type : CmfType.values()) {
+			if (!nameFixer.supportsType(type)) {
+				continue;
 			}
-		} catch (SQLException e) {
-			throw new CmfStorageException(
-				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
+
+			loadObjects(operation, translator, type, null, new CmfObjectHandler<V>() {
+
+				@Override
+				public boolean newBatch(String batchId) throws CmfStorageException {
+					return true;
+				}
+
+				@Override
+				public boolean handleObject(CmfObject<V> obj) throws CmfStorageException {
+					String newName = nameFixer.fixName(obj);
+					if ((newName != null) && !Tools.equals(newName, obj.getName())) {
+						// Update the name in the alt_names table
+						CmfObjectRef ref = new CmfObjectRef(obj);
+						int updateCount;
+						try {
+							updateCount = qr.update(connection, translateQuery(JdbcDialect.Query.UPDATE_ALT_NAME),
+								newName, JdbcTools.composeDatabaseId(ref), obj.getName());
+						} catch (SQLException e) {
+							throw new CmfStorageException(String.format(
+								"Failed to update the alternate name for %s [%s](%s): old = [%s] new = [%s]",
+								obj.getType(), obj.getLabel(), obj.getId(), obj.getName(), newName), e);
+						}
+						if (updateCount != 1) {
+							//
+							throw new CmfStorageException(String.format(
+								"Failed to update the name for %s [%s](%s) from [%s] to [%s] - updated %d records, expected exactly 1",
+								obj.getType(), obj.getLabel(), obj.getId(), obj.getName(), newName, updateCount));
+						}
+						result.incrementAndGet();
+					}
+					return true;
+				}
+
+				@Override
+				public boolean handleException(Exception e) {
+					return false;
+				}
+
+				@Override
+				public boolean closeBatch(boolean ok) throws CmfStorageException {
+					return true;
+				}
+			}, false);
+
 		}
+		return result.get();
 	}
 
 	/**
