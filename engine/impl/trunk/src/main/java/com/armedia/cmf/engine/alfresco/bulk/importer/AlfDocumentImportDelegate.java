@@ -27,6 +27,7 @@ import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
+import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
@@ -197,7 +198,15 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		for (String s : this.cmfObject.getAttributeNames()) {
 			CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(s);
 
-			final CmfValueSerializer serializer = CmfValueSerializer.get(srcAtt.getType());
+			CmfValueSerializer serializer = CmfValueSerializer.get(srcAtt.getType());
+			switch (srcAtt.getType()) {
+				case DATETIME:
+					break;
+				default:
+					// Use the default one for everyone else
+					serializer = CmfValueSerializer.get(CmfDataType.STRING);
+					break;
+			}
 
 			// Easy mode: direct mapping
 			SchemaAttribute tgtAtt = targetType.getAttribute(srcAtt.getName());
@@ -244,9 +253,11 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 					i++;
 				}
 				value = sb.toString();
-			} else {
+			} else if (!srcAtt.getValue().isNull()) {
 				// Write out the single value
 				value = serializer.serialize(srcAtt.getValue());
+			} else {
+				value = null;
 			}
 
 			if (!StringUtils.isEmpty(value)) {
@@ -280,12 +291,17 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 			}
 			final CmfValueSerializer serializer = CmfValueSerializer.get(srcAtt.getType());
 			if (srcAtt.isRepeating() && !tgtAtt.multiple) {
-				v = serializer.serialize(srcAtt.getValue(0));
+				CmfValue cv = srcAtt.getValue();
+				if (!cv.isNull()) {
+					v = serializer.serialize(cv);
+				} else {
+					v = null;
+				}
 			}
 
-			// Now, check to see if the attribute needs fixing
-
-			p.put(tgtName, v);
+			if (!StringUtils.isEmpty(v)) {
+				p.put(tgtName, v);
+			}
 		}
 
 		// Now handle the special properties
