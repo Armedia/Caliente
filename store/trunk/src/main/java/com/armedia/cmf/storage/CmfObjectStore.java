@@ -449,20 +449,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
 		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException;
 
-	public final <V> void fixObjectNames(CmfAttributeTranslator<V> translator, final CmfType type,
-		CmfNameFixer<V> nameFixer) throws CmfStorageException {
-		fixObjectNames(translator, type, null, nameFixer);
-	}
-
-	public final <V> void fixObjectNames(CmfAttributeTranslator<V> translator, CmfType type, CmfNameFixer<V> nameFixer,
-		String... ids) throws CmfStorageException {
-		fixObjectNames(translator, type, (ids != null ? Arrays.asList(ids) : null), nameFixer);
-	}
-
-	public final <V> void fixObjectNames(CmfAttributeTranslator<V> translator, final CmfType type,
-		Collection<String> ids, CmfNameFixer<V> nameFixer) throws CmfStorageException {
+	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
+		throws CmfStorageException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (nameFixer == null) { throw new IllegalArgumentException(
 			"Must provide name fixer to fix the object names"); }
 		O operation = beginConcurrentInvocation();
@@ -470,18 +459,18 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		try {
 			final boolean tx = operation.begin();
 			try {
-				fixObjectNames(operation, translator, type, ids, nameFixer);
+				int ret = fixObjectNames(operation, translator, nameFixer);
 				if (tx) {
 					operation.commit();
 				}
 				ok = true;
+				return ret;
 			} finally {
 				if (tx && !ok) {
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for loading %s : %s", type, ids), e);
+						this.log.warn("Failed to roll back the transaction for fixing object names", e);
 					}
 				}
 			}
@@ -490,8 +479,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> void fixObjectNames(O operation, CmfAttributeTranslator<V> translator, final CmfType type,
-		Collection<String> ids, CmfNameFixer<V> nameFixer) throws CmfStorageException;
+	protected abstract <V> int fixObjectNames(O operation, CmfAttributeTranslator<V> translator,
+		CmfNameFixer<V> nameFixer) throws CmfStorageException;
 
 	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
