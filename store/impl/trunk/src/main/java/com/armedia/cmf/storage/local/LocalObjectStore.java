@@ -152,12 +152,6 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	}
 
 	@Override
-	protected <V> String getFirstUniqueName(LocalStoreOperation operation, CmfObject<V> object, String... names)
-		throws CmfStorageException {
-		return null;
-	}
-
-	@Override
 	protected <V> int fixObjectNames(LocalStoreOperation operation, CmfAttributeTranslator<V> translator,
 		CmfNameFixer<V> nameFixer) throws CmfStorageException {
 		return 0;
@@ -165,5 +159,16 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 
 	@Override
 	protected void resetAltNames(LocalStoreOperation operation) throws CmfStorageException {
+	}
+
+	@Override
+	protected <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(LocalStoreOperation operation,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException {
+		return null;
+	}
+
+	@Override
+	protected <V> void renameObject(LocalStoreOperation operation, CmfObject<V> object, String newName)
+		throws CmfStorageException {
 	}
 }
