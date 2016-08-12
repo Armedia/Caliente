@@ -619,10 +619,11 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					Collection<CmfObject<V>> collidingObjects = objectStore
 						.getObjectsWithFileNameCollisions(getTranslator());
 					if (collidingObjects.isEmpty()) {
+						output.info("No name collisions left to resolve (after {} passes)", pass);
 						break;
 					}
-					output.info(String.format("Resolving the next filename collision (%d total remaining, pass #%d)",
-						collidingObjects.size(), ++pass));
+					output.info("Resolving the next filename collision ({} total remaining, pass # {})",
+						collidingObjects.size(), ++pass);
 					for (CmfObject<V> object : collidingObjects) {
 						String newName = object.getName();
 						String id = object.getId();
@@ -636,6 +637,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							}
 						}
 						newName = String.format("%s_%s%s", newName, id, ext);
+						output.info("Fixing name collisions for {} [{}]({}), from [{}] to [{}]", object.getType(),
+							object.getLabel(), object.getId(), object.getName(), newName);
 						objectStore.renameObject(object, newName);
 						continue outer;
 					}
