@@ -451,9 +451,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
 		throws CmfStorageException {
-		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
-		if (nameFixer == null) { throw new IllegalArgumentException(
-			"Must provide name fixer to fix the object names"); }
+		if ((translator == null) || (nameFixer == null)) { return 0; }
 		O operation = beginConcurrentInvocation();
 		boolean ok = false;
 		try {
