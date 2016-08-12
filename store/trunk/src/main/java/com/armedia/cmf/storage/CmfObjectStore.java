@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.tools.CollectionObjectHandler;
+import com.armedia.commons.utilities.Tools;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -449,6 +449,31 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
 		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException;
 
+	public final <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(
+		final CmfAttributeTranslator<V> translator) throws CmfStorageException {
+		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				return getObjectsWithFileNameCollisions(operation, translator);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to roll back the transaction for fixing object names", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(O operation,
+		final CmfAttributeTranslator<V> translator) throws CmfStorageException;
+
 	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
 		throws CmfStorageException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
@@ -607,38 +632,6 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract Map<CmfType, Integer> getStoredObjectTypes(O operation) throws CmfStorageException;
 
-	public final <V> boolean hasNameCollision(CmfObject<V> object) throws CmfStorageException {
-		return (getFirstUniqueName(object) == null);
-	}
-
-	public final <V> String getFirstUniqueName(CmfObject<V> object, String... names) throws CmfStorageException {
-		O operation = beginConcurrentInvocation();
-		try {
-			final boolean tx = operation.begin();
-			try {
-				if (names != null) {
-					for (String s : names) {
-						if (StringUtils.isEmpty(s)) { throw new IllegalArgumentException(String.format(
-							"May not use null or empty string values as potential names to check against: %s",
-							Arrays.toString(names))); }
-					}
-				}
-				if ((names == null)
-					|| (names.length == 0)) { return getFirstUniqueName(operation, object, object.getName()); }
-				return getFirstUniqueName(operation, object, names);
-			} finally {
-				if (tx) {
-					operation.rollback();
-				}
-			}
-		} finally {
-			endConcurrentInvocation(operation);
-		}
-	}
-
-	protected abstract <V> String getFirstUniqueName(O operation, CmfObject<V> object, String... names)
-		throws CmfStorageException;
-
 	public final CmfAttributeMapper getAttributeMapper() {
 		return this.mapper;
 	}
@@ -675,6 +668,42 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract void resetAltNames(O operation) throws CmfStorageException;
+
+	public final <V> void renameObject(final CmfObject<V> object, final String newName) throws CmfStorageException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to rename"); }
+		if (newName == null) { throw new IllegalArgumentException("Must provide new name for the object"); }
+
+		// Shortcut - do nothing if there's no name change
+		if (Tools.equals(newName, object.getName())) { return; }
+
+		O operation = beginExclusiveInvocation();
+		try {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				renameObject(operation, object, newName);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					if (tx && !ok) {
+						try {
+							operation.rollback();
+						} catch (CmfStorageException e) {
+							this.log.warn("Failed to rollback the transaction for resetting the alternate names", e);
+						}
+					}
+				}
+			}
+		} finally {
+			endExclusiveInvocation(operation);
+		}
+	}
+
+	protected abstract <V> void renameObject(final O operation, final CmfObject<V> object, final String newName)
+		throws CmfStorageException;
 
 	public final int clearAttributeMappings() throws CmfStorageException {
 		O operation = beginExclusiveInvocation();
