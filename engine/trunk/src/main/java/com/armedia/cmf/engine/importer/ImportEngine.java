@@ -596,9 +596,15 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			// Reset all alternate names, to ensure we're not using already-processed names
 			output.info("Resetting object names to the source values...");
 			objectStore.resetAltNames();
-			output.info("Fixing object names...");
-			final int fixes = objectStore.fixObjectNames(getTranslator(), getNameFixer());
-			output.info(String.format("Fixed the names of %d objects", fixes));
+			CmfNameFixer<V> nameFixer = getNameFixer();
+			if (nameFixer != null) {
+				output.info("Fixing object names...");
+				final int fixes = objectStore.fixObjectNames(getTranslator(), getNameFixer());
+				output.info(String.format("Fixed the names of %d objects", fixes));
+			} else {
+				output.info("Object names will be kept as-is");
+			}
+
 			// TODO: Handle deduplication globally as well, since we may have cross-type collisions
 
 			final CmfAttributeTranslator<V> translator = getTranslator();
