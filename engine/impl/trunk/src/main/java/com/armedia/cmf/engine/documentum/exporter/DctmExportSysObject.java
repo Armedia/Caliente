@@ -190,33 +190,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		IDfSession session = object.getSession();
 
 		CmfProperty<IDfValue> aclInheritedProp = new CmfProperty<IDfValue>(IntermediateProperty.ACL_INHERITED,
-			DctmDataType.DF_STRING.getStoredType());
+			DctmDataType.DF_STRING.getStoredType(), false);
 		properties.add(aclInheritedProp);
 		boolean aclInheritedSet = false;
 		final IDfACL acl = object.getACL();
-
-		// If it's a defaulted ACL it must match its parent folder's, it's creator user's, or
-		// it's data type's, so let's check all 3
-		{
-
-			if (!aclInheritedSet && (object.getFolderIdCount() > 0)) {
-				IDfId folderId = object.getFolderId(0);
-				try {
-					IDfFolder parent = session.getFolderBySpecification(folderId.getId());
-					// Does the object's ACL match the parent's?
-					IDfACL parentACL = parent.getACL();
-					if (Tools.equals(parentACL.getObjectId(), acl.getObjectId())) {
-						aclInheritedProp.setValue(DfValueFactory.newStringValue("FOLDER"));
-						aclInheritedSet = true;
-					}
-				} catch (DfIdNotFoundException e) {
-					// WTF? No parent? Well...shit...
-					this.log.warn(
-						String.format("%s [%s](%s) references non-existent folder [%s]", object.getType().getName(),
-							object.getObjectName(), object.getObjectId().getId(), folderId.getId()));
-				}
-			}
-		}
 
 		CmfProperty<IDfValue> paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH,
 			DctmDataType.DF_STRING.getStoredType(), true);
