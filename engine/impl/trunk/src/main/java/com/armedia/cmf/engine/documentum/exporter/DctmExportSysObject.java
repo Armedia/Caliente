@@ -189,7 +189,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 		IDfSession session = object.getSession();
 
-		CmfProperty<IDfValue> aclInheritedProp = new CmfProperty<IDfValue>(IntermediateProperty.ACL_INHERITED,
+		CmfProperty<IDfValue> aclInheritedProp = new CmfProperty<IDfValue>(IntermediateProperty.ACL_INHERITANCE,
 			DctmDataType.DF_STRING.getStoredType(), false);
 		properties.add(aclInheritedProp);
 		boolean aclInheritedSet = false;
