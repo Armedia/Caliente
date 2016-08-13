@@ -38,6 +38,8 @@ import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
+import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.common.DfException;
@@ -186,6 +188,36 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (!super.getDataProperties(ctx, properties, object)) { return false; }
 
 		IDfSession session = object.getSession();
+
+		CmfProperty<IDfValue> aclInheritedProp = new CmfProperty<IDfValue>(IntermediateProperty.ACL_INHERITED,
+			DctmDataType.DF_STRING.getStoredType());
+		properties.add(aclInheritedProp);
+		boolean aclInheritedSet = false;
+		final IDfACL acl = object.getACL();
+
+		// If it's a defaulted ACL it must match its parent folder's, it's creator user's, or
+		// it's data type's, so let's check all 3
+		{
+
+			if (!aclInheritedSet && (object.getFolderIdCount() > 0)) {
+				IDfId folderId = object.getFolderId(0);
+				try {
+					IDfFolder parent = session.getFolderBySpecification(folderId.getId());
+					// Does the object's ACL match the parent's?
+					IDfACL parentACL = parent.getACL();
+					if (Tools.equals(parentACL.getObjectId(), acl.getObjectId())) {
+						aclInheritedProp.setValue(DfValueFactory.newStringValue("FOLDER"));
+						aclInheritedSet = true;
+					}
+				} catch (DfIdNotFoundException e) {
+					// WTF? No parent? Well...shit...
+					this.log.warn(
+						String.format("%s [%s](%s) references non-existent folder [%s]", object.getType().getName(),
+							object.getObjectName(), object.getObjectId().getId(), folderId.getId()));
+				}
+			}
+		}
+
 		CmfProperty<IDfValue> paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		properties.add(paths);
@@ -199,6 +231,15 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			final IDfFolder parent;
 			try {
 				parent = session.getFolderBySpecification(folderId.asId().getId());
+				if (!aclInheritedSet) {
+					// Is the object's ACL the same as its parent folder's?
+					IDfACL parentACL = parent.getACL();
+					if (Tools.equals(parentACL.getObjectId(), acl.getObjectId())) {
+						aclInheritedProp
+							.setValue(DfValueFactory.newStringValue(String.format("FOLDER[%s]", folderId.asString())));
+						aclInheritedSet = true;
+					}
+				}
 			} catch (DfIdNotFoundException e) {
 				this.log
 					.warn(String.format("%s [%s](%s) references non-existent folder [%s]", object.getType().getName(),
@@ -210,6 +251,48 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			for (int p = 0; p < pathCount; p++) {
 				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(p)));
 			}
+		}
+
+		if (!aclInheritedSet) {
+			IDfUser creator = session.getUser(object.getCreatorName());
+			if ((creator != null) && Tools.equals(acl.getDomain(), creator.getACLDomain())
+				&& Tools.equals(acl.getObjectName(), creator.getACLName())) {
+				aclInheritedProp
+					.setValue(DfValueFactory.newStringValue(String.format("USER[%s]", creator.getUserName())));
+				aclInheritedSet = true;
+			}
+		}
+
+		if (!aclInheritedSet) {
+			IDfType type = object.getType();
+			// Need to scale up the type hierarchy...
+			while (type != null) {
+				IDfCollection c = null;
+				try {
+					String dql = String.format("select acl_domain, acl_name from dmi_type_info where r_type_id = %s",
+						DfUtils.quoteString(type.getObjectId().getId()));
+					c = DfUtils.executeQuery(session, dql);
+					if (c.next()) {
+						String aclDomain = c.getString(DctmAttributes.ACL_DOMAIN);
+						String aclName = c.getString(DctmAttributes.ACL_NAME);
+						if (Tools.equals(acl.getDomain(), aclDomain) && Tools.equals(acl.getObjectName(), aclName)) {
+							aclInheritedProp
+								.setValue(DfValueFactory.newStringValue(String.format("TYPE[%s]", type.getName())));
+							aclInheritedSet = true;
+							break;
+						}
+					}
+				} finally {
+					DfUtils.closeQuietly(c);
+				}
+
+				type = type.getSuperType();
+			}
+		}
+
+		if (!aclInheritedSet) {
+			aclInheritedProp.setValue(DfValueFactory.newStringValue("NONE[]"));
+			aclInheritedSet = true;
 		}
 
 		IDfReference ref = getReferenceFor(object);
@@ -235,15 +318,15 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			return false;
 		}
 
-		CmfProperty<IDfValue> acl = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ID,
+		CmfProperty<IDfValue> aclIdProp = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ID,
 			DctmDataType.DF_ID.getStoredType(), false);
-		properties.add(acl);
+		properties.add(aclIdProp);
 		IDfId aclId = DfId.DF_NULLID;
 		IDfACL aclObj = object.getACL();
 		if (aclObj != null) {
 			aclId = aclObj.getObjectId();
 		}
-		acl.setValue(DfValueFactory.newIdValue(aclId));
+		aclIdProp.setValue(DfValueFactory.newIdValue(aclId));
 		return true;
 	}
 
