@@ -333,6 +333,11 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 
 		// TODO: Generate the ACL attribute
 
+		CmfProperty<CmfValue> aclInherit = this.cmfObject.getProperty(IntermediateProperty.ACL_INHERITANCE);
+		if (aclInherit != null) {
+			p.setProperty("arm:aclInheritance", aclInherit.getValue().asString());
+		}
+
 		p.setProperty("dctm:r_object_id", this.cmfObject.getId());
 		p.setProperty("dctm:i_chronicle_id", this.cmfObject.getBatchId());
 		p.setProperty("cm:name", this.cmfObject.getName());

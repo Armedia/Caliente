@@ -3777,6 +3777,17 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>true</multiple>
 				</property>
+				<property name="arm:aclInheritance">
+					<!-- The object's ACL Inheritance mode                     -->
+					<!-- * FOLDER[${folderId}]                                 -->
+					<!-- * TYPE[${typeName}]                                   -->
+					<!-- * USER[${userName}]                                   -->
+					<!-- * NONE[]                                              -->
+					<title>ACL Inheritance</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
 				<property name="arm:aspects">
 					<!-- The list of aspects that were added to preserve metadata -->
 					<title>Extra Aspects</title>
