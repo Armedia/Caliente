@@ -40,7 +40,11 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.subType = calculateSubType(this.exportTarget.getType(), object);
 		if (factory.getEngine().isSupportsDuplicateFileNames()) {
 			// We only calculate parent IDs
-			this.parentIds = Tools.freezeList(new ArrayList<CmfObjectRef>(calculateParentIds(object)));
+			Collection<CmfObjectRef> parentIds = calculateParentIds(object);
+			if (parentIds == null) {
+				parentIds = Collections.emptySet();
+			}
+			this.parentIds = Tools.freezeList(new ArrayList<CmfObjectRef>(parentIds));
 		} else {
 			this.parentIds = Collections.emptyList();
 		}
