@@ -21,6 +21,7 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmException;
+import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DctmVersionNumber;
 import com.armedia.cmf.engine.documentum.DctmVersionTree;
 import com.armedia.cmf.engine.documentum.DfUtils;
@@ -234,8 +235,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			IDfUser creator = session.getUser(object.getCreatorName());
 			if ((creator != null) && Tools.equals(acl.getDomain(), creator.getACLDomain())
 				&& Tools.equals(acl.getObjectName(), creator.getACLName())) {
-				aclInheritedProp
-					.setValue(DfValueFactory.newStringValue(String.format("USER[%s]", creator.getUserName())));
+				// Make sure we perform all necessary mappings
+				String userName = DctmMappingUtils.substituteMappableUsers(session, creator.getUserName());
+				aclInheritedProp.setValue(DfValueFactory.newStringValue(String.format("USER[%s]", userName)));
 				aclInheritedSet = true;
 			}
 		}
