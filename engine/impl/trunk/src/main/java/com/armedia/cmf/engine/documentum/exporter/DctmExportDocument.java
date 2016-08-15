@@ -88,9 +88,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				false, patchAntecedent));
 		}
 
-		properties.add(new CmfProperty<IDfValue>(IntermediateProperty.IS_LATEST_VERSION,
-			DctmDataType.DF_BOOLEAN.getStoredType(), false, DfValueFactory.newBooleanValue(document.getHasFolder())));
-
 		// If this is a virtual document, we export the document's components first
 		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {
 			CmfProperty<IDfValue> p = new CmfProperty<IDfValue>(IntermediateProperty.VDOC_MEMBER,

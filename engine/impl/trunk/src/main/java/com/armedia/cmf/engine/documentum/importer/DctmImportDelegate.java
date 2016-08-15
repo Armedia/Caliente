@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers;
 import com.armedia.cmf.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
@@ -34,7 +33,6 @@ import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
-import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
@@ -241,7 +239,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 
 			if (updateVersionLabels) {
 				CmfAttribute<IDfValue> versionLabel = this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
-				CmfProperty<IDfValue> current = this.cmfObject.getProperty(IntermediateProperty.IS_LATEST_VERSION);
+				CmfAttribute<IDfValue> current = this.cmfObject.getAttribute(DctmAttributes.I_HAS_FOLDER);
 				if ((current != null) && current.getValue().asBoolean()) {
 					// This is the current version...so double-check that it's not already in the
 					// attribute. If it isn't there, add it
