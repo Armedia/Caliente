@@ -57,9 +57,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			CmfProperty<IDfValue> prop = null;
 			prop = acl.getProperty(DctmACL.ACCESSORS);
 			this.name = DctmMappingUtils.resolveMappableUser(session, prop.getValue(pos).asString());
-			prop = acl.getProperty(DctmACL.PERMIT_TYPE);
+			prop = acl.getProperty(DctmACL.PERMIT_TYPES);
 			this.type = prop.getValue(pos).asInteger();
-			prop = acl.getProperty(DctmACL.PERMIT_VALUE);
+			prop = acl.getProperty(DctmACL.PERMIT_VALUES);
 			this.value = prop.getValue(pos).asString();
 			this.typeStr = DfUtils.decodePermitType(this.type);
 		}
@@ -235,11 +235,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), accessors));
 			}
-			CmfProperty<IDfValue> permitTypes = this.cmfObject.getProperty(DctmACL.PERMIT_TYPE);
+			CmfProperty<IDfValue> permitTypes = this.cmfObject.getProperty(DctmACL.PERMIT_TYPES);
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), permitTypes));
 			}
-			CmfProperty<IDfValue> permitValues = this.cmfObject.getProperty(DctmACL.PERMIT_VALUE);
+			CmfProperty<IDfValue> permitValues = this.cmfObject.getProperty(DctmACL.PERMIT_VALUES);
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), permitValues));
 			}

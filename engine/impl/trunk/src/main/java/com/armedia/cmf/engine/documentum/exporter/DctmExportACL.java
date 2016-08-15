@@ -80,9 +80,9 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			DctmDataType.DF_STRING.getStoredType(), true);
 		CmfProperty<IDfValue> accessorTypes = new CmfProperty<IDfValue>(DctmACL.ACCESSOR_TYPES,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		CmfProperty<IDfValue> permitTypes = new CmfProperty<IDfValue>(DctmACL.PERMIT_TYPE,
+		CmfProperty<IDfValue> permitTypes = new CmfProperty<IDfValue>(DctmACL.PERMIT_TYPES,
 			DctmDataType.DF_INTEGER.getStoredType(), true);
-		CmfProperty<IDfValue> permitValues = new CmfProperty<IDfValue>(DctmACL.PERMIT_VALUE,
+		CmfProperty<IDfValue> permitValues = new CmfProperty<IDfValue>(DctmACL.PERMIT_VALUES,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		IDfList permits = acl.getPermissions();
 		final int permitCount = permits.getCount();
