@@ -323,6 +323,7 @@ public class DctmCmisACLTools implements DctmACL {
 		}
 
 		properties.add(accessors);
+		properties.add(accessorTypes);
 		properties.add(accessorActions);
 	}
 }
