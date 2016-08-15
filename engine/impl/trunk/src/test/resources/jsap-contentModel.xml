@@ -64,6 +64,20 @@
 		-->
 
 		<!--
+			BEGIN jsap:reference
+		-->
+		<type name="jsap:reference">
+			<title>JSAP-N Object Reference</title>
+			<parent>cm:content</parent>
+			<mandatory-aspects>
+				<aspect>dctm:dm_reference</aspect>
+			</mandatory-aspects>
+		</type>
+		<!--
+			END jsap:reference
+		-->
+
+		<!--
 			BEGIN jsap:jcoa_award
 		-->
 		<type name="jsap:jcoa_award">
@@ -3505,6 +3519,49 @@
 		</aspect>
 		<!--
 			END dctm:dm_document
+		-->
+
+		<!--
+			BEGIN dctm:dm_reference
+		-->
+		<aspect name="dctm:dm_reference">
+			<title>Documentum Reference</title>
+			<properties>
+				<property name="dctm:reference_by_id">
+					<!-- preserve -->
+					<title>Documentum Object or Chronicle ID Referenced</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:binding_label">
+					<!-- preserve -->
+					<title>Version Label Referenced</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:binding_condition">
+					<!-- preserve -->
+					<title>Reference Binding Condition</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>EXACT_ID</value>
+									<value>VERSION_LABEL</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END dctm:dm_reference
 		-->
 
 		<!--

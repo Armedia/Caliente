@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,17 +23,20 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.engine.tools.AclTools;
+import com.armedia.cmf.engine.tools.AclTools.AccessorType;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueSerializer;
+import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfDocumentImportDelegate extends AlfImportDelegate {
@@ -42,6 +44,13 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 	private static final Map<String, String> UNMAPPER;
 	private static final Map<String, String> MAPPER;
 	private static final Map<String, String> COPIER;
+
+	private static enum PermitValue {
+		//
+		NONE, BROWSE, READ, RELATE, VERSION, WRITE, DELETE,
+		//
+		;
+	}
 
 	static {
 		Map<String, String> m = new HashMap<String, String>();
@@ -153,13 +162,21 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		super(factory, storedObject);
 	}
 
+	protected boolean isReference() {
+		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute("dctm:i_is_reference");
+		return ((att != null) && att.hasValues() && att.getValue().asBoolean());
+	}
+
 	protected AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
 		AlfrescoType type = null;
 		if (!content.isDefaultRendition() || (content.getRenditionPage() > 0)) {
 			// If this is a rendition or rendition extra page...
 			type = this.factory.getType("jsap:rendition");
+		} else if (isReference()) {
+			// If this is a reference - folder or document, doesn't matter...
+			type = this.factory.getType("jsap:reference");
 		} else {
-			// Not a rendition? Fine...let's identify the type
+			// Not a rendition or a reference? Fine...let's identify the type
 			String srcTypeName = this.cmfObject.getSubtype().toLowerCase();
 			String finalTypeName = String.format("jsap:%s", srcTypeName);
 			if (this.factory.schema.hasType(finalTypeName)) {
@@ -333,22 +350,7 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		p.setProperty("aspects", sb.toString());
 		p.setProperty("arm:aspects", sb.toString());
 
-		// TODO: Generate the ACL attribute
-		CmfProperty<CmfValue> accessors = this.cmfObject.getProperty(IntermediateProperty.ACL_ACCESSOR_NAME);
-		CmfProperty<CmfValue> accessorActions = this.cmfObject.getProperty(IntermediateProperty.ACL_ACCESSOR_ACTIONS);
-		if ((accessors != null) && (accessorActions != null)) {
-			int count = accessors.getValueCount();
-			if (accessorActions.getValueCount() != count) {
-				count = Math.min(count, accessorActions.getValueCount());
-			}
-
-			for (int i = 0; i < count; i++) {
-				CmfValue accessor = accessors.getValue(i);
-				Set<String> actions = AclTools.decode(accessorActions.getValue(i).asString());
-
-				// TODO: Map the accessor...is it a group?
-			}
-		}
+		p.setProperty("arm:dmAcl", Tools.coalesce(generateAcl(ctx), ""));
 
 		CmfProperty<CmfValue> aclInherit = this.cmfObject.getProperty(IntermediateProperty.ACL_INHERITANCE);
 		if (aclInherit != null) {
@@ -358,6 +360,81 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		p.setProperty("dctm:r_object_id", this.cmfObject.getId());
 		p.setProperty("dctm:i_chronicle_id", this.cmfObject.getBatchId());
 		p.setProperty("cm:name", this.cmfObject.getName());
+	}
+
+	protected String generateAcl(final AlfImportContext ctx) throws ImportException {
+		// TODO: This is hardcoded to Documentum-generated attributes, since we don't yet have
+		// a universal means of expressing ACLs
+
+		// Make sure that if ACL processing is disabled, we don't process it
+		// if (!ctx.isSupported(CmfType.ACL)) { return null; }
+		CmfProperty<CmfValue> aclIdAtt = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
+		if ((aclIdAtt == null) || !aclIdAtt.hasValues()) { return null; }
+		CmfValue aclId = aclIdAtt.getValue();
+		if ((aclId == null) || aclId.isNull()) { return null; }
+
+		final StringBuilder ret = new StringBuilder();
+		CmfObjectHandler<CmfValue> handler = new DefaultCmfObjectHandler<CmfValue>() {
+
+			@Override
+			public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+				CmfProperty<CmfValue> accessors = dataObject.getProperty("accessors");
+				CmfProperty<CmfValue> accessorTypes = dataObject.getProperty("accessorTypes");
+				CmfProperty<CmfValue> permitTypes = dataObject.getProperty("permitTypes");
+				CmfProperty<CmfValue> permitValues = dataObject.getProperty("permitValues");
+
+				final int count = Tools.min(accessors.getValueCount(), accessorTypes.getValueCount(),
+					permitTypes.getValueCount(), permitValues.getValueCount());
+
+				for (int i = 0; i < count; i++) {
+					String accessor = accessors.getValue(i).asString();
+					String accessorType = accessorTypes.getValue(i).asString();
+					int permitType = permitTypes.getValue(i).asInteger();
+					String permitValue = permitValues.getValue(i).asString();
+
+					if (permitType != 0) {
+						// We only support DF_ACCESS_PERMIT
+						continue;
+					}
+
+					final AccessorType type;
+					if (accessorType.equals("user")) {
+						type = AccessorType.USER;
+						accessor = ctx.mapUser(accessor);
+					} else if (accessorType.indexOf("role") < 0) {
+						type = AccessorType.ROLE;
+						accessor = ctx.mapRole(accessor);
+					} else {
+						type = AccessorType.GROUP;
+						accessor = ctx.mapGroup(accessor);
+					}
+
+					String permit = "?";
+					try {
+						permit = PermitValue.valueOf(permitValue.toUpperCase()).name();
+					} catch (Exception e) {
+						// Unknown value, use "?"
+						permit = "?";
+					}
+
+					if (ret.length() > 0) {
+						ret.append(',');
+					}
+					ret.append(String.format("%1.1s:%s:%1.1s", type.name().toLowerCase(), accessor, permit));
+				}
+
+				return false;
+			}
+
+		};
+		try {
+			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
+			if (count == 0) { return null; }
+		} catch (CmfStorageException e) {
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclIdAtt,
+				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+		}
+		return null;
 	}
 
 	protected void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentInfo content)
