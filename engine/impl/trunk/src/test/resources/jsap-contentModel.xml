@@ -3527,6 +3527,20 @@
 		<aspect name="dctm:dm_reference">
 			<title>Documentum Reference</title>
 			<properties>
+				<property name="dctm:r_object_id">
+					<!-- preserve -->
+					<title>Documentum Object ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_parent_path_ids">
+					<!-- preserve from source id-paths -->
+					<title>Parent Path IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
 				<property name="dctm:reference_by_id">
 					<!-- preserve -->
 					<title>Documentum Object or Chronicle ID Referenced</title>
