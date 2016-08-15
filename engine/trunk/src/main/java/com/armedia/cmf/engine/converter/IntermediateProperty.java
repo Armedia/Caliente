@@ -22,7 +22,6 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	PATH(PropertyIds.PATH, CmfDataType.STRING),
 	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.ID),
 	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, CmfDataType.STRING),
-	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfDataType.BOOLEAN),
 
 	// Non-CMIS properties
 	PARENT_TREE_IDS(CmfDataType.STRING),
@@ -38,6 +37,7 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	VERSION_COUNT(CmfDataType.INTEGER),
 	VERSION_INDEX(CmfDataType.INTEGER),
 	VERSION_PATCHES(CmfDataType.STRING),
+	IS_NEWEST_VERSION(CmfDataType.BOOLEAN),
 	PATCH_ANTECEDENT(CmfDataType.STRING),
 	USERS_WITH_DEFAULT_FOLDER(CmfDataType.STRING),
 	USERS_DEFAULT_FOLDER_PATHS(CmfDataType.STRING),
