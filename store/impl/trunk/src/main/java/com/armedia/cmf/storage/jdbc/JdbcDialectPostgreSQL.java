@@ -50,6 +50,14 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 		"     truncate table %s cascade " //
 	;
 
+	private static final String DISABLE_REFERENTIAL_INTEGRITY = //
+		"     set session_replication_role = replica " //
+	;
+
+	private static final String ENABLE_REFERENTIAL_INTEGRITY = //
+		"     set session_replication_role = DEFAULT " //
+	;
+
 	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
 		super(EngineType.PostgreSQL, md);
 	}
@@ -70,6 +78,10 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_HEAD;
 			case TRUNCATE_TABLE_FMT:
 				return JdbcDialectPostgreSQL.TRUNCATE_TABLE_FMT;
+			case ENABLE_REFERENTIAL_INTEGRITY:
+				return JdbcDialectPostgreSQL.ENABLE_REFERENTIAL_INTEGRITY;
+			case DISABLE_REFERENTIAL_INTEGRITY:
+				return JdbcDialectPostgreSQL.DISABLE_REFERENTIAL_INTEGRITY;
 			default:
 				break;
 		}

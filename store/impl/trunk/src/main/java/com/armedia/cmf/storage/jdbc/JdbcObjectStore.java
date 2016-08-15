@@ -817,13 +817,33 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
+	private Set<String> getCmfTables(Connection c) throws SQLException {
+		DatabaseMetaData dmd = c.getMetaData();
+		ResultSet rs = null;
+		Set<String> tableNames = new TreeSet<String>();
+		try {
+			rs = dmd.getTables(null, null, "CMF_%", new String[] {
+				"TABLE"
+			});
+			while (rs.next()) {
+				tableNames.add(rs.getString("TABLE_NAME"));
+			}
+			return tableNames;
+		} finally {
+			DbUtils.closeQuietly(rs);
+		}
+	}
+
 	protected boolean optimizedClearAllObjects(JdbcOperation operation) throws CmfStorageException {
+		/*
 		String[] tables = {
 			"CMF_CONTENT_PROPERTY", "CMF_PROPERTY_VALUE", "CMF_ATTRIBUTE_VALUE", "CMF_MAPPER", "CMF_CONTENT",
 			"CMF_PROPERTY", "CMF_ATTRIBUTE", "CMF_OBJECT", "CMF_EXPORT_PLAN", "CMF_INFO"
 		};
+		*/
 		final Connection c = operation.getConnection();
 		try {
+			Set<String> tables = getCmfTables(c);
 			Statement s = c.createStatement();
 			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
 			try {
@@ -846,21 +866,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private void clearAllObjects(Connection c) throws SQLException {
 		// Allow for subclasses to implement optimized clearing operations
-		DatabaseMetaData dmd = c.getMetaData();
-		ResultSet rs = null;
-		Set<String> tableNames = new TreeSet<String>();
-		try {
-			rs = dmd.getTables(null, null, "CMF_%", new String[] {
-				"TABLE"
-			});
-			while (rs.next()) {
-				tableNames.add(rs.getString("TABLE_NAME"));
-			}
-		} finally {
-			DbUtils.closeQuietly(rs);
-		}
-		QueryRunner qr = new QueryRunner();
-		for (String tableName : tableNames) {
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		for (String tableName : getCmfTables(c)) {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace("Deleting all records from [%s]", tableName);
 			}
