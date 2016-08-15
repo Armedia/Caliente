@@ -676,7 +676,6 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					this.cmfObject.getLabel(), newId.getId()));
 			}
 			ref = IDfReference.class.cast(session.getObject(c.getId("r_object_id")));
-			ref.dump();
 		} finally {
 			DfUtils.closeQuietly(c);
 		}
