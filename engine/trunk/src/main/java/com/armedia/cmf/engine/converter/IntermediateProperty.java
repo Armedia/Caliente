@@ -31,6 +31,7 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	ACL_OWNER(CmfDataType.STRING),
 	ACL_OBJECT_ID(CmfDataType.STRING),
 	ACL_ACCESSOR_NAME(CmfDataType.STRING),
+	ACL_ACCESSOR_TYPE(CmfDataType.STRING),
 	ACL_ACCESSOR_ACTIONS(CmfDataType.STRING),
 	USERS_WITH_DEFAULT_GROUP(CmfDataType.ID),
 	VERSION_TREE_ROOT(CmfDataType.BOOLEAN),

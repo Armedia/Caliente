@@ -13,6 +13,13 @@ import com.armedia.commons.utilities.FileNameTools;
 
 public abstract class AclTools {
 
+	public static enum AccessorType {
+		//
+		USER, GROUP, ROLE,
+		//
+		;
+	}
+
 	private static final String ENCODING = "UTF-8";
 	private static final char SEPARATOR = '|';
 
