@@ -19,6 +19,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -77,6 +78,8 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 
 		CmfProperty<IDfValue> accessors = new CmfProperty<IDfValue>(DctmACL.ACCESSORS,
 			DctmDataType.DF_STRING.getStoredType(), true);
+		CmfProperty<IDfValue> accessorTypes = new CmfProperty<IDfValue>(DctmACL.ACCESSOR_TYPES,
+			DctmDataType.DF_STRING.getStoredType(), true);
 		CmfProperty<IDfValue> permitTypes = new CmfProperty<IDfValue>(DctmACL.PERMIT_TYPE,
 			DctmDataType.DF_INTEGER.getStoredType(), true);
 		CmfProperty<IDfValue> permitValues = new CmfProperty<IDfValue>(DctmACL.PERMIT_VALUE,
@@ -112,11 +115,20 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 				continue;
 			}
 
+			final String accessorType;
+			if (IDfGroup.class.isInstance(o)) {
+				accessorType = IDfGroup.class.cast(o).getGroupClass();
+			} else {
+				accessorType = "user";
+			}
+
 			accessors.addValue(DfValueFactory.newStringValue(DctmMappingUtils.substituteMappableUsers(acl, accessor)));
+			accessorTypes.addValue(DfValueFactory.newStringValue(accessorType));
 			permitTypes.addValue(DfValueFactory.newIntValue(p.getPermitType()));
 			permitValues.addValue(DfValueFactory.newStringValue(p.getPermitValueString()));
 		}
 		properties.add(accessors);
+		properties.add(accessorTypes);
 		properties.add(permitValues);
 		properties.add(permitTypes);
 	}
