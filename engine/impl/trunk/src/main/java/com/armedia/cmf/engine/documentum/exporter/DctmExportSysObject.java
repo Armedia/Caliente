@@ -294,6 +294,11 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 					false, DfValueFactory.newStringValue(ref.getReferenceByName())));
 			properties.add(new CmfProperty<IDfValue>(DctmAttributes.REFRESH_INTERVAL,
 				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(ref.getRefreshInterval())));
+
+			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_COUNT,
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(1)));
+			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_INDEX,
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(0)));
 			return false;
 		}
 
