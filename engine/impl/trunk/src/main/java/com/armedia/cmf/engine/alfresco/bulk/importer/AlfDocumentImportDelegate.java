@@ -527,6 +527,9 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		Collection<CmfContentInfo> contents = ctx.getContentInfo(this.cmfObject);
 		if (contents.isEmpty()) {
 			// No content streams, so make one up so we can build the properties file
+			if (isReference()) {
+				contents.size();
+			}
 			contents = Collections.singleton(new CmfContentInfo());
 		}
 		for (CmfContentInfo content : contents) {
