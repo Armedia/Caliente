@@ -227,15 +227,6 @@ public class DctmAttributes {
 	/** The r_permit_type attribute of dm_acl. */
 	public static final String R_PERMIT_TYPE = "r_permit_type";
 
-	/** The accessor_name_dm_world attribute of dm_acl. */
-	public static final String ACCESSOR_NAME_DM_WORLD = "dm_world";
-
-	/** The accessor_name_dm_owner attribute of dm_acl. */
-	public static final String ACCESSOR_NAME_DM_OWNER = "dm_owner";
-
-	/** The accessor_name_dm_group attribute of dm_acl. */
-	public static final String ACCESSOR_NAME_DM_GROUP = "dm_group";
-
 	// dm_type attributes
 	/** The owner attribute of dm_type. */
 	public static final String OWNER = "owner";

@@ -17,6 +17,7 @@ import com.armedia.cmf.engine.documentum.common.DctmCmisACLTools;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
@@ -116,10 +117,17 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			}
 
 			final String accessorType;
-			if (IDfGroup.class.isInstance(o)) {
-				accessorType = IDfGroup.class.cast(o).getGroupClass();
-			} else {
+			if (IDfUser.class.isInstance(o) || Tools.equals(DctmACL.DM_OWNER, accessor)) {
 				accessorType = "user";
+			} else {
+				IDfGroup g = session.getGroup(accessor);
+				if ((g != null) || Tools.equals(DctmACL.DM_GROUP, accessor)
+					|| Tools.equals(DctmACL.DM_WORLD, accessor)) {
+					accessorType = (g != null ? g.getGroupClass() : "group");
+				} else {
+					// WTF is it?
+					accessorType = "?";
+				}
 			}
 
 			accessors.addValue(DfValueFactory.newStringValue(DctmMappingUtils.substituteMappableUsers(acl, accessor)));

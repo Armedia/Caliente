@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.engine.documentum.common.DctmACL;
 import com.armedia.cmf.storage.CmfProperty;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
@@ -28,9 +29,9 @@ public class DctmMappingUtils {
 	public static final Set<String> SPECIAL_NAMES;
 	static {
 		Set<String> s = new HashSet<String>();
-		s.add("dm_owner");
-		s.add("dm_group");
-		s.add("dm_world");
+		s.add(DctmACL.DM_OWNER);
+		s.add(DctmACL.DM_GROUP);
+		s.add(DctmACL.DM_WORLD);
 		SPECIAL_NAMES = Collections.unmodifiableSet(s);
 	}
 
@@ -72,8 +73,8 @@ public class DctmMappingUtils {
 							}
 							if (!forward.containsKey(serverAttribute)) {
 								final IDfValue value = src.getValue(serverAttribute);
-								final IDfValue substitution = DfValueFactory.newStringValue(String.format("${%s}",
-									serverAttribute));
+								final IDfValue substitution = DfValueFactory
+									.newStringValue(String.format("${%s}", serverAttribute));
 								forward.put(substitution.asString(), value);
 								reverse.put(value.asString(), substitution);
 							}
@@ -81,10 +82,10 @@ public class DctmMappingUtils {
 					}
 					DctmMappingUtils.FWD_MAPPINGS.put(docbase, Collections.unmodifiableMap(forward));
 					DctmMappingUtils.REV_MAPPINGS.put(docbase, Collections.unmodifiableMap(reverse));
-					DctmMappingUtils.LOG.info(String.format("User Mapping Substitutions configured for [%s]: %s",
-						docbase, reverse));
-					DctmMappingUtils.LOG.info(String.format("User Mapping Resolutions configured for [%s]: %s",
-						docbase, forward));
+					DctmMappingUtils.LOG
+						.info(String.format("User Mapping Substitutions configured for [%s]: %s", docbase, reverse));
+					DctmMappingUtils.LOG
+						.info(String.format("User Mapping Resolutions configured for [%s]: %s", docbase, forward));
 				}
 			}
 		}
@@ -143,8 +144,8 @@ public class DctmMappingUtils {
 		for (IDfValue user : values) {
 			IDfValue substitution = substitutions.get(user.asString());
 			if (substitution != null) {
-				DctmMappingUtils.LOG.info(String.format("Substituted user [%s] as %s", user.asString(),
-					substitution.asString()));
+				DctmMappingUtils.LOG
+					.info(String.format("Substituted user [%s] as %s", user.asString(), substitution.asString()));
 				user = substitution;
 			}
 			ret.add(user);
@@ -175,8 +176,8 @@ public class DctmMappingUtils {
 				}
 				IDfValue actual = resolutions.get(oldValue.asString());
 				if (actual != null) {
-					DctmMappingUtils.LOG.info(String.format("Resolved user %s as [%s]", oldValue.asString(),
-						actual.asString()));
+					DctmMappingUtils.LOG
+						.info(String.format("Resolved user %s as [%s]", oldValue.asString(), actual.asString()));
 					oldValue = actual;
 				}
 			}
