@@ -14,6 +14,7 @@ import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
+import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
@@ -111,10 +112,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			}
 			object.setAttribute(antecedentId);
 		}
-		CmfProperty<CmfValue> current = new CmfProperty<CmfValue>(IntermediateProperty.IS_LATEST_VERSION,
+		CmfAttribute<CmfValue> current = new CmfAttribute<CmfValue>(IntermediateAttribute.IS_LATEST_VERSION,
 			CmfDataType.BOOLEAN, false);
 		current.setValue(new CmfValue(this.object.isLatestVersion()));
-		object.setProperty(current);
+		object.setAttribute(current);
 
 		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<CmfValue>(IntermediateProperty.VERSION_TREE_ROOT,
 			CmfDataType.BOOLEAN, false);
