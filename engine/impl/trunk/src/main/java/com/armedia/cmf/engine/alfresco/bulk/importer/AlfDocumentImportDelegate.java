@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +24,7 @@ import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.engine.tools.AclTools;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentInfo;
@@ -192,8 +194,8 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		return targetType.getAttribute(target);
 	}
 
-	protected void populatePrimaryAttributes(Properties p, AlfrescoType targetType, CmfContentInfo content)
-		throws ImportException, ParseException {
+	protected void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
+		CmfContentInfo content) throws ImportException, ParseException {
 
 		for (String s : this.cmfObject.getAttributeNames()) {
 			CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(s);
@@ -307,22 +309,22 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		// Now handle the special properties
 		CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 		StringBuilder sb = new StringBuilder();
-		int i = 0;
-		for (CmfValue v : prop) {
-			if (i > 0) {
-				sb.append(',');
+		{
+			int i = 0;
+			for (CmfValue v : prop) {
+				if (i > 0) {
+					sb.append(',');
+				}
+				sb.append(v.asString());
+				i++;
 			}
-			sb.append(v.asString());
-			i++;
+			p.setProperty("dctm:r_parent_path_ids", sb.toString());
 		}
-		p.setProperty("dctm:r_parent_path_ids", sb.toString());
 
 		// Set the type property
 		p.setProperty("type", targetType.getName());
 
 		// Set the aspects
-		// TODO: Identify the target aspects
-		// cm:ownable, cm:auditable, cm:author, cm:titled
 		sb.setLength(0);
 		sb.append("arm:caliente");
 		for (String s : targetType.getAspects()) {
@@ -332,6 +334,21 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		p.setProperty("arm:aspects", sb.toString());
 
 		// TODO: Generate the ACL attribute
+		CmfProperty<CmfValue> accessors = this.cmfObject.getProperty(IntermediateProperty.ACL_ACCESSOR_NAME);
+		CmfProperty<CmfValue> accessorActions = this.cmfObject.getProperty(IntermediateProperty.ACL_ACCESSOR_ACTIONS);
+		if ((accessors != null) && (accessorActions != null)) {
+			int count = accessors.getValueCount();
+			if (accessorActions.getValueCount() != count) {
+				count = Math.min(count, accessorActions.getValueCount());
+			}
+
+			for (int i = 0; i < count; i++) {
+				CmfValue accessor = accessors.getValue(i);
+				Set<String> actions = AclTools.decode(accessorActions.getValue(i).asString());
+
+				// TODO: Map the accessor...is it a group?
+			}
+		}
 
 		CmfProperty<CmfValue> aclInherit = this.cmfObject.getProperty(IntermediateProperty.ACL_INHERITANCE);
 		if (aclInherit != null) {
@@ -397,7 +414,7 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 					// First page of the default rendition gets ALL the metadata. Everything else
 					// only gets supplementary metadata
 					primary = true;
-					populatePrimaryAttributes(p, targetType, content);
+					populatePrimaryAttributes(ctx, p, targetType, content);
 				} else {
 					// This is a supplementary rendition, and thus will need some minimal
 					// metadata set on it
