@@ -9,8 +9,10 @@ import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.SchemaAttribute;
+import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
@@ -44,6 +47,7 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 	private static final Map<String, String> UNMAPPER;
 	private static final Map<String, String> MAPPER;
 	private static final Map<String, String> COPIER;
+	private static final Set<String> USER_CONVERSIONS;
 
 	private static enum PermitValue {
 		//
@@ -153,28 +157,40 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		}
 
 		COPIER = Tools.freezeMap(m);
+
+		m = new HashMap<String, String>();
+		String[] conversions = {
+			"cm:owner", "cm:creator", "cm:modifier"
+		};
+		for (String s : conversions) {
+			m.put(s, s);
+		}
+		USER_CONVERSIONS = Tools.freezeSet(new HashSet<String>(m.keySet()));
 	}
 
 	private static final Pattern SUFFIX = Pattern.compile("^.*(\\.v\\d+(?:\\.\\d+)?)$");
 
+	private final boolean reference;
+
 	public AlfDocumentImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(factory, storedObject);
+		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute("dctm:i_is_reference");
+		this.reference = ((att != null) && att.hasValues() && att.getValue().asBoolean());
 	}
 
-	protected boolean isReference() {
-		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute("dctm:i_is_reference");
-		return ((att != null) && att.hasValues() && att.getValue().asBoolean());
+	protected final boolean isReference() {
+		return this.reference;
 	}
 
 	protected AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
 		AlfrescoType type = null;
-		if (!content.isDefaultRendition() || (content.getRenditionPage() > 0)) {
-			// If this is a rendition or rendition extra page...
-			type = this.factory.getType("jsap:rendition");
-		} else if (isReference()) {
+		if (isReference()) {
 			// If this is a reference - folder or document, doesn't matter...
 			type = this.factory.getType("jsap:reference");
+		} else if (!content.isDefaultRendition() || (content.getRenditionPage() > 0)) {
+			// If this is a rendition or rendition extra page...
+			type = this.factory.getType("jsap:rendition");
 		} else {
 			// Not a rendition or a reference? Fine...let's identify the type
 			String srcTypeName = this.cmfObject.getSubtype().toLowerCase();
@@ -350,7 +366,21 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		p.setProperty("aspects", sb.toString());
 		p.setProperty("arm:aspects", sb.toString());
 
-		p.setProperty("arm:dmAcl", Tools.coalesce(generateAcl(ctx), ""));
+		// Perform user mappings
+		for (String s : AlfDocumentImportDelegate.USER_CONVERSIONS) {
+			String v = ctx.mapUser(p.getProperty(s));
+			p.setProperty(s, v);
+		}
+
+		// Map the group attribute
+		String group = null;
+		prop = this.cmfObject.getAttribute(IntermediateAttribute.GROUP);
+		if ((prop != null) && prop.hasValues()) {
+			group = ctx.mapGroup(prop.getValue().asString());
+
+		}
+
+		p.setProperty("arm:dmAcl", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
 
 		CmfProperty<CmfValue> aclInherit = this.cmfObject.getProperty(IntermediateProperty.ACL_INHERITANCE);
 		if (aclInherit != null) {
@@ -362,7 +392,8 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		p.setProperty("cm:name", this.cmfObject.getName());
 	}
 
-	protected String generateAcl(final AlfImportContext ctx) throws ImportException {
+	protected String generateAcl(final AlfImportContext ctx, final String owner, final String group)
+		throws ImportException {
 		// TODO: This is hardcoded to Documentum-generated attributes, since we don't yet have
 		// a universal means of expressing ACLs
 
@@ -397,6 +428,16 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 						continue;
 					}
 
+					if (Tools.equals(accessor, "dm_owner")) {
+						accessor = owner;
+					} else if (Tools.equals(accessor, "dm_group")) {
+						accessor = group;
+					}
+
+					if (StringUtils.isEmpty(accessor)) {
+						continue;
+					}
+
 					final AccessorType type;
 					if (accessorType.equals("user")) {
 						type = AccessorType.USER;
@@ -417,7 +458,7 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 						permit = "?";
 					}
 
-					if (ret.length() > 0) {
+					if (i > 0) {
 						ret.append(',');
 					}
 					ret.append(String.format("%1.1s:%s:%1.1s", type.name().toLowerCase(), accessor, permit));
@@ -429,7 +470,7 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		};
 		try {
 			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
-			if (count == 0) { return null; }
+			if (count > 0) { return ret.toString(); }
 		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclIdAtt,
 				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
