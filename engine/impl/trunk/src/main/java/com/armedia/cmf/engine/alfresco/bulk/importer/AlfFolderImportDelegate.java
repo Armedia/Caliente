@@ -35,6 +35,8 @@ public class AlfFolderImportDelegate extends AlfFileableImportDelegate {
 
 	@Override
 	protected boolean createStub(File target) throws IOException {
+		// Only do this if the target is not a cabinet.
+		if ("dm_cabinet".equalsIgnoreCase(this.cmfObject.getSubtype())) { return false; }
 		FileUtils.forceMkdir(target);
 		return true;
 	}
