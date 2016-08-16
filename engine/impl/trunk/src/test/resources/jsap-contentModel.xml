@@ -3831,6 +3831,16 @@
 		-->
 
 		<!--
+			BEGIN arm:calienteIngested
+		-->
+		<aspect name="arm:calienteIngested">
+			<title>Armedia Caliente Ingested Content</title>
+		</aspect>
+		<!--
+			BEGIN arm:calienteIngested
+		-->
+
+		<!--
 			BEGIN arm:caliente
 		-->
 		<aspect name="arm:caliente">
