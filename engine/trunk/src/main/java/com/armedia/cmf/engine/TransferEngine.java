@@ -192,7 +192,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		String type = Tools.toString(referrentType.getValue(), true);
 		String id = Tools.toString(referrentId.getValue(), true);
 		String key = Tools.toString(referrentKey.getValue(), true);
-		if ((type == null) || (id == null) || (key == null)) { return null; }
+		if ((type == null) || (id == null)) { return null; }
 		return new ExportTarget(CmfType.decodeString(type), id, key);
 	}
 
