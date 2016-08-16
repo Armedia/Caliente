@@ -35,8 +35,6 @@ import com.delta.cmsmf.utils.CMSMFUtils;
 public abstract class AbstractCMSMFMain_import
 	extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
 
-	private static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
-
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
 	private final AtomicInteger aggregateCurrent = new AtomicInteger(0);
@@ -80,7 +78,7 @@ public abstract class AbstractCMSMFMain_import
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(),
-			Setting.THREADS.getInt(AbstractCMSMFMain_import.DEFAULT_THREADS));
+			Setting.THREADS.getInt(AbstractCMSMFMain.DEFAULT_THREADS));
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), Setting.CMF_IMPORT_TARGET_LOCATION.getString("/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), Setting.CMF_IMPORT_TRIM_PREFIX.getInt(0));
 		customizeSettings(settings);

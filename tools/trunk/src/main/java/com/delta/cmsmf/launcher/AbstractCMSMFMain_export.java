@@ -126,7 +126,6 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			}
 		});
 		extraListeners.setHideErrors(false);
-
 		for (ExportEngineListener l : extraListeners) {
 			this.engine.addListener(l);
 		}
@@ -137,6 +136,8 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		validateState();
 		Map<String, Object> settings = new HashMap<String, Object>();
 		prepareSettings(settings);
+		settings.put(TransferSetting.THREAD_COUNT.getLabel(),
+			Setting.THREADS.getInt(AbstractCMSMFMain_export.DEFAULT_THREADS));
 
 		Date end = null;
 		Map<CmfType, Integer> summary = null;

@@ -20,6 +20,8 @@ import com.delta.cmsmf.cfg.SettingManager;
 
 public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CMSMFMain {
 
+	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
+
 	protected static final String ALL = "ALL";
 
 	protected static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
