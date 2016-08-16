@@ -40,15 +40,9 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled)
-		throws ExportException {
+	protected final void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled) throws Exception {
 		super.prepareForStorage(ctx, marshaled);
-		try {
-			prepareForStorage(ctx, marshaled, this.object);
-		} catch (DfException e) {
-			throw new ExportException(String.format("Failed to prepare the %s [%s](%s) for storage",
-				marshaled.getType(), marshaled.getLabel(), marshaled.getId()), e);
-		}
+		prepareForStorage(ctx, marshaled, this.object);
 	}
 
 	protected void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled, T object)
@@ -97,6 +91,22 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 		Collection<DctmExportDelegate<?>> ret = new ArrayList<DctmExportDelegate<?>>();
 		ret.add(this.factory.newExportDelegate(object.getType()));
 		return ret;
+	}
+
+	protected Collection<DctmExportDelegate<?>> findAntecedents(IDfSession session, CmfObject<IDfValue> marshaled,
+		T object, DctmExportContext ctx) throws Exception {
+		return new ArrayList<DctmExportDelegate<?>>();
+	}
+
+	@Override
+	protected final Collection<DctmExportDelegate<?>> identifySuccessors(CmfObject<IDfValue> marshaled,
+		DctmExportContext ctx) throws Exception {
+		return findSuccessors(ctx.getSession(), marshaled, castObject(this.object), ctx);
+	}
+
+	protected Collection<DctmExportDelegate<?>> findSuccessors(IDfSession session, CmfObject<IDfValue> marshaled,
+		T object, DctmExportContext ctx) throws Exception {
+		return new ArrayList<DctmExportDelegate<?>>();
 	}
 
 	@Override

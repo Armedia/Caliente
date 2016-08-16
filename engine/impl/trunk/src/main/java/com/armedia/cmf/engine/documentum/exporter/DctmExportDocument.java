@@ -175,6 +175,16 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				req.add(this.factory.newExportDelegate(session.getObject(vDoc.getUniqueObjectId(i))));
 			}
 		}
+		return req;
+	}
+
+	@Override
+	protected Collection<DctmExportDelegate<?>> findAntecedents(IDfSession session, CmfObject<IDfValue> marshaled,
+		IDfDocument document, DctmExportContext ctx) throws Exception {
+		Collection<DctmExportDelegate<?>> req = super.findAntecedents(session, marshaled, document, ctx);
+
+		// We do nothing else for references, as we need nothing else
+		if (isDfReference(document)) { return req; }
 
 		// We only export versions if we're the root object of the context operation
 		// There is no actual harm done, since the export engine is smart enough to
@@ -206,10 +216,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, CmfObject<IDfValue> marshaled,
+	protected Collection<DctmExportDelegate<?>> findSuccessors(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfDocument document, DctmExportContext ctx) throws Exception {
 		// TODO Auto-generated method stub
-		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, document, ctx);
+		Collection<DctmExportDelegate<?>> ret = super.findSuccessors(session, marshaled, document, ctx);
 
 		// References need only the ACL as a dependent
 		if (isDfReference(document)) { return ret; }

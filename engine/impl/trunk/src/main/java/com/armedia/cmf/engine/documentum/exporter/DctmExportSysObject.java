@@ -322,8 +322,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			Set<String> parentIdPaths = this.factory.pathIdCache.get(folderId.asString());
 			if ((parentIdPaths != null) && !parentIdPaths.isEmpty()) {
 				for (String s : parentIdPaths) {
-					String S = String.format("%s/%s", s, folderId.asString());
-					ptid.add(S);
+					ptid.add(String.format("%s/%s", s, folderId.asString()));
 				}
 			} else {
 				ptid.add(folderId.asString());
@@ -490,12 +489,17 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (currentObject != null) {
 			String markerName = String.format(DctmExportSysObject.CTX_VERSION_CURRENT, chronicleId.getId());
 			ctx.setObject(markerName, currentObject.getObjectId().getId());
-
-			markerName = String.format(DctmExportSysObject.JSAP_HISTORY_PATH_IDS, chronicleId.getId());
-			ctx.setObject(markerName, calculateParentTreeIds(currentObject));
 		}
 
 		return history;
+	}
+
+	@Override
+	protected void requirementsExported(CmfObject<IDfValue> marshalled, DctmExportContext ctx) throws Exception {
+		T currentObject = castObject(ctx.getSession().getObject(new DfId(marshalled.getId())));
+		IDfId chronicleId = currentObject.getChronicleId();
+		String markerName = String.format(DctmExportSysObject.JSAP_HISTORY_PATH_IDS, chronicleId.getId());
+		ctx.setObject(markerName, calculateParentTreeIds(currentObject));
 	}
 
 	protected final List<IDfValue> getVersionPatches(T object, DctmExportContext ctx) throws DfException {
