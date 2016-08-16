@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
+import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfObject;
@@ -37,6 +38,18 @@ public class AlfFolderImportDelegate extends AlfFileableImportDelegate {
 	protected boolean createStub(File target) throws IOException {
 		// Only do this if the target is not a cabinet.
 		if ("dm_cabinet".equalsIgnoreCase(this.cmfObject.getSubtype())) { return false; }
+		ExportTarget referrent = this.factory.getEngine().getReferrent(this.cmfObject);
+		if (referrent != null) {
+			switch (referrent.getType()) {
+				case FOLDER:
+				case DOCUMENT:
+					break;
+				default:
+					// If this folder is referenced by anything other than a folder
+					// or another document, we're not interested in creating it.
+					return false;
+			}
+		}
 		FileUtils.forceMkdir(target);
 		return true;
 	}
