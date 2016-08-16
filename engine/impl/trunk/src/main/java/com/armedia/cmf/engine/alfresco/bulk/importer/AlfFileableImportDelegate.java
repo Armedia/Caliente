@@ -255,7 +255,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 		}
 	}
 
-	protected abstract void createStub(File target) throws IOException;
+	protected abstract boolean createStub(File target) throws IOException;
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentInfo content) throws ImportException, ParseException {
@@ -487,7 +487,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 
 		String path = null;
 		CmfValue pathProp = getPropertyValue(IntermediateProperty.JSAP_PARENT_TREE_IDS);
-		if (pathProp == null) {
+		if ((pathProp == null) || pathProp.isNull()) {
 			pathProp = getPropertyValue(IntermediateProperty.PARENT_TREE_IDS);
 		}
 		if (pathProp == null) { throw new ImportException(String.format(
@@ -518,8 +518,10 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 			}
 
 			if (!main.exists()) {
+				ctx.printf("Creating a stub for %s [%s](%s)", this.cmfObject.getType(), this.cmfObject.getLabel(),
+					this.cmfObject.getId());
 				try {
-					createStub(main);
+					if (!createStub(main)) { return Collections.singleton(ImportOutcome.SKIPPED); }
 				} catch (IOException e) {
 					throw new ImportException(
 						String.format("Failed to create the stub for %s [%s](%s) at [%s]", this.cmfObject.getType(),

@@ -61,10 +61,20 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 			default:
 				break;
 		}
-		CmfAttribute<T> latestVersionAtt = object
-			.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
-		final boolean isHeadVersion = ((latestVersionAtt != null) && latestVersionAtt.hasValues()
-			&& translator.getCodec(latestVersionAtt.getType()).encodeValue(latestVersionAtt.getValue()).asBoolean());
+		final boolean headVersion;
+		switch (object.getType()) {
+			case DOCUMENT:
+				CmfAttribute<T> latestVersionAtt = object.getAttribute(
+					translator.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
+				headVersion = ((latestVersionAtt != null) && latestVersionAtt.hasValues() && translator
+					.getCodec(latestVersionAtt.getType()).encodeValue(latestVersionAtt.getValue()).asBoolean());
+				break;
+			case FOLDER:
+				// Fall-through
+			default:
+				headVersion = true;
+				break;
+		}
 
 		CmfProperty<T> vCounter = object.getProperty(IntermediateProperty.VERSION_COUNT);
 		CmfProperty<T> vIndex = object.getProperty(IntermediateProperty.VERSION_INDEX);
@@ -80,7 +90,7 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 
 				final int counter = vCounterCodec.encodeValue(vCounter.getValue()).asInteger();
 				final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
-				if ((index < (counter - 1)) || !isHeadVersion) {
+				if ((index < (counter - 1)) || !headVersion) {
 					final int width = String.format("%d", counter).length();
 
 					String format = "v%s%d";

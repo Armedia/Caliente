@@ -40,8 +40,9 @@ public class AlfDocumentImportDelegate extends AlfFileableImportDelegate {
 	}
 
 	@Override
-	protected void createStub(File target) throws IOException {
+	protected boolean createStub(File target) throws IOException {
 		// If it's a folder, make the folder...else, make the file
 		FileUtils.write(target, this.cmfObject.getLabel());
+		return true;
 	}
 }

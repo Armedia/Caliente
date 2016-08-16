@@ -34,7 +34,8 @@ public class AlfFolderImportDelegate extends AlfFileableImportDelegate {
 	}
 
 	@Override
-	protected void createStub(File target) throws IOException {
+	protected boolean createStub(File target) throws IOException {
 		FileUtils.forceMkdir(target);
+		return true;
 	}
 }
