@@ -29,6 +29,18 @@ public abstract class CmisExportDelegate<T> extends
 	}
 
 	@Override
+	protected Collection<CmisExportDelegate<?>> identifyAntecedents(CmfObject<CmfValue> marshalled,
+		CmisExportContext ctx) throws Exception {
+		return new ArrayList<CmisExportDelegate<?>>();
+	}
+
+	@Override
+	protected Collection<CmisExportDelegate<?>> identifySuccessors(CmfObject<CmfValue> marshalled,
+		CmisExportContext ctx) throws Exception {
+		return new ArrayList<CmisExportDelegate<?>>();
+	}
+
+	@Override
 	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
 		return new ArrayList<CmisExportDelegate<?>>();

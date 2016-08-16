@@ -87,9 +87,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
+	protected Collection<CmisExportDelegate<?>> identifyAntecedents(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
+		Collection<CmisExportDelegate<?>> ret = super.identifyAntecedents(marshalled, ctx);
 		String prev = null;
 		for (Document d : this.previous) {
 			ret.add(new CmisDocumentDelegate(this, d, prev));
@@ -173,9 +173,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
+	protected Collection<CmisExportDelegate<?>> identifySuccessors(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		Collection<CmisExportDelegate<?>> ret = super.identifyDependents(marshalled, ctx);
+		Collection<CmisExportDelegate<?>> ret = super.identifySuccessors(marshalled, ctx);
 		String prev = this.object.getId();
 		for (Document d : this.successors) {
 			ret.add(new CmisDocumentDelegate(this, d, prev));
