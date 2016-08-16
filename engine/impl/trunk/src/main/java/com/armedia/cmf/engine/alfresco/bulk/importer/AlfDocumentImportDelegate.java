@@ -277,6 +277,11 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		}
 	}
 
+	protected void createStub(File target) throws IOException {
+		// If it's a folder, make the folder...else, make the file
+		FileUtils.write(target, this.cmfObject.getLabel());
+	}
+
 	protected void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentInfo content) throws ImportException, ParseException {
 
@@ -527,9 +532,6 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 		Collection<CmfContentInfo> contents = ctx.getContentInfo(this.cmfObject);
 		if (contents.isEmpty()) {
 			// No content streams, so make one up so we can build the properties file
-			if (isReference()) {
-				contents.size();
-			}
 			contents = Collections.singleton(new CmfContentInfo());
 		}
 		for (CmfContentInfo content : contents) {
@@ -548,9 +550,12 @@ public class AlfDocumentImportDelegate extends AlfImportDelegate {
 
 			if (!main.exists()) {
 				try {
-					FileUtils.write(main, this.cmfObject.getLabel());
+					createStub(main);
 				} catch (IOException e) {
-					throw new ImportException("Failure!", e);
+					throw new ImportException(
+						String.format("Failed to create the stub for %s [%s](%s) at [%s]", this.cmfObject.getType(),
+							this.cmfObject.getLabel(), this.cmfObject.getId(), main.getAbsolutePath()),
+						e);
 				}
 			}
 
