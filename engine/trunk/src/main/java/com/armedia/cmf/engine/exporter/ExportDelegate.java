@@ -127,7 +127,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	protected Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyAntecedents(CmfObject<V> marshalled,
 		C ctx) throws Exception {
-		return Collections.emptyList();
+		return new ArrayList<ExportDelegate<?, S, W, V, C, DF, ?>>();
 	}
 
 	protected void antecedentsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
@@ -148,7 +148,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	protected Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifySuccessors(CmfObject<V> marshalled,
 		C ctx) throws Exception {
-		return Collections.emptyList();
+		return new ArrayList<ExportDelegate<?, S, W, V, C, DF, ?>>();
 	}
 
 	protected void successorsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
