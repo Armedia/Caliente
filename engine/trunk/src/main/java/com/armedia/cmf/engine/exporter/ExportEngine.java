@@ -262,6 +262,28 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					listenerDelegator);
 			}
 
+			sourceObject.requirementsExported(marshaled, ctx);
+
+			try {
+				referenced = sourceObject.identifyAntecedents(marshaled, ctx);
+				if (referenced == null) {
+					referenced = Collections.emptyList();
+				}
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to identify the antecedent versions for %s", label), e);
+			}
+
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("%s requires %d antecedent versions for successful storage", label,
+					referenced.size()));
+			}
+			for (ExportDelegate<?, S, W, V, C, ?, ?> antecedent : referenced) {
+				exportObject(objectStore, streamStore, target, antecedent.getExportTarget(), antecedent, ctx,
+					listenerDelegator);
+			}
+
+			sourceObject.antecedentsExported(marshaled, ctx);
+
 			// Are there any last-minute properties/attributes to calculate prior to
 			// storing the object for posterity?
 			sourceObject.prepareForStorage(ctx, marshaled);
@@ -293,6 +315,26 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			try {
+				referenced = sourceObject.identifySuccessors(marshaled, ctx);
+				if (referenced == null) {
+					referenced = Collections.emptyList();
+				}
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to identify the successor versions for %s", label), e);
+			}
+
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("%s is succeeded by %d additional versions for successful storage", label,
+					referenced.size()));
+			}
+			for (ExportDelegate<?, S, W, V, C, ?, ?> successor : referenced) {
+				exportObject(objectStore, streamStore, target, successor.getExportTarget(), successor, ctx,
+					listenerDelegator);
+			}
+
+			sourceObject.successorsExported(marshaled, ctx);
+
+			try {
 				referenced = sourceObject.identifyDependents(marshaled, ctx);
 				if (referenced == null) {
 					referenced = Collections.emptyList();
@@ -308,6 +350,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				exportObject(objectStore, streamStore, target, dependent.getExportTarget(), dependent, ctx,
 					listenerDelegator);
 			}
+
+			sourceObject.dependentsExported(marshaled, ctx);
+
 			return new Result(ret, marshaled);
 		} finally {
 			if (referrent != null) {

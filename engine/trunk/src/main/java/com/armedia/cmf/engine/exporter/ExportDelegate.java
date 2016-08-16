@@ -122,6 +122,17 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyRequirements(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
+	protected void requirementsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
+	}
+
+	protected Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyAntecedents(CmfObject<V> marshalled,
+		C ctx) throws Exception {
+		return Collections.emptyList();
+	}
+
+	protected void antecedentsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
+	}
+
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
 		CmfObject<V> marshaled = new CmfObject<V>(this.factory.getTranslator(), this.exportTarget.getType(),
 			this.exportTarget.getId(), this.name, this.parentIds, this.exportTarget.getSearchKey(), this.batchId,
@@ -135,11 +146,22 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		// By default, do nothing.
 	}
 
+	protected Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifySuccessors(CmfObject<V> marshalled,
+		C ctx) throws Exception {
+		return Collections.emptyList();
+	}
+
+	protected void successorsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
+	}
+
 	protected abstract boolean marshal(C ctx, CmfObject<V> object) throws ExportException;
+
+	protected abstract List<CmfContentInfo> storeContent(C ctx, CmfAttributeTranslator<V> translator,
+		CmfObject<V> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception;
 
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyDependents(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
-	protected abstract List<CmfContentInfo> storeContent(C ctx, CmfAttributeTranslator<V> translator,
-		CmfObject<V> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception;
+	protected void dependentsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
+	}
 }
