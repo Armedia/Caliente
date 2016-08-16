@@ -18,7 +18,7 @@ import com.armedia.cmf.storage.CmfValue;
 public abstract class AlfImportDelegate extends
 	ImportDelegate<File, AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportDelegateFactory, AlfImportEngine> {
 
-	protected static final TimeZone TZUTC = TimeZone.getTimeZone(("UTC"));
+	protected static final TimeZone TZUTC = TimeZone.getTimeZone("UTC");
 
 	protected final CmfValue getAttributeValue(CmfEncodeableName attribute) {
 		return getAttributeValue(attribute.encode());

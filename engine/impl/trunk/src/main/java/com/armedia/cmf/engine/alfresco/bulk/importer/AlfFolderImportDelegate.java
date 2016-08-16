@@ -1,24 +1,17 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
+import java.io.IOException;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.io.FileUtils;
 
-import com.armedia.cmf.engine.converter.IntermediateProperty;
+import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.importer.ImportException;
-import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfProperty;
-import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 
-public class AlfFolderImportDelegate extends AlfImportDelegate {
+public class AlfFolderImportDelegate extends AlfFileableImportDelegate {
 
 	public AlfFolderImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
@@ -26,29 +19,22 @@ public class AlfFolderImportDelegate extends AlfImportDelegate {
 	}
 
 	@Override
-	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, AlfImportContext ctx)
-		throws ImportException, CmfStorageException {
-		String path = null;
-		CmfProperty<CmfValue> pathProp = this.cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-		if (pathProp == null) { throw new ImportException(String.format(
-			"Failed to find the required property [%s] in %s [%s](%s)", IntermediateProperty.PARENT_TREE_IDS.encode(),
-			this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
+		AlfrescoType type = null;
+		// Not a rendition or a reference? Fine...let's identify the type
+		String srcTypeName = this.cmfObject.getSubtype().toLowerCase();
+		String finalTypeName = String.format("jsap:%s", srcTypeName);
+		if (this.factory.schema.hasType(finalTypeName)) {
+			type = this.factory.schema.buildType(finalTypeName);
+		} else {
+			type = this.factory.getType("jsap:folder");
+		}
 
-		String prefix = (pathProp.hasValues() ? pathProp.getValue().asString() : "");
-		path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/", this.cmfObject.getId());
+		return type;
+	}
 
-		File directory = this.factory.getLocation(path);
-		File metadata = this.factory.getLocation(String.format("%s-metadata.xml", path));
-
-		StringBuilder sb = new StringBuilder();
-		sb.append(String.format("ABI-DIRECTORY: [%s]->[%s || %s]%n", this.cmfObject.getLabel(), directory, metadata));
-
-		Set<String> attNames = new TreeSet<String>(this.cmfObject.getAttributeNames());
-		sb.append(String.format("\tATTNAMES for [%s] = %s%n", this.cmfObject.getSubtype(), attNames));
-		Set<String> propNames = new TreeSet<String>(this.cmfObject.getPropertyNames());
-		sb.append(String.format("\tPROPNAMES for [%s] = %s%n", this.cmfObject.getSubtype(), propNames));
-
-		ctx.printf(sb.toString());
-		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), path));
+	@Override
+	protected void createStub(File target) throws IOException {
+		FileUtils.forceMkdir(target);
 	}
 }

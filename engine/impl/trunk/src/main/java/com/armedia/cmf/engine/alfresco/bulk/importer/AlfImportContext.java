@@ -20,16 +20,4 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore,
 			batchPosition);
 	}
-
-	protected String mapUser(String user) {
-		return user;
-	}
-
-	protected String mapGroup(String group) {
-		return group;
-	}
-
-	protected String mapRole(String role) {
-		return role;
-	}
 }

@@ -38,8 +38,10 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 		final boolean primaryContent = (info.isDefaultRendition() && (info.getRenditionPage() == 0));
 
 		List<String> paths = new ArrayList<String>();
-		for (String p : FileNameTools.tokenize(pathProp.getValue().toString(), '/')) {
-			paths.add(p);
+		if (pathProp.hasValues()) {
+			for (String p : FileNameTools.tokenize(pathProp.getValue().toString(), '/')) {
+				paths.add(p);
+			}
 		}
 
 		if (!primaryContent) {

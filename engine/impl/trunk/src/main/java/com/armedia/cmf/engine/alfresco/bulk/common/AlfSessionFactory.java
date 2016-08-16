@@ -16,6 +16,9 @@ public class AlfSessionFactory extends SessionFactory<AlfRoot> {
 	public static final String DB = "db";
 	public static final String CONTENT = "content";
 	public static final String CONTENT_MODEL = "contentModel";
+	public static final String USER_MAP = "userMap";
+	public static final String GROUP_MAP = "groupMap";
+	public static final String ROLE_MAP = "roleMap";
 
 	private final AlfRoot root;
 

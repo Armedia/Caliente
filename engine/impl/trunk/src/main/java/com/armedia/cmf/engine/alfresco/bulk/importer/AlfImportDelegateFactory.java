@@ -9,9 +9,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.validation.Schema;
@@ -24,9 +23,6 @@ import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
-import com.armedia.cmf.engine.importer.ImportEngineListener;
-import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
@@ -50,72 +46,19 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final Map<String, AtomicInteger> sequence = new ConcurrentHashMap<String, AtomicInteger>();
-
-	private final ImportEngineListener listener = new ImportEngineListener() {
-
-		@Override
-		public void importStarted(Map<CmfType, Integer> summary) {
-		}
-
-		@Override
-		public void objectTypeImportStarted(CmfType objectType, int totalObjects) {
-		}
-
-		@Override
-		public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
-			switch (objectType) {
-				case DOCUMENT:
-					AlfImportDelegateFactory.this.sequence.put(batchId, new AtomicInteger(-1));
-					return;
-				default:
-					return;
-			}
-		}
-
-		@Override
-		public void objectImportStarted(CmfObject<?> object) {
-			getCounter(object).incrementAndGet();
-		}
-
-		@Override
-		public void objectImportFailed(CmfObject<?> object, Throwable thrown) {
-		}
-
-		@Override
-		public void objectImportCompleted(CmfObject<?> object, ImportOutcome outcome) {
-		}
-
-		@Override
-		public void objectBatchImportFinished(CmfType objectType, String batchId,
-			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
-			switch (objectType) {
-				case DOCUMENT:
-					AlfImportDelegateFactory.this.sequence.remove(batchId);
-					return;
-				default:
-					return;
-			}
-		}
-
-		@Override
-		public void objectTypeImportFinished(CmfType objectType, Map<ImportResult, Integer> counters) {
-		}
-
-		@Override
-		public void importFinished(Map<ImportResult, Integer> counters) {
-		}
-	};
-
 	private final File db;
 	private final File content;
+
+	private final Properties userMap = new Properties();
+	private final Properties userLoginMap = new Properties();
+	private final Properties groupMap = new Properties();
+	private final Properties roleMap = new Properties();
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration) throws IOException, JAXBException {
 		super(engine, configuration);
-		engine.addListener(this.listener);
 		String db = configuration.getString(AlfSessionFactory.DB);
 		if (db != null) {
 			this.db = new File(db).getCanonicalFile();
@@ -175,19 +118,11 @@ public class AlfImportDelegateFactory
 		return new File(this.content, relativePath);
 	}
 
-	private final AtomicInteger getCounter(CmfObject<?> storedObject) {
-		if (storedObject == null) { throw new IllegalArgumentException(
-			"Must provide a CMF object to get the counter for"); }
-		AtomicInteger counter = this.sequence.get(storedObject.getBatchId());
-		if (counter == null) { throw new IllegalStateException(
-			String.format("Failed to locate the counter for batch [%s] referenced by [%s](%s)",
-				storedObject.getBatchId(), storedObject.getLabel(), storedObject.getId())); }
-		return counter;
-	}
-
 	@Override
 	protected AlfImportDelegate newImportDelegate(CmfObject<CmfValue> storedObject) throws Exception {
 		switch (storedObject.getType()) {
+			case USER:
+				return new AlfUserDelegate(this, storedObject);
 			case FOLDER:
 				return new AlfFolderImportDelegate(this, storedObject);
 			case DOCUMENT:
@@ -201,6 +136,22 @@ public class AlfImportDelegateFactory
 
 	protected File calculateConsolidatedFile(CmfType t) {
 		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
+	}
+
+	protected String mapUser(String user) {
+		if (user == null) { return null; }
+		user = Tools.coalesce(this.userLoginMap.getProperty(user), user);
+		return Tools.coalesce(this.userMap.getProperty(user), user);
+	}
+
+	protected String mapGroup(String group) {
+		if (group == null) { return null; }
+		return Tools.coalesce(this.groupMap.getProperty(group), group);
+	}
+
+	protected String mapRole(String role) {
+		if (role == null) { return null; }
+		return Tools.coalesce(this.roleMap.getProperty(role), role);
 	}
 
 	@Override

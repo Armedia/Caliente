@@ -97,7 +97,7 @@ public class AlfImportEngine extends
 		}
 	};
 
-	private static final ImportStrategy DOCUMENT_STRATEGY = new ImportStrategy() {
+	private static final ImportStrategy USER_STRATEGY = new ImportStrategy() {
 
 		@Override
 		public boolean isParallelCapable() {
@@ -111,7 +111,7 @@ public class AlfImportEngine extends
 
 		@Override
 		public boolean isBatchIndependent() {
-			return true;
+			return false;
 		}
 
 		@Override
@@ -121,7 +121,7 @@ public class AlfImportEngine extends
 
 		@Override
 		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_SERIALIZED;
+			return BatchItemStrategy.ITEMS_CONCURRENT;
 		}
 
 		@Override
@@ -131,7 +131,7 @@ public class AlfImportEngine extends
 
 		@Override
 		public boolean isBatchingSupported() {
-			return true;
+			return false;
 		}
 	};
 
@@ -173,6 +173,44 @@ public class AlfImportEngine extends
 		}
 	};
 
+	private static final ImportStrategy DOCUMENT_STRATEGY = new ImportStrategy() {
+
+		@Override
+		public boolean isParallelCapable() {
+			return true;
+		}
+
+		@Override
+		public boolean isIgnored() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchIndependent() {
+			return true;
+		}
+
+		@Override
+		public boolean isBatchFailRemainder() {
+			return true;
+		}
+
+		@Override
+		public BatchItemStrategy getBatchItemStrategy() {
+			return BatchItemStrategy.ITEMS_SERIALIZED;
+		}
+
+		@Override
+		public boolean isSupportsTransactions() {
+			return false;
+		}
+
+		@Override
+		public boolean isBatchingSupported() {
+			return true;
+		}
+	};
+
 	public AlfImportEngine() {
 		super(new CmfCrypt());
 	}
@@ -180,6 +218,9 @@ public class AlfImportEngine extends
 	@Override
 	protected ImportStrategy getImportStrategy(CmfType type) {
 		switch (type) {
+			case USER:
+				return AlfImportEngine.USER_STRATEGY;
+
 			case FOLDER:
 				return AlfImportEngine.FOLDER_STRATEGY;
 
@@ -194,6 +235,7 @@ public class AlfImportEngine extends
 	@Override
 	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
 		switch (type) {
+			case USER:
 			case FOLDER:
 			case DOCUMENT:
 				return super.checkSupported(excludes, type);
