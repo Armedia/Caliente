@@ -331,22 +331,26 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 				Collections.singleton(new CmfValue(modifier.getName()))));
 		}
 
-		for (ShptFile f : this.predecessors) {
-			ret.add(f);
-		}
-
 		return ret;
 	}
 
 	@Override
-	protected Collection<ShptObject<?>> findDependents(ShptSession service, CmfObject<CmfValue> marshaled,
+	protected Collection<ShptObject<?>> findAntecedents(ShptSession service, CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
-		Collection<ShptObject<?>> ret = super.findDependents(service, marshaled, ctx);
+		Collection<ShptObject<?>> ret = super.findAntecedents(service, marshaled, ctx);
+		for (ShptFile f : this.predecessors) {
+			ret.add(f);
+		}
+		return ret;
+	}
 
+	@Override
+	protected Collection<ShptObject<?>> findSuccessors(ShptSession service, CmfObject<CmfValue> marshaled,
+		ShptExportContext ctx) throws Exception {
+		Collection<ShptObject<?>> ret = super.findSuccessors(service, marshaled, ctx);
 		for (ShptFile f : this.successors) {
 			ret.add(f);
 		}
-
 		return ret;
 	}
 

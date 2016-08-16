@@ -71,8 +71,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 		Date d = getCreatedTime();
 		if (d != null) {
-			object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME,
-				false, Collections.singleton(new CmfValue(d))));
+			object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME, false,
+				Collections.singleton(new CmfValue(d))));
 		}
 
 		d = getLastModifiedTime();
@@ -89,8 +89,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			path = FileNameTools.removeEdgeSeparators(path, '/').replaceFirst("/", "_");
 			path = String.format("/%s", path);
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]",
-					path, getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
+				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]", path,
+					getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
 			}
 			object.setProperty(new CmfProperty<CmfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true,
 				Collections.singleton(new CmfValue(path))));
@@ -110,9 +110,9 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 				Collections.singleton(new CmfValue(CmfDataType.ID, parent.getObjectId()))));
 			ret.add(parent);
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format(
-					"Adding parent dependency to [%s] from source path [%s] for %s [ID=%s/L=%s]", parentPath,
-					getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
+				this.log
+					.debug(String.format("Adding parent dependency to [%s] from source path [%s] for %s [ID=%s/L=%s]",
+						parentPath, getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
 			}
 		}
 		return ret;
