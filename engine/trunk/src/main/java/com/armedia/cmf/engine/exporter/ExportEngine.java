@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 
@@ -152,14 +154,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	private Result exportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
-		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
-		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException {
+		final ExportTarget referrent, final ExportTarget target, final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
+		final C ctx, final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportStatus> statusMap)
+		throws ExportException, CmfStorageException {
 		try {
 			listenerDelegator.objectExportStarted(target.getType(), target.getId());
 			Result result = null;
 			if (ctx.isSupported(target.getType())) {
 				result = doExportObject(objectStore, streamStore, referrent, target, sourceObject, ctx,
-					listenerDelegator);
+					listenerDelegator, statusMap);
 			} else {
 				result = new Result(ExportSkipReason.UNSUPPORTED);
 			}
@@ -178,8 +181,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	private Result doExportObject(final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
-		final ExportTarget referrent, final ExportTarget target, ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
-		C ctx, ExportListenerDelegator listenerDelegator) throws ExportException, CmfStorageException {
+		final ExportTarget referrent, final ExportTarget target, final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
+		final C ctx, final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportStatus> statusMap)
+		throws ExportException, CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
@@ -199,9 +203,18 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		// First, make sure other threads don't work on this same object
+		ExportStatus thisStatus = null;
 		boolean locked = false;
 		try {
 			locked = objectStore.lockForStorage(type, id);
+			if (locked) {
+				// We got the lock, which means we create the locker object
+				thisStatus = new ExportStatus(target);
+				ExportStatus old = statusMap.put(target, thisStatus);
+				if (old != null) { throw new ExportException(String.format(
+					"Duplicate export status for [%s] - this should be impossible! This means DB lock markers are broken!",
+					target)); }
+			}
 		} catch (CmfStorageException e) {
 			throw new ExportException(
 				String.format("Exception caught attempting to lock a %s for storage [%s](%s)", type, label, id), e);
@@ -225,9 +238,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log
 					.trace(String.format("%s was locked for storage by this thread, but is already stored...", label));
 			}
+			// Just in case...
+			thisStatus.markExported(true);
 			return new Result(ExportSkipReason.ALREADY_STORED);
 		}
 
+		boolean success = false;
 		if (referrent != null) {
 			ctx.pushReferrent(referrent);
 		}
@@ -257,12 +273,65 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log
 					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
 			}
+			// We use a TreeSet to ensure that all our targets are always waited upon in the same
+			// order, to avoid deadlocks.
+			Collection<ExportTarget> waitTargets = new TreeSet<ExportTarget>();
 			for (ExportDelegate<?, S, W, V, C, ?, ?> requirement : referenced) {
-				exportObject(objectStore, streamStore, target, requirement.getExportTarget(), requirement, ctx,
-					listenerDelegator);
+				if (requirement.getExportTarget().equals(target)) {
+					continue;
+				}
+				Result r = exportObject(objectStore, streamStore, target, requirement.getExportTarget(), requirement,
+					ctx, listenerDelegator, statusMap);
+				// If there is no message, the result is success
+				if (r.message == null) {
+					continue;
+				}
+				switch (r.message) {
+					case ALREADY_LOCKED:
+						if (!ctx.isReferrentLoop(requirement.exportTarget)
+							&& ctx.shouldWaitForRequirement(target.getType(), requirement.getType())) {
+							// Locked, but not stored...we should wait for it to be stored...
+							waitTargets.add(requirement.getExportTarget());
+						}
+						break;
+					default:
+						// Already stored, skipped, or is unsupported... we need not wait
+						break;
+				}
 			}
 
-			sourceObject.requirementsExported(marshaled, ctx);
+			thisStatus.startWait();
+			try {
+				for (ExportTarget requirement : waitTargets) {
+					// We need to wait for each of these to be stored...so find their lock object
+					// and listen on it...?
+					ExportStatus status = statusMap.get(requirement);
+					if (status == null) { throw new ExportException(
+						String.format("No export status found for requirement [%s] of %s", requirement, label)); }
+					try {
+						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, label,
+							status.getObjectNumber(), status.getCreatorThread());
+						long waitTime = status.waitUntilExported();
+						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, label, waitTime);
+					} catch (InterruptedException e) {
+						Thread.interrupted();
+						throw new ExportException(
+							String.format("Thread interrupted waiting on the export of [%s] by %s", requirement, label),
+							e);
+					}
+					if (!status.isSuccessful()) { throw new ExportException(
+						String.format("A required object [%s] failed to serialize for %s", requirement, label)); }
+				}
+			} finally {
+				thisStatus.endWait();
+			}
+
+			try {
+				sourceObject.requirementsExported(marshaled, ctx);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to run the post-requirements callback for %s", label),
+					e);
+			}
 
 			try {
 				referenced = sourceObject.identifyAntecedents(marshaled, ctx);
@@ -279,14 +348,23 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 			for (ExportDelegate<?, S, W, V, C, ?, ?> antecedent : referenced) {
 				exportObject(objectStore, streamStore, target, antecedent.getExportTarget(), antecedent, ctx,
-					listenerDelegator);
+					listenerDelegator, statusMap);
 			}
 
-			sourceObject.antecedentsExported(marshaled, ctx);
+			try {
+				sourceObject.antecedentsExported(marshaled, ctx);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to run the post-antecedents callback for %s", label),
+					e);
+			}
 
 			// Are there any last-minute properties/attributes to calculate prior to
 			// storing the object for posterity?
-			sourceObject.prepareForStorage(ctx, marshaled);
+			try {
+				sourceObject.prepareForStorage(ctx, marshaled);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to prepare the object for storage for %s", label), e);
+			}
 
 			final Long ret = objectStore.storeObject(marshaled, getTranslator());
 			if (ret == null) {
@@ -329,10 +407,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 			for (ExportDelegate<?, S, W, V, C, ?, ?> successor : referenced) {
 				exportObject(objectStore, streamStore, target, successor.getExportTarget(), successor, ctx,
-					listenerDelegator);
+					listenerDelegator, statusMap);
 			}
 
-			sourceObject.successorsExported(marshaled, ctx);
+			try {
+				sourceObject.successorsExported(marshaled, ctx);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to run the post-successors callback for %s", label), e);
+			}
 
 			try {
 				referenced = sourceObject.identifyDependents(marshaled, ctx);
@@ -348,13 +430,20 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 			for (ExportDelegate<?, S, W, V, C, ?, ?> dependent : referenced) {
 				exportObject(objectStore, streamStore, target, dependent.getExportTarget(), dependent, ctx,
-					listenerDelegator);
+					listenerDelegator, statusMap);
 			}
 
-			sourceObject.dependentsExported(marshaled, ctx);
+			try {
+				sourceObject.dependentsExported(marshaled, ctx);
+			} catch (Exception e) {
+				throw new ExportException(String.format("Failed to run the post-dependents callback for %s", label), e);
+			}
 
-			return new Result(ret, marshaled);
+			Result result = new Result(ret, marshaled);
+			success = true;
+			return result;
 		} finally {
+			thisStatus.markExported(success);
 			if (referrent != null) {
 				ctx.popReferrent();
 			}
@@ -438,6 +527,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
 		}
 		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
+		final Map<ExportTarget, ExportStatus> statusMap = new ConcurrentHashMap<ExportTarget, ExportStatus>();
 
 		PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
 			backlogSize) {
@@ -503,7 +593,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					try {
 						initContext(ctx);
 						Result result = exportObject(objectStore, contentStore, null, next, exportDelegate, ctx,
-							listenerDelegator);
+							listenerDelegator, statusMap);
 						if (result != null) {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(

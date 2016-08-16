@@ -122,7 +122,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyRequirements(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
-	protected void requirementsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
+	protected void requirementsExported(CmfObject<V> marshalled, C ctx) throws Exception {
 	}
 
 	protected Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyAntecedents(CmfObject<V> marshalled,
@@ -130,7 +130,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return new ArrayList<ExportDelegate<?, S, W, V, C, DF, ?>>();
 	}
 
-	protected void antecedentsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
+	protected void antecedentsExported(CmfObject<V> marshalled, C ctx) throws Exception {
 	}
 
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
@@ -142,7 +142,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return marshaled;
 	}
 
-	protected void prepareForStorage(C ctx, CmfObject<V> object) throws ExportException {
+	protected void prepareForStorage(C ctx, CmfObject<V> object) throws Exception {
 		// By default, do nothing.
 	}
 
@@ -151,7 +151,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return new ArrayList<ExportDelegate<?, S, W, V, C, DF, ?>>();
 	}
 
-	protected void successorsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
+	protected void successorsExported(CmfObject<V> marshalled, C ctx) throws Exception {
 	}
 
 	protected abstract boolean marshal(C ctx, CmfObject<V> object) throws ExportException;
@@ -162,6 +162,6 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyDependents(
 		CmfObject<V> marshalled, C ctx) throws Exception;
 
-	protected void dependentsExported(CmfObject<V> marshalled, C ctx) throws ExportException {
+	protected void dependentsExported(CmfObject<V> marshalled, C ctx) throws Exception {
 	}
 }

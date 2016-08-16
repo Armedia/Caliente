@@ -37,12 +37,20 @@ public class ExportContext<S, V, CF extends ExportContextFactory<S, ?, V, ?, ?>>
 		this.referrents.push(referrent);
 	}
 
+	public boolean shouldWaitForRequirement(CmfType referrent, CmfType referenced) {
+		return false;
+	}
+
+	public final boolean isReferrentLoop(ExportTarget referrent) {
+		return this.referrents.contains(referrent);
+	}
+
 	public final ExportTarget getReferrent() {
 		if (this.referrents.isEmpty()) { return null; }
 		return this.referrents.peek();
 	}
 
-	final ExportTarget popReferrent() {
+	ExportTarget popReferrent() {
 		if (this.referrents.isEmpty()) { return null; }
 		return this.referrents.pop();
 	}
