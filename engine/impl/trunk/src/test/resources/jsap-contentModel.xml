@@ -47,9 +47,9 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>false</multiple>
 				</property>
-				<property name="arm:renditionNumber">
-					<title>Rendition's Number</title>
-					<type>d:int</type>
+				<property name="arm:renditionName">
+					<title>Rendition's Name</title>
+					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
 					<multiple>false</multiple>
 				</property>
