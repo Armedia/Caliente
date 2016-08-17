@@ -74,19 +74,21 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			if (o == null) { return 1; }
 			if (equals(o)) { return 0; }
 
+			// If they're siblings, resort to version numbering
+			if (this.versionNumber.isSibling(o.versionNumber)) { return this.versionNumber.compareTo(o.versionNumber); }
+
 			// First, check hierarchy
 			if (this.versionNumber.isAntecedentOf(o.versionNumber)) { return -1; }
 			if (this.versionNumber.isSuccessorOf(o.versionNumber)) { return 1; }
 			if (this.versionNumber.isAncestorOf(o.versionNumber)) { return -1; }
 			if (this.versionNumber.isDescendantOf(o.versionNumber)) { return 1; }
 
-			// if there is no hierarchical relationship, then...
+			// if there is no familial (hierarchy or peer) relationship, so fall back to chronology
 			final int dateResult = this.creationDate.compareTo(o.creationDate);
 			if (dateResult != 0) { return dateResult; }
 
-			// No hierarchical or temporal relationship...so can't
-			// establish an order between them... sort by whomever's
-			// version number is "earliest"
+			// No familial or temporal relationship...so can't establish an order between them...
+			// sort by whomever's version number is "earliest"
 			return this.versionNumber.compareTo(o.versionNumber);
 		}
 

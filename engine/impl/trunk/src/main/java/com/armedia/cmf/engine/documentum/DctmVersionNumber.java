@@ -145,7 +145,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	public boolean isSibling(DctmVersionNumber other) {
 		final int length = getComponentCount();
 		if (length != other.getComponentCount()) { return false; }
-		return this.equals(other, length - 2) && (getComponent(length - 2) != other.getComponent(length - 2));
+		return this.equals(other, length - 1) && (getComponent(length - 1) != other.getComponent(length - 1));
 	}
 
 	public boolean isSuccessorOf(DctmVersionNumber other) {
