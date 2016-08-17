@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -513,6 +514,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 			// No content streams, so make one up so we can build the properties file
 			contents = Collections.singleton(new CmfContentInfo());
 		}
+
 		for (CmfContentInfo content : contents) {
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(this.factory.getTranslator(),
 				this.cmfObject, content);
@@ -589,9 +591,27 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 				IOUtils.closeQuietly(out);
 			}
 
-			// TODO: IF (and only if) the document is also the head document, but not the latest
+			// IF (and only if) the document is also the head document, but not the latest
 			// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
 			// location with no version number - including the properties.
+			if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
+				final String versionTag = String.format("\\Q%s\\E$", suffix);
+				File newMain = new File(main.getAbsolutePath().replaceAll(versionTag, ""));
+				File newMeta = new File(meta.getAbsolutePath().replaceAll(versionTag, ""));
+				boolean ok = false;
+				try {
+					FileUtils.copyFile(main, newMain);
+					FileUtils.copyFile(meta, newMeta);
+					ok = true;
+				} catch (IOException e) {
+
+				} finally {
+					if (!ok) {
+						newMain.delete();
+						newMeta.delete();
+					}
+				}
+			}
 		}
 
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), path));
