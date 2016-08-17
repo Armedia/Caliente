@@ -40,9 +40,32 @@
 		<type name="jsap:rendition">
 			<title>JSAP-N Base Rendition Object</title>
 			<parent>cm:content</parent>
-			<mandatory-aspects>
-				<aspect>arm:calienteRendition</aspect>
-			</mandatory-aspects>
+			<properties>
+				<property name="arm:renditionObjectId">
+					<title>Rendition's Parent Object's R_OBJECT_ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionNumber">
+					<title>Rendition's Number</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionPage">
+					<title>Rendition's Page Number</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionFormat">
+					<title>Rendition's MIME type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
 		</type>
 		<!--
 			END jsap:rendition
@@ -3880,42 +3903,6 @@
 		</aspect>
 		<!--
 			END arm:caliente
-		-->
-
-		<!--
-			BEGIN arm:calienteRendition
-		-->
-		<aspect name="arm:calienteRendition">
-			<title>Armedia Caliente Extra Rendition</title>
-			<properties>
-				<property name="arm:renditionObjectId">
-					<title>Rendition's Parent Object's R_OBJECT_ID</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="arm:renditionNumber">
-					<title>Rendition's Number</title>
-					<type>d:int</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="arm:renditionPage">
-					<title>Rendition's Page Number</title>
-					<type>d:int</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="arm:renditionFormat">
-					<title>Rendition's MIME type</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-			</properties>
-		</aspect>
-		<!--
-			END arm:calienteRendition
 		-->
 	</aspects>
 </model>

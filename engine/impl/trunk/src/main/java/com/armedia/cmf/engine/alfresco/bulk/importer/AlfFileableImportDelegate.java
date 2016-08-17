@@ -476,6 +476,14 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 
 	protected final void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentInfo content)
 		throws ImportException {
+		// Set the type property
+		p.setProperty("type", targetType.getName());
+		p.setProperty("cm:name", String.format("%s-%s-%d", this.cmfObject.getId(), content.getRenditionIdentifier(),
+			content.getRenditionPage()));
+		p.setProperty("arm:renditionObjectId", this.cmfObject.getId());
+		p.setProperty("arm:renditionNumber", content.getRenditionIdentifier());
+		p.setProperty("arm:renditionPage", String.valueOf(content.getRenditionPage()));
+		p.setProperty("arm:renditionFormat", content.getMimeType().toString());
 	}
 
 	@Override
@@ -484,6 +492,8 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 
 		if (!ctx.getContentStore()
 			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }
+
+		// TODO: Virtual Documents!!!!
 
 		String path = null;
 		CmfValue pathProp = getPropertyValue(IntermediateProperty.JSAP_PARENT_TREE_IDS);
@@ -578,6 +588,10 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 			} finally {
 				IOUtils.closeQuietly(out);
 			}
+
+			// TODO: IF (and only if) the document is also the head document, but not the latest
+			// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
+			// location with no version number - including the properties.
 		}
 
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, this.cmfObject.getId(), path));
