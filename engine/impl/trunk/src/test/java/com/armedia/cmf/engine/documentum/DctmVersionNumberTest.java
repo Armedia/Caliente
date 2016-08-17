@@ -17,11 +17,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.armedia.commons.utilities.Tools;
+
 public class DctmVersionNumberTest {
 
 	private static final int majors = 9;
 	private static final int minorsPerLevel = 16;
-	private static final int branchLevels = 4;
+	// private static final int branchLevels = 4;
 
 	private static Set<String> BRANCHED_VERSIONS = Collections.emptySet();
 	private static Map<String, Integer> COMPONENT_COUNTERS = Collections.emptyMap();
@@ -51,8 +53,8 @@ public class DctmVersionNumberTest {
 		DctmVersionNumberTest.COMPONENT_COUNTERS = Collections.unmodifiableMap(componentCounters);
 
 		Set<String> testVersions = new TreeSet<String>();
-		testVersions.addAll(branchedVersions);
-		testVersions.addAll(componentCounters.keySet());
+		testVersions.addAll(DctmVersionNumberTest.BRANCHED_VERSIONS);
+		testVersions.addAll(DctmVersionNumberTest.COMPONENT_COUNTERS.keySet());
 		DctmVersionNumberTest.TEST_VERSIONS = Collections.unmodifiableSet(testVersions);
 	}
 
@@ -250,10 +252,6 @@ public class DctmVersionNumberTest {
 	}
 
 	@Test
-	public void testGetSubset() {
-	}
-
-	@Test
 	public void testClone() {
 		for (String s : DctmVersionNumberTest.TEST_VERSIONS) {
 			DctmVersionNumber a = new DctmVersionNumber(s);
@@ -353,22 +351,21 @@ public class DctmVersionNumberTest {
 
 	@Test
 	public void testGetDepthInCommon() {
-	}
+		for (String a : DctmVersionNumberTest.TEST_VERSIONS) {
+			DctmVersionNumber va = new DctmVersionNumber(a);
+			String[] ca = a.split("\\.");
+			for (String b : DctmVersionNumberTest.TEST_VERSIONS) {
+				DctmVersionNumber vb = new DctmVersionNumber(b);
+				String[] cb = b.split("\\.");
 
-	@Test
-	public void testGetAntecedent() {
-	}
-
-	@Test
-	public void testGetAntecedentBoolean() {
-	}
-
-	@Test
-	public void testGetAllAntecedents() {
-	}
-
-	@Test
-	public void testGetAllAntecedentsBoolean() {
+				int c = 0;
+				while ((c < ca.length) && (c < cb.length) && Tools.equals(ca[c], cb[c])) {
+					c++;
+				}
+				// We've found a mismatch, so check to see if the code does the same thing
+				Assert.assertEquals(String.format("[%s] vs [%s]", a, b), c, va.getDepthInCommon(vb));
+			}
+		}
 	}
 
 	@Test
@@ -399,5 +396,46 @@ public class DctmVersionNumberTest {
 			}
 			a = b;
 		}
+	}
+
+	@Test
+	public void testGetSubset() {
+		List<DctmVersionNumber> l = new ArrayList<DctmVersionNumber>(DctmVersionNumberTest.COMPONENT_COUNTERS.size());
+		for (String s : DctmVersionNumberTest.COMPONENT_COUNTERS.keySet()) {
+			l.add(new DctmVersionNumber(s));
+		}
+		Collections.sort(l);
+		Collections.reverse(l);
+		DctmVersionNumber big = null;
+		for (DctmVersionNumber small : l) {
+			if (big != null) {
+				int len = big.getComponentCount();
+				if (len == 2) {
+					continue;
+				}
+				Assert.assertEquals(small, big.getSubset(len - 2));
+			}
+			big = small;
+		}
+	}
+
+	@Test
+	public void testGetAntecedent() {
+		// TODO: This is a PITA to test...
+	}
+
+	@Test
+	public void testGetAntecedentBoolean() {
+		// TODO: This is a PITA to test...
+	}
+
+	@Test
+	public void testGetAllAntecedents() {
+		// TODO: This is a PITA to test...
+	}
+
+	@Test
+	public void testGetAllAntecedentsBoolean() {
+		// TODO: This is a PITA to test...
 	}
 }
