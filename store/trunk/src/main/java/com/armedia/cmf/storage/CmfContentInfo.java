@@ -14,7 +14,7 @@ import com.armedia.commons.utilities.Tools;
 
 public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 
-	public static final String DEFAULT_RENDITION = "00000000";
+	public static final String DEFAULT_RENDITION = "$main$";
 
 	private final String renditionIdentifier;
 	private final int renditionPage;
