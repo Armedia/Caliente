@@ -140,10 +140,7 @@ public class AlfImportDelegateFactory
 
 	protected String mapUser(String user) {
 		if (user == null) { return null; }
-		String newUser = Tools.coalesce(this.userLoginMap.getProperty(user), user);
-		if (newUser != null) {
-			user = newUser;
-		}
+		user = Tools.coalesce(this.userLoginMap.getProperty(user), user);
 		return Tools.coalesce(this.userMap.getProperty(user), user);
 	}
 
