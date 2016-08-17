@@ -78,7 +78,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			if (this.versionNumber.isAntecedentOf(o.versionNumber)) { return -1; }
 			if (this.versionNumber.isSuccessorOf(o.versionNumber)) { return 1; }
 			if (this.versionNumber.isAncestorOf(o.versionNumber)) { return -1; }
-			if (o.versionNumber.isAncestorOf(this.versionNumber)) { return 1; }
+			if (this.versionNumber.isDescendantOf(o.versionNumber)) { return 1; }
 
 			// if there is no hierarchical relationship, then...
 			final int dateResult = this.creationDate.compareTo(o.creationDate);
