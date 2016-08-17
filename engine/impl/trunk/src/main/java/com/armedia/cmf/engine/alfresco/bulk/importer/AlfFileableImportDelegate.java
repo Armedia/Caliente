@@ -267,6 +267,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 		Set<String> common = new HashSet<String>();
 		common.addAll(tgtNames);
 		common.retainAll(srcNames);
+		// Copy everything that exists with the same name at the source and at the target
 		for (String s : common) {
 			final CmfProperty<CmfValue> src = this.cmfObject.getAttribute(s);
 			final SchemaAttribute tgt = targetType.getAttribute(s);
@@ -276,6 +277,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 		Set<String> tgtOnly = new HashSet<String>();
 		tgtOnly.addAll(tgtNames);
 		tgtOnly.removeAll(srcNames);
+		// Copy everything that exists only at the target
 		for (final String tgtAttName : tgtOnly) {
 			final SchemaAttribute tgtAtt = targetType.getAttribute(tgtAttName);
 
@@ -283,7 +285,9 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 			String srcAttName = AlfFileableImportDelegate.ATTRIBUTE_MAPPER.get(tgtAttName);
 			if (srcAttName == null) {
 				// This is because the source attributes all come with either "dctm:", "cmf:", or
-				// "cmis:" as a prefix, so we first try the happy path
+				// "cmis:" as a prefix, so we first try the happy path (prefix "dctm:")...
+				// attributes with the prefixes "cmis:" and "cmf:" are dealt with separately,
+				// below (via ATTRIBUTE_SPECIAL_COPIES)
 				srcAttName = tgtAttName.replaceAll("^[^:]+:", "dctm:");
 			}
 
@@ -352,9 +356,13 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 		if (!isReference()) {
 			p.setProperty("dctm:i_chronicle_id", this.cmfObject.getBatchId());
 
-			// Perform user mappings
+			// Finally, perform user mappings for special user-relative attributes
 			for (String s : AlfFileableImportDelegate.USER_CONVERSIONS) {
-				String v = this.factory.mapUser(p.getProperty(s));
+				final String src = AlfFileableImportDelegate.ATTRIBUTE_SPECIAL_COPIES.get(s);
+				if (src == null) {
+					continue;
+				}
+				String v = this.factory.mapUser(p.getProperty(src));
 				if (v == null) {
 					continue;
 				}
