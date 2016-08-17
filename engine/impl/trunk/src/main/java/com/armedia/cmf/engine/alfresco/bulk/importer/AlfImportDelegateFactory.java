@@ -138,6 +138,17 @@ public class AlfImportDelegateFactory
 		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
 	}
 
+	boolean mapUserLogin(String userName, String login) {
+		// Only add the mapping if the username is different from the login
+		if ((userName == null) || Tools.equals(userName, login)) { return false; }
+		if (login == null) {
+			this.userLoginMap.remove(userName);
+		} else {
+			this.userLoginMap.setProperty(userName, login);
+		}
+		return true;
+	}
+
 	protected String mapUser(String user) {
 		if (user == null) { return null; }
 		user = Tools.coalesce(this.userLoginMap.getProperty(user), user);

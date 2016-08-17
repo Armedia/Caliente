@@ -27,7 +27,9 @@ public class AlfUserDelegate extends AlfImportDelegate {
 		CmfValue login = getAttributeValue("cmf:login_name");
 		if (login == null) { return Collections.singleton(ImportOutcome.SKIPPED); }
 
-		ctx.printf("Mapping username [%s] to loginname [%s]...", name.asString(), login.asString());
+		if (this.factory.mapUserLogin(name.asString(), login.asString())) {
+			ctx.printf("Mapped username [%s] to loginname [%s]...", name.asString(), login.asString());
+		}
 		return Collections.singleton(new ImportOutcome(ImportResult.CREATED, login.asString(), login.asString()));
 	}
 }
