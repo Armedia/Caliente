@@ -49,6 +49,10 @@ public enum Setting {
 	MANIFEST_OUTCOMES("manifest.outcomes"),
 	MANIFEST_TYPES("manifest.types"),
 
+	USER_MAP("user.map"),
+	GROUP_MAP("group.map"),
+	ROLE_MAP("role.map"),
+
 	//
 	CMF_EXCLUDE_TYPES(TransferSetting.EXCLUDE_TYPES.getLabel()),
 	CMF_IMPORT_TARGET_LOCATION(ImportSetting.TARGET_LOCATION.getLabel()),
