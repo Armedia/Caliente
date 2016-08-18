@@ -11,6 +11,8 @@
 
 		<!--  Import Alfresco Content Domain Model Definitions  -->
 		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+
+		<!-- Import Caliente and Documentum Domain Model Definitions -->
 		<import uri="http://www.armedia.com/model/documentum/1.0" prefix="dctm" />
 		<import uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
 	</imports>
