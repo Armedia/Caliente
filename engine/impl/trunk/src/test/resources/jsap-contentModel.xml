@@ -928,6 +928,13 @@
 					<mandatory enforced="false">true</mandatory>
 					<multiple>false</multiple>
 				</property>
+				<property name="dctm:i_folder_id">
+					<!-- preserve -->
+					<title>Parent Folder IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
 				<property name="dctm:r_parent_path_ids">
 					<!-- preserve from source id-paths -->
 					<title>Parent Path IDs</title>
@@ -946,14 +953,8 @@
 		-->
 		<aspect name="dctm:dm_sysobject">
 			<title>Documentum Migrated Object</title>
+			<parent>dctm:dm_object_id</parent>
 			<properties>
-				<property name="dctm:i_folder_id">
-					<!-- preserve -->
-					<title>Parent Folder IDs</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>true</multiple>
-				</property>
 				<property name="dctm:object_name">
 					<!-- preserved, and converted into cmis:name -->
 					<title>Name</title>
@@ -1558,7 +1559,6 @@
 				</property>
 			</properties>
 			<mandatory-aspects>
-				<aspect>dctm:dm_object_id</aspect>
 				<aspect>cm:ownable</aspect>
 				<aspect>cm:auditable</aspect>
 				<aspect>cm:author</aspect>
@@ -1585,6 +1585,7 @@
 		-->
 		<aspect name="dctm:dm_reference">
 			<title>Documentum Reference</title>
+			<parent>dctm:dm_object_id</parent>
 			<properties>
 				<property name="dctm:reference_by_id">
 					<!-- preserve -->
@@ -1618,9 +1619,6 @@
 					</constraints>
 				</property>
 			</properties>
-			<mandatory-aspects>
-				<aspect>dctm:dm_object_id</aspect>
-			</mandatory-aspects>
 		</aspect>
 		<!--
 			END dctm:dm_reference
