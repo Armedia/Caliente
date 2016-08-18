@@ -12,9 +12,9 @@ import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfValue;
 
-public class AlfFolderImportDelegate extends AlfFileableImportDelegate {
+public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 
-	public AlfFolderImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
+	public AlfImportFolderDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(factory, storedObject);
 	}

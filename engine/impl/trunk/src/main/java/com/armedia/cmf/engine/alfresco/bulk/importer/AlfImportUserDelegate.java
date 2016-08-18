@@ -11,9 +11,9 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfValue;
 
-public class AlfUserDelegate extends AlfImportDelegate {
+public class AlfImportUserDelegate extends AlfImportDelegate {
 
-	public AlfUserDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
+	public AlfImportUserDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, storedObject);
 	}
 

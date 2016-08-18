@@ -122,12 +122,12 @@ public class AlfImportDelegateFactory
 	protected AlfImportDelegate newImportDelegate(CmfObject<CmfValue> storedObject) throws Exception {
 		switch (storedObject.getType()) {
 			case USER:
-				return new AlfUserDelegate(this, storedObject);
+				return new AlfImportUserDelegate(this, storedObject);
 			case FOLDER:
-				return new AlfFolderImportDelegate(this, storedObject);
+				return new AlfImportFolderDelegate(this, storedObject);
 			case DOCUMENT:
 				// TODO: How to determine the minor counter
-				return new AlfDocumentImportDelegate(this, storedObject);
+				return new AlfImportDocumentDelegate(this, storedObject);
 			default:
 				break;
 		}

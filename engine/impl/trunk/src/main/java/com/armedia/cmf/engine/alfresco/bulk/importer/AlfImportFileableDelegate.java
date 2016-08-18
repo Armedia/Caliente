@@ -43,7 +43,7 @@ import com.armedia.cmf.storage.CmfValueSerializer;
 import com.armedia.cmf.storage.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 
-abstract class AlfFileableImportDelegate extends AlfImportDelegate {
+abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	private static final Map<String, String> ATTRIBUTE_MAPPER;
 	private static final Map<String, String> ATTRIBUTE_SPECIAL_COPIES;
@@ -174,7 +174,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 	private final boolean reference;
 	private final boolean virtual;
 
-	public AlfFileableImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
+	public AlfImportFileableDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(factory, storedObject);
 		CmfValue reference = getAttributeValue("dctm:i_is_reference");
@@ -215,7 +215,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 	}
 
 	protected final CmfAttribute<CmfValue> mapAttributeName(String attributeName) {
-		String target = AlfFileableImportDelegate.ATTRIBUTE_MAPPER.get(attributeName);
+		String target = AlfImportFileableDelegate.ATTRIBUTE_MAPPER.get(attributeName);
 		if (target == null) { return null; }
 		return this.cmfObject.getAttribute(target);
 	}
@@ -292,7 +292,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 			final SchemaAttribute tgtAtt = targetType.getAttribute(tgtAttName);
 
 			// Easy path: is this already mapped?
-			String srcAttName = AlfFileableImportDelegate.ATTRIBUTE_MAPPER.get(tgtAttName);
+			String srcAttName = AlfImportFileableDelegate.ATTRIBUTE_MAPPER.get(tgtAttName);
 			if (srcAttName == null) {
 				// This is because the source attributes all come with either "dctm:", "cmf:", or
 				// "cmis:" as a prefix, so we first try the happy path (prefix "dctm:")...
@@ -321,9 +321,9 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 
 		// Now, do the mappings as copies of what has already been copied over, except when the
 		// source attribute is repeating.
-		for (String m : AlfFileableImportDelegate.ATTRIBUTE_SPECIAL_COPIES.keySet()) {
-			final String tgtName = AlfFileableImportDelegate.ATTRIBUTE_SPECIAL_COPIES.get(m);
-			String srcName = AlfFileableImportDelegate.ATTRIBUTE_MAPPER.get(tgtName);
+		for (String m : AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.keySet()) {
+			final String tgtName = AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.get(m);
+			String srcName = AlfImportFileableDelegate.ATTRIBUTE_MAPPER.get(tgtName);
 			if (srcName == null) {
 				// If it didn't need mapping, stick to the original name.
 				srcName = tgtName;
@@ -367,8 +367,8 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 			p.setProperty("dctm:i_chronicle_id", this.cmfObject.getBatchId());
 
 			// Finally, perform user mappings for special user-relative attributes
-			for (String s : AlfFileableImportDelegate.USER_CONVERSIONS) {
-				final String src = AlfFileableImportDelegate.ATTRIBUTE_SPECIAL_COPIES.get(s);
+			for (String s : AlfImportFileableDelegate.USER_CONVERSIONS) {
+				final String src = AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.get(s);
 				if (src == null) {
 					continue;
 				}
@@ -456,13 +456,13 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 					final AccessorType type;
 					if (accessorType.equals("user")) {
 						type = AccessorType.USER;
-						accessor = AlfFileableImportDelegate.this.factory.mapUser(accessor);
+						accessor = AlfImportFileableDelegate.this.factory.mapUser(accessor);
 					} else if (accessorType.indexOf("role") < 0) {
 						type = AccessorType.ROLE;
-						accessor = AlfFileableImportDelegate.this.factory.mapRole(accessor);
+						accessor = AlfImportFileableDelegate.this.factory.mapRole(accessor);
 					} else {
 						type = AccessorType.GROUP;
-						accessor = AlfFileableImportDelegate.this.factory.mapGroup(accessor);
+						accessor = AlfImportFileableDelegate.this.factory.mapGroup(accessor);
 					}
 
 					String permit = "?";
@@ -561,7 +561,7 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 			}
 
 			String mainName = main.getName();
-			final Matcher m = AlfFileableImportDelegate.SUFFIX.matcher(mainName);
+			final Matcher m = AlfImportFileableDelegate.SUFFIX.matcher(mainName);
 			final String suffix = (m.matches() ? m.group(1) : "");
 
 			mainName = mainName.substring(0, mainName.length() - suffix.length());
