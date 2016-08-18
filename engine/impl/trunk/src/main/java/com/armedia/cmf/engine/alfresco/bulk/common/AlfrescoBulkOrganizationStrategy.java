@@ -3,6 +3,8 @@ package com.armedia.cmf.engine.alfresco.bulk.common;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
@@ -17,6 +19,7 @@ import com.armedia.commons.utilities.FileNameTools;
 public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy {
 
 	public static final String NAME = "alfrescoBulkImport";
+	private static final String BASE_DIR = "bulk-import-root";
 
 	public AlfrescoBulkOrganizationStrategy() {
 		super(AlfrescoBulkOrganizationStrategy.NAME);
@@ -37,7 +40,13 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 
 		final boolean primaryContent = (info.isDefaultRendition() && (info.getRenditionPage() == 0));
 
+		// TODO: Make this configurable?
+		final String baseDir = AlfrescoBulkOrganizationStrategy.BASE_DIR;
+
 		List<String> paths = new ArrayList<String>();
+		if (!StringUtils.isEmpty(baseDir)) {
+			paths.add(baseDir);
+		}
 		if (pathProp.hasValues()) {
 			for (String p : FileNameTools.tokenize(pathProp.getValue().toString(), '/')) {
 				paths.add(p);

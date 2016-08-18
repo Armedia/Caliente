@@ -41,7 +41,7 @@ public class AlfImportDelegateFactory
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
 
-	private static final String MODEL_DIR_NAME = "$CONTENT-MODELS$";
+	private static final String MODEL_DIR_NAME = "content-models";
 
 	static final Schema SCHEMA;
 
