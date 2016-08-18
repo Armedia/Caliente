@@ -19,9 +19,9 @@ public class AlfTranslator extends CmfAttributeTranslator<CmfValue> {
 	public String getDefaultSubtype(CmfType baseType) {
 		switch (baseType) {
 			case DOCUMENT:
-				return "jsap:document";
+				return "arm:document";
 			case FOLDER:
-				return "jsap:folder";
+				return "arm:folder";
 			default:
 				break;
 		}

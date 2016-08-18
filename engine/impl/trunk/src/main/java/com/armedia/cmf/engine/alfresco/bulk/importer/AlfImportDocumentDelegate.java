@@ -15,28 +15,16 @@ public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 
 	public AlfImportDocumentDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
-		super(factory, storedObject);
+		super("arm:document", factory, storedObject);
 	}
 
 	@Override
 	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
-		AlfrescoType type = null;
-
 		if (!content.isDefaultRendition() || (content.getRenditionPage() > 0)) {
 			// If this is a rendition or rendition extra page...
-			type = this.factory.getType("jsap:rendition");
-		} else {
-			// Not a rendition or a reference? Fine...let's identify the type
-			String srcTypeName = this.cmfObject.getSubtype().toLowerCase();
-			String finalTypeName = String.format("jsap:%s", srcTypeName);
-			if (this.factory.schema.hasType(finalTypeName)) {
-				type = this.factory.schema.buildType(finalTypeName);
-			} else {
-				type = this.factory.getType("jsap:document");
-			}
+			return this.factory.getType("arm:rendition");
 		}
-
-		return type;
+		return super.calculateTargetType(content);
 	}
 
 	@Override

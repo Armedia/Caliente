@@ -173,9 +173,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	private final boolean reference;
 	private final boolean virtual;
+	private final String defaultType;
 
-	public AlfImportFileableDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
-		throws Exception {
+	public AlfImportFileableDelegate(String defaultType, AlfImportDelegateFactory factory,
+		CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, storedObject);
 		CmfValue reference = getAttributeValue("dctm:i_is_reference");
 		this.reference = ((reference != null) && !reference.isNull() && reference.asBoolean());
@@ -184,6 +185,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		CmfValue linkCnt = getAttributeValue("dctm:r_link_cnt");
 		int lc = ((linkCnt != null) && !linkCnt.isNull() ? linkCnt.asInteger() : 0);
 		this.virtual = vflag || (lc > 0);
+		this.defaultType = defaultType;
 	}
 
 	protected final boolean isVirtual() {
@@ -194,13 +196,32 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return this.reference;
 	}
 
-	protected abstract AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException;
+	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
+		AlfrescoType type = null;
+		// Not a rendition or a reference? Fine...let's identify the type
+		String srcTypeName = this.cmfObject.getSubtype().toLowerCase();
+		String finalTypeName = null;
+		for (String prefix : this.factory.getTargetPrefixes()) {
+			finalTypeName = String.format("%s:%s", prefix, srcTypeName);
+			if (this.factory.schema.hasType(finalTypeName)) { return this.factory.schema.buildType(finalTypeName); }
+		}
+		// If none of the target prefixes matched, default to the base one
+		finalTypeName = String.format("arm:%s", srcTypeName);
+		if (this.factory.schema.hasType(finalTypeName)) {
+			type = this.factory.schema.buildType(finalTypeName);
+		}
+
+		if (type == null) {
+			type = this.factory.schema.buildType(this.defaultType);
+		}
+		return type;
+	}
 
 	protected final AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
 		AlfrescoType type = null;
 		if (isReference()) {
 			// If this is a reference - folder or document, doesn't matter...
-			type = this.factory.getType("jsap:reference");
+			type = this.factory.getType("arm:reference");
 		} else {
 			type = calculateTargetType(content);
 		}

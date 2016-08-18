@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -211,6 +212,10 @@ public class AlfImportDelegateFactory
 			this.userLoginMap.setProperty(userName, login);
 		}
 		return true;
+	}
+
+	public final Collection<String> getTargetPrefixes() {
+		return Collections.emptyList();
 	}
 
 	protected String mapUser(String user) {

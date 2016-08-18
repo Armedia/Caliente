@@ -34,7 +34,7 @@ public class AlfrescoSchemaTest {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		URL[] urls = {
 			cl.getResource("systemModel.xml"), cl.getResource("contentModel.xml"), cl.getResource("cmisModel.xml"),
-			cl.getResource("jsap-contentModel.xml"),
+			cl.getResource("calienteModel.xml"), cl.getResource("jsapModel.xml"),
 		};
 		List<URI> urlList = new ArrayList<URI>();
 		for (URL u : urls) {
