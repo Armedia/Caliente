@@ -172,12 +172,22 @@ abstract class AlfFileableImportDelegate extends AlfImportDelegate {
 	private static final Pattern SUFFIX = Pattern.compile("^.*(\\.v\\d+(?:\\.\\d+)?)$");
 
 	private final boolean reference;
+	private final boolean virtual;
 
 	public AlfFileableImportDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(factory, storedObject);
 		CmfValue reference = getAttributeValue("dctm:i_is_reference");
-		this.reference = ((reference != null) && reference.asBoolean());
+		this.reference = ((reference != null) && !reference.isNull() && reference.asBoolean());
+		CmfValue virtual = getAttributeValue("dctm:r_is_virtual_doc");
+		boolean vflag = ((virtual != null) && !virtual.isNull() && (virtual.asInteger() != 0));
+		CmfValue linkCnt = getAttributeValue("dctm:r_link_cnt");
+		int lc = ((linkCnt != null) && !linkCnt.isNull() ? linkCnt.asInteger() : 0);
+		this.virtual = vflag || (lc > 0);
+	}
+
+	protected final boolean isVirtual() {
+		return this.virtual;
 	}
 
 	protected final boolean isReference() {
