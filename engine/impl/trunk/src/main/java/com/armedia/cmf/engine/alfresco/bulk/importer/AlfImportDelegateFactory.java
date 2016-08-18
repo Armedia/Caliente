@@ -1,11 +1,14 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +19,9 @@ import javax.xml.bind.JAXBException;
 import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
@@ -57,6 +63,56 @@ public class AlfImportDelegateFactory
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
 
+	private static void loadMap(final Logger log, String mapFile, Properties properties) {
+		if (StringUtils.isEmpty(mapFile)) { return; }
+
+		File f = new File(mapFile);
+		try {
+			f = f.getCanonicalFile();
+		} catch (IOException e) {
+			// Screw it...ignore the problem
+			if (log.isDebugEnabled()) {
+				log.warn(String.format("Failed to canonicalize the file path [%s]", mapFile), e);
+			}
+		}
+		if (!f.exists()) {
+			log.warn("The file [{}] does not exist", mapFile);
+			return;
+		}
+		if (!f.isFile()) {
+			log.warn("The file [{}] is not a regular file", mapFile);
+			return;
+		}
+		if (!f.canRead()) {
+			log.warn("The file [{}] is not readable", mapFile);
+			return;
+		}
+
+		Properties p = new Properties();
+		try {
+			InputStream in = new FileInputStream(f);
+			try {
+				// First, try the XML format
+				p.clear();
+				p.loadFromXML(in);
+				properties.putAll(p);
+			} catch (InvalidPropertiesFormatException e) {
+				// Not XML-format, try text format
+				IOUtils.closeQuietly(in);
+				in = new FileInputStream(f);
+
+				p.clear();
+				p.load(in);
+				properties.putAll(p);
+			} finally {
+				IOUtils.closeQuietly(in);
+			}
+		} catch (IOException e) {
+			log.warn(String.format("Failed to load the properties from file [%s]", mapFile), e);
+			p.clear();
+		}
+	}
+
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration) throws IOException, JAXBException {
 		super(engine, configuration);
 		String db = configuration.getString(AlfSessionFactory.DB);
@@ -96,6 +152,9 @@ public class AlfImportDelegateFactory
 			m.put(t, this.schema.buildType(t));
 		}
 		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<String, AlfrescoType>(m));
+		AlfImportDelegateFactory.loadMap(this.log, configuration.getString(AlfSessionFactory.USER_MAP), this.userMap);
+		AlfImportDelegateFactory.loadMap(this.log, configuration.getString(AlfSessionFactory.GROUP_MAP), this.groupMap);
+		AlfImportDelegateFactory.loadMap(this.log, configuration.getString(AlfSessionFactory.ROLE_MAP), this.roleMap);
 	}
 
 	protected AlfrescoType getType(String name, String... aspects) {
