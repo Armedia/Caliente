@@ -41,6 +41,8 @@ public class AlfImportDelegateFactory
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
 
+	private static final String MODEL_DIR_NAME = "$CONTENT-MODELS$";
+
 	static final Schema SCHEMA;
 
 	static {
@@ -129,6 +131,8 @@ public class AlfImportDelegateFactory
 			this.content = new File(db, "content").getCanonicalFile();
 		}
 		FileUtils.forceMkdir(this.content);
+		final File modelDir = new File(this.content, AlfImportDelegateFactory.MODEL_DIR_NAME);
+		FileUtils.forceMkdir(modelDir);
 
 		String contentModels = configuration.getString(AlfSessionFactory.CONTENT_MODEL);
 		if (contentModels == null) { throw new IllegalStateException(
@@ -143,6 +147,7 @@ public class AlfImportDelegateFactory
 			if (!f
 				.canRead()) { throw new IOException(String.format("File [%s] is not readable", f.getAbsolutePath())); }
 			modelUrls.add(f.toURI());
+			FileUtils.copyFile(f, new File(modelDir, f.getName()));
 		}
 
 		this.schema = new AlfrescoSchema(modelUrls);
