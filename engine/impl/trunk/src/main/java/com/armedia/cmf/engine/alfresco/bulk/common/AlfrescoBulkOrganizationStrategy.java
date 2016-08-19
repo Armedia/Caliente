@@ -58,16 +58,12 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 		final boolean vdoc = ((vdocProp != null) && vdocProp.hasValues()
 			&& vdocCodec.encodeValue(vdocProp.getValue()).asBoolean());
 
+		String appendix = calculateVersionAppendix(translator, object, info, primaryContent, vdoc);
+
 		if (vdoc) {
-			vdocProp = object.getProperty(IntermediateProperty.VDOC_MEMBER);
-			List<String> vdocMembers = new ArrayList<String>();
-			if ((vdocProp != null) && vdocProp.hasValues()) {
-				vdocCodec = translator.getCodec(vdocProp.getType());
-				for (T t : vdocProp) {
-					vdocMembers.add(vdocCodec.encodeValue(t).asString());
-				}
-			}
-			// TODO: Handle as a VDoc
+			paths.add(object.getBatchId());
+			paths.add(appendix);
+			appendix = "";
 		}
 
 		if (!primaryContent) {
@@ -87,12 +83,18 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 			default:
 				break;
 		}
+
+		return newLocation(paths, baseName, null, null, appendix);
+	}
+
+	protected <T> String calculateVersionAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentInfo info, boolean primaryContent, boolean vDoc) {
 		final boolean headVersion;
 		switch (object.getType()) {
 			case DOCUMENT:
 				CmfAttribute<T> latestVersionAtt = object.getAttribute(
 					translator.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
-				headVersion = ((latestVersionAtt != null) && latestVersionAtt.hasValues() && translator
+				headVersion = !vDoc && ((latestVersionAtt != null) && latestVersionAtt.hasValues() && translator
 					.getCodec(latestVersionAtt.getType()).encodeValue(latestVersionAtt.getValue()).asBoolean());
 				break;
 			case FOLDER:
@@ -101,12 +103,11 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 				headVersion = true;
 				break;
 		}
-
 		CmfProperty<T> vCounter = object.getProperty(IntermediateProperty.VERSION_COUNT);
 		CmfProperty<T> vIndex = object.getProperty(IntermediateProperty.VERSION_INDEX);
 		String appendix = null;
 		final String versionPrefix = "0.";
-		if (!primaryContent) {
+		if (!primaryContent && !vDoc) {
 			appendix = "";
 		} else {
 			if ((vCounter != null) && (vIndex != null) && vCounter.hasValues() && vIndex.hasValues()) {
@@ -136,6 +137,6 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 				}
 			}
 		}
-		return newLocation(paths, baseName, null, null, appendix);
+		return appendix;
 	}
 }
