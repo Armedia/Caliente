@@ -93,6 +93,12 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 		return ret;
 	}
 
+	@Override
+	protected final Collection<DctmExportDelegate<?>> identifyAntecedents(CmfObject<IDfValue> marshaled,
+		DctmExportContext ctx) throws Exception {
+		return findAntecedents(ctx.getSession(), marshaled, castObject(this.object), ctx);
+	}
+
 	protected Collection<DctmExportDelegate<?>> findAntecedents(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
 		return new ArrayList<DctmExportDelegate<?>>();
