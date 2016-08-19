@@ -53,6 +53,23 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 			}
 		}
 
+		CmfProperty<T> vdocProp = object.getProperty(IntermediateProperty.VDOC_HISTORY);
+		CmfValueCodec<T> vdocCodec = translator.getCodec(vdocProp.getType());
+		final boolean vdoc = ((vdocProp != null) && vdocProp.hasValues()
+			&& vdocCodec.encodeValue(vdocProp.getValue()).asBoolean());
+
+		if (vdoc) {
+			vdocProp = object.getProperty(IntermediateProperty.VDOC_MEMBER);
+			List<String> vdocMembers = new ArrayList<String>();
+			if ((vdocProp != null) && vdocProp.hasValues()) {
+				vdocCodec = translator.getCodec(vdocProp.getType());
+				for (T t : vdocProp) {
+					vdocMembers.add(vdocCodec.encodeValue(t).asString());
+				}
+			}
+			// TODO: Handle as a VDoc
+		}
+
 		if (!primaryContent) {
 			// Ok...so this isn't the default rendition, so we have to add the object ID
 			// at the end of the path
