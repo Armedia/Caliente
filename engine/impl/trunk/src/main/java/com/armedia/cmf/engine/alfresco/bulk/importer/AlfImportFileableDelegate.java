@@ -536,7 +536,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		// TODO: Virtual Documents!!!!
 
 		String path = null;
-		CmfValue pathProp = getPropertyValue(IntermediateProperty.JSAP_PARENT_TREE_IDS);
+		CmfValue pathProp = getPropertyValue(IntermediateProperty.LATEST_PARENT_TREE_IDS);
 		if ((pathProp == null) || pathProp.isNull()) {
 			pathProp = getPropertyValue(IntermediateProperty.PARENT_TREE_IDS);
 		}
