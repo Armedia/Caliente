@@ -122,7 +122,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	private static final String CTX_VERSION_CURRENT = "VERSION_CURRENT_%S";
 	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
 
-	private static final String JSAP_HISTORY_PATH_IDS = "JSAP_HISTORY_PATH_IDS_%S";
+	private static final String HISTORY_PATH_IDS = "HISTORY_PATH_IDS_%S";
+	private static final String HISTORY_VDOC_STATUS = "HISTORY_VDOC_STATUS_%S";
 
 	protected DctmExportSysObject(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass, object);
@@ -336,25 +337,45 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	@Override
 	protected void prepareForStorage(DctmExportContext ctx, CmfObject<IDfValue> marshaled, T object)
 		throws ExportException, DfException {
-		CmfProperty<IDfValue> parentTreeIds = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_TREE_IDS,
+		final String chronicleId = object.getChronicleId().getId();
+		CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_TREE_IDS,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		marshaled.setProperty(parentTreeIds);
+		marshaled.setProperty(prop);
 		Set<String> ptid = calculateParentTreeIds(object);
 		for (String s : ptid) {
-			parentTreeIds.addValue(DfValueFactory.newStringValue(s));
+			prop.addValue(DfValueFactory.newStringValue(s));
 		}
 		this.factory.pathIdCache.put(object.getObjectId().getId(), Collections.unmodifiableSet(ptid));
 
-		String marker = String.format(DctmExportSysObject.JSAP_HISTORY_PATH_IDS, object.getChronicleId().getId());
+		String marker = String.format(DctmExportSysObject.HISTORY_PATH_IDS, chronicleId);
 		ptid = ctx.getObject(marker);
 		if (ptid != null) {
-			parentTreeIds = new CmfProperty<IDfValue>(IntermediateProperty.JSAP_PARENT_TREE_IDS,
+			prop = new CmfProperty<IDfValue>(IntermediateProperty.LATEST_PARENT_TREE_IDS,
 				DctmDataType.DF_STRING.getStoredType(), true);
-			marshaled.setProperty(parentTreeIds);
+			marshaled.setProperty(prop);
 			for (String s : ptid) {
-				parentTreeIds.addValue(DfValueFactory.newStringValue(s));
+				prop.addValue(DfValueFactory.newStringValue(s));
 			}
 		}
+		marker = String.format(DctmExportSysObject.HISTORY_VDOC_STATUS, chronicleId);
+		Boolean vdocMarker = ctx.getObject(marker);
+		if (vdocMarker == null) {
+			IDfCollection c = null;
+			try {
+				String dql = String.format(
+					"select count(*) as vdocs from dm_document (ALL) where i_chronicle_id = %s and ((r_is_virtual_doc = 1) or (r_link_cnt > 0))",
+					DfUtils.quoteString(chronicleId));
+				c = DfUtils.executeQuery(ctx.getSession(), dql);
+				vdocMarker = c.next() && (c.getInt("vdocs") > 0);
+				ctx.setObject(marker, vdocMarker);
+			} finally {
+				DfUtils.closeQuietly(c);
+			}
+		}
+		prop = new CmfProperty<IDfValue>(IntermediateProperty.VDOC_HISTORY, DctmDataType.DF_BOOLEAN.getStoredType(),
+			false);
+		marshaled.setProperty(prop);
+		prop.setValue(DfValueFactory.newBooleanValue(vdocMarker.booleanValue()));
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
@@ -500,7 +521,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	protected void requirementsExported(CmfObject<IDfValue> marshalled, DctmExportContext ctx) throws Exception {
 		T currentObject = castObject(ctx.getSession().getObject(new DfId(marshalled.getId())));
 		IDfId chronicleId = currentObject.getChronicleId();
-		String markerName = String.format(DctmExportSysObject.JSAP_HISTORY_PATH_IDS, chronicleId.getId());
+		String markerName = String.format(DctmExportSysObject.HISTORY_PATH_IDS, chronicleId.getId());
 		ctx.setObject(markerName, calculateParentTreeIds(currentObject));
 	}
 
