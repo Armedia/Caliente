@@ -28,9 +28,14 @@ public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 	}
 
 	@Override
-	protected boolean createStub(File target) throws IOException {
-		// If it's a folder, make the folder...else, make the file
-		FileUtils.write(target, this.cmfObject.getLabel());
-		return true;
+	protected boolean createStub(File target, String content) throws ImportException {
+		try {
+			FileUtils.write(target, content);
+			return true;
+		} catch (IOException e) {
+			throw new ImportException(String.format(
+				"Failed to create the stub file for %s [%s](%s) at [%s] with contents [%s]", this.cmfObject.getType(),
+				this.cmfObject.getLabel(), this.cmfObject.getId(), target.getAbsolutePath(), content), e);
+		}
 	}
 }

@@ -49,6 +49,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private static final Map<String, String> ATTRIBUTE_SPECIAL_COPIES;
 	private static final Set<String> USER_CONVERSIONS;
 
+	private static final Pattern VDOC_MEMBER_PARSER = Pattern.compile("^\\[(.+)\\]\\{(.+)\\}$");
+
 	private static enum PermitValue {
 		//
 		NONE, BROWSE, READ, RELATE, VERSION, WRITE, DELETE,
@@ -59,6 +61,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	static {
 		Map<String, String> m = new HashMap<String, String>();
 
+		// Attribute X "gets populated from" Y
 		String[][] unmappings = {
 			{
 				"dctm:acl_name", "cmf:acl_name"
@@ -126,6 +129,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 		ATTRIBUTE_MAPPER = Tools.freezeMap(m);
 
+		// Attribute X "gets populated from" Y, Y may need re-mapping through ATTRIBUTE_MAPPER
 		m = new HashMap<String, String>();
 		String[][] copies = {
 			{
@@ -184,7 +188,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		boolean vflag = ((virtual != null) && !virtual.isNull() && (virtual.asInteger() != 0));
 		CmfValue linkCnt = getAttributeValue("dctm:r_link_cnt");
 		int lc = ((linkCnt != null) && !linkCnt.isNull() ? linkCnt.asInteger() : 0);
-		this.virtual = vflag || (lc > 0);
+		this.virtual = (this.cmfObject.getType() == CmfType.DOCUMENT) && (vflag || (lc > 0));
 		this.defaultType = defaultType;
 	}
 
@@ -287,7 +291,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 	}
 
-	protected abstract boolean createStub(File target) throws IOException;
+	protected abstract boolean createStub(File target, String content) throws ImportException;
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentInfo content) throws ImportException, ParseException {
@@ -526,14 +530,41 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty("arm:renditionFormat", content.getMimeType().toString());
 	}
 
+	protected final void populateVdocReference(Properties p, String targetName, String targetId, String label)
+		throws ImportException {
+		// Set the type property
+		p.setProperty("type", "jsap:reference");
+		p.setProperty("cm:name", targetName);
+		p.setProperty("dctm:binding_condition", "VERSION_LABEL");
+		p.setProperty("dctm:reference_by_id", targetId);
+		p.setProperty("dctm:binding_label", StringUtils.isEmpty(label) ? "CURRENT" : label);
+	}
+
+	protected final void storeProperties(Properties p, File f) throws ImportException {
+		final OutputStream out;
+		try {
+			out = new FileOutputStream(f);
+		} catch (FileNotFoundException e) {
+			throw new ImportException(String.format("Failed to open the properties file at [%s]", f.getAbsolutePath()),
+				e);
+		}
+		try {
+			p.storeToXML(out, null);
+		} catch (IOException e) {
+			f.delete();
+			throw new ImportException(
+				String.format("Failed to write to the properties file at [%s]", f.getAbsolutePath()), e);
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+	}
+
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
 
 		if (!ctx.getContentStore()
 			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }
-
-		// TODO: Virtual Documents!!!!
 
 		String path = null;
 		CmfValue pathProp = getPropertyValue(IntermediateProperty.LATEST_PARENT_TREE_IDS);
@@ -571,14 +602,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if (!main.exists()) {
 				ctx.printf("Creating a stub for %s [%s](%s)", this.cmfObject.getType(), this.cmfObject.getLabel(),
 					this.cmfObject.getId());
-				try {
-					if (!createStub(main)) { return Collections.singleton(ImportOutcome.SKIPPED); }
-				} catch (IOException e) {
-					throw new ImportException(
-						String.format("Failed to create the stub for %s [%s](%s) at [%s]", this.cmfObject.getType(),
-							this.cmfObject.getLabel(), this.cmfObject.getId(), main.getAbsolutePath()),
-						e);
-				}
+				if (!createStub(main,
+					this.cmfObject.getLabel())) { return Collections.singleton(ImportOutcome.SKIPPED); }
 			}
 
 			String mainName = main.getName();
@@ -615,39 +640,68 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId(), renditionSpec), e);
 			}
 
-			final OutputStream out;
-			try {
-				out = new FileOutputStream(meta);
-			} catch (FileNotFoundException e) {
-				throw new ImportException("Failed to open properties file", e);
-			}
-			try {
-				p.storeToXML(out, null);
-			} catch (IOException e) {
-				meta.delete();
-				throw new ImportException("Failed to write properties", e);
-			} finally {
-				IOUtils.closeQuietly(out);
-			}
+			storeProperties(p, meta);
 
-			// IF (and only if) the document is also the head document, but not the latest
-			// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
-			// location with no version number - including the properties.
-			if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
-				final String versionTag = String.format("\\Q%s\\E$", suffix);
-				File newMain = new File(main.getAbsolutePath().replaceAll(versionTag, ""));
-				File newMeta = new File(meta.getAbsolutePath().replaceAll(versionTag, ""));
-				boolean ok = false;
-				try {
-					FileUtils.copyFile(main, newMain);
-					FileUtils.copyFile(meta, newMeta);
-					ok = true;
-				} catch (IOException e) {
+			if (this.virtual) {
+				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
+				if (members != null) {
+					final File refHome = meta.getParentFile();
+					// Does the reference home already have properties? If not, then add them...
 
-				} finally {
-					if (!ok) {
-						newMain.delete();
-						newMeta.delete();
+					for (CmfValue member : members) {
+						if (member.isNull()) {
+							continue;
+						}
+						Matcher matcher = AlfImportFileableDelegate.VDOC_MEMBER_PARSER.matcher(member.asString());
+						if (!matcher.matches()) {
+							this.log.warn("Incomplete VDoc member data for [%s](%s) - [%s]", this.cmfObject.getLabel(),
+								this.cmfObject.getId(), member.asString());
+							continue;
+						}
+
+						String[] memberData = matcher.group(1).split("\\|");
+						if (memberData.length < 5) {
+							this.log.warn("Incomplete VDoc member reference data for [%s](%s) - [%s]",
+								this.cmfObject.getLabel(), this.cmfObject.getId(), member.asString());
+							continue;
+						}
+
+						Properties memberProps = new Properties();
+						populateVdocReference(memberProps, matcher.group(2), memberData[1], memberData[2]);
+
+						File refTarget = new File(refHome, memberData[0]);
+						File refMeta = new File(refHome,
+							String.format("%s.metadata.properties.xml", refTarget.getName()));
+						createStub(refTarget, member.asString());
+						storeProperties(memberProps, refMeta);
+					}
+				}
+
+				// If this is the head revision, then we need to create one more reference to point
+				// to the actual head version...
+				if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
+
+				}
+			} else {
+				// IF (and only if) the document is also the head document, but not the latest
+				// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
+				// location with no version number - including the properties.
+				if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
+					final String versionTag = String.format("\\Q%s\\E$", suffix);
+					File newMain = new File(main.getAbsolutePath().replaceAll(versionTag, ""));
+					File newMeta = new File(meta.getAbsolutePath().replaceAll(versionTag, ""));
+					boolean ok = false;
+					try {
+						FileUtils.copyFile(main, newMain);
+						FileUtils.copyFile(meta, newMeta);
+						ok = true;
+					} catch (IOException e) {
+
+					} finally {
+						if (!ok) {
+							newMain.delete();
+							newMeta.delete();
+						}
 					}
 				}
 			}
