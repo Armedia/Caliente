@@ -84,12 +84,12 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 
 	protected <T> String calculateVersionAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info, boolean primaryContent, boolean vDoc) {
-		final boolean headVersion;
+		boolean headVersion = false;
 		switch (object.getType()) {
 			case DOCUMENT:
 				CmfAttribute<T> latestVersionAtt = object.getAttribute(
 					translator.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
-				headVersion = !vDoc && ((latestVersionAtt != null) && latestVersionAtt.hasValues() && translator
+				headVersion = ((latestVersionAtt != null) && latestVersionAtt.hasValues() && translator
 					.getCodec(latestVersionAtt.getType()).encodeValue(latestVersionAtt.getValue()).asBoolean());
 				break;
 			case FOLDER:
@@ -112,7 +112,7 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 
 				final int counter = vCounterCodec.encodeValue(vCounter.getValue()).asInteger();
 				final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
-				if ((index < (counter - 1)) || !headVersion) {
+				if ((index < (counter - 1)) || (vDoc || !headVersion)) {
 					final int width = String.format("%d", counter).length();
 
 					String format = "v%s%d";
@@ -120,6 +120,10 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 						format = String.format("v%%s%%0%dd", width);
 					}
 					appendix = String.format(format, versionPrefix, index);
+				}
+
+				if (vDoc && headVersion) {
+					appendix = String.format("%s [CURRENT]", appendix);
 				}
 			} else {
 				// Use the version string
