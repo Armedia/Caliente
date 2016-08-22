@@ -45,6 +45,8 @@ import com.armedia.commons.utilities.Tools;
 
 abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
+	private static final String METADATA_SUFFIX = ".metadata.properties.xml";
+
 	private static final Map<String, String> ATTRIBUTE_MAPPER;
 	private static final Map<String, String> ATTRIBUTE_SPECIAL_COPIES;
 	private static final Set<String> USER_CONVERSIONS;
@@ -184,11 +186,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		super(factory, storedObject);
 		CmfValue reference = getAttributeValue("dctm:i_is_reference");
 		this.reference = ((reference != null) && !reference.isNull() && reference.asBoolean());
-		CmfValue virtual = getAttributeValue("dctm:r_is_virtual_doc");
-		boolean vflag = ((virtual != null) && !virtual.isNull() && (virtual.asInteger() != 0));
-		CmfValue linkCnt = getAttributeValue("dctm:r_link_cnt");
-		int lc = ((linkCnt != null) && !linkCnt.isNull() ? linkCnt.asInteger() : 0);
-		this.virtual = (this.cmfObject.getType() == CmfType.DOCUMENT) && (vflag || (lc > 0));
+		CmfValue virtual = getPropertyValue(IntermediateProperty.VDOC_HISTORY);
+		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
 		this.defaultType = defaultType;
 	}
 
@@ -246,7 +245,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected final void storeValue(CmfProperty<CmfValue> srcAtt, SchemaAttribute tgtAtt, Properties p,
-		boolean concatenateFallback) throws ImportException, ParseException {
+		boolean concatenateFallback) throws ImportException {
 		final String value;
 		// If the source attribute is repeating, but the target isn't, we'll concatenate
 		if (!srcAtt.hasValues()) { return; }
@@ -261,29 +260,36 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				break;
 		}
 
-		if (srcAtt.isRepeating()) {
-			if (tgtAtt.multiple || concatenateFallback) {
-				// Concatenate using the separator
-				StringBuilder sb = new StringBuilder();
-				char separator = ',';
-				// TODO: Detect separator - if it exists, try another
-				int i = 0;
-				for (CmfValue v : srcAtt) {
-					if (i > 0) {
-						sb.append(separator);
+		try {
+			if (srcAtt.isRepeating()) {
+				if (tgtAtt.multiple || concatenateFallback) {
+					// Concatenate using the separator
+					StringBuilder sb = new StringBuilder();
+					char separator = ',';
+					// TODO: Detect separator - if it exists, try another
+					int i = 0;
+					for (CmfValue v : srcAtt) {
+						if (i > 0) {
+							sb.append(separator);
+						}
+						sb.append(serializer.serialize(v));
+						i++;
 					}
-					sb.append(serializer.serialize(v));
-					i++;
+					value = sb.toString();
+				} else {
+					value = serializer.serialize(srcAtt.getValue());
 				}
-				value = sb.toString();
-			} else {
+			} else if (!srcAtt.getValue().isNull()) {
+				// Write out the single value
 				value = serializer.serialize(srcAtt.getValue());
+			} else {
+				value = null;
 			}
-		} else if (!srcAtt.getValue().isNull()) {
-			// Write out the single value
-			value = serializer.serialize(srcAtt.getValue());
-		} else {
-			value = null;
+		} catch (ParseException e) {
+			throw new ImportException(
+				String.format("Failed to serialize the values from source attribute [%s] for %s [%s](%s)",
+					srcAtt.getName(), this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getName()),
+				e);
 		}
 
 		if (!StringUtils.isEmpty(value)) {
@@ -294,7 +300,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected abstract boolean createStub(File target, String content) throws ImportException;
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
-		CmfContentInfo content) throws ImportException, ParseException {
+		CmfContentInfo content) throws ImportException {
 
 		Set<String> tgtNames = targetType.getAttributeNames();
 		Set<String> srcNames = this.cmfObject.getAttributeNames();
@@ -612,42 +618,45 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 			mainName = mainName.substring(0, mainName.length() - suffix.length());
 			final File meta = new File(main.getParentFile(),
-				String.format("%s.metadata.properties.xml%s", mainName, suffix));
+				String.format("%s%s%s", mainName, AlfImportFileableDelegate.METADATA_SUFFIX, suffix));
 
 			// Ok...so...now that we know where the metadata properties must go, we write them
 			// out
 			Properties p = new Properties();
-			boolean primary = false;
-			try {
-				if (content.isDefaultRendition() && (content.getRenditionPage() == 0)) {
-					// First page of the default rendition gets ALL the metadata. Everything
-					// else
-					// only gets supplementary metadata
-					primary = true;
-					populatePrimaryAttributes(ctx, p, targetType, content);
-				} else {
-					// This is a supplementary rendition, and thus will need some minimal
-					// metadata set on it
-					populateRenditionAttributes(p, targetType, content);
-				}
-			} catch (ParseException e) {
-				String renditionSpec = "primary rendition";
-				if (!primary) {
-					renditionSpec = String.format("rendition [%s], page # %d", content.getRenditionIdentifier(),
-						content.getRenditionPage());
-				}
-				throw new ImportException(String.format("Failed to serialize the attributes for %s [%s](%s), %s",
-					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId(), renditionSpec), e);
+			if (content.isDefaultRendition() && (content.getRenditionPage() == 0)) {
+				// First page of the default rendition gets ALL the metadata. Everything
+				// else only gets supplementary metadata
+				populatePrimaryAttributes(ctx, p, targetType, content);
+			} else {
+				// This is a supplementary rendition, and thus will need some minimal
+				// metadata set on it
+				populateRenditionAttributes(p, targetType, content);
 			}
 
 			storeProperties(p, meta);
 
 			if (this.virtual) {
+				final File refHome = meta.getParentFile();
+				// Does the reference home already have properties? If not, then add them...
+				Properties versionProps = new Properties();
+				populatePrimaryAttributes(ctx, versionProps, this.factory.schema.buildType("arm:vdocRoot"), content);
+
+				File directoryMeta = null;
+				if (this.cmfObject.isBatchHead()) {
+					directoryMeta = refHome.getParentFile();
+					directoryMeta = new File(directoryMeta.getParentFile(),
+						String.format("%s%s", directoryMeta.getName(), AlfImportFileableDelegate.METADATA_SUFFIX));
+					storeProperties(versionProps, directoryMeta);
+				}
+
+				directoryMeta = new File(refHome.getParentFile(),
+					String.format("%s%s", refHome.getName(), AlfImportFileableDelegate.METADATA_SUFFIX));
+				versionProps.setProperty("cm:name", refHome.getName());
+				versionProps.setProperty("dctm:object_name", refHome.getName());
+				storeProperties(versionProps, directoryMeta);
+
 				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
 				if (members != null) {
-					final File refHome = meta.getParentFile();
-					// Does the reference home already have properties? If not, then add them...
-
 					for (CmfValue member : members) {
 						if (member.isNull()) {
 							continue;
@@ -671,16 +680,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 						File refTarget = new File(refHome, memberData[0]);
 						File refMeta = new File(refHome,
-							String.format("%s.metadata.properties.xml", refTarget.getName()));
+							String.format("%s%s", refTarget.getName(), AlfImportFileableDelegate.METADATA_SUFFIX));
 						createStub(refTarget, member.asString());
 						storeProperties(memberProps, refMeta);
 					}
-				}
-
-				// If this is the head revision, then we need to create one more reference to point
-				// to the actual head version...
-				if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
-
 				}
 			} else {
 				// IF (and only if) the document is also the head document, but not the latest

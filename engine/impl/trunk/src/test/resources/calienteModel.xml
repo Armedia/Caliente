@@ -99,6 +99,28 @@
 		<!--
 			END arm:reference
 		-->
+
+		<!--
+			BEGIN arm:vdocRoot
+		-->
+		<type name="arm:vdocRoot">
+			<title>Armedia Caliente Virtual Document Root Folder Object</title>
+			<parent>arm:folder</parent>
+		</type>
+		<!--
+			END arm:vdocRoot
+		-->
+
+		<!--
+			BEGIN arm:vdocVersion
+		-->
+		<type name="arm:vdocVersion">
+			<title>Armedia Caliente Virtual Document Version Folder Object</title>
+			<parent>arm:folder</parent>
+		</type>
+		<!--
+			END arm:vdocVersion
+		-->
 	</types>
 
 	<aspects>
