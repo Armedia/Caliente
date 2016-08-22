@@ -123,7 +123,7 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 				}
 
 				if (vDoc && headVersion) {
-					appendix = String.format("%s [CURRENT]", appendix);
+					appendix = String.format("%s,CURRENT", appendix);
 				}
 			} else {
 				// Use the version string
