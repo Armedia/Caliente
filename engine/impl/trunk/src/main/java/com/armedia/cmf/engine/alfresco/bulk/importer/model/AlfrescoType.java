@@ -12,11 +12,13 @@ import com.armedia.commons.utilities.Tools;
 
 public class AlfrescoType {
 
+	private final SchemaMember<?> type;
 	private final String name;
 	private final Set<String> aspects;
 	private final Map<String, SchemaMember<?>> attributes;
 
 	AlfrescoType(SchemaMember<?> type, Collection<SchemaMember<?>> appliedAspects) {
+		this.type = type;
 		if (appliedAspects == null) {
 			appliedAspects = Collections.emptyList();
 		}
@@ -44,6 +46,10 @@ public class AlfrescoType {
 
 	public String getName() {
 		return this.name;
+	}
+
+	public boolean isDescendedOf(String typeName) {
+		return this.aspects.contains(typeName) || this.type.isDescendedOf(typeName);
 	}
 
 	public Set<String> getAspects() {

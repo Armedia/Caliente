@@ -81,6 +81,12 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		return this.mandatoryAspects;
 	}
 
+	public boolean isDescendedOf(String name) {
+		if (this.name.equals(name)) { return true; }
+		if (this.parent != null) { return this.parent.isDescendedOf(name); }
+		return false;
+	}
+
 	public SchemaAttribute getAttribute(String name) {
 		if (!this.allAttributeNames.contains(name)) { return null; }
 		SchemaAttribute schemaAttribute = this.localAttributes.get(name);

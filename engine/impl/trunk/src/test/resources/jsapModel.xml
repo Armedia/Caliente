@@ -683,28 +683,6 @@
 		-->
 
 		<!--
-			BEGIN jsap:js_folder
-		-->
-		<type name="jsap:js_folder">
-			<title>js_folder</title>
-			<parent>arm:folder</parent>
-		</type>
-		<!--
-			END jsap:js_folder
-		-->
-
-		<!--
-			BEGIN jsap:js_gen_folder
-		-->
-		<type name="jsap:js_gen_folder">
-			<title>js_gen_folder</title>
-			<parent>jsap:js_folder</parent>
-		</type>
-		<!--
-			END jsap:js_gen_folder
-		-->
-
-		<!--
 			BEGIN jsap:js_jsapm_document
 		-->
 		<type name="jsap:js_jsapm_document">
@@ -738,7 +716,7 @@
 		-->
 		<type name="jsap:js_message_archive">
 			<title>js_message_archive</title>
-			<parent>cm:content</parent>
+			<parent>arm:document</parent>
 			<properties>
 				<property name="jsap:js_mail_author">
 					<title>Mail Author</title>
@@ -765,74 +743,6 @@
 		</type>
 		<!--
 			END jsap:js_message_attachment
-		-->
-
-		<!--
-			BEGIN jsap:js_nr_folder
-		-->
-		<type name="jsap:js_nr_folder">
-			<title>js_nr_folder</title>
-			<parent>jsap:js_folder</parent>
-		</type>
-		<!--
-			END jsap:js_nr_folder
-		-->
-
-		<!--
-			BEGIN jsap:js_rm_folder
-		-->
-		<type name="jsap:js_rm_folder">
-			<title>js_rm_folder</title>
-			<parent>arm:folder</parent>
-			<properties>
-				<property name="jsap:js_archive_record_series">
-					<title>Record Series</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="jsap:js_archive_filing_location">
-					<title>Filing Location</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="jsap:js_archive_directorate">
-					<title>Archiving Directorate</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="jsap:js_rmfolder_description">
-					<title>Description</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="jsap:js_retention_period">
-					<title>Retention Period</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-			</properties>
-			<mandatory-aspects>
-				<aspect>dctm:dmc_rm_formal_rec_folder</aspect>
-			</mandatory-aspects>
-		</type>
-		<!--
-			END jsap:js_rm_folder
-		-->
-
-		<!--
-			BEGIN jsap:js_sa_folder
-		-->
-		<type name="jsap:js_sa_folder">
-			<title>js_sa_folder</title>
-			<parent>jsap:js_folder</parent>
-		</type>
-		<!--
-			END jsap:js_sa_folder
 		-->
 	</types>
 
@@ -1868,6 +1778,95 @@
 		</aspect>
 		<!--
 			END jsap:js_jsapm_common
+		-->
+
+		<!--
+			BEGIN jsap:js_folder
+		-->
+		<aspect name="jsap:js_folder">
+			<title>js_folder</title>
+			<parent>arm:folder</parent>
+		</aspect>
+		<!--
+			END jsap:js_folder
+		-->
+
+		<!--
+			BEGIN jsap:js_gen_folder
+		-->
+		<aspect name="jsap:js_gen_folder">
+			<title>js_gen_folder</title>
+			<parent>jsap:js_folder</parent>
+		</aspect>
+		<!--
+			END jsap:js_gen_folder
+		-->
+
+		<!--
+			BEGIN jsap:js_nr_folder
+		-->
+		<aspect name="jsap:js_nr_folder">
+			<title>js_nr_folder</title>
+			<parent>jsap:js_folder</parent>
+		</aspect>
+		<!--
+			END jsap:js_nr_folder
+		-->
+
+		<!--
+			BEGIN jsap:js_rm_folder
+		-->
+		<aspect name="jsap:js_rm_folder">
+			<title>js_rm_folder</title>
+			<properties>
+				<property name="jsap:js_archive_record_series">
+					<title>Record Series</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_archive_filing_location">
+					<title>Filing Location</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_archive_directorate">
+					<title>Archiving Directorate</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_rmfolder_description">
+					<title>Description</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:js_retention_period">
+					<title>Retention Period</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+			<mandatory-aspects>
+				<aspect>dctm:dmc_rm_formal_rec_folder</aspect>
+			</mandatory-aspects>
+		</aspect>
+		<!--
+			END jsap:js_rm_folder
+		-->
+
+		<!--
+			BEGIN jsap:js_sa_folder
+		-->
+		<aspect name="jsap:js_sa_folder">
+			<title>js_sa_folder</title>
+			<parent>jsap:js_folder</parent>
+		</aspect>
+		<!--
+			END jsap:js_sa_folder
 		-->
 	</aspects>
 </model>

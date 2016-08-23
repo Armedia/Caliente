@@ -200,20 +200,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
-		AlfrescoType type = null;
-		// Not a rendition or a reference? Fine...let's identify the type
-		String srcTypeName = this.cmfObject.getSubtype().toLowerCase();
-		String finalTypeName = null;
-		for (String prefix : this.factory.getTargetPrefixes()) {
-			finalTypeName = String.format("%s:%s", prefix, srcTypeName);
-			if (this.factory.schema.hasType(finalTypeName)) { return this.factory.schema.buildType(finalTypeName); }
-		}
-		// If none of the target prefixes matched, default to the base one
-		finalTypeName = String.format("arm:%s", srcTypeName);
-		if (this.factory.schema.hasType(finalTypeName)) {
-			type = this.factory.schema.buildType(finalTypeName);
-		}
-
+		AlfrescoType type = this.factory.mapType(this.cmfObject.getSubtype().toLowerCase());
 		if (type == null) {
 			type = this.factory.schema.buildType(this.defaultType);
 		}
@@ -429,7 +416,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		for (String s : targetType.getAspects()) {
-			if (StringUtils.isEmpty(s)) {
+			if (StringUtils.isEmpty(s) || Tools.equals("arm:caliente", s)) {
 				continue;
 			}
 			if (sb.length() > 0) {

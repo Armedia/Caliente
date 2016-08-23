@@ -72,21 +72,6 @@
 		-->
 
 		<!--
-			BEGIN arm:folder
-		-->
-		<type name="arm:folder">
-			<title>Armedia Caliente Base Folder Object</title>
-			<parent>cm:folder</parent>
-			<mandatory-aspects>
-				<aspect>dctm:dm_folder</aspect>
-				<aspect>arm:caliente</aspect>
-			</mandatory-aspects>
-		</type>
-		<!--
-			END arm:folder
-		-->
-
-		<!--
 			BEGIN arm:reference
 		-->
 		<type name="arm:reference">
@@ -1093,6 +1078,20 @@
 		</aspect>
 		<!--
 			BEGIN arm:calienteIngested
+		-->
+
+		<!--
+			BEGIN arm:folder
+		-->
+		<aspect name="arm:folder">
+			<title>Armedia Caliente Base Folder Aspect</title>
+			<parent>dctm:dm_folder</parent>
+			<mandatory-aspects>
+				<aspect>arm:caliente</aspect>
+			</mandatory-aspects>
+		</aspect>
+		<!--
+			END arm:folder
 		-->
 
 		<!--
