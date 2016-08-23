@@ -24,7 +24,7 @@ public class AlfImportEngine extends
 
 	private static final CmfNameFixer<CmfValue> NAME_FIXER = new CmfNameFixer<CmfValue>() {
 
-		private final String forbidden = "[*\\\\><?/:]";
+		private final String forbidden = "[\"*\\><?/:|]";
 
 		@Override
 		public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
