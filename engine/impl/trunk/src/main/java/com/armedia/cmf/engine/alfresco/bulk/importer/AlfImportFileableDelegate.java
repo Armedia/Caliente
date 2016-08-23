@@ -180,6 +180,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private final boolean reference;
 	private final boolean virtual;
 	private final String defaultType;
+	private final AlfrescoType vdocRoot;
+	private final AlfrescoType vdocVersion;
 
 	public AlfImportFileableDelegate(String defaultType, AlfImportDelegateFactory factory,
 		CmfObject<CmfValue> storedObject) throws Exception {
@@ -189,6 +191,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		CmfValue virtual = getPropertyValue(IntermediateProperty.VDOC_HISTORY);
 		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
 		this.defaultType = defaultType;
+		this.vdocRoot = this.factory.schema.buildType("cm:folder", "arm:vdocRoot");
+		this.vdocVersion = this.factory.schema.buildType("cm:folder", "arm:vdocVersion");
 	}
 
 	protected final boolean isVirtual() {
@@ -626,7 +630,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				final File refHome = meta.getParentFile();
 				// Does the reference home already have properties? If not, then add them...
 				Properties versionProps = new Properties();
-				populatePrimaryAttributes(ctx, versionProps, this.factory.schema.buildType("arm:vdocRoot"), content);
+				populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
 
 				File directoryMeta = null;
 				if (this.cmfObject.isBatchHead()) {
@@ -640,6 +644,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					String.format("%s%s", refHome.getName(), AlfImportFileableDelegate.METADATA_SUFFIX));
 				versionProps.setProperty("cm:name", refHome.getName());
 				versionProps.setProperty("dctm:object_name", refHome.getName());
+				versionProps.setProperty("types", this.vdocVersion.getName());
+				versionProps.setProperty("aspects", StringUtils.join(this.vdocVersion.getAspects(), ','));
 				storeProperties(versionProps, directoryMeta);
 
 				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);

@@ -45,7 +45,7 @@ public class AlfImportDelegateFactory
 		public void validate(String key, String value) throws Exception;
 	}
 
-	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^(.+)(?:\\[(.*)\\])?$");
+	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^([^\\[]+)(?:\\[(.*)\\])?$");
 
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
 
@@ -122,8 +122,8 @@ public class AlfImportDelegateFactory
 								k.toString(), v.toString()), e);
 						}
 					}
+					properties.setProperty(k.toString(), v);
 				}
-				properties.putAll(p);
 				return true;
 			} catch (InvalidPropertiesFormatException e) {
 				// Not XML-format, try text format
@@ -132,7 +132,18 @@ public class AlfImportDelegateFactory
 
 				p.clear();
 				p.load(in);
-				properties.putAll(p);
+				for (Object k : p.keySet()) {
+					String v = p.getProperty(k.toString());
+					if (validator != null) {
+						try {
+							validator.validate(k.toString(), v);
+						} catch (Exception e2) {
+							log.error(String.format("Mapping error detected in file [%s]: [%s]->[%s]", mapFile,
+								k.toString(), v.toString()), e2);
+						}
+					}
+					properties.setProperty(k.toString(), v);
+				}
 			} finally {
 				IOUtils.closeQuietly(in);
 			}
@@ -207,21 +218,23 @@ public class AlfImportDelegateFactory
 						String.format("No default type named [%s] was found", baseName)); }
 
 					String aspects = m.group(2);
-					if (StringUtils.isEmpty(aspects)) { return; }
-
-					List<String> l = new ArrayList<String>();
-					for (String aspect : aspects.split(",")) {
-						aspect = aspect.trim();
-						if (StringUtils.isEmpty(aspects)) {
-							continue;
+					if (!StringUtils.isEmpty(aspects)) {
+						List<String> l = new ArrayList<String>();
+						for (String aspect : aspects.split(",")) {
+							aspect = aspect.trim();
+							if (StringUtils.isEmpty(aspects)) {
+								continue;
+							}
+							if (!AlfImportDelegateFactory.this.schema.hasAspect(aspect)) { throw new Exception(
+								String.format("No aspect named [%s] was found", baseName)); }
+							l.add(aspect);
 						}
-						if (!AlfImportDelegateFactory.this.schema.hasAspect(
-							aspect)) { throw new Exception(String.format("No aspect named [%s] was found", baseName)); }
-						l.add(aspect);
+						// Build with aspects...
+						mappedTypes.put(key, AlfImportDelegateFactory.this.schema.buildType(baseName, l));
+					} else {
+						// No need to build since we lack aspects...
+						mappedTypes.put(key, AlfImportDelegateFactory.this.defaultTypes.get(baseName));
 					}
-
-					// Ok...so...build the types right away
-					mappedTypes.put(key, AlfImportDelegateFactory.this.schema.buildType(baseName, l));
 				}
 			});
 		if (mappedTypes.isEmpty()) {
