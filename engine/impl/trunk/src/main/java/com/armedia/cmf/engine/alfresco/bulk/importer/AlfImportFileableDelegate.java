@@ -205,7 +205,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
 		AlfrescoType type = this.factory.mapType(this.cmfObject.getSubtype().toLowerCase());
-		if (type == null) {
+		if ((type == null) && (this.defaultType != null)) {
 			type = this.factory.schema.buildType(this.defaultType);
 		}
 		return type;

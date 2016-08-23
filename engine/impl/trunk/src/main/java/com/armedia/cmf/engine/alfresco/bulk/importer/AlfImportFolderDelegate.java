@@ -5,16 +5,30 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
+import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.engine.importer.ImportException;
+import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfValue;
 
 public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 
+	private final AlfrescoType folderType;
+
 	public AlfImportFolderDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
-		super("arm:folder", factory, storedObject);
+		super(null, factory, storedObject);
+		this.folderType = this.factory.schema.buildType("cm:folder", "arm:folder");
+	}
+
+	@Override
+	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
+		AlfrescoType type = super.calculateTargetType(content);
+		if (type == null) {
+			type = this.folderType;
+		}
+		return type;
 	}
 
 	@Override
