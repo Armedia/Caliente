@@ -97,9 +97,10 @@ public enum CLIParam {
 	job_name(null, 1, "The name of the synchronization job this export is to define"),
 	reset_job(null, 0, "Reset any existing synchronization job settings with this export's"),
 	content_model(null, -1, "The list of XML files that make up the Alfresco content model to use on import"),
-	user_map(null, 1, "The Properties (XML) file that contains the group name mappings to apply"),
-	group_map(null, 1, "The Properties (XML) file that contains the user name mappings to apply"),
-	role_map(null, 1, "The Properties (XML) file that contains the role name mappings to apply"),
+	user_map(Setting.USER_MAP, 1, "The Properties (XML) file that contains the group name mappings to apply"),
+	group_map(Setting.GROUP_MAP, 1, "The Properties (XML) file that contains the user name mappings to apply"),
+	role_map(Setting.ROLE_MAP, 1, "The Properties (XML) file that contains the role name mappings to apply"),
+	type_map(Setting.TYPE_MAP, 1, "The Properties (XML) file that contains the type mappings to apply"),
 	//
 	;
 

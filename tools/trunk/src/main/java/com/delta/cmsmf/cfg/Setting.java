@@ -52,6 +52,7 @@ public enum Setting {
 	USER_MAP("user.map"),
 	GROUP_MAP("group.map"),
 	ROLE_MAP("role.map"),
+	TYPE_MAP("type.map"),
 
 	//
 	CMF_EXCLUDE_TYPES(TransferSetting.EXCLUDE_TYPES.getLabel()),

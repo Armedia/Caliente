@@ -37,6 +37,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 		settings.put(AlfSessionFactory.USER_MAP, Setting.USER_MAP.getString());
 		settings.put(AlfSessionFactory.GROUP_MAP, Setting.GROUP_MAP.getString());
 		settings.put(AlfSessionFactory.ROLE_MAP, Setting.ROLE_MAP.getString());
+		settings.put(AlfSessionFactory.TYPE_MAP, Setting.TYPE_MAP.getString());
 		super.customizeSettings(settings);
 	}
 }
