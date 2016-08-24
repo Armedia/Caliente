@@ -671,7 +671,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						}
 
 						Properties memberProps = new Properties();
-						populateVdocReference(memberProps, matcher.group(2), memberData[1], memberData[2]);
+						populateVdocReference(memberProps, memberData[0], memberData[1], memberData[2]);
 
 						File refTarget = new File(refHome, memberData[0]);
 						File refMeta = new File(refHome,
