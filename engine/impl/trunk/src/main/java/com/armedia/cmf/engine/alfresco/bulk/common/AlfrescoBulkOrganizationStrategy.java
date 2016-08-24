@@ -49,9 +49,13 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 		}
 
 		CmfProperty<T> vdocProp = object.getProperty(IntermediateProperty.VDOC_HISTORY);
-		CmfValueCodec<T> vdocCodec = translator.getCodec(vdocProp.getType());
-		final boolean vdoc = ((vdocProp != null) && vdocProp.hasValues()
-			&& vdocCodec.encodeValue(vdocProp.getValue()).asBoolean());
+		final boolean vdoc;
+		if (vdocProp != null) {
+			CmfValueCodec<T> vdocCodec = translator.getCodec(vdocProp.getType());
+			vdoc = (vdocProp.hasValues() && vdocCodec.encodeValue(vdocProp.getValue()).asBoolean());
+		} else {
+			vdoc = false;
+		}
 
 		String appendix = calculateVersionAppendix(translator, object, info, primaryContent, vdoc);
 
