@@ -47,6 +47,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	private static final String METADATA_SUFFIX = ".metadata.properties.xml";
 
+	private static final String REFERENCE_TYPE = "arm:reference";
+
 	private static final Map<String, String> ATTRIBUTE_MAPPER;
 	private static final Map<String, String> ATTRIBUTE_SPECIAL_COPIES;
 	private static final Set<String> USER_CONVERSIONS;
@@ -215,7 +217,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		AlfrescoType type = null;
 		if (isReference()) {
 			// If this is a reference - folder or document, doesn't matter...
-			type = this.factory.getType("arm:reference");
+			type = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
 		} else {
 			type = calculateTargetType(content);
 		}
@@ -530,7 +532,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected final void populateVdocReference(Properties p, String targetName, String targetId, String label)
 		throws ImportException {
 		// Set the type property
-		p.setProperty("type", "arm:reference");
+		p.setProperty("type", AlfImportFileableDelegate.REFERENCE_TYPE);
 		p.setProperty("cm:name", targetName);
 		p.setProperty("dctm:binding_condition", "VERSION_LABEL");
 		p.setProperty("dctm:reference_by_id", targetId);
