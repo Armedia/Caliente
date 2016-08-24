@@ -530,7 +530,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected final void populateVdocReference(Properties p, String targetName, String targetId, String label)
 		throws ImportException {
 		// Set the type property
-		p.setProperty("type", "jsap:reference");
+		p.setProperty("type", "arm:reference");
 		p.setProperty("cm:name", targetName);
 		p.setProperty("dctm:binding_condition", "VERSION_LABEL");
 		p.setProperty("dctm:reference_by_id", targetId);
