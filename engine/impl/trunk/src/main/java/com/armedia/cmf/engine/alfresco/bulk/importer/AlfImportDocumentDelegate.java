@@ -13,16 +13,22 @@ import com.armedia.cmf.storage.CmfValue;
 
 public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 
+	private static final String BASE_TYPE = "arm:document";
+	private static final String RENDITION_TYPE = "arm:rendition";
+
+	private final AlfrescoType renditionType;
+
 	public AlfImportDocumentDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
-		super("arm:document", factory, storedObject);
+		super(AlfImportDocumentDelegate.BASE_TYPE, factory, storedObject);
+		this.renditionType = factory.getType(AlfImportDocumentDelegate.RENDITION_TYPE);
 	}
 
 	@Override
 	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
 		if (!content.isDefaultRendition() || (content.getRenditionPage() > 0)) {
 			// If this is a rendition or rendition extra page...
-			return this.factory.getType("arm:rendition");
+			return this.renditionType;
 		}
 		return super.calculateTargetType(content);
 	}

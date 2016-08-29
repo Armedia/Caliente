@@ -18,6 +18,20 @@
 		<namespace uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
 	</namespaces>
 
+	<constraints>
+		<constraint name="arm:calienteProcessingStatus" type="LIST">
+			<parameter name="allowedValues">
+				<list>
+					<value>Success</value>
+					<value>Fail</value>
+					<value>N/A</value>
+					<value>Remediate</value>
+					<value>Unprocessed</value>
+				</list>
+			</parameter>
+		</constraint>
+	</constraints>
+
 	<types>
 		<!--
 			BEGIN arm:document
@@ -1049,13 +1063,55 @@
 		-->
 
 		<!--
-			BEGIN arm:calienteIngested
+			BEGIN arm:calienteStatus
 		-->
-		<aspect name="arm:calienteIngested">
+		<aspect name="arm:calienteStatus">
 			<title>Armedia Caliente Ingested Content</title>
+			<properties>
+				<property name="arm:appliedAcls">
+					<title>AppliedAcls</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+				<property name="arm:appliedRenditions">
+					<title>AppliedRenditions</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+				<property name="arm:appliedReferences">
+					<title>AppliedReferences</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+				<property name="arm:appliedParents">
+					<title>AppliedParents</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+				<property name="arm:appliedVdocs">
+					<title>AppliedAcls</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+			</properties>
 		</aspect>
 		<!--
-			BEGIN arm:calienteIngested
+			BEGIN arm:calienteStatus
 		-->
 
 		<!--

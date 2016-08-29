@@ -14,12 +14,19 @@ import com.armedia.cmf.storage.CmfValue;
 
 public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 
+	private static final String BASE_TYPE = "cm:folder";
+	private static final String FOLDER_ASPECT = "arm:folder";
+	private static final String[] BASE_ASPECTS = {
+		AlfImportFolderDelegate.FOLDER_ASPECT, AlfImportFileableDelegate.STATUS_ASPECT
+	};
+
 	private final AlfrescoType folderType;
 
 	public AlfImportFolderDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(null, factory, storedObject);
-		this.folderType = this.factory.schema.buildType("cm:folder", "arm:folder");
+		this.folderType = this.factory.schema.buildType(AlfImportFolderDelegate.BASE_TYPE,
+			AlfImportFolderDelegate.BASE_ASPECTS);
 	}
 
 	@Override
