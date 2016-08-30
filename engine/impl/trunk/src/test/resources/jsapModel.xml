@@ -1786,6 +1786,14 @@
 		<aspect name="jsap:js_folder">
 			<title>js_folder</title>
 			<parent>arm:folder</parent>
+			<properties>
+				<property name="jsap:js_folder_description">
+					<title>Description</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
 		</aspect>
 		<!--
 			END jsap:js_folder
