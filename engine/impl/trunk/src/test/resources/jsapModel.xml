@@ -248,6 +248,18 @@
 			<title>jcoa_sysobj</title>
 			<parent>arm:document</parent>
 			<properties>
+				<property name="jsap:class_rvw_by">
+					<title>class_rvw_by</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="jsap:class_rvw_date">
+					<title>class_rvw_date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
 				<property name="jsap:classification">
 					<title>classification</title>
 					<type>d:text</type>
@@ -266,11 +278,11 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>false</multiple>
 				</property>
-				<property name="jsap:ujt_r">
-					<title>ujt_r</title>
+				<property name="jsap:release_to">
+					<title>Release To</title>
 					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
-					<multiple>true</multiple>
+					<multiple>false</multiple>
 				</property>
 				<property name="jsap:reviewed">
 					<title>reviewed</title>
@@ -284,23 +296,11 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>true</multiple>
 				</property>
-				<property name="jsap:class_rvw_by">
-					<title>class_rvw_by</title>
+				<property name="jsap:ujt_r">
+					<title>ujt_r</title>
 					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="jsap:class_rvw_date">
-					<title>class_rvw_date</title>
-					<type>d:datetime</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="jsap:release_to">
-					<title>Release To</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
+					<multiple>true</multiple>
 				</property>
 			</properties>
 		</type>
