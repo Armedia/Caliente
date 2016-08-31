@@ -26,7 +26,7 @@
 			BEGIN jsap:jcoa_award
 		-->
 		<type name="jsap:jcoa_award">
-			<title>jcoa_award</title>
+			<title>JCOA Award</title>
 			<parent>jsap:jcoa_sysobj</parent>
 		</type>
 		<!--
@@ -37,7 +37,7 @@
 			BEGIN jsap:jcoa_brief
 		-->
 		<type name="jsap:jcoa_brief">
-			<title>jcoa_brief</title>
+			<title>JCOA Brief</title>
 			<parent>jsap:jcoa_sysobj</parent>
 		</type>
 		<!--
@@ -48,7 +48,7 @@
 			BEGIN jsap:jcoa_doc
 		-->
 		<type name="jsap:jcoa_doc">
-			<title>jcoa_doc</title>
+			<title>JCOA Document</title>
 			<parent>jsap:js_doc</parent>
 			<properties>
 				<property name="jsap:governingauthority2">
@@ -79,7 +79,7 @@
 			BEGIN jsap:jcoa_finding
 		-->
 		<type name="jsap:jcoa_finding">
-			<title>jcoa_finding</title>
+			<title>JCOA Finding</title>
 			<parent>jsap:jcoa_sysobj</parent>
 		</type>
 		<!--
@@ -90,7 +90,7 @@
 			BEGIN jsap:jcoa_interview
 		-->
 		<type name="jsap:jcoa_interview">
-			<title>jcoa_interview</title>
+			<title>JCOA Interview</title>
 			<parent>jsap:jcoa_sysobj</parent>
 			<properties>
 				<property name="jsap:interviewee_name">
@@ -169,7 +169,7 @@
 			BEGIN jsap:jcoa_issue
 		-->
 		<type name="jsap:jcoa_issue">
-			<title>jcoa_issue</title>
+			<title>JCOA Issue</title>
 			<parent>jsap:jcoa_sysobj</parent>
 		</type>
 		<!--
@@ -180,7 +180,7 @@
 			BEGIN jsap:jcoa_reference_08
 		-->
 		<type name="jsap:jcoa_reference_08">
-			<title>jcoa_reference_08</title>
+			<title>JCOA Reference (08)</title>
 			<parent>jsap:jcoa_reference</parent>
 			<properties>
 				<property name="jsap:pub_date">
@@ -223,7 +223,7 @@
 			BEGIN jsap:jcoa_reference
 		-->
 		<type name="jsap:jcoa_reference">
-			<title>jcoa_reference</title>
+			<title>JCOA Reference</title>
 			<parent>jsap:jcoa_sysobj</parent>
 		</type>
 		<!--
@@ -234,7 +234,7 @@
 			BEGIN jsap:jcoa_report
 		-->
 		<type name="jsap:jcoa_report">
-			<title>jcoa_report</title>
+			<title>JCOA Report</title>
 			<parent>jsap:jcoa_sysobj</parent>
 		</type>
 		<!--
@@ -312,7 +312,7 @@
 			BEGIN jsap:jcoa_trdv_finding
 		-->
 		<type name="jsap:jcoa_trdv_finding">
-			<title>jcoa_trdv_finding</title>
+			<title>JCOA Report</title>
 			<parent>jsap:jcoa_sysobj</parent>
 			<properties>
 				<property name="jsap:associated">
@@ -367,7 +367,7 @@
 			BEGIN jsap:jcoa_unknown
 		-->
 		<type name="jsap:jcoa_unknown">
-			<title>jcoa_unknown</title>
+			<title>Unknown</title>
 			<parent>jsap:jcoa_sysobj</parent>
 		</type>
 		<!--
@@ -378,7 +378,7 @@
 			BEGIN jsap:js_doc
 		-->
 		<type name="jsap:js_doc">
-			<title>js_doc</title>
+			<title>JS Document</title>
 			<parent>arm:document</parent>
 			<properties>
 				<property name="jsap:subject_">
@@ -471,7 +471,7 @@
 			BEGIN jsap:js_document
 		-->
 		<type name="jsap:js_document">
-			<title>js_document</title>
+			<title>JS Document</title>
 			<parent>arm:document</parent>
 			<properties>
 				<property name="jsap:js_application_format">
@@ -686,7 +686,7 @@
 			BEGIN jsap:js_jsapm_document
 		-->
 		<type name="jsap:js_jsapm_document">
-			<title>js_jsapm_document</title>
+			<title>Document (JSAP-M)</title>
 			<parent>jsap:js_document</parent>
 			<mandatory-aspects>
 				<aspect>jsap:js_jsapm_common</aspect>
@@ -700,7 +700,7 @@
 			BEGIN jsap:js_jsapm_message_archive
 		-->
 		<type name="jsap:js_jsapm_message_archive">
-			<title>js_jsapm_message_archive</title>
+			<title>JS JSAP-M Message ARchive</title>
 			<parent>jsap:js_message_archive</parent>
 			<mandatory-aspects>
 				<aspect>dctm:dm_message_archive</aspect>
@@ -715,7 +715,7 @@
 			BEGIN jsap:js_message_archive
 		-->
 		<type name="jsap:js_message_archive">
-			<title>js_message_archive</title>
+			<title>JS Message Archive</title>
 			<parent>arm:document</parent>
 			<properties>
 				<property name="jsap:js_mail_author">
@@ -738,7 +738,7 @@
 			BEGIN jsap:js_message_attachment
 		-->
 		<type name="jsap:js_message_attachment">
-			<title>js_message_attachment</title>
+			<title>JS Message Attachment</title>
 			<parent>jsap:js_document</parent>
 		</type>
 		<!--
@@ -1784,7 +1784,7 @@
 			BEGIN jsap:js_folder
 		-->
 		<aspect name="jsap:js_folder">
-			<title>js_folder</title>
+			<title>JS Folder</title>
 			<parent>arm:folder</parent>
 			<properties>
 				<property name="jsap:js_folder_description">
@@ -1803,7 +1803,7 @@
 			BEGIN jsap:js_gen_folder
 		-->
 		<aspect name="jsap:js_gen_folder">
-			<title>js_gen_folder</title>
+			<title>JS Folder (General)</title>
 			<parent>jsap:js_folder</parent>
 		</aspect>
 		<!--
@@ -1814,7 +1814,7 @@
 			BEGIN jsap:js_nr_folder
 		-->
 		<aspect name="jsap:js_nr_folder">
-			<title>js_nr_folder</title>
+			<title>JS Folder (Non-Record)</title>
 			<parent>jsap:js_folder</parent>
 		</aspect>
 		<!--
@@ -1825,7 +1825,7 @@
 			BEGIN jsap:js_rm_folder
 		-->
 		<aspect name="jsap:js_rm_folder">
-			<title>js_rm_folder</title>
+			<title>JS Folder (Records Management)</title>
 			<properties>
 				<property name="jsap:js_archive_record_series">
 					<title>Record Series</title>
@@ -1870,8 +1870,16 @@
 			BEGIN jsap:js_sa_folder
 		-->
 		<aspect name="jsap:js_sa_folder">
-			<title>js_sa_folder</title>
+			<title>JS Folder (Discretionary Access)</title>
 			<parent>jsap:js_folder</parent>
+			<properties>
+				<property name="jsap:js_information_type">
+					<title>Information Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
 		</aspect>
 		<!--
 			END jsap:js_sa_folder
