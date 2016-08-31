@@ -131,7 +131,7 @@ public class AlfrescoSchemaTest {
 			Assert.assertNotNull(type);
 			for (String attributeName : type.getAttributeNames()) {
 				SchemaAttribute attribute = type.getAttribute(attributeName);
-				System.out.printf("%s\t%s%n", type.getName(), attribute.name);
+				System.out.printf("%s\t%s%n", s, attribute.name);
 			}
 		}
 	}
