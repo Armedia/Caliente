@@ -130,8 +130,12 @@ public class AlfrescoSchemaTest {
 			AlfrescoType type = schema.buildType(typeName, aspects);
 			Assert.assertNotNull(type);
 			for (String attributeName : type.getAttributeNames()) {
+				if (attributeName.startsWith("cm:") || attributeName.startsWith("sys:")
+					|| attributeName.startsWith("arm:")) {
+					continue;
+				}
 				SchemaAttribute attribute = type.getAttribute(attributeName);
-				System.out.printf("%s\t%s%n", s, attribute.name);
+				System.out.printf("%s\t%s%n", s, attribute.name.replaceAll("^jsap:", "dctm:"));
 			}
 		}
 	}
