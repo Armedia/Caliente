@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -104,7 +105,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void importStarted(Map<CmfType, Integer> summary) {
+	public void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
 		// Clear manifest
 		this.openBatches.clear();
 		this.manifestLog.info(String.format(ImportManifest.RECORD_FORMAT, "DATE", "TYPE", "RESULT", "BATCH_ID",
@@ -112,13 +113,13 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectImportStarted(CmfObject<?> object) {
+	public void objectImportStarted(UUID jobId, CmfObject<?> object) {
 		// TODO Auto-generated method stub
-		super.objectImportStarted(object);
+		super.objectImportStarted(jobId, object);
 	}
 
 	@Override
-	public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
+	public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
 		if (!this.types.contains(objectType)) { return; }
 		if (count <= 1) {
 			// We don't track batches with a single item because it's not worth the trouble
@@ -130,7 +131,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectImportCompleted(CmfObject<?> object, ImportOutcome outcome) {
+	public void objectImportCompleted(UUID jobId, CmfObject<?> object, ImportOutcome outcome) {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(outcome.getResult())) { return; }
 		Record record = new Record(object, outcome.getNewId(), outcome.getResult());
@@ -144,7 +145,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectImportFailed(CmfObject<?> object, Throwable thrown) {
+	public void objectImportFailed(UUID jobId, CmfObject<?> object, Throwable thrown) {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(ImportResult.FAILED)) { return; }
 		Record record = new Record(object, thrown);
@@ -158,7 +159,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectBatchImportFinished(CmfType objectType, String batchId,
+	public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 		if (!this.types.contains(objectType)) { return; }
 		List<Record> batch = this.openBatches.get(batchId);
@@ -171,7 +172,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void importFinished(Map<ImportResult, Integer> counters) {
+	public void importFinished(UUID jobId, Map<ImportResult, Integer> counters) {
 		// We're done...
 	}
 }

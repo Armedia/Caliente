@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -188,7 +189,7 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void importStarted(Map<CmfType, Integer> summary) {
+	public final void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
 		this.aggregateCurrent.set(0);
 		this.total.clear();
 		this.current.clear();
@@ -206,20 +207,20 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void objectTypeImportStarted(CmfType objectType, int totalObjects) {
+	public final void objectTypeImportStarted(UUID jobId, CmfType objectType, int totalObjects) {
 		showProgress(objectType);
 		this.console.info(String.format("Object import started for %d %s objects", totalObjects, objectType.name()));
 	}
 
 	@Override
-	public final void objectImportStarted(CmfObject<?> object) {
+	public final void objectImportStarted(UUID jobId, CmfObject<?> object) {
 		showProgress(object.getType());
 		this.console.info(String.format("Import started for %s [%s](%s)", object.getType().name(), object.getLabel(),
 			object.getId()));
 	}
 
 	@Override
-	public final void objectImportCompleted(CmfObject<?> object, ImportOutcome outcome) {
+	public final void objectImportCompleted(UUID jobId, CmfObject<?> object, ImportOutcome outcome) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
 		String suffix = null;
@@ -239,7 +240,7 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void objectImportFailed(CmfObject<?> object, Throwable thrown) {
+	public final void objectImportFailed(UUID jobId, CmfObject<?> object, Throwable thrown) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
 		this.console.info(
@@ -249,7 +250,7 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void objectTypeImportFinished(CmfType objectType, Map<ImportResult, Integer> counters) {
+	public final void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Integer> counters) {
 		this.console.info(String.format("Finished importing %s objects", objectType.name()));
 		for (ImportResult r : ImportResult.values()) {
 			Integer v = counters.get(r);
@@ -262,7 +263,7 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void importFinished(Map<ImportResult, Integer> counters) {
+	public final void importFinished(UUID jobId, Map<ImportResult, Integer> counters) {
 		this.console.info("Import process finished");
 		for (ImportResult r : ImportResult.values()) {
 			Integer v = counters.get(r);
@@ -275,12 +276,12 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
+	public final void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
 		showProgress(objectType);
 	}
 
 	@Override
-	public final void objectBatchImportFinished(CmfType objectType, String batchId,
+	public final void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 		showProgress(objectType);
 	}
