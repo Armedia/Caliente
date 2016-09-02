@@ -288,6 +288,14 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 
 	public abstract boolean isSupportsFileAccess();
 
+	// Return null if this doesn't support file access
+	public final File getRootLocation() {
+		if (!isSupportsFileAccess()) { return null; }
+		return doGetRootLocation();
+	}
+
+	protected abstract File doGetRootLocation();
+
 	protected final File getFile(L locator) throws IOException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a locator string"); }
 		// Short-cut, no need to luck if we won't do anything
