@@ -186,7 +186,8 @@ public class LocalExportDelegate extends
 
 	@Override
 	protected List<CmfContentInfo> storeContent(LocalExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		boolean includeRenditions) throws Exception {
 		if (getType() != CmfType.DOCUMENT) { return null; }
 
 		List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>(1);
