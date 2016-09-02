@@ -652,7 +652,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			// Fire off the workers
 			worker.start(threadCount, new ExportTarget(), true);
 
-			int c = 0;
+			int c = 1;
 			// 1: run the query for the given predicate
 			listenerDelegator.exportStarted(configuration);
 			// 2: iterate over the results, gathering up the object IDs
@@ -660,24 +660,25 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug("Processing the located results...");
 				while ((results != null) && results.hasNext()) {
 					final ExportTarget target = results.next();
-					msg = String.format("Queueing item %s", target);
+					msg = String.format("Queueing item #%d: %s", c, target);
 					this.log.info(msg);
 					if (output != null) {
 						output.info(msg);
 					}
 					try {
 						worker.addWorkItem(target);
-						msg = String.format("Queued item %s", target);
+						msg = String.format("Queued item #%d: %s", c, target);
 						this.log.info(msg);
 						if (output != null) {
 							output.info(msg);
 						}
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
+						msg = String.format("Thread interrupted while queueing target #%d: %s", c, target);
 						if (this.log.isDebugEnabled()) {
-							this.log.warn(String.format("Thread interrupted after reading %d object targets", c), e);
+							this.log.warn(msg, e);
 						} else {
-							this.log.warn(String.format("Thread interrupted after reading %d objects targets", c));
+							this.log.warn(msg);
 						}
 						break;
 					} finally {
