@@ -132,8 +132,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 	@Override
 	protected List<CmfContentInfo> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
-		List<CmfContentInfo> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore);
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		boolean includeRenditions) throws Exception {
+		List<CmfContentInfo> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
+			includeRenditions);
 		ContentStream main = this.object.getContentStream();
 		CmfContentInfo mainInfo = new CmfContentInfo();
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
@@ -143,22 +145,24 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo);
 		mainInfo.setLength(length);
 		ret.add(mainInfo);
-		for (Rendition r : this.object.getRenditions()) {
-			CmfContentInfo info = new CmfContentInfo(r.getKind());
-			ContentStream cs = r.getContentStream();
-			info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
-			name = cs.getFileName();
-			info.setFileName(name);
-			info.setExtension(FilenameUtils.getExtension(name));
-			info.setProperty("kind", r.getKind());
-			info.setProperty("docId", r.getRenditionDocumentId());
-			info.setProperty("streamId", r.getStreamId());
-			info.setProperty("title", r.getTitle());
-			info.setProperty("height", String.valueOf(r.getHeight()));
-			info.setProperty("width", String.valueOf(r.getWidth()));
-			length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
-			info.setLength(length);
-			ret.add(info);
+		if (includeRenditions) {
+			for (Rendition r : this.object.getRenditions()) {
+				CmfContentInfo info = new CmfContentInfo(r.getKind());
+				ContentStream cs = r.getContentStream();
+				info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
+				name = cs.getFileName();
+				info.setFileName(name);
+				info.setExtension(FilenameUtils.getExtension(name));
+				info.setProperty("kind", r.getKind());
+				info.setProperty("docId", r.getRenditionDocumentId());
+				info.setProperty("streamId", r.getStreamId());
+				info.setProperty("title", r.getTitle());
+				info.setProperty("height", String.valueOf(r.getHeight()));
+				info.setProperty("width", String.valueOf(r.getWidth()));
+				length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
+				info.setLength(length);
+				ret.add(info);
+			}
 		}
 		return ret;
 	}

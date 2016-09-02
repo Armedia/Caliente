@@ -48,7 +48,8 @@ public abstract class CmisExportDelegate<T> extends
 
 	@Override
 	protected List<CmfContentInfo> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		boolean includeRenditions) throws Exception {
 		return new ArrayList<CmfContentInfo>();
 	}
 }
