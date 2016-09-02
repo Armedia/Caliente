@@ -98,11 +98,16 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			final int members = root.getChildCount();
 			for (int i = 0; i < members; i++) {
 				final IDfVirtualDocumentNode child = root.getChild(i);
-				p.addValue(DfValueFactory
-					.newStringValue(String.format("[%s|%s|%s|%s|%s]{%s}", child.getId().getId(), child.getChronId().getId(),
-						child.getBinding(), child.getFollowAssembly(), child.getOverrideLateBindingValue(), child.getSelectedObject().getObjectName())));
+				p.addValue(DfValueFactory.newStringValue(String.format("[%s|%s|%s|%s|%s]{%s}", child.getId().getId(),
+					child.getChronId().getId(), child.getBinding(), child.getFollowAssembly(),
+					child.getOverrideLateBindingValue(), child.getSelectedObject().getObjectName())));
 
 			}
+		}
+
+		if (ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
+			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+				IntermediateProperty.VERSION_TREE_ROOT.type, DfValueFactory.newBooleanValue(true)));
 		}
 		return true;
 	}
