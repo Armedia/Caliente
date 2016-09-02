@@ -392,6 +392,11 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
+	protected File doGetRootLocation() {
+		return this.baseDir;
+	}
+
+	@Override
 	protected void clearAllStreams(LocalStoreOperation op) {
 		File[] files = this.baseDir.listFiles();
 		if (files != null) {
