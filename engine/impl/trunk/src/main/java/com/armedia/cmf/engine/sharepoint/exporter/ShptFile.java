@@ -378,7 +378,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 	@Override
 	protected List<CmfContentInfo> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception {
+		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		boolean includeRenditions) throws Exception {
 		final ShptSession session = ctx.getSession();
 		CmfContentInfo info = new CmfContentInfo();
 		final String name = this.object.getName();
