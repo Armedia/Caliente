@@ -94,7 +94,11 @@ public enum CLIParam {
 	skip_acls(Setting.SKIP_ACLS, 0, "Skip exporting acls"),
 	skip_content(null, 0, "Skip importing document contents (only create \"empty\" documents)"),
 	direct_fs(null, 0, "Export files to local FS duplicating the CMS's path"),
-	latest_only(null, 0, "Only include the latest (current) version of documents"),
+	no_renditions(
+		null,
+		0,
+		"Only include the main content stream for documents (and only the first page where multipage is supported)"),
+	no_versions(null, 0, "Only include the latest (current) version of documents"),
 	job_name(null, 1, "The name of the synchronization job this export is to define"),
 	reset_job(null, 0, "Reset any existing synchronization job settings with this export's"),
 	content_model(null, -1, "The list of XML files that make up the Alfresco content model to use on import"),

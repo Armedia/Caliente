@@ -52,7 +52,9 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
-			CLIParam.latest_only.isPresent() || CLIParam.direct_fs.isPresent());
+			CLIParam.no_versions.isPresent() || CLIParam.direct_fs.isPresent());
+		settings.put(TransferSetting.NO_RENDITIONS.getLabel(),
+			CLIParam.no_renditions.isPresent() || CLIParam.direct_fs.isPresent());
 		if (this.user != null) {
 			settings.put(CmisSessionSetting.USER.getLabel(), this.user);
 		}
