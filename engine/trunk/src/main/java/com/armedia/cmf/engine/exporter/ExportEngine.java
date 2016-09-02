@@ -685,9 +685,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						c++;
 					}
 				}
-				this.log.info(String.format("Submitted the entire export workload (%d objects)", c));
+				this.log.info(String.format("Submitted the entire export workload (%d objects)", c - 1));
 				if (output != null) {
-					output.info(String.format("Submitted the entire export workload (%d objects)", c));
+					output.info(String.format("Submitted the entire export workload (%d objects)", c - 1));
 				}
 			} finally {
 				worker.waitForCompletion();
