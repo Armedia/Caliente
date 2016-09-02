@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.tools.CollectionObjectHandler;
+import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -837,4 +838,118 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract void clearAllObjects(O operation) throws CmfStorageException;
+
+	public final void clearTargetCache() throws CmfStorageException {
+		O operation = beginExclusiveInvocation();
+		try {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				clearTargetCache(operation);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for clearing all objects", e);
+					}
+				}
+			}
+		} finally {
+			endExclusiveInvocation(operation);
+		}
+	}
+
+	protected abstract void clearTargetCache(O operation) throws CmfStorageException;
+
+	public final void cacheTarget(CmfObjectSpec object) throws CmfStorageException {
+		cacheTargets(Collections.singleton(object));
+	}
+
+	public final void cacheTargets(Collection<CmfObjectSpec> objects) throws CmfStorageException {
+		O operation = beginExclusiveInvocation();
+		try {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				cacheTargets(operation, objects);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for clearing all cached targets", e);
+					}
+				}
+			}
+		} finally {
+			endExclusiveInvocation(operation);
+		}
+	}
+
+	protected abstract void cacheTargets(O operation, Collection<CmfObjectSpec> objects) throws CmfStorageException;
+
+	public final CloseableIterator<CmfObjectSpec> getCachedTargets() throws CmfStorageException {
+		boolean ok = false;
+		final O operation = beginExclusiveInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				CloseableIterator<CmfObjectSpec> ret = new CloseableIterator<CmfObjectSpec>() {
+					final Object iteratorState = getCachedTargets(operation);
+
+					@Override
+					protected CmfObjectSpec seek() throws Throwable {
+						return getNextCachedTarget(operation, this.iteratorState);
+					}
+
+					@Override
+					protected void doClose() {
+						try {
+							closeCachedTargets(operation, this.iteratorState);
+						} catch (CmfStorageException e) {
+							CmfObjectStore.this.log.warn("Failed to close the cached targets state", e);
+						} finally {
+							if (tx) {
+								try {
+									operation.rollback();
+								} catch (CmfOperationException e) {
+									CmfObjectStore.this.log.warn("Failed to roll back a read-only operation", e);
+								}
+							}
+							endExclusiveInvocation(operation);
+						}
+					}
+				};
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for fetching all cached targets", e);
+					}
+				}
+			}
+		} finally {
+			if (!ok) {
+				endExclusiveInvocation(operation);
+			}
+		}
+	}
+
+	protected abstract Object getCachedTargets(O operation) throws CmfStorageException;
+
+	protected abstract CmfObjectSpec getNextCachedTarget(O operation, Object state) throws CmfStorageException;
+
+	protected abstract void closeCachedTargets(O operation, Object state) throws CmfStorageException;
 }

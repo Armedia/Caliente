@@ -16,15 +16,11 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmfObject<V> {
-
-	private final CmfType type;
+public class CmfObject<V> extends CmfObjectSpec {
 
 	private Long number = null;
-	private final String id;
 	private final String name;
 	private final Collection<CmfObjectRef> parentIds;
-	private final String searchKey;
 	private final String batchId;
 	private final boolean batchHead;
 	private final String label;
@@ -43,12 +39,10 @@ public class CmfObject<V> {
 	 * @param pattern
 	 */
 	public CmfObject(CmfObject<V> pattern) {
+		super(pattern);
 		this.number = pattern.number;
-		this.type = pattern.getType();
-		this.id = pattern.getId();
 		this.name = pattern.name;
 		this.parentIds = pattern.parentIds;
-		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
 		this.batchHead = pattern.batchHead;
 		this.label = pattern.getLabel();
@@ -74,13 +68,11 @@ public class CmfObject<V> {
 	 * @param altType
 	 */
 	CmfObject(CmfObject<V> pattern, String altSubType) {
+		super(pattern);
 		this.number = pattern.number;
-		this.type = pattern.getType();
 		this.subtype = altSubType;
-		this.id = pattern.getId();
 		this.name = pattern.name;
 		this.parentIds = pattern.parentIds;
-		this.searchKey = pattern.getSearchKey();
 		this.batchId = pattern.getBatchId();
 		this.batchHead = pattern.batchHead;
 		this.label = pattern.getLabel();
@@ -105,6 +97,7 @@ public class CmfObject<V> {
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
 		Collection<CmfObjectRef> parentIds, String searchKey, String batchId, boolean batchHead, String label,
 		String subtype, String productName, String productVersion, Long number) {
+		super(type, id, searchKey);
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
@@ -116,11 +109,8 @@ public class CmfObject<V> {
 			parentIds = Collections.emptyList();
 		}
 		this.number = number;
-		this.type = type;
-		this.id = id;
 		this.name = name;
 		this.parentIds = parentIds;
-		this.searchKey = Tools.coalesce(searchKey, id);
 		this.batchId = Tools.coalesce(batchId, id);
 		this.batchHead = (batchId == null ? true : batchHead);
 		this.label = label;
@@ -148,20 +138,8 @@ public class CmfObject<V> {
 		return this.number;
 	}
 
-	public final CmfType getType() {
-		return this.type;
-	}
-
 	public final String getSubtype() {
 		return this.subtype;
-	}
-
-	public final String getId() {
-		return this.id;
-	}
-
-	public final String getSearchKey() {
-		return this.searchKey;
 	}
 
 	public final String getBatchId() {
@@ -282,7 +260,7 @@ public class CmfObject<V> {
 		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
 		return String.format(
 			"%s [type=%s, subtype=%s, id=%s, name=%s, searchKey=%s, batchId=%s, batchHead=%s, label=%s%s%s]",
-			getClass().getSimpleName(), this.type, this.subtype, this.id, this.name, this.searchKey, this.batchId,
+			getClass().getSimpleName(), getType(), this.subtype, getId(), this.name, getSearchKey(), this.batchId,
 			this.batchHead, this.label, trailerSep, trailer);
 	}
 }
