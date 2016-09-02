@@ -51,6 +51,8 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	protected final void prepareSettings(Map<String, Object> settings) throws CMSMFException {
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
+		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
+			CLIParam.latest_only.isPresent() || CLIParam.direct_fs.isPresent());
 		if (this.user != null) {
 			settings.put(CmisSessionSetting.USER.getLabel(), this.user);
 		}
@@ -137,7 +139,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		Map<String, Object> settings = new HashMap<String, Object>();
 		prepareSettings(settings);
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(),
-			Setting.THREADS.getInt(AbstractCMSMFMain_export.DEFAULT_THREADS));
+			Setting.THREADS.getInt(AbstractCMSMFMain.DEFAULT_THREADS));
 
 		Date end = null;
 		Map<CmfType, Integer> summary = null;
