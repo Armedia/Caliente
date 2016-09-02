@@ -157,7 +157,8 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected abstract boolean marshal(C ctx, CmfObject<V> object) throws ExportException;
 
 	protected abstract List<CmfContentInfo> storeContent(C ctx, CmfAttributeTranslator<V> translator,
-		CmfObject<V> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore) throws Exception;
+		CmfObject<V> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		boolean includeRenditions) throws Exception;
 
 	protected abstract Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyDependents(
 		CmfObject<V> marshalled, C ctx) throws Exception;

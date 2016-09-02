@@ -334,7 +334,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					e);
 			}
 
-			if (!ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
+			final boolean latestOnly = ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY);
+			if (!latestOnly) {
 				try {
 					referenced = sourceObject.identifyAntecedents(marshaled, ctx);
 					if (referenced == null) {
@@ -383,8 +384,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug(String.format("Executing supplemental storage for %s", label));
 			}
 			try {
+				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
 				List<CmfContentInfo> cmfContentInfo = sourceObject.storeContent(ctx, getTranslator(), marshaled,
-					referrent, streamStore);
+					referrent, streamStore, includeRenditions);
 				if ((cmfContentInfo != null) && !cmfContentInfo.isEmpty()) {
 					objectStore.setContentInfo(marshaled, cmfContentInfo);
 				}
@@ -396,7 +398,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug(String.format("Successfully stored %s as object # %d", label, ret));
 			}
 
-			if (!ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
+			if (!latestOnly) {
 				try {
 					referenced = sourceObject.identifySuccessors(marshaled, ctx);
 					if (referenced == null) {

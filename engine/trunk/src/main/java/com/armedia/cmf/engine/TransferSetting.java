@@ -4,7 +4,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum TransferSetting implements ConfigurationSetting {
 	//
-	EXCLUDE_TYPES, IGNORE_CONTENT(false), THREAD_COUNT, BACKLOG_SIZE, LATEST_ONLY(false),
+	EXCLUDE_TYPES, IGNORE_CONTENT(false), THREAD_COUNT, BACKLOG_SIZE, LATEST_ONLY(false), NO_RENDITIONS(false),
 	//
 	;
 
