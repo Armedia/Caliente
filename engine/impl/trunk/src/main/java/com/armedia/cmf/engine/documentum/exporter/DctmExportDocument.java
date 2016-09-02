@@ -251,9 +251,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	@Override
 	protected List<CmfContentInfo> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document,
-		CmfContentStore<?, ?, ?> streamStore) throws Exception {
-		if (isDfReference(
-			document)) { return super.doStoreContent(ctx, translator, marshaled, referrent, document, streamStore); }
+		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws Exception {
+		if (isDfReference(document)) { return super.doStoreContent(ctx, translator, marshaled, referrent, document,
+			streamStore, includeRenditions); }
 
 		// We export our contents...
 		final String dql = "" //
@@ -261,14 +261,16 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			+ "  from dmr_content_r dcr, dmr_content_s dcs " //
 			+ " where dcr.r_object_id = dcs.r_object_id " //
 			+ "   and dcr.parent_id = '%s' " //
+			+ "   and dcs.rendition <= %d " //
 			+ "   and dcr.page = %d " //
 			+ " order by dcs.rendition, dcr.page ";
 		final IDfSession session = ctx.getSession();
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
 		List<CmfContentInfo> cmfContentInfo = new ArrayList<CmfContentInfo>();
+		final int renditionLimit = (includeRenditions ? Integer.MAX_VALUE : 0);
 		for (int i = 0; i < pageCount; i++) {
-			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
+			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, renditionLimit, i),
 				IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				while (results.next()) {
@@ -280,6 +282,11 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				}
 			} finally {
 				DfUtils.closeQuietly(results);
+			}
+			// If we're not including renditions, we're also not including multiple pages, so we
+			// only do the first page.
+			if (!includeRenditions) {
+				break;
 			}
 		}
 		return cmfContentInfo;
