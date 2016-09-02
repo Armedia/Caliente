@@ -152,14 +152,32 @@ public abstract class JdbcDialect {
 				"   values (?, ?) " //
 		),
 
+		INSERT_CACHE_TARGET( //
+			"       insert into " + //
+				"          cmf_cache_target (" + //
+				"              object_type, object_id, search_key" + //
+				"          ) " + //
+				"   values (?, ?, ?) " //
+		),
+
 		CLEAR_ALL_MAPPINGS( //
 			"     truncate table cmf_mapper" //
+		),
+
+		CLEAR_TARGET_CACHE( //
+			"     truncate table cmf_target_cache" //
 		),
 
 		LOAD_ALL_MAPPINGS( //
 			"       select distinct object_type, name " + //
 				"     from cmf_mapper " + //
 				" order by object_type, name" //
+		),
+
+		LOAD_ALL_CACHE_TARGETS( //
+			"       select distinct object_type, object_id, search_key " + //
+				"     from cmf_cache_target " + //
+				" order by object_number " //
 		),
 
 		LOAD_TYPE_MAPPINGS( //

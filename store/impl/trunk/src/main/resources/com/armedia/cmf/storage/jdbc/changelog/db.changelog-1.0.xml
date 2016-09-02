@@ -38,6 +38,27 @@
 			<column name="object_id" />
 		</createIndex>
 
+		<!-- The target cache table -->
+		<createTable tableName="cmf_target_cache" remarks="The CMS target cache">
+			<column name="object_number" type="bigint" remarks="The export ordinal number of the object (import will be done in this order as well)">
+				<constraints nullable="false" unique="true"/>
+			</column>
+			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
+				<constraints nullable="true" />
+			</column>
+			<column name="object_id" type="varchar(96)" remarks="The object's ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="search_key" type="varchar(1024)" remarks="The object's Search Key">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_target_cache" columnNames="object_id" />
+		<createIndex tableName="cmf_target_cache" indexName="idx_cmf_target_cache" unique="true">
+			<column name="object_number" />
+		</createIndex>
+		<addAutoIncrement tableName="cmf_target_cache" columnName="object_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
+
 		<!-- The main objects table -->
 		<createTable tableName="cmf_object" remarks="The CMS objects">
 			<column name="object_number" type="bigint" remarks="The export ordinal number of the object (import will be done in this order as well)">

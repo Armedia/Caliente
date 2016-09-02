@@ -42,6 +42,7 @@ import com.armedia.cmf.storage.CmfNameFixer;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
 import com.armedia.cmf.storage.CmfObjectRef;
+import com.armedia.cmf.storage.CmfObjectSpec;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfOperationException;
 import com.armedia.cmf.storage.CmfProperty;
@@ -1305,5 +1306,88 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	protected String translateQuery(JdbcDialect.Query query) {
 		return this.dialect.translateQuery(query, true);
+	}
+
+	@Override
+	protected void clearTargetCache(JdbcOperation operation) throws CmfStorageException {
+		Connection c = operation.getConnection();
+		try {
+			JdbcTools.getQueryRunner().update(c, translateQuery(JdbcDialect.Query.CLEAR_TARGET_CACHE));
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to clear the target cache", e);
+		}
+	}
+
+	@Override
+	protected void cacheTargets(JdbcOperation operation, Collection<CmfObjectSpec> targets) throws CmfStorageException {
+		Object[] arr = new Object[3];
+		Collection<Object[]> cacheTargets = new ArrayList<Object[]>(targets.size());
+		for (CmfObjectSpec spec : targets) {
+			arr[0] = spec.getType().name();
+			arr[1] = spec.getId();
+			arr[2] = spec.getSearchKey();
+			cacheTargets.add(arr.clone());
+		}
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		try {
+			qr.insertBatch(operation.getConnection(), translateQuery(JdbcDialect.Query.INSERT_CACHE_TARGET),
+				JdbcTools.HANDLER_NULL, cacheTargets.toArray(JdbcTools.NO_PARAMS));
+		} catch (SQLException e) {
+			throw new CmfStorageException("Exception caught inserting the cache targets", e);
+		}
+	}
+
+	@Override
+	protected Object getCachedTargets(JdbcOperation operation) throws CmfStorageException {
+		try {
+			return operation.getConnection().prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ALL_CACHE_TARGETS))
+				.executeQuery();
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to fetch all the cached targets", e);
+		}
+	}
+
+	@Override
+	protected CmfObjectSpec getNextCachedTarget(JdbcOperation operation, Object state) throws CmfStorageException {
+		if (!ResultSet.class.isInstance(state)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
+		ResultSet rs = ResultSet.class.cast(state);
+		try {
+			if (!rs.next()) { return null; }
+			String type = rs.getString("object_type");
+			if (rs.wasNull()) {
+				type = null;
+			}
+			String id = rs.getString("object_id");
+			if (rs.wasNull()) {
+				id = null;
+			}
+			String searchKey = rs.getString("search_key");
+			if (rs.wasNull()) {
+				searchKey = null;
+			}
+			try {
+				return new CmfObjectSpec(CmfType.valueOf(type), id, searchKey);
+			} catch (Exception e) {
+				throw new CmfStorageException(String.format("Illegal CmfType value [%s]", type), e);
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to retrieve the next cached target in the given result set", e);
+		}
+	}
+
+	@Override
+	protected void closeCachedTargets(JdbcOperation operation, Object state) throws CmfStorageException {
+		if (!ResultSet.class.isInstance(state)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
+		ResultSet rs = ResultSet.class.cast(state);
+		Statement s = null;
+		try {
+			s = rs.getStatement();
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				"Failed to retrieve the statement associated with the cached targets result set", e);
+		} finally {
+			DbUtils.closeQuietly(rs);
+			DbUtils.closeQuietly(s);
+		}
 	}
 }
