@@ -20,6 +20,7 @@ import com.armedia.cmf.engine.PooledWorkers;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
@@ -333,29 +334,32 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					e);
 			}
 
-			try {
-				referenced = sourceObject.identifyAntecedents(marshaled, ctx);
-				if (referenced == null) {
-					referenced = Collections.emptyList();
+			if (!ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
+				try {
+					referenced = sourceObject.identifyAntecedents(marshaled, ctx);
+					if (referenced == null) {
+						referenced = Collections.emptyList();
+					}
+				} catch (Exception e) {
+					throw new ExportException(String.format("Failed to identify the antecedent versions for %s", label),
+						e);
 				}
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to identify the antecedent versions for %s", label), e);
-			}
 
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("%s requires %d antecedent versions for successful storage", label,
-					referenced.size()));
-			}
-			for (ExportDelegate<?, S, W, V, C, ?, ?> antecedent : referenced) {
-				exportObject(objectStore, streamStore, target, antecedent.getExportTarget(), antecedent, ctx,
-					listenerDelegator, statusMap);
-			}
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("%s requires %d antecedent versions for successful storage", label,
+						referenced.size()));
+				}
+				for (ExportDelegate<?, S, W, V, C, ?, ?> antecedent : referenced) {
+					exportObject(objectStore, streamStore, target, antecedent.getExportTarget(), antecedent, ctx,
+						listenerDelegator, statusMap);
+				}
 
-			try {
-				sourceObject.antecedentsExported(marshaled, ctx);
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to run the post-antecedents callback for %s", label),
-					e);
+				try {
+					sourceObject.antecedentsExported(marshaled, ctx);
+				} catch (Exception e) {
+					throw new ExportException(
+						String.format("Failed to run the post-antecedents callback for %s", label), e);
+				}
 			}
 
 			// Are there any last-minute properties/attributes to calculate prior to
@@ -392,28 +396,32 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug(String.format("Successfully stored %s as object # %d", label, ret));
 			}
 
-			try {
-				referenced = sourceObject.identifySuccessors(marshaled, ctx);
-				if (referenced == null) {
-					referenced = Collections.emptyList();
+			if (!ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
+				try {
+					referenced = sourceObject.identifySuccessors(marshaled, ctx);
+					if (referenced == null) {
+						referenced = Collections.emptyList();
+					}
+				} catch (Exception e) {
+					throw new ExportException(String.format("Failed to identify the successor versions for %s", label),
+						e);
 				}
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to identify the successor versions for %s", label), e);
-			}
 
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("%s is succeeded by %d additional versions for successful storage", label,
-					referenced.size()));
-			}
-			for (ExportDelegate<?, S, W, V, C, ?, ?> successor : referenced) {
-				exportObject(objectStore, streamStore, target, successor.getExportTarget(), successor, ctx,
-					listenerDelegator, statusMap);
-			}
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(String.format("%s is succeeded by %d additional versions for successful storage",
+						label, referenced.size()));
+				}
+				for (ExportDelegate<?, S, W, V, C, ?, ?> successor : referenced) {
+					exportObject(objectStore, streamStore, target, successor.getExportTarget(), successor, ctx,
+						listenerDelegator, statusMap);
+				}
 
-			try {
-				sourceObject.successorsExported(marshaled, ctx);
-			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to run the post-successors callback for %s", label), e);
+				try {
+					sourceObject.successorsExported(marshaled, ctx);
+				} catch (Exception e) {
+					throw new ExportException(String.format("Failed to run the post-successors callback for %s", label),
+						e);
+				}
 			}
 
 			try {
