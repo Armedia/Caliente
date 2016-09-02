@@ -5,7 +5,7 @@
 	<name>CMS Migration Framework</name>
 	<groupId>com.delta</groupId>
 	<artifactId>cmsmf</artifactId>
-	<version>3.3.0-beta44</version>
+	<version>3.3.0-beta45</version>
 	<packaging>jar</packaging>
 
 	<scm>
@@ -16,7 +16,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.6</project.build.target>
 		<maven.min-version>3.0</maven.min-version>
-		<dfc.version>6.7-SP2</dfc.version>
+		<dfc.version>6.7-SP1</dfc.version>
 	</properties>
 
 	<organization>
