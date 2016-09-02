@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -14,9 +15,9 @@ import org.apache.log4j.Logger;
 import com.armedia.cmf.engine.exporter.DefaultExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.engine.exporter.ExportSkipReason;
+import com.armedia.cmf.engine.exporter.ExportState;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -123,21 +124,21 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void exportStarted(CfgTools config) {
+	public void exportStarted(ExportState exportState) {
 		this.openBatches.clear();
 		this.manifestLog.info(String.format(ExportManifest.RECORD_FORMAT, "DATE", "TYPE", "RESULT", "BATCH_ID",
 			"SOURCE_ID", "LABEL", "ERROR_DATA"));
 	}
 
 	@Override
-	public void objectExportCompleted(CmfObject<?> object, Long objectNumber) {
+	public void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(ExportResult.EXPORTED)) { return; }
 		new Record(object, ExportResult.EXPORTED).log(this.manifestLog);
 	}
 
 	@Override
-	public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason) {
+	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason) {
 		// For the manifest, we're not really interested in Skipped objects, since
 		// they'll always be the result of duplicate serializations, so there's no
 		// problem to be reported or deduced from it
@@ -149,7 +150,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectExportFailed(CmfType objectType, String objectId, Throwable thrown) {
+	public void objectExportFailed(UUID jobId, CmfType objectType, String objectId, Throwable thrown) {
 		if (!this.types.contains(objectType)) { return; }
 		if (!this.results.contains(ExportResult.FAILED)) { return; }
 		new Record(objectType, objectId, thrown).log(this.manifestLog);

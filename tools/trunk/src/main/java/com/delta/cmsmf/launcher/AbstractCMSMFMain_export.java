@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
@@ -20,10 +21,10 @@ import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.engine.exporter.ExportSkipReason;
+import com.armedia.cmf.engine.exporter.ExportState;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
@@ -295,17 +296,17 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	}
 
 	@Override
-	public final void exportStarted(CfgTools config) {
-		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", config));
+	public final void exportStarted(ExportState exportState) {
+		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportState.cfg));
 	}
 
 	@Override
-	public final void objectExportStarted(CmfType objectType, String objectId) {
+	public final void objectExportStarted(UUID jobId, CmfType objectType, String objectId) {
 		this.console.info(String.format("Object export started for %s[%s]", objectType.name(), objectId));
 	}
 
 	@Override
-	public final void objectExportCompleted(CmfObject<?> object, Long objectNumber) {
+	public final void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
 		if (objectNumber != null) {
 			this.console.info(String.format("%s export completed for [%s](%s) as object #%d", object.getType().name(),
 				object.getLabel(), object.getId(), objectNumber));
@@ -313,19 +314,19 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	}
 
 	@Override
-	public final void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason) {
+	public final void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason) {
 		if (reason == ExportSkipReason.SKIPPED) {
 			this.console.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
 		}
 	}
 
 	@Override
-	public final void objectExportFailed(CmfType objectType, String objectId, Throwable thrown) {
+	public final void objectExportFailed(UUID jobId, CmfType objectType, String objectId, Throwable thrown) {
 		this.console.warn(String.format("Object export failed for %s[%s]", objectType.name(), objectId), thrown);
 	}
 
 	@Override
-	public final void exportFinished(Map<CmfType, Integer> summary) {
+	public final void exportFinished(ExportState exportState, Map<CmfType, Integer> summary) {
 		this.console.info("Export process finished");
 		for (CmfType t : CmfType.values()) {
 			Integer v = summary.get(t);
