@@ -1,5 +1,7 @@
 package com.armedia.cmf.engine.exporter;
 
+import java.util.UUID;
+
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 
@@ -13,7 +15,7 @@ public interface ExportListener {
 	 * @param objectType
 	 * @param objectId
 	 */
-	public void objectExportStarted(CmfType objectType, String objectId);
+	public void objectExportStarted(UUID jobId, CmfType objectType, String objectId);
 
 	/**
 	 * <p>
@@ -22,7 +24,7 @@ public interface ExportListener {
 	 *
 	 * @param object
 	 */
-	public void objectExportCompleted(CmfObject<?> object, Long objectNumber);
+	public void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber);
 
 	/**
 	 * <p>
@@ -33,7 +35,7 @@ public interface ExportListener {
 	 * @param objectId
 	 * @param reason
 	 */
-	public void objectSkipped(CmfType objectType, String objectId, ExportSkipReason reason);
+	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason);
 
 	/**
 	 * <p>
@@ -43,6 +45,6 @@ public interface ExportListener {
 	 * @param objectType
 	 * @param thrown
 	 */
-	public void objectExportFailed(CmfType objectType, String objectId, Throwable thrown);
+	public void objectExportFailed(UUID jobId, CmfType objectType, String objectId, Throwable thrown);
 
 }

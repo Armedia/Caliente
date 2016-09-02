@@ -304,8 +304,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		final CfgTools configuration = new CfgTools(settings);
 
-		final UUID jobId = UUID.randomUUID();
-		prepareImport(jobId, settings, objectStore, streamStore);
+		ImportState importState = new ImportState(output, objectStore, streamStore, configuration);
+
+		prepareImport(importState);
 		boolean ok = false;
 		try {
 
@@ -352,8 +353,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						baseSession = null;
 					}
 
-					CmfObjectCounter<ImportResult> result = runImportImpl(jobId, output, objectStore, streamStore,
-						settings, sessionFactory, counter, contextFactory, delegateFactory, typeMapper);
+					CmfObjectCounter<ImportResult> result = runImportImpl(importState, sessionFactory, counter,
+						contextFactory, delegateFactory, typeMapper);
 					ok = true;
 					return result;
 				} finally {
@@ -375,19 +376,24 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 		} finally {
 			if (ok) {
-				importFinalized(jobId);
+				importFinalized(importState);
 			} else {
-				importFailed(jobId);
+				importFailed(importState);
 			}
 		}
 	}
 
-	private final CmfObjectCounter<ImportResult> runImportImpl(final UUID jobId, final Logger output,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
-		final Map<String, ?> settings, final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
+	private final CmfObjectCounter<ImportResult> runImportImpl(ImportState importState,
+		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
 		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper)
 		throws ImportException, CmfStorageException {
+		final UUID jobId = importState.jobId;
+		final Logger output = importState.output;
+		final CmfObjectStore<?, ?> objectStore = importState.objectStore;
+		final CmfContentStore<?, ?, ?> streamStore = importState.streamStore;
+		final CfgTools settings = importState.cfg;
+
 		final int threadCount;
 		final int backlogSize;
 		synchronized (this) {
@@ -984,16 +990,15 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void initContext(C ctx) {
 	}
 
-	protected void prepareImport(UUID uuid, Map<String, ?> settings, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore) throws CmfStorageException, ImportException {
+	protected void prepareImport(ImportState importState) throws CmfStorageException, ImportException {
 		// In case we wish to do something before the import process runs...
 	}
 
-	protected void importFinalized(UUID uuid) throws CmfStorageException, ImportException {
+	protected void importFinalized(ImportState importState) throws CmfStorageException, ImportException {
 		// In case we need to do some cleanup
 	}
 
-	protected void importFailed(UUID uuid) throws CmfStorageException, ImportException {
+	protected void importFailed(ImportState importState) throws CmfStorageException, ImportException {
 		// In case we need to do some cleanup
 	}
 }

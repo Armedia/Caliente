@@ -3,7 +3,6 @@ package com.armedia.cmf.engine.exporter;
 import java.util.Map;
 
 import com.armedia.cmf.storage.CmfType;
-import com.armedia.commons.utilities.CfgTools;
 
 public interface ExportEngineListener extends ExportListener {
 
@@ -13,7 +12,7 @@ public interface ExportEngineListener extends ExportListener {
 	 * </p>
 	 *
 	 */
-	public void exportStarted(CfgTools configuration);
+	public void exportStarted(ExportState exportState);
 
 	/**
 	 * <p>
@@ -21,5 +20,5 @@ public interface ExportEngineListener extends ExportListener {
 	 * </p>
 	 *
 	 */
-	public void exportFinished(Map<CmfType, Integer> summary);
+	public void exportFinished(ExportState exportState, Map<CmfType, Integer> summary);
 }
