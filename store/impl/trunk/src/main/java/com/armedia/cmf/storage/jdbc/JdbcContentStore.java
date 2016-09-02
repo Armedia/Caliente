@@ -1,5 +1,6 @@
 package com.armedia.cmf.storage.jdbc;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -255,6 +256,11 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	public boolean isSupportsFileAccess() {
 		return false;
+	}
+
+	@Override
+	protected File doGetRootLocation() {
+		return null;
 	}
 
 	@Override
