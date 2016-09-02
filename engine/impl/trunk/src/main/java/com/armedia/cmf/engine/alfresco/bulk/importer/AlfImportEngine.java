@@ -1,6 +1,10 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer;
 
+import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfCommon;
@@ -9,11 +13,17 @@ import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfTranslator;
 import com.armedia.cmf.engine.importer.ImportEngine;
+import com.armedia.cmf.engine.importer.ImportEngineListener;
+import com.armedia.cmf.engine.importer.ImportException;
+import com.armedia.cmf.engine.importer.ImportOutcome;
+import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
+import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfNameFixer;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
@@ -211,8 +221,61 @@ public class AlfImportEngine extends
 		}
 	};
 
+	private final ImportEngineListener listener = new ImportEngineListener() {
+
+		private PrintWriter writer = null;
+
+		@Override
+		public void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
+		}
+
+		@Override
+		public void objectTypeImportStarted(UUID jobId, CmfType objectType, int totalObjects) {
+		}
+
+		@Override
+		public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
+		}
+
+		@Override
+		public void objectImportStarted(UUID jobId, CmfObject<?> object) {
+			if (this.writer == null) { return; }
+			switch (object.getType()) {
+				case DOCUMENT:
+				case FOLDER:
+					// output the r_object_id
+					this.writer.printf("%s%n", object.getId());
+					break;
+				default:
+					break;
+			}
+		}
+
+		@Override
+		public void objectImportCompleted(UUID jobId, CmfObject<?> object, ImportOutcome outcome) {
+		}
+
+		@Override
+		public void objectImportFailed(UUID jobId, CmfObject<?> object, Throwable thrown) {
+		}
+
+		@Override
+		public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
+			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
+		}
+
+		@Override
+		public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Integer> counters) {
+		}
+
+		@Override
+		public void importFinished(UUID jobId, Map<ImportResult, Integer> counters) {
+		}
+	};
+
 	public AlfImportEngine() {
 		super(new CmfCrypt());
+		addListener(this.listener);
 	}
 
 	@Override
@@ -282,5 +345,11 @@ public class AlfImportEngine extends
 	@Override
 	protected Set<String> getTargetNames() {
 		return AlfCommon.TARGETS;
+	}
+
+	@Override
+	protected void prepareImport(UUID uuid, Map<String, ?> settings, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> contentStore) throws CmfStorageException, ImportException {
+		// Set up the listener, and open the manifest file
 	}
 }
