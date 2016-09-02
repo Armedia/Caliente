@@ -532,6 +532,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			threadCount = getThreadCount(settings);
 			backlogSize = getBacklogSize(settings);
 		}
+		String msg = String.format("Will pull a maximum of %d items at a time, and process them using %d threads",
+			backlogSize, threadCount);
+		this.log.info(msg);
+		if (output != null) {
+			output.info(msg);
+		}
 
 		if (counter == null) {
 			counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
@@ -654,13 +660,18 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug("Processing the located results...");
 				while ((results != null) && results.hasNext()) {
 					final ExportTarget target = results.next();
-					String msg = String.format("Processing item %s", target);
+					msg = String.format("Queueing item %s", target);
 					this.log.info(msg);
 					if (output != null) {
 						output.info(msg);
 					}
 					try {
 						worker.addWorkItem(target);
+						msg = String.format("Queued item %s", target);
+						this.log.info(msg);
+						if (output != null) {
+							output.info(msg);
+						}
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 						if (this.log.isDebugEnabled()) {
