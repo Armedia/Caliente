@@ -1,11 +1,14 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 
@@ -15,6 +18,7 @@ import com.armedia.cmf.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfTranslator;
+import com.armedia.cmf.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.cmf.engine.importer.DefaultImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
@@ -35,6 +39,8 @@ import com.armedia.commons.utilities.Tools;
 
 public class AlfImportEngine extends
 	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory> {
+
+	private static final String MANIFEST_NAME = "CALIENTE_INGESTION_INDEX.txt";
 
 	private static final CmfNameFixer<CmfValue> NAME_FIXER = new CmfNameFixer<CmfValue>() {
 
@@ -225,6 +231,8 @@ public class AlfImportEngine extends
 		}
 	};
 
+	private final Map<UUID, ImportState> states = new ConcurrentHashMap<UUID, ImportState>();
+
 	private final ImportEngineListener listener = new DefaultImportEngineListener() {
 
 		private final PrintWriter nullWriter = new PrintWriter(new NullOutputStream());
@@ -232,8 +240,31 @@ public class AlfImportEngine extends
 
 		@Override
 		public void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
-			// Initialize the manifest for this job
-			jobId.hashCode();
+			ImportState state = AlfImportEngine.this.states.get(jobId);
+			if (state == null) {
+				this.log.error("Failed to find the import state for job {}", jobId.toString());
+				return;
+			}
+
+			File rootLocation = state.streamStore.getRootLocation();
+			if (rootLocation != null) {
+				// Initialize the manifest for this job
+				File biRoot = new File(rootLocation, AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
+				File manifest = new File(biRoot, AlfImportEngine.MANIFEST_NAME);
+				try {
+					manifest = manifest.getCanonicalFile();
+				} catch (IOException e) {
+					// Do nothing, stick with the old one
+				}
+				try {
+					FileUtils.forceMkdir(biRoot);
+					this.writers.put(jobId, new PrintWriter(manifest));
+				} catch (IOException e) {
+					// Log a warning
+					this.log.error(String.format("Failed to initialize the output manifest for job %s at [%s]",
+						jobId.toString(), manifest.getAbsolutePath()), e);
+				}
+			}
 		}
 
 		private PrintWriter getWriter(UUID jobId) {
@@ -247,6 +278,10 @@ public class AlfImportEngine extends
 			try {
 				switch (object.getType()) {
 					case DOCUMENT:
+						if (!object.isBatchHead()) {
+							break;
+						}
+						// Fall-through
 					case FOLDER:
 						// output the r_object_id
 						writer.printf("%s%n", object.getId());
@@ -344,17 +379,16 @@ public class AlfImportEngine extends
 	@Override
 	protected void prepareImport(ImportState importState) throws CmfStorageException, ImportException {
 		super.prepareImport(importState);
+		this.states.put(importState.jobId, importState);
 	}
 
 	@Override
 	protected void importFinalized(ImportState importState) throws CmfStorageException, ImportException {
-		// TODO Auto-generated method stub
-		super.importFinalized(importState);
+		this.states.remove(importState.jobId);
 	}
 
 	@Override
 	protected void importFailed(ImportState importState) throws CmfStorageException, ImportException {
-		// TODO Auto-generated method stub
-		super.importFailed(importState);
+		this.states.remove(importState.jobId);
 	}
 }

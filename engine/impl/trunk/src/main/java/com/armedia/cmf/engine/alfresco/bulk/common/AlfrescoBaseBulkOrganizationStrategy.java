@@ -16,7 +16,7 @@ import com.armedia.commons.utilities.FileNameTools;
 
 public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganizationStrategy {
 
-	private static final String BASE_DIR = "bulk-import-root";
+	public static final String BASE_DIR = "bulk-import-root";
 
 	private final String versionPrefix;
 
