@@ -261,16 +261,17 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			+ "  from dmr_content_r dcr, dmr_content_s dcs " //
 			+ " where dcr.r_object_id = dcs.r_object_id " //
 			+ "   and dcr.parent_id = '%s' " //
-			+ "   and dcs.rendition <= %d " //
+			// If we're not including renditions, then we only want rendition #0 since that's the
+			// primary content stream.
+			+ (includeRenditions ? "" : "   and dcs.rendition = 0 ") //
 			+ "   and dcr.page = %d " //
 			+ " order by dcs.rendition, dcr.page ";
 		final IDfSession session = ctx.getSession();
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
 		List<CmfContentInfo> cmfContentInfo = new ArrayList<CmfContentInfo>();
-		final int renditionLimit = (includeRenditions ? Integer.MAX_VALUE : 0);
 		for (int i = 0; i < pageCount; i++) {
-			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, renditionLimit, i),
+			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
 				IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				while (results.next()) {
