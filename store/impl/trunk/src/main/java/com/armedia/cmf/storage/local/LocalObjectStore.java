@@ -15,6 +15,7 @@ import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfNameFixer;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectHandler;
+import com.armedia.cmf.storage.CmfObjectSpec;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
@@ -170,5 +171,37 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	@Override
 	protected <V> void renameObject(LocalStoreOperation operation, CmfObject<V> object, String newName)
 		throws CmfStorageException {
+	}
+
+	@Override
+	protected void clearTargetCache(LocalStoreOperation operation) throws CmfStorageException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void cacheTargets(LocalStoreOperation operation, Collection<CmfObjectSpec> objects)
+		throws CmfStorageException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected Object getCachedTargets(LocalStoreOperation operation) throws CmfStorageException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected CmfObjectSpec getNextCachedTarget(LocalStoreOperation operation, Object state)
+		throws CmfStorageException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void closeCachedTargets(LocalStoreOperation operation, Object state) throws CmfStorageException {
+		// TODO Auto-generated method stub
+
 	}
 }
