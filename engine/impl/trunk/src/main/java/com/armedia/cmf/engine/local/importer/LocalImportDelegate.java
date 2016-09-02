@@ -97,12 +97,9 @@ public abstract class LocalImportDelegate extends
 			tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
 		}
 
-		CmfAttribute<CmfValue> nameAtt = this.cmfObject
-			.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.NAME));
-
 		// We always fix the file's name, since it's not part of the path and may also need fixing.
 		// Same dilemma as above, though - need to know "when" to use windows mode...
-		String name = FilenameFixer.safeEncode(nameAtt.getValue().toString(), windowsMode);
+		String name = FilenameFixer.safeEncode(this.cmfObject.getName(), windowsMode);
 		return new File(tgt, name).getCanonicalFile();
 	}
 
