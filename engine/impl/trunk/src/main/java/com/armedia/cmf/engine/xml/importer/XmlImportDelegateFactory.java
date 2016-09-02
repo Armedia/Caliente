@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -93,7 +94,7 @@ public class XmlImportDelegateFactory
 		private int filesWritten = 0;
 
 		@Override
-		public void objectBatchImportStarted(CmfType objectType, String batchId, int count) {
+		public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
 			if (objectType != CmfType.DOCUMENT) { return; }
 			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
 			if (l == null) {
@@ -104,7 +105,7 @@ public class XmlImportDelegateFactory
 		}
 
 		@Override
-		public void objectBatchImportFinished(CmfType objectType, String batchId,
+		public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
 			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 			if (objectType != CmfType.DOCUMENT) { return; }
 			if (failed) { return; }
@@ -193,7 +194,7 @@ public class XmlImportDelegateFactory
 		}
 
 		@Override
-		public void objectTypeImportFinished(CmfType cmfType, Map<ImportResult, Integer> counters) {
+		public void objectTypeImportFinished(UUID jobId, CmfType cmfType, Map<ImportResult, Integer> counters) {
 			AggregatorBase<?> root = XmlImportDelegateFactory.this.xml.get(cmfType);
 			if ((root == null) || (root.getCount() == 0)) {
 				// If there is no aggregator, or it's empty, skip it
