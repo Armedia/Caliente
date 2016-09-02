@@ -1,10 +1,13 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer;
 
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
 
 import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfCommon;
@@ -12,22 +15,23 @@ import com.armedia.cmf.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfTranslator;
+import com.armedia.cmf.engine.importer.DefaultImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.engine.importer.ImportState;
 import com.armedia.cmf.engine.importer.ImportStrategy;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
-import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfNameFixer;
 import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 public class AlfImportEngine extends
 	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory> {
@@ -221,55 +225,45 @@ public class AlfImportEngine extends
 		}
 	};
 
-	private final ImportEngineListener listener = new ImportEngineListener() {
+	private final ImportEngineListener listener = new DefaultImportEngineListener() {
 
-		private PrintWriter writer = null;
+		private final PrintWriter nullWriter = new PrintWriter(new NullOutputStream());
+		private final Map<UUID, PrintWriter> writers = new ConcurrentHashMap<UUID, PrintWriter>();
 
 		@Override
 		public void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
+			// Initialize the manifest for this job
+			jobId.hashCode();
 		}
 
-		@Override
-		public void objectTypeImportStarted(UUID jobId, CmfType objectType, int totalObjects) {
-		}
-
-		@Override
-		public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
-		}
-
-		@Override
-		public void objectImportStarted(UUID jobId, CmfObject<?> object) {
-			if (this.writer == null) { return; }
-			switch (object.getType()) {
-				case DOCUMENT:
-				case FOLDER:
-					// output the r_object_id
-					this.writer.printf("%s%n", object.getId());
-					break;
-				default:
-					break;
-			}
+		private PrintWriter getWriter(UUID jobId) {
+			if (jobId == null) { return this.nullWriter; }
+			return Tools.coalesce(this.writers.get(jobId), this.nullWriter);
 		}
 
 		@Override
 		public void objectImportCompleted(UUID jobId, CmfObject<?> object, ImportOutcome outcome) {
-		}
-
-		@Override
-		public void objectImportFailed(UUID jobId, CmfObject<?> object, Throwable thrown) {
-		}
-
-		@Override
-		public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
-			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
-		}
-
-		@Override
-		public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Integer> counters) {
+			final PrintWriter writer = getWriter(jobId);
+			try {
+				switch (object.getType()) {
+					case DOCUMENT:
+					case FOLDER:
+						// output the r_object_id
+						writer.printf("%s%n", object.getId());
+						break;
+					default:
+						break;
+				}
+			} finally {
+				writer.flush();
+			}
 		}
 
 		@Override
 		public void importFinished(UUID jobId, Map<ImportResult, Integer> counters) {
+			PrintWriter w = getWriter(jobId);
+			w.flush();
+			IOUtils.closeQuietly(w);
 		}
 	};
 
@@ -348,8 +342,19 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected void prepareImport(UUID uuid, Map<String, ?> settings, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore) throws CmfStorageException, ImportException {
-		// Set up the listener, and open the manifest file
+	protected void prepareImport(ImportState importState) throws CmfStorageException, ImportException {
+		super.prepareImport(importState);
+	}
+
+	@Override
+	protected void importFinalized(ImportState importState) throws CmfStorageException, ImportException {
+		// TODO Auto-generated method stub
+		super.importFinalized(importState);
+	}
+
+	@Override
+	protected void importFailed(ImportState importState) throws CmfStorageException, ImportException {
+		// TODO Auto-generated method stub
+		super.importFailed(importState);
 	}
 }
