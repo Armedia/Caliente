@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.importer;
 
 import java.util.Map;
+import java.util.UUID;
 
 import com.armedia.cmf.storage.CmfType;
 
@@ -15,7 +16,7 @@ public interface ImportEngineListener extends ImportListener {
 	 *
 	 * @param summary
 	 */
-	public void importStarted(Map<CmfType, Integer> summary);
+	public void importStarted(UUID jobId, Map<CmfType, Integer> summary);
 
 	/**
 	 * <p>
@@ -26,7 +27,7 @@ public interface ImportEngineListener extends ImportListener {
 	 * @param objectType
 	 * @param totalObjects
 	 */
-	public void objectTypeImportStarted(CmfType objectType, int totalObjects);
+	public void objectTypeImportStarted(UUID jobId, CmfType objectType, int totalObjects);
 
 	/**
 	 * <p>
@@ -37,7 +38,7 @@ public interface ImportEngineListener extends ImportListener {
 	 * @param objectType
 	 * @param counters
 	 */
-	public void objectTypeImportFinished(CmfType objectType, Map<ImportResult, Integer> counters);
+	public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Integer> counters);
 
 	/**
 	 * <p>
@@ -47,5 +48,5 @@ public interface ImportEngineListener extends ImportListener {
 	 *
 	 * @param counters
 	 */
-	public void importFinished(Map<ImportResult, Integer> counters);
+	public void importFinished(UUID jobId, Map<ImportResult, Integer> counters);
 }
