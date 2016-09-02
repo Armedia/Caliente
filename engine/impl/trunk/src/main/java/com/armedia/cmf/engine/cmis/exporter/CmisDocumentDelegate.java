@@ -13,6 +13,7 @@ import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.commons.io.FilenameUtils;
 
+import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.cmis.CmisCustomAttributes;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
@@ -119,7 +120,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<CmfValue>(IntermediateProperty.VERSION_TREE_ROOT,
 			CmfDataType.BOOLEAN, false);
-		versionTreeRoot.setValue(new CmfValue(this.antecedentId == null));
+		versionTreeRoot.setValue(
+			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)));
 		object.setProperty(versionTreeRoot);
 
 		if (!this.object.isLatestVersion()) {
