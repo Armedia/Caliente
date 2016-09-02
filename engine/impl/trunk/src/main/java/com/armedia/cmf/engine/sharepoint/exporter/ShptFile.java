@@ -16,6 +16,7 @@ import javax.activation.MimeType;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
+import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -280,7 +281,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<CmfValue>(IntermediateProperty.VERSION_TREE_ROOT,
 			CmfDataType.BOOLEAN, false);
-		versionTreeRoot.setValue(new CmfValue(isRoot));
+		versionTreeRoot.setValue(new CmfValue(isRoot || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)));
 		object.setProperty(versionTreeRoot);
 
 		object.setAttribute(
