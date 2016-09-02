@@ -14,17 +14,18 @@ import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.commons.utilities.FileNameTools;
 
-public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy {
+public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganizationStrategy {
 
-	public static final String NAME = "alfrescoBulkImport";
 	private static final String BASE_DIR = "bulk-import-root";
 
-	public AlfrescoBulkOrganizationStrategy() {
-		super(AlfrescoBulkOrganizationStrategy.NAME);
-	}
+	private final String versionPrefix;
 
-	protected AlfrescoBulkOrganizationStrategy(String name) {
+	protected AlfrescoBaseBulkOrganizationStrategy(String name, String versionPrefix) {
 		super(name);
+		if (versionPrefix == null) {
+			versionPrefix = "";
+		}
+		this.versionPrefix = versionPrefix;
 	}
 
 	@Override
@@ -41,7 +42,7 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 		List<String> paths = new ArrayList<String>();
 		// Make sure the contents all land in the bulk-import root location, so it's easy to point
 		// the bulk importer at that directory and not import any unwanted crap
-		paths.add(AlfrescoBulkOrganizationStrategy.BASE_DIR);
+		paths.add(AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
 		if (pathProp.hasValues()) {
 			for (String p : FileNameTools.tokenize(pathProp.getValue().toString(), '/')) {
 				paths.add(p);
@@ -105,7 +106,6 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 		CmfProperty<T> vCounter = object.getProperty(IntermediateProperty.VERSION_COUNT);
 		CmfProperty<T> vIndex = object.getProperty(IntermediateProperty.VERSION_INDEX);
 		String appendix = null;
-		final String versionPrefix = "0.";
 		if (!primaryContent && !vDoc) {
 			appendix = "";
 		} else {
@@ -123,7 +123,7 @@ public class AlfrescoBulkOrganizationStrategy extends LocalOrganizationStrategy 
 					if (width > 1) {
 						format = String.format("v%%s%%0%dd", width);
 					}
-					appendix = String.format(format, versionPrefix, index);
+					appendix = String.format(format, this.versionPrefix, index);
 				}
 
 				if (vDoc && headVersion) {
