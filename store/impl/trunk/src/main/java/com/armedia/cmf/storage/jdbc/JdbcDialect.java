@@ -154,7 +154,7 @@ public abstract class JdbcDialect {
 
 		INSERT_CACHE_TARGET( //
 			"       insert into " + //
-				"          cmf_cache_target (" + //
+				"          cmf_target_cache (" + //
 				"              object_type, object_id, search_key" + //
 				"          ) " + //
 				"   values (?, ?, ?) " //
@@ -176,7 +176,7 @@ public abstract class JdbcDialect {
 
 		LOAD_ALL_CACHE_TARGETS( //
 			"       select distinct object_type, object_id, search_key " + //
-				"     from cmf_cache_target " + //
+				"     from cmf_target_cache " + //
 				" order by object_number " //
 		),
 
