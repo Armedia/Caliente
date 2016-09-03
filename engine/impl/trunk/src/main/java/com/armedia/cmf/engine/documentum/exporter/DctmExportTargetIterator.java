@@ -4,30 +4,28 @@
 
 package com.armedia.cmf.engine.documentum.exporter;
 
-import java.util.Iterator;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.engine.documentum.DctmCollectionIterator;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
+import com.armedia.cmf.engine.exporter.ExportException;
 import com.armedia.cmf.engine.exporter.ExportTarget;
+import com.armedia.commons.utilities.CloseableIterator;
 import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;
 
 /**
  * @author diego
  *
  */
-public class DctmExportTargetIterator implements Iterator<ExportTarget> {
+public class DctmExportTargetIterator extends CloseableIterator<ExportTarget> {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final String idAttribute;
 	private final String typeAttribute;
-	private final DctmCollectionIterator iterator;
+	private final IDfCollection collection;
 	private int current = 0;
 
 	public DctmExportTargetIterator(IDfCollection collection) {
@@ -39,46 +37,49 @@ public class DctmExportTargetIterator implements Iterator<ExportTarget> {
 	}
 
 	public DctmExportTargetIterator(IDfCollection collection, String idAttribute, String typeAttribute) {
-		this.iterator = new DctmCollectionIterator(collection);
+		this.collection = collection;
 		this.typeAttribute = typeAttribute;
 		this.idAttribute = idAttribute;
 	}
 
 	@Override
-	public boolean hasNext() {
-		return this.iterator.hasNext();
+	public boolean checkNext() {
+		try {
+			return this.collection.next();
+		} catch (DfException e) {
+			throw new RuntimeException(String.format("Failed to get element # %d", this.current), e);
+		}
 	}
 
-	private ExportTarget newTarget(IDfTypedObject source) throws DfException, UnsupportedDctmObjectTypeException {
-		return DfUtils.getExportTarget(source, this.idAttribute, this.typeAttribute);
+	private ExportTarget newTarget() throws DfException, UnsupportedDctmObjectTypeException {
+		return DfUtils.getExportTarget(this.collection, this.idAttribute, this.typeAttribute);
 	}
 
 	@Override
-	public ExportTarget next() {
-		IDfTypedObject next = this.iterator.next();
+	public ExportTarget getNext() throws Exception {
 		this.current++;
 		try {
-			return newTarget(next);
+			return newTarget();
 		} catch (DfException e) {
-			throw new RuntimeException(
-				String.format("DfException caught constructing export target # %d", this.current), e);
+			throw new ExportException(String.format("DfException caught constructing export target # %d", this.current),
+				e);
 		} catch (UnsupportedDctmObjectTypeException e) {
 			String dump = " (dump failed)";
 			try {
-				dump = String.format(":%n%s%n", next.dump());
+				dump = String.format(":%n%s%n", this.collection.dump());
 			} catch (DfException e2) {
 				if (this.log.isTraceEnabled()) {
-					this.log
-						.error(String.format("Failed to generate the debug dump for object # %d", this.current), e2);
+					this.log.error(String.format("Failed to generate the debug dump for object # %d", this.current),
+						e2);
 				}
 			}
-			throw new RuntimeException(String.format("Item # %d is not a supported export target: %s", this.current,
-				dump), e);
+			throw new ExportException(
+				String.format("Item # %d is not a supported export target: %s", this.current, dump), e);
 		}
 	}
 
 	@Override
-	public void remove() {
-		this.iterator.remove();
+	protected void doClose() {
+		DfUtils.closeQuietly(this.collection);
 	}
 }

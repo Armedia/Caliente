@@ -5,7 +5,6 @@
 package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Set;
 
 import com.armedia.cmf.engine.CmfCrypt;
@@ -23,6 +22,7 @@ import com.armedia.cmf.engine.exporter.ExportTarget;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.CloseableIterator;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -41,7 +41,7 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(IDfSession session, CfgTools configuration,
+	protected CloseableIterator<ExportTarget> findExportResults(IDfSession session, CfgTools configuration,
 		DctmExportDelegateFactory factory) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
