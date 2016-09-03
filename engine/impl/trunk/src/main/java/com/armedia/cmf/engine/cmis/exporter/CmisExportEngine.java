@@ -31,6 +31,8 @@ import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.CloseableIteratorWrapper;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
@@ -79,7 +81,7 @@ public class CmisExportEngine extends
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(final Session session, CfgTools cfg,
+	protected CloseableIterator<ExportTarget> findExportResults(final Session session, CfgTools cfg,
 		CmisExportDelegateFactory factory) throws Exception {
 		String path = cfg.getString(CmisSetting.EXPORT_PATH);
 		if (StringUtils.isEmpty(path)) {
@@ -108,22 +110,22 @@ public class CmisExportEngine extends
 			}
 
 			if (Folder.class.isInstance(obj)) {
-				return new Iterator<ExportTarget>() {
+				return new CloseableIterator<ExportTarget>() {
 					private final Iterator<CmisObject> it = new CmisRecursiveIterator(session, Folder.class.cast(obj),
 						true);
 
 					@Override
-					public boolean hasNext() {
+					protected boolean checkNext() {
 						return this.it.hasNext();
 					}
 
 					@Override
-					public ExportTarget next() {
+					protected ExportTarget getNext() throws Exception {
 						final CmisObject next = this.it.next();
 						try {
 							return new ExportTarget(decodeType(next.getType()), next.getId(), next.getId());
 						} catch (ExportException e) {
-							throw new RuntimeException(
+							throw new ExportException(
 								String.format("Failed to decode the object type [%s] for object [%s]",
 									next.getType().getId(), next.getId()),
 								e);
@@ -131,15 +133,20 @@ public class CmisExportEngine extends
 					}
 
 					@Override
-					public void remove() {
+					public void remove(ExportTarget e) {
 						this.it.remove();
+					}
+
+					@Override
+					protected void doClose() {
+						// TODO Auto-generated method stub
+
 					}
 				};
 			} else {
 				try {
-					return Collections
-						.singleton(new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId()))
-						.iterator();
+					return new CloseableIteratorWrapper<ExportTarget>(Collections
+						.singleton(new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId())));
 				} catch (CmisObjectNotFoundException e) {
 					return null;
 				}
@@ -150,8 +157,9 @@ public class CmisExportEngine extends
 		if (query != null) {
 			final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 				.isAllVersionsSearchableSupported();
-			return new CmisPagingTransformerIterator<QueryResult, ExportTarget>(session.query(query, searchAllVersions),
-				this.transformer);
+			return new CloseableIteratorWrapper<ExportTarget>(
+				new CmisPagingTransformerIterator<QueryResult, ExportTarget>(session.query(query, searchAllVersions),
+					this.transformer));
 		}
 		return null;
 	}
