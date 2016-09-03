@@ -47,8 +47,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		Pattern.CASE_INSENSITIVE);
 	private static final Pattern ORDER_BY_FINDER = Pattern.compile("(?:\\border\\s+by\\b)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern ENABLE_FINDER = Pattern.compile("(?:\\benable\\b)", Pattern.CASE_INSENSITIVE);
-	private static final String FIXED_PREDICATE_6_6 = "select distinct CMF_WRAP_${objectType}.r_object_id from ${objectType} CMF_WRAP_${objectType}, ( ${baseDql} ) CMF_SUBQ_${objectType} where CMF_WRAP_${objectType}.r_object_id = CMF_SUBQ_${objectType}.r_object_id and CMF_WRAP_${objectType}.${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
-	private static final String FIXED_PREDICATE_6 = "select distinct r_object_id from ${objectType} where r_object_id in ( ${baseDql} ) and ${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
+	private static final String FIXED_PREDICATE_6_6 = "select CMF_WRAP_${objectType}.r_object_id from ${objectType} CMF_WRAP_${objectType}, ( ${baseDql} ) CMF_SUBQ_${objectType} where CMF_WRAP_${objectType}.r_object_id = CMF_SUBQ_${objectType}.r_object_id and CMF_WRAP_${objectType}.${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
+	private static final String FIXED_PREDICATE_6 = "select r_object_id from ${objectType} where r_object_id in ( ${baseDql} ) and ${dateColumn} >= DATE(${dateValue}, ${dateFormat})";
 	private static final String DATE_CHECK_DQL = "select date(now) from dm_server_config";
 	private static final long SECONDS = (60 * 1000);
 
@@ -158,7 +158,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			predicate = CMSMFMain_export.DEFAULT_PREDICATE;
 		}
 
-		String dql = String.format("select distinct r_object_id from %s", predicate);
+		String dql = String.format("select r_object_id from %s", predicate);
 		settings.put(AbstractCMSMFMain_export.BASE_SELECTOR, dql);
 		return settings;
 	}
