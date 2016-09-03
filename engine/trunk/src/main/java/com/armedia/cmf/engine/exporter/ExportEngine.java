@@ -816,9 +816,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			@Override
 			protected ExportTarget seek() throws Throwable {
-				CmfObjectSpec spec = this.it.next();
-				if (spec == null) { return null; }
-				return new ExportTarget(spec);
+				if (!this.it.hasNext()) { return null; }
+				return new ExportTarget(this.it.next());
 			}
 
 			@Override
