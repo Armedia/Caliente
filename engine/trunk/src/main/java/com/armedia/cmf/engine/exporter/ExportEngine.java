@@ -7,7 +7,6 @@ package com.armedia.cmf.engine.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -772,27 +771,30 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		boolean ok = false;
 		try {
 			output.info("Retrieving the results");
-			Iterator<ExportTarget> it = findExportResults(session, configuration, factory);
-
-			final int segmentSize = 1000;
-			List<CmfObjectSpec> temp = new ArrayList<CmfObjectSpec>(segmentSize);
-			// It's OK to ask if the thread is finished up front because the only way it could
-			// happen is if it ran into an error, in which case we need to fail short.
-			while (!cachingTask.isDone() && it.hasNext()) {
-				if (temp.size() == segmentSize) {
-					try {
-						queue.put(temp);
-					} finally {
-						temp = new ArrayList<CmfObjectSpec>(segmentSize);
+			CloseableIterator<ExportTarget> it = findExportResults(session, configuration, factory);
+			try {
+				final int segmentSize = 1000;
+				List<CmfObjectSpec> temp = new ArrayList<CmfObjectSpec>(segmentSize);
+				// It's OK to ask if the thread is finished up front because the only way it could
+				// happen is if it ran into an error, in which case we need to fail short.
+				while (!cachingTask.isDone() && it.hasNext()) {
+					if (temp.size() == segmentSize) {
+						try {
+							queue.put(temp);
+						} finally {
+							temp = new ArrayList<CmfObjectSpec>(segmentSize);
+						}
 					}
+					temp.add(it.next().toObjectSpec());
 				}
-				temp.add(it.next().toObjectSpec());
-			}
-			queue.put(temp);
-			queue.put(end);
+				queue.put(temp);
+				queue.put(end);
 
-			output.info("Cached a total of {} objects", cachingTask.get());
-			ok = true;
+				output.info("Cached a total of {} objects", cachingTask.get());
+				ok = true;
+			} finally {
+				it.close();
+			}
 		} finally {
 			// If the caching thread isn't finished, then...
 			if (!ok && !cachingTask.isDone()) {
@@ -827,7 +829,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		};
 	}
 
-	protected abstract Iterator<ExportTarget> findExportResults(S session, CfgTools configuration, DF factory)
+	protected abstract CloseableIterator<ExportTarget> findExportResults(S session, CfgTools configuration, DF factory)
 		throws Exception;
 
 	/*
