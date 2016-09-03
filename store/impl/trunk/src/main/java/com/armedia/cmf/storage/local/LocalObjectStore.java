@@ -175,33 +175,30 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 
 	@Override
 	protected void clearTargetCache(LocalStoreOperation operation) throws CmfStorageException {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	protected void cacheTargets(LocalStoreOperation operation, Collection<CmfObjectSpec> objects)
 		throws CmfStorageException {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	protected Object getCachedTargets(LocalStoreOperation operation) throws CmfStorageException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected CmfObjectSpec getNextCachedTarget(LocalStoreOperation operation, Object state)
 		throws CmfStorageException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected void closeCachedTargets(LocalStoreOperation operation, Object state) throws CmfStorageException {
-		// TODO Auto-generated method stub
+	}
 
+	@Override
+	protected boolean hasNextCachedTarget(LocalStoreOperation operation, Object state) throws CmfStorageException {
+		return false;
 	}
 }
