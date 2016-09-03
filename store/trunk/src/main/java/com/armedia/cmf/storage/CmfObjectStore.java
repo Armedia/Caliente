@@ -925,7 +925,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 									CmfObjectStore.this.log.warn("Failed to roll back a read-only operation", e);
 								}
 							}
-							endExclusiveInvocation(operation);
+							endConcurrentInvocation(operation);
 						}
 					}
 				};
