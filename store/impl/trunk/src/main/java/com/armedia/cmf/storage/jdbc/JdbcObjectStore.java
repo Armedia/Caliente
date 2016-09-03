@@ -1323,7 +1323,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		Object[] arr = new Object[3];
 		Collection<Object[]> cacheTargets = new ArrayList<Object[]>(targets.size());
 		for (CmfObjectSpec spec : targets) {
-			arr[0] = spec.getType().name();
+			arr[0] = (spec.getType() != null ? spec.getType().name() : null);
 			arr[1] = spec.getId();
 			arr[2] = spec.getSearchKey();
 			cacheTargets.add(arr.clone());
@@ -1366,7 +1366,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				searchKey = null;
 			}
 			try {
-				return new CmfObjectSpec(CmfType.valueOf(type), id, searchKey);
+				return new CmfObjectSpec(type != null ? CmfType.valueOf(type) : null, id, searchKey);
 			} catch (Exception e) {
 				throw new CmfStorageException(String.format("Illegal CmfType value [%s]", type), e);
 			}
