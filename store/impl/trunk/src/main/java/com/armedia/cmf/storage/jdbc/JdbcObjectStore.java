@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -1352,7 +1353,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		if (!ResultSet.class.isInstance(state)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
 		ResultSet rs = ResultSet.class.cast(state);
 		try {
-			if (!rs.next()) { return null; }
+			if (!rs.next()) { throw new NoSuchElementException("No row to retrieve"); }
 			String type = rs.getString("object_type");
 			if (rs.wasNull()) {
 				type = null;
@@ -1388,6 +1389,20 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} finally {
 			DbUtils.closeQuietly(rs);
 			DbUtils.closeQuietly(s);
+		}
+	}
+
+	@Override
+	protected boolean hasNextCachedTarget(JdbcOperation operation, Object state) throws CmfStorageException {
+		if (!ResultSet.class.isInstance(state)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
+		ResultSet rs = ResultSet.class.cast(state);
+		try {
+			return rs.isBeforeFirst() && !rs.isAfterLast();
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				"Failed to retrieve the statement associated with the cached targets result set", e);
+		} finally {
+			DbUtils.closeQuietly(rs);
 		}
 	}
 }
