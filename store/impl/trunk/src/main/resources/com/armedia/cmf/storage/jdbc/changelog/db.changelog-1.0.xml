@@ -53,9 +53,9 @@
 				<constraints nullable="true" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_target_cache" columnNames="object_id" />
-		<createIndex tableName="cmf_target_cache" indexName="idx_cmf_target_cache" unique="true">
-			<column name="object_number" />
+		<addPrimaryKey tableName="cmf_target_cache" columnNames="object_number" />
+		<createIndex tableName="cmf_target_cache" indexName="idx_cmf_target_cache" unique="false">
+			<column name="object_id" />
 		</createIndex>
 		<addAutoIncrement tableName="cmf_target_cache" columnName="object_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
 
