@@ -188,17 +188,16 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	}
 
 	@Override
-	protected CmfObjectSpec getNextCachedTarget(LocalStoreOperation operation, Object state)
-		throws CmfStorageException {
+	protected CmfObjectSpec getNextCachedTarget(Object state) throws CmfStorageException {
 		return null;
 	}
 
 	@Override
-	protected void closeCachedTargets(LocalStoreOperation operation, Object state) throws CmfStorageException {
+	protected void closeCachedTargets(Object state) throws CmfStorageException {
 	}
 
 	@Override
-	protected boolean hasNextCachedTarget(LocalStoreOperation operation, Object state) throws CmfStorageException {
+	protected boolean hasNextCachedTarget(Object state) throws CmfStorageException {
 		return false;
 	}
 }
