@@ -1,6 +1,5 @@
 package com.armedia.cmf.engine.local.exporter;
 
-import java.util.Iterator;
 import java.util.Set;
 
 import com.armedia.cmf.engine.CmfCrypt;
@@ -15,6 +14,8 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.CloseableIteratorWrapper;
 
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory> {
@@ -24,9 +25,9 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected Iterator<ExportTarget> findExportResults(LocalRoot session, CfgTools configuration,
+	protected CloseableIterator<ExportTarget> findExportResults(LocalRoot session, CfgTools configuration,
 		LocalExportDelegateFactory factory) throws Exception {
-		return new LocalRecursiveIterator(session, true);
+		return new CloseableIteratorWrapper<ExportTarget>(new LocalRecursiveIterator(session, true));
 	}
 
 	@Override
