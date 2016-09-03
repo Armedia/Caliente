@@ -104,9 +104,9 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 	private static final int MAX_THREAD_COUNT = Runtime.getRuntime().availableProcessors() * 2;
 
-	private static final int MIN_BACKLOG_SIZE = 10000;
-	private static final int DEFAULT_BACKLOG_SIZE = 100000;
-	private static final int MAX_BACKLOG_SIZE = Integer.MAX_VALUE;
+	private static final int MIN_BACKLOG_SIZE = 100;
+	private static final int DEFAULT_BACKLOG_SIZE = 1000;
+	private static final int MAX_BACKLOG_SIZE = 10000;
 
 	private final List<L> listeners = new ArrayList<L>();
 

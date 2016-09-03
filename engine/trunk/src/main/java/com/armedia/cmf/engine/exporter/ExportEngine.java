@@ -41,7 +41,6 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.CloseableIterator;
-import com.armedia.commons.utilities.WrappedCloseableIterator;
 
 /**
  * @author diego
@@ -159,16 +158,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private final boolean requiresTargetCache;
-
 	protected ExportEngine(CmfCrypt crypto) {
 		super(crypto);
-		this.requiresTargetCache = false;
 	}
 
-	protected ExportEngine(CmfCrypt crypto, boolean supportsDuplicateNames, boolean requiresTargetCache) {
+	protected ExportEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
 		super(crypto, supportsDuplicateNames);
-		this.requiresTargetCache = requiresTargetCache;
 	}
 
 	private Result exportObject(ExportState exportState, final ExportTarget referrent, final ExportTarget target,
@@ -668,14 +663,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final CloseableIterator<ExportTarget> results;
 		this.log.debug("Locating export results...");
 		try {
-			if (this.requiresTargetCache) {
-				this.log.debug("Results will be cached");
-				output.info("Caching export results...");
-				results = cacheExportResults(baseSession.getWrapped(), settings, delegateFactory, objectStore, output);
-			} else {
-				results = new WrappedCloseableIterator<ExportTarget>(
-					findExportResults(baseSession.getWrapped(), settings, delegateFactory));
-			}
+			this.log.debug("Results will be cached");
+			output.info("Caching export results...");
+			results = cacheExportResults(baseSession.getWrapped(), settings, delegateFactory, objectStore, output);
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to obtain the export results with settings: %s", settings),
 				e);
