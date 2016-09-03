@@ -817,8 +817,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			private final CloseableIterator<CmfObjectSpec> it = store.getCachedTargets();
 
 			@Override
-			protected ExportTarget seek() throws Throwable {
-				if (!this.it.hasNext()) { return null; }
+			protected boolean checkNext() {
+				return this.it.hasNext();
+			}
+
+			@Override
+			protected ExportTarget getNext() throws Exception {
 				return new ExportTarget(this.it.next());
 			}
 
