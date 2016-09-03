@@ -9,20 +9,14 @@ import java.util.NoSuchElementException;
 
 import com.armedia.commons.utilities.Tools;
 
-public class CmfProperty<V> implements Iterable<V> {
-
-	private final String name;
-	private final CmfDataType type;
-	private final boolean repeating;
+public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 
 	private V singleValue = null;
 	private final List<V> values;
 
 	public CmfProperty(CmfProperty<V> pattern) {
+		super(pattern);
 		if (pattern == null) { throw new IllegalArgumentException("Must provide a pattern to construct from"); }
-		this.name = pattern.name;
-		this.type = pattern.type;
-		this.repeating = pattern.repeating;
 		this.singleValue = pattern.singleValue;
 		final int valueCount = pattern.values.size();
 		this.values = new ArrayList<V>(valueCount);
@@ -74,52 +68,13 @@ public class CmfProperty<V> implements Iterable<V> {
 	}
 
 	public CmfProperty(String name, CmfDataType type, boolean repeating, Collection<V> values) {
-		if (name == null) { throw new IllegalArgumentException("Must provide a name"); }
-		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
+		super(name, type, repeating);
 		if (values == null) {
 			values = Collections.emptyList();
 		}
-		this.name = name;
-		this.type = type;
 		final int valueCount = values.size();
-		this.repeating = repeating;
 		this.values = new ArrayList<V>(valueCount);
 		setValues(values);
-	}
-
-	/**
-	 * <p>
-	 * Returns the name given to this instance.
-	 * </p>
-	 *
-	 * @return the name given to this instance.
-	 */
-	public final String getName() {
-		return this.name;
-	}
-
-	/**
-	 * <p>
-	 * Returns the type associated to this instance.
-	 * </p>
-	 *
-	 * @return the type associated to this instance.
-	 */
-	public final CmfDataType getType() {
-		return this.type;
-	}
-
-	/**
-	 * <p>
-	 * Indicates whether or not this instance can store multiple values ({@code true}), or only a
-	 * single one ({@code false}).
-	 * </p>
-	 *
-	 * @return whether or not this instance can store multiple values ({@code true}), or only a
-	 *         single one ({@code false}).
-	 */
-	public final boolean isRepeating() {
-		return this.repeating;
 	}
 
 	/**
@@ -132,7 +87,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 *         returns 1.
 	 */
 	public final int getValueCount() {
-		if (!this.repeating) { return 1; }
+		if (!isRepeating()) { return 1; }
 		return this.values.size();
 	}
 
@@ -140,8 +95,8 @@ public class CmfProperty<V> implements Iterable<V> {
 		if (idx < 0) {
 			idx = 0;
 		}
-		if ((!this.repeating && (idx > 0)) || (this.repeating && (idx >= this.values.size()))) { throw new ArrayIndexOutOfBoundsException(
-			idx); }
+		if ((!isRepeating() && (idx > 0))
+			|| (isRepeating() && (idx >= this.values.size()))) { throw new ArrayIndexOutOfBoundsException(idx); }
 		return idx;
 	}
 
@@ -154,7 +109,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 * @return {@code true} if there are values stored in this instance, {@code false} otherwise.
 	 */
 	public final boolean hasValues() {
-		return !this.repeating || !this.values.isEmpty();
+		return !isRepeating() || !this.values.isEmpty();
 	}
 
 	/**
@@ -174,7 +129,7 @@ public class CmfProperty<V> implements Iterable<V> {
 		if (values == null) {
 			values = Collections.emptyList();
 		}
-		if (this.repeating) {
+		if (isRepeating()) {
 			for (V value : values) {
 				this.values.add(value);
 			}
@@ -197,7 +152,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 * @return a list containing all the values in this instance
 	 */
 	public final List<V> getValues() {
-		if (this.repeating) { return this.values; }
+		if (isRepeating()) { return this.values; }
 		List<V> l = new ArrayList<V>(1);
 		l.add(this.singleValue);
 		return l;
@@ -212,7 +167,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 * @param value
 	 */
 	public final void addValue(V value) {
-		if (this.repeating) {
+		if (isRepeating()) {
 			this.values.add(value);
 		} else {
 			throw new UnsupportedOperationException("This is a single-valued property, cannot add another value");
@@ -242,7 +197,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 * </p>
 	 */
 	public final void setValue(V value) {
-		if (this.repeating) {
+		if (isRepeating()) {
 			this.values.clear();
 			this.values.add(value);
 		} else {
@@ -260,7 +215,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 * @return {@code true} if the value was cleared, {@code false} otherwise.
 	 */
 	public final boolean clearValue() {
-		if (this.repeating) {
+		if (isRepeating()) {
 			boolean empty = this.values.isEmpty();
 			this.values.clear();
 			return !empty;
@@ -289,7 +244,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 */
 	public final V removeValue(int idx) {
 		idx = sanitizeIndex(idx);
-		if (this.repeating) { return this.values.remove(idx); }
+		if (isRepeating()) { return this.values.remove(idx); }
 		V old = this.singleValue;
 		this.singleValue = null;
 		return old;
@@ -314,7 +269,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 */
 	public final V getValue(int idx) {
 		idx = sanitizeIndex(idx);
-		if (this.repeating) { return this.values.get(idx); }
+		if (isRepeating()) { return this.values.get(idx); }
 		return this.singleValue;
 	}
 
@@ -342,15 +297,13 @@ public class CmfProperty<V> implements Iterable<V> {
 	public boolean isSame(CmfProperty<?> other) {
 		if (other == null) { return false; }
 		if (other == this) { return true; }
-		if (!this.name.equals(other.name)) { return false; }
-		if (this.type != other.type) { return false; }
-		if (this.repeating != other.repeating) { return false; }
+		if (!super.equals(other)) { return false; }
 		return true;
 	}
 
 	public boolean isSameValues(CmfProperty<?> other) {
 		if (!isSame(other)) { return false; }
-		if (!this.repeating) { return Tools.equals(this.singleValue, other.singleValue); }
+		if (!isRepeating()) { return Tools.equals(this.singleValue, other.singleValue); }
 		final int valueCount = this.values.size();
 		if (valueCount != other.getValueCount()) { return false; }
 		for (int i = 0; i < valueCount; i++) {
@@ -369,7 +322,7 @@ public class CmfProperty<V> implements Iterable<V> {
 	 */
 	@Override
 	public final Iterator<V> iterator() {
-		if (this.repeating) { return this.values.iterator(); }
+		if (isRepeating()) { return this.values.iterator(); }
 		return new Iterator<V>() {
 			boolean retrieved = false;
 			boolean removed = false;
@@ -398,8 +351,7 @@ public class CmfProperty<V> implements Iterable<V> {
 
 	@Override
 	public String toString() {
-		return String.format("CmsProperty [name=%s, type=%s, repeating=%s, %s=%s]", this.name, this.type,
-			this.repeating, (this.repeating ? "values" : "singleValue"), (this.repeating ? this.values
-				: this.singleValue));
+		return String.format("CmsProperty [name=%s, type=%s, repeating=%s, %s=%s]", getName(), getType(), isRepeating(),
+			(isRepeating() ? "values" : "singleValue"), (isRepeating() ? this.values : this.singleValue));
 	}
 }
