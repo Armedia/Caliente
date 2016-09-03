@@ -907,7 +907,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					final Object iteratorState = getCachedTargets(operation);
 
 					@Override
-					protected CmfObjectSpec seek() throws Throwable {
+					protected boolean checkNext() {
+						try {
+							return hasNextCachedTarget(operation, this.iteratorState);
+						} catch (CmfStorageException e) {
+							throw new RuntimeException("Failed to check if more cache targets were available", e);
+						}
+					}
+
+					@Override
+					protected CmfObjectSpec getNext() throws Exception {
 						return getNextCachedTarget(operation, this.iteratorState);
 					}
 
@@ -948,6 +957,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract Object getCachedTargets(O operation) throws CmfStorageException;
+
+	protected abstract boolean hasNextCachedTarget(O operation, Object state) throws CmfStorageException;
 
 	protected abstract CmfObjectSpec getNextCachedTarget(O operation, Object state) throws CmfStorageException;
 
