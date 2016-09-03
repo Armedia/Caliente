@@ -1394,9 +1394,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		CachedTargetState cacheState = CachedTargetState.convert(state);
 		try {
 			if (!cacheState.hasNext()) { throw new NoSuchElementException("No row to retrieve"); }
+			// If we're here, then next() has already been called and returned true, so we can
+			// safely begin to read off the ResultSet
 			final ResultSet rs = cacheState.results;
-
-			if (!rs.next()) { throw new NoSuchElementException("No row to retrieve"); }
 			String type = rs.getString("object_type");
 			if (rs.wasNull()) {
 				type = null;
