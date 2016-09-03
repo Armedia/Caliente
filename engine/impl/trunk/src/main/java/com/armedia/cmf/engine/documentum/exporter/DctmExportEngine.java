@@ -37,7 +37,7 @@ public class DctmExportEngine extends
 	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
 
 	public DctmExportEngine() {
-		super(new DctmCrypto(), true, true);
+		super(new DctmCrypto(), true);
 	}
 
 	@Override
