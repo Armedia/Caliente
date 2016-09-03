@@ -175,7 +175,7 @@ public abstract class JdbcDialect {
 		),
 
 		LOAD_ALL_CACHE_TARGETS( //
-			"       select distinct object_type, object_id, search_key " + //
+			"       select object_number, object_type, object_id, search_key " + //
 				"     from cmf_target_cache " + //
 				" order by object_number " //
 		),
