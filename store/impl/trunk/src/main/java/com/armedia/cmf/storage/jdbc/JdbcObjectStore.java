@@ -1338,21 +1338,64 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
+	private static final class CachedTargetState {
+		private final Statement statement;
+		private final ResultSet results;
+		private Boolean nextAvailable = null;
+
+		private CachedTargetState(ResultSet results) throws SQLException {
+			this.results = results;
+			this.statement = results.getStatement();
+		}
+
+		private boolean hasNext() throws SQLException {
+			if (this.nextAvailable == null) {
+				// Need to fetch the next row
+				this.nextAvailable = this.results.next();
+			}
+			return this.nextAvailable.booleanValue();
+		}
+
+		private static CachedTargetState convert(Object o) throws CmfStorageException {
+			if (o == null) { throw new CmfStorageException("No object to check against"); }
+			if (!CachedTargetState.class
+				.isInstance(o)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
+			return CachedTargetState.class.cast(o);
+		}
+
+		private void close() {
+			DbUtils.closeQuietly(this.results);
+			DbUtils.closeQuietly(this.statement);
+		}
+	}
+
 	@Override
 	protected Object getCachedTargets(JdbcOperation operation) throws CmfStorageException {
 		try {
-			return operation.getConnection().prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ALL_CACHE_TARGETS))
-				.executeQuery();
+			return new CachedTargetState(operation.getConnection()
+				.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ALL_CACHE_TARGETS)).executeQuery());
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to fetch all the cached targets", e);
 		}
 	}
 
 	@Override
-	protected CmfObjectSpec getNextCachedTarget(JdbcOperation operation, Object state) throws CmfStorageException {
-		if (!ResultSet.class.isInstance(state)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
-		ResultSet rs = ResultSet.class.cast(state);
+	protected boolean hasNextCachedTarget(Object state) throws CmfStorageException {
 		try {
+			return CachedTargetState.convert(state).hasNext();
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				"Failed to retrieve the statement associated with the cached targets result set", e);
+		}
+	}
+
+	@Override
+	protected CmfObjectSpec getNextCachedTarget(Object state) throws CmfStorageException {
+		CachedTargetState cacheState = CachedTargetState.convert(state);
+		try {
+			if (!cacheState.hasNext()) { throw new NoSuchElementException("No row to retrieve"); }
+			final ResultSet rs = cacheState.results;
+
 			if (!rs.next()) { throw new NoSuchElementException("No row to retrieve"); }
 			String type = rs.getString("object_type");
 			if (rs.wasNull()) {
@@ -1370,6 +1413,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				return new CmfObjectSpec(type != null ? CmfType.valueOf(type) : null, id, searchKey);
 			} catch (Exception e) {
 				throw new CmfStorageException(String.format("Illegal CmfType value [%s]", type), e);
+			} finally {
+				// Mark the row as fetched so next() needs to be invoked again
+				cacheState.nextAvailable = null;
 			}
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to retrieve the next cached target in the given result set", e);
@@ -1377,32 +1423,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void closeCachedTargets(JdbcOperation operation, Object state) throws CmfStorageException {
-		if (!ResultSet.class.isInstance(state)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
-		ResultSet rs = ResultSet.class.cast(state);
-		Statement s = null;
-		try {
-			s = rs.getStatement();
-		} catch (SQLException e) {
-			throw new CmfStorageException(
-				"Failed to retrieve the statement associated with the cached targets result set", e);
-		} finally {
-			DbUtils.closeQuietly(rs);
-			DbUtils.closeQuietly(s);
-		}
-	}
-
-	@Override
-	protected boolean hasNextCachedTarget(JdbcOperation operation, Object state) throws CmfStorageException {
-		if (!ResultSet.class.isInstance(state)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
-		ResultSet rs = ResultSet.class.cast(state);
-		try {
-			return rs.isBeforeFirst() && !rs.isAfterLast();
-		} catch (SQLException e) {
-			throw new CmfStorageException(
-				"Failed to retrieve the statement associated with the cached targets result set", e);
-		} finally {
-			DbUtils.closeQuietly(rs);
-		}
+	protected void closeCachedTargets(Object state) throws CmfStorageException {
+		CachedTargetState.convert(state).close();
 	}
 }
