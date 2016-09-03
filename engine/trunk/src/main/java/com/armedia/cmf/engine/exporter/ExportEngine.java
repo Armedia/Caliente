@@ -4,6 +4,7 @@
 
 package com.armedia.cmf.engine.exporter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -11,7 +12,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.slf4j.Logger;
 
@@ -26,10 +35,13 @@ import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectCounter;
+import com.armedia.cmf.storage.CmfObjectSpec;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.WrappedCloseableIterator;
 
 /**
  * @author diego
@@ -147,12 +159,16 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
+	private final boolean requiresTargetCache;
+
 	protected ExportEngine(CmfCrypt crypto) {
 		super(crypto);
+		this.requiresTargetCache = false;
 	}
 
-	protected ExportEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
+	protected ExportEngine(CmfCrypt crypto, boolean supportsDuplicateNames, boolean requiresTargetCache) {
 		super(crypto, supportsDuplicateNames);
+		this.requiresTargetCache = requiresTargetCache;
 	}
 
 	private Result exportObject(ExportState exportState, final ExportTarget referrent, final ExportTarget target,
@@ -649,10 +665,17 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 		};
 
-		final Iterator<ExportTarget> results;
+		final CloseableIterator<ExportTarget> results;
 		this.log.debug("Locating export results...");
 		try {
-			results = findExportResults(baseSession.getWrapped(), settings, delegateFactory);
+			if (this.requiresTargetCache) {
+				this.log.debug("Results will be cached");
+				output.info("Caching export results...");
+				results = cacheExportResults(baseSession.getWrapped(), settings, delegateFactory, objectStore, output);
+			} else {
+				results = new WrappedCloseableIterator<ExportTarget>(
+					findExportResults(baseSession.getWrapped(), settings, delegateFactory));
+			}
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to obtain the export results with settings: %s", settings),
 				e);
@@ -706,6 +729,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			setExportProperties(objectStore);
 			return listenerDelegator.getStoredObjectCounter();
 		} finally {
+			results.close();
 			baseSession.close(false);
 
 			Map<CmfType, Integer> summary = Collections.emptyMap();
@@ -722,6 +746,98 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
+	}
+
+	private final CloseableIterator<ExportTarget> cacheExportResults(final S session, final CfgTools configuration,
+		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
+
+		final List<CmfObjectSpec> end = Collections.emptyList();
+		final BlockingQueue<Collection<CmfObjectSpec>> queue = new LinkedBlockingQueue<Collection<CmfObjectSpec>>();
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		final Future<Long> cachingTask = executor.submit(new Callable<Long>() {
+			@Override
+			public Long call() throws Exception {
+				long cached = 0;
+				store.clearTargetCache();
+				while (true) {
+					Collection<CmfObjectSpec> c = queue.take();
+					if (c.isEmpty()) {
+						// We're done
+						return cached;
+					}
+
+					try {
+						output.info("Caching {} targets", c.size());
+						store.cacheTargets(c);
+						cached += c.size();
+					} finally {
+						// Help the GC along...
+						c.clear();
+					}
+				}
+			}
+
+		});
+		// No more tasks needed here
+		executor.shutdown();
+
+		boolean ok = false;
+		try {
+			output.info("Retrieving the results");
+			Iterator<ExportTarget> it = findExportResults(session, configuration, factory);
+
+			final int segmentSize = 1000;
+			List<CmfObjectSpec> temp = new ArrayList<CmfObjectSpec>(segmentSize);
+			// It's OK to ask if the thread is finished up front because the only way it could
+			// happen is if it ran into an error, in which case we need to fail short.
+			while (!cachingTask.isDone() && it.hasNext()) {
+				if (temp.size() == segmentSize) {
+					try {
+						queue.put(temp);
+					} finally {
+						temp = new ArrayList<CmfObjectSpec>(segmentSize);
+					}
+				}
+				temp.add(it.next().toObjectSpec());
+			}
+			queue.put(temp);
+			queue.put(end);
+
+			output.info("Cached a total of {} objects", cachingTask.get());
+			ok = true;
+		} finally {
+			// If the caching thread isn't finished, then...
+			if (!ok && !cachingTask.isDone()) {
+				queue.put(end);
+				cachingTask.cancel(true);
+				try {
+					cachingTask.get();
+				} catch (CancellationException e) {
+					// Do nothing...we're OK with this
+				} catch (ExecutionException e) {
+					// Do nothing...we're OK with this
+				} catch (InterruptedException e) {
+					// Do nothing...we're OK with this
+				}
+			}
+		}
+
+		return new CloseableIterator<ExportTarget>() {
+
+			private final CloseableIterator<CmfObjectSpec> it = store.getCachedTargets();
+
+			@Override
+			protected ExportTarget seek() throws Throwable {
+				CmfObjectSpec spec = this.it.next();
+				if (spec == null) { return null; }
+				return new ExportTarget(spec);
+			}
+
+			@Override
+			protected void doClose() {
+				this.it.close();
+			}
+		};
 	}
 
 	protected abstract Iterator<ExportTarget> findExportResults(S session, CfgTools configuration, DF factory)

@@ -1,5 +1,6 @@
 package com.armedia.cmf.engine.exporter;
 
+import com.armedia.cmf.storage.CmfObjectSpec;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
 
@@ -13,6 +14,14 @@ public final class ExportTarget implements Comparable<ExportTarget> {
 		this.type = null;
 		this.id = null;
 		this.searchKey = null;
+		this.number = null;
+	}
+
+	public ExportTarget(CmfObjectSpec spec) {
+		if (spec == null) { throw new IllegalArgumentException("Must provide an object spec"); }
+		this.type = spec.getType();
+		this.id = spec.getId();
+		this.searchKey = spec.getSearchKey();
 		this.number = null;
 	}
 
@@ -42,6 +51,10 @@ public final class ExportTarget implements Comparable<ExportTarget> {
 
 	public Long getNumber() {
 		return this.number;
+	}
+
+	public CmfObjectSpec toObjectSpec() {
+		return new CmfObjectSpec(this.type, this.id, this.searchKey);
 	}
 
 	@Override
