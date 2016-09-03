@@ -578,9 +578,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					this.log.error("Failed to obtain a worker session", e);
 					return null;
 				}
-				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Got session [%s]", s.getId()));
-				}
+				this.log.info(String.format("Worker ready with session [%s]", s.getId()));
 				return s;
 			}
 
