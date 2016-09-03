@@ -767,7 +767,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 
 					try {
-						output.info("Caching {} targets", c.size());
+						output.info("Caching {} targets ({} total so far)", c.size(), cached);
 						store.cacheTargets(c);
 						cached += c.size();
 					} finally {
