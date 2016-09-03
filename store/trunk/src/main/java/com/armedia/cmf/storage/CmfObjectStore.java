@@ -899,7 +899,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final CloseableIterator<CmfObjectSpec> getCachedTargets() throws CmfStorageException {
 		boolean ok = false;
-		final O operation = beginExclusiveInvocation();
+		final O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -942,7 +942,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			}
 		} finally {
 			if (!ok) {
-				endExclusiveInvocation(operation);
+				endConcurrentInvocation(operation);
 			}
 		}
 	}
