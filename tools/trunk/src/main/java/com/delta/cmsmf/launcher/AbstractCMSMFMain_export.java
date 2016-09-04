@@ -284,6 +284,8 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 
 		if (exceptionReport != null) {
 			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
+			this.console
+				.error(String.format("%n%nEXCEPTION CAUGHT WHILE RUNNING THE EXPORT:%n%n%s%n", exceptionReport));
 		}
 
 		String reportString = report.toString();
