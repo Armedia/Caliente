@@ -20,11 +20,6 @@ import com.armedia.commons.utilities.CfgTools;
  */
 public class ShptSessionFactory extends SessionFactory<ShptSession> {
 
-	public static final String BASE_URL = Setting.BASE_URL.name;
-	public static final String USER = Setting.USER.name;
-	public static final String DOMAIN = Setting.DOMAIN.name;
-	public static final String PASSWORD = Setting.PASSWORD.name;
-
 	private final URL url;
 	private final String user;
 	private final String password;
@@ -32,10 +27,10 @@ public class ShptSessionFactory extends SessionFactory<ShptSession> {
 
 	public ShptSessionFactory(CfgTools settings, CmfCrypt crypto) throws MalformedURLException {
 		super(settings, crypto);
-		this.url = new URL(settings.getString(Setting.BASE_URL));
-		this.user = settings.getString(Setting.USER);
-		this.password = crypto.decrypt(settings.getString(Setting.PASSWORD));
-		this.domain = settings.getString(Setting.DOMAIN);
+		this.url = new URL(settings.getString(ShptSetting.URL));
+		this.user = settings.getString(ShptSetting.USER);
+		this.password = crypto.decrypt(settings.getString(ShptSetting.PASSWORD));
+		this.domain = settings.getString(ShptSetting.DOMAIN);
 	}
 
 	@Override

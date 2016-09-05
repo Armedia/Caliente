@@ -11,7 +11,7 @@ import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportTarget;
-import com.armedia.cmf.engine.sharepoint.Setting;
+import com.armedia.cmf.engine.sharepoint.ShptSetting;
 import com.armedia.cmf.engine.sharepoint.ShptException;
 import com.armedia.cmf.engine.sharepoint.ShptSession;
 import com.armedia.cmf.engine.sharepoint.ShptSessionException;
@@ -45,9 +45,9 @@ public class ShptExportEngine extends
 		// support query by Sharepoint query language
 		if (service == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
-		final String path = configuration.getString(Setting.PATH);
+		final String path = configuration.getString(ShptSetting.PATH);
 		if (path == null) { throw new ShptException("Must provide the name of the site to export"); }
-		final boolean excludeEmptyFolders = configuration.getBoolean(Setting.EXCLUDE_EMPTY_FOLDERS);
+		final boolean excludeEmptyFolders = configuration.getBoolean(ShptSetting.EXCLUDE_EMPTY_FOLDERS);
 
 		try {
 			return new CloseableIteratorWrapper<ExportTarget>(

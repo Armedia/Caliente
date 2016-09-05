@@ -124,7 +124,7 @@ public final class ShptVersion {
 	}
 
 	public boolean isCurrentVersion() {
-		return this.version.isCurrentVersion();
+		return (this.version == null) || this.version.isCurrentVersion();
 	}
 
 	public String getUrl() {
