@@ -19,22 +19,19 @@ import com.documentum.fc.common.DfException;
  *
  */
 public class DctmSessionFactory extends SessionFactory<IDfSession> {
-	public static final String DOCBASE = DfcSessionFactory.DOCBASE;
-	public static final String USERNAME = DfcSessionFactory.USERNAME;
-	public static final String PASSWORD = DfcSessionFactory.PASSWORD;
 
 	private final DfcSessionFactory factory;
 
 	public DctmSessionFactory(CfgTools settings, CmfCrypt crypto) throws DfException {
 		super(settings, crypto);
-		String username = settings.getString(DctmSessionFactory.USERNAME);
-		String password = settings.getString(DctmSessionFactory.PASSWORD);
+		String username = settings.getString(DctmSetting.USERNAME);
+		String password = settings.getString(DctmSetting.PASSWORD);
 		try {
 			password = crypto.encrypt(crypto.decrypt(password));
 		} catch (Exception e) {
 			throw new DfException("Failed to re-encrypt the password", e);
 		}
-		String docbase = settings.getString(DctmSessionFactory.DOCBASE);
+		String docbase = settings.getString(DctmSetting.DOCBASE);
 		this.factory = new DfcSessionFactory(username, password, docbase);
 	}
 

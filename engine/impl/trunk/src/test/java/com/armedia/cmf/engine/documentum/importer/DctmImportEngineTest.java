@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.armedia.cmf.engine.documentum.DctmEngineTest;
-import com.armedia.cmf.engine.documentum.DctmSessionFactory;
+import com.armedia.cmf.engine.documentum.DctmSetting;
 import com.armedia.cmf.engine.importer.ImportEngine;
 
 public class DctmImportEngineTest extends DctmEngineTest {
@@ -22,9 +22,9 @@ public class DctmImportEngineTest extends DctmEngineTest {
 		ImportEngine<?, ?, ?, ?, ?, ?> importer = ImportEngine.getImportEngine("dctm");
 
 		Map<String, String> settings = new HashMap<String, String>();
-		settings.put(DctmSessionFactory.DOCBASE, "dctmvm01");
-		settings.put(DctmSessionFactory.USERNAME, "dctmadmin");
-		settings.put(DctmSessionFactory.PASSWORD, "123");
+		settings.put(DctmSetting.DOCBASE.getLabel(), "dctmvm01");
+		settings.put(DctmSetting.USERNAME.getLabel(), "dctmadmin");
+		settings.put(DctmSetting.PASSWORD.getLabel(), "123");
 
 		importer.runImport(this.output, this.cmfObjectStore, this.streamStore, settings);
 	}

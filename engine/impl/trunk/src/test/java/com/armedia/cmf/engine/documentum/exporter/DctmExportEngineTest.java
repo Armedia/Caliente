@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.armedia.cmf.engine.documentum.DctmEngineTest;
-import com.armedia.cmf.engine.documentum.DctmSessionFactory;
+import com.armedia.cmf.engine.documentum.DctmSetting;
 import com.armedia.cmf.engine.documentum.common.Setting;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 
@@ -24,9 +24,9 @@ public class DctmExportEngineTest extends DctmEngineTest {
 		ExportEngine<?, ?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("dctm");
 
 		Map<String, String> settings = new HashMap<String, String>();
-		settings.put(DctmSessionFactory.DOCBASE, "documentum");
-		settings.put(DctmSessionFactory.USERNAME, "dmadmin2");
-		settings.put(DctmSessionFactory.PASSWORD, "XZ6ZkrcrHEg=");
+		settings.put(DctmSetting.DOCBASE.getLabel(), "documentum");
+		settings.put(DctmSetting.USERNAME.getLabel(), "dmadmin2");
+		settings.put(DctmSetting.PASSWORD.getLabel(), "XZ6ZkrcrHEg=");
 		settings.put(Setting.DQL.getLabel(),
 			"select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 
