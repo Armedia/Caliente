@@ -18,11 +18,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
+import com.armedia.cmf.engine.documentum.DctmSetting;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DocumentumOrganizationStrategy;
 import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
-import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
@@ -71,13 +71,13 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	@Override
 	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
 		if (this.server != null) {
-			settings.put(DfcSessionFactory.DOCBASE, this.server);
+			settings.put(DctmSetting.DOCBASE.getLabel(), this.server);
 		}
 		if (this.user != null) {
-			settings.put(DfcSessionFactory.USERNAME, this.user);
+			settings.put(DctmSetting.USERNAME.getLabel(), this.user);
 		}
 		if (this.password != null) {
-			settings.put(DfcSessionFactory.PASSWORD, this.password);
+			settings.put(DctmSetting.PASSWORD.getLabel(), this.password);
 		}
 	}
 

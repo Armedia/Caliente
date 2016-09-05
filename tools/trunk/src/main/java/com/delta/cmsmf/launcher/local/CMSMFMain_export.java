@@ -5,8 +5,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
-import com.armedia.cmf.engine.local.common.LocalCommon;
-import com.armedia.cmf.engine.local.common.Setting;
+import com.armedia.cmf.engine.local.common.LocalSetting;
 import com.armedia.cmf.engine.local.exporter.LocalExportEngine;
 import com.armedia.cmf.engine.tools.LocalOrganizationStrategy;
 import com.delta.cmsmf.cfg.CLIParam;
@@ -54,8 +53,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 
 	@Override
 	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
-		settings.put(LocalCommon.ROOT, this.source.getAbsolutePath());
-		settings.put(Setting.COPY_CONTENT.getLabel(), false);
+		settings.put(LocalSetting.ROOT.getLabel(), this.source.getAbsolutePath());
+		settings.put(LocalSetting.COPY_CONTENT.getLabel(), false);
 	}
 
 	@Override

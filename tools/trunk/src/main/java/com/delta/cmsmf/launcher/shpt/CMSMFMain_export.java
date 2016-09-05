@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
-import com.armedia.cmf.engine.sharepoint.ShptSessionFactory;
+import com.armedia.cmf.engine.sharepoint.ShptSetting;
 import com.armedia.cmf.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.commons.utilities.FileNameTools;
 import com.delta.cmsmf.cfg.CLIParam;
@@ -46,8 +46,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		List<String> l = FileNameTools.tokenize(srcPath, '/');
 		if (l.isEmpty()) { throw new CMSMFException("Must provide the name of the sharepoint site to export"); }
 		final String site = l.get(0);
-		if (StringUtils.isEmpty(site)) { throw new CMSMFException(
-			"Must provide the name of the sharepoint site to export"); }
+		if (StringUtils
+			.isEmpty(site)) { throw new CMSMFException("Must provide the name of the sharepoint site to export"); }
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
@@ -62,14 +62,20 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		try {
 			// We don't use a leading slash here in "sites" because the URL *SHOULD* contain a
 			// trailing slash
-			settings.put(
-				ShptSessionFactory.BASE_URL,
-				new URL(baseUrl, String.format("%s%s",
-					StringUtils.isEmpty(srcPrefix) ? "" : String.format("%s/", srcPrefix), site)).toString());
+			settings.put(ShptSetting.URL.getLabel(),
+				new URL(baseUrl,
+					String.format("%s%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("%s/", srcPrefix), site))
+						.toString());
 		} catch (MalformedURLException e) {
 			throw new CMSMFException("Bad base URL", e);
 		}
-		settings.put("path",
+		if (this.user != null) {
+			settings.put(ShptSetting.USER.getLabel(), this.user);
+		}
+		if (this.password != null) {
+			settings.put(ShptSetting.PASSWORD.getLabel(), this.password);
+		}
+		settings.put(ShptSetting.PATH.getLabel(),
 			String.format("%s/%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("/%s", srcPrefix), srcPath));
 	}
 }
