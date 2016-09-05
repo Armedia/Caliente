@@ -12,12 +12,6 @@ import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 
 public class XmlSessionFactory extends SessionFactory<XmlRoot> {
-	public static final String ROOT = "root";
-	public static final String DB = "db";
-	public static final String CONTENT = "content";
-	public static final String AGGREGATE_FOLDERS = "individualFolders";
-	public static final String AGGREGATE_DOCUMENTS = "individualDocuments";
-
 	private final XmlRoot root;
 
 	public XmlSessionFactory(CfgTools settings, CmfCrypt crypto) throws IOException {

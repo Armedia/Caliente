@@ -11,14 +11,12 @@ public final class XmlCommon {
 	public static final String TARGET_NAME = "xml";
 	public static final Set<String> TARGETS = Collections.singleton(XmlCommon.TARGET_NAME);
 
-	public static final String ROOT = "root";
-
 	private XmlCommon() {
 
 	}
 
 	public static File getRootDirectory(CfgTools cfg) throws IOException {
-		String root = cfg.getString(XmlCommon.ROOT);
+		String root = cfg.getString(XmlSetting.ROOT);
 		if (root == null) { return null; }
 		return new File(root).getCanonicalFile();
 	}

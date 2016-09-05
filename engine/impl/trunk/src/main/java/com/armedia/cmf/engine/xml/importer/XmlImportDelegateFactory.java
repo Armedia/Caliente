@@ -29,8 +29,8 @@ import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.xml.common.XmlRoot;
-import com.armedia.cmf.engine.xml.common.XmlSessionFactory;
 import com.armedia.cmf.engine.xml.common.XmlSessionWrapper;
+import com.armedia.cmf.engine.xml.common.XmlSetting;
 import com.armedia.cmf.engine.xml.importer.jaxb.AclsT;
 import com.armedia.cmf.engine.xml.importer.jaxb.AggregatorBase;
 import com.armedia.cmf.engine.xml.importer.jaxb.ContentInfoT;
@@ -280,22 +280,22 @@ public class XmlImportDelegateFactory
 	public XmlImportDelegateFactory(XmlImportEngine engine, CfgTools configuration) throws IOException {
 		super(engine, configuration);
 		engine.addListener(this.documentListener);
-		String db = configuration.getString(XmlSessionFactory.DB);
+		String db = configuration.getString(XmlSetting.DB);
 		if (db != null) {
 			this.db = new File(db).getCanonicalFile();
 		} else {
 			this.db = new File("cmsmf-xml").getCanonicalFile();
 		}
 		FileUtils.forceMkdir(this.db);
-		String content = configuration.getString(XmlSessionFactory.CONTENT);
+		String content = configuration.getString(XmlSetting.CONTENT);
 		if (content != null) {
 			this.content = new File(content).getCanonicalFile();
 		} else {
 			this.content = new File(db, "content").getCanonicalFile();
 		}
 		FileUtils.forceMkdir(this.content);
-		this.aggregateFolders = configuration.getBoolean(XmlSessionFactory.AGGREGATE_FOLDERS, false);
-		this.aggregateDocuments = configuration.getBoolean(XmlSessionFactory.AGGREGATE_DOCUMENTS, false);
+		this.aggregateFolders = configuration.getBoolean(XmlSetting.AGGREGATE_FOLDERS);
+		this.aggregateDocuments = configuration.getBoolean(XmlSetting.AGGREGATE_DOCUMENTS);
 
 		Map<CmfType, AggregatorBase<?>> xml = new EnumMap<CmfType, AggregatorBase<?>>(CmfType.class);
 		xml.put(CmfType.USER, new UsersT());
