@@ -76,8 +76,6 @@ public abstract class LocalImportDelegate extends
 		LocalImportContext ctx) throws ImportException, CmfStorageException;
 
 	protected final File getTargetFile(LocalImportContext ctx) throws ImportException, IOException {
-		final CmfAttributeTranslator<CmfValue> translator = this.factory.getEngine().getTranslator();
-
 		// TODO: We must also determine if the target FS requires "windows mode".. for instance
 		// for NTFS on Linux, windows restrictions must be observed... but there's no "clean"
 		// way to figure that out from Java...

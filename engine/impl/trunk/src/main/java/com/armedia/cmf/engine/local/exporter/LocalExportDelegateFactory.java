@@ -7,13 +7,13 @@ import com.armedia.cmf.engine.local.common.LocalCommon;
 import com.armedia.cmf.engine.local.common.LocalFile;
 import com.armedia.cmf.engine.local.common.LocalRoot;
 import com.armedia.cmf.engine.local.common.LocalSessionWrapper;
-import com.armedia.cmf.engine.local.common.Setting;
+import com.armedia.cmf.engine.local.common.LocalSetting;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class LocalExportDelegateFactory extends
-	ExportDelegateFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportEngine> {
+public class LocalExportDelegateFactory
+	extends ExportDelegateFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportEngine> {
 
 	private final LocalRoot root;
 	private final boolean copyContent;
@@ -24,8 +24,8 @@ public class LocalExportDelegateFactory extends
 		File root = LocalCommon.getRootDirectory(configuration);
 		if (root == null) { throw new IllegalArgumentException("Must provide a root directory to work from"); }
 		this.root = new LocalRoot(root);
-		this.copyContent = configuration.getBoolean(Setting.COPY_CONTENT);
-		this.includeAllVersions = configuration.getBoolean(Setting.INCLUDE_ALL_VERSIONS);
+		this.copyContent = configuration.getBoolean(LocalSetting.COPY_CONTENT);
+		this.includeAllVersions = configuration.getBoolean(LocalSetting.INCLUDE_ALL_VERSIONS);
 	}
 
 	public final LocalRoot getRoot() {
@@ -41,7 +41,8 @@ public class LocalExportDelegateFactory extends
 	}
 
 	@Override
-	protected LocalExportDelegate newExportDelegate(LocalRoot session, CmfType type, String searchKey) throws Exception {
+	protected LocalExportDelegate newExportDelegate(LocalRoot session, CmfType type, String searchKey)
+		throws Exception {
 		return new LocalExportDelegate(this, LocalFile.newFromSafePath(session, searchKey));
 	}
 }

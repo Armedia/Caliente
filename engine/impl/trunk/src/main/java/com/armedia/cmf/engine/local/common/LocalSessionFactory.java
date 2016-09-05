@@ -12,8 +12,6 @@ import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalSessionFactory extends SessionFactory<LocalRoot> {
-	public static final String ROOT = "root";
-
 	private final LocalRoot root;
 
 	public LocalSessionFactory(CfgTools settings, CmfCrypt crypto) throws IOException {
