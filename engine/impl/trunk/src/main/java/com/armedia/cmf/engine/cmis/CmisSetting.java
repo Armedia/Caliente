@@ -1,23 +1,35 @@
 package com.armedia.cmf.engine.cmis;
 
-import com.armedia.commons.utilities.ConfigurationSetting;
+import com.armedia.cmf.engine.TransferEngineSetting;
+import com.armedia.cmf.storage.CmfDataType;
 
-public enum CmisSetting implements ConfigurationSetting {
+public enum CmisSetting implements TransferEngineSetting {
 	//
-	EXPORT_PATH(), EXPORT_ID(), EXPORT_QUERY(), EXPORT_PAGE_SIZE(100),
+	EXPORT_PATH(CmfDataType.STRING),
+	EXPORT_ID(CmfDataType.STRING),
+	EXPORT_QUERY(CmfDataType.STRING),
+	EXPORT_PAGE_SIZE(CmfDataType.INTEGER, 100),
 	//
 	;
 
 	private final String label;
 	private final Object defaultValue;
+	private final CmfDataType type;
+	private final boolean required;
 
-	private CmisSetting() {
-		this(null);
+	private CmisSetting(CmfDataType type) {
+		this(type, null);
 	}
 
-	private CmisSetting(Object defaultValue) {
-		this.label = name().toLowerCase().replace('_', '.');
+	private CmisSetting(CmfDataType type, Object defaultValue) {
+		this(type, defaultValue, false);
+	}
+
+	private CmisSetting(CmfDataType type, Object defaultValue, boolean required) {
+		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
+		this.type = type;
+		this.required = required;
 	}
 
 	@Override
@@ -28,5 +40,15 @@ public enum CmisSetting implements ConfigurationSetting {
 	@Override
 	public final Object getDefaultValue() {
 		return this.defaultValue;
+	}
+
+	@Override
+	public CmfDataType getType() {
+		return this.type;
+	}
+
+	@Override
+	public boolean isRequired() {
+		return this.required;
 	}
 }
