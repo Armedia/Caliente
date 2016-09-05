@@ -23,7 +23,7 @@ public enum ExportSetting implements TransferEngineSetting {
 	}
 
 	private ExportSetting(CmfDataType type, Object defaultValue, boolean required) {
-		this.label = String.format("cmf.import.%s", name().toLowerCase().replaceAll("_", "."));
+		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
 		this.type = type;
 		this.required = required;

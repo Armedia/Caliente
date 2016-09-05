@@ -28,7 +28,7 @@ public enum TransferSetting implements TransferEngineSetting {
 
 	private TransferSetting(CmfDataType type, Object defaultValue, boolean required) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
-		this.label = String.format("cmf.%s", name().toLowerCase().replaceAll("_", "."));
+		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
 		this.type = type;
 		this.required = required;
