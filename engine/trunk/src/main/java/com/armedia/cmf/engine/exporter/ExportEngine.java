@@ -29,6 +29,7 @@ import com.armedia.cmf.engine.PooledWorkers;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.TransferEngineSetting;
 import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
@@ -836,12 +837,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected abstract CloseableIterator<ExportTarget> findExportResults(S session, CfgTools configuration, DF factory)
 		throws Exception;
 
-	/*
-	protected abstract ExportDelegate<?, S, W, V, C, ?> getExportDelegate(S session, CmfType type,
-		String searchKey, CfgTools configuration) throws Exception;
-	 */
-
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
+	}
+
+	@Override
+	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
+		for (ExportSetting s : ExportSetting.values()) {
+			settings.add(s);
+		}
 	}
 }

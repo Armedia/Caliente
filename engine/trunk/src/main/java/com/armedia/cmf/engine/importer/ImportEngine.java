@@ -34,6 +34,7 @@ import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.SessionFactory;
 import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
+import com.armedia.cmf.engine.TransferEngineSetting;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
@@ -1000,5 +1001,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	protected void importFailed(ImportState importState) throws CmfStorageException, ImportException {
 		// In case we need to do some cleanup
+	}
+
+	@Override
+	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
+		for (ImportSetting s : ImportSetting.values()) {
+			settings.add(s);
+		}
 	}
 }

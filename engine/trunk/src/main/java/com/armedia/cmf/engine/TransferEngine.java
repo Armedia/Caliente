@@ -3,10 +3,14 @@ package com.armedia.cmf.engine;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -28,6 +32,8 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
+
+	private static final Pattern SETTING_NAME_PATTERN = Pattern.compile("^[\\w&&[^\\d]][\\w]*$");
 
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
 	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<String, PluggableServiceLocator<?>>();
@@ -220,5 +226,36 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	public final boolean isSupportsDuplicateFileNames() {
 		return this.supportsDuplicateFileNames;
+	}
+
+	public final Collection<TransferEngineSetting> getSupportedSettings() {
+		Map<String, TransferEngineSetting> settings = new TreeMap<String, TransferEngineSetting>();
+		for (TransferSetting s : TransferSetting.values()) {
+			settings.put(s.getLabel(), s);
+		}
+		Collection<TransferEngineSetting> c = new ArrayList<TransferEngineSetting>();
+		getSupportedSettings(c);
+		for (TransferEngineSetting s : c) {
+			if (s == null) {
+				continue;
+			}
+			TransferEngineSetting old = settings.put(s.getLabel(), s);
+			if (old != null) {
+				this.log.warn(String.format("Duplicate setting name [%s]", s.getLabel()));
+			}
+		}
+		c = new ArrayList<TransferEngineSetting>(settings.size());
+		for (String s : settings.keySet()) {
+			Matcher m = TransferEngine.SETTING_NAME_PATTERN.matcher(s);
+			if (!m.matches()) {
+				this.log.warn(String.format("Illegal setting name [%s], skipping", s));
+				continue;
+			}
+			c.add(settings.get(s));
+		}
+		return Collections.unmodifiableCollection(c);
+	}
+
+	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
 	}
 }

@@ -1,8 +1,9 @@
 package com.armedia.cmf.engine.exporter;
 
-import com.armedia.commons.utilities.ConfigurationSetting;
+import com.armedia.cmf.engine.TransferEngineSetting;
+import com.armedia.cmf.storage.CmfDataType;
 
-public enum ExportSetting implements ConfigurationSetting {
+public enum ExportSetting implements TransferEngineSetting {
 	//
 
 	//
@@ -10,14 +11,22 @@ public enum ExportSetting implements ConfigurationSetting {
 
 	private final String label;
 	private final Object defaultValue;
+	private final CmfDataType type;
+	private final boolean required;
 
-	private ExportSetting() {
-		this(null);
+	private ExportSetting(CmfDataType type) {
+		this(type, null);
 	}
 
-	private ExportSetting(Object defaultValue) {
-		this.label = String.format("cmf.export.%s", name().toLowerCase().replaceAll("_", "."));
+	private ExportSetting(CmfDataType type, Object defaultValue) {
+		this(type, defaultValue, false);
+	}
+
+	private ExportSetting(CmfDataType type, Object defaultValue, boolean required) {
+		this.label = String.format("cmf.import.%s", name().toLowerCase().replaceAll("_", "."));
 		this.defaultValue = defaultValue;
+		this.type = type;
+		this.required = required;
 	}
 
 	@Override
@@ -28,5 +37,15 @@ public enum ExportSetting implements ConfigurationSetting {
 	@Override
 	public final Object getDefaultValue() {
 		return this.defaultValue;
+	}
+
+	@Override
+	public CmfDataType getType() {
+		return this.type;
+	}
+
+	@Override
+	public boolean isRequired() {
+		return this.required;
 	}
 }
