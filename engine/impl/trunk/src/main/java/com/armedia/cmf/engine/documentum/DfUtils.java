@@ -37,8 +37,7 @@ public class DfUtils {
 
 	public static enum DbType {
 		//
-		ORACLE("^.*\\.Oracle$"),
-		MSSQL("^.*\\.SQLServer$");
+		ORACLE("^.*\\.Oracle$"), MSSQL("^.*\\.SQLServer$");
 
 		private final Pattern pattern;
 
@@ -198,8 +197,8 @@ public class DfUtils {
 		for (DbType type : DbType.values()) {
 			if (type.matches(serverVersion)) { return type; }
 		}
-		throw new UnsupportedOperationException(String.format(
-			"Failed to identify a supported database from the server version string [%s]", serverVersion));
+		throw new UnsupportedOperationException(String
+			.format("Failed to identify a supported database from the server version string [%s]", serverVersion));
 	}
 
 	public static String generateSqlDateClause(Date date, IDfSession session) throws DfException {
@@ -245,15 +244,16 @@ public class DfUtils {
 			case IDfACL.DF_PERMIT_DELETE:
 				return IDfACL.DF_PERMIT_DELETE_STR;
 			default:
-				throw new IllegalArgumentException(String.format("Unknown permissions value [%d] detected", permission));
+				throw new IllegalArgumentException(
+					String.format("Unknown permissions value [%d] detected", permission));
 		}
 	}
 
 	public static int decodeAccessPermission(String permission) {
 		if (permission == null) { throw new IllegalArgumentException("Must provide a permission to map"); }
 		Integer ret = DfUtils.PERMISSIONS_MAP.get(permission);
-		if (ret == null) { throw new IllegalArgumentException(String.format("Unknown permissions value [%s] detected",
-			permission)); }
+		if (ret == null) { throw new IllegalArgumentException(
+			String.format("Unknown permissions value [%s] detected", permission)); }
 		return ret;
 	}
 
@@ -282,13 +282,13 @@ public class DfUtils {
 	public static int decodePermitType(String permitType) {
 		if (permitType == null) { throw new IllegalArgumentException("Must provide a permit type to map"); }
 		Integer ret = DfUtils.PERMIT_TYPES_MAP.get(permitType);
-		if (ret == null) { throw new IllegalArgumentException(String.format("Unknown permit type value [%s] detected",
-			permitType)); }
+		if (ret == null) { throw new IllegalArgumentException(
+			String.format("Unknown permit type value [%s] detected", permitType)); }
 		return ret;
 	}
 
-	public static ExportTarget getExportTarget(IDfPersistentObject source) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	public static ExportTarget getExportTarget(IDfPersistentObject source)
+		throws DfException, UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		final IDfId id = source.getObjectId();
 		final DctmObjectType type = DctmObjectType.decodeType(source);
@@ -299,21 +299,34 @@ public class DfUtils {
 	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute, String typeAttribute)
 		throws DfException, UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
-		if (source instanceof IDfPersistentObject) { return DfUtils.getExportTarget(IDfPersistentObject.class
-			.cast(source)); }
 		idAttribute = Tools.coalesce(idAttribute, DctmAttributes.R_OBJECT_ID);
-		if (!source.hasAttr(idAttribute)) { throw new IllegalArgumentException(String.format(
-			"The ID attribute [%s] was not found in the given object", idAttribute)); }
+		if (!source.hasAttr(idAttribute)) { throw new IllegalArgumentException(
+			String.format("The ID attribute [%s] was not found in the given object", idAttribute)); }
 		final IDfId id = source.getId(idAttribute);
-
-		typeAttribute = Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE);
+		final DctmObjectType dctmType = DctmObjectType.decodeType(id);
 		final CmfType objectType;
-		if (source.hasAttr(typeAttribute)) {
-			objectType = DctmObjectType.decodeType(source.getSession(), source.getString(typeAttribute))
-				.getStoredObjectType();
+		if (dctmType != null) {
+			// This is the best case scenario - we deduced the object's archetype from its ID,
+			// so we don't need to analyze anything else.
+			objectType = dctmType.getStoredObjectType();
 		} else {
-			objectType = null;
+			// This is the worst case, slowest scenario where we have to actually analyze the object
+			// type in play directly, either by getting the object type attribute or by analyzing
+			// the object itself.
+			typeAttribute = Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE);
+			if (source.hasAttr(typeAttribute)) {
+				objectType = DctmObjectType.decodeType(source.getSession(), source.getString(typeAttribute))
+					.getStoredObjectType();
+			} else {
+				if (IDfPersistentObject.class.isInstance(source)) {
+					objectType = DctmObjectType.decodeType(IDfPersistentObject.class.cast(source))
+						.getStoredObjectType();
+				} else {
+					objectType = null;
+				}
+			}
 		}
+
 		final String strId = id.getId();
 		return new ExportTarget(objectType, strId, strId);
 	}
@@ -321,8 +334,8 @@ public class DfUtils {
 	public static IDfStore getStore(IDfSession session, String name) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to seek the store with"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a store name to look for"); }
-		return IDfStore.class.cast(session.getObjectByQualification(String.format("dm_store where name = %s",
-			DfUtils.quoteString(name))));
+		return IDfStore.class.cast(
+			session.getObjectByQualification(String.format("dm_store where name = %s", DfUtils.quoteString(name))));
 	}
 
 	/**

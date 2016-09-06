@@ -19,6 +19,7 @@ import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfId;
 
 public enum DctmObjectType {
 
@@ -110,8 +111,8 @@ public enum DctmObjectType {
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
 		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
 		boolean supportsTransactions) {
-		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch,
-			supportsTransactions, true);
+		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch, supportsTransactions,
+			true);
 	}
 
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
@@ -151,14 +152,14 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 	private static Map<CmfType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
 
-	public static DctmObjectType decodeType(IDfPersistentObject object) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	public static DctmObjectType decodeType(IDfPersistentObject object)
+		throws DfException, UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
 		return DctmObjectType.decodeType(object.getType());
 	}
 
-	public static DctmObjectType decodeType(IDfSession session, String typeName) throws DfException,
-		UnsupportedDctmObjectTypeException {
+	public static DctmObjectType decodeType(IDfSession session, String typeName)
+		throws DfException, UnsupportedDctmObjectTypeException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to find the type in"); }
 		if (typeName == null) { throw new IllegalArgumentException("Must provide a type to find"); }
 		IDfType type = session.getType(typeName);
@@ -212,5 +213,40 @@ public enum DctmObjectType {
 			}
 		}
 		return DctmObjectType.OBJECT_TYPE_TRANSLATOR.get(type);
+	}
+
+	public static DctmObjectType decodeType(IDfId id) {
+		if (id == null) { throw new IllegalArgumentException("Must provide an ID to decode the information from"); }
+		// TODO: Not happy with this hardcoded table - maybe find a way to dynamically populate this
+		// from the installation?
+		switch (id.getTypePart()) {
+			case 0x28:
+				return DctmObjectType.STORE;
+
+			case 0x11:
+				return DctmObjectType.USER;
+
+			case 0x12:
+				return DctmObjectType.GROUP;
+
+			case 0x45:
+				return DctmObjectType.ACL;
+
+			case 0x03:
+				return DctmObjectType.TYPE;
+
+			case 0x27:
+				return DctmObjectType.FORMAT;
+
+			case 0x0b: // fall-through, both folders and cabinets map as folders
+			case 0x0c:
+				return DctmObjectType.FOLDER;
+
+			case 0x09:
+				return DctmObjectType.DOCUMENT;
+
+			default:
+				return null;
+		}
 	}
 }
