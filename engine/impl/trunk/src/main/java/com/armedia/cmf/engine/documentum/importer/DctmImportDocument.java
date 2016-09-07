@@ -703,8 +703,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			String fullFormat = cfg.getString(DctmAttributes.FULL_FORMAT);
 			int rendition = i;
 			int page = 0;
-			String pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER,
-				DctmDataType.DF_STRING.getNull().asString());
+			String pageModifier = info.getModifier();
+			if (StringUtils.isEmpty(pageModifier)) {
+				pageModifier = cfg.getString(DctmAttributes.PAGE_MODIFIER, DctmDataType.DF_STRING.getNull().asString());
+			}
 
 			if (fromDctm) {
 				// Parse out the rendition number for this one...
