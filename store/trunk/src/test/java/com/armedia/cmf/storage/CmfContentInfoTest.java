@@ -65,6 +65,44 @@ public class CmfContentInfoTest {
 	}
 
 	@Test
+	public void testGetRenditionIdAndPageAndModifier() {
+		CmfContentInfo a = null;
+		String id = null;
+		int page = -1;
+
+		Random r = new Random(System.currentTimeMillis());
+		for (int i = 0; i < 100; i++) {
+			for (int j = 0; j < 100; j++) {
+				page = r.nextInt(100000);
+				String modifier = String.format("modifier-%05X", j);
+				a = new CmfContentInfo(null, page);
+				Assert.assertNotNull(a.getRenditionIdentifier());
+				Assert.assertEquals(CmfContentInfo.DEFAULT_RENDITION, a.getRenditionIdentifier());
+				Assert.assertEquals(page, a.getRenditionPage());
+				Assert.assertEquals("", a.getModifier());
+
+				a = new CmfContentInfo(null, page, null);
+				Assert.assertNotNull(a.getRenditionIdentifier());
+				Assert.assertEquals(CmfContentInfo.DEFAULT_RENDITION, a.getRenditionIdentifier());
+				Assert.assertEquals(page, a.getRenditionPage());
+				Assert.assertEquals("", a.getModifier());
+
+				a = new CmfContentInfo(null, page, modifier);
+				Assert.assertNotNull(a.getRenditionIdentifier());
+				Assert.assertEquals(CmfContentInfo.DEFAULT_RENDITION, a.getRenditionIdentifier());
+				Assert.assertEquals(page, a.getRenditionPage());
+				Assert.assertEquals(modifier, a.getModifier());
+
+				id = UUID.randomUUID().toString();
+				a = new CmfContentInfo(id, page, modifier);
+				Assert.assertEquals(id, a.getRenditionIdentifier());
+				Assert.assertEquals(page, a.getRenditionPage());
+				Assert.assertEquals(modifier, a.getModifier());
+			}
+		}
+	}
+
+	@Test
 	public void testSetProperty() {
 		CmfContentInfo a = new CmfContentInfo(UUID.randomUUID().toString());
 		for (int i = 0; i < 100; i++) {

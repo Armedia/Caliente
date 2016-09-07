@@ -18,6 +18,7 @@ public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 
 	private final String renditionIdentifier;
 	private final int renditionPage;
+	private final String modifier;
 
 	private long length = 0;
 	private MimeType mimeType = null;
@@ -28,20 +29,29 @@ public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 	private final CfgTools cfg = new CfgTools(this.properties);
 
 	public CmfContentInfo() {
-		this(null, 0);
-	}
-
-	public CmfContentInfo(String renditionIdentifier) {
-		this(renditionIdentifier, 0);
+		this(null, 0, null);
 	}
 
 	public CmfContentInfo(int renditionPage) {
-		this(null, renditionPage);
+		this(null, renditionPage, null);
+	}
+
+	public CmfContentInfo(int renditionPage, String modifier) {
+		this(null, renditionPage, modifier);
+	}
+
+	public CmfContentInfo(String renditionIdentifier) {
+		this(renditionIdentifier, 0, null);
 	}
 
 	public CmfContentInfo(String renditionIdentifier, int renditionPage) {
+		this(renditionIdentifier, renditionPage, null);
+	}
+
+	public CmfContentInfo(String renditionIdentifier, int renditionPage, String modifier) {
 		this.renditionIdentifier = Tools.coalesce(renditionIdentifier, CmfContentInfo.DEFAULT_RENDITION);
 		this.renditionPage = renditionPage;
+		this.modifier = Tools.coalesce(modifier, "");
 	}
 
 	public boolean isDefaultRendition() {
@@ -58,6 +68,10 @@ public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 
 	public String getExtension() {
 		return this.extension;
+	}
+
+	public String getModifier() {
+		return this.modifier;
 	}
 
 	public void setExtension(String extension) {
