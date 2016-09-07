@@ -313,7 +313,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		} else {
 			renditionId = null;
 		}
-		CmfContentInfo info = new CmfContentInfo(renditionId, pageNumber);
+		CmfContentInfo info = new CmfContentInfo(renditionId, pageNumber, pageModifier);
 		IDfId formatId = content.getFormatId();
 		MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
 		if (!formatId.isNull()) {
