@@ -73,6 +73,12 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>false</multiple>
 				</property>
+				<property name="arm:renditionModifier">
+					<title>Rendition's Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
 				<property name="arm:renditionFormat">
 					<title>Rendition's MIME type</title>
 					<type>d:text</type>

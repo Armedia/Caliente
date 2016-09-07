@@ -13,6 +13,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganizationStrategy {
 
@@ -78,7 +79,8 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 			case DOCUMENT:
 				baseName = object.getBatchId();
 				if (!primaryContent) {
-					baseName = String.format("page-%08x", info.getRenditionPage());
+					baseName = String.format("page-%08x-%s", info.getRenditionPage(),
+						Tools.coalesce(info.getModifier(), ""));
 				}
 			default:
 				break;

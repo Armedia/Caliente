@@ -529,6 +529,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty("arm:renditionObjectId", this.cmfObject.getId());
 		p.setProperty("arm:renditionName", content.getRenditionIdentifier());
 		p.setProperty("arm:renditionPage", String.valueOf(content.getRenditionPage()));
+		p.setProperty("arm:renditionModifier", String.valueOf(content.getModifier()));
 		p.setProperty("arm:renditionFormat", content.getMimeType().toString());
 	}
 
