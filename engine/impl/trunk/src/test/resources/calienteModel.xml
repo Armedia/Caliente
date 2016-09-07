@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model name="arm:calienteModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/cmf-engine-alfresco-bulk/src/main/resources/alfresco-model.xsd ">
-	<description>JSAP-N Object Model</description>
+	<description>Armedia Caliente Object Model</description>
 	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
 	<version>1.0</version>
 
