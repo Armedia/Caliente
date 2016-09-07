@@ -315,6 +315,9 @@
 			<column name="rendition_page" type="number" remarks="The content's rendition page number">
 				<constraints nullable="false" />
 			</column>
+			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier">
+				<constraints nullable="false" />
+			</column>
 			<column name="extension" type="varchar(64)" remarks="The content's DOS extension, if any">
 				<constraints nullable="true" />
 			</column>
@@ -331,7 +334,7 @@
 				<constraints nullable="true" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content" columnNames="object_id, rendition_id, rendition_page" />
+		<addPrimaryKey tableName="cmf_content" columnNames="object_id, rendition_id, rendition_page, modifier" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_object"
 			baseTableName="cmf_content" baseColumnNames="object_id"
 			referencedTableName="cmf_object" referencedColumnNames="object_id"
@@ -348,6 +351,9 @@
 			<column name="rendition_page" type="number" remarks="The content's rendition page number">
 				<constraints nullable="false" />
 			</column>
+			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier">
+				<constraints nullable="false" />
+			</column>
 			<column name="name" type="varchar(64)" remarks="The property's name">
 				<constraints nullable="false" />
 			</column>
@@ -355,10 +361,10 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, rendition_id, rendition_page, name" />
+		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, rendition_id, rendition_page, modifier, name" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_property_content"
-			baseTableName="cmf_content_property" baseColumnNames="object_id, rendition_id, rendition_page"
-			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page"
+			baseTableName="cmf_content_property" baseColumnNames="object_id, rendition_id, rendition_page, modifier"
+			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page, modifier"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>

@@ -119,10 +119,10 @@ public abstract class JdbcDialect {
 		INSERT_CONTENT( //
 			"       insert into " + //
 				"          cmf_content (" + //
-				"              object_id, rendition_id, rendition_page, extension, content_number, " + //
+				"              object_id, rendition_id, rendition_page, modifier, extension, content_number, " + //
 				"              stream_length, mime_type, file_name" + //
 				"           ) " + //
-				"    values (?, ?, ?, ?, ?, ?, ?, ?)" //
+				"    values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
 		DELETE_CONTENT( //
@@ -133,9 +133,9 @@ public abstract class JdbcDialect {
 		INSERT_CONTENT_PROPERTY( //
 			"       insert into " + //
 				"          cmf_content_property (" + //
-				"              object_id, rendition_id, rendition_page, name, value" + //
+				"              object_id, rendition_id, rendition_page, modifier, name, value" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?, ?, ?)" //
 		),
 
 		QUERY_EXPORT_PLAN_DUPE( //
@@ -347,6 +347,7 @@ public abstract class JdbcDialect {
 				"    where object_id = ? " + //
 				"      and rendition_id = ?" + //
 				"      and rendition_page = ?" + //
+				"      and modifier = ?" + //
 				" order by name" //
 		),
 
@@ -377,7 +378,8 @@ public abstract class JdbcDialect {
 				"     from cmf_content_stream " + //
 				"    where object_id = ? " + //
 				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" //
+				"      and rendition_page = ?" + //
+				"      and modifier = ?" //
 		),
 
 		GET_STREAM_LENGTH( //
@@ -385,7 +387,8 @@ public abstract class JdbcDialect {
 				"     from cmf_content_stream " + //
 				"    where object_id = ? " + //
 				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" //
+				"      and rendition_page = ?" + //
+				"      and modifier = ?" //
 		),
 
 		GET_STREAM( //
@@ -393,22 +396,24 @@ public abstract class JdbcDialect {
 				"     from cmf_content_stream " + //
 				"    where object_id = ? " + //
 				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" //
+				"      and rendition_page = ?" + //
+				"      and modifier = ?" //
 		),
 
 		DELETE_STREAM( //
 			"       delete from cmf_content_stream " + //
 				"    where object_id = ? " + //
 				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" //
+				"      and rendition_page = ?" + //
+				"      and modifier = ?" //
 		),
 
 		INSERT_STREAM( //
 			"       insert into " + //
 				"          cmf_content_stream (" + //
-				"              object_id, rendition_id, rendition_page, length, data" + //
+				"              object_id, rendition_id, rendition_page, modifier, length, data" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?, ?, ?)" //
 		),
 
 		TRUNCATE_TABLE_FMT( //

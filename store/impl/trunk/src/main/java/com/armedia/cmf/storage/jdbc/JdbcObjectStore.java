@@ -1069,31 +1069,33 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		// Step 2: prepare the new content records and properties
 		List<Object[]> contents = new ArrayList<Object[]>();
 		List<Object[]> properties = new ArrayList<Object[]>();
-		Object[] cArr = new Object[8];
-		Object[] pArr = new Object[5];
+		Object[] cArr = new Object[9];
+		Object[] pArr = new Object[6];
 		int pos = 0;
 		for (CmfContentInfo i : content) {
 			// First, the content record...
 			cArr[0] = objectId;
 			cArr[1] = i.getRenditionIdentifier();
 			cArr[2] = i.getRenditionPage();
-			cArr[3] = i.getExtension();
-			cArr[4] = pos++;
-			cArr[5] = i.getLength();
-			cArr[6] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
-			cArr[7] = i.getFileName();
+			cArr[3] = i.getModifier();
+			cArr[4] = i.getExtension();
+			cArr[5] = pos++;
+			cArr[6] = i.getLength();
+			cArr[7] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
+			cArr[8] = i.getFileName();
 			contents.add(cArr.clone());
 
 			// Then, the properties...
 			pArr[0] = objectId;
 			pArr[1] = i.getRenditionIdentifier();
 			pArr[2] = i.getRenditionPage();
+			pArr[3] = i.getModifier();
 			for (String s : i.getPropertyNames()) {
 				if (s == null) {
 					continue;
 				}
-				pArr[3] = s;
-				pArr[4] = i.getProperty(s);
+				pArr[4] = s;
+				pArr[5] = i.getProperty(s);
 				if (pArr[4] == null) {
 					continue;
 				}
@@ -1146,7 +1148,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					final QueryRunner qr = new QueryRunner();
 					while (rs.next()) {
 						final CmfContentInfo info = new CmfContentInfo(rs.getString("rendition_id"),
-							rs.getInt("rendition_page"));
+							rs.getInt("rendition_page"), rs.getString("modifier"));
 						info.setLength(rs.getLong("stream_length"));
 						String ext = rs.getString("extension");
 						if (rs.wasNull() || StringUtils.isEmpty(ext)) {
@@ -1164,7 +1166,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 						Map<String, String> props = qr.query(c,
 							translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES), pHandler, objectId,
-							info.getRenditionIdentifier(), info.getRenditionPage());
+							info.getRenditionIdentifier(), info.getRenditionPage(), info.getModifier());
 						for (String s : props.keySet()) {
 							String v = props.get(s);
 							if ((s != null) && (v != null)) {

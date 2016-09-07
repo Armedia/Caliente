@@ -29,6 +29,9 @@
 			<column name="rendition_page" type="number" remarks="The content's rendition page number">
 				<constraints nullable="false" />
 			</column>
+			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier">
+				<constraints nullable="false" />
+			</column>
 			<column name="length" type="bigint" remarks="The content stream's length">
 				<constraints nullable="false" />
 			</column>
@@ -36,6 +39,6 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, rendition_id, rendition_page" />
+		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, rendition_id, rendition_page, modifier" />
 	</changeSet>
 </databaseChangeLog>
