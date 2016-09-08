@@ -561,13 +561,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								failBatch);
 							if (session != null) {
 								session.close();
+								session = null;
 							}
 							batchCounter.incrementAndGet();
 							synchronized (workerSynchronizer) {
 								workerSynchronizer.notify();
 							}
 						}
-
 					}
 				} finally {
 					this.log.debug("Worker exiting...");
