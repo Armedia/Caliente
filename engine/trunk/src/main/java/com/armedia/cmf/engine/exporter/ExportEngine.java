@@ -566,16 +566,26 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
 		final Map<ExportTarget, ExportStatus> statusMap = new ConcurrentHashMap<ExportTarget, ExportStatus>();
 
-		PooledWorkers<SessionFactory<S>, ExportTarget> worker = new PooledWorkers<SessionFactory<S>, ExportTarget>(
+		PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
 			backlogSize) {
 
 			@Override
-			protected SessionFactory<S> prepare() throws Exception {
-				return sessionFactory;
+			protected SessionWrapper<S> prepare() throws Exception {
+				final SessionWrapper<S> s;
+				try {
+					s = sessionFactory.acquireSession();
+				} catch (Exception e) {
+					this.log.error("Failed to obtain a worker session", e);
+					return null;
+				}
+				this.log.info(String.format("Worker ready with session [%s]", s.getId()));
+				return s;
 			}
 
 			@Override
-			protected void process(SessionFactory<S> sessionFactory, ExportTarget next) throws Exception {
+			protected void process(SessionWrapper<S> session, ExportTarget next) throws Exception {
+				final S s = session.getWrapped();
+
 				CmfType nextType = next.getType();
 				final String nextId = next.getId();
 				final String nextKey = next.getSearchKey();
@@ -586,9 +596,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 				boolean tx = false;
 				boolean ok = false;
-				final SessionWrapper<S> session = sessionFactory.acquireSession();
-				this.log.info(String.format("Worker ready with session [%s]", session.getId()));
-				final S s = session.getWrapped();
 				try {
 					// Begin transaction
 					tx = session.begin();
@@ -638,18 +645,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 				} catch (Throwable t) {
 					this.log.error(String.format("Failed to export %s object with ID[%s]", nextType, nextId), t);
-					listenerDelegator.objectExportFailed(exportState.jobId, nextType, nextId, t);
 					if (tx && !ok) {
 						session.rollback();
 					}
-				} finally {
-					session.close();
 				}
 			}
 
 			@Override
-			protected void cleanup(SessionFactory<S> session) {
-				// Do nothing...we've already released our session
+			protected void cleanup(SessionWrapper<S> session) {
+				session.close();
 			}
 		};
 
