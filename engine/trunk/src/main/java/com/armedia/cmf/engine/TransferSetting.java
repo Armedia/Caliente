@@ -10,6 +10,7 @@ public enum TransferSetting implements TransferEngineSetting {
 	BACKLOG_SIZE(CmfDataType.INTEGER),
 	LATEST_ONLY(CmfDataType.BOOLEAN, false),
 	NO_RENDITIONS(CmfDataType.BOOLEAN, false),
+	RETRY_ATTEMPTS(CmfDataType.INTEGER, 2),
 	//
 	;
 
