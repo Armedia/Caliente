@@ -23,6 +23,7 @@ import com.armedia.cmf.engine.exporter.ExportResult;
 import com.armedia.cmf.engine.exporter.ExportSkipReason;
 import com.armedia.cmf.engine.exporter.ExportState;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfObjectCounter;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
@@ -39,6 +40,8 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	protected static final String EXPORT_END = "cmsmfExportEnd";
 	protected static final String BASE_SELECTOR = "cmsmfBaseSelector";
 	protected static final String FINAL_SELECTOR = "cmsmfFinalSelector";
+
+	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
 
 	protected AbstractCMSMFMain_export(ExportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine, true, true);
@@ -137,7 +140,6 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 
 		final String jobName = CLIParam.job_name.getString();
 		final boolean resetJob = CLIParam.reset_job.isPresent();
-
 		validateState();
 		Map<String, Object> settings = new HashMap<String, Object>();
 		prepareSettings(settings);
@@ -193,6 +195,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");
+				this.counter.reset();
 				this.engine.runExport(this.console, this.cmfObjectStore, this.cmfContentStore, settings);
 				final Date exportEnd = new Date();
 				this.log.info("##### Export Process Finished #####");
@@ -282,6 +285,20 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			report.append(String.format("%n%s%n%-16s: %6d%n", StringUtils.repeat("=", 30), "Total", total));
 		}
 
+		report.append(String.format("%n%n%nFull Result Report:%n")).append(StringUtils.repeat("=", 30));
+		report.append(String.format("%n%s%n", this.counter.generateFullReport(0)));
+
+		Map<ExportResult, Integer> m = this.counter.getCummulative();
+		final Integer zero = Integer.valueOf(0);
+		report.append(String.format("Result summary:%n%n")).append(StringUtils.repeat("=", 30));
+		for (ExportResult r : ExportResult.values()) {
+			Integer i = m.get(r);
+			if (i == null) {
+				i = zero;
+			}
+			report.append(String.format("%n%-16s : %8d", r.name(), i.intValue()));
+		}
+
 		if (exceptionReport != null) {
 			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
 			this.console
@@ -312,6 +329,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		if (objectNumber != null) {
 			this.console.info(String.format("%s export completed for [%s](%s) as object #%d", object.getType().name(),
 				object.getLabel(), object.getId(), objectNumber));
+			this.counter.increment(object.getType(), ExportResult.EXPORTED);
 		}
 	}
 
@@ -319,17 +337,21 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	public final void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason) {
 		if (reason == ExportSkipReason.SKIPPED) {
 			this.console.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
+			this.counter.increment(objectType, ExportResult.SKIPPED);
 		}
 	}
 
 	@Override
 	public final void objectExportFailed(UUID jobId, CmfType objectType, String objectId, Throwable thrown) {
+		this.counter.increment(objectType, ExportResult.FAILED);
 		this.console.warn(String.format("Object export failed for %s[%s]", objectType.name(), objectId), thrown);
 	}
 
 	@Override
 	public final void exportFinished(ExportState exportState, Map<CmfType, Integer> summary) {
-		this.console.info("Export process finished");
+		this.console.info("");
+		this.console.info("Export Summary");
+		this.console.info("");
 		for (CmfType t : CmfType.values()) {
 			Integer v = summary.get(t);
 			if ((v == null) || (v.intValue() == 0)) {
@@ -337,5 +359,19 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			}
 			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
 		}
+		this.console.info("");
+		Map<ExportResult, Integer> m = this.counter.getCummulative();
+		final Integer zero = Integer.valueOf(0);
+		this.console.info("Result summary:");
+		this.console.info("");
+		for (ExportResult r : ExportResult.values()) {
+			Integer i = m.get(r);
+			if (i == null) {
+				i = zero;
+			}
+			this.console.info(String.format("%-16s : %8d", r.name(), i.intValue()));
+		}
+		this.console.info("");
+		this.console.info("Export process finished");
 	}
 }
