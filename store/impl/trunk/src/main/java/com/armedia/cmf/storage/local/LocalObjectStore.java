@@ -78,6 +78,12 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	}
 
 	@Override
+	protected boolean unlockForStorage(LocalStoreOperation operation, CmfType type, String objectId)
+		throws CmfStorageException {
+		return false;
+	}
+
+	@Override
 	protected <V> int loadObjects(LocalStoreOperation operation, CmfAttributeTranslator<V> translator,
 		final CmfType type, Collection<String> ids, CmfObjectHandler<V> handler, boolean batching)
 		throws CmfStorageException {
