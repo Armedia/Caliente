@@ -230,6 +230,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				if (old != null) { throw new ExportException(String.format(
 					"Duplicate export status for [%s] - this should be impossible! This means DB lock markers are broken!",
 					target)); }
+				if (this.log.isTraceEnabled()) {
+					this.log.trace(String.format("Locked %s for storage", label));
+				}
 			}
 		} catch (CmfStorageException e) {
 			throw new ExportException(
@@ -243,10 +246,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			return new Result(ExportSkipReason.ALREADY_LOCKED);
 		}
 
-		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format("Locked %s for storage", label));
-		}
-
 		// Make sure the object hasn't already been exported
 		if (objectStore.isStored(type, id)) {
 			// Should be impossible, but still guard against it
@@ -258,6 +257,22 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			thisStatus.markExported(true);
 			return new Result(ExportSkipReason.ALREADY_STORED);
 		}
+
+		/*
+		try {
+		
+		} finally {
+			try {
+				objectStore.unlockForStorage(type, id);
+			} catch (CmfStorageException e) {
+				if (this.log.isTraceEnabled()) {
+					this.log.error(String.format("Failed to unlock the object [%s::%s]", type.name(), id), e);
+				}
+			} finally {
+				statusMap.remove(target);
+			}
+		}
+		*/
 
 		boolean success = false;
 		if (referrent != null) {
