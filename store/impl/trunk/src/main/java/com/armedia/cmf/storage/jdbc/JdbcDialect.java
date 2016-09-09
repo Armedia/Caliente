@@ -152,6 +152,12 @@ public abstract class JdbcDialect {
 				"   values (?, ?) " //
 		),
 
+		DELETE_EXPORT_PLAN( //
+			"       delete from cmf_export_plan " + //
+				"    where object_type = ? " + //
+				"      and object_id = ? " //
+		),
+
 		INSERT_CACHE_TARGET( //
 			"       insert into " + //
 				"          cmf_target_cache (" + //

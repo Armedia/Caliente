@@ -1026,6 +1026,27 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
+	protected boolean unlockForStorage(JdbcOperation operation, CmfType type, String id) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		final String dbid = JdbcTools.composeDatabaseId(type, id);
+		try {
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("ATTEMPTING TO REMOVE DEPENDENCY [%s::%s]", type.name(), id));
+			}
+			qr.update(c, translateQuery(JdbcDialect.Query.DELETE_EXPORT_PLAN), JdbcTools.HANDLER_NULL, type.name(),
+				dbid);
+			if (this.log.isDebugEnabled()) {
+				this.log.debug(String.format("REMOVED DEPENDENCY [%s::%s]", type.name(), id));
+			}
+			return true;
+		} catch (SQLException e) {
+			throw new CmfStorageException(String.format("Failed to remove the dependency [%s::%s]", type.name(), id),
+				e);
+		}
+	}
+
+	@Override
 	protected CmfValue getProperty(JdbcOperation operation, String property) throws CmfStorageException {
 		return this.propertyManager.getProperty(operation, property);
 	}
