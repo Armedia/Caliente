@@ -48,7 +48,7 @@ public class UserMapper {
 			return;
 		}
 		// TODO: Output the user's CSV record
-		UserMapper.log.info("Retrieved user {}", u.getUserName());
+		UserMapper.log.info("Retrieved user {} ({})", u.getUserName(), u.getUserSourceAsString());
 	}
 
 	private static void outputGroup(IDfSession session, DctmGroup group, Properties userMappings,
@@ -61,7 +61,7 @@ public class UserMapper {
 			return;
 		}
 		// TODO: Output the group's CSV record ... make sure to fold group names to uppercase
-		UserMapper.log.info("Retrieved group {}", g.getGroupName());
+		UserMapper.log.info("Retrieved group {} ({})", g.getGroupName(), g.getGroupSource());
 	}
 
 	private static int runMain(String... args) {

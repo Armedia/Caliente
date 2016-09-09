@@ -6,12 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
 import com.unboundid.ldap.sdk.DN;
@@ -33,6 +36,7 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 
 	private static final String GUID_ATTRIBUTE = "objectGUID";
 
+	private final Class<P> pClass;
 	private final Map<String, P> byName;
 	private final Map<String, P> byGuid;
 	private final Map<DN, P> byDn;
@@ -43,7 +47,10 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 	private final List<String> searchAttributes;
 	private final String nameAttribute;
 
-	protected LdapPrincipalDb() {
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+
+	protected LdapPrincipalDb(Class<P> pClass) {
+		this.pClass = pClass;
 		this.byName = Collections.emptyMap();
 		this.byGuid = Collections.emptyMap();
 		this.byDn = Collections.emptyMap();
@@ -54,11 +61,12 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 		this.nameAttribute = null;
 	}
 
-	protected LdapPrincipalDb(LDAPConnectionPool pool, boolean onDemand, String baseDn, String baseFilter,
-		String... searchAttributes) throws LDAPException {
+	protected LdapPrincipalDb(Class<P> pClass, LDAPConnectionPool pool, boolean onDemand, String baseDn,
+		String baseFilter, String... searchAttributes) throws LDAPException {
 		if ((searchAttributes == null) || (searchAttributes.length < 1)
 			|| StringUtils.isEmpty(searchAttributes[0])) { throw new IllegalArgumentException(
 				"Must provide at least one attribute to search against"); }
+		this.pClass = pClass;
 		this.baseFilter = Filter.create(baseFilter);
 		this.baseDn = baseDn;
 		this.nameAttribute = searchAttributes[0];
@@ -77,7 +85,8 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 			final Map<String, P> byName = new HashMap<String, P>();
 			final Map<String, P> byGuid = new HashMap<String, P>();
 			final Map<DN, P> byDn = new HashMap<DN, P>();
-
+			final AtomicInteger counter = new AtomicInteger(0);
+			final String label = pClass.getSimpleName();
 			SearchRequest request = new SearchRequest(new SearchResultListener() {
 				private static final long serialVersionUID = 1L;
 
@@ -87,6 +96,10 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 					byName.put(p.getName().toLowerCase(), p);
 					byGuid.put(p.getGuid().toLowerCase(), p);
 					byDn.put(p.getDn(), p);
+					int i = counter.incrementAndGet();
+					if ((i % 100) == 0) {
+						LdapPrincipalDb.this.log.info("Loaded {} {} objects", i, label);
+					}
 				}
 
 				@Override
@@ -98,6 +111,7 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 			LDAPConnection c = pool.getConnection();
 			try {
 				c.search(request);
+				this.log.info("Finished loading {} {} objects", byDn.size(), label);
 			} finally {
 				pool.releaseConnection(c);
 			}
@@ -152,7 +166,9 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 			request.setSizeLimit(1);
 
 			for (SearchResultEntry e : c.search(request).getSearchEntries()) {
-				return buildObject(e);
+				P p = buildObject(e);
+				this.log.info("Loaded LDAP {} object [{}]", this.pClass.getSimpleName(), p.getName());
+				return p;
 			}
 			return null;
 		} finally {

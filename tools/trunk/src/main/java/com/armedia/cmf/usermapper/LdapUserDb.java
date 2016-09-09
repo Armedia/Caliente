@@ -14,11 +14,11 @@ public class LdapUserDb extends LdapPrincipalDb<LdapUser> {
 	};
 
 	public LdapUserDb() {
-		super();
+		super(LdapUser.class);
 	}
 
 	public LdapUserDb(LDAPConnectionPool pool, boolean onDemand, String baseDn) throws LDAPException {
-		super(pool, onDemand, baseDn, LdapUserDb.FILTER, LdapUserDb.ATTRIBUTES);
+		super(LdapUser.class, pool, onDemand, baseDn, LdapUserDb.FILTER, LdapUserDb.ATTRIBUTES);
 	}
 
 	@Override

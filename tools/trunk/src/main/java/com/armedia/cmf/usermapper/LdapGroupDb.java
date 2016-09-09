@@ -14,11 +14,11 @@ public class LdapGroupDb extends LdapPrincipalDb<LdapGroup> {
 	};
 
 	public LdapGroupDb() {
-		super();
+		super(LdapGroup.class);
 	}
 
 	public LdapGroupDb(LDAPConnectionPool pool, boolean onDemand, String baseDn) throws LDAPException {
-		super(pool, onDemand, baseDn, LdapGroupDb.FILTER, LdapGroupDb.ATTRIBUTES);
+		super(LdapGroup.class, pool, onDemand, baseDn, LdapGroupDb.FILTER, LdapGroupDb.ATTRIBUTES);
 	}
 
 	@Override
