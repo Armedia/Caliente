@@ -85,7 +85,12 @@
 			<version>3.1.1</version>
 			<scope>compile</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.4</version>
+			<scope>compile</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.documentum.dfc</groupId>
 			<artifactId>dfc-jars</artifactId>

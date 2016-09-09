@@ -1,13 +1,20 @@
 package com.armedia.cmf.usermapper;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,11 +23,18 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.usermapper.tools.DfUtils;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
@@ -35,11 +49,112 @@ public class UserMapper {
 	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	private static final Logger log = LoggerFactory.getLogger(UserMapper.class);
 
+	private static final String NEWLINE = String.format("%n");
+
+	private static final Map<String, String> USER_HEADINGS;
+	private static final Map<String, String> GROUP_HEADINGS;
+
+	private static final String FIRST_NAME = UUID.randomUUID().toString();
+	private static final String LAST_NAME = UUID.randomUUID().toString();
+
+	private static final String GROUP_NAME = UUID.randomUUID().toString();
+	private static final String USER_MEMBERS = UUID.randomUUID().toString();
+	private static final String GROUP_MEMBERS = UUID.randomUUID().toString();
+
+	private static final Appendable NULL = new Appendable() {
+		@Override
+		public Appendable append(CharSequence csq) throws IOException {
+			return this;
+		}
+
+		@Override
+		public Appendable append(CharSequence csq, int start, int end) throws IOException {
+			return this;
+		}
+
+		@Override
+		public Appendable append(char c) throws IOException {
+			return this;
+		}
+	};
+
+	static {
+		Map<String, String> m = new LinkedHashMap<String, String>();
+		final String[][] userHeadings = {
+			{
+				"User Name", "user_login_name"
+			}, {
+				"First Name", UserMapper.FIRST_NAME
+			}, {
+				"Last Name", UserMapper.LAST_NAME
+			}, {
+				"E-mail Address", "user_address"
+			}, {
+				""
+			}, {
+				"Password", "user_password"
+			}, {
+				"Company", "JSAP"
+			}, {
+				"Job Title",
+			}, {
+				"Location"
+			}, {
+				"Telephone"
+			}, {
+				"Mobile"
+			}, {
+				"Skype", "DCTM_HISTORIC"
+			}, {
+				"IM", "user_source"
+			}, {
+				"Google User Name"
+			}, {
+				"Address"
+			}, {
+				"Address Line 2"
+			}, {
+				"Address Line 3"
+			}, {
+				"Post Code"
+			}, {
+				"Telephone"
+			}, {
+				"Fax"
+			}, {
+				"Email", "user_address"
+			},
+		};
+		for (String[] h : userHeadings) {
+			m.put(h[0], (h.length > 1 ? h[1] : null));
+		}
+		USER_HEADINGS = Tools.freezeMap(m);
+
+		m = new LinkedHashMap<String, String>();
+		final String[][] groupHeadings = {
+			{
+				"Group Source", "group_source"
+			}, {
+				"Group Name", UserMapper.GROUP_NAME
+			}, {
+				"Group Display Name", "group_display_name"
+			}, {
+				"User Members", UserMapper.USER_MEMBERS
+			}, {
+				"Group Members", UserMapper.GROUP_MEMBERS
+			},
+		};
+		for (String[] h : groupHeadings) {
+			m.put(h[0], (h.length > 1 ? h[1] : null));
+		}
+		GROUP_HEADINGS = Tools.freezeMap(m);
+	}
+
 	public static final void main(String... args) {
 		System.exit(UserMapper.runMain(args));
 	}
 
-	private static void outputUser(IDfSession session, DctmUser user, PrintWriter userRecords) throws Exception {
+	private static void outputUser(IDfSession session, DctmUser user, CSVPrinter userRecords) throws Exception {
 		IDfUser u = session.getUser(user.getName());
 		if (u == null) {
 			// WTF?!?!?
@@ -47,12 +162,45 @@ public class UserMapper {
 				.warn(String.format("User [%s] disappeared on us...can't generate the record", user.getName()));
 			return;
 		}
-		// TODO: Output the user's CSV record
+
 		UserMapper.log.info("Retrieved user {} ({})", u.getUserName(), u.getUserSourceAsString());
+		if (userRecords == null) { return; }
+		for (String s : UserMapper.USER_HEADINGS.keySet()) {
+			String v = UserMapper.USER_HEADINGS.get(s);
+			if (!StringUtils.isEmpty(v)) {
+				if (u.hasAttr(v)) {
+					v = u.getString(v);
+				} else if (v == UserMapper.FIRST_NAME) {
+					// The first name is everything but the last word
+					String[] n = StringUtils.split(u.getUserName());
+					if (n.length > 1) {
+						v = StringUtils.join(n, ' ', 0, n.length - 1);
+					} else {
+						v = n[0];
+					}
+				} else if (v == UserMapper.LAST_NAME) {
+					// The last name is only the last word...if it's only one word,
+					// then it's nothing
+					String[] n = StringUtils.split(u.getUserName());
+					if (n.length > 1) {
+						v = n[n.length - 1];
+					} else {
+						v = null;
+					}
+				} else {
+					// No attribute, and it's not a special value, so we simply leave it
+					// as-is assuming it's a constant
+				}
+
+			}
+			userRecords.print(Tools.coalesce(v, ""));
+		}
+		userRecords.println();
+		userRecords.flush();
 	}
 
 	private static void outputGroup(IDfSession session, DctmGroup group, Properties userMappings,
-		Properties groupMappings, PrintWriter groupRecords) throws Exception {
+		Properties groupMappings, CSVPrinter groupRecords) throws Exception {
 		IDfGroup g = session.getGroup(group.getName());
 		if (g == null) {
 			// WTF?!?!?
@@ -60,8 +208,96 @@ public class UserMapper {
 				.warn(String.format("Group [%s] disappeared on us...can't generate the record", group.getName()));
 			return;
 		}
-		// TODO: Output the group's CSV record ... make sure to fold group names to uppercase
 		UserMapper.log.info("Retrieved group {} ({})", g.getGroupName(), g.getGroupSource());
+		if (groupRecords == null) { return; }
+		for (String s : UserMapper.GROUP_HEADINGS.keySet()) {
+			String v = UserMapper.GROUP_HEADINGS.get(s);
+			if (!StringUtils.isEmpty(v)) {
+				if (g.hasAttr(v)) {
+					v = g.getString(v);
+				} else if (v == UserMapper.GROUP_NAME) {
+					// The group name is to be folded to uppercase
+					v = g.getGroupName().toUpperCase();
+				} else if (v == UserMapper.USER_MEMBERS) {
+					// Encode the user members into a single value
+					IDfCollection c = g.getUsersNames();
+					List<String> users = new ArrayList<String>(g.getUsersNamesCount());
+					try {
+						while (c.next()) {
+							String n = c.getString("users_names");
+							users.add(Tools.coalesce(userMappings.getProperty(n), n));
+						}
+					} finally {
+						DfUtils.closeQuietly(c);
+					}
+					v = StringUtils.join(users, ',');
+				} else if (v == UserMapper.GROUP_MEMBERS) {
+					// Encode the group members into a single value
+					IDfCollection c = g.getGroupsNames();
+					List<String> groups = new ArrayList<String>(g.getGroupsNamesCount());
+					try {
+						while (c.next()) {
+							String n = c.getString("groups_names");
+							groups.add(Tools.coalesce(groupMappings.getProperty(n), n.toUpperCase()));
+						}
+					} finally {
+						DfUtils.closeQuietly(c);
+					}
+					v = StringUtils.join(groups, ',');
+				} else {
+					// No attribute, and it's not a special value, so we simply leave it
+					// as-is assuming it's a constant
+				}
+
+			}
+			groupRecords.print(Tools.coalesce(v, ""));
+		}
+		groupRecords.println();
+		groupRecords.flush();
+	}
+
+	private static CSVPrinter getCSVPrinter(String name, Set<String> headings, Map<String, CSVPrinter> records,
+		String source) {
+		if (StringUtils.isEmpty(source)) {
+			source = "INTERNAL";
+		}
+		source = source.toUpperCase();
+		source = source.replaceAll("\\s", "_");
+		CSVPrinter ret = records.get(source);
+		if (ret == null) {
+			CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
+			File f = new File(String.format("new_%s.%s.csv", name, source.toUpperCase())).getAbsoluteFile();
+			try {
+				try {
+					f = f.getCanonicalFile();
+				} catch (IOException e) {
+					// Do nothing
+				}
+				UserMapper.log.info("Creating a new CSV file at [{}]...", f.getAbsolutePath());
+				ret = new CSVPrinter(new FileWriter(f), format);
+			} catch (IOException e) {
+				UserMapper.log.warn(String.format("Error creating CSV file at [%s]...will use a grounded out printer",
+					f.getAbsolutePath()), e);
+				try {
+					ret = new CSVPrinter(UserMapper.NULL, format);
+				} catch (IOException e2) {
+					// Impossible not writing at all
+					throw new RuntimeException("Unexpected exception - no I/O happening", e2);
+				}
+			}
+			try {
+				for (String s : headings) {
+					ret.print(s);
+				}
+				ret.println();
+				ret.flush();
+			} catch (IOException e) {
+				throw new RuntimeException(
+					String.format("Failed to initialize the new records file [%s]", f.getAbsolutePath()), e);
+			}
+			records.put(source, ret);
+		}
+		return ret;
 	}
 
 	private static int runMain(String... args) {
@@ -170,6 +406,10 @@ public class UserMapper {
 			}
 
 			executor = Executors.newCachedThreadPool();
+
+			final Date startMarker = new Date();
+			final String startMarkerString = DateFormatUtils.ISO_DATE_TIME_ZONE_FORMAT.format(startMarker);
+
 			final Future<Map<String, DctmUser>> dctmUserFuture = executor.submit(DctmUser.getUserLoader(dfcPool));
 			final Future<Map<String, DctmGroup>> dctmGroupFuture = executor.submit(DctmGroup.getGroupLoader(dfcPool));
 			final Future<LdapUserDb> ldapUserFuture;
@@ -248,13 +488,14 @@ public class UserMapper {
 				return 1;
 			}
 
-			final PrintWriter userRecords = null;
-			final PrintWriter groupRecords = null;
+			final Map<String, CSVPrinter> userRecords = new HashMap<String, CSVPrinter>();
+			final Map<String, CSVPrinter> groupRecords = new HashMap<String, CSVPrinter>();
 
 			final Properties userMapping = new Properties();
 			final Set<String> newUsers = new LinkedHashSet<String>();
 			for (String u : dctmUsers.keySet()) {
 				DctmUser user = dctmUsers.get(u);
+
 				// Look the user up by login in LDAP. If it's there, then
 				// we're fine and we simply output the mapping
 				LdapUser ldap = null;
@@ -307,7 +548,49 @@ public class UserMapper {
 					continue;
 				}
 
+				groupMapping.setProperty(group.getName(), group.getName().toUpperCase());
 				newGroups.add(g);
+			}
+
+			File f = null;
+			FileOutputStream out = null;
+
+			f = new File("usermap.xml").getAbsoluteFile();
+			try {
+				try {
+					f = f.getCanonicalFile();
+				} catch (IOException e) {
+					// Do nothing...
+				}
+				out = new FileOutputStream(f);
+				UserMapper.log.info("Writing out user mappings to [{}]...", f.getAbsolutePath());
+				userMapping.storeToXML(out, String.format("User mappings as of %s", startMarkerString));
+			} catch (IOException e) {
+				f.deleteOnExit();
+				UserMapper.log
+					.error(String.format("Failed to write out the user mappings to [%s]", f.getAbsolutePath()), e);
+				return 1;
+			} finally {
+				IOUtils.closeQuietly(out);
+			}
+
+			f = new File("groupmap.xml").getAbsoluteFile();
+			try {
+				try {
+					f = f.getCanonicalFile();
+				} catch (IOException e) {
+					// Do nothing...
+				}
+				UserMapper.log.info("Writing out group mappings to [{}]...", f.getAbsolutePath());
+				out = new FileOutputStream(f);
+				groupMapping.storeToXML(out, String.format("Group mappings as of %s", startMarkerString));
+			} catch (IOException e) {
+				f.deleteOnExit();
+				UserMapper.log
+					.error(String.format("Failed to write out the group mappings to [%s]", f.getAbsolutePath()), e);
+				return 1;
+			} finally {
+				IOUtils.closeQuietly(out);
 			}
 
 			IDfSession session;
@@ -315,35 +598,44 @@ public class UserMapper {
 				session = dfcPool.acquireSession();
 			} catch (Exception e) {
 				UserMapper.log.error("Failed to open a Documentum session to handle the user/group generation", e);
-				return -1;
+				return 1;
 			}
 			try {
 				for (String u : newUsers) {
 					final DctmUser user = dctmUsers.get(u);
+					CSVPrinter p = UserMapper.getCSVPrinter("users", UserMapper.USER_HEADINGS.keySet(), userRecords,
+						user.getSource());
 					// The user isn't there, so we output a new record...but first we must pull
 					// all the user's data from Documentum so we can do that...
 					try {
-						UserMapper.outputUser(session, user, userRecords);
+						UserMapper.outputUser(session, user, p);
 					} catch (Exception e) {
 						throw new RuntimeException(String.format("Failed to write the record for user %s", user), e);
 					}
 				}
 				for (String g : newGroups) {
 					final DctmGroup group = dctmGroups.get(g);
+					CSVPrinter p = UserMapper.getCSVPrinter("groups", UserMapper.GROUP_HEADINGS.keySet(), groupRecords,
+						group.getSource());
 					// The group isn't there, so we output a new record...but first we must pull
 					// all the group's data from Documentum so we can do that...
 					try {
-						UserMapper.outputGroup(session, group, userMapping, groupMapping, groupRecords);
+						UserMapper.outputGroup(session, group, userMapping, groupMapping, p);
 					} catch (Exception e) {
 						throw new RuntimeException(String.format("Failed to write the record for group %s", group), e);
 					}
 				}
 			} finally {
 				dfcPool.releaseSession(session);
+
+				for (CSVPrinter p : userRecords.values()) {
+					IOUtils.closeQuietly(p);
+				}
+
+				for (CSVPrinter p : groupRecords.values()) {
+					IOUtils.closeQuietly(p);
+				}
 			}
-
-			// Ok...so...write out the mapping files
-
 			return 0;
 		} finally {
 			if (executor != null) {
