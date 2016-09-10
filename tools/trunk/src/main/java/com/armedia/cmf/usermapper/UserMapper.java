@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -272,6 +273,115 @@ public class UserMapper {
 		return ret;
 	}
 
+	private static int writeMappings(String startMarkerString, Properties userMapping, Properties groupMapping) {
+		File mapFile = null;
+		FileOutputStream out = null;
+		mapFile = new File("usermap.xml").getAbsoluteFile();
+		try {
+			try {
+				mapFile = mapFile.getCanonicalFile();
+			} catch (IOException e) {
+				// Do nothing...
+			}
+			out = new FileOutputStream(mapFile);
+			UserMapper.log.info("Writing out user mappings to [{}]...", mapFile.getAbsolutePath());
+			userMapping.storeToXML(out, String.format("User mappings as of %s", startMarkerString));
+		} catch (IOException e) {
+			mapFile.deleteOnExit();
+			UserMapper.log
+				.error(String.format("Failed to write out the user mappings to [%s]", mapFile.getAbsolutePath()), e);
+			return 1;
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+
+		mapFile = new File("groupmap.xml").getAbsoluteFile();
+		try {
+			try {
+				mapFile = mapFile.getCanonicalFile();
+			} catch (IOException e) {
+				// Do nothing...
+			}
+			UserMapper.log.info("Writing out group mappings to [{}]...", mapFile.getAbsolutePath());
+			out = new FileOutputStream(mapFile);
+			groupMapping.storeToXML(out, String.format("Group mappings as of %s", startMarkerString));
+		} catch (IOException e) {
+			mapFile.deleteOnExit();
+			UserMapper.log
+				.error(String.format("Failed to write out the group mappings to [%s]", mapFile.getAbsolutePath()), e);
+			return 1;
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+
+		return 0;
+	}
+
+	private static abstract class RecordWorker<P extends DctmPrincipal> implements Runnable {
+		protected final P principal;
+		protected final CSVPrinter printer;
+		protected final DfcSessionPool pool;
+
+		protected RecordWorker(P principal, CSVPrinter printer, DfcSessionPool pool) {
+			this.principal = principal;
+			this.printer = printer;
+			this.pool = pool;
+		}
+
+		@Override
+		public final void run() {
+			// The user isn't there, so we output a new record...but first we must pull
+			// all the user's data from Documentum so we can do that...
+			IDfSession session = null;
+			try {
+				session = this.pool.acquireSession();
+				synchronized (this.printer) {
+					// Make sure we block out the printer while we work.
+					doWork(session);
+				}
+			} catch (Exception e) {
+				UserMapper.log.error(String.format("Exception caught attempting to store %s", this.principal), e);
+				return;
+			} finally {
+				if (session != null) {
+					this.pool.releaseSession(session);
+				}
+			}
+		}
+
+		protected abstract void doWork(IDfSession session) throws Exception;
+	}
+
+	private static class UserWorker extends RecordWorker<DctmUser> {
+
+		protected UserWorker(DctmUser principal, CSVPrinter printer, DfcSessionPool pool) {
+			super(principal, printer, pool);
+		}
+
+		@Override
+		protected void doWork(IDfSession session) throws Exception {
+			UserMapper.outputUser(session, this.principal, this.printer);
+		}
+	}
+
+	private static class GroupWorker extends RecordWorker<DctmGroup> {
+
+		private final Properties userMapping;
+		private final Properties groupMapping;
+
+		protected GroupWorker(DctmGroup principal, CSVPrinter printer, DfcSessionPool pool, Properties userMapping,
+			Properties groupMapping) {
+			super(principal, printer, pool);
+			this.userMapping = userMapping;
+			this.groupMapping = groupMapping;
+		}
+
+		@Override
+		protected void doWork(IDfSession session) throws Exception {
+			UserMapper.outputGroup(session, this.principal, this.userMapping, this.groupMapping, this.printer);
+		}
+	}
+
 	private static int runMain(String... args) {
 		if (!CLIParam.parse(args)) {
 			// If the parameters didn't parse, we fail.
@@ -414,35 +524,38 @@ public class UserMapper {
 				executor = null;
 			}
 
-			Future<?>[] futures = {
-				dctmUserFuture, dctmGroupFuture, ldapUserFuture, ldapGroupFuture
-			};
-			Throwable[] thrown = new Throwable[futures.length];
-			int i = 0;
-			boolean exceptionRaised = false;
-			for (Future<?> f : futures) {
-				if (f == null) {
-					continue;
-				}
-				try {
-					f.get();
-				} catch (Exception e) {
-					exceptionRaised = true;
-					thrown[i] = e.getCause();
-				} finally {
-					i++;
-				}
-			}
-
-			if (exceptionRaised) {
-				for (i = 0; i < thrown.length; i++) {
-					final Throwable t = thrown[i];
-					if (t == null) {
+			{
+				Future<?>[] futures = {
+					dctmUserFuture, dctmGroupFuture, ldapUserFuture, ldapGroupFuture
+				};
+				Throwable[] thrown = new Throwable[futures.length];
+				int i = 0;
+				boolean exceptionRaised = false;
+				for (Future<?> f : futures) {
+					if (f == null) {
 						continue;
 					}
-					UserMapper.log.error(String.format("Exception raised while downloading databases (#%d)", i + 1), t);
+					try {
+						f.get();
+					} catch (Exception e) {
+						exceptionRaised = true;
+						thrown[i] = e.getCause();
+					} finally {
+						i++;
+					}
 				}
-				return 1;
+
+				if (exceptionRaised) {
+					for (i = 0; i < thrown.length; i++) {
+						final Throwable t = thrown[i];
+						if (t == null) {
+							continue;
+						}
+						UserMapper.log.error(String.format("Exception raised while downloading databases (#%d)", i + 1),
+							t);
+					}
+					return 1;
+				}
 			}
 
 			final Map<String, DctmUser> dctmUsers;
@@ -459,9 +572,6 @@ public class UserMapper {
 				UserMapper.log.error("Impossible exception", e);
 				return 1;
 			}
-
-			final Map<String, CSVPrinter> userRecords = new HashMap<String, CSVPrinter>();
-			final Map<String, CSVPrinter> groupRecords = new HashMap<String, CSVPrinter>();
 
 			final Set<String> userSources = new TreeSet<String>();
 			final Set<String> groupSources = new TreeSet<String>();
@@ -528,47 +638,11 @@ public class UserMapper {
 				groupSources.add(group.getSource());
 			}
 
-			File f = null;
-			FileOutputStream out = null;
+			int ret = UserMapper.writeMappings(startMarkerString, userMapping, groupMapping);
+			if (ret != 0) { return ret; }
 
-			f = new File("usermap.xml").getAbsoluteFile();
-			try {
-				try {
-					f = f.getCanonicalFile();
-				} catch (IOException e) {
-					// Do nothing...
-				}
-				out = new FileOutputStream(f);
-				UserMapper.log.info("Writing out user mappings to [{}]...", f.getAbsolutePath());
-				userMapping.storeToXML(out, String.format("User mappings as of %s", startMarkerString));
-			} catch (IOException e) {
-				f.deleteOnExit();
-				UserMapper.log
-					.error(String.format("Failed to write out the user mappings to [%s]", f.getAbsolutePath()), e);
-				return 1;
-			} finally {
-				IOUtils.closeQuietly(out);
-			}
-
-			f = new File("groupmap.xml").getAbsoluteFile();
-			try {
-				try {
-					f = f.getCanonicalFile();
-				} catch (IOException e) {
-					// Do nothing...
-				}
-				UserMapper.log.info("Writing out group mappings to [{}]...", f.getAbsolutePath());
-				out = new FileOutputStream(f);
-				groupMapping.storeToXML(out, String.format("Group mappings as of %s", startMarkerString));
-			} catch (IOException e) {
-				f.deleteOnExit();
-				UserMapper.log
-					.error(String.format("Failed to write out the group mappings to [%s]", f.getAbsolutePath()), e);
-				return 1;
-			} finally {
-				IOUtils.closeQuietly(out);
-			}
-
+			final Map<String, CSVPrinter> userRecords = new HashMap<String, CSVPrinter>();
+			final Map<String, CSVPrinter> groupRecords = new HashMap<String, CSVPrinter>();
 			try {
 				for (String source : userSources) {
 					userRecords.put(source,
@@ -583,46 +657,71 @@ public class UserMapper {
 				return 1;
 			}
 
-			// TODO: Parallelize the crap out of this for speed. The user mappings are complete
-			// and finalized, as are the group mappings. We're simply generating the CSV files
-			// we're going to need.
-
-			IDfSession session;
 			try {
-				session = dfcPool.acquireSession();
-			} catch (Exception e) {
-				UserMapper.log.error("Failed to open a Documentum session to handle the user/group generation", e);
-				return 1;
-			}
-			try {
+				executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+				List<Future<?>> futures = new ArrayList<Future<?>>(newUsers.size() + newGroups.size());
+				List<DctmPrincipal> principals = new ArrayList<DctmPrincipal>(newUsers.size() + newGroups.size());
 				for (String u : newUsers) {
-					final DctmUser user = dctmUsers.get(u);
-					// The user isn't there, so we output a new record...but first we must pull
-					// all the user's data from Documentum so we can do that...
-					try {
-						UserMapper.outputUser(session, user, userRecords.get(user.getSource()));
-					} catch (Exception e) {
-						UserMapper.log.error(String.format("Exception caught attempting to store the user %s", user),
-							e);
-						return 1;
-					}
+					DctmUser user = dctmUsers.get(u);
+					futures.add(executor.submit(new UserWorker(user, userRecords.get(user.getSource()), dfcPool)));
+					principals.add(user);
 				}
 				for (String g : newGroups) {
 					final DctmGroup group = dctmGroups.get(g);
-					// The group isn't there, so we output a new record...but first we must pull
-					// all the group's data from Documentum so we can do that...
+					futures.add(executor.submit(new GroupWorker(group, groupRecords.get(group.getSource()), dfcPool,
+						userMapping, groupMapping)));
+					principals.add(group);
+				}
+
+				UserMapper.log.info("Waiting for background tasks to finish");
+				executor.shutdown();
+				while (true) {
 					try {
-						UserMapper.outputGroup(session, group, userMapping, groupMapping,
-							groupRecords.get(group.getSource()));
-					} catch (Exception e) {
-						UserMapper.log.error(String.format("Exception caught attempting to store the group %s", group),
-							e);
+						if (executor.awaitTermination(5, TimeUnit.SECONDS)) {
+							break;
+						}
+					} catch (InterruptedException e) {
+						UserMapper.log.error("Interrupted waiting for job termination", e);
+						executor.shutdownNow();
 						return 1;
 					}
 				}
-			} finally {
-				dfcPool.releaseSession(session);
 
+				Map<Integer, Throwable> thrown = new TreeMap<Integer, Throwable>();
+				int i = 0;
+				boolean exceptionRaised = false;
+				for (Future<?> f : futures) {
+					if (f == null) {
+						continue;
+					}
+					try {
+						f.get();
+					} catch (Exception e) {
+						exceptionRaised = true;
+						thrown.put(i, e);
+					} finally {
+						i++;
+					}
+				}
+
+				if (exceptionRaised) {
+					for (Integer key : thrown.keySet()) {
+						final Throwable t = thrown.get(key);
+						if (t == null) {
+							continue;
+						}
+						int k = key.intValue();
+						if ((k < 0) || (k >= principals.size())) {
+							// ?!?!? Out of bounds
+							UserMapper.log.error(String.format("Unidentified exception caught (%d)", i), t);
+							continue;
+						}
+						DctmPrincipal p = principals.get(key.intValue());
+						UserMapper.log.error(String.format("Exception raised while processing %s", p), t);
+					}
+					return 1;
+				}
+			} finally {
 				for (CSVPrinter p : userRecords.values()) {
 					IOUtils.closeQuietly(p);
 				}
