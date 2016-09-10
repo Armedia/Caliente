@@ -249,31 +249,26 @@ public class UserMapper {
 		groupRecords.flush();
 	}
 
-	private static CSVPrinter getCSVPrinter(String name, Set<String> headings, Map<String, CSVPrinter> records,
-		String source) throws IOException {
+	private static CSVPrinter newCSVPrinter(String name, Set<String> headings, String source) throws IOException {
 		if (StringUtils.isEmpty(source)) {
 			source = "INTERNAL";
 		}
 		source = source.toUpperCase();
 		source = source.replaceAll("\\s", "_");
-		CSVPrinter ret = records.get(source);
-		if (ret == null) {
-			CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
-			File f = new File(String.format("new_%s.%s.csv", name, source.toUpperCase())).getAbsoluteFile();
-			try {
-				f = f.getCanonicalFile();
-			} catch (IOException e) {
-				// Do nothing
-			}
-			UserMapper.log.info("Creating a new CSV file at [{}]...", f.getAbsolutePath());
-			ret = new CSVPrinter(new FileWriter(f), format);
-			for (String s : headings) {
-				ret.print(s);
-			}
-			ret.println();
-			ret.flush();
-			records.put(source, ret);
+		CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
+		File f = new File(String.format("new_%s.%s.csv", name, source.toUpperCase())).getAbsoluteFile();
+		try {
+			f = f.getCanonicalFile();
+		} catch (IOException e) {
+			// Do nothing
 		}
+		UserMapper.log.info("Creating a new CSV file at [{}]...", f.getAbsolutePath());
+		CSVPrinter ret = new CSVPrinter(new FileWriter(f), format);
+		for (String s : headings) {
+			ret.print(s);
+		}
+		ret.println();
+		ret.flush();
 		return ret;
 	}
 
@@ -576,10 +571,12 @@ public class UserMapper {
 
 			try {
 				for (String source : userSources) {
-					UserMapper.getCSVPrinter("users", UserMapper.USER_HEADINGS.keySet(), userRecords, source);
+					userRecords.put(source,
+						UserMapper.newCSVPrinter("users", UserMapper.USER_HEADINGS.keySet(), source));
 				}
 				for (String source : groupSources) {
-					UserMapper.getCSVPrinter("groups", UserMapper.GROUP_HEADINGS.keySet(), userRecords, source);
+					groupRecords.put(source,
+						UserMapper.newCSVPrinter("groups", UserMapper.GROUP_HEADINGS.keySet(), source));
 				}
 			} catch (IOException e) {
 				UserMapper.log.error("Failed to initialize the CSV files", e);
@@ -603,9 +600,7 @@ public class UserMapper {
 					// The user isn't there, so we output a new record...but first we must pull
 					// all the user's data from Documentum so we can do that...
 					try {
-						CSVPrinter p = UserMapper.getCSVPrinter("users", UserMapper.USER_HEADINGS.keySet(), userRecords,
-							user.getSource());
-						UserMapper.outputUser(session, user, p);
+						UserMapper.outputUser(session, user, userRecords.get(user.getSource()));
 					} catch (Exception e) {
 						UserMapper.log.error(String.format("Exception caught attempting to store the user %s", user),
 							e);
@@ -617,9 +612,8 @@ public class UserMapper {
 					// The group isn't there, so we output a new record...but first we must pull
 					// all the group's data from Documentum so we can do that...
 					try {
-						CSVPrinter p = UserMapper.getCSVPrinter("groups", UserMapper.GROUP_HEADINGS.keySet(),
-							groupRecords, group.getSource());
-						UserMapper.outputGroup(session, group, userMapping, groupMapping, p);
+						UserMapper.outputGroup(session, group, userMapping, groupMapping,
+							groupRecords.get(group.getSource()));
 					} catch (Exception e) {
 						UserMapper.log.error(String.format("Exception caught attempting to store the group %s", group),
 							e);
@@ -637,6 +631,7 @@ public class UserMapper {
 					IOUtils.closeQuietly(p);
 				}
 			}
+			UserMapper.log.info("File generation completed");
 			return 0;
 		} finally {
 			if (executor != null) {
