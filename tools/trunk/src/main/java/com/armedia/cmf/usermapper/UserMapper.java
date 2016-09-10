@@ -248,7 +248,6 @@ public class UserMapper {
 					// No attribute, and it's not a special value, so we simply leave it
 					// as-is assuming it's a constant
 				}
-
 			}
 			groupRecords.print(Tools.coalesce(v, ""));
 		}
