@@ -280,6 +280,7 @@ public class UserMapper {
 			out = new FileOutputStream(mapFile);
 			UserMapper.log.info("Writing out user mappings to [{}]...", mapFile.getAbsolutePath());
 			userMapping.storeToXML(out, String.format("User mappings as of %s", startMarkerString));
+			UserMapper.log.info("User mappings written out to [{}]...", mapFile.getAbsolutePath());
 		} catch (IOException e) {
 			mapFile.deleteOnExit();
 			UserMapper.log
@@ -299,6 +300,7 @@ public class UserMapper {
 			UserMapper.log.info("Writing out group mappings to [{}]...", mapFile.getAbsolutePath());
 			out = new FileOutputStream(mapFile);
 			groupMapping.storeToXML(out, String.format("Group mappings as of %s", startMarkerString));
+			UserMapper.log.info("Group mappings written out to [{}]...", mapFile.getAbsolutePath());
 		} catch (IOException e) {
 			mapFile.deleteOnExit();
 			UserMapper.log
