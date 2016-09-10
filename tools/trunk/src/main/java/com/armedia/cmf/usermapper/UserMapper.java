@@ -13,6 +13,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -22,6 +23,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSocketFactory;
+import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -47,7 +49,9 @@ import com.unboundid.util.ssl.SSLUtil;
 
 public class UserMapper {
 	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
+
 	private static final Logger log = LoggerFactory.getLogger(UserMapper.class);
+	private static final Random RANDOM = new Random(System.currentTimeMillis());
 
 	private static final String NEWLINE = String.format("%n");
 
@@ -56,6 +60,7 @@ public class UserMapper {
 
 	private static final String FIRST_NAME = UUID.randomUUID().toString();
 	private static final String LAST_NAME = UUID.randomUUID().toString();
+	private static final String PASSWORD = UUID.randomUUID().toString();
 
 	private static final String GROUP_NAME = UUID.randomUUID().toString();
 	private static final String USER_MEMBERS = UUID.randomUUID().toString();
@@ -92,7 +97,7 @@ public class UserMapper {
 			}, {
 				""
 			}, {
-				"Password", "user_password"
+				"Password", UserMapper.PASSWORD
 			}, {
 				"Company", "JSAP"
 			}, {
@@ -187,6 +192,10 @@ public class UserMapper {
 					} else {
 						v = null;
 					}
+				} else if (v == UserMapper.PASSWORD) {
+					byte[] b = new byte[64];
+					UserMapper.RANDOM.nextBytes(b);
+					v = DatatypeConverter.printBase64Binary(b);
 				} else {
 					// No attribute, and it's not a special value, so we simply leave it
 					// as-is assuming it's a constant
