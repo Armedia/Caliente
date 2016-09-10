@@ -475,7 +475,6 @@ public class UserMapper {
 			final Set<String> newUsers = new LinkedHashSet<String>();
 			for (String u : dctmUsers.keySet()) {
 				DctmUser user = dctmUsers.get(u);
-				userSources.add(user.getSource());
 				// Look the user up by login in LDAP. If it's there, then
 				// we're fine and we simply output the mapping
 				LdapUser ldap = null;
@@ -500,13 +499,13 @@ public class UserMapper {
 
 				userMapping.setProperty(user.getName(), user.getLogin());
 				newUsers.add(u);
+				userSources.add(user.getSource());
 			}
 
 			final Properties groupMapping = new Properties();
 			final Set<String> newGroups = new LinkedHashSet<String>();
 			for (String g : dctmGroups.keySet()) {
 				DctmGroup group = dctmGroups.get(g);
-				groupSources.add(group.getSource());
 				// Look the user up by login in LDAP. If it's there, then
 				// we're fine and we simply output the mapping
 				LdapGroup ldap = null;
@@ -531,6 +530,7 @@ public class UserMapper {
 
 				groupMapping.setProperty(group.getName(), group.getName().toUpperCase());
 				newGroups.add(g);
+				groupSources.add(group.getSource());
 			}
 
 			File f = null;
