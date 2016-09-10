@@ -193,7 +193,7 @@ public class UserMapper {
 						v = null;
 					}
 				} else if (v == UserMapper.PASSWORD) {
-					byte[] b = new byte[64];
+					byte[] b = new byte[24];
 					UserMapper.RANDOM.nextBytes(b);
 					v = DatatypeConverter.printBase64Binary(b);
 				} else {
