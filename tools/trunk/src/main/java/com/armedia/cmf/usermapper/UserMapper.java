@@ -407,7 +407,7 @@ public class UserMapper {
 			executor = Executors.newCachedThreadPool();
 
 			final Date startMarker = new Date();
-			final String startMarkerString = DateFormatUtils.ISO_DATE_TIME_ZONE_FORMAT.format(startMarker);
+			final String startMarkerString = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(startMarker);
 
 			final Future<Map<String, DctmUser>> dctmUserFuture = executor.submit(DctmUser.getUserLoader(dfcPool));
 			final Future<Map<String, DctmGroup>> dctmGroupFuture = executor.submit(DctmGroup.getGroupLoader(dfcPool));
