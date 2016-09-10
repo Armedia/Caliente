@@ -50,8 +50,6 @@ import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.util.ssl.SSLUtil;
 
 public class UserMapper {
-	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
-
 	private static final Logger log = LoggerFactory.getLogger(UserMapper.class);
 	private static final Random RANDOM = new Random(System.currentTimeMillis());
 
@@ -138,10 +136,6 @@ public class UserMapper {
 			m.put(h[0], (h.length > 1 ? h[1] : null));
 		}
 		GROUP_HEADINGS = Tools.freezeMap(m);
-	}
-
-	public static final void main(String... args) {
-		System.exit(UserMapper.runMain(args));
 	}
 
 	private static void outputUser(IDfSession session, DctmUser user, CSVPrinter userRecords)
@@ -382,40 +376,7 @@ public class UserMapper {
 		}
 	}
 
-	private static int runMain(String... args) {
-		if (!CLIParam.parse(args)) {
-			// If the parameters didn't parse, we fail.
-			return 1;
-		}
-
-		// final boolean debug = CLIParam.debug.isPresent();
-
-		if (CLIParam.dfc_prop.isPresent()) {
-			File f = new File(CLIParam.dfc_prop.getString("dfc.properties"));
-			try {
-				f = f.getCanonicalFile();
-			} catch (IOException e) {
-				// Do nothing...stay with the non-canonical path
-				f = f.getAbsoluteFile();
-			}
-			String error = null;
-			if ((error == null) && !f.exists()) {
-				error = "does not exist";
-			}
-			if ((error == null) && !f.isFile()) {
-				error = "is not a regular file";
-			}
-			if ((error == null) && !f.canRead()) {
-				error = "cannot be read";
-			}
-			if (error == null) {
-				System.setProperty(UserMapper.DFC_PROPERTIES_PROP, f.getAbsolutePath());
-			} else {
-				UserMapper.log.warn("The DFC properties file [{}] {} - will continue using DFC defaults",
-					f.getAbsolutePath(), error);
-			}
-		}
-
+	static int run() {
 		DfcSessionPool dfcPool = null;
 		LDAPConnectionPool ldapPool = null;
 		ExecutorService executor = null;

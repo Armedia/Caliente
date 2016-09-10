@@ -20,6 +20,8 @@ public enum CLIParam {
 	debug(0, "Enable debugging"),
 	dfc_prop(1, "The dfc.properties file to use instead of the default"),
 	docbase(1, true, "The Documentum repostory name to connect to"),
+	dfc(1, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
+	dctm(1, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
 	dctm_user(1, true, "The username to connect to Documentum with"),
 	dctm_pass(1, true, "The password to connect to Documentum with"),
 	ldap_url(1, "The LDAP URL to bind to"),
