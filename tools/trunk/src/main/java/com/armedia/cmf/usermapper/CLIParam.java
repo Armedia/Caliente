@@ -30,11 +30,7 @@ public enum CLIParam {
 	ldap_user_basedn(1, "The Base DN to search LDAP for users (SUB scope)"),
 	ldap_group_basedn(1, "The Base DN to search LDAP for groups (SUB scope)"),
 	ldap_pass(1, "The password to bind to LDAP with"),
-	ldap_on_demand(0, "Execute LDAP queries on demand vs. batched up front"),
-	grounded_users(1, "The properties file mapping users which should be 'grounded' to a pre-set value"),
-	grounded_groups(1, "The properties file mapping groups which should be 'grounded' to a pre-set value"),
-	//
-	;
+	ldap_on_demand(0, "Execute LDAP queries on demand vs. batched up front"),;
 
 	public final Option option;
 
