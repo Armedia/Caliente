@@ -639,14 +639,19 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				// Handle deduplication globally as well, since we may have cross-type collisions
 				int pass = 0;
 				outer: for (;;) {
+					output.info("Checking for filename collisions (pass # {})", ++pass);
 					Collection<CmfObject<V>> collidingObjects = objectStore
 						.getObjectsWithFileNameCollisions(getTranslator());
 					if (collidingObjects.isEmpty()) {
-						output.info("No name collisions left to resolve (after {} passes)", pass);
+						if (pass > 1) {
+							output.info("No name collisions left to resolve (after {} passes)", pass - 1);
+						} else {
+							output.info("No name collisions were found");
+						}
 						break;
 					}
 					output.info("Resolving the next filename collision ({} total remaining, pass # {})",
-						collidingObjects.size(), ++pass);
+						collidingObjects.size(), pass);
 					for (CmfObject<V> object : collidingObjects) {
 						String newName = object.getName();
 						String id = object.getId();
