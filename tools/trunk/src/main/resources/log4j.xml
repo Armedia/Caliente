@@ -7,6 +7,10 @@
 			<param name="ConversionPattern" value="%d{ISO8601} [%-16t] %m%n" />
 		</layout>
 	</appender>
+	<appender name="stdout.async" class="org.apache.log4j.AsyncAppender">
+		<param name="BufferSize" value="10240" />
+		<appender-ref ref="stdout" />
+	</appender>
 
 	<appender name="default" class="org.apache.log4j.RollingFileAppender">
 		<param name="File" value="${logName}.log" />
@@ -19,6 +23,10 @@
 			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n" />
 		</layout>
 	</appender>
+	<appender name="default.async" class="org.apache.log4j.AsyncAppender">
+		<param name="BufferSize" value="10240" />
+		<appender-ref ref="default" />
+	</appender>
 
 	<appender name="manifest" class="org.apache.log4j.RollingFileAppender">
 		<param name="File" value="${logName}.manifest.csv" />
@@ -30,6 +38,10 @@
 			<param name="ConversionPattern" value="%m%n" />
 		</layout>
 	</appender>
+	<appender name="manifest.async" class="org.apache.log4j.AsyncAppender">
+		<param name="BufferSize" value="10240" />
+		<appender-ref ref="manifest" />
+	</appender>
 
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
 
@@ -40,17 +52,17 @@
 	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
 	<logger name="console" additivity="false">
 		<level value="INFO" />
-		<appender-ref ref="stdout" />
-		<appender-ref ref="default" />
+		<appender-ref ref="stdout.async" />
+		<appender-ref ref="default.async" />
 	</logger>
 
 	<logger name="manifest" additivity="false">
 		<level value="INFO" />
-		<appender-ref ref="manifest" />
+		<appender-ref ref="manifest.async" />
 	</logger>
 
 	<root>
 		<level value="INFO" />
-		<appender-ref ref="default" />
+		<appender-ref ref="default.async" />
 	</root>
 </log4j:configuration>
