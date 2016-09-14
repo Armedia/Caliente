@@ -19,6 +19,7 @@ import com.armedia.cmf.storage.CmfObjectSpec;
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValue;
 
 /**
@@ -205,5 +206,11 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	@Override
 	protected boolean hasNextCachedTarget(Object state) throws CmfStorageException {
 		return false;
+	}
+
+	@Override
+	protected <V> CmfObject<V> loadHeadObject(LocalStoreOperation operation, CmfTypeMapper typeMapper,
+		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException {
+		return null;
 	}
 }
