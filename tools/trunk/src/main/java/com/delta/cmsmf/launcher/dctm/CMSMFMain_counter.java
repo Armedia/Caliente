@@ -47,7 +47,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 
 	private static final String HEADERS = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT,CHILD_SIZE";
 
-	private static final String LISTER = "select r_object_id from dm_folder where folder(ID(%s)%s)";
+	private static final String LISTER = "select r_object_id from dm_folder where folder(ID(%s), DESCEND)";
 	private static final String COUNTER = "select count(*) from dm_sysobject (ALL) where folder(ID(%s)) and not type(dm_folder)";
 	private static final String SIZER = "select sum(r_full_content_size) from dm_sysobject (ALL) where folder(ID(%s)) and not type(dm_folder)";
 
@@ -255,29 +255,31 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 
 					this.console.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
 					manifest.info(CMSMFMain_counter.HEADERS);
-					boolean nonRecursive = CLIParam.non_recursive.isPresent();
-					String dql = String.format(CMSMFMain_counter.LISTER,
-						DfUtils.quoteString(root.getObjectId().getId()), !nonRecursive ? ", DESCEND" : "");
-					IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
-					try {
-						int count = 0;
-						while (c.next()) {
-							IDfId id = c.getValueAt(0).asId();
-							if ((id == null) || id.isNull()) {
-								continue;
-							}
-							if (traversed.add(id.getId())) {
-								workers.addWorkItem(id);
-								if ((++count % 1000) == 0) {
-									this.console.info("Submitted {} folders for analysis", count);
+					workers.addWorkItem(root.getObjectId());
+
+					if (!CLIParam.non_recursive.isPresent()) {
+						String dql = String.format(CMSMFMain_counter.LISTER,
+							DfUtils.quoteString(root.getObjectId().getId()));
+						IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
+						try {
+							int count = 0;
+							while (c.next()) {
+								IDfId id = c.getValueAt(0).asId();
+								if ((id == null) || id.isNull()) {
+									continue;
+								}
+								if (traversed.add(id.getId())) {
+									workers.addWorkItem(id);
+									if ((++count % 1000) == 0) {
+										this.console.info("Submitted {} folders for analysis", count);
+									}
 								}
 							}
+							this.console.info("Submitted a total of {} folders for analysis", count);
+						} finally {
+							DfUtils.closeQuietly(c);
 						}
-						this.console.info("Submitted a total of {} folders for analysis", count);
-					} finally {
-						DfUtils.closeQuietly(c);
 					}
-
 				} finally {
 					workers.waitForCompletion();
 					this.console.info("##### Counter Process Finished #####");
@@ -303,16 +305,14 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			this.console.info("Sorting the obtained results ({} entries)", results.size());
 			Collections.sort(results);
 			this.console.info("Results sorted, outputting the manifest", results.size());
-			this.console.info(CMSMFMain_counter.HEADERS);
 			final boolean excludeEmpty = !CLIParam.count_empty.isPresent();
 			for (CounterResult r : results) {
 				if (r.isEmpty() && excludeEmpty) {
 					continue;
 				}
-				this.console.info(r.toString());
 				manifest.info(r.toString());
 			}
-			this.console.info("Manifest ready", results.size());
+			this.console.info("Manifest completed", results.size());
 
 			long duration = (end.getTime() - start.getTime());
 			long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);
