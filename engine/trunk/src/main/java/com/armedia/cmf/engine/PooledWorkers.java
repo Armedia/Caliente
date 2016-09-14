@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -100,9 +101,13 @@ public abstract class PooledWorkers<S, Q> {
 		}
 	}
 
+	public PooledWorkers() {
+		this(0);
+	}
+
 	public PooledWorkers(int backlogSize) {
-		this.workQueue = new ArrayBlockingQueue<Q>(backlogSize);
-		this.futures = new ArrayList<Future<?>>(this.threadCount);
+		this.workQueue = (backlogSize <= 0 ? new LinkedBlockingQueue<Q>() : new ArrayBlockingQueue<Q>(backlogSize));
+		this.futures = new LinkedList<Future<?>>();
 		this.activeCounter = new AtomicInteger(0);
 	}
 
@@ -124,8 +129,8 @@ public abstract class PooledWorkers<S, Q> {
 
 	public final synchronized boolean start(int threadCount, Q exitValue, boolean blocking) {
 		if (this.executor != null) { return false; }
-		if (blocking && (exitValue == null)) { throw new IllegalArgumentException(
-			"Blocking mode requires an exit value"); }
+		if (blocking
+			&& (exitValue == null)) { throw new IllegalArgumentException("Blocking mode requires an exit value"); }
 		this.threadCount = threadCount;
 		this.exitValue = exitValue;
 		this.activeCounter.set(0);
@@ -196,8 +201,8 @@ public abstract class PooledWorkers<S, Q> {
 		// minutes
 		int pending = this.activeCounter.get();
 		if (pending > 0) {
-			this.log.info(String.format(
-				"Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
+			this.log.info(String
+				.format("Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
 			try {
 				this.executor.awaitTermination(5, TimeUnit.MINUTES);
 			} catch (InterruptedException e) {
@@ -217,11 +222,9 @@ public abstract class PooledWorkers<S, Q> {
 				int pending = this.activeCounter.get();
 				if (pending > 0) {
 					try {
-						this.log
-							.info(String
-								.format(
-									"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-									pending));
+						this.log.info(String.format(
+							"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
+							pending));
 						this.executor.awaitTermination(1, TimeUnit.MINUTES);
 					} catch (InterruptedException e) {
 						this.log.warn("Interrupted while waiting for immediate executor termination", e);
