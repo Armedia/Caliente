@@ -1,14 +1,11 @@
 package com.armedia.cmf.engine.alfresco.bulk.importer;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,9 +18,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
@@ -31,6 +26,8 @@ import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
+import com.armedia.cmf.engine.tools.MappingTools;
+import com.armedia.cmf.engine.tools.MappingTools.MappingValidator;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
@@ -40,10 +37,6 @@ import com.armedia.commons.utilities.XmlTools;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
-
-	private static interface MappingValidator {
-		public void validate(String key, String value) throws Exception;
-	}
 
 	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^([^\\[]+)(?:\\[(.*)\\])?$");
 
@@ -74,85 +67,6 @@ public class AlfImportDelegateFactory
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
 	private final Map<String, AlfrescoType> mappedTypes;
-
-	private static boolean loadMap(final Logger log, String mapFile, Properties properties) {
-		return AlfImportDelegateFactory.loadMap(log, mapFile, properties, null);
-	}
-
-	private static boolean loadMap(final Logger log, String mapFile, Properties properties,
-		MappingValidator validator) {
-		if (StringUtils.isEmpty(mapFile)) { return false; }
-
-		File f = new File(mapFile);
-		try {
-			f = f.getCanonicalFile();
-		} catch (IOException e) {
-			// Screw it...ignore the problem
-			if (log.isDebugEnabled()) {
-				log.warn(String.format("Failed to canonicalize the file path [%s]", mapFile), e);
-			}
-		}
-		if (!f.exists()) {
-			log.warn("The file [{}] does not exist", mapFile);
-			return false;
-		}
-		if (!f.isFile()) {
-			log.warn("The file [{}] is not a regular file", mapFile);
-			return false;
-		}
-		if (!f.canRead()) {
-			log.warn("The file [{}] is not readable", mapFile);
-			return false;
-		}
-
-		Properties p = new Properties();
-		try {
-			InputStream in = new FileInputStream(f);
-			try {
-				// First, try the XML format
-				p.clear();
-				p.loadFromXML(in);
-				for (Object k : p.keySet()) {
-					String v = p.getProperty(k.toString());
-					if (validator != null) {
-						try {
-							validator.validate(k.toString(), v);
-						} catch (Exception e) {
-							log.error(String.format("Mapping error detected in file [%s]: [%s]->[%s]", mapFile,
-								k.toString(), v.toString()), e);
-						}
-					}
-					properties.setProperty(k.toString(), v);
-				}
-				return true;
-			} catch (InvalidPropertiesFormatException e) {
-				// Not XML-format, try text format
-				IOUtils.closeQuietly(in);
-				in = new FileInputStream(f);
-
-				p.clear();
-				p.load(in);
-				for (Object k : p.keySet()) {
-					String v = p.getProperty(k.toString());
-					if (validator != null) {
-						try {
-							validator.validate(k.toString(), v);
-						} catch (Exception e2) {
-							log.error(String.format("Mapping error detected in file [%s]: [%s]->[%s]", mapFile,
-								k.toString(), v.toString()), e2);
-						}
-					}
-					properties.setProperty(k.toString(), v);
-				}
-			} finally {
-				IOUtils.closeQuietly(in);
-			}
-		} catch (IOException e) {
-			log.warn(String.format("Failed to load the properties from file [%s]", mapFile), e);
-			p.clear();
-		}
-		return false;
-	}
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration) throws IOException, JAXBException {
 		super(engine, configuration);
@@ -200,7 +114,7 @@ public class AlfImportDelegateFactory
 		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<String, AlfrescoType>(m));
 
 		final Map<String, AlfrescoType> mappedTypes = new TreeMap<String, AlfrescoType>();
-		AlfImportDelegateFactory.loadMap(this.log, configuration.getString(AlfSessionFactory.TYPE_MAP), this.typeMap,
+		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.TYPE_MAP), this.typeMap,
 			new MappingValidator() {
 
 				@Override
@@ -241,9 +155,9 @@ public class AlfImportDelegateFactory
 			this.log.warn("No type mappings defined, only the default fallback types and aspects will be used");
 		}
 		this.mappedTypes = Tools.freezeMap(mappedTypes);
-		AlfImportDelegateFactory.loadMap(this.log, configuration.getString(AlfSessionFactory.USER_MAP), this.userMap);
-		AlfImportDelegateFactory.loadMap(this.log, configuration.getString(AlfSessionFactory.GROUP_MAP), this.groupMap);
-		AlfImportDelegateFactory.loadMap(this.log, configuration.getString(AlfSessionFactory.ROLE_MAP), this.roleMap);
+		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.USER_MAP), this.userMap);
+		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.GROUP_MAP), this.groupMap);
+		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.ROLE_MAP), this.roleMap);
 	}
 
 	protected AlfrescoType getType(String name, String... aspects) {
