@@ -49,6 +49,7 @@ import com.armedia.cmf.storage.CmfOperationException;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
+import com.armedia.cmf.storage.CmfTypeMapper;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.cmf.storage.CmfValueCodec;
 import com.armedia.cmf.storage.CmfValueSerializer;
@@ -312,6 +313,131 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			attValue = null;
 			propData = null;
 			parentData = null;
+		}
+	}
+
+	@Override
+	protected <V> CmfObject<V> loadHeadObject(JdbcOperation operation, CmfTypeMapper typeMapper,
+		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException {
+		final Connection connection = operation.getConnection();
+		final CmfType type = sample.getType();
+		try {
+			PreparedStatement objectPS = null;
+			PreparedStatement attributePS = null;
+			PreparedStatement attributeValuePS = null;
+			PreparedStatement propertyPS = null;
+			PreparedStatement propertyValuePS = null;
+			PreparedStatement parentsPS = null;
+			try {
+				objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS_HEAD_BY_BATCH_ID));
+				attributePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTES));
+				attributeValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTE_VALUES));
+				propertyPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTIES));
+				propertyValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTY_VALUES));
+				parentsPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PARENT_IDS));
+
+				ResultSet objectRS = null;
+				ResultSet attributeRS = null;
+				ResultSet propertyRS = null;
+				ResultSet valueRS = null;
+				ResultSet parentsRS = null;
+
+				objectPS.setString(1, sample.getBatchId());
+				objectRS = objectPS.executeQuery();
+				try {
+					while (objectRS.next()) {
+						final CmfObject<V> obj;
+						try {
+							final int objNum = objectRS.getInt("object_number");
+							final String objId = objectRS.getString("object_id");
+							final String objLabel = objectRS.getString("object_label");
+
+							if (this.log.isInfoEnabled()) {
+								this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
+									objLabel, objId));
+							}
+
+							parentsPS.setString(1, objId);
+							parentsRS = parentsPS.executeQuery();
+
+							obj = loadObject(translator, objectRS, parentsRS);
+							if (this.log.isTraceEnabled()) {
+								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
+							} else if (this.log.isDebugEnabled()) {
+								this.log.debug(String.format("De-serialized %s object #%d [%s](%s)", type, objNum,
+									objLabel, objId));
+							}
+
+							attributePS.clearParameters();
+							attributePS.setString(1, objId);
+							attributeRS = attributePS.executeQuery();
+							try {
+								loadAttributes(translator, attributeRS, obj);
+							} finally {
+								DbUtils.closeQuietly(attributeRS);
+							}
+
+							attributeValuePS.clearParameters();
+							attributeValuePS.setString(1, objId);
+							for (CmfAttribute<V> att : obj.getAttributes()) {
+								// We need to re-encode, since that's the value that will be
+								// referenced in the DB
+								attributeValuePS.setString(2, translator.encodeAttributeName(type, att.getName()));
+								valueRS = attributeValuePS.executeQuery();
+								try {
+									loadValues(translator.getCodec(att.getType()),
+										CmfValueSerializer.get(att.getType()), valueRS, att);
+								} finally {
+									DbUtils.closeQuietly(valueRS);
+								}
+							}
+
+							propertyPS.clearParameters();
+							propertyPS.setString(1, objId);
+							propertyRS = propertyPS.executeQuery();
+							try {
+								loadProperties(translator, propertyRS, obj);
+							} finally {
+								DbUtils.closeQuietly(propertyRS);
+							}
+
+							propertyValuePS.clearParameters();
+							propertyValuePS.setString(1, objId);
+							for (CmfProperty<V> prop : obj.getProperties()) {
+								// We need to re-encode, since that's the value that will be
+								// referenced in the DB
+								propertyValuePS.setString(2, prop.getName());
+								valueRS = propertyValuePS.executeQuery();
+								try {
+									loadValues(translator.getCodec(prop.getType()),
+										CmfValueSerializer.get(prop.getType()), valueRS, prop);
+								} finally {
+									DbUtils.closeQuietly(valueRS);
+								}
+							}
+						} catch (SQLException e) {
+							throw new CmfStorageException(
+								"Exception raised while loading objects - ObjectHandler did not handle the exception",
+								e);
+						}
+						return obj;
+					}
+					return null;
+				} finally {
+					DbUtils.closeQuietly(objectRS);
+					DbUtils.closeQuietly(parentsRS);
+				}
+			} finally {
+				DbUtils.closeQuietly(parentsPS);
+				DbUtils.closeQuietly(propertyValuePS);
+				DbUtils.closeQuietly(propertyPS);
+				DbUtils.closeQuietly(attributeValuePS);
+				DbUtils.closeQuietly(attributePS);
+				DbUtils.closeQuietly(objectPS);
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
 		}
 	}
 

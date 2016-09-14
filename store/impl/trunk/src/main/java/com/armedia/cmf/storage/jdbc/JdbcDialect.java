@@ -279,11 +279,20 @@ public abstract class JdbcDialect {
 				" order by o.object_number" //
 		),
 
-		LOAD_OBJECTS_HEAD( //
+		LOAD_OBJECTS_HEAD_BY_TYPE( //
 			"       select o.*, n.new_name " + //
 				"     from cmf_object o, cmf_alt_name n" + //
 				"    where o.object_id = n.object_id " + //
 				"      and o.object_type = ? " + //
+				"      and o.batch_head = true " + //
+				" order by o.object_number" //
+		),
+
+		LOAD_OBJECTS_HEAD_BY_BATCH_ID( //
+			"       select o.*, n.new_name " + //
+				"     from cmf_object o, cmf_alt_name n" + //
+				"    where o.object_id = n.object_id " + //
+				"      and o.batch_id = ? " + //
 				"      and o.batch_head = true " + //
 				" order by o.object_number" //
 		),
