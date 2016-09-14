@@ -718,7 +718,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			if (!settings.getBoolean(ImportSetting.NO_NAME_FIX)) {
-				CmfNameFixer<V> nameFixer = getNameFixer();
+				CmfNameFixer<V> nameFixer = getNameFixer(output);
 				if (nameFixer != null) {
 					output.info("Fixing all object names dynamically...");
 					final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
@@ -1076,7 +1076,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		return false;
 	}
 
-	protected CmfNameFixer<V> getNameFixer() {
+	protected CmfNameFixer<V> getNameFixer(Logger output) {
 		return null;
 	}
 
