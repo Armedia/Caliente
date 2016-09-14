@@ -701,9 +701,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			// Reset all alternate names, to ensure we're not using already-processed names
-			output.info("Resetting object names to their original values...");
-			objectStore.resetAltNames();
-			output.info("Original object names successfully reset");
+			output.info("Resetting object names to their {} values...",
+				isSupportsDuplicateFileNames() ? "original" : "HEAD version");
+			objectStore.resetAltNames(!isSupportsDuplicateFileNames());
+			output.info("Object names successfully reset");
 
 			{
 				final Properties p = new Properties();
