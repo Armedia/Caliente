@@ -347,6 +347,37 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		return translator.decodeObject(dataObject);
 	}
 
+	public final <V> CmfObject<V> loadHeadObject(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
+		CmfObject<V> sample) throws CmfStorageException {
+		if (typeMapper == null) { throw new IllegalArgumentException("Must provde a type mapper"); }
+		if (translator == null) { throw new IllegalArgumentException(
+			"Must provide a translator for storing object values"); }
+		if (sample == null) { throw new IllegalArgumentException("Must provide a sample to work with"); }
+		if (sample.isBatchHead()) { return sample; }
+
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				return loadHeadObject(operation, typeMapper, translator, sample);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for loading the head object for %s", sample), e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract <V> CmfObject<V> loadHeadObject(O operation, CmfTypeMapper typeMapper,
+		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException;
+
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator, CmfType type, boolean batching, String... ids)
 		throws CmfStorageException {
