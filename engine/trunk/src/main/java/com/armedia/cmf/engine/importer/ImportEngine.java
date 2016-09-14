@@ -426,7 +426,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		if (idMap.isEmpty()) {
-			output.info("Static name fix map is empty, object names will be kept as-is");
+			output.info("Static name fix map is empty, will not {} any object names", verb);
 			return;
 		}
 
