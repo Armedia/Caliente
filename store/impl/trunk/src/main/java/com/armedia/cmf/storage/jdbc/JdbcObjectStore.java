@@ -529,14 +529,20 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <V> int fixObjectNames(final JdbcOperation operation, CmfAttributeTranslator<V> translator,
-		final CmfNameFixer<V> nameFixer) throws CmfStorageException {
+		final CmfNameFixer<V> nameFixer, CmfType type, Set<String> ids) throws CmfStorageException {
 		final AtomicInteger result = new AtomicInteger(0);
-		for (CmfType type : CmfType.values()) {
-			if (!nameFixer.supportsType(type)) {
+		CmfType[] types = {
+			type
+		};
+		if (type == null) {
+			types = CmfType.values();
+		}
+		for (CmfType currentType : types) {
+			if (!nameFixer.supportsType(currentType)) {
 				continue;
 			}
 
-			loadObjects(operation, translator, type, null, new CmfObjectHandler<V>() {
+			loadObjects(operation, translator, currentType, ids, new CmfObjectHandler<V>() {
 
 				@Override
 				public boolean newBatch(String batchId) throws CmfStorageException {
