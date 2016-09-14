@@ -165,7 +165,7 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 	}
 
 	@Override
-	protected void resetAltNames(LocalStoreOperation operation, boolean headVersion) throws CmfStorageException {
+	protected void resetAltNames(LocalStoreOperation operation) throws CmfStorageException {
 	}
 
 	@Override
