@@ -28,6 +28,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -62,6 +64,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
 	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
+
+	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^(\\w+)::\\{(.+)\\}$");
 
 	private static final CmfTypeMapper DEFAULT_TYPE_MAPPER = new CmfTypeMapper() {
 
@@ -388,6 +392,75 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
+	private final void renameObjectsWithMap(Logger output, Properties p, CmfObjectStore<?, ?> objectStore,
+		final String verb) throws ImportException, CmfStorageException {
+		// Things happen differently here... since we have a limited scope in which
+		// objects require fixing, we don't sweep the whole table, but instead submit
+		// the IDs that we want fixed.
+
+		Map<CmfType, Map<String, String>> idMap = new EnumMap<CmfType, Map<String, String>>(CmfType.class);
+		for (Object k : p.keySet()) {
+			final String key = k.toString();
+			final String fixedName = p.getProperty(key);
+			Matcher matcher = ImportEngine.MAP_KEY_PARSER.matcher(key);
+			if (!matcher.matches()) {
+				continue;
+			}
+			final String T = matcher.group(1);
+			final CmfType t;
+			try {
+				t = CmfType.valueOf(T);
+			} catch (Exception e) {
+				this.log.warn(
+					String.format("Unsupported object type found [%s] in key [%s] (value = [%s])", T, key, fixedName),
+					e);
+				continue;
+			}
+			final String id = matcher.group(2);
+			Map<String, String> m = idMap.get(t);
+			if (m == null) {
+				m = new TreeMap<String, String>();
+				idMap.put(t, m);
+			}
+			m.put(id, fixedName);
+		}
+
+		if (idMap.isEmpty()) {
+			output.info("Static name fix map is empty, object names will be kept as-is");
+			return;
+		}
+
+		for (final CmfType t : idMap.keySet()) {
+			final Map<String, String> mappings = idMap.get(t);
+			CmfNameFixer<V> nameFixer = new CmfNameFixer<V>() {
+
+				@Override
+				public boolean supportsType(CmfType type) {
+					return (type == t);
+				}
+
+				@Override
+				public String fixName(CmfObject<V> dataObject) throws CmfStorageException {
+					// DOCUMENTS will use the batchId instead of the ID, while all
+					// others will use the ID
+					String id = dataObject.getId();
+					if (dataObject.getType() == CmfType.DOCUMENT) {
+						id = dataObject.getBatchId();
+					}
+					return mappings.get(id);
+				}
+
+				@Override
+				public boolean handleException(Exception e) {
+					return false;
+				}
+			};
+			output.info("Trying to {} {} {} names...", verb, mappings.size(), t.name());
+			final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer, t, mappings.keySet());
+			output.info("Modified {} {} objects", fixes, t.name());
+		}
+	}
+
 	private final CmfObjectCounter<ImportResult> runImportImpl(ImportState importState,
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
@@ -633,65 +706,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			if (!settings.getBoolean(ImportSetting.NO_NAME_FIX)) {
 				final Properties p = new Properties();
-				CmfNameFixer<V> nameFixer = null;
 				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.NAME_FIX_MAP), p)) {
 					// Things happen differently here... since we have a limited scope in which
 					// objects require fixing, we don't sweep the whole table, but instead submit
 					// the IDs that we want fixed.
-
-					Map<CmfType, Map<String, String>> idMap = new EnumMap<CmfType, Map<String, String>>(CmfType.class);
-					for (Object k : p.keySet()) {
-						final String key = k.toString();
-						final String fixedName = p.getProperty(key);
-						// TODO: Decode the object type and ID from key
-						CmfType t = null;
-						String id = null;
-						Map<String, String> m = idMap.get(t);
-						if (m == null) {
-							m = new TreeMap<String, String>();
-							idMap.put(t, m);
-						}
-						m.put(id, fixedName);
-					}
-
-					if (idMap.isEmpty()) {
-						output.info("Static name fix map is empty, object names will be kept as-is");
-					} else {
-						for (final CmfType t : idMap.keySet()) {
-							final Map<String, String> mappings = idMap.get(t);
-							nameFixer = new CmfNameFixer<V>() {
-
-								@Override
-								public boolean supportsType(CmfType type) {
-									return (type == t);
-								}
-
-								@Override
-								public String fixName(CmfObject<V> dataObject) throws CmfStorageException {
-									// DOCUMENTS will use the batchId instead of the ID, while all
-									// others will use the ID
-									String id = dataObject.getId();
-									if (dataObject.getType() == CmfType.DOCUMENT) {
-										id = dataObject.getBatchId();
-									}
-									return mappings.get(id);
-								}
-
-								@Override
-								public boolean handleException(Exception e) {
-									ImportEngine.this.log
-										.error("Exception raised while attempting to repair object names", e);
-									return true;
-								}
-							};
-							output.info("Fixing {} {} object names...", mappings.size(), t.name());
-							final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer, t,
-								mappings.keySet());
-							output.info("Fixed the names of {} {} objects", fixes, t.name());
-						}
-					}
+					renameObjectsWithMap(output, p, objectStore, "fix");
 				} else {
-					nameFixer = getNameFixer();
+					CmfNameFixer<V> nameFixer = getNameFixer();
 					if (nameFixer != null) {
 						output.info("Fixing all object names dynamically...");
 						final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
@@ -705,41 +726,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			if (!isSupportsDuplicateFileNames() && !settings.getBoolean(ImportSetting.NO_DEDUP)) {
 				final Properties p = new Properties();
 				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.DEDUP_MAP), p)) {
-					// Run the name fixer again, but with the deduplication mappings
-					CmfNameFixer<V> nameFixer = new CmfNameFixer<V>() {
-
-						@Override
-						public boolean supportsType(CmfType type) {
-							switch (type) {
-								case DOCUMENT:
-								case FOLDER:
-									return true;
-								default:
-									return false;
-							}
-						}
-
-						@Override
-						public String fixName(CmfObject<V> dataObject) throws CmfStorageException {
-							// The key format MUST be TYPE::{id} - since that's what we'll be
-							// looking for with the caveat that DOCUMENTS will use the batchId
-							// instead of the ID, while all others will use the ID
-							String id = dataObject.getId();
-							if (dataObject.getType() == CmfType.DOCUMENT) {
-								id = dataObject.getBatchId();
-							}
-							return p.getProperty(String.format("%s::{%s}", dataObject.getType().name(), id));
-						}
-
-						@Override
-						public boolean handleException(Exception e) {
-							ImportEngine.this.log.error("Exception raised while attempting to repair object names", e);
-							return true;
-						}
-					};
-					output.info("Deduplicating object names using a static map...");
-					final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
-					output.info(String.format("Fixed the names of %d objects", fixes));
+					renameObjectsWithMap(output, p, objectStore, "deduplicate");
 				}
 
 				// Handle deduplication globally as well, since we may have cross-type
