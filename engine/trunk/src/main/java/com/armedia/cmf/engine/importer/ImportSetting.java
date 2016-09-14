@@ -9,6 +9,7 @@ public enum ImportSetting implements TransferEngineSetting {
 	TRIM_PREFIX(CmfDataType.INTEGER, 0),
 	NO_DEDUP(CmfDataType.BOOLEAN, false),
 	NO_NAME_FIX(CmfDataType.BOOLEAN, false),
+	NO_FILENAME_MAP(CmfDataType.BOOLEAN, false),
 	FILENAME_MAP(CmfDataType.STRING),
 	//
 	;

@@ -705,7 +705,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			objectStore.resetAltNames();
 			output.info("Object names successfully reset");
 
-			{
+			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
 				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.FILENAME_MAP), p)) {
 					// Things happen differently here... since we have a limited scope in which
