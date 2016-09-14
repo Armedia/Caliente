@@ -160,7 +160,7 @@ public class LocalObjectStore extends CmfObjectStore<File, LocalStoreOperation> 
 
 	@Override
 	protected <V> int fixObjectNames(LocalStoreOperation operation, CmfAttributeTranslator<V> translator,
-		CmfNameFixer<V> nameFixer) throws CmfStorageException {
+		CmfNameFixer<V> nameFixer, CmfType type, Set<String> ids) throws CmfStorageException {
 		return 0;
 	}
 
