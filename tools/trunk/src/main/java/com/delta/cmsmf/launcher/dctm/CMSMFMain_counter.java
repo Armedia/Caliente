@@ -39,7 +39,8 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
 
-	private static final String COUNTER = "select count(*) from dm_sysobject where folder(ID('%s')) and not type(dm_folder)";
+	private static final String COUNTER = "select count(*) from dm_sysobject (ALL) where folder(ID('%s')) and not type(dm_folder)";
+	private static final String SIZER = "select sum(r_full_content_size) from dm_sysobject (ALL) where folder(ID('%s')) and not type(dm_folder)";
 	private static final String RECURSOR = "select distinct r_object_id, object_name from dm_sysobject where folder(ID('%s')) and type(dm_folder) order by object_name, r_object_id";
 
 	public CMSMFMain_counter() throws Throwable {
@@ -56,11 +57,29 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		IDfCollection result = null;
 		result = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.COUNTER, id),
 			IDfQuery.DF_EXECREAD_QUERY);
-		if (!result.next()) { throw new CMSMFException("Counter query did not return any values"); }
-		final IDfValue count = result.getValueAt(0);
-		DfUtils.closeQuietly(result);
+		final IDfValue count;
+		try {
+			if (!result.next()) { throw new CMSMFException("Counter query did not return any values"); }
+			count = result.getValueAt(0);
+		} finally {
+			DfUtils.closeQuietly(result);
+			result = null;
+		}
+
 		if (count.asInteger() > 0) {
-			String msg = String.format("%s,\"%s\",%d", id, path.replaceAll("\"", "\"\""), count.asInteger());
+			result = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.SIZER, id),
+				IDfQuery.DF_EXECREAD_QUERY);
+			final IDfValue size;
+			try {
+				if (!result.next()) { throw new CMSMFException("Sizer query did not return any values"); }
+				size = result.getValueAt(0);
+			} finally {
+				DfUtils.closeQuietly(result);
+				result = null;
+			}
+			Double d = size.asDouble();
+			String msg = String.format("%s,\"%s\",%d,%d", id, path.replaceAll("\"", "\"\""), count.asInteger(),
+				d.longValue());
 			this.console.info(msg);
 			manifest.info(msg);
 		}
@@ -135,7 +154,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 						String.format("Could not find the cabinet at [%s]", folderPath)); }
 					this.console.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
 					this.log.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
-					String msg = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT";
+					String msg = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT,CHILD_SIZE";
 					this.console.info(msg);
 					manifest.info(msg);
 					printFolderCounts(traversed, folder, manifest);
