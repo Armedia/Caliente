@@ -551,10 +551,19 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 				@Override
 				public boolean handleObject(CmfObject<V> obj) throws CmfStorageException {
-					String newName = nameFixer.fixName(obj);
-					if ((newName != null) && !Tools.equals(newName, obj.getName())) {
+					final String oldName = obj.getName();
+					final String newName = nameFixer.fixName(obj);
+					if ((newName != null) && !Tools.equals(oldName, newName)) {
 						renameObject(operation, obj, newName);
 						result.incrementAndGet();
+						try {
+							nameFixer.nameFixed(obj, oldName, newName);
+						} catch (Exception e) {
+							// Just log it
+							JdbcObjectStore.this.log.warn(String.format(
+								"Exception caught while invoking the nameFixed() callback for %s [%s](%s)",
+								obj.getType().name(), obj.getLabel(), obj.getId()), e);
+						}
 					}
 					return true;
 				}
