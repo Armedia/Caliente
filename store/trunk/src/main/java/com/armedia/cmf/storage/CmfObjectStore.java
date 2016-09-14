@@ -689,13 +689,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		return new Mapper(operation);
 	}
 
-	public final void resetAltNames(boolean headVersion) throws CmfStorageException {
+	public final void resetAltNames() throws CmfStorageException {
 		O operation = beginExclusiveInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				resetAltNames(operation, headVersion);
+				resetAltNames(operation);
 				if (tx) {
 					operation.commit();
 				}
@@ -716,7 +716,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract void resetAltNames(O operation, boolean headVersion) throws CmfStorageException;
+	protected abstract void resetAltNames(O operation) throws CmfStorageException;
 
 	public final <V> void renameObject(final CmfObject<V> object, final String newName) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to rename"); }
