@@ -711,33 +711,31 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			objectStore.resetAltNames();
 			output.info("Original object names successfully reset");
 
-			if (!settings.getBoolean(ImportSetting.NO_NAME_FIX)) {
+			{
 				final Properties p = new Properties();
-				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.NAME_FIX_MAP), p)) {
+				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.FILENAME_MAP), p)) {
 					// Things happen differently here... since we have a limited scope in which
 					// objects require fixing, we don't sweep the whole table, but instead submit
 					// the IDs that we want fixed.
-					renameObjectsWithMap(output, p, objectStore, "fix");
+					output.info("Applying static object renames for {} objects...", p.size());
+					renameObjectsWithMap(output, p, objectStore, "statically transform");
+					output.info("Static renames completed");
+				}
+			}
+
+			if (!settings.getBoolean(ImportSetting.NO_NAME_FIX)) {
+				CmfNameFixer<V> nameFixer = getNameFixer();
+				if (nameFixer != null) {
+					output.info("Fixing all object names dynamically...");
+					final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
+					output.info("Fixed the names of {} objects", fixes);
 				} else {
-					CmfNameFixer<V> nameFixer = getNameFixer();
-					if (nameFixer != null) {
-						output.info("Fixing all object names dynamically...");
-						final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
-						output.info("Fixed the names of {} objects", fixes);
-					} else {
-						output.info("Object names will be kept as-is");
-					}
+					output.info("Object names will be kept as-is");
 				}
 			}
 
 			if (!isSupportsDuplicateFileNames() && !settings.getBoolean(ImportSetting.NO_DEDUP)) {
-				final Properties p = new Properties();
-				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.DEDUP_MAP), p)) {
-					renameObjectsWithMap(output, p, objectStore, "deduplicate");
-				}
-
-				// Handle deduplication globally as well, since we may have cross-type
-				// collisions
+				// Handle deduplication globally as well, since we may have cross-type collisions
 				int pass = 0;
 				outer: for (;;) {
 					output.info("Checking for filename collisions (pass # {})", ++pass);
