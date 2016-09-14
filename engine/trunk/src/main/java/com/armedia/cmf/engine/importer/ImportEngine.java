@@ -8,11 +8,14 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -36,6 +39,7 @@ import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.TransferEngineSetting;
 import com.armedia.cmf.engine.importer.ImportStrategy.BatchItemStrategy;
+import com.armedia.cmf.engine.tools.MappingTools;
 import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfNameFixer;
@@ -624,19 +628,122 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			// Reset all alternate names, to ensure we're not using already-processed names
-			output.info("Resetting object names to the source values...");
+			output.info("Resetting object names to their original values...");
 			objectStore.resetAltNames();
-			final CmfNameFixer<V> nameFixer = getNameFixer();
-			if (nameFixer != null) {
-				output.info("Fixing object names...");
-				final int fixes = objectStore.fixObjectNames(getTranslator(), getNameFixer());
-				output.info(String.format("Fixed the names of %d objects", fixes));
-			} else {
-				output.info("Object names will be kept as-is");
+
+			if (!settings.getBoolean(ImportSetting.NO_NAME_FIX)) {
+				final Properties p = new Properties();
+				CmfNameFixer<V> nameFixer = null;
+				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.NAME_FIX_MAP), p)) {
+					// Things happen differently here... since we have a limited scope in which
+					// objects require fixing, we don't sweep the whole table, but instead submit
+					// the IDs that we want fixed.
+
+					Map<CmfType, Map<String, String>> idMap = new EnumMap<CmfType, Map<String, String>>(CmfType.class);
+					for (Object k : p.keySet()) {
+						final String key = k.toString();
+						final String fixedName = p.getProperty(key);
+						// TODO: Decode the object type and ID from key
+						CmfType t = null;
+						String id = null;
+						Map<String, String> m = idMap.get(t);
+						if (m == null) {
+							m = new TreeMap<String, String>();
+							idMap.put(t, m);
+						}
+						m.put(id, fixedName);
+					}
+
+					if (idMap.isEmpty()) {
+						output.info("Static name fix map is empty, object names will be kept as-is");
+					} else {
+						for (final CmfType t : idMap.keySet()) {
+							final Map<String, String> mappings = idMap.get(t);
+							nameFixer = new CmfNameFixer<V>() {
+
+								@Override
+								public boolean supportsType(CmfType type) {
+									return (type == t);
+								}
+
+								@Override
+								public String fixName(CmfObject<V> dataObject) throws CmfStorageException {
+									// DOCUMENTS will use the batchId instead of the ID, while all
+									// others will use the ID
+									String id = dataObject.getId();
+									if (dataObject.getType() == CmfType.DOCUMENT) {
+										id = dataObject.getBatchId();
+									}
+									return mappings.get(id);
+								}
+
+								@Override
+								public boolean handleException(Exception e) {
+									ImportEngine.this.log
+										.error("Exception raised while attempting to repair object names", e);
+									return true;
+								}
+							};
+							output.info("Fixing {} {} object names...", mappings.size(), t.name());
+							final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer, t,
+								mappings.keySet());
+							output.info("Fixed the names of {} {} objects", fixes, t.name());
+						}
+					}
+				} else {
+					nameFixer = getNameFixer();
+					if (nameFixer != null) {
+						output.info("Fixing all object names dynamically...");
+						final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
+						output.info("Fixed the names of {} objects", fixes);
+					} else {
+						output.info("Object names will be kept as-is");
+					}
+				}
 			}
 
-			if (!isSupportsDuplicateFileNames()) {
-				// Handle deduplication globally as well, since we may have cross-type collisions
+			if (!isSupportsDuplicateFileNames() && !settings.getBoolean(ImportSetting.NO_DEDUP)) {
+				final Properties p = new Properties();
+				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.DEDUP_MAP), p)) {
+					// Run the name fixer again, but with the deduplication mappings
+					CmfNameFixer<V> nameFixer = new CmfNameFixer<V>() {
+
+						@Override
+						public boolean supportsType(CmfType type) {
+							switch (type) {
+								case DOCUMENT:
+								case FOLDER:
+									return true;
+								default:
+									return false;
+							}
+						}
+
+						@Override
+						public String fixName(CmfObject<V> dataObject) throws CmfStorageException {
+							// The key format MUST be TYPE::{id} - since that's what we'll be
+							// looking for with the caveat that DOCUMENTS will use the batchId
+							// instead of the ID, while all others will use the ID
+							String id = dataObject.getId();
+							if (dataObject.getType() == CmfType.DOCUMENT) {
+								id = dataObject.getBatchId();
+							}
+							return p.getProperty(String.format("%s::{%s}", dataObject.getType().name(), id));
+						}
+
+						@Override
+						public boolean handleException(Exception e) {
+							ImportEngine.this.log.error("Exception raised while attempting to repair object names", e);
+							return true;
+						}
+					};
+					output.info("Deduplicating object names using a static map...");
+					final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
+					output.info(String.format("Fixed the names of %d objects", fixes));
+				}
+
+				// Handle deduplication globally as well, since we may have cross-type
+				// collisions
 				int pass = 0;
 				outer: for (;;) {
 					output.info("Checking for filename collisions (pass # {})", ++pass);

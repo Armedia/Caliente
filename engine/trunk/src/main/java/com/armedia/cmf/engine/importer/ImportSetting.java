@@ -5,7 +5,12 @@ import com.armedia.cmf.storage.CmfDataType;
 
 public enum ImportSetting implements TransferEngineSetting {
 	//
-	TARGET_LOCATION(CmfDataType.STRING, "/"), TRIM_PREFIX(CmfDataType.INTEGER, 0),
+	TARGET_LOCATION(CmfDataType.STRING, "/"),
+	TRIM_PREFIX(CmfDataType.INTEGER, 0),
+	NO_DEDUP(CmfDataType.BOOLEAN, false),
+	DEDUP_MAP(CmfDataType.STRING),
+	NO_NAME_FIX(CmfDataType.BOOLEAN, false),
+	NAME_FIX_MAP(CmfDataType.STRING),
 	//
 	;
 
