@@ -106,6 +106,10 @@ public enum CLIParam {
 	group_map(Setting.GROUP_MAP, 1, "The Properties (XML) file that contains the user name mappings to apply"),
 	role_map(Setting.ROLE_MAP, 1, "The Properties (XML) file that contains the role name mappings to apply"),
 	type_map(Setting.TYPE_MAP, 1, "The Properties (XML) file that contains the type mappings to apply"),
+	no_dedup(null, 0, "Disable the automatic filename deduplication code"),
+	dedup_map(Setting.DEDUP_MAP, 1, "The deduplication map that will be used to resolve naming collisions"),
+	no_name_fix(null, 0, "Disable the automatic filename fixing code"),
+	name_fix_map(Setting.NAME_FIX_MAP, 1, "The filename repair map that will be used to resolve naming collisions"),
 	//
 	;
 

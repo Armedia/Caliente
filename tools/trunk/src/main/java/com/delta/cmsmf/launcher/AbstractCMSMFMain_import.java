@@ -48,7 +48,10 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
-
+		settings.put(ImportSetting.NO_DEDUP.getLabel(), CLIParam.no_dedup.isPresent());
+		settings.put(ImportSetting.DEDUP_MAP.getLabel(), Setting.DEDUP_MAP.getString());
+		settings.put(ImportSetting.NO_NAME_FIX.getLabel(), CLIParam.no_name_fix.isPresent());
+		settings.put(ImportSetting.NAME_FIX_MAP.getLabel(), Setting.NAME_FIX_MAP.getString());
 	}
 
 	@Override
