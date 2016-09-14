@@ -729,8 +729,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					output.info("Fixing all object names dynamically...");
 					final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
 					output.info("Fixed the names of {} objects", fixes);
-				} else {
-					output.info("Object names will be kept as-is");
 				}
 			}
 
