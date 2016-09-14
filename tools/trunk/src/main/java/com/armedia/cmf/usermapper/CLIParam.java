@@ -24,13 +24,17 @@ public enum CLIParam {
 	dctm(1, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
 	dctm_user(1, true, "The username to connect to Documentum with"),
 	dctm_pass(1, true, "The password to connect to Documentum with"),
+	dctm_attributes(1, "The (comma-separated) list of Documentum attributes to attempt to use for mapping"),
 	ldap_url(1, "The LDAP URL to bind to"),
 	ldap_binddn(1, "The DN to bind to LDAP with"),
 	ldap_basedn(1, "The Base DN to search LDAP for both users and groups (SUB scope)"),
 	ldap_user_basedn(1, "The Base DN to search LDAP for users (SUB scope)"),
 	ldap_group_basedn(1, "The Base DN to search LDAP for groups (SUB scope)"),
 	ldap_pass(1, "The password to bind to LDAP with"),
-	ldap_on_demand(0, "Execute LDAP queries on demand vs. batched up front"),;
+	ldap_on_demand(0, "Execute LDAP queries on demand vs. batched up front"),
+	ldap_attributes(1, "The (comma-separated) list of LDAP attributes to attempt to use for mapping"),
+	//
+	;
 
 	public final Option option;
 
