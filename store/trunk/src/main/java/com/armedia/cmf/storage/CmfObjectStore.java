@@ -508,15 +508,32 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
 		throws CmfStorageException {
+		return fixObjectNames(translator, nameFixer, null, null);
+	}
+
+	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer,
+		final CmfType type) throws CmfStorageException {
+		return fixObjectNames(translator, nameFixer, type, null);
+	}
+
+	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer,
+		final CmfType type, Set<String> ids) throws CmfStorageException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (nameFixer == null) { throw new IllegalArgumentException(
 			"Must provide name fixer to fix the object names"); }
+		if (ids != null) {
+			if (type == null) { throw new CmfStorageException(
+				"Submitted a set of IDs without an object type - this is not supported"); }
+			// Short-circuit - avoid doing anything if there's nothing to do
+			if (ids.isEmpty()) { return 0; }
+		}
+
 		O operation = beginConcurrentInvocation();
 		boolean ok = false;
 		try {
 			final boolean tx = operation.begin();
 			try {
-				int ret = fixObjectNames(operation, translator, nameFixer);
+				int ret = fixObjectNames(operation, translator, nameFixer, type, ids);
 				if (tx) {
 					operation.commit();
 				}
@@ -537,7 +554,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> int fixObjectNames(O operation, CmfAttributeTranslator<V> translator,
-		CmfNameFixer<V> nameFixer) throws CmfStorageException;
+		CmfNameFixer<V> nameFixer, CmfType type, Set<String> ids) throws CmfStorageException;
 
 	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
