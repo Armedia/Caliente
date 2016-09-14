@@ -44,15 +44,27 @@ public class AlfImportEngine extends
 
 	private static final String MANIFEST_NAME = "CALIENTE_INGESTION_INDEX.txt";
 
-	private static final CmfNameFixer<CmfValue> NAME_FIXER = new CmfNameFixer<CmfValue>() {
-
-		private final Logger log = LoggerFactory.getLogger(AlfImportEngine.class);
+	private static final class NameFixer implements CmfNameFixer<CmfValue> {
 
 		private final String forbidden = "[\"*\\\\><?/:|]";
 
+		private long renamed = 0;
+		private long visited = 0;
+
+		private final Logger output;
+
+		private NameFixer(Logger output) {
+			if (output == null) {
+				output = LoggerFactory.getLogger(getClass());
+			}
+			this.output = output;
+		}
+
 		@Override
 		public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-			String newName = dataObject.getName();
+			this.visited++;
+			final String originalName = dataObject.getName();
+			String newName = originalName;
 
 			// File names may not contain any of the following characters: "*\><?/:|
 			newName = newName.replaceAll(this.forbidden, "_");
@@ -63,6 +75,13 @@ public class AlfImportEngine extends
 			// File names may not end in one or more spaces
 			newName = newName.replaceAll("\\s$", "_");
 
+			if (!Tools.equals(originalName, newName)) {
+				this.renamed++;
+			}
+
+			if ((this.visited % 1000) == 0) {
+				this.output.info("Analyzed {} names, fixed {} so far", this.visited, this.renamed);
+			}
 			return newName;
 		}
 
@@ -84,8 +103,8 @@ public class AlfImportEngine extends
 
 		@Override
 		public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
-			this.log.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(), oldName,
-				newName);
+			this.output.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(),
+				oldName, newName);
 		}
 	};
 
@@ -373,8 +392,8 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected CmfNameFixer<CmfValue> getNameFixer() {
-		return AlfImportEngine.NAME_FIXER;
+	protected CmfNameFixer<CmfValue> getNameFixer(Logger output) {
+		return new NameFixer(output);
 	}
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
