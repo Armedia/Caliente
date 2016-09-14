@@ -436,7 +436,15 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, aspectList);
 		p.setProperty("arm:aspects", aspectList);
 
-		p.setProperty("cm:name", this.cmfObject.getName());
+		// Now, get the head object
+		CmfObject<CmfValue> head = this.cmfObject;
+		try {
+			head = ctx.getHeadObject(this.cmfObject);
+		} catch (CmfStorageException e) {
+			this.log.warn(String.format("Failed to load the HEAD object for %s batch [%s]",
+				this.cmfObject.getType().name(), this.cmfObject.getBatchId()), e);
+		}
+		p.setProperty("cm:name", head.getName());
 	}
 
 	protected final String generateAcl(final AlfImportContext ctx, final String owner, final String group)
