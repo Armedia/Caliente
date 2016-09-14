@@ -65,7 +65,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
 	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
 
-	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^(\\w+)::\\{(.+)\\}$");
+	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^\\s*([^#\\s]+)\\s*#\\s*(.+)\\s*$");
 
 	private static final CmfTypeMapper DEFAULT_TYPE_MAPPER = new CmfTypeMapper() {
 
@@ -392,7 +392,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private final void renameObjectsWithMap(Logger output, Properties p, CmfObjectStore<?, ?> objectStore,
+	private final void renameObjectsWithMap(final Logger output, Properties p, CmfObjectStore<?, ?> objectStore,
 		final String verb) throws ImportException, CmfStorageException {
 		// Things happen differently here... since we have a limited scope in which
 		// objects require fixing, we don't sweep the whole table, but instead submit
@@ -453,6 +453,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				@Override
 				public boolean handleException(Exception e) {
 					return false;
+				}
+
+				@Override
+				public void nameFixed(CmfObject<V> dataObject, String oldName, String newName) {
+					output.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(),
+						oldName, newName);
 				}
 			};
 			output.info("Trying to {} {} {} names...", verb, mappings.size(), t.name());
@@ -703,6 +709,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			// Reset all alternate names, to ensure we're not using already-processed names
 			output.info("Resetting object names to their original values...");
 			objectStore.resetAltNames();
+			output.info("Original object names successfully reset");
 
 			if (!settings.getBoolean(ImportSetting.NO_NAME_FIX)) {
 				final Properties p = new Properties();
