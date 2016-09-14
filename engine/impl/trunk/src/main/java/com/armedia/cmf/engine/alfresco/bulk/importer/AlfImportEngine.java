@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.engine.CmfCrypt;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfCommon;
@@ -44,6 +46,8 @@ public class AlfImportEngine extends
 
 	private static final CmfNameFixer<CmfValue> NAME_FIXER = new CmfNameFixer<CmfValue>() {
 
+		private final Logger log = LoggerFactory.getLogger(AlfImportEngine.class);
+
 		private final String forbidden = "[\"*\\\\><?/:|]";
 
 		@Override
@@ -76,6 +80,12 @@ public class AlfImportEngine extends
 				default:
 					return false;
 			}
+		}
+
+		@Override
+		public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
+			this.log.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(), oldName,
+				newName);
 		}
 	};
 
