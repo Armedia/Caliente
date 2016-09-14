@@ -441,13 +441,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 				@Override
 				public String fixName(CmfObject<V> dataObject) throws CmfStorageException {
-					// DOCUMENTS will use the batchId instead of the ID, while all
-					// others will use the ID
-					String id = dataObject.getId();
-					if (dataObject.getType() == CmfType.DOCUMENT) {
-						id = dataObject.getBatchId();
-					}
-					return mappings.get(id);
+					return mappings.get(dataObject.getId());
 				}
 
 				@Override
