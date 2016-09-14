@@ -57,6 +57,10 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 			strategy.isBatchingSupported());
 	}
 
+	public final CmfObject<V> getHeadObject(CmfObject<V> sample) throws CmfStorageException {
+		return this.cmfObjectStore.loadHeadObject(this.typeMapper, this.translator, sample);
+	}
+
 	public final CmfContentStore<?, ?, ?> getContentStore() {
 		return this.streamStore;
 	}
