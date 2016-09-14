@@ -109,7 +109,11 @@ public enum CLIParam {
 	type_map(Setting.TYPE_MAP, 1, "The Properties (XML) file that contains the type mappings to apply"),
 	no_dedup(null, 0, "Disable the automatic filename deduplication code"),
 	no_name_fix(null, 0, "Disable the automatic filename fixing code"),
-	filename_map(Setting.FILENAME_MAP, 1, "The filename map to be used for static file renames"),
+	no_filename_map(null, 0, "Disable the use of the filename map (even if the default map exists)"),
+	filename_map(
+		Setting.FILENAME_MAP,
+		1,
+		"The Properties (XML) file that contains the static filename mappings to be applied"),
 	//
 	;
 
