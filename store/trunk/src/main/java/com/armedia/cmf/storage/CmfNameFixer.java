@@ -6,5 +6,7 @@ public interface CmfNameFixer<V> {
 
 	public String fixName(CmfObject<V> dataObject) throws CmfStorageException;
 
+	public void nameFixed(CmfObject<V> dataObject, String oldName, String newName);
+
 	public boolean handleException(Exception e);
 }
