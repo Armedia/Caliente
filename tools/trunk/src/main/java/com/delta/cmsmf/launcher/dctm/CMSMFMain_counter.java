@@ -3,6 +3,7 @@ package com.delta.cmsmf.launcher.dctm;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,21 +16,26 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 
+import com.armedia.cmf.engine.PooledWorkers;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngineListener;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.DfId;
+import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -39,71 +45,74 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
 
-	private static final String COUNTER = "select count(*) from dm_sysobject (ALL) where folder(ID('%s')) and not type(dm_folder)";
-	private static final String SIZER = "select sum(r_full_content_size) from dm_sysobject (ALL) where folder(ID('%s')) and not type(dm_folder)";
-	private static final String RECURSOR = "select distinct r_object_id, object_name from dm_sysobject where folder(ID('%s')) and type(dm_folder) order by object_name, r_object_id";
+	private static final String HEADERS = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT,CHILD_SIZE";
+
+	private static final String LISTER = "select r_object_id from dm_folder where folder(ID(%s)%s)";
+	private static final String COUNTER = "select count(*) from dm_sysobject (ALL) where folder(ID(%s)) and not type(dm_folder)";
+	private static final String SIZER = "select sum(r_full_content_size) from dm_sysobject (ALL) where folder(ID(%s)) and not type(dm_folder)";
+
+	private static class CounterResult implements Comparable<CounterResult> {
+		private final IDfId id;
+		private final String path;
+		private final long count;
+		private final long size;
+
+		private volatile String string;
+
+		/**
+		 * @param id
+		 * @param path
+		 * @param count
+		 * @param size
+		 */
+		public CounterResult(IDfId id, String path, long count, long size) {
+			this.id = id;
+			this.path = path;
+			this.count = count;
+			this.size = size;
+		}
+
+		public boolean isEmpty() {
+			return (this.count == 0);
+		}
+
+		@Override
+		public String toString() {
+			if (this.string == null) {
+				synchronized (this) {
+					if (this.string == null) {
+						this.string = String.format("%s,\"%s\",%d,%d", this.id, this.path.replaceAll("\"", "\"\""),
+							this.count, this.size);
+					}
+				}
+			}
+			return this.string;
+		}
+
+		@Override
+		public int compareTo(CounterResult o) {
+			if (o == null) { return 1; }
+			int r = Tools.compare(this.path, o.path);
+			if (r != 0) { return r; }
+			r = Tools.compare(this.id.getId(), o.id.getId());
+			if (r != 0) { return r; }
+			return 0;
+		}
+
+		@Override
+		public int hashCode() {
+			return Tools.hashTool(this, null, this.path, this.id);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (!Tools.baseEquals(this, obj)) { return false; }
+			return (compareTo(CounterResult.class.cast(obj)) == 0);
+		}
+	}
 
 	public CMSMFMain_counter() throws Throwable {
 		super(DctmExportEngine.getExportEngine(), false, false);
-	}
-
-	private void printFolderCounts(Set<String> traversed, IDfFolder folder, Logger manifest)
-		throws CMSMFException, DfException {
-		// If we're already traversed, we skip it
-		final String id = folder.getObjectId().getId();
-		if (!traversed.add(id)) { return; }
-		final IDfSession session = folder.getSession();
-		final String path = folder.getFolderPath(0);
-		IDfCollection result = null;
-		result = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.COUNTER, id),
-			IDfQuery.DF_EXECREAD_QUERY);
-		final IDfValue count;
-		try {
-			if (!result.next()) { throw new CMSMFException("Counter query did not return any values"); }
-			count = result.getValueAt(0);
-		} finally {
-			DfUtils.closeQuietly(result);
-			result = null;
-		}
-
-		if (count.asInteger() > 0) {
-			result = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.SIZER, id),
-				IDfQuery.DF_EXECREAD_QUERY);
-			final IDfValue size;
-			try {
-				if (!result.next()) { throw new CMSMFException("Sizer query did not return any values"); }
-				size = result.getValueAt(0);
-			} finally {
-				DfUtils.closeQuietly(result);
-				result = null;
-			}
-			Double d = size.asDouble();
-			String msg = String.format("%s,\"%s\",%d,%d", id, path.replaceAll("\"", "\"\""), count.asInteger(),
-				d.longValue());
-			this.console.info(msg);
-			manifest.info(msg);
-		}
-
-		if (CLIParam.non_recursive.isPresent()) { return; }
-
-		// Recurse into its children
-		result = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.RECURSOR, id),
-			IDfQuery.DF_EXECREAD_QUERY);
-		List<String> children = new ArrayList<String>();
-		while (result.next()) {
-			children.add(result.getString("r_object_id"));
-		}
-		DfUtils.closeQuietly(result);
-		for (String childId : children) {
-			IDfFolder child = session.getFolderBySpecification(childId);
-			if (child == null) {
-				// Warning
-				this.log.warn(String.format(
-					"Failed to find the child folder with ID [%s] (referenced by parent [%s](%s))", childId, path, id));
-				continue;
-			}
-			printFolderCounts(traversed, child, manifest);
-		}
 	}
 
 	/**
@@ -143,28 +152,139 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			String folderPath = CLIParam.count_path.getString();
 			if (StringUtils.isEmpty(
 				folderPath)) { throw new CMSMFException("Must provide a cabinet name to count the objects for"); }
+
+			final List<CounterResult> results = Collections.synchronizedList(new ArrayList<CounterResult>());
+
+			final PooledWorkers<IDfSession, IDfId> workers = new PooledWorkers<IDfSession, IDfId>() {
+
+				private IDfLocalTransaction localTx = null;
+
+				@Override
+				protected IDfSession prepare() throws Exception {
+					IDfSession s = pool.acquireSession();
+					if (s.isTransactionActive()) {
+						this.localTx = s.beginTransEx();
+					} else {
+						s.beginTrans();
+					}
+					return s;
+				}
+
+				private CounterResult doWork(IDfSession session, IDfId id) throws DfException, CMSMFException {
+					IDfFolder folder = session.getFolderBySpecification(id.getId());
+					if (folder == null) {
+						CMSMFMain_counter.this.console.warn("Failed to locate the folder with ID [{}]", id.getId());
+						return null;
+					}
+
+					final String path = folder.getFolderPath(0);
+					final String quotedId = DfUtils.quoteString(id.getId());
+
+					IDfCollection queryResult = null;
+					queryResult = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.COUNTER, quotedId),
+						IDfQuery.DF_EXECREAD_QUERY);
+					final IDfValue count;
+					try {
+						if (!queryResult.next()) { throw new CMSMFException(
+							String.format("Counter query for [%s] did not return any values", path)); }
+						count = queryResult.getValueAt(0);
+					} finally {
+						DfUtils.closeQuietly(queryResult);
+						queryResult = null;
+					}
+
+					long c = 0;
+					long s = 0;
+					final Double cDouble = count.asDouble();
+					if (cDouble.longValue() > 0) {
+						queryResult = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.SIZER, quotedId),
+							IDfQuery.DF_EXECREAD_QUERY);
+						final IDfValue size;
+						try {
+							if (!queryResult.next()) { throw new CMSMFException(
+								String.format("Sizer query for [%s] did not return any values", path)); }
+							size = queryResult.getValueAt(0);
+							Double sDouble = size.asDouble();
+							c = cDouble.longValue();
+							s = sDouble.longValue();
+						} finally {
+							DfUtils.closeQuietly(queryResult);
+							queryResult = null;
+						}
+					}
+					return new CounterResult(id, path, c, s);
+				}
+
+				@Override
+				protected void process(IDfSession session, IDfId id) throws Exception {
+					if ((id == null) || id.isNull()) { return; }
+					CounterResult result = doWork(session, id);
+					if (result == null) { return; }
+					CMSMFMain_counter.this.console.info(result.toString());
+					results.add(result);
+				}
+
+				@Override
+				protected void cleanup(IDfSession session) {
+					try {
+						if (this.localTx != null) {
+							session.abortTransEx(this.localTx);
+						} else {
+							session.abortTrans();
+						}
+					} catch (DfException e) {
+						this.log.warn("Exception caught aborting a read-only transaction", e);
+					} finally {
+						this.localTx = null;
+						pool.releaseSession(session);
+					}
+				}
+			};
+
 			try {
 				final IDfSession session = pool.acquireSession();
 				final Set<String> traversed = new HashSet<String>();
 
+				workers.start(Setting.THREADS.getInt(), DfId.DF_NULLID, true);
 				try {
 					session.beginTrans();
-					IDfFolder folder = session.getFolderByPath(folderPath);
-					if (folder == null) { throw new CMSMFException(
-						String.format("Could not find the cabinet at [%s]", folderPath)); }
+
+					IDfFolder root = session.getFolderByPath(folderPath);
+					if (root == null) { throw new CMSMFException(
+						String.format("Could not find the folder at [%s]", folderPath)); }
+
 					this.console.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
-					this.log.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
-					String msg = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT,CHILD_SIZE";
-					this.console.info(msg);
-					manifest.info(msg);
-					printFolderCounts(traversed, folder, manifest);
+					manifest.info(CMSMFMain_counter.HEADERS);
+					boolean nonRecursive = CLIParam.non_recursive.isPresent();
+					String dql = String.format(CMSMFMain_counter.LISTER,
+						DfUtils.quoteString(root.getObjectId().getId()), !nonRecursive ? ", DESCEND" : "");
+					IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
+					try {
+						int count = 0;
+						while (c.next()) {
+							IDfId id = c.getValueAt(0).asId();
+							if ((id == null) || id.isNull()) {
+								continue;
+							}
+							if (traversed.add(id.getId())) {
+								workers.addWorkItem(id);
+								if ((++count % 1000) == 0) {
+									this.console.info("Submitted {} folders for analysis", count);
+								}
+							}
+						}
+						this.console.info("Submitted a total of {} folders for analysis", count);
+					} finally {
+						DfUtils.closeQuietly(c);
+					}
+
 				} finally {
+					workers.waitForCompletion();
 					this.console.info("##### Counter Process Finished #####");
-					this.log.info("##### Counter Process Finished #####");
 					try {
 						session.abortTrans();
 					} catch (DfException e) {
-						this.log.error("Exception caught while aborting the transaction for object counts", e);
+						this.log.error("Exception caught while aborting the transaction for folder lists", e);
 					}
 					pool.releaseSession(session);
 				}
@@ -179,6 +299,20 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 				// unlock
 				end = new Date();
 			}
+
+			this.console.info("Sorting the obtained results ({} entries)", results.size());
+			Collections.sort(results);
+			this.console.info("Results sorted, outputting the manifest", results.size());
+			this.console.info(CMSMFMain_counter.HEADERS);
+			final boolean excludeEmpty = !CLIParam.count_empty.isPresent();
+			for (CounterResult r : results) {
+				if (r.isEmpty() && excludeEmpty) {
+					continue;
+				}
+				this.console.info(r.toString());
+				manifest.info(r.toString());
+			}
+			this.console.info("Manifest ready", results.size());
 
 			long duration = (end.getTime() - start.getTime());
 			long hours = TimeUnit.HOURS.convert(duration, TimeUnit.MILLISECONDS);
@@ -212,7 +346,9 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 
 			if (exceptionReport != null) {
 				report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
+				this.console.info(exceptionReport);
 			}
+			this.log.info(report.toString());
 		} finally {
 			pool.close();
 		}
