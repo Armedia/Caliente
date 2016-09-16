@@ -18,6 +18,10 @@ import com.armedia.commons.utilities.Tools;
 
 public class FilenameDeduplicator {
 
+	public static interface IdValidator {
+		public boolean isValidId(String id);
+	}
+
 	public static interface Renamer {
 		public String getNewName(String entryId, String currentName);
 	}
@@ -221,6 +225,13 @@ public class FilenameDeduplicator {
 		}
 	}
 
+	private static final IdValidator DEFAULT_VALIDATOR = new IdValidator() {
+		@Override
+		public boolean isValidId(String id) {
+			return (id != null);
+		}
+	};
+
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final LockDispenser<String, Object> containerLocks = LockDispenser.getBasic();
@@ -232,6 +243,16 @@ public class FilenameDeduplicator {
 	private final Map<String, FSEntryContainer> conflictContainers = new ConcurrentHashMap<String, FSEntryContainer>();
 
 	private final Map<String, FSEntry> renamedEntries = new ConcurrentHashMap<String, FSEntry>();
+
+	private final IdValidator idValidator;
+
+	public FilenameDeduplicator() {
+		this(null);
+	}
+
+	public FilenameDeduplicator(IdValidator idValidator) {
+		this.idValidator = Tools.coalesce(idValidator, FilenameDeduplicator.DEFAULT_VALIDATOR);
+	}
 
 	private void conflictsDetected(FSEntryContainer container) {
 		this.conflictContainers.put(container.id, container);
@@ -313,7 +334,9 @@ public class FilenameDeduplicator {
 		}
 	}
 
-	public void addEntry(String containerId, String entryId, String name) {
+	public boolean addEntry(String containerId, String entryId, String name) {
+		if (!this.idValidator.isValidId(containerId)) { return false; }
+		if (!this.idValidator.isValidId(entryId)) { return false; }
 		final FSEntryContainer container = getContainer(containerId);
 		FSEntry entry = null;
 		synchronized (this.allEntriesLocks.getLock(entryId)) {
@@ -325,5 +348,6 @@ public class FilenameDeduplicator {
 		}
 		entry.addParent(container);
 		container.addChild(entry);
+		return true;
 	}
 }
