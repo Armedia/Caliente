@@ -343,7 +343,6 @@ public class FilenameMapper {
 						String name = collection.getString("object_name");
 
 						// First things first: make sure the filename is fixed
-						boolean renamed = false;
 						if (fixer != null) {
 							final String oldName = name;
 							name = fixer.fixName(name, fixChar, fixLength);
@@ -351,15 +350,15 @@ public class FilenameMapper {
 								name = oldName;
 							}
 							if (!Tools.equals(name, oldName)) {
-								renamed = true;
+								// If it was renamed, then the mapping is output, conflict
+								// or no conflict. If the same entry later has a conflict,
+								// it will be overwritten anyway...
+								finalMap.setProperty(FilenameMapper.generateKey(entryId), name);
 							}
 						}
 
 						if (dedupEnabled) {
 							deduplicator.addEntry(containerId, entryId, name);
-						} else if (renamed) {
-							// Simply output the mapping
-							finalMap.setProperty(FilenameMapper.generateKey(entryId), name);
 						}
 
 						if ((++count % 1000) == 0) {
@@ -399,7 +398,6 @@ public class FilenameMapper {
 						}
 					});
 					FilenameMapper.log.info("Conflicts fixed: {}", fixes);
-					finalMap.clear();
 					deduplicator.processRenamedEntries(new Processor() {
 						@Override
 						public void processEntry(String entryId, String entryName) {
