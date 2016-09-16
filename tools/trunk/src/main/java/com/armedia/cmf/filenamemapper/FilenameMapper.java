@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -46,9 +47,18 @@ public class FilenameMapper {
 			};
 
 			@Override
-			protected String trimName(String name) {
-				// TODO: Mind the extension!!
-				return name.substring(0, Math.min(name.length(), this.maxLength));
+			protected String fixLength(String name) {
+				// Mind the extension on the rename...
+				String ext = FilenameUtils.getExtension(name);
+				int maxLength = this.maxLength;
+				if (!StringUtils.isEmpty(ext)) {
+					maxLength -= (ext.length() + 1);
+				}
+				name = name.substring(0, Math.min(name.length(), maxLength));
+				if (!StringUtils.isEmpty(ext)) {
+					name = String.format("%s.%s", name, ext);
+				}
+				return name;
 			}
 
 			@Override
@@ -62,9 +72,6 @@ public class FilenameMapper {
 			@Override
 			protected String fixFinalName(String name, Character fixChar) {
 				// Windows has some extra rules as to how files shall not be named
-				if (fixChar == null) {
-					fixChar = FilenameMapper.DEFAULT_FIX_CHAR;
-				}
 
 				// File names may not end in one or more dots (.)
 				name = name.replaceAll("\\.$", fixChar.toString());
@@ -117,7 +124,7 @@ public class FilenameMapper {
 			return name;
 		}
 
-		protected String trimName(String name) {
+		protected String fixLength(String name) {
 			return name.substring(0, Math.min(name.length(), this.maxLength));
 		}
 
@@ -135,12 +142,14 @@ public class FilenameMapper {
 				srcName = srcName.replaceAll(this.forbiddenChars, fixChar.toString());
 			}
 
-			// Now, fix the length (mind the extension)
+			srcName = fixFinalName(srcName, Tools.coalesce(fixChar, FilenameMapper.DEFAULT_FIX_CHAR));
+
+			// Now, fix the length
 			if ((this.maxLength > 0) && fixLength) {
-				srcName = trimName(srcName);
+				srcName = fixLength(srcName);
 			}
 
-			return fixFinalName(srcName, fixChar);
+			return srcName;
 		}
 
 		public static Fixer getDefault() {
@@ -409,7 +418,12 @@ public class FilenameMapper {
 							resolverMap.put("id", entryId);
 							resolverMap.put("name", currentName);
 							resolverMap.put("count", count);
-							return StrSubstitutor.replace(resolverPattern, resolverMap);
+							String newName = StrSubstitutor.replace(resolverPattern, resolverMap);
+							if (fixer != null) {
+								// Make sure we use a clean name...
+								newName = fixer.fixName(newName, fixChar, fixLength);
+							}
+							return newName;
 						}
 					});
 					FilenameMapper.log.info("Conflicts fixed: {}", fixes);
