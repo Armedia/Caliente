@@ -5,7 +5,7 @@
 	<name>Caliente Filename Mapper</name>
 	<groupId>com.armedia.cmf</groupId>
 	<artifactId>cmf-filename-mapper</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
 	<scm>
