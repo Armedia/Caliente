@@ -36,9 +36,6 @@ import com.documentum.fc.common.IDfId;
 
 public class FilenameMapper {
 
-	private static final Character DEFAULT_FIX_CHAR = '_';
-	private static final String DEFAULT_TARGET = "filenamemap.xml";
-
 	private static enum Fixer {
 
 		//
@@ -161,6 +158,30 @@ public class FilenameMapper {
 
 	};
 
+	private static final Logger log = LoggerFactory.getLogger(FilenameMapper.class);
+
+	private static final Character DEFAULT_FIX_CHAR = '_';
+
+	private static final String DEFAULT_TARGET = "filenamemap.xml";
+
+	private static final String DEFAULT_DEDUP_PATTERN = "${name}${fixChar}${id}";
+
+	private static final String ALL_DQL = //
+		"         select r_object_id, i_folder_id, object_name " + //
+			"       from dm_sysobject " + //
+			"      where object_name is not nullstring " + //
+			"        and r_object_id is not nullstring " + //
+			"        and r_object_id is not nullid " + //
+			"        and i_folder_id is not nullstring " + //
+			"        and i_folder_id is not nullid " + //
+			"        and not folder('/Integration', DESCEND) " + //
+			"        and not folder('/dm_bof_registry', DESCEND) " + //
+			"        and not folder('/Resources', DESCEND) " + //
+			"        and not folder('/System', DESCEND) " + //
+			"        and not folder('/Temp', DESCEND) " + //
+			"        and not folder('/Templates', DESCEND) " + //
+			"            enable (ROW_BASED) ";
+
 	private static CmfType decodeType(String idString) {
 		if (idString == null) { throw new IllegalArgumentException(
 			"Must provide an ID to decode the information from"); }
@@ -197,26 +218,6 @@ public class FilenameMapper {
 				return null;
 		}
 	}
-
-	private static final String ALL_DQL = //
-		"         select r_object_id, i_folder_id, object_name " + //
-			"       from dm_sysobject " + //
-			"      where object_name is not nullstring " + //
-			"        and r_object_id is not nullstring " + //
-			"        and r_object_id is not nullid " + //
-			"        and i_folder_id is not nullstring " + //
-			"        and i_folder_id is not nullid " + //
-			"        and not folder('/Integration', DESCEND) " + //
-			"        and not folder('/dm_bof_registry', DESCEND) " + //
-			"        and not folder('/Resources', DESCEND) " + //
-			"        and not folder('/System', DESCEND) " + //
-			"        and not folder('/Temp', DESCEND) " + //
-			"        and not folder('/Templates', DESCEND) " + //
-			"            enable (ROW_BASED) ";
-
-	private static final Logger log = LoggerFactory.getLogger(FilenameMapper.class);
-
-	private static final String DEFAULT_DEDUP_PATTERN = "${name}_${id}";
 
 	private static boolean checkDedupPattern(String pattern) {
 		final Set<String> found = new HashSet<String>();
@@ -399,6 +400,8 @@ public class FilenameMapper {
 					deduplicator.showConflicts(FilenameMapper.log);
 					FilenameMapper.log.info("Will resolve any conflicts using the pattern [{}]", resolverPattern);
 					final Map<String, Object> resolverMap = new HashMap<String, Object>();
+					// This is the only one that never changes...so we add it once and never again
+					resolverMap.put("fixChar", Tools.coalesce(fixChar, FilenameMapper.DEFAULT_FIX_CHAR).toString());
 					long fixes = deduplicator.fixConflicts(new ConflictResolver() {
 						@Override
 						public String resolveConflict(String entryId, String currentName, long count) {

@@ -36,7 +36,7 @@ public enum CLIParam {
 	no_dedup(0, "Disable filename deduplication"),
 	dedup_pattern(
 		1,
-		"The Deduplication pattern to apply - must contain both ${name} and ${id}, and can contain ${count} (the number of conflicts resolved so far) - default is \"${name}_${id}\""),
+		"The Deduplication pattern to apply - must contain ${id}, and can contain any of ${name}, ${fixChar}, and ${count} (the number of conflicts resolved so far) - default is \"${name}${fixChar}${id}\""),
 	target(1, "The target file to write the properties into (default filenamemap.xml)"),
 	//
 	;
