@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.filenamemapper.FilenameDeduplicator.ConflictResolver;
+import com.armedia.cmf.filenamemapper.FilenameDeduplicator.IdValidator;
 import com.armedia.cmf.filenamemapper.FilenameDeduplicator.Processor;
 import com.armedia.cmf.filenamemapper.tools.DfUtils;
 import com.armedia.cmf.storage.CmfType;
@@ -150,6 +151,16 @@ public class FilenameMapper {
 		}
 	}
 
+	private static final IdValidator ID_VALIDATOR = new IdValidator() {
+
+		@Override
+		public boolean isValidId(String id) {
+			if (StringUtils.isEmpty(id)) { return false; }
+			return (FilenameMapper.decodeType(id) != null);
+		}
+
+	};
+
 	private static CmfType decodeType(String idString) {
 		if (idString == null) { throw new IllegalArgumentException(
 			"Must provide an ID to decode the information from"); }
@@ -221,11 +232,8 @@ public class FilenameMapper {
 
 	private static String generateKey(String entryId) {
 		CmfType t = FilenameMapper.decodeType(entryId);
-		String T = "UNKNOWN";
-		if (t != null) {
-			T = t.name();
-		}
-		return String.format("%s # %s", T, entryId);
+		if (t == null) { return null; }
+		return String.format("%s # %s", t.name(), entryId);
 	}
 
 	static int run() throws Exception {
@@ -315,7 +323,7 @@ public class FilenameMapper {
 		}
 
 		try {
-			final FilenameDeduplicator deduplicator = new FilenameDeduplicator();
+			final FilenameDeduplicator deduplicator = new FilenameDeduplicator(FilenameMapper.ID_VALIDATOR);
 
 			IDfSession session = dfcPool.acquireSession();
 			final Runtime runtime = Runtime.getRuntime();
@@ -353,7 +361,10 @@ public class FilenameMapper {
 								// If it was renamed, then the mapping is output, conflict
 								// or no conflict. If the same entry later has a conflict,
 								// it will be overwritten anyway...
-								finalMap.setProperty(FilenameMapper.generateKey(entryId), name);
+								String key = FilenameMapper.generateKey(entryId);
+								if (key != null) {
+									finalMap.setProperty(key, name);
+								}
 							}
 						}
 
@@ -401,7 +412,10 @@ public class FilenameMapper {
 					deduplicator.processRenamedEntries(new Processor() {
 						@Override
 						public void processEntry(String entryId, String entryName) {
-							finalMap.setProperty(FilenameMapper.generateKey(entryId), entryName);
+							String key = FilenameMapper.generateKey(entryId);
+							if (key != null) {
+								finalMap.setProperty(key, entryName);
+							}
 						}
 					});
 				}
