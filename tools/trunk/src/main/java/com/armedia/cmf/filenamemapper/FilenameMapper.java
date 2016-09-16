@@ -242,15 +242,6 @@ public class FilenameMapper {
 		final String dctmUser = CLIParam.dctm_user.getString();
 		final String dctmPass = CLIParam.dctm_pass.getString();
 
-		final DfcSessionPool dfcPool;
-		try {
-			dfcPool = new DfcSessionPool(docbase, dctmUser, dctmPass);
-		} catch (DfException e) {
-			FilenameMapper.log
-				.error(String.format("Failed to open the session pool to docbase [%s] as [%s]", docbase, dctmUser), e);
-			return 1;
-		}
-
 		final File targetFile;
 		{
 			String targetStr = CLIParam.target.getString(FilenameMapper.DEFAULT_TARGET);
@@ -321,6 +312,15 @@ public class FilenameMapper {
 					fixChar = FilenameMapper.DEFAULT_FIX_CHAR;
 				}
 			}
+		}
+
+		final DfcSessionPool dfcPool;
+		try {
+			dfcPool = new DfcSessionPool(docbase, dctmUser, dctmPass);
+		} catch (DfException e) {
+			FilenameMapper.log
+				.error(String.format("Failed to open the session pool to docbase [%s] as [%s]", docbase, dctmUser), e);
+			return 1;
 		}
 
 		try {
