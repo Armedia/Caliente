@@ -39,7 +39,7 @@ public class FilenameMapper {
 	private static enum Fixer {
 
 		//
-		WIN(255, "[\"*\\\\><?/:|\0]") {
+		WIN(255, "[\"*\\\\><?/:|\u0000]") {
 			private final String[] forbidden = {
 				"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
 				"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
@@ -84,6 +84,7 @@ public class FilenameMapper {
 				return name;
 			}
 		},
+
 		UNIX(255, "[/\0]"),
 		//
 		;
@@ -121,7 +122,7 @@ public class FilenameMapper {
 		}
 
 		public boolean isValidFixChar(Character fixChar) {
-			if (this.forbiddenChars != null) { return fixChar.toString().matches(this.forbiddenChars); }
+			if (this.forbiddenChars != null) { return !fixChar.toString().matches(this.forbiddenChars); }
 			return true;
 		}
 
