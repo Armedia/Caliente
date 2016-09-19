@@ -21,6 +21,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.cmf.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.SchemaAttribute;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
@@ -532,8 +533,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		throws ImportException {
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
-		p.setProperty("cm:name", String.format("%s-%s-%d-%s", this.cmfObject.getId(), content.getRenditionIdentifier(),
-			content.getRenditionPage(), content.getModifier()));
+		p.setProperty("cm:name", AlfrescoBaseBulkOrganizationStrategy.generateRenditionName(this.cmfObject, content));
 		p.setProperty("arm:renditionObjectId", this.cmfObject.getId());
 		p.setProperty("arm:renditionName", content.getRenditionIdentifier());
 		p.setProperty("arm:renditionPage", String.valueOf(content.getRenditionPage()));

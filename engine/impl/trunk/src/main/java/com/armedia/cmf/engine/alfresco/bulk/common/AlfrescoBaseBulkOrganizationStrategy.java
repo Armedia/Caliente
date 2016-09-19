@@ -77,10 +77,10 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		String baseName = object.getId();
 		switch (object.getType()) {
 			case DOCUMENT:
-				baseName = object.getBatchId();
-				if (!primaryContent) {
-					baseName = String.format("page-%08x-%s", info.getRenditionPage(),
-						Tools.coalesce(info.getModifier(), ""));
+				if (primaryContent) {
+					baseName = object.getBatchId();
+				} else {
+					baseName = AlfrescoBaseBulkOrganizationStrategy.generateRenditionName(object, info);
 				}
 			default:
 				break;
@@ -143,5 +143,10 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 			}
 		}
 		return appendix;
+	}
+
+	public static String generateRenditionName(CmfObject<?> object, CmfContentInfo info) {
+		return String.format("%s-[%s]-%08x-%s", object.getId(), info.getRenditionIdentifier(), info.getRenditionPage(),
+			Tools.coalesce(info.getModifier(), ""));
 	}
 }
