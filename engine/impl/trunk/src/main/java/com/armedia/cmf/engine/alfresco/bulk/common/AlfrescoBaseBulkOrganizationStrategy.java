@@ -124,7 +124,8 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 				final boolean middleVersion = (index < counter);
 
 				if ((index > 0) && (vDoc || middleVersion || !headVersion)) {
-					final int width = String.format("%d", counter).length();
+					final int offset = (middleVersion && headVersion ? 1 : 0);
+					final int width = String.format("%d", (counter - 1) + offset).length();
 
 					String format = "v%s%d";
 					if (width > 1) {
