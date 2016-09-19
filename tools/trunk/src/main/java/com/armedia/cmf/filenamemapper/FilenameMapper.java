@@ -135,6 +135,7 @@ public class FilenameMapper {
 		}
 
 		public final String fixName(String srcName, Character fixChar, boolean fixLength) {
+			if (srcName == null) { throw new IllegalArgumentException("Must provide a name to fix"); }
 			// If no fix is desired, return the same value
 			if ((fixChar == null) && !fixLength) { return srcName; }
 
