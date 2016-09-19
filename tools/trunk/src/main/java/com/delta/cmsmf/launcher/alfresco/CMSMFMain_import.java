@@ -3,6 +3,8 @@ package com.delta.cmsmf.launcher.alfresco;
 import java.io.File;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
 import com.armedia.cmf.engine.alfresco.bulk.importer.AlfImportEngine;
 import com.delta.cmsmf.cfg.CLIParam;
@@ -33,7 +35,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 		settings.put(AlfSessionFactory.ROOT, this.targetDir.getAbsolutePath());
 		settings.put(AlfSessionFactory.DB, Setting.DB_DIRECTORY.getString());
 		settings.put(AlfSessionFactory.CONTENT, Setting.CONTENT_DIRECTORY.getString());
-		settings.put(AlfSessionFactory.CONTENT_MODEL, CLIParam.content_model.getString());
+		settings.put(AlfSessionFactory.CONTENT_MODEL, StringUtils.join(CLIParam.content_model.getAllString(), ','));
 		settings.put(AlfSessionFactory.USER_MAP, Setting.USER_MAP.getString());
 		settings.put(AlfSessionFactory.GROUP_MAP, Setting.GROUP_MAP.getString());
 		settings.put(AlfSessionFactory.ROLE_MAP, Setting.ROLE_MAP.getString());
