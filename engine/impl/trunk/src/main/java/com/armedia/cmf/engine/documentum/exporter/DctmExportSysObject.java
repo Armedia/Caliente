@@ -301,7 +301,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_COUNT,
 				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(1)));
 			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_INDEX,
-				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(0)));
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(1)));
+			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_HEAD_INDEX,
+				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(1)));
 			return false;
 		}
 
