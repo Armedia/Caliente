@@ -109,23 +109,27 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		}
 		CmfProperty<T> vCounter = object.getProperty(IntermediateProperty.VERSION_COUNT);
 		CmfProperty<T> vIndex = object.getProperty(IntermediateProperty.VERSION_INDEX);
+		CmfProperty<T> vIndexHead = object.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
 		String appendix = null;
 		if (!primaryContent && !vDoc) {
 			appendix = "";
 		} else {
-			if ((vCounter != null) && (vIndex != null) && vCounter.hasValues() && vIndex.hasValues()) {
+			if ((vCounter != null) && (vIndex != null) && (vIndexHead != null) && vCounter.hasValues()
+				&& vIndex.hasValues() && vIndexHead.hasValues()) {
 				// Use the version index counter
 				CmfValueCodec<T> vCounterCodec = translator.getCodec(vCounter.getType());
 				CmfValueCodec<T> vIndexCodec = translator.getCodec(vIndex.getType());
+				CmfValueCodec<T> vIndexHeadCodec = translator.getCodec(vIndexHead.getType());
 
 				final int counter = vCounterCodec.encodeValue(vCounter.getValue()).asInteger();
 				final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
+				final int indexHead = vIndexHeadCodec.encodeValue(vIndexHead.getValue()).asInteger();
 
-				final boolean middleVersion = (index < counter);
+				final boolean lastIsHead = (index == indexHead);
 
-				if ((index > 0) && (vDoc || middleVersion || !headVersion)) {
-					final int offset = (middleVersion && headVersion ? 1 : 0);
-					final int width = String.format("%d", (counter - 1) + offset).length();
+				if ((index > 0) && (vDoc || !lastIsHead || !headVersion)) {
+					final int offset = (lastIsHead ? 1 : 0);
+					final int width = String.format("%d", (counter - offset)).length();
 
 					String format = "v%s%d";
 					if (width > 1) {
