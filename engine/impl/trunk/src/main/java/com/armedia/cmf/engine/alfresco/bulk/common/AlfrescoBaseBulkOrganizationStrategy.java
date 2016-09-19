@@ -121,9 +121,9 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 				final int counter = vCounterCodec.encodeValue(vCounter.getValue()).asInteger();
 				final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
 
-				final boolean middleVersion = (index < (counter - 1));
+				final boolean middleVersion = (index < counter);
 
-				if (vDoc || middleVersion || !headVersion) {
+				if ((index > 0) && (vDoc || middleVersion || !headVersion)) {
 					final int width = String.format("%d", counter).length();
 
 					String format = "v%s%d";
