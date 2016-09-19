@@ -92,7 +92,6 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 	protected <T> String calculateVersionAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info, boolean primaryContent, boolean vDoc) {
 		boolean headVersion = false;
-		boolean newestVersion = false;
 		switch (object.getType()) {
 			case DOCUMENT:
 				// The "latest version" attribute really only says which version is "CURRENT". In
@@ -101,15 +100,11 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 					translator.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
 				headVersion = ((p != null) && p.hasValues()
 					&& translator.getCodec(p.getType()).encodeValue(p.getValue()).asBoolean());
-				p = object.getProperty(IntermediateProperty.IS_NEWEST_VERSION);
-				newestVersion = ((p != null) && p.hasValues()
-					&& translator.getCodec(p.getType()).encodeValue(p.getValue()).asBoolean());
 				break;
 			case FOLDER:
 				// Fall-through
 			default:
 				headVersion = true;
-				newestVersion = true;
 				break;
 		}
 		CmfProperty<T> vCounter = object.getProperty(IntermediateProperty.VERSION_COUNT);
@@ -126,7 +121,9 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 				final int counter = vCounterCodec.encodeValue(vCounter.getValue()).asInteger();
 				final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
 
-				if ((index < (counter - 1)) || vDoc || !newestVersion) {
+				final boolean middleVersion = (index < (counter - 1));
+
+				if (vDoc || middleVersion || !headVersion) {
 					final int width = String.format("%d", counter).length();
 
 					String format = "v%s%d";
