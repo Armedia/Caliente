@@ -1,7 +1,11 @@
 package com.armedia.cmf.filenamemapper;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -103,6 +107,7 @@ public class FilenameDeduplicator {
 			l.lock();
 			try {
 				for (FSEntryContainer c : this.parents.values()) {
+					// TODO: use this to revert a rename if it would generate a new conflict
 					c.entryRenamed(this, oldName);
 				}
 			} finally {
@@ -327,13 +332,35 @@ public class FilenameDeduplicator {
 	}
 
 	public synchronized long fixConflicts(ConflictResolver resolver) {
+		return fixConflicts(resolver, null);
+	}
+
+	public synchronized long fixConflicts(ConflictResolver resolver, Comparator<FSEntry> comparator) {
 		long count = 0;
 		nextConflict: while (!this.conflictContainers.isEmpty()) {
 			int deltas = 0;
 			for (FSEntryContainer c : this.conflictContainers.values()) {
 				for (String s : c.conflicts) {
 					Map<String, FSEntry> conflictEntries = c.children.get(s);
-					for (FSEntry e : conflictEntries.values()) {
+					// Sort the entries...this will only be slow when there are many, MANY
+					// entries with a naming conflict. By taking this approach, we make it
+					// so that we're now able to choose what order the entries will be renamed
+					// in when fixing a conflict. The order should prioritize those who
+					// have fewer parents, and thus those who cause the lowest impact.
+					List<FSEntry> l = new ArrayList<FSEntry>(conflictEntries.size());
+					l.addAll(conflictEntries.values());
+					if (comparator != null) {
+						// If the user requested a specific ordering of entries, we use that.
+						Collections.sort(l, comparator);
+					} else {
+						// The default ordering is by newName (asc), then # of parents (asc),
+						// then ID (desc). This means that since all the entries in this list
+						// share the same newName, then only the last two will be applied. Thus,
+						// the first entry to be renamed will be the one with the fewest parents
+						// and thus the (expected) smallest impact to the overall hierarchy.
+						Collections.sort(l);
+					}
+					for (FSEntry e : l) {
 						final String oldName = e.newName;
 						String newName = resolver.resolveConflict(e.id, e.newName, count);
 						if (e.setName(newName)) {
