@@ -1,7 +1,9 @@
 package com.delta.cmsmf.cfg;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -13,6 +15,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import com.armedia.commons.utilities.Tools;
 
 public enum CLIParam {
 	//
@@ -185,8 +189,11 @@ public enum CLIParam {
 
 	private static final String[] NO_OPTS = new String[0];
 	private static final Map<CLIParam, String> NO_PARSED = Collections.emptyMap();
+	private static final List<String> NO_REMAINING = Collections.emptyList();
 	private static AtomicReference<Map<CLIParam, String>> CLI_PARSED = new AtomicReference<Map<CLIParam, String>>(
 		CLIParam.NO_PARSED);
+	private static AtomicReference<List<String>> CLI_REMAINING = new AtomicReference<List<String>>(
+		CLIParam.NO_REMAINING);
 
 	public static String getString(CLIParam param) {
 		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
@@ -204,6 +211,10 @@ public enum CLIParam {
 
 	public static Map<CLIParam, String> getParsed() {
 		return CLIParam.CLI_PARSED.get();
+	}
+
+	public static List<String> getRemaining() {
+		return CLIParam.CLI_REMAINING.get();
 	}
 
 	public static synchronized boolean parse(String... args) {
@@ -259,7 +270,15 @@ public enum CLIParam {
 				}
 			}
 		}
-		CLIParam.CLI_PARSED.set(Collections.unmodifiableMap(cliParams));
+		List<?> remaining = cli.getArgList();
+		if (!remaining.isEmpty()) {
+			List<String> l = new ArrayList<String>(remaining.size());
+			for (Object o : remaining) {
+				l.add(Tools.toString(o));
+			}
+			CLIParam.CLI_REMAINING.set(Tools.freezeList(l));
+		}
+		CLIParam.CLI_PARSED.set(Tools.freezeMap(cliParams));
 		return true;
 	}
 }
