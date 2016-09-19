@@ -47,7 +47,10 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 
 	private static final String HEADERS = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT,CHILD_SIZE";
 
-	private static final String LISTER = "select r_object_id from dm_folder where folder(ID(%s), DESCEND)";
+	private static final String FOLDER_LISTER = "select r_object_id from dm_folder where folder(ID(%s), DESCEND)";
+	private static final String CABINET_ALL_LISTER = "select distinct r_object_id from dm_cabinet";
+	// private static final String CABINET_PUBPRIV_LISTER = "select distinct r_object_id from
+	// dm_cabinet where is_public = %s";
 	private static final String COUNTER = "select count(*) from dm_sysobject (ALL) where folder(ID(%s)) and not type(dm_folder)";
 	private static final String SIZER = "select sum(r_full_content_size) from dm_sysobject (ALL) where folder(ID(%s)) and not type(dm_folder)";
 
@@ -140,6 +143,16 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
 
+		final Set<String> rootFolderIds = new HashSet<String>();
+		if (CLIParam.count_include.isPresent()) {
+			// We only want one folder, so find it
+			String path = CLIParam.count_include.getString();
+			if (StringUtils
+				.isEmpty(path)) { throw new CMSMFException("Must provide a folder name to count the objects for"); }
+			rootFolderIds.add(path);
+		} else if (CLIParam.non_recursive.isPresent()) { throw new CMSMFException(
+			"May not request non-recursive searches without providing a folder to count"); }
+
 		final DfcSessionPool pool;
 		try {
 			pool = new DfcSessionPool(settings);
@@ -149,9 +162,6 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 
 		try {
 			final Logger manifest = Logger.getLogger("manifest");
-			String folderPath = CLIParam.count_path.getString();
-			if (StringUtils.isEmpty(
-				folderPath)) { throw new CMSMFException("Must provide a cabinet name to count the objects for"); }
 
 			final List<CounterResult> results = Collections.synchronizedList(new ArrayList<CounterResult>());
 
@@ -241,6 +251,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 				}
 			};
 
+			String activity = "retrieving the list of cabinets";
 			try {
 				final IDfSession session = pool.acquireSession();
 				final Set<String> traversed = new HashSet<String>();
@@ -249,37 +260,58 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 				try {
 					session.beginTrans();
 
-					IDfFolder root = session.getFolderByPath(folderPath);
-					if (root == null) { throw new CMSMFException(
-						String.format("Could not find the folder at [%s]", folderPath)); }
-
-					this.console.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
-					manifest.info(CMSMFMain_counter.HEADERS);
-					workers.addWorkItem(root.getObjectId());
-
-					if (!CLIParam.non_recursive.isPresent()) {
-						String dql = String.format(CMSMFMain_counter.LISTER,
-							DfUtils.quoteString(root.getObjectId().getId()));
-						IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
+					if (rootFolderIds.isEmpty()) {
+						// If no paths or IDs are specified, scan through all the cabinets
+						IDfCollection c = null;
+						String dql = CMSMFMain_counter.CABINET_ALL_LISTER;
 						try {
-							int count = 0;
+							c = DfUtils.executeQuery(session, dql);
 							while (c.next()) {
-								IDfId id = c.getValueAt(0).asId();
-								if ((id == null) || id.isNull()) {
-									continue;
-								}
-								if (traversed.add(id.getId())) {
-									workers.addWorkItem(id);
-									if ((++count % 1000) == 0) {
-										this.console.info("Submitted {} folders for analysis", count);
-									}
+								IDfId id = c.getId("r_object_id");
+								if ((id != null) && !id.isNull()) {
+									rootFolderIds.add(id.getId());
 								}
 							}
-							this.console.info("Submitted a total of {} folders for analysis", count);
 						} finally {
 							DfUtils.closeQuietly(c);
 						}
 					}
+
+					int count = 0;
+					for (String folderSpec : rootFolderIds) {
+						activity = String.format("analyzing the contents of folder [%s]", folderSpec);
+						IDfFolder folder = session.getFolderBySpecification(folderSpec);
+						if (folder == null) { throw new CMSMFException(
+							String.format("Could not find the folder at [%s]", folderSpec)); }
+
+						activity = String.format("analyzing the contents of folder [%s]", folder.getPath(0));
+						this.console.info(String.format("##### Counter Process Started for [%s] #####", folderSpec));
+						manifest.info(CMSMFMain_counter.HEADERS);
+						workers.addWorkItem(folder.getObjectId());
+
+						if (!CLIParam.non_recursive.isPresent()) {
+							String dql = String.format(CMSMFMain_counter.FOLDER_LISTER,
+								DfUtils.quoteString(folder.getObjectId().getId()));
+							IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
+							try {
+								while (c.next()) {
+									IDfId id = c.getValueAt(0).asId();
+									if ((id == null) || id.isNull()) {
+										continue;
+									}
+									if (traversed.add(id.getId())) {
+										workers.addWorkItem(id);
+										if ((++count % 1000) == 0) {
+											this.console.info("Submitted {} folders for analysis", count);
+										}
+									}
+								}
+							} finally {
+								DfUtils.closeQuietly(c);
+							}
+						}
+					}
+					this.console.info("Submitted a total of {} folders for analysis", count);
 				} finally {
 					workers.waitForCompletion();
 					this.console.info("##### Counter Process Finished #####");
@@ -293,8 +325,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			} catch (Throwable t) {
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
-				report.append(
-					String.format("%n%nException caught while attempting an object count for [%s]%n%n", folderPath));
+				report.append(String.format("%n%nException caught while %s%n%n", activity));
 				t.printStackTrace(pw);
 				exceptionReport = sw.toString();
 			} finally {

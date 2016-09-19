@@ -1,6 +1,7 @@
 package com.delta.cmsmf.cfg;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -37,7 +38,18 @@ public enum CLIParam {
 	threads(Setting.THREADS, 1, "The number of threads to use while importing or exporting"),
 	non_recursive(null, 0, "Turn off counter recursion (i.e. to count a single folder without descending)"),
 	count_empty(null, 0, "Enable reporting of empty folders (i.e. folders with 0 non-folder children)"),
-	count_path(null, 1, "The path within which to count objects for"),
+	count_private(
+		null,
+		1,
+		"For any cabinets encountered, evaluate their private status and include (true/yes/1), exclude (false/no/0) them. The special value 'any' (default) causes the status to not be taken into account"),
+	count_include(
+		null,
+		-1,
+		"Include the folder in the count (defaults to only these, may be specified multiple times) - path or object ID is valid"),
+	count_exclude(
+		null,
+		-1,
+		"Exclude the folder in the count (defaults to ALL except these, may be specified multiple times) - path or object ID is valid"),
 	cmf_exclude_types(
 		Setting.CMF_EXCLUDE_TYPES,
 		-1,
@@ -123,6 +135,7 @@ public enum CLIParam {
 
 	public final Setting property;
 	public final Option option;
+	private final int paramCount;
 
 	private CLIParam(Setting property, int paramCount, boolean required, String description) {
 		this.property = property;
@@ -133,10 +146,10 @@ public enum CLIParam {
 		OptionBuilder.withDescription(description);
 		OptionBuilder.withValueSeparator(',');
 		if (paramCount < 0) {
-			OptionBuilder.hasArgs(Integer.MAX_VALUE);
-		} else if (paramCount > 0) {
-			OptionBuilder.hasArgs(paramCount);
+			paramCount = Integer.MAX_VALUE;
 		}
+		OptionBuilder.hasArgs(paramCount);
+		this.paramCount = paramCount;
 		this.option = OptionBuilder.create();
 	}
 
@@ -158,6 +171,16 @@ public enum CLIParam {
 		return (v != null ? v.booleanValue() : def);
 	}
 
+	public List<Boolean> getAllBoolean() {
+		List<String> l = getAllString();
+		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
+		List<Boolean> r = new ArrayList<Boolean>(l.size());
+		for (String s : l) {
+			r.add(Tools.toBoolean(s));
+		}
+		return Tools.freezeList(r);
+	}
+
 	public Integer getInteger() {
 		String s = getString();
 		return (s != null ? Integer.valueOf(s) : null);
@@ -166,6 +189,16 @@ public enum CLIParam {
 	public int getInteger(int def) {
 		Integer v = getInteger();
 		return (v != null ? v.intValue() : def);
+	}
+
+	public List<Integer> getAllInteger() {
+		List<String> l = getAllString();
+		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
+		List<Integer> r = new ArrayList<Integer>(l.size());
+		for (String s : l) {
+			r.add(Integer.valueOf(s));
+		}
+		return Tools.freezeList(r);
 	}
 
 	public Double getDouble() {
@@ -178,6 +211,16 @@ public enum CLIParam {
 		return (v != null ? v.doubleValue() : def);
 	}
 
+	public List<Double> getAllDouble() {
+		List<String> l = getAllString();
+		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
+		List<Double> r = new ArrayList<Double>(l.size());
+		for (String s : l) {
+			r.add(Double.valueOf(s));
+		}
+		return Tools.freezeList(r);
+	}
+
 	public String getString() {
 		return CLIParam.getString(this);
 	}
@@ -187,29 +230,44 @@ public enum CLIParam {
 		return (v != null ? v : def);
 	}
 
+	public List<String> getAllString() {
+		return CLIParam.getAllString(this);
+	}
+
 	private static final String[] NO_OPTS = new String[0];
-	private static final Map<CLIParam, String> NO_PARSED = Collections.emptyMap();
+	private static final Map<CLIParam, List<String>> NO_PARSED = Collections.emptyMap();
 	private static final List<String> NO_REMAINING = Collections.emptyList();
-	private static AtomicReference<Map<CLIParam, String>> CLI_PARSED = new AtomicReference<Map<CLIParam, String>>(
+	private static AtomicReference<Map<CLIParam, List<String>>> CLI_PARSED = new AtomicReference<Map<CLIParam, List<String>>>(
 		CLIParam.NO_PARSED);
 	private static AtomicReference<List<String>> CLI_REMAINING = new AtomicReference<List<String>>(
 		CLIParam.NO_REMAINING);
 
 	public static String getString(CLIParam param) {
 		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
-		Map<CLIParam, String> m = CLIParam.getParsed();
+		Map<CLIParam, List<String>> m = CLIParam.getParsed();
 		if (m == null) { return null; }
-		return m.get(param);
+		List<String> l = m.get(param);
+		if ((l == null) || l.isEmpty()) { return null; }
+		return l.get(0);
+	}
+
+	public static List<String> getAllString(CLIParam param) {
+		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
+		Map<CLIParam, List<String>> m = CLIParam.getParsed();
+		if (m == null) { return null; }
+		List<String> l = m.get(param);
+		if ((l == null) || l.isEmpty()) { return CLIParam.NO_REMAINING; }
+		return l;
 	}
 
 	public static boolean isPresent(CLIParam param) {
 		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
-		Map<CLIParam, String> m = CLIParam.getParsed();
+		Map<CLIParam, List<String>> m = CLIParam.getParsed();
 		if (m == null) { return false; }
 		return m.containsKey(param);
 	}
 
-	public static Map<CLIParam, String> getParsed() {
+	public static Map<CLIParam, List<String>> getParsed() {
 		return CLIParam.CLI_PARSED.get();
 	}
 
@@ -245,28 +303,30 @@ public enum CLIParam {
 		}
 
 		// Convert the command-line parameters into "configuration properties"
-		Map<CLIParam, String> cliParams = new EnumMap<CLIParam, String>(CLIParam.class);
-		StringBuilder b = new StringBuilder();
+		Map<CLIParam, List<String>> cliParams = new EnumMap<CLIParam, List<String>>(CLIParam.class);
 		for (CLIParam p : CLIParam.values()) {
 			if (cli.hasOption(p.option.getLongOpt())) {
+				// If it takes no parameters, ignore whatever was submitted
+				if (p.paramCount == 0) {
+					cliParams.put(p, CLIParam.NO_REMAINING);
+					continue;
+				}
+
+				// It take parameters, so ... store them
 				String[] v = cli.getOptionValues(p.option.getLongOpt());
 				if ((v != null) && (v.length > 0)) {
-					if (v.length == 1) {
+					List<String> l = null;
+					// If it only has one, or it only takes one, only keep one
+					if ((v.length == 1) || (p.paramCount == 1)) {
 						// Single value, life is easy :)
-						cliParams.put(p, v[0]);
+						l = Collections.singletonList(v[0]);
 					} else {
-						// Multi-value, must concatenate as comma-separated
-						b.setLength(0);
-						for (String s : v) {
-							if (b.length() > 0) {
-								b.append(',');
-							}
-							b.append(s);
-						}
-						cliParams.put(p, b.toString());
+						l = Arrays.asList(v);
 					}
+					cliParams.put(p, Tools.freezeList(l));
 				} else {
-					cliParams.put(p, null);
+					// The parameters may be optional....???
+					cliParams.put(p, CLIParam.NO_REMAINING);
 				}
 			}
 		}

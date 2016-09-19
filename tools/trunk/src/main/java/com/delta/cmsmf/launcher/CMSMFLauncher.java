@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -75,8 +76,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 		final String engine = CLIParam.engine.getString();
 		if (engine == null) { throw new IllegalArgumentException(String.format("Must provide a --engine parameter")); }
 		Matcher m = CMSMFLauncher.ENGINE_PARSER.matcher(engine);
-		if (!m.matches()) { throw new IllegalArgumentException(String.format(
-			"Invalid --engine parameter value [%s] - must only contain [a-zA-Z_0-9]", engine)); }
+		if (!m.matches()) { throw new IllegalArgumentException(
+			String.format("Invalid --engine parameter value [%s] - must only contain [a-zA-Z_0-9]", engine)); }
 
 		String log4j = CLIParam.log4j.getString();
 		boolean customLog4j = false;
@@ -146,11 +147,11 @@ public class CMSMFLauncher extends AbstractLauncher {
 			if (!p.isPresent()) {
 				continue;
 			}
-			String value = p.getString();
-			if ((value != null) && (p.property != null)) {
+			List<String> values = p.getAllString();
+			if ((values != null) && !values.isEmpty() && (p.property != null)) {
 				final String key = p.property.name;
-				if ((key != null) && (value != null)) {
-					CMSMFLauncher.PARAMETER_PROPERTIES.setProperty(key, value);
+				if ((key != null) && !values.isEmpty()) {
+					CMSMFLauncher.PARAMETER_PROPERTIES.setProperty(key, StringUtils.join(values, ','));
 				}
 			}
 		}
@@ -162,8 +163,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 		try {
 			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, engine, mode));
 		} catch (ClassNotFoundException e) {
-			System.err
-			.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode, engine);
+			System.err.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode,
+				engine);
 			return;
 		}
 

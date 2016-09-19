@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.delta.cmsmf.cfg.CLIParam;
@@ -15,7 +16,7 @@ public class DFCLauncher extends AbstractLauncher {
 	public static void main(String[] args) throws Throwable {
 		if (!CLIParam.parse(args)) { return; }
 
-		Map<CLIParam, String> cliParams = CLIParam.getParsed();
+		Map<CLIParam, List<String>> cliParams = CLIParam.getParsed();
 		if (cliParams == null) { return; }
 
 		Collection<File> classpath = new ArrayList<File>();
@@ -39,23 +40,24 @@ public class DFCLauncher extends AbstractLauncher {
 			var = System.getenv(AbstractLauncher.ENV_DOCUMENTUM);
 			if (cliParams.containsKey(CLIParam.dctm)) {
 				// DFC is specified
-				var = cliParams.get(CLIParam.dctm);
+				List<String> l = cliParams.get(CLIParam.dctm);
+				var = (!l.isEmpty() ? l.get(0) : null);
 			} else {
 				// Go with the environment
-				if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
-					AbstractLauncher.ENV_DOCUMENTUM)); }
+				if (var == null) { throw new RuntimeException(
+					String.format("The environment variable [%s] is not set", AbstractLauncher.ENV_DOCUMENTUM)); }
 			}
 
 			base = new File(var).getCanonicalFile();
-			if (!base.isDirectory()) { throw new FileNotFoundException(String.format(
-				"Could not find the directory [%s]", base.getAbsolutePath())); }
+			if (!base.isDirectory()) { throw new FileNotFoundException(
+				String.format("Could not find the directory [%s]", base.getAbsolutePath())); }
 
 			// Make sure the environment reflects our changes
 			environment.put(AbstractLauncher.ENV_DOCUMENTUM, base.getCanonicalPath());
 
 			tgt = new File(base, "config");
-			if (!base.isDirectory()) { throw new FileNotFoundException(String.format(
-				"Could not find the directory [%s]", tgt.getAbsolutePath())); }
+			if (!base.isDirectory()) { throw new FileNotFoundException(
+				String.format("Could not find the directory [%s]", tgt.getAbsolutePath())); }
 
 			classpath.add(tgt);
 
@@ -63,7 +65,8 @@ public class DFCLauncher extends AbstractLauncher {
 			var = System.getenv(AbstractLauncher.ENV_DOCUMENTUM_SHARED);
 			if (cliParams.containsKey(CLIParam.dfc)) {
 				// DFC is specified
-				var = cliParams.get(CLIParam.dfc);
+				List<String> l = cliParams.get(CLIParam.dfc);
+				var = (!l.isEmpty() ? l.get(0) : null);
 			} else {
 				// Go with the environment
 				if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
@@ -72,16 +75,16 @@ public class DFCLauncher extends AbstractLauncher {
 
 			// Next, is it a directory?
 			base = new File(var).getCanonicalFile();
-			if (!base.isDirectory()) { throw new FileNotFoundException(String.format(
-				"Could not find the directory [%s]", base.getAbsolutePath())); }
+			if (!base.isDirectory()) { throw new FileNotFoundException(
+				String.format("Could not find the directory [%s]", base.getAbsolutePath())); }
 
 			// Make sure the environment reflects our changes
 			environment.put(AbstractLauncher.ENV_DOCUMENTUM_SHARED, base.getCanonicalPath());
 
 			// Next, does dctm.jar exist in there?
 			tgt = new File(base, AbstractLauncher.DCTM_JAR);
-			if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
-				tgt.getAbsolutePath())); }
+			if (!tgt.isFile()) { throw new FileNotFoundException(
+				String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath())); }
 
 			// Next, to the classpath
 			classpath.add(tgt);
