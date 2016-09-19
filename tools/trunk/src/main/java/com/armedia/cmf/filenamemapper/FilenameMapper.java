@@ -37,7 +37,7 @@ import com.documentum.fc.common.IDfId;
 
 public class FilenameMapper {
 
-	private static enum Fixer {
+	public static enum Fixer {
 
 		//
 		WIN(255, "[\"*\\\\><?/:|\u0000]") {
