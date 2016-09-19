@@ -42,9 +42,27 @@ public class FilenameDeduplicator {
 			if (id == null) { throw new IllegalArgumentException("Must provide a non-null id"); }
 			this.id = id;
 		}
+
+		@Override
+		public final int hashCode() {
+			return Tools.hashTool(this, null, this.id);
+		}
+
+		@Override
+		public final boolean equals(Object obj) {
+			if (!Tools.baseEquals(this, obj)) { return false; }
+			FSObject other = FSObject.class.cast(obj);
+			if (getOuterType() != other.getOuterType()) { return false; }
+			if (!Tools.equals(this.id, other.id)) { return false; }
+			return true;
+		}
+
+		private FilenameDeduplicator getOuterType() {
+			return FilenameDeduplicator.this;
+		}
 	}
 
-	private class FSEntry extends FSObject {
+	private class FSEntry extends FSObject implements Comparable<FSEntry> {
 		private final ReadWriteLock parentsLock = new ReentrantReadWriteLock();
 		private final Map<String, FSEntryContainer> parents = new HashMap<String, FSEntryContainer>();
 		private final String originalName;
@@ -98,6 +116,25 @@ public class FilenameDeduplicator {
 			return String.format("FSEntry [id=%s, originalName={%s}, newName={%s}]", this.id, this.originalName,
 				this.newName);
 		}
+
+		@Override
+		public int compareTo(FSEntry o) {
+			if (o == null) { return 1; }
+
+			// First, sort by name
+			int r = Tools.compare(this.newName, o.newName);
+			if (r != 0) { return r; }
+
+			// Then, the one with the fewest parents sorts first
+			r = Tools.compare(this.parents.size(), o.parents.size());
+			if (r != 0) { return r; }
+
+			// Then, the one with the "newest" ID sorts first
+			r = Tools.compare(this.id, o.id);
+			if (r != 0) { return -r; }
+
+			return 0;
+		}
 	}
 
 	public class FSEntryContainer extends FSObject {
@@ -114,21 +151,21 @@ public class FilenameDeduplicator {
 
 		private void addChild(FSEntry child) {
 			if (child == null) { throw new IllegalArgumentException("Must provide a non-null child"); }
-			Map<String, FSEntry> m = null;
+			Map<String, FSEntry> namedChildren = null;
 			final boolean newConflict;
 
 			Lock l = this.childrenLock.writeLock();
 			l.lock();
 			try {
-				m = this.children.get(child.newName);
-				if (m == null) {
+				namedChildren = this.children.get(child.newName);
+				if (namedChildren == null) {
 					// This is a new object name, so we create the map to contain
 					// all entries with that name
-					m = new HashMap<String, FSEntry>();
-					this.children.put(child.newName, m);
+					namedChildren = new HashMap<String, FSEntry>();
+					this.children.put(child.newName, namedChildren);
 				}
-				m.put(child.id, child);
-				newConflict = (m.size() > 1);
+				namedChildren.put(child.id, child);
+				newConflict = (namedChildren.size() > 1);
 			} finally {
 				l.unlock();
 			}
@@ -152,21 +189,21 @@ public class FilenameDeduplicator {
 			Lock l = this.childrenLock.writeLock();
 			l.lock();
 			try {
-				final Map<String, FSEntry> oldM = this.children.get(oldName);
-				if (oldM == null) {
+				final Map<String, FSEntry> oldNamedChildren = this.children.get(oldName);
+				if (oldNamedChildren == null) {
 					// ERROR!! Parent link defect
 					throw new IllegalStateException("An entry refers to a parent that knows nothing about it");
 				}
-				oldM.remove(child.id);
-				oldSize = oldM.size();
+				oldNamedChildren.remove(child.id);
+				oldSize = oldNamedChildren.size();
 
-				Map<String, FSEntry> newM = this.children.get(child.newName);
-				if (newM == null) {
-					newM = new HashMap<String, FSEntry>();
-					this.children.put(child.newName, newM);
+				Map<String, FSEntry> newNamedChildren = this.children.get(child.newName);
+				if (newNamedChildren == null) {
+					newNamedChildren = new HashMap<String, FSEntry>();
+					this.children.put(child.newName, newNamedChildren);
 				}
-				newM.put(child.id, child);
-				newSize = newM.size();
+				newNamedChildren.put(child.id, child);
+				newSize = newNamedChildren.size();
 			} finally {
 				l.unlock();
 			}
@@ -193,14 +230,19 @@ public class FilenameDeduplicator {
 				l.unlock();
 			}
 
+			// Check to see if our conflict status is different from before. If it's the same,
+			// then we don't do anything since there's no need.
 			if (oldConflict != newConflict) {
-				if (newConflict) { // if we weren't in conflict, but are now
+				if (newConflict) {
+					// if we weren't in conflict, but are now
 					conflictsDetected(this);
-				} else // If we were in conflict, but aren't anymore
-				if (oldConflict) {
+				} else {
+					// If we were in conflict, but aren't anymore
 					conflictsCleared(this);
 				}
 			}
+			// Finally, mark the entry as renamed. But if it got renamed to its original
+			// name, then unmark it as renamed so we don't do anything to it
 			if (Tools.equals(child.originalName, child.newName)) {
 				FilenameDeduplicator.this.renamedEntries.remove(child.id);
 			} else {
