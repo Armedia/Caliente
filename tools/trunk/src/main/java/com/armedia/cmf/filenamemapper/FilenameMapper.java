@@ -50,13 +50,14 @@ public class FilenameMapper {
 			protected String fixLength(String name) {
 				// Mind the extension on the rename...
 				String ext = FilenameUtils.getExtension(name);
+				String base = FilenameUtils.getBaseName(name);
 				int maxLength = this.maxLength;
 				if (!StringUtils.isEmpty(ext)) {
 					maxLength -= (ext.length() + 1);
 				}
-				name = name.substring(0, Math.min(name.length(), maxLength));
+				base = base.substring(0, Math.min(base.length(), maxLength));
 				if (!StringUtils.isEmpty(ext)) {
-					name = String.format("%s.%s", name, ext);
+					name = String.format("%s.%s", base, ext);
 				}
 				return name;
 			}
@@ -145,7 +146,7 @@ public class FilenameMapper {
 			srcName = fixFinalName(srcName, Tools.coalesce(fixChar, FilenameMapper.DEFAULT_FIX_CHAR));
 
 			// Now, fix the length
-			if ((this.maxLength > 0) && fixLength) {
+			if ((this.maxLength > 0) && (srcName.length() >= this.maxLength) && fixLength) {
 				srcName = fixLength(srcName);
 			}
 
