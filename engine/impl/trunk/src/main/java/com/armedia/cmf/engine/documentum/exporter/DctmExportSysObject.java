@@ -536,6 +536,17 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return m.get(object.getObjectId().getId());
 	}
 
+	protected final Integer getHeadIndex(T object, DctmExportContext ctx) throws DfException, ExportException {
+		IDfId chronicleId = object.getChronicleId();
+		String currentId = ctx.getObject(String.format(DctmExportSysObject.CTX_VERSION_CURRENT, chronicleId.getId()));
+		if (currentId == null) { return null; }
+
+		Map<String, Integer> m = ctx
+			.getObject(String.format(DctmExportSysObject.CTX_VERSION_INDEXES, object.getChronicleId().getId()));
+		if (m == null) { return null; }
+		return m.get(currentId);
+	}
+
 	protected final IDfValue getPatchAntecedent(T object, DctmExportContext ctx) throws DfException {
 		return ctx.getValue(String.format(DctmExportSysObject.CTX_PATCH_ANTECEDENT, object.getObjectId().getId()));
 	}

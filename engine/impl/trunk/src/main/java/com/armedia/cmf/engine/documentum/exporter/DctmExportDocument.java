@@ -75,6 +75,13 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		if (historyIndex != null) {
 			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_INDEX,
 				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(historyIndex)));
+			/*
+			historyIndex = getHeadIndex(document, ctx);
+			if (historyIndex != null) {
+				properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_HEAD_INDEX,
+					DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(historyIndex)));
+			}
+			*/
 		}
 
 		List<IDfValue> patches = getVersionPatches(document, ctx);
