@@ -125,7 +125,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 				final int index = vIndexCodec.encodeValue(vIndex.getValue()).asInteger();
 				final int indexHead = vIndexHeadCodec.encodeValue(vIndexHead.getValue()).asInteger();
 
-				final boolean lastIsHead = (index == indexHead);
+				final boolean lastIsHead = (counter == indexHead);
 
 				if ((index > 0) && (vDoc || !lastIsHead || !headVersion)) {
 					final int offset = (lastIsHead ? 1 : 0);
