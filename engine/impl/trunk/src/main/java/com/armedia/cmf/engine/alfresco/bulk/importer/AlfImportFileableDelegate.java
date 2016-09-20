@@ -50,6 +50,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private static final String METADATA_SUFFIX = ".metadata.properties.xml";
 
 	public static final String REFERENCE_TYPE = "arm:reference";
+	public static final String VDOC_REFERENCE_TYPE = "arm:vdocReference";
 	public static final String STATUS_ASPECT = "arm:calienteStatus";
 	public static final String CALIENTE_ASPECT = "arm:caliente";
 
@@ -189,9 +190,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private final boolean reference;
 	private final boolean virtual;
 	private final AlfrescoType defaultType;
+	private final AlfrescoType referenceType;
 	private final AlfrescoType vdocRoot;
 	private final AlfrescoType vdocVersion;
-	private final AlfrescoType referenceType;
+	private final AlfrescoType vdocReference;
 
 	public AlfImportFileableDelegate(String defaultType, AlfImportDelegateFactory factory,
 		CmfObject<CmfValue> storedObject) throws Exception {
@@ -201,9 +203,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		CmfValue virtual = getPropertyValue(IntermediateProperty.VDOC_HISTORY);
 		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
 		this.defaultType = this.factory.getType(defaultType);
+		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
 		this.vdocRoot = this.factory.getType("cm:folder", "arm:vdocRoot");
 		this.vdocVersion = this.factory.getType("cm:folder", "arm:vdocVersion");
-		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
+		this.vdocReference = this.factory.getType("cm:content", AlfImportFileableDelegate.VDOC_REFERENCE_TYPE);
 	}
 
 	protected final boolean isVirtual() {
@@ -541,17 +544,21 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty("arm:renditionFormat", content.getMimeType().toString());
 	}
 
-	protected final void populateReference(Properties p, String referenceId, String targetName, String targetId,
+	protected final void populateVdocReference(Properties p, String referenceId, String targetName, String targetId,
 		String label) throws ImportException {
 		// Set the type property
-		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, AlfImportFileableDelegate.REFERENCE_TYPE);
+		AlfrescoType type = this.vdocReference;
+		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, type.getName());
 		Collection<String> aspects = new LinkedHashSet<String>();
+		for (String aspect : type.getAspects()) {
+			aspects.add(aspect);
+		}
 		aspects.add(AlfImportFileableDelegate.CALIENTE_ASPECT);
 		aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
 		p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
 		p.setProperty("arm:aspects", StringUtils.join(aspects, ','));
 		p.setProperty("arm:aclInheritance", "NONE[]");
-		p.setProperty("arm:baseReferenceId", referenceId);
+		p.setProperty("arm:vdocReferenceId", referenceId);
 		p.setProperty("cm:name", targetName);
 		p.setProperty("dctm:binding_condition", "VERSION_LABEL");
 		p.setProperty("dctm:reference_by_id", targetId);
@@ -692,7 +699,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						}
 
 						Properties memberProps = new Properties();
-						populateReference(memberProps, memberData[0], memberData[0], memberData[1], memberData[2]);
+						populateVdocReference(memberProps, memberData[0], memberData[0], memberData[1], memberData[2]);
 
 						File refTarget = new File(refHome, memberData[0]);
 						File refMeta = new File(refHome,

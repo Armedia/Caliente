@@ -97,14 +97,6 @@
 		<type name="arm:reference">
 			<title>Armedia Caliente Object Reference</title>
 			<parent>cm:content</parent>
-			<properties>
-				<property name="arm:baseReferenceId">
-					<title>Original ID for the reference object itself</title>
-					<type>d:text</type>
-					<mandatory enforced="false">true</mandatory>
-					<multiple>false</multiple>
-				</property>
-			</properties>
 			<mandatory-aspects>
 				<aspect>dctm:dm_reference</aspect>
 			</mandatory-aspects>
@@ -1204,6 +1196,25 @@
 		</aspect>
 		<!--
 			END arm:vdocVersion
+		-->
+
+		<!--
+			BEGIN arm:vdocReference
+		-->
+		<aspect name="arm:vdocReference">
+			<title>Armedia Caliente Virtual Document Object Reference</title>
+			<parent>dctm:dm_reference</parent>
+			<properties>
+				<property name="arm:vdocReferenceId">
+					<title>Original ID for the reference object itself</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END arm:vdocReference
 		-->
 	</aspects>
 </model>
