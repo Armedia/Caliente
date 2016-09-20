@@ -16,6 +16,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 
+import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.cmf.engine.exporter.ExportEngine;
@@ -95,8 +96,14 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		@Override
 		public int compareTo(CounterResult o) {
 			if (o == null) { return 1; }
-			int r = Tools.compare(this.path, o.path);
+
+			// Case-insensitive sort...
+			int r = Tools.compare(this.path.toLowerCase(), o.path.toLowerCase());
 			if (r != 0) { return r; }
+			// If case insensitive fails to decide, then let the case decide
+			r = Tools.compare(this.path, o.path);
+			if (r != 0) { return r; }
+			// Path is not enough, look at the object's ID
 			r = Tools.compare(this.id.getId(), o.id.getId());
 			if (r != 0) { return r; }
 			return 0;
@@ -143,15 +150,11 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			settings.put(DfcSessionFactory.PASSWORD, this.password);
 		}
 
-		final Set<String> rootFolderIds = new HashSet<String>();
-		if (CLIParam.count_include.isPresent()) {
-			// We only want one folder, so find it
-			String path = CLIParam.count_include.getString();
-			if (StringUtils
-				.isEmpty(path)) { throw new CMSMFException("Must provide a folder name to count the objects for"); }
-			rootFolderIds.add(path);
-		} else if (CLIParam.non_recursive.isPresent()) { throw new CMSMFException(
-			"May not request non-recursive searches without providing a folder to count"); }
+		List<String> includedPaths = CLIParam.count_include.getAllString();
+		List<String> excludedPaths = CLIParam.count_exclude.getAllString();
+		final boolean countEmpty = CLIParam.count_empty.getBoolean(false);
+		final Boolean privateMode = CLIParam.count_private.getBoolean();
+		final Boolean hiddenMode = CLIParam.count_hidden.getBoolean();
 
 		final DfcSessionPool pool;
 		try {
@@ -254,14 +257,28 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			String activity = "retrieving the list of cabinets";
 			try {
 				final IDfSession session = pool.acquireSession();
-				final Set<String> traversed = new HashSet<String>();
+				final Set<IDfId> traversed = new HashSet<IDfId>();
 
 				workers.start(Setting.THREADS.getInt(), DfId.DF_NULLID, true);
 				try {
 					session.beginTrans();
 
-					if (rootFolderIds.isEmpty()) {
-						// If no paths or IDs are specified, scan through all the cabinets
+					// If paths are both included and excluded, then the exclusions are applied to
+					// the included set. First, we identify the excluded folders so we may filter
+					// them out. It's OK for exclusions to not exist...
+					Set<IDfId> excludedIds = new HashSet<IDfId>();
+					for (String folderSpec : excludedPaths) {
+						IDfFolder f = session.getFolderBySpecification(folderSpec);
+						if (f != null) {
+							excludedIds.add(f.getObjectId());
+						}
+					}
+					excludedIds = Tools.freezeSet(excludedIds);
+
+					if (includedPaths.isEmpty()) {
+						// Make sure we use a list we can modify...
+						includedPaths = new ArrayList<String>();
+						// No paths...we find all cabinets then
 						IDfCollection c = null;
 						String dql = CMSMFMain_counter.CABINET_ALL_LISTER;
 						try {
@@ -269,7 +286,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 							while (c.next()) {
 								IDfId id = c.getId("r_object_id");
 								if ((id != null) && !id.isNull()) {
-									rootFolderIds.add(id.getId());
+									includedPaths.add(id.getId());
 								}
 							}
 						} finally {
@@ -277,16 +294,51 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 						}
 					}
 
-					int count = 0;
-					for (String folderSpec : rootFolderIds) {
-						activity = String.format("analyzing the contents of folder [%s]", folderSpec);
-						IDfFolder folder = session.getFolderBySpecification(folderSpec);
-						if (folder == null) { throw new CMSMFException(
-							String.format("Could not find the folder at [%s]", folderSpec)); }
+					Set<String> includedFolders = new HashSet<String>();
+					for (String folderSpec : includedPaths) {
+						IDfFolder f = session.getFolderBySpecification(folderSpec);
+						if (f == null) {
+							this.log.warn(
+								"Failed to locate the folder specified by [{}] - its contents will not be counted",
+								folderSpec);
+							continue;
+						}
+						includedFolders.add(f.getFolderPath(0));
+					}
+					includedFolders = Tools.freezeSet(includedFolders);
 
-						activity = String.format("analyzing the contents of folder [%s]", folder.getPath(0));
-						this.console.info(String.format("##### Counter Process Started for [%s] #####", folderSpec));
-						manifest.info(CMSMFMain_counter.HEADERS);
+					// Simple trick to make sure we don't visit any of the folders we're not
+					// interested in
+					traversed.addAll(excludedIds);
+
+					int count = 0;
+					manifest.info(CMSMFMain_counter.HEADERS);
+					for (String folderPath : includedFolders) {
+						activity = String.format("analyzing the contents of folder [%s]", folderPath);
+						IDfFolder folder = session.getFolderByPath(folderPath);
+						if (folder == null) { throw new CMSMFException(
+							String.format("Could not find the folder at [%s]", folderPath)); }
+
+						if (traversed.contains(folder.getObjectId())) {
+							// We've already been here, so we skip it.
+							continue;
+						}
+
+						// Is this a folder that should be excluded due to privacy mode?
+						final boolean folderPrivate = folder.hasAttr(DctmAttributes.IS_PRIVATE)
+							&& folder.getBoolean(DctmAttributes.IS_PRIVATE);
+						if ((privateMode != null) && !privateMode.booleanValue() && folderPrivate) {
+							continue;
+						}
+
+						// Is this a folder that should be excluded due to hidden mode?
+						final boolean folderHidden = folder.getBoolean(DctmAttributes.A_IS_HIDDEN);
+						if ((hiddenMode != null) && !hiddenMode.booleanValue() && folderHidden) {
+							continue;
+						}
+
+						activity = String.format("analyzing the contents of folder [%s]", folderPath);
+						this.console.info(String.format("##### Counter Process Started for [%s] #####", folderPath));
 						workers.addWorkItem(folder.getObjectId());
 
 						if (!CLIParam.non_recursive.isPresent()) {
@@ -299,7 +351,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 									if ((id == null) || id.isNull()) {
 										continue;
 									}
-									if (traversed.add(id.getId())) {
+									if (traversed.add(id)) {
 										workers.addWorkItem(id);
 										if ((++count % 1000) == 0) {
 											this.console.info("Submitted {} folders for analysis", count);
@@ -336,9 +388,8 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			this.console.info("Sorting the obtained results ({} entries)", results.size());
 			Collections.sort(results);
 			this.console.info("Results sorted, outputting the manifest", results.size());
-			final boolean excludeEmpty = !CLIParam.count_empty.isPresent();
 			for (CounterResult r : results) {
-				if (r.isEmpty() && excludeEmpty) {
+				if (r.isEmpty() && !countEmpty) {
 					continue;
 				}
 				manifest.info(r.toString());

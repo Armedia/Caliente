@@ -41,7 +41,11 @@ public enum CLIParam {
 	count_private(
 		null,
 		1,
-		"For any cabinets encountered, evaluate their private status and include (true/yes/1), exclude (false/no/0) them. The special value 'any' (default) causes the status to not be taken into account"),
+		"For any cabinets encountered, evaluate their private status and include (true/yes/1), exclude (false/no/0) the private ones. The special value 'any' (default) causes the status to not be taken into account"),
+	count_hidden(
+		null,
+		1,
+		"For any folders encountered, evaluate their hidden status and include (true/yes/1), exclude (false/no/0) the hidden ones. The special value 'any' (default) causes the status to not be taken into account"),
 	count_include(
 		null,
 		-1,
@@ -163,7 +167,7 @@ public enum CLIParam {
 
 	public Boolean getBoolean() {
 		String s = getString();
-		return (s != null ? Boolean.valueOf(s) : null);
+		return (s != null ? Tools.toBoolean(s) : null);
 	}
 
 	public boolean getBoolean(boolean def) {
@@ -312,7 +316,7 @@ public enum CLIParam {
 					continue;
 				}
 
-				// It take parameters, so ... store them
+				// It takes parameters, so ... store them
 				String[] v = cli.getOptionValues(p.option.getLongOpt());
 				if ((v != null) && (v.length > 0)) {
 					List<String> l = null;
