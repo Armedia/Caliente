@@ -541,8 +541,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty("arm:renditionFormat", content.getMimeType().toString());
 	}
 
-	protected final void populateReference(Properties p, String targetName, String targetId, String label)
-		throws ImportException {
+	protected final void populateReference(Properties p, String referenceId, String targetName, String targetId,
+		String label) throws ImportException {
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, AlfImportFileableDelegate.REFERENCE_TYPE);
 		Collection<String> aspects = new LinkedHashSet<String>();
@@ -551,6 +551,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
 		p.setProperty("arm:aspects", StringUtils.join(aspects, ','));
 		p.setProperty("arm:aclInheritance", "NONE[]");
+		p.setProperty("arm:baseReferenceId", referenceId);
 		p.setProperty("cm:name", targetName);
 		p.setProperty("dctm:binding_condition", "VERSION_LABEL");
 		p.setProperty("dctm:reference_by_id", targetId);
@@ -691,7 +692,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						}
 
 						Properties memberProps = new Properties();
-						populateReference(memberProps, memberData[0], memberData[1], memberData[2]);
+						populateReference(memberProps, memberData[0], memberData[0], memberData[1], memberData[2]);
 
 						File refTarget = new File(refHome, memberData[0]);
 						File refMeta = new File(refHome,
