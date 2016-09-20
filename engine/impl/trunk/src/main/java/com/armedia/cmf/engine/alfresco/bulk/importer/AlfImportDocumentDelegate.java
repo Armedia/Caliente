@@ -2,6 +2,7 @@ package com.armedia.cmf.engine.alfresco.bulk.importer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 
@@ -36,7 +37,7 @@ public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 	@Override
 	protected boolean createStub(File target, String content) throws ImportException {
 		try {
-			FileUtils.write(target, content);
+			FileUtils.write(target, content, Charset.defaultCharset());
 			return true;
 		} catch (IOException e) {
 			throw new ImportException(String.format(
