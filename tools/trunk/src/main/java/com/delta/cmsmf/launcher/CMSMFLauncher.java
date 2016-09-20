@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -46,7 +47,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 				InputStream in = url.openStream();
 				final String str;
 				try {
-					str = IOUtils.toString(in);
+					str = IOUtils.toString(in, Charset.defaultCharset());
 				} finally {
 					IOUtils.closeQuietly(in);
 				}
