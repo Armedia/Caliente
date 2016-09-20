@@ -30,7 +30,6 @@ import com.armedia.cmf.engine.SessionWrapper;
 import com.armedia.cmf.engine.TransferEngine;
 import com.armedia.cmf.engine.TransferEngineSetting;
 import com.armedia.cmf.engine.TransferSetting;
-import com.armedia.cmf.engine.tools.PooledWorkers;
 import com.armedia.cmf.storage.CmfContentInfo;
 import com.armedia.cmf.storage.CmfContentStore;
 import com.armedia.cmf.storage.CmfObject;
@@ -41,6 +40,7 @@ import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.PooledWorkers;
 
 /**
  * @author diego
