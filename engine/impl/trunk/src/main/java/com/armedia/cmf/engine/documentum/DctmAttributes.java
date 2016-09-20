@@ -126,6 +126,9 @@ public class DctmAttributes {
 	/** The r_link_cnt attribute of dm_sysobject. */
 	public static final String R_LINK_CNT = "r_link_cnt";
 
+	/** The a_is_hidden attribute of dm_sysobject. */
+	public static final String A_IS_HIDDEN = "a_is_hidden";
+
 	// dm_folder Attributes
 	/** The r_folder_path attribute of dm_folder. */
 	public static final String R_FOLDER_PATH = "r_folder_path";
