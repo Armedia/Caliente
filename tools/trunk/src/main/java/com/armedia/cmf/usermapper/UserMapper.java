@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -43,6 +44,7 @@ import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfAttr;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -51,7 +53,16 @@ import com.unboundid.util.ssl.SSLUtil;
 
 public class UserMapper {
 	private static final Logger log = LoggerFactory.getLogger(UserMapper.class);
+
 	private static final Random RANDOM = new Random(System.currentTimeMillis());
+
+	private static final List<String> DEFAULT_DCTM_SAM_ATTRIBUTES;
+	static {
+		List<String> l = new ArrayList<String>();
+		l.add("user_login_name");
+		l.add("user_os_name");
+		DEFAULT_DCTM_SAM_ATTRIBUTES = Tools.freezeList(l);
+	}
 
 	private static final String NEWLINE = String.format("%n");
 
@@ -378,6 +389,50 @@ public class UserMapper {
 		}
 	}
 
+	private static Set<String> getMappingAttributes(DfcSessionPool pool) throws Exception {
+		List<String> attributes = CLIParam.dctm_sam.getAllString(UserMapper.DEFAULT_DCTM_SAM_ATTRIBUTES);
+		// Shortcut - if there's nothing to validate, don't bother validating...
+		if (attributes.isEmpty()) { return Collections.emptySet(); }
+
+		Set<String> candidates = new LinkedHashSet<String>(attributes);
+		Set<String> finalAttributes = new LinkedHashSet<String>();
+		IDfSession session = pool.acquireSession();
+		try {
+			// Who is the current user? Use that as a validation point...
+			IDfUser user = session.getUser(session.getLoginUserName());
+			if (user == null) { throw new Exception(
+				String.format("Failed to locate the current session's user object [%s]", session.getLoginUserName())); }
+			for (String attributeName : candidates) {
+				if (StringUtils.isEmpty(attributeName)) {
+					UserMapper.log.warn("Blank attribute name detected, ignoring it");
+					continue;
+				}
+				if (!user.hasAttr(attributeName)) {
+					UserMapper.log.warn("The attribute [{}] is not part of the user object type, ignoring it",
+						attributeName);
+					continue;
+				}
+				if (user.isAttrRepeating(attributeName)) {
+					UserMapper.log.warn("The attribute [{}] is a repeating attribute, ignoring it", attributeName);
+					continue;
+				}
+				switch (user.getAttrDataType(attributeName)) {
+					case IDfAttr.DM_STRING:
+					case IDfAttr.DM_ID:
+						break;
+					default:
+						UserMapper.log.warn("The attribute [{}] is not a string-equivalent attribute, ignoring it",
+							attributeName);
+						continue;
+				}
+				finalAttributes.add(attributeName);
+			}
+		} finally {
+			pool.releaseSession(session);
+		}
+		return Tools.freezeSet(finalAttributes);
+	}
+
 	static int run() {
 		DfcSessionPool dfcPool = null;
 		LDAPConnectionPool ldapPool = null;
@@ -394,6 +449,23 @@ public class UserMapper {
 					String.format("Failed to open the session pool to docbase [%s] as [%s]", docbase, dctmUser), e);
 				return 1;
 			}
+
+			// First things first: validate the list of attributes provided against those available
+			// in the user type. They must be string or ID-valued, and non-repeating
+			final Set<String> mappingAttributes;
+			try {
+				mappingAttributes = UserMapper.getMappingAttributes(dfcPool);
+			} catch (Exception e) {
+				UserMapper.log.error("Failed to validate the mapping attributes provided", e);
+				return 1;
+			}
+			if (mappingAttributes.isEmpty()) {
+				UserMapper.log.error("No mapping attributes specified, cannot continue");
+				return 1;
+			}
+
+			UserMapper.log.info("Will use the following attributes (in order) to map to sAMAccountName: {}",
+				mappingAttributes);
 
 			Callable<LdapUserDb> ldapUserCallable = null;
 			Callable<LdapGroupDb> ldapGroupCallable = null;
@@ -547,7 +619,16 @@ public class UserMapper {
 				// we're fine and we simply output the mapping
 				LdapUser ldap = null;
 				try {
-					ldap = ldapUserDb.getByName(user.getLogin());
+					for (String attribute : mappingAttributes) {
+						final String value = user.getAttribute(attribute);
+						ldap = ldapUserDb.getByName(value);
+						if (ldap != null) {
+							break;
+						}
+					}
+
+					// If we have no match by any of the other attributes, we attempt to match
+					// by GUID...
 					if (ldap == null) {
 						ldap = ldapUserDb.getByGuid(user.getGuid());
 					}

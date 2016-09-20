@@ -1,5 +1,6 @@
 package com.armedia.cmf.usermapper;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -11,31 +12,58 @@ import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfTypedObject;
+import com.documentum.fc.common.DfException;
+import com.documentum.fc.common.IDfAttr;
 
 public class DctmUser extends DctmPrincipal {
 	private static final long serialVersionUID = 1L;
 
 	private final String login;
+	private final String osName;
+	private final Map<String, String> attributes;
 
-	/**
-	 * @param name
-	 * @param login
-	 * @param source
-	 * @param guid
-	 */
-	public DctmUser(String name, String login, String source, String guid) {
+	protected DctmUser(String name, String source, String guid, IDfTypedObject obj) throws DfException {
 		super(name, source, guid);
-		this.login = login;
+		this.login = obj.getString("user_login_name");
+		this.osName = obj.getString("user_os_name");
+		final int attCount = obj.getAttrCount();
+		Map<String, String> attributes = new HashMap<String, String>(attCount);
+		for (int i = 0; i < attCount; i++) {
+			final IDfAttr att = obj.getAttr(i);
+			final String attName = att.getName();
+			if (att.isRepeating()) {
+				continue;
+			}
+			switch (att.getDataType()) {
+				case IDfAttr.DM_STRING:
+				case IDfAttr.DM_ID:
+					break;
+				default: // Only string or string-ish attributes are allowed
+					continue;
+			}
+			attributes.put(attName.toLowerCase(), obj.getString(attName));
+		}
+		this.attributes = Tools.freezeMap(attributes);
 	}
 
-	public String getLogin() {
+	public final String getLogin() {
 		return this.login;
+	}
+
+	public final String getOsName() {
+		return this.osName;
+	}
+
+	public final String getAttribute(String name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a non-null attribute name"); }
+		return this.attributes.get(name.toLowerCase());
 	}
 
 	@Override
 	public String toString() {
-		return String.format("DctmUser [name=%s, login=%s source=%s, guid=%s]", getName(), this.login, getSource(),
-			getGuid());
+		return String.format("DctmUser [name=%s, login=%s, osName=%s, source=%s, guid=%s, attributes=%s]", getName(),
+			this.login, this.osName, getSource(), getGuid(), this.attributes);
 	}
 
 	public static Callable<Map<String, DctmUser>> getUserLoader(final DfcSessionPool pool) {
@@ -54,19 +82,17 @@ public class DctmUser extends DctmPrincipal {
 					try {
 						// Only pull users that aren't groups
 						final IDfCollection c = DfUtils.executeQuery(session,
-							"select user_name, user_login_name, user_source, user_global_unique_id from dm_user where r_is_group = 0 order by 1",
-							IDfQuery.DF_READ_QUERY);
+							"select * from dm_user where r_is_group = 0 order by 1", IDfQuery.DF_READ_QUERY);
 						int i = 0;
 						try {
 							Map<String, DctmUser> users = new LinkedHashMap<String, DctmUser>();
 							while (c.next()) {
 								String name = c.getString("user_name");
-								String login = c.getString("user_login_name");
 								String source = c.getString("user_source");
 								String guid = c.getString("user_global_unique_id");
 
 								// Stow this crap elsewhere
-								users.put(name, new DctmUser(name, login, source, guid));
+								users.put(name, new DctmUser(name, source, guid, c));
 								if ((++i % 100) == 0) {
 									DctmPrincipal.LOG.info("Loaded {} Documentum Users", i);
 								}
@@ -87,7 +113,6 @@ public class DctmUser extends DctmPrincipal {
 					pool.releaseSession(session);
 				}
 			}
-
 		};
 	}
 }
