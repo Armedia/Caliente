@@ -206,7 +206,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
 		this.vdocRoot = this.factory.getType("cm:folder", "arm:vdocRoot");
 		this.vdocVersion = this.factory.getType("cm:folder", "arm:vdocVersion");
-		this.vdocReference = this.factory.getType("cm:content", AlfImportFileableDelegate.VDOC_REFERENCE_TYPE);
+		this.vdocReference = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE,
+			AlfImportFileableDelegate.VDOC_REFERENCE_TYPE);
 	}
 
 	protected final boolean isVirtual() {
