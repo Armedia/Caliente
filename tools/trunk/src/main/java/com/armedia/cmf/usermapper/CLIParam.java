@@ -10,10 +10,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Option.Builder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -47,18 +47,21 @@ public enum CLIParam {
 	private final int paramCount;
 
 	private CLIParam(int paramCount, boolean required, String description) {
+		String longOpt = name().replace('_', '-');
+		Builder b = Option.builder();
 		if (required) {
-			OptionBuilder.isRequired();
+			b.required();
 		}
-		OptionBuilder.withLongOpt(name().replace('_', '-'));
-		OptionBuilder.withDescription(description);
-		OptionBuilder.withValueSeparator(',');
+		b.longOpt(longOpt);
+		b.desc(description);
+		b.valueSeparator(',');
 		if (paramCount < 0) {
-			paramCount = Integer.MAX_VALUE;
+			b.hasArgs();
+		} else if (paramCount > 0) {
+			b.numberOfArgs(paramCount);
 		}
-		OptionBuilder.hasArgs(paramCount);
+		this.option = b.build();
 		this.paramCount = paramCount;
-		this.option = OptionBuilder.create();
 	}
 
 	private CLIParam(int paramCount, String description) {
@@ -200,7 +203,7 @@ public enum CLIParam {
 			options.addOption(p.option);
 		}
 
-		CommandLineParser parser = new GnuParser();
+		CommandLineParser parser = new DefaultParser();
 		final CommandLine cli;
 		try {
 			cli = parser.parse(options, args);
