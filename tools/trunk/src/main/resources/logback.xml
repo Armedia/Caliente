@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+<configuration scanPeriod="10 seconds" scan="true">
+	<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%d{ISO8601} [%-16t] %m%n</pattern>
+        </encoder>
+	</appender>
+	<appender name="stdout.async" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="stdout" />
+		<discardingThreshold>0</discardingThreshold>
+		<queueSize>10240</queueSize>
+	</appender>
+
+	<appender name="default" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${logName}.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${logName}.log.%i</fileNamePattern>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>1536MB</maxFileSize>
+		</triggeringPolicy>
+		<encoder>
+			<pattern>%d{ISO8601} %-5p [%t] %c - %m%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="default.async" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="default" />
+		<discardingThreshold>0</discardingThreshold>
+		<queueSize>10240</queueSize>
+	</appender>
+
+	<appender name="manifest" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${logName}.manifest.csv</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${logName}.manifest.csv.%i</fileNamePattern>
+		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>1536MB</maxFileSize>
+		</triggeringPolicy>
+ 	    <encoder>
+	        <pattern>%m%n</pattern>
+	    </encoder>
+	</appender>
+	<appender name="manifest.async" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="manifest" />
+		<discardingThreshold>0</discardingThreshold>
+		<queueSize>10240</queueSize>
+	</appender>
+
+	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
+
+	<logger name="com.delta.cmsmf" level="INFO"/>
+
+	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
+	<logger name="console" level="INFO" additivity="false">
+		<appender-ref ref="stdout.async" />
+		<appender-ref ref="default.async" />
+	</logger>
+
+	<logger name="manifest" level="INFO" additivity="false">
+		<appender-ref ref="manifest.async" />
+	</logger>
+
+	<root level="INFO">
+		<appender-ref ref="default.async" />
+	</root>
+</configuration>
