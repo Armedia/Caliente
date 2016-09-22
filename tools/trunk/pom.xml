@@ -78,6 +78,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.4</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-alfresco-bulk</artifactId>
 			<version>1.0.0</version>

@@ -2,6 +2,7 @@ package com.armedia.cmf.validator;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -9,6 +10,8 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -35,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.SchemaAttribute;
+import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;
 
 public class Validator {
@@ -46,14 +53,19 @@ public class Validator {
 	private static final Pattern VALID_FILENAME = Pattern
 		.compile("^.*\\.metadata\\.properties\\.xml(?:\\.v\\d+(?:\\.\\d+)?)?$", Pattern.CASE_INSENSITIVE);
 
+	private static final int BUFFER_SIZE = (int) FileUtils.ONE_MB;
+
+	private static final String METADATA_MARKER = ".metadata.properties.xml";
+	private static final String METADATA_MARKER_PATTERN = String.format("\\Q%s\\E", Validator.METADATA_MARKER);
 	private static final Pattern CHECKSUM_PARSER = Pattern.compile("^([^:]+):((?:[a-f0-9]{2})+)$",
 		Pattern.CASE_INSENSITIVE);
+
+	private static final String CONTENT_TYPE = "cm:content";
 
 	private static final String PROP_TYPE = "type";
 	private static final String PROP_ASPECTS = "aspects";
 	private static final String PROP_CHECKSUM = "streamChecksum";
-	// TODO: This should be made neutral
-	private static final String PROP_CONTENT_SIZE = "dctm:r_full_content_size";
+	// private static final String PROP_CONTENT_SIZE = "streamLength";
 
 	private static enum ValidationErrorType {
 		//
@@ -79,6 +91,40 @@ public class Validator {
 			this.candidate = candidate;
 		}
 
+		private CSVPrinter createOutputFile(File baseDir) throws IOException {
+			// Open the file
+			File targetFile = new File(baseDir, String.format("faults.%s.csv", this.type.name().toLowerCase()));
+
+			// Create the CSVPrinter
+			CSVPrinter p = new CSVPrinter(new FileWriter(targetFile), CSVFormat.DEFAULT);
+
+			// Print out the headers
+			writeHeaders(p);
+			p.println();
+			p.flush();
+
+			// Return the printer
+			return p;
+		}
+
+		protected void writeColumns(CSVPrinter p) throws IOException {
+			p.print(this.type.name());
+			p.print(this.source.toString());
+			p.print(this.candidate.toString());
+		}
+
+		protected final void writeRecord(CSVPrinter p) throws IOException {
+			writeColumns(p);
+			p.println();
+			p.flush();
+		}
+
+		protected void writeHeaders(CSVPrinter p) throws IOException {
+			p.print("FAULT TYPE");
+			p.print("SOURCE PATH");
+			p.print("CANDIDATE PATH");
+		}
+
 		@Override
 		public int compareTo(ValidationFault o) {
 			if (o == null) { return 1; }
@@ -94,15 +140,35 @@ public class Validator {
 
 	public static class ExceptionFault extends ValidationFault {
 		private final String message;
+		private final Boolean examiningSource;
 		private final Throwable exception;
-		private final boolean examiningSource;
 
 		private ExceptionFault(Path source, Path candidate, String message, Throwable exception,
-			boolean examiningSource) {
+			Boolean examiningSource) {
 			super(ValidationErrorType.EXCEPTION, source, candidate);
 			this.message = message;
 			this.exception = exception;
 			this.examiningSource = examiningSource;
+		}
+
+		@Override
+		protected void writeColumns(CSVPrinter p) throws IOException {
+			super.writeColumns(p);
+			String stage = "(unknown stage)";
+			if (this.examiningSource != null) {
+				stage = String.format("While examining the %s file", this.examiningSource ? "source" : "candidate");
+			}
+			p.print(stage);
+			p.print(this.message);
+			p.print(Tools.dumpStackTrace(this.exception));
+		}
+
+		@Override
+		protected void writeHeaders(CSVPrinter p) throws IOException {
+			super.writeHeaders(p);
+			p.print("STAGE");
+			p.print("MESSAGE");
+			p.print("EXCEPTION DUMP");
 		}
 	}
 
@@ -116,12 +182,18 @@ public class Validator {
 			this.candidateMessage = candidateMessage;
 		}
 
-		public boolean isSourceMissing() {
-			return (this.sourceMessage == null);
+		@Override
+		protected void writeColumns(CSVPrinter p) throws IOException {
+			super.writeColumns(p);
+			p.print(this.sourceMessage);
+			p.print(this.candidateMessage);
 		}
 
-		public boolean isCandidateMissing() {
-			return (this.candidateMessage == null);
+		@Override
+		protected void writeHeaders(CSVPrinter p) throws IOException {
+			super.writeHeaders(p);
+			p.print("SOURCE ERROR");
+			p.print("CANDIDATE ERROR");
 		}
 	}
 
@@ -134,6 +206,20 @@ public class Validator {
 			this.sourceType = sourceType;
 			this.candidateType = candidateType;
 		}
+
+		@Override
+		protected void writeColumns(CSVPrinter p) throws IOException {
+			super.writeColumns(p);
+			p.print(this.sourceType);
+			p.print(this.candidateType);
+		}
+
+		@Override
+		protected void writeHeaders(CSVPrinter p) throws IOException {
+			super.writeHeaders(p);
+			p.print("SOURCE TYPE");
+			p.print("CANDIDATE TYPE");
+		}
 	}
 
 	public static class AspectMissingFault extends ValidationFault {
@@ -144,6 +230,20 @@ public class Validator {
 			super(ValidationErrorType.ASPECT_MISSING, source, candidate);
 			this.sourceAspect = sourceAspect;
 			this.candidateAspects = Tools.freezeCopy(candidateAspects, true);
+		}
+
+		@Override
+		protected void writeColumns(CSVPrinter p) throws IOException {
+			super.writeColumns(p);
+			p.print(this.sourceAspect);
+			p.print(StringUtils.join(this.candidateAspects, ','));
+		}
+
+		@Override
+		protected void writeHeaders(CSVPrinter p) throws IOException {
+			super.writeHeaders(p);
+			p.print("MISSING ASPECT");
+			p.print("CANDIDATE ASPECTS");
 		}
 	}
 
@@ -159,16 +259,48 @@ public class Validator {
 			this.sourceValue = sourceValue;
 			this.candidateValue = candidateValue;
 		}
+
+		@Override
+		protected void writeColumns(CSVPrinter p) throws IOException {
+			super.writeColumns(p);
+			p.print(this.attribute.name);
+			p.print(this.attribute.type.nameString);
+			p.print(this.sourceValue);
+			p.print(this.candidateValue);
+		}
+
+		@Override
+		protected void writeHeaders(CSVPrinter p) throws IOException {
+			super.writeHeaders(p);
+			p.print("ATTRIBUTE NAME");
+			p.print("ATTRIBUTE TYPE");
+			p.print("SOURCE VALUE");
+			p.print("CANDIDATE TYPE");
+		}
 	}
 
 	public static class ContentSizeFault extends ValidationFault {
-		private final int sourceSize;
-		private final int candidateSize;
+		private final long sourceSize;
+		private final long candidateSize;
 
-		private ContentSizeFault(Path source, Path candidate, int sourceSize, int candidateSize) {
+		private ContentSizeFault(Path source, Path candidate, long sourceSize, long candidateSize) {
 			super(ValidationErrorType.CONTENT_SIZE, source, candidate);
 			this.sourceSize = sourceSize;
 			this.candidateSize = candidateSize;
+		}
+
+		@Override
+		protected void writeColumns(CSVPrinter p) throws IOException {
+			super.writeColumns(p);
+			p.print(this.sourceSize);
+			p.print(this.candidateSize);
+		}
+
+		@Override
+		protected void writeHeaders(CSVPrinter p) throws IOException {
+			super.writeHeaders(p);
+			p.print("SOURCE SIZE");
+			p.print("CANDIDATE SIZE");
 		}
 	}
 
@@ -180,6 +312,20 @@ public class Validator {
 			super(ValidationErrorType.CONTENT_SUM, source, candidate);
 			this.sourceSum = sourceSum;
 			this.candidateSum = candidateSum;
+		}
+
+		@Override
+		protected void writeColumns(CSVPrinter p) throws IOException {
+			super.writeColumns(p);
+			p.print(this.sourceSum);
+			p.print(this.candidateSum);
+		}
+
+		@Override
+		protected void writeHeaders(CSVPrinter p) throws IOException {
+			super.writeHeaders(p);
+			p.print("SOURCE CHECKSUM");
+			p.print("CANDIDATE CHECKSUM");
 		}
 	}
 
@@ -280,7 +426,10 @@ public class Validator {
 	}
 
 	private String validateFile(Path p) {
-		File f = p.toFile();
+		return validateFile(p.toFile());
+	}
+
+	private String validateFile(File f) {
 		if (!f.exists()) { return "The %s file doesn't exist"; }
 		if (!f.isFile()) { return "The %s file is not a regular file"; }
 		if (!f.canRead()) { return "The %s file is not readable"; }
@@ -456,8 +605,122 @@ public class Validator {
 		return !faultReported;
 	}
 
+	private byte[] getChecksum(MessageDigest digest, File source) throws IOException {
+		final byte[] buffer = new byte[Validator.BUFFER_SIZE];
+		InputStream in = new FileInputStream(source);
+		try {
+			for (;;) {
+				int read = in.read(buffer);
+				if (read < 0) {
+					break;
+				}
+				digest.update(buffer, 0, read);
+			}
+		} finally {
+			IOUtils.closeQuietly(in);
+		}
+
+		return digest.digest();
+	}
+
 	private boolean checkContents(Path sourcePath, Properties sourceData, Path candidatePath,
 		Properties candidateData) {
+
+		AlfrescoType alfrescoType = this.schema.buildType(sourceData.getProperty(Validator.PROP_TYPE),
+			loadAspects(sourceData));
+
+		final String candidateCheckSumStr = candidateData.getProperty(Validator.PROP_CHECKSUM);
+		final boolean sourceContentRequired = alfrescoType.isDescendedOf(Validator.CONTENT_TYPE);
+
+		if (candidateCheckSumStr == null) {
+			// If this type doesn't require a content stream, then there's no checksum required,
+			// and therefore it's OK to short-circuit the validation
+			if (!sourceContentRequired) { return true; }
+
+			// If there is a content stream required, then we issue a checksum violation
+			addFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)", "(not provided)"));
+			return false;
+		}
+
+		if (!sourceContentRequired) {
+			// The source file shouldn't have any content...so this is a mismatch
+			addFault(new ContentSumFault(sourcePath, candidatePath, "(not supported)", candidateCheckSumStr));
+			return false;
+		}
+
+		// Ok we have a checksum, let's parse it out
+		Matcher m = Validator.CHECKSUM_PARSER.matcher(candidateCheckSumStr);
+		if (!m.matches()) {
+			// If we have a badly formatted content stream, we must report it as a validation
+			// failure, and we can't continue b/c we won't know what to check
+			addFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)",
+				String.format("BAD FORMAT: %s", candidateCheckSumStr)));
+			return false;
+		}
+
+		// Our candidate checksum is properly formatted, parse out its contents
+		final String checksumType = m.group(1);
+		final MessageDigest checksumDigest;
+		try {
+			checksumDigest = MessageDigest.getInstance(checksumType.toUpperCase());
+		} catch (NoSuchAlgorithmException e) {
+			// Illegal checksum scheme...this is a validation error
+			addFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)",
+				String.format("BAD HASH TYPE (%s): %s", checksumType, candidateCheckSumStr)));
+			return false;
+		}
+
+		// Ok so we know the candidate says we should have a content stream...let's try to find it
+		// First, identify the content file for this one
+		final File sourceContentFile = new File(
+			sourcePath.toString().replaceAll(Validator.METADATA_MARKER_PATTERN, ""));
+		final Path sourceContentPath = sourceContentFile.toPath();
+
+		if (!sourceContentFile.exists()) {
+			addFault(new ContentSumFault(sourceContentPath, candidatePath,
+				String.format("SOURCE FILE [%s] MISSING", sourceContentPath.toString()), candidateCheckSumStr));
+			return false;
+		}
+
+		if (!sourceContentFile.isFile()) {
+			addFault(new ContentSumFault(sourceContentPath, candidatePath,
+				String.format("SOURCE FILE [%s] IS NOT A REGULAR FILE", sourceContentPath.toString()),
+				candidateCheckSumStr));
+			return false;
+		}
+
+		if (!sourceContentFile.canRead()) {
+			addFault(new ContentSumFault(sourceContentPath, candidatePath,
+				String.format("SOURCE FILE [%s] IS NOT READABLE", sourceContentPath.toString()), candidateCheckSumStr));
+			return false;
+		}
+
+		final long sourceSize = sourceContentFile.length();
+		final long candidateSize = sourceContentFile.length(); // TODO: pull this from....???
+
+		if (sourceSize != candidateSize) {
+			addFault(new ContentSizeFault(sourceContentPath, candidatePath, sourceSize, candidateSize));
+			return false;
+		}
+
+		final String candidateChecksumValue = m.group(2).toLowerCase();
+		final byte[] sourceChecksumBytes;
+		try {
+			sourceChecksumBytes = getChecksum(checksumDigest, sourceContentFile);
+		} catch (IOException e) {
+			addFault(new ExceptionFault(sourceContentPath, candidatePath,
+				String.format("Failed to calculate the %s checksum for the source file [%s]", checksumType,
+					sourceContentPath.toString()),
+				e, null));
+			return false;
+		}
+
+		final String sourceChecksumValue = BinaryEncoding.HEX.encode(sourceChecksumBytes).toLowerCase();
+		if (!Tools.equals(sourceChecksumValue, candidateChecksumValue)) {
+			addFault(new ContentSumFault(sourceContentPath, candidatePath, sourceChecksumValue, candidateCheckSumStr));
+			return false;
+		}
+
 		return true;
 	}
 
@@ -500,12 +763,19 @@ public class Validator {
 
 			// Test 5: every property specified in source must match its corresponding
 			// property on target (apply special typing rules for date, int, double, etc.)
-			if (!checkAttributes(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
+			// We check the attributes and the content at this point...
+			final boolean attsOk = checkAttributes(sourcePath, sourceProp, candidatePath, candidateProp);
 
-			// Test 7: perform the size + checksum check (folders will simply pass this test
+			// Test 6: perform the size + checksum check (folders will simply pass this test
 			// quietly)
-			if (!checkContents(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
+			final boolean contentOk = checkContents(sourcePath, sourceProp, candidatePath, candidateProp);
+
+			if (!attsOk || !contentOk) { return; }
+
+			// We only reach here if all tests were successful.
 			validated = true;
+		} catch (Throwable t) {
+			addFault(new ExceptionFault(sourcePath, candidatePath, "Unexpected exception caught", t, null));
 		} finally {
 			this.log.info("Validation for the object at [{}] {}", relativePath.toString(),
 				validated ? "passed" : "FAILED");
