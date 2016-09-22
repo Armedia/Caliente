@@ -26,6 +26,7 @@ public enum CLIParam {
 	threads(1, "The number of threads to use in processing"),
 	bulk_import(1, true, "The location of the Bulk Import source data"),
 	bulk_export(1, true, "The location of the Bulk Export validation data"),
+	model(-1, true, "The (list of) content model(s) in XML format and proper dependency order"),
 	//
 	;
 

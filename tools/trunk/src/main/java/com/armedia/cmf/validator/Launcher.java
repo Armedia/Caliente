@@ -48,8 +48,7 @@ public class Launcher {
 			final File beFile = new File(CLIParam.bulk_export.getString()).getCanonicalFile();
 			if (!Launcher.verifyPath(beFile, "bulk export")) { return 1; }
 
-			final Path biPath = biFile.toPath();
-			final Path bePath = beFile.toPath();
+			final Validator validator = new Validator(biFile.toPath(), beFile.toPath(), CLIParam.model.getAllString());
 
 			final PooledWorkers<Object, Path> workers = new PooledWorkers<Object, Path>() {
 				@Override
@@ -59,7 +58,7 @@ public class Launcher {
 
 				@Override
 				protected void process(Object state, Path source) throws Exception {
-					Validator.validate(biPath, bePath, source);
+					validator.validate(source);
 				}
 
 				@Override
@@ -69,19 +68,25 @@ public class Launcher {
 			};
 
 			final int threads = CLIParam.threads.getInteger(Launcher.DEFAULT_THREADS);
-			workers.start(threads, Paths.get(""), false);
+			final Path endPath = Paths.get("");
+			workers.start(threads, endPath, true);
 
-			Files.walkFileTree(biPath, new Validator.FileVisitor() {
+			try {
+				Files.walkFileTree(validator.getSourceRoot(), validator.new FileVisitor() {
+					@Override
+					protected void processFile(Path file) throws Exception {
+						workers.addWorkItem(file);
+					}
+				});
+			} finally {
+				workers.waitForCompletion();
+			}
 
-				@Override
-				protected void processFile(Path file) throws Exception {
-					workers.addWorkItem(file);
-				}
-			});
+			// validator.reportOutcome(Launcher.LOG);
 
 			return 0;
 		} catch (Exception e) {
-			Launcher.LOG.error("Exception caught", e);
+			Launcher.LOG.error("Launcher error", e);
 			return 1;
 		}
 	}

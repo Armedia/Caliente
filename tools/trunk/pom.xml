@@ -49,13 +49,6 @@
 	</pluginRepositories>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.21</version>
-			<scope>compile</scope>
-		</dependency>
-
  		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
@@ -84,14 +77,18 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<!--
 		<dependency>
 			<groupId>com.armedia.cmf</groupId>
 			<artifactId>cmf-engine-alfresco-bulk</artifactId>
 			<version>1.0.0</version>
 			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-log4j12</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
-		-->
 
 		<dependency>
 			<groupId>junit</groupId>
