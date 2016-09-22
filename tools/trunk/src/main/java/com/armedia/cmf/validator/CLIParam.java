@@ -23,6 +23,7 @@ public enum CLIParam {
 	//
 	help(0, "This help message"),
 	debug(0, "Enable debugging"),
+	threads(1, "The number of threads to use in processing"),
 	bulk_import(1, true, "The location of the Bulk Import source data"),
 	bulk_export(1, true, "The location of the Bulk Export validation data"),
 	//
