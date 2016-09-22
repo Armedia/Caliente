@@ -462,44 +462,53 @@ public class Validator {
 	}
 
 	public void validate(final Path sourcePath) {
-
 		// Validate the source file against the target...
 		final Path relativePath = this.sourceRoot.relativize(sourcePath);
 		final Path candidatePath = this.candidateRoot.resolve(relativePath);
 
-		if (!checkFiles(sourcePath, candidatePath)) { return; }
+		this.log.info("Examining the object at [{}]...", relativePath.toString());
 
-		// Test 2: Load both properties files, and begin property comparisons
-		Properties sourceProp = null;
+		boolean validated = false;
 		try {
-			sourceProp = loadProperties(sourcePath);
-		} catch (IOException e) {
-			addFault(new ExceptionFault(sourcePath, candidatePath, "Loading source properties", e, true));
-			sourceProp = null;
+			if (!checkFiles(sourcePath, candidatePath)) { return; }
+
+			// Test 2: Load both properties files, and begin property comparisons
+			Properties sourceProp = null;
+			try {
+				sourceProp = loadProperties(sourcePath);
+			} catch (IOException e) {
+				addFault(new ExceptionFault(sourcePath, candidatePath, "Loading source properties", e, true));
+				sourceProp = null;
+			}
+			Properties candidateProp = null;
+			try {
+				candidateProp = loadProperties(candidatePath);
+			} catch (IOException e) {
+				addFault(new ExceptionFault(sourcePath, candidatePath, "Loading candidate properties", e, false));
+				candidateProp = null;
+			}
+
+			// If we were unable to load the properties for either of them, we can no longer proceed
+			if ((sourceProp == null) || (candidateProp == null)) { return; }
+
+			// Test 3: they must be of the same object type
+			if (!checkTypes(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
+
+			// Test 4: the aspects specified by candidate must be a superset of the aspects
+			// specified by the source
+			if (!checkAspects(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
+
+			// Test 5: every property specified in source must match its corresponding
+			// property on target (apply special typing rules for date, int, double, etc.)
+			if (!checkAttributes(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
+
+			// Test 7: perform the size + checksum check (folders will simply pass this test
+			// quietly)
+			if (!checkContents(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
+			validated = true;
+		} finally {
+			this.log.info("Validation for the object at [{}] {}", relativePath.toString(),
+				validated ? "passed" : "FAILED");
 		}
-		Properties candidateProp = null;
-		try {
-			candidateProp = loadProperties(candidatePath);
-		} catch (IOException e) {
-			addFault(new ExceptionFault(sourcePath, candidatePath, "Loading candidate properties", e, false));
-			candidateProp = null;
-		}
-
-		// If we were unable to load the properties for either of them, we can no longer proceed
-		if ((sourceProp == null) || (candidateProp == null)) { return; }
-
-		// Test 3: they must be of the same object type
-		if (!checkTypes(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
-
-		// Test 4: the aspects specified by candidate must be a superset of the aspects
-		// specified by the source
-		if (!checkAspects(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
-
-		// Test 5: every property specified in source must match its corresponding
-		// property on target (apply special typing rules for date, int, double, etc.)
-		if (!checkAttributes(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
-
-		// Test 7: perform the size + checksum check (folders will simply pass this test quietly)
-		if (!checkContents(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
 	}
 }
