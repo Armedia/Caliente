@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,41 +49,60 @@ public class Launcher {
 			final File beFile = new File(CLIParam.bulk_export.getString()).getCanonicalFile();
 			if (!Launcher.verifyPath(beFile, "bulk export")) { return 1; }
 
-			final Validator validator = new Validator(biFile.toPath(), beFile.toPath(), CLIParam.model.getAllString());
-
-			final PooledWorkers<Object, Path> workers = new PooledWorkers<Object, Path>() {
-				@Override
-				protected Object prepare() throws Exception {
-					return null;
-				}
-
-				@Override
-				protected void process(Object state, Path source) throws Exception {
-					validator.validate(source);
-				}
-
-				@Override
-				protected void cleanup(Object state) {
-					// Do nothing
-				}
-			};
-
-			final int threads = CLIParam.threads.getInteger(Launcher.DEFAULT_THREADS);
-			final Path endPath = Paths.get("");
-			workers.start(threads, endPath, true);
+			final String reportDirStr = CLIParam.report_dir.getString(System.getProperty("user.dir"));
+			File reportDir = new File(reportDirStr);
+			try {
+				reportDir = reportDir.getCanonicalFile();
+			} catch (IOException e) {
+				// do nothing...
+			}
+			reportDir = reportDir.getAbsoluteFile();
 
 			try {
-				Files.walkFileTree(validator.getSourceRoot(), validator.new FileVisitor() {
-					@Override
-					protected void processFile(Path file) throws Exception {
-						workers.addWorkItem(file);
-					}
-				});
-			} finally {
-				workers.waitForCompletion();
+				FileUtils.forceMkdir(reportDir);
+			} catch (IOException e) {
+				Launcher.LOG.error("Failed to ensure that the target directory [{}] exists",
+					reportDir.getAbsolutePath());
+				return 1;
 			}
 
-			// validator.reportOutcome(Launcher.LOG);
+			final Validator validator = new Validator(reportDir.toPath(), biFile.toPath(), beFile.toPath(),
+				CLIParam.model.getAllString());
+			try {
+				final PooledWorkers<Object, Path> workers = new PooledWorkers<Object, Path>() {
+					@Override
+					protected Object prepare() throws Exception {
+						return null;
+					}
+
+					@Override
+					protected void process(Object state, Path source) throws Exception {
+						validator.validate(source);
+					}
+
+					@Override
+					protected void cleanup(Object state) {
+						// Do nothing
+					}
+				};
+
+				final int threads = CLIParam.threads.getInteger(Launcher.DEFAULT_THREADS);
+				final Path endPath = Paths.get("");
+				workers.start(threads, endPath, true);
+
+				try {
+					Files.walkFileTree(validator.getSourceRoot(), validator.new FileVisitor() {
+						@Override
+						protected void processFile(Path file) throws Exception {
+							workers.addWorkItem(file);
+						}
+					});
+				} finally {
+					workers.waitForCompletion();
+				}
+			} finally {
+				validator.writeAndClear();
+			}
 
 			return 0;
 		} catch (Exception e) {

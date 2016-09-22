@@ -15,17 +15,18 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.InvalidPropertiesFormatException;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -275,7 +276,7 @@ public class Validator {
 			p.print("ATTRIBUTE NAME");
 			p.print("ATTRIBUTE TYPE");
 			p.print("SOURCE VALUE");
-			p.print("CANDIDATE TYPE");
+			p.print("CANDIDATE VALUE");
 		}
 	}
 
@@ -378,15 +379,22 @@ public class Validator {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final Map<ValidationErrorType, List<ValidationFault>> errors;
+	private final File reportDir;
+	private final Map<ValidationErrorType, AtomicLong> faultCounters;
+	private final Map<ValidationErrorType, CSVPrinter> errors;
 	private final AtomicLong faultCount = new AtomicLong(0);
 	private final Path sourceRoot;
 	private final Path candidateRoot;
 
 	private final AlfrescoSchema schema;
 
-	public Validator(final Path sourceRoot, final Path candidateRoot, Collection<String> contentModel)
-		throws Exception {
+	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+
+	private final AtomicBoolean closed = new AtomicBoolean(false);
+
+	public Validator(final Path reportDir, final Path sourceRoot, final Path candidateRoot,
+		Collection<String> contentModel) throws Exception {
+		this.reportDir = reportDir.toFile();
 		this.sourceRoot = sourceRoot;
 		this.candidateRoot = candidateRoot;
 
@@ -399,12 +407,8 @@ public class Validator {
 		}
 		this.schema = new AlfrescoSchema(modelUris);
 
-		Map<ValidationErrorType, List<ValidationFault>> errors = new EnumMap<ValidationErrorType, List<ValidationFault>>(
-			ValidationErrorType.class);
-		for (ValidationErrorType t : ValidationErrorType.values()) {
-			errors.put(t, Collections.synchronizedList(new LinkedList<ValidationFault>()));
-		}
-		this.errors = Tools.freezeMap(errors);
+		this.errors = new EnumMap<ValidationErrorType, CSVPrinter>(ValidationErrorType.class);
+		this.faultCounters = new EnumMap<ValidationErrorType, AtomicLong>(ValidationErrorType.class);
 	}
 
 	public final long getFaultCount() {
@@ -419,9 +423,42 @@ public class Validator {
 		return this.candidateRoot;
 	}
 
-	private void addFault(ValidationFault fault) {
+	private void reportFault(ValidationFault fault) {
 		if (fault == null) { return; }
-		this.errors.get(fault.type).add(fault);
+
+		CSVPrinter p = this.errors.get(fault.type);
+		AtomicLong c = this.faultCounters.get(fault.type);
+		if (p == null) {
+			synchronized (fault.type) {
+				p = this.errors.get(fault.type);
+				if (p == null) {
+					try {
+						p = fault.createOutputFile(this.reportDir);
+					} catch (IOException e) {
+						String msg = String.format("Failed to create the fault report for %s", fault.type.name());
+						Validator.LOG.error(msg, e);
+						throw new RuntimeException(msg, e);
+					}
+					this.errors.put(fault.type, p);
+				}
+				c = this.faultCounters.get(fault.type);
+				if (c == null) {
+					c = new AtomicLong(0);
+					this.faultCounters.put(fault.type, c);
+				}
+			}
+		}
+
+		try {
+			synchronized (p) {
+				fault.writeRecord(p);
+			}
+		} catch (IOException e) {
+			String msg = String.format("Failed to write out a fault record for %s", fault.type.name());
+			Validator.LOG.error(msg, e);
+			throw new RuntimeException(msg, e);
+		}
+		c.incrementAndGet();
 		this.faultCount.incrementAndGet();
 	}
 
@@ -478,7 +515,7 @@ public class Validator {
 		}
 
 		// Can't do anything else...so... we barf out
-		addFault(new ObjectMissingFault(sourcePath, sourceMsg, candidatePath, candidateMsg));
+		reportFault(new ObjectMissingFault(sourcePath, sourceMsg, candidatePath, candidateMsg));
 		return false;
 	}
 
@@ -488,7 +525,7 @@ public class Validator {
 		String sourceType = sourceData.getProperty(Validator.PROP_TYPE);
 		String candidateType = candidateData.getProperty(Validator.PROP_TYPE);
 		if (Tools.equals(sourceType, candidateType)) { return true; }
-		addFault(new TypeMismatchFault(sourcePath, sourceType, candidatePath, candidateType));
+		reportFault(new TypeMismatchFault(sourcePath, sourceType, candidatePath, candidateType));
 		return false;
 	}
 
@@ -518,7 +555,7 @@ public class Validator {
 		// If there are remaining source aspects, it means they weren't included in the
 		// candidate, and thus should be reported as a fault
 		for (String aspect : sourceAspects) {
-			addFault(new AspectMissingFault(sourcePath, candidatePath, aspect, candidateAspects));
+			reportFault(new AspectMissingFault(sourcePath, candidatePath, aspect, candidateAspects));
 		}
 		return false;
 	}
@@ -551,7 +588,8 @@ public class Validator {
 			// If the value is present in the source, but is absent in the candidate, we report
 			// a fault because we have a value mismatch
 			if (candidateValueStr == null) {
-				addFault(new AttributeFault(sourcePath, candidatePath, attribute, sourceValueStr, candidateValueStr));
+				reportFault(
+					new AttributeFault(sourcePath, candidatePath, attribute, sourceValueStr, candidateValueStr));
 				faultReported = true;
 				continue;
 			}
@@ -569,7 +607,7 @@ public class Validator {
 						sourceValue = parseDate(sourceValueStr);
 					} catch (ParseException e) {
 						sourceValue = null;
-						addFault(new ExceptionFault(sourcePath, candidatePath,
+						reportFault(new ExceptionFault(sourcePath, candidatePath,
 							String.format("Parsing source field [%s] as %s with value [%s]", attributeName,
 								attribute.type.name(), sourceValueStr),
 							e, true));
@@ -579,7 +617,7 @@ public class Validator {
 						candidateValue = parseDate(candidateValueStr);
 					} catch (ParseException e) {
 						candidateValue = null;
-						addFault(new ExceptionFault(sourcePath, candidatePath,
+						reportFault(new ExceptionFault(sourcePath, candidatePath,
 							String.format("Parsing candidate field [%s] as %s with value [%s]", attributeName,
 								attribute.type.name(), candidateValueStr),
 							e, true));
@@ -598,7 +636,8 @@ public class Validator {
 			// Do the actual comparison... the values support equality testing by now, or remain
 			// strings (which also supports equality)
 			if (!Tools.equals(sourceValue, candidateValue)) {
-				addFault(new AttributeFault(sourcePath, candidatePath, attribute, sourceValueStr, candidateValueStr));
+				reportFault(
+					new AttributeFault(sourcePath, candidatePath, attribute, sourceValueStr, candidateValueStr));
 				faultReported = true;
 			}
 		}
@@ -638,13 +677,13 @@ public class Validator {
 			if (!sourceContentRequired) { return true; }
 
 			// If there is a content stream required, then we issue a checksum violation
-			addFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)", "(not provided)"));
+			reportFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)", "(not provided)"));
 			return false;
 		}
 
 		if (!sourceContentRequired) {
 			// The source file shouldn't have any content...so this is a mismatch
-			addFault(new ContentSumFault(sourcePath, candidatePath, "(not supported)", candidateCheckSumStr));
+			reportFault(new ContentSumFault(sourcePath, candidatePath, "(not supported)", candidateCheckSumStr));
 			return false;
 		}
 
@@ -653,7 +692,7 @@ public class Validator {
 		if (!m.matches()) {
 			// If we have a badly formatted content stream, we must report it as a validation
 			// failure, and we can't continue b/c we won't know what to check
-			addFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)",
+			reportFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)",
 				String.format("BAD FORMAT: %s", candidateCheckSumStr)));
 			return false;
 		}
@@ -665,7 +704,7 @@ public class Validator {
 			checksumDigest = MessageDigest.getInstance(checksumType.toUpperCase());
 		} catch (NoSuchAlgorithmException e) {
 			// Illegal checksum scheme...this is a validation error
-			addFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)",
+			reportFault(new ContentSumFault(sourcePath, candidatePath, "(not checked)",
 				String.format("BAD HASH TYPE (%s): %s", checksumType, candidateCheckSumStr)));
 			return false;
 		}
@@ -677,20 +716,20 @@ public class Validator {
 		final Path sourceContentPath = sourceContentFile.toPath();
 
 		if (!sourceContentFile.exists()) {
-			addFault(new ContentSumFault(sourceContentPath, candidatePath,
+			reportFault(new ContentSumFault(sourceContentPath, candidatePath,
 				String.format("SOURCE FILE [%s] MISSING", sourceContentPath.toString()), candidateCheckSumStr));
 			return false;
 		}
 
 		if (!sourceContentFile.isFile()) {
-			addFault(new ContentSumFault(sourceContentPath, candidatePath,
+			reportFault(new ContentSumFault(sourceContentPath, candidatePath,
 				String.format("SOURCE FILE [%s] IS NOT A REGULAR FILE", sourceContentPath.toString()),
 				candidateCheckSumStr));
 			return false;
 		}
 
 		if (!sourceContentFile.canRead()) {
-			addFault(new ContentSumFault(sourceContentPath, candidatePath,
+			reportFault(new ContentSumFault(sourceContentPath, candidatePath,
 				String.format("SOURCE FILE [%s] IS NOT READABLE", sourceContentPath.toString()), candidateCheckSumStr));
 			return false;
 		}
@@ -699,7 +738,7 @@ public class Validator {
 		final long candidateSize = sourceContentFile.length(); // TODO: pull this from....???
 
 		if (sourceSize != candidateSize) {
-			addFault(new ContentSizeFault(sourceContentPath, candidatePath, sourceSize, candidateSize));
+			reportFault(new ContentSizeFault(sourceContentPath, candidatePath, sourceSize, candidateSize));
 			return false;
 		}
 
@@ -708,7 +747,7 @@ public class Validator {
 		try {
 			sourceChecksumBytes = getChecksum(checksumDigest, sourceContentFile);
 		} catch (IOException e) {
-			addFault(new ExceptionFault(sourceContentPath, candidatePath,
+			reportFault(new ExceptionFault(sourceContentPath, candidatePath,
 				String.format("Failed to calculate the %s checksum for the source file [%s]", checksumType,
 					sourceContentPath.toString()),
 				e, null));
@@ -717,7 +756,8 @@ public class Validator {
 
 		final String sourceChecksumValue = BinaryEncoding.HEX.encode(sourceChecksumBytes).toLowerCase();
 		if (!Tools.equals(sourceChecksumValue, candidateChecksumValue)) {
-			addFault(new ContentSumFault(sourceContentPath, candidatePath, sourceChecksumValue, candidateCheckSumStr));
+			reportFault(
+				new ContentSumFault(sourceContentPath, candidatePath, sourceChecksumValue, candidateCheckSumStr));
 			return false;
 		}
 
@@ -725,60 +765,92 @@ public class Validator {
 	}
 
 	public void validate(final Path sourcePath) {
-		// Validate the source file against the target...
-		final Path relativePath = this.sourceRoot.relativize(sourcePath);
-		final Path candidatePath = this.candidateRoot.resolve(relativePath);
-
-		this.log.info("Examining the object at [{}]...", relativePath.toString());
-
-		boolean validated = false;
+		Lock l = this.rwLock.readLock();
+		l.lock();
 		try {
-			if (!checkFiles(sourcePath, candidatePath)) { return; }
+			if (this.closed.get()) { throw new IllegalStateException("This validator has been closed, but not reset"); }
+			// Validate the source file against the target...
+			final Path relativePath = this.sourceRoot.relativize(sourcePath);
+			final Path candidatePath = this.candidateRoot.resolve(relativePath);
 
-			// Test 2: Load both properties files, and begin property comparisons
-			Properties sourceProp = null;
+			this.log.info("Examining the object at [{}]...", relativePath.toString());
+
+			boolean validated = false;
 			try {
-				sourceProp = loadProperties(sourcePath);
-			} catch (IOException e) {
-				addFault(new ExceptionFault(sourcePath, candidatePath, "Loading source properties", e, true));
-				sourceProp = null;
+				if (!checkFiles(sourcePath, candidatePath)) { return; }
+
+				// Test 2: Load both properties files, and begin property comparisons
+				Properties sourceProp = null;
+				try {
+					sourceProp = loadProperties(sourcePath);
+				} catch (IOException e) {
+					reportFault(new ExceptionFault(sourcePath, candidatePath, "Loading source properties", e, true));
+					sourceProp = null;
+				}
+				Properties candidateProp = null;
+				try {
+					candidateProp = loadProperties(candidatePath);
+				} catch (IOException e) {
+					reportFault(
+						new ExceptionFault(sourcePath, candidatePath, "Loading candidate properties", e, false));
+					candidateProp = null;
+				}
+
+				// If we were unable to load the properties for either of them, we can no longer
+				// proceed
+				if ((sourceProp == null) || (candidateProp == null)) { return; }
+
+				// Test 3: they must be of the same object type
+				if (!checkTypes(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
+
+				// Test 4: the aspects specified by candidate must be a superset of the aspects
+				// specified by the source
+				if (!checkAspects(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
+
+				// Test 5: every property specified in source must match its corresponding
+				// property on target (apply special typing rules for date, int, double, etc.)
+				// We check the attributes and the content at this point...
+				final boolean attsOk = checkAttributes(sourcePath, sourceProp, candidatePath, candidateProp);
+
+				// Test 6: perform the size + checksum check (folders will simply pass this test
+				// quietly)
+				final boolean contentOk = checkContents(sourcePath, sourceProp, candidatePath, candidateProp);
+
+				if (!attsOk || !contentOk) { return; }
+
+				// We only reach here if all tests were successful.
+				validated = true;
+			} catch (Throwable t) {
+				this.log.error(
+					String.format("Unexpected Exception caught while processing [%s]", relativePath.toString()), t);
+			} finally {
+				this.log.info("Validation for the object at [{}] {}", relativePath.toString(),
+					validated ? "passed" : "FAILED");
 			}
-			Properties candidateProp = null;
-			try {
-				candidateProp = loadProperties(candidatePath);
-			} catch (IOException e) {
-				addFault(new ExceptionFault(sourcePath, candidatePath, "Loading candidate properties", e, false));
-				candidateProp = null;
-			}
-
-			// If we were unable to load the properties for either of them, we can no longer proceed
-			if ((sourceProp == null) || (candidateProp == null)) { return; }
-
-			// Test 3: they must be of the same object type
-			if (!checkTypes(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
-
-			// Test 4: the aspects specified by candidate must be a superset of the aspects
-			// specified by the source
-			if (!checkAspects(sourcePath, sourceProp, candidatePath, candidateProp)) { return; }
-
-			// Test 5: every property specified in source must match its corresponding
-			// property on target (apply special typing rules for date, int, double, etc.)
-			// We check the attributes and the content at this point...
-			final boolean attsOk = checkAttributes(sourcePath, sourceProp, candidatePath, candidateProp);
-
-			// Test 6: perform the size + checksum check (folders will simply pass this test
-			// quietly)
-			final boolean contentOk = checkContents(sourcePath, sourceProp, candidatePath, candidateProp);
-
-			if (!attsOk || !contentOk) { return; }
-
-			// We only reach here if all tests were successful.
-			validated = true;
-		} catch (Throwable t) {
-			addFault(new ExceptionFault(sourcePath, candidatePath, "Unexpected exception caught", t, null));
 		} finally {
-			this.log.info("Validation for the object at [{}] {}", relativePath.toString(),
-				validated ? "passed" : "FAILED");
+			l.unlock();
+		}
+	}
+
+	private void resetState() {
+		this.errors.clear();
+		this.faultCount.set(0);
+		this.faultCounters.clear();
+	}
+
+	public void writeAndClear() throws IOException {
+		Lock l = this.rwLock.writeLock();
+		l.lock();
+		try {
+			for (ValidationErrorType t : this.errors.keySet()) {
+				IOUtils.closeQuietly(this.errors.get(t));
+				this.log.info("Detected {} {} faults", this.faultCounters.get(t).get(), t.name());
+			}
+			this.log.info("Detected {} faults total", this.faultCount.get());
+		} finally {
+			resetState();
+			this.closed.set(true);
+			l.unlock();
 		}
 	}
 }
