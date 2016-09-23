@@ -17,11 +17,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -39,6 +41,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoDataType;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.SchemaAttribute;
@@ -48,8 +51,6 @@ import com.armedia.commons.utilities.Tools;
 public class Validator {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Validator.class);
-
-	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 
 	private static final Pattern VALID_FILENAME = Pattern
 		.compile("^.*\\.metadata\\.properties\\.xml(?:\\.v\\d+(?:\\.\\d+)?)?$", Pattern.CASE_INSENSITIVE);
@@ -79,6 +80,129 @@ public class Validator {
 		CONTENT_SUM, // content sum mismatch
 		//
 		;
+	}
+
+	private static enum ValueComparator {
+		//
+		OBJECT(), // Default mode
+		STRING(AlfrescoDataType.MLTEXT, AlfrescoDataType.TEXT, AlfrescoDataType.QNAME) { // Compare
+																							// strings
+			@Override
+			public String compareValues(String source, String candidate) {
+				if (source == candidate) { return null; }
+				if (source == null) { return "SOURCE VALUE IS NULL"; }
+				if (candidate == null) { return "CANDIDATE VALUE IS NULL"; }
+				if (source.length() != candidate.length()) { return String.format("LENGTHS ARE DIFFERENT (%d vs %d)",
+					source.length(), candidate.length()); }
+				if (source.equals(candidate)) { return null; }
+				if (source.equalsIgnoreCase(candidate)) { return "VALUES DIFFER IN CASE"; }
+				// TODO: Calculate and highlight the differences?
+				return "VALUES ARE DIFFERENT";
+			}
+		},
+		DATE(AlfrescoDataType.DATE, AlfrescoDataType.DATETIME) { // Compare date values
+			// ISO8601 with timezone...
+			final String dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
+
+			@Override
+			public String compareValues(String source, String candidate) {
+				// Dates require parsing using ISO8601 datetime
+				String remarks = null;
+				Date sourceValue = null;
+				try {
+					sourceValue = DateUtils.parseDate(source, this.dateFormat);
+				} catch (ParseException e) {
+					if (Validator.LOG.isDebugEnabled()) {
+						Validator.LOG.error(String.format("Failed to parse the source date value [%s] with format [%s]",
+							source, this.dateFormat), e);
+					}
+					sourceValue = null;
+					remarks = String.format("Failed to parse the source date value with the format [%s]: %s",
+						this.dateFormat, e.getMessage());
+				}
+				Date candidateValue = null;
+				try {
+					candidateValue = DateUtils.parseDate(candidate, this.dateFormat);
+				} catch (ParseException e) {
+					if (Validator.LOG.isDebugEnabled()) {
+						Validator.LOG
+							.error(String.format("Failed to parse the candidate date value [%s] with format [%s]",
+								source, this.dateFormat), e);
+					}
+					candidateValue = null;
+					String split = "F";
+					if (remarks == null) {
+						remarks = "";
+					} else {
+						split = ", f";
+					}
+					remarks = String.format("%s%sailed to parse the candidate date value with the format [%s]: %s",
+						remarks, split, this.dateFormat, e.getMessage());
+				}
+				if (remarks != null) { return remarks; }
+
+				if (!Tools.equals(sourceValue, candidateValue)) {
+					long diff = sourceValue.getTime() - candidateValue.getTime();
+					String sign = "";
+					if (diff < 0) {
+						sign = "-";
+						diff *= -1;
+					}
+					long h = TimeUnit.MILLISECONDS.toHours(diff);
+					diff -= TimeUnit.HOURS.toMillis(h);
+					long m = TimeUnit.MILLISECONDS.toMinutes(diff);
+					diff -= TimeUnit.MINUTES.toMillis(m);
+					long s = TimeUnit.MILLISECONDS.toSeconds(diff);
+					diff -= TimeUnit.SECONDS.toMillis(s);
+					long l = TimeUnit.MILLISECONDS.toMillis(diff);
+					remarks = String.format("SRC - DST == %s%d:%02d:%02d.%03d", sign, h, m, s, l);
+				}
+				return remarks;
+			}
+		},
+		//
+		;
+
+		private final Set<AlfrescoDataType> supported;
+
+		ValueComparator(AlfrescoDataType... supported) {
+			Set<AlfrescoDataType> s = EnumSet.noneOf(AlfrescoDataType.class);
+			for (AlfrescoDataType t : supported) {
+				if (t == null) {
+					continue;
+				}
+				s.add(t);
+			}
+			this.supported = Tools.freezeSet(s);
+		}
+
+		public String compareValues(String source, String candidate) {
+			if (Tools.equals(source, candidate)) { return null; }
+			return "VALUES ARE DIFFERENT";
+		}
+
+		private static Map<AlfrescoDataType, ValueComparator> MAP = null;
+
+		public static ValueComparator getComparator(AlfrescoDataType type) {
+			if (ValueComparator.MAP == null) {
+				synchronized (ValueComparator.class) {
+					if (ValueComparator.MAP == null) {
+						Map<AlfrescoDataType, ValueComparator> m = new EnumMap<AlfrescoDataType, ValueComparator>(
+							AlfrescoDataType.class);
+						for (ValueComparator c : ValueComparator.values()) {
+							for (AlfrescoDataType t : c.supported) {
+								ValueComparator C = m.put(t, c);
+								if (C != null) { throw new IllegalStateException(String.format(
+									"Comparators %s and %s both support type %s - this is not permitted, only one should support it",
+									c.name(), C.name(), t.name())); }
+							}
+						}
+						ValueComparator.MAP = Tools.freezeMap(m);
+					}
+				}
+			}
+			return Tools.coalesce(ValueComparator.MAP.get(type), ValueComparator.OBJECT);
+		}
 	}
 
 	private static abstract class ValidationFault implements Comparable<ValidationFault> {
@@ -245,12 +369,15 @@ public class Validator {
 		private final SchemaAttribute attribute;
 		private final Object sourceValue;
 		private final Object candidateValue;
+		private final String remarks;
 
-		private AttributeFault(Path path, SchemaAttribute attribute, Object sourceValue, Object candidateValue) {
+		private AttributeFault(Path path, SchemaAttribute attribute, Object sourceValue, Object candidateValue,
+			String remarks) {
 			super(ValidationErrorType.ATTRIBUTE_VALUE, path);
 			this.attribute = attribute;
 			this.sourceValue = sourceValue;
 			this.candidateValue = candidateValue;
+			this.remarks = remarks;
 		}
 
 		@Override
@@ -260,6 +387,7 @@ public class Validator {
 			p.print(this.attribute.type.nameString);
 			p.print(this.sourceValue);
 			p.print(this.candidateValue);
+			p.print(this.remarks);
 		}
 
 		@Override
@@ -269,6 +397,7 @@ public class Validator {
 			p.print("ATTRIBUTE TYPE");
 			p.print("SOURCE VALUE");
 			p.print("CANDIDATE VALUE");
+			p.print("REMARKS");
 		}
 	}
 
@@ -554,11 +683,6 @@ public class Validator {
 		return false;
 	}
 
-	private Date parseDate(String dateStr) throws ParseException {
-		return DateUtils.parseDate(dateStr, Validator.DATE_FORMAT);
-
-	}
-
 	private boolean checkAttributes(final Path relativePath, Properties sourceData, Properties candidateData) {
 		AlfrescoType alfrescoType = this.schema.buildType(sourceData.getProperty(Validator.PROP_TYPE),
 			loadAspects(sourceData));
@@ -580,54 +704,17 @@ public class Validator {
 			// If the value is present in the source, but is absent in the candidate, we report
 			// a fault because we have a value mismatch
 			if (candidateValueStr == null) {
-				reportFault(new AttributeFault(relativePath, attribute, sourceValueStr, candidateValueStr));
+				reportFault(new AttributeFault(relativePath, attribute, sourceValueStr, candidateValueStr,
+					"NULL CANDIDATE VALUE"));
 				faultReported = true;
 				continue;
 			}
 
-			// So we have both values... for now, assume they're strings
-			Object sourceValue = sourceValueStr;
-			Object candidateValue = candidateValueStr;
-
 			// Check to see if the type requires special handling
-			switch (attribute.type) {
-				case DATETIME:
-				case DATE:
-					// Dates require parsing using ISO8601 datetime
-					try {
-						sourceValue = parseDate(sourceValueStr);
-					} catch (ParseException e) {
-						sourceValue = null;
-						reportFault(new ExceptionFault(relativePath,
-							String.format("Parsing source field [%s] as %s with value [%s]", attributeName,
-								attribute.type.name(), sourceValueStr),
-							e, true));
-						faultReported = true;
-					}
-					try {
-						candidateValue = parseDate(candidateValueStr);
-					} catch (ParseException e) {
-						candidateValue = null;
-						reportFault(new ExceptionFault(relativePath,
-							String.format("Parsing candidate field [%s] as %s with value [%s]", attributeName,
-								attribute.type.name(), candidateValueStr),
-							e, true));
-						faultReported = true;
-					}
-					if ((sourceValue == null) || (candidateValue == null)) {
-						// The faults have been reported, move on to the next attribute
-						continue;
-					}
-					break;
-
-				default:
-					break;
-			}
-
-			// Do the actual comparison... the values support equality testing by now, or remain
-			// strings (which also supports equality)
-			if (!Tools.equals(sourceValue, candidateValue)) {
-				reportFault(new AttributeFault(relativePath, attribute, sourceValueStr, candidateValueStr));
+			final ValueComparator comparator = ValueComparator.getComparator(attribute.type);
+			String remarks = comparator.compareValues(sourceValueStr, candidateValueStr);
+			if (remarks != null) {
+				reportFault(new AttributeFault(relativePath, attribute, sourceValueStr, candidateValueStr, remarks));
 				faultReported = true;
 			}
 		}
