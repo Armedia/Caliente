@@ -303,6 +303,16 @@ public class AlfImportEngine extends
 
 		@Override
 		public void objectImportCompleted(UUID jobId, CmfObject<?> object, ImportOutcome outcome) {
+			switch (outcome.getResult()) {
+				case CREATED:
+				case UPDATED:
+					// This ID we'll report...
+					break;
+				default:
+					// Skip this one...
+					return;
+			}
+
 			final PrintWriter writer = getWriter(jobId);
 			try {
 				switch (object.getType()) {
