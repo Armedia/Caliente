@@ -19,9 +19,11 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.InvalidPropertiesFormatException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -67,7 +69,14 @@ public class Validator {
 	private static final String PROP_TYPE = "type";
 	private static final String PROP_ASPECTS = "aspects";
 	private static final String PROP_CHECKSUM = "streamChecksum";
-	// private static final String PROP_CONTENT_SIZE = "streamLength";
+
+	private static final Map<String, String> CANDIDATE_TYPE_MAPPING;
+	static {
+		Map<String, String> m = new TreeMap<String, String>();
+		m.put("app:folderlink", "arm:reference");
+		m.put("app:filelink", "arm:reference");
+		CANDIDATE_TYPE_MAPPING = Tools.freezeMap(new LinkedHashMap<String, String>(m));
+	}
 
 	private static enum ValidationErrorType {
 		//
@@ -630,7 +639,8 @@ public class Validator {
 	private boolean checkTypes(final Path relativePath, Properties sourceData, Properties candidateData) {
 		String sourceType = sourceData.getProperty(Validator.PROP_TYPE);
 		String candidateType = candidateData.getProperty(Validator.PROP_TYPE);
-		if (Tools.equals(sourceType, candidateType)) { return true; }
+		if (Tools.equals(sourceType, candidateType)
+			|| Tools.equals(Validator.CANDIDATE_TYPE_MAPPING.get(candidateType), sourceType)) { return true; }
 		reportFault(new TypeMismatchFault(relativePath, sourceType, candidateType));
 		return false;
 	}
