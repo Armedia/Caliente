@@ -59,7 +59,7 @@ public class Validator {
 
 	private static final String METADATA_MARKER = ".metadata.properties.xml";
 	private static final String METADATA_MARKER_PATTERN = String.format("\\Q%s\\E", Validator.METADATA_MARKER);
-	private static final Pattern CHECKSUM_PARSER = Pattern.compile("^([^:]+):((?:[a-f0-9]{2})+)$",
+	private static final Pattern CHECKSUM_PARSER = Pattern.compile("^([^:]+):(\\d+):((?:[a-f0-9]{2})+)$",
 		Pattern.CASE_INSENSITIVE);
 
 	private static final String CONTENT_TYPE = "cm:content";
@@ -76,8 +76,7 @@ public class Validator {
 		TYPE_MISMATCH, // type or aspects fail to meet requirements
 		ASPECT_MISSING, // type or aspects fail to meet requirements
 		ATTRIBUTE_VALUE, // attribute values are different
-		CONTENT_SIZE, // content size mismatch
-		CONTENT_SUM, // content sum mismatch
+		CONTENT_MISMATCH, // content size or checksum mismatch
 		//
 		;
 	}
@@ -401,52 +400,36 @@ public class Validator {
 		}
 	}
 
-	public static class ContentSizeFault extends ValidationFault {
+	public static class ContentMismatchFault extends ValidationFault {
 		private final long sourceSize;
-		private final long candidateSize;
-
-		private ContentSizeFault(Path path, long sourceSize, long candidateSize) {
-			super(ValidationErrorType.CONTENT_SIZE, path);
-			this.sourceSize = sourceSize;
-			this.candidateSize = candidateSize;
-		}
-
-		@Override
-		protected void writeColumns(CSVPrinter p) throws IOException {
-			super.writeColumns(p);
-			p.print(this.sourceSize);
-			p.print(this.candidateSize);
-		}
-
-		@Override
-		protected void writeHeaders(CSVPrinter p) throws IOException {
-			super.writeHeaders(p);
-			p.print("SOURCE SIZE");
-			p.print("CANDIDATE SIZE");
-		}
-	}
-
-	public static class ContentSumFault extends ValidationFault {
 		private final String sourceSum;
+		private final long candidateSize;
 		private final String candidateSum;
 
-		private ContentSumFault(Path path, String sourceSum, String candidateSum) {
-			super(ValidationErrorType.CONTENT_SUM, path);
+		private ContentMismatchFault(Path path, long sourceSize, String sourceSum, long candidateSize,
+			String candidateSum) {
+			super(ValidationErrorType.CONTENT_MISMATCH, path);
+			this.sourceSize = sourceSize;
 			this.sourceSum = sourceSum;
+			this.candidateSize = candidateSize;
 			this.candidateSum = candidateSum;
 		}
 
 		@Override
 		protected void writeColumns(CSVPrinter p) throws IOException {
 			super.writeColumns(p);
+			p.print(this.sourceSize);
 			p.print(this.sourceSum);
+			p.print(this.candidateSize);
 			p.print(this.candidateSum);
 		}
 
 		@Override
 		protected void writeHeaders(CSVPrinter p) throws IOException {
 			super.writeHeaders(p);
+			p.print("SOURCE SIZE");
 			p.print("SOURCE CHECKSUM");
+			p.print("CANDIDATE SIZE");
 			p.print("CANDIDATE CHECKSUM");
 		}
 	}
@@ -752,13 +735,13 @@ public class Validator {
 			if (!sourceContentRequired) { return true; }
 
 			// If there is a content stream required, then we issue a checksum violation
-			reportFault(new ContentSumFault(relativePath, "(not checked)", "(not provided)"));
+			reportFault(new ContentMismatchFault(relativePath, -1, "(not checked)", -1, "(not provided)"));
 			return false;
 		}
 
 		if (!sourceContentRequired) {
 			// The source file shouldn't have any content...so this is a mismatch
-			reportFault(new ContentSumFault(relativePath, "(not supported)", candidateCheckSumStr));
+			reportFault(new ContentMismatchFault(relativePath, -1, "(not supported)", -1, candidateCheckSumStr));
 			return false;
 		}
 
@@ -767,22 +750,34 @@ public class Validator {
 		if (!m.matches()) {
 			// If we have a badly formatted content stream, we must report it as a validation
 			// failure, and we can't continue b/c we won't know what to check
-			reportFault(new ContentSumFault(relativePath, "(not checked)",
+			reportFault(new ContentMismatchFault(relativePath, -1, "(not checked)", -1,
 				String.format("BAD FORMAT: %s", candidateCheckSumStr)));
 			return false;
 		}
 
 		// Our candidate checksum is properly formatted, parse out its contents
 		final String checksumType = m.group(1);
+
 		final MessageDigest checksumDigest;
 		try {
 			checksumDigest = MessageDigest.getInstance(checksumType.toUpperCase());
 		} catch (NoSuchAlgorithmException e) {
 			// Illegal checksum scheme...this is a validation error
-			reportFault(new ContentSumFault(relativePath, "(not checked)",
+			reportFault(new ContentMismatchFault(relativePath, -1, "(not checked)", -1,
 				String.format("BAD HASH TYPE (%s): %s", checksumType, candidateCheckSumStr)));
 			return false;
 		}
+
+		final long candidateSize;
+		try {
+			candidateSize = Long.valueOf(m.group(2));
+		} catch (NumberFormatException e) {
+			reportFault(new ContentMismatchFault(relativePath, -1, "(not checked)", -1,
+				String.format("BAD SIZE COMPONENT: %s", candidateCheckSumStr)));
+			return false;
+		}
+
+		final String candidateChecksumValue = m.group(3).toLowerCase();
 
 		// Ok so we know the candidate says we should have a content stream...let's try to find it
 		// First, identify the content file for this one
@@ -791,36 +786,37 @@ public class Validator {
 		final Path sourceContentPath = sourceContentFile.toPath();
 
 		if (!sourceContentFile.exists()) {
-			reportFault(new ContentSumFault(relativePath,
-				String.format("SOURCE FILE [%s] MISSING", sourceContentPath.toString()), candidateCheckSumStr));
+			reportFault(new ContentMismatchFault(relativePath, -1,
+				String.format("SOURCE FILE [%s] MISSING", sourceContentPath.toString()), candidateSize,
+				String.format("%s:%s", checksumType, candidateChecksumValue)));
 			return false;
 		}
 
 		if (!sourceContentFile.isFile()) {
-			reportFault(new ContentSumFault(relativePath,
-				String.format("SOURCE FILE [%s] IS NOT A REGULAR FILE", sourceContentPath.toString()),
-				candidateCheckSumStr));
+			reportFault(new ContentMismatchFault(relativePath, -1,
+				String.format("SOURCE FILE [%s] IS NOT A REGULAR FILE", sourceContentPath.toString()), candidateSize,
+				String.format("%s:%s", checksumType, candidateChecksumValue)));
 			return false;
 		}
 
 		if (!sourceContentFile.canRead()) {
-			reportFault(new ContentSumFault(relativePath,
-				String.format("SOURCE FILE [%s] IS NOT READABLE", sourceContentPath.toString()), candidateCheckSumStr));
+			reportFault(new ContentMismatchFault(relativePath, -1,
+				String.format("SOURCE FILE [%s] IS NOT READABLE", sourceContentPath.toString()), candidateSize,
+				String.format("%s:%s", checksumType, candidateChecksumValue)));
 			return false;
 		}
 
 		final long sourceSize = sourceContentFile.length();
-		final long candidateSize = sourceContentFile.length(); // TODO: pull this from....???
 
 		if (sourceSize != candidateSize) {
-			reportFault(new ContentSizeFault(relativePath, sourceSize, candidateSize));
+			reportFault(new ContentMismatchFault(relativePath, sourceSize, "(not checked)", candidateSize,
+				String.format("%s:%s", checksumType, candidateChecksumValue)));
 			return false;
 		}
 
-		final String candidateChecksumValue = m.group(2).toLowerCase();
-		final byte[] sourceChecksumBytes;
+		final String sourceChecksumValue;
 		try {
-			sourceChecksumBytes = getChecksum(checksumDigest, sourceContentFile);
+			sourceChecksumValue = BinaryEncoding.HEX.encode(getChecksum(checksumDigest, sourceContentFile));
 		} catch (IOException e) {
 			reportFault(new ExceptionFault(relativePath,
 				String.format("Failed to calculate the %s checksum for the source file [%s]", checksumType,
@@ -829,9 +825,10 @@ public class Validator {
 			return false;
 		}
 
-		final String sourceChecksumValue = BinaryEncoding.HEX.encode(sourceChecksumBytes).toLowerCase();
 		if (!Tools.equals(sourceChecksumValue, candidateChecksumValue)) {
-			reportFault(new ContentSumFault(relativePath, sourceChecksumValue, candidateCheckSumStr));
+			reportFault(new ContentMismatchFault(relativePath, sourceSize,
+				String.format("%s:%s", checksumType, sourceChecksumValue), candidateSize,
+				String.format("%s:%s", checksumType, candidateChecksumValue)));
 			return false;
 		}
 
