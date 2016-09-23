@@ -26,8 +26,8 @@ public class AlfrescoSchema {
 		List<AlfrescoContentModel> models = new ArrayList<AlfrescoContentModel>();
 		Map<String, SchemaMember<?>> typeIndex = new TreeMap<String, SchemaMember<?>>();
 		Map<String, SchemaMember<?>> aspectIndex = new TreeMap<String, SchemaMember<?>>();
-		for (URI f : modelFiles) {
-			AlfrescoContentModel model = AlfrescoContentModel.newModel(f, models);
+		for (URI uri : modelFiles) {
+			AlfrescoContentModel model = AlfrescoContentModel.newModel(uri, models);
 			for (String typeName : model.getTypeNames()) {
 				typeIndex.put(typeName, model.getType(typeName));
 			}
