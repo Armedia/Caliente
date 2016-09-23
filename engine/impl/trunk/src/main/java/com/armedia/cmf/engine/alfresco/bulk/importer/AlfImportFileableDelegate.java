@@ -358,25 +358,23 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 		// Now, do the mappings as copies of what has already been copied over, except when the
 		// source attribute is repeating.
-		for (String m : AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.keySet()) {
-			final String tgtName = AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.get(m);
-			String srcName = AlfImportFileableDelegate.ATTRIBUTE_MAPPER.get(tgtName);
-			if (srcName == null) {
-				// If it didn't need mapping, stick to the original name.
-				srcName = tgtName;
-			}
-
-			SchemaAttribute tgtAtt = targetType.getAttribute(tgtName);
-			if (tgtAtt == null) {
+		for (final String specialName : AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.keySet()) {
+			// First get the attribute the special copy must go to
+			final SchemaAttribute specialAtt = targetType.getAttribute(specialName);
+			if (specialAtt == null) {
 				continue;
 			}
+
+			String srcName = AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.get(specialName);
+			// If it didn't need mapping, stick to the original name.
+			srcName = Tools.coalesce(AlfImportFileableDelegate.ATTRIBUTE_MAPPER.get(srcName), srcName);
 
 			CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(srcName);
 			if ((srcAtt == null) || !srcAtt.hasValues()) {
 				continue;
 			}
 
-			storeValue(srcAtt, tgtAtt, p, false);
+			storeValue(srcAtt, specialAtt, p, false);
 		}
 
 		// Now handle the special properties
