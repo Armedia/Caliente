@@ -70,12 +70,12 @@ public class Validator {
 	private static final String PROP_ASPECTS = "aspects";
 	private static final String PROP_CHECKSUM = "streamChecksum";
 
-	private static final Map<String, String> CANDIDATE_TYPE_MAPPING;
+	private static final Map<String, String> REFERENCE_TYPE_MAPPING;
 	static {
 		Map<String, String> m = new TreeMap<String, String>();
 		m.put("app:folderlink", "arm:reference");
 		m.put("app:filelink", "arm:reference");
-		CANDIDATE_TYPE_MAPPING = Tools.freezeMap(new LinkedHashMap<String, String>(m));
+		REFERENCE_TYPE_MAPPING = Tools.freezeMap(new LinkedHashMap<String, String>(m));
 	}
 
 	private static enum ValidationErrorType {
@@ -640,7 +640,7 @@ public class Validator {
 		String sourceType = sourceData.getProperty(Validator.PROP_TYPE);
 		String candidateType = candidateData.getProperty(Validator.PROP_TYPE);
 		if (Tools.equals(sourceType, candidateType)
-			|| Tools.equals(Validator.CANDIDATE_TYPE_MAPPING.get(candidateType), sourceType)) { return true; }
+			|| Tools.equals(Validator.REFERENCE_TYPE_MAPPING.get(candidateType), sourceType)) { return true; }
 		reportFault(new TypeMismatchFault(relativePath, sourceType, candidateType));
 		return false;
 	}
@@ -741,17 +741,21 @@ public class Validator {
 
 		if (candidateCheckSumStr == null) {
 			// If this type doesn't require a content stream, then there's no checksum required,
-			// and therefore it's OK to short-circuit the validation
-			if (!sourceContentRequired) { return true; }
+			// and therefore it's OK to short-circuit the validation. Also, if the type is a
+			// reference, we assume that there won't be any content to begin with...
+			if (!sourceContentRequired || Validator.REFERENCE_TYPE_MAPPING
+				.containsKey(candidateData.getProperty(Validator.PROP_TYPE))) { return true; }
 
 			// If there is a content stream required, then we issue a checksum violation
-			reportFault(new ContentMismatchFault(relativePath, -1, "(not checked)", -1, "(not provided)"));
+			reportFault(new ContentMismatchFault(relativePath, -1, "(expected, but not checked)", -1,
+				"NO CANDIDATE DATA PROVIDED"));
 			return false;
 		}
 
 		if (!sourceContentRequired) {
 			// The source file shouldn't have any content...so this is a mismatch
-			reportFault(new ContentMismatchFault(relativePath, -1, "(not supported)", -1, candidateCheckSumStr));
+			reportFault(new ContentMismatchFault(relativePath, -1, "SOURCE OBJECT PROVIDES NO CONTENT", -1,
+				candidateCheckSumStr));
 			return false;
 		}
 
