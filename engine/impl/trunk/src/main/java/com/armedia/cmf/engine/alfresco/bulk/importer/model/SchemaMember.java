@@ -111,4 +111,26 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	public int getAllAttributeCount() {
 		return this.allAttributeNames.size();
 	}
+
+	@Override
+	public int hashCode() {
+		return Tools.hashTool(this, null, this.name, this.parent);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!Tools.baseEquals(this, obj)) { return false; }
+		@SuppressWarnings("unchecked")
+		SchemaMember<T> other = (SchemaMember<T>) obj;
+		if (!Tools.equals(this.name, other.name)) { return false; }
+		if (!Tools.equals(this.parent, other.parent)) { return false; }
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		final String type = getClass().getSimpleName();
+		if (this.parent != null) { return String.format("%s [%s extends %s]", type, this.name, this.parent.name); }
+		return String.format("%s [%s]", type, this.name);
+	}
 }
