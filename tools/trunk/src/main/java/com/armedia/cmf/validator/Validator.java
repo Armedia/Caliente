@@ -72,7 +72,7 @@ public class Validator {
 	private static enum ValidationErrorType {
 		//
 		EXCEPTION, // exception raised while examining
-		CANDIDATE_MISSING, // source exists, but not target
+		FILE_MISSING, // source exists, but not target
 		TYPE_MISMATCH, // type or aspects fail to meet requirements
 		ASPECT_MISSING, // type or aspects fail to meet requirements
 		ATTRIBUTE_VALUE, // attribute values are different
@@ -290,12 +290,12 @@ public class Validator {
 		}
 	}
 
-	public static class ObjectMissingFault extends ValidationFault {
+	public static class FileMissingFault extends ValidationFault {
 		private final String sourceMessage;
 		private final String candidateMessage;
 
-		private ObjectMissingFault(Path path, String sourceMessage, String candidateMessage) {
-			super(ValidationErrorType.CANDIDATE_MISSING, path);
+		private FileMissingFault(Path path, String sourceMessage, String candidateMessage) {
+			super(ValidationErrorType.FILE_MISSING, path);
 			this.sourceMessage = sourceMessage;
 			this.candidateMessage = candidateMessage;
 		}
@@ -623,7 +623,7 @@ public class Validator {
 		// Test 1: If the candidate doesn't exist, then we have a problem
 		String candidateMsg = validateFile(candidatePath);
 		if (candidateMsg != null) {
-			candidateMsg = String.format(candidateMsg, "source");
+			candidateMsg = String.format(candidateMsg, "candidate");
 		}
 
 		// No faults? check out
@@ -638,7 +638,7 @@ public class Validator {
 		}
 
 		// Can't do anything else...so... we barf out
-		reportFault(new ObjectMissingFault(relativePath, sourceMsg, candidateMsg));
+		reportFault(new FileMissingFault(relativePath, sourceMsg, candidateMsg));
 		return false;
 	}
 
@@ -897,8 +897,7 @@ public class Validator {
 				this.log.error(
 					String.format("Unexpected Exception caught while processing [%s]", relativePath.toString()), t);
 			} finally {
-				this.log.info("Validation for the object at [{}] {}", relativePath.toString(),
-					validated ? "passed" : "FAILED");
+				this.log.info("Validation for [{}] {}", relativePath.toString(), validated ? "PASSED" : "FAILED");
 			}
 		} finally {
 			l.unlock();
