@@ -782,6 +782,8 @@
 					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
 					<multiple>true</multiple>
+					<!-- ddjsa value added due to factorization -->
+					<!--
 					<constraints>
 						<constraint type="LIST">
 							<parameter name="allowedValues">
@@ -808,7 +810,6 @@
 									<value>dj5</value>
 									<value>vdj5</value>
 									<value>cos</value>
-									<!-- ddjsa value added due to factorization -->
 									<value>ddjsa</value>
 									<value>ddgsa</value>
 									<value>ddgsp</value>
@@ -844,6 +845,7 @@
 							</parameter>
 						</constraint>
 					</constraints>
+					-->
 				</property>
 				<property name="jsap:js_classified_by_name">
 					<title>Classified By Name</title>
@@ -1326,6 +1328,7 @@
 					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
 					<multiple>true</multiple>
+					<!--
 					<constraints>
 						<constraint type="LIST">
 							<parameter name="allowedValues">
@@ -1361,6 +1364,7 @@
 							</parameter>
 						</constraint>
 					</constraints>
+					-->
 				</property>
 				<property name="jsap:js_security_classification">
 					<title>Security Classification</title>
