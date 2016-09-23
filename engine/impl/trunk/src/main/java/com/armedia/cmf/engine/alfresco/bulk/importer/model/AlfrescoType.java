@@ -69,4 +69,9 @@ public class AlfrescoType {
 	public int getAttributeCount() {
 		return this.attributes.size();
 	}
+
+	@Override
+	public String toString() {
+		return String.format("AlfrescoType [name=%s, aspects=%s]", this.name, this.aspects);
+	}
 }
