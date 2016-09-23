@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +69,9 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 
 			if (var != null) {
 				f = new File(var).getCanonicalFile();
+				if (!f.exists()) {
+					FileUtils.forceMkdir(f);
+				}
 				if (!f.isDirectory()) { throw new FileNotFoundException(
 					String.format("Could not find the directory [%s]", f.getAbsolutePath())); }
 
