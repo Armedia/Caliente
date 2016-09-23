@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+<configuration scanPeriod="10 seconds" scan="true">
+	<appender name="default" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <encoder>
+            <pattern>%d{ISO8601} [%-16t] %m%n</pattern>
+        </encoder>
+	</appender>
+	<appender name="default.async" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="default" />
+		<discardingThreshold>0</discardingThreshold>
+		<queueSize>10240</queueSize>
+	</appender>
+
+	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
+
+	<logger name="com.armedia" level="INFO"/>
+
+	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
+	<root level="INFO">
+		<appender-ref ref="default.async" />
+	</root>
+</configuration>
