@@ -39,6 +39,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,8 @@ public class Validator {
 	private static final String METADATA_MARKER_PATTERN = String.format("\\Q%s\\E", Validator.METADATA_MARKER);
 	private static final Pattern CHECKSUM_PARSER = Pattern.compile("^([^:]+):(\\d+):((?:[a-f0-9]{2})+)$",
 		Pattern.CASE_INSENSITIVE);
+
+	private static final String REPORT_MARKER_FORMAT = "yyyyMMdd-HHmmss";
 
 	private static final String CONTENT_TYPE = "cm:content";
 
@@ -222,9 +225,15 @@ public class Validator {
 			this.path = path;
 		}
 
-		private CSVPrinter createOutputFile(File baseDir) throws IOException {
+		private CSVPrinter createOutputFile(File baseDir, String marker) throws IOException {
 			// Open the file
-			File targetFile = new File(baseDir, String.format("faults.%s.csv", this.type.name().toLowerCase()));
+			File targetFile = new File(baseDir,
+				String.format("faults.%s.%s.csv", marker, this.type.name().toLowerCase()));
+
+			// Clear out garbage
+			if (targetFile.exists() && targetFile.isFile()) {
+				FileUtils.forceDelete(targetFile);
+			}
 
 			// Create the CSVPrinter
 			CSVPrinter p = new CSVPrinter(new FileWriter(targetFile), CSVFormat.DEFAULT);
@@ -493,6 +502,7 @@ public class Validator {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final File reportDir;
+	private final String reportMarker;
 	private final Map<ValidationErrorType, AtomicLong> faultCounters;
 	private final Map<ValidationErrorType, CSVPrinter> errors;
 	private final AtomicLong faultCount = new AtomicLong(0);
@@ -508,6 +518,8 @@ public class Validator {
 	public Validator(final Path reportDir, final Path sourceRoot, final Path candidateRoot,
 		Collection<String> contentModel) throws Exception {
 		this.reportDir = reportDir.toFile();
+		// TODO: Format as UTC or local time?
+		this.reportMarker = DateFormatUtils.format(new Date(), Validator.REPORT_MARKER_FORMAT);
 		this.sourceRoot = sourceRoot;
 		this.candidateRoot = candidateRoot;
 
@@ -546,7 +558,7 @@ public class Validator {
 				p = this.errors.get(fault.type);
 				if (p == null) {
 					try {
-						p = fault.createOutputFile(this.reportDir);
+						p = fault.createOutputFile(this.reportDir, this.reportMarker);
 					} catch (IOException e) {
 						String msg = String.format("Failed to create the fault report for %s", fault.type.name());
 						Validator.LOG.error(msg, e);
