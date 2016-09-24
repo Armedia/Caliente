@@ -14,6 +14,11 @@ import com.delta.cmsmf.launcher.AbstractCMSMFMain_import;
  */
 public class CMSMFMain_import extends AbstractCMSMFMain_import {
 
+	static {
+		// Try to ensure our version of this class is the first one loaded into the JVM...
+		LogInterceptor.init();
+	}
+
 	public CMSMFMain_import() throws Throwable {
 		super(DctmImportEngine.getImportEngine());
 	}

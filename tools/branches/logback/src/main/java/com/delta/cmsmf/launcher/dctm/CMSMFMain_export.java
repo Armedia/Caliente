@@ -38,6 +38,11 @@ import com.documentum.fc.common.IDfTime;
 
 public class CMSMFMain_export extends AbstractCMSMFMain_export implements ExportEngineListener {
 
+	static {
+		// Try to ensure our version of this class is the first one loaded into the JVM...
+		LogInterceptor.init();
+	}
+
 	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss";
 	private static final String DATE_FORMAT_DQL = IDfTime.DF_TIME_PATTERN26; // DQL-friendly syntax
 	private static final String DATE_FORMAT_UTC = String.format("%s 'UTC'", CMSMFMain_export.DATE_FORMAT);

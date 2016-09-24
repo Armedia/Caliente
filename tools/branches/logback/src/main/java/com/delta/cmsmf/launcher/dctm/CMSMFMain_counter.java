@@ -46,6 +46,11 @@ import com.documentum.fc.common.IDfValue;
  */
 public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
 
+	static {
+		// Try to ensure our version of this class is the first one loaded into the JVM...
+		LogInterceptor.init();
+	}
+
 	private static final String HEADERS = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT,CHILD_SIZE";
 
 	private static final String FOLDER_LISTER = "select r_object_id from dm_folder where folder(ID(%s), DESCEND)";

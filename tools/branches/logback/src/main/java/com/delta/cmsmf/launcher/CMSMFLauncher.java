@@ -1,6 +1,7 @@
 package com.delta.cmsmf.launcher;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -17,9 +18,8 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.cmf.storage.CmfObjectStore;
 import com.armedia.cmf.storage.CmfValue;
@@ -28,6 +28,9 @@ import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.utils.ClasspathPatcher;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
 
 public class CMSMFLauncher extends AbstractLauncher {
 
@@ -80,36 +83,44 @@ public class CMSMFLauncher extends AbstractLauncher {
 		if (!m.matches()) { throw new IllegalArgumentException(
 			String.format("Invalid --engine parameter value [%s] - must only contain [a-zA-Z_0-9]", engine)); }
 
-		String log4j = CLIParam.log4j.getString();
-		boolean customLog4j = false;
-		if (log4j != null) {
-			final File cfg = new File(log4j);
+		String logConf = CLIParam.log_cfg.getString();
+
+		String logName = CLIParam.log_name.getString();
+		if (!CLIParam.log_name.isPresent() || (logName == null)) {
+			String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+			logName = String.format("cmsmf-%s-%s-%s", engine.toLowerCase(), mode.toLowerCase(), runTime);
+		}
+		System.setProperty("logName", logName);
+
+		final LoggerContext loggerContext = LoggerContext.class.cast(LoggerFactory.getILoggerFactory());
+
+		boolean customLogConf = false;
+		if (logConf != null) {
+			final File cfg = new File(logConf);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
-				DOMConfigurator.configureAndWatch(cfg.getCanonicalPath());
-				customLog4j = true;
+				System.setProperty("logName", null);
+				JoranConfigurator configurator = new JoranConfigurator();
+				configurator.setContext(loggerContext);
+				loggerContext.reset();
+				configurator.doConfigure(cfg);
+				customLogConf = true;
 			}
 		}
-		if (!customLog4j) {
-			String logName = CLIParam.log_name.getString();
-			if (logName == null) {
-				String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-				logName = String.format("cmsmf-%s-%s-%s", engine.toLowerCase(), mode.toLowerCase(), runTime);
-			}
-			System.setProperty("logName", logName);
-			URL config = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
-			if (config != null) {
-				DOMConfigurator.configure(config);
-			} else {
-				config = Thread.currentThread().getContextClassLoader().getResource("log4j.properties");
-				if (config != null) {
-					PropertyConfigurator.configure(config);
-				}
-			}
+		if (!customLogConf) {
+			// URL config = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
+			URL config = Thread.currentThread().getContextClassLoader().getResource("logback.xml");
+			if (config == null) { throw new FileNotFoundException("Failed to find the base logger configuration"); }
+
+			// DOMConfigurator.configure(config);
+			JoranConfigurator configurator = new JoranConfigurator();
+			configurator.setContext(loggerContext);
+			loggerContext.reset();
+			configurator.doConfigure(config);
 		}
 
-		// Make sure log4j is configured
-		Logger.getRootLogger().info("Logging active");
-		final Logger console = Logger.getLogger("console");
+		// Make sure logging is configured
+		LoggerFactory.getLogger(CMSMFLauncher.class).info("Logging active");
+		final Logger console = LoggerFactory.getLogger("console");
 		console.info(String.format("Launching CMSMF v%s %s mode for engine %s%n", CMSMFLauncher.VERSION,
 			CLIParam.mode.getString(), engine));
 		Runtime runtime = Runtime.getRuntime();
