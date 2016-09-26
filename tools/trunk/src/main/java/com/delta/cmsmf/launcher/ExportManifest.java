@@ -38,22 +38,32 @@ public class ExportManifest extends DefaultExportEngineListener {
 		private final String label;
 		private final ExportResult result;
 		private final Throwable thrown;
+		private final String extraInfo;
 
 		private Record(CmfObject<?> object, Throwable thrown) {
-			this(object, ExportResult.FAILED, thrown);
+			this(object, ExportResult.FAILED, thrown, null);
 		}
 
 		private Record(CmfObject<?> object, ExportResult result) {
-			this(object, result, null);
+			this(object, result, null, null);
+		}
+
+		private Record(CmfObject<?> object, ExportResult result, String extraInfo) {
+			this(object, result, null, extraInfo);
 		}
 
 		private Record(CmfObject<?> object, ExportResult result, Throwable thrown) {
+			this(object, result, thrown, null);
+		}
+
+		private Record(CmfObject<?> object, ExportResult result, Throwable thrown, String extraInfo) {
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = object.getType();
 			this.batchId = StringEscapeUtils.escapeCsv(object.getBatchId());
 			this.sourceId = StringEscapeUtils.escapeCsv(object.getId());
 			this.label = StringEscapeUtils.escapeCsv(object.getLabel());
 			this.result = result;
+			this.extraInfo = extraInfo;
 			if (result != ExportResult.FAILED) {
 				this.thrown = null;
 			} else {
@@ -63,21 +73,22 @@ public class ExportManifest extends DefaultExportEngineListener {
 		}
 
 		private Record(CmfType type, String objectId, Throwable thrown) {
-			this(type, objectId, ExportResult.FAILED, thrown);
+			this(type, objectId, ExportResult.FAILED, thrown, null);
 
 		}
 
 		private Record(CmfType type, String objectId, ExportResult result) {
-			this(type, objectId, result, null);
+			this(type, objectId, result, null, null);
 		}
 
-		private Record(CmfType type, String objectId, ExportResult result, Throwable thrown) {
+		private Record(CmfType type, String objectId, ExportResult result, Throwable thrown, String extraInfo) {
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = type;
 			this.batchId = "";
 			this.sourceId = StringEscapeUtils.escapeCsv(objectId);
 			this.label = "";
 			this.result = result;
+			this.extraInfo = extraInfo;
 			if (result != ExportResult.FAILED) {
 				this.thrown = null;
 			} else {
@@ -105,7 +116,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 			final String msg;
 			if (this.result != ExportResult.FAILED) {
 				msg = String.format(ExportManifest.RECORD_FORMAT, this.date, this.type.name(), this.result.name(),
-					this.batchId, this.sourceId, this.label, "");
+					this.batchId, this.sourceId, this.label, Tools.coalesce(this.extraInfo, ""));
 			} else {
 				msg = String.format(ExportManifest.RECORD_FORMAT, this.date, this.type.name(), this.result.name(),
 					this.batchId, this.sourceId, this.label, getThrownMessage());
@@ -138,7 +149,8 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason) {
+	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason,
+		String extraInfo) {
 		// For the manifest, we're not really interested in Skipped objects, since
 		// they'll always be the result of duplicate serializations, so there's no
 		// problem to be reported or deduced from it
