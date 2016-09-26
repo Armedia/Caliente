@@ -6,6 +6,7 @@ public enum ExportSkipReason {
 	ALREADY_LOCKED("Already locked"),
 	ALREADY_STORED("Already stored"),
 	SKIPPED("Explicitly skipped"),
+	DEPENDENCY_FAILED("A dependency failed to export"),
 	//
 	;
 

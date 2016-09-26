@@ -21,7 +21,8 @@ public class DefaultExportListener implements ExportListener {
 	}
 
 	@Override
-	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason) {
+	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason,
+		String extraInfo) {
 	}
 
 	@Override

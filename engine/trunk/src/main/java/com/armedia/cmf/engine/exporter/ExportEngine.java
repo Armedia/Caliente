@@ -53,17 +53,24 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		private final Long objectNumber;
 		private final CmfObject<V> marshaled;
 		private final ExportSkipReason message;
+		private final String extraInfo;
 
 		public Result(Long objectNumber, CmfObject<V> marshaled) {
 			this.objectNumber = objectNumber;
 			this.marshaled = marshaled;
 			this.message = null;
+			this.extraInfo = null;
 		}
 
 		public Result(ExportSkipReason message) {
+			this(message, null);
+		}
+
+		public Result(ExportSkipReason message, String extraInfo) {
 			this.objectNumber = null;
 			this.marshaled = null;
 			this.message = message;
+			this.extraInfo = null;
 		}
 	}
 
@@ -117,11 +124,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason) {
+		public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason,
+			String extraInfo) {
 			getStoredObjectCounter().increment(objectType, ExportResult.SKIPPED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
-					l.objectSkipped(jobId, objectType, objectId, reason);
+					l.objectSkipped(jobId, objectType, objectId, reason, extraInfo);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -182,7 +190,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			if ((result.objectNumber != null) && (result.marshaled != null)) {
 				listenerDelegator.objectExportCompleted(exportState.jobId, result.marshaled, result.objectNumber);
 			} else {
-				listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(), result.message);
+				listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(), result.message,
+					result.extraInfo);
 			}
 			return result;
 		} catch (Exception e) {
@@ -350,7 +359,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							String.format("Thread interrupted waiting on the export of [%s] by %s", requirement, label),
 							e);
 					}
-					if (!status.isSuccessful()) { throw new ExportException(
+					if (!status.isSuccessful()) { return new Result(ExportSkipReason.DEPENDENCY_FAILED,
 						String.format("A required object [%s] failed to serialize for %s", requirement, label)); }
 				}
 			} finally {
@@ -360,8 +369,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				sourceObject.requirementsExported(marshaled, ctx);
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to run the post-requirements callback for %s", label),
-					e);
+				this.log.error(String.format("Failed to run the post-requirements callback for %s", label), e);
 			}
 
 			final boolean latestOnly = ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY);
@@ -388,8 +396,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					sourceObject.antecedentsExported(marshaled, ctx);
 				} catch (Exception e) {
-					throw new ExportException(
-						String.format("Failed to run the post-antecedents callback for %s", label), e);
+					this.log.error(String.format("Failed to run the post-antecedents callback for %s", label), e);
 				}
 			}
 
@@ -451,8 +458,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					sourceObject.successorsExported(marshaled, ctx);
 				} catch (Exception e) {
-					throw new ExportException(String.format("Failed to run the post-successors callback for %s", label),
-						e);
+					this.log.error(String.format("Failed to run the post-successors callback for %s", label), e);
 				}
 			}
 
@@ -476,7 +482,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				sourceObject.dependentsExported(marshaled, ctx);
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to run the post-dependents callback for %s", label), e);
+				this.log.error(String.format("Failed to run the post-dependents callback for %s", label), e);
 			}
 
 			Result result = new Result(ret, marshaled);

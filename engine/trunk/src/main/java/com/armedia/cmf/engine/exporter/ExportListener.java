@@ -35,7 +35,8 @@ public interface ExportListener {
 	 * @param objectId
 	 * @param reason
 	 */
-	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason);
+	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason,
+		String extraInfo);
 
 	/**
 	 * <p>
