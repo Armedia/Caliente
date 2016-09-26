@@ -26,6 +26,7 @@ public enum CLIParam {
 	dfc(null, 1, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
 	dfc_prop(null, 1, "The dfc.properties file to use instead of the default"),
 	dctm(null, 1, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
+	dctm_extra(null, 1, "The directory which contains extra DFC JARs that should be added to the classpath"),
 	mode(null, 1, true, "The mode of operation, either 'import', 'export', 'encrypt', 'decrypt' or 'counter'"),
 	engine(null, 1, true, "The engine to use for the operation (either dctm or shpt)"),
 	server(null, 1, "The server URL to connect to (Documentum docbase spec, or the sharepoint server URL)"),
