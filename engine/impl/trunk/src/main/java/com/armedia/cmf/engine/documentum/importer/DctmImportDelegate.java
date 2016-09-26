@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -41,6 +42,9 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.aspect.IDfAspects;
+import com.documentum.fc.client.aspect.IDfAttachAspectCallback;
+import com.documentum.fc.client.aspect.IDfDetachAspectCallback;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
@@ -155,6 +159,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 						this.cmfObject.getId()));
 				}
 				object = newObject(context);
+				// Apply the aspects right away?
+				object = applyAspects(object, context);
 				cmsImportResult = ImportResult.CREATED;
 				if (!isTransitoryObject(object)) {
 					// DO NOT override mappings...we don't know the new object's ID until checkin is
@@ -322,6 +328,61 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 					DctmAttributes.R_OBJECT_ID, this.cmfObject.getId());
 			}
 		}
+	}
+
+	private T applyAspects(T object, DctmImportContext ctx) throws DfException, ImportException {
+		// Is this an aspect-able class?
+		if (!IDfAspects.class.isInstance(object)) { return object; }
+
+		// First things first: which aspects does it already have?
+		Set<String> currentAspects = new LinkedHashSet<String>();
+		int aspectCount = object.getValueCount(DctmAttributes.R_ASPECT_NAME);
+		for (int i = 0; i < aspectCount; i++) {
+			currentAspects.add(object.getRepeatingString(DctmAttributes.R_ASPECT_NAME, i));
+		}
+
+		Set<String> newAspects = new LinkedHashSet<String>();
+		// Next... which aspects does the incoming object have?
+		CmfAttribute<IDfValue> aspectAttr = this.cmfObject.getAttribute(DctmAttributes.R_ASPECT_NAME);
+		if (aspectAttr != null) {
+			for (IDfValue v : aspectAttr) {
+				newAspects.add(v.toString());
+			}
+		}
+
+		// Next... remove from the list of aspects to be detached, the aspects which we know
+		// we'll have to keep
+		Set<String> oldAspects = new LinkedHashSet<String>(currentAspects);
+		oldAspects.removeAll(newAspects);
+
+		// Now, detach the aspects that need detaching
+		final AtomicReference<T> ref = new AtomicReference<T>(object);
+		for (String a : oldAspects) {
+			IDfAspects aspectsView = IDfAspects.class.cast(ref.get());
+			aspectsView.detachAspect(a, new IDfDetachAspectCallback() {
+				@Override
+				public void doPostDetach(IDfPersistentObject object) throws Exception {
+					ref.set(castObject(object));
+				}
+			});
+		}
+
+		// Next, remove from the list of aspects to be attached, the aspects that are currently
+		// already attached...
+		newAspects.removeAll(currentAspects);
+
+		// Finally, attach the aspects that need attaching
+		for (String a : newAspects) {
+			IDfAspects aspectsView = IDfAspects.class.cast(ref.get());
+			aspectsView.attachAspect(a, new IDfAttachAspectCallback() {
+				@Override
+				public void doPostAttach(IDfPersistentObject object) throws Exception {
+					ref.set(castObject(object));
+				}
+			});
+		}
+
+		return ref.get();
 	}
 
 	protected final AttributeHandler getAttributeHandler(IDfAttr attr) {
