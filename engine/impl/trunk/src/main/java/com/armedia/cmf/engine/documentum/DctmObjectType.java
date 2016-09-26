@@ -242,6 +242,7 @@ public enum DctmObjectType {
 			case 0x0c:
 				return DctmObjectType.FOLDER;
 
+			// case 0x08: // fall-through - dm_sysobject types will be folded into dm_document
 			case 0x09:
 				return DctmObjectType.DOCUMENT;
 
