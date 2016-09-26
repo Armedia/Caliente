@@ -20,7 +20,6 @@ import com.armedia.cmf.engine.TransferSetting;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmDataType;
-import com.armedia.cmf.engine.documentum.DctmMappingUtils;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.common.DctmDocument;
@@ -37,11 +36,9 @@ import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFormat;
-import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
 import com.documentum.fc.client.content.IDfContent;
@@ -93,6 +90,11 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				false, patchAntecedent));
 		}
 
+		if (ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
+			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+				IntermediateProperty.VERSION_TREE_ROOT.type, DfValueFactory.newBooleanValue(true)));
+		}
+
 		// If this is a virtual document, we export the document's components first
 		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {
 			CmfProperty<IDfValue> p = new CmfProperty<IDfValue>(IntermediateProperty.VDOC_MEMBER,
@@ -108,11 +110,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 					child.getOverrideLateBindingValue(), child.getSelectedObject().getObjectName())));
 
 			}
-		}
-
-		if (ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
-			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_TREE_ROOT,
-				IntermediateProperty.VERSION_TREE_ROOT.type, DfValueFactory.newBooleanValue(true)));
 		}
 		return true;
 	}
@@ -157,27 +154,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 		// We do nothing else for references, as we need nothing else
 		if (isDfReference(document)) { return req; }
-
-		// Export the format
-		IDfFormat format = document.getFormat();
-		if (format != null) {
-			req.add(this.factory.newExportDelegate(format));
-		}
-
-		// Export the owner
-		String owner = DctmMappingUtils.substituteMappableUsers(session, document.getOwnerName());
-		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner)) {
-			IDfUser user = session.getUser(document.getOwnerName());
-			if (user != null) {
-				req.add(this.factory.newExportDelegate(user));
-			}
-		}
-
-		// Export the group
-		IDfGroup group = session.getGroup(document.getGroupName());
-		if (group != null) {
-			req.add(this.factory.newExportDelegate(group));
-		}
 
 		// If this is a virtual document, we export the document's components first
 		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {

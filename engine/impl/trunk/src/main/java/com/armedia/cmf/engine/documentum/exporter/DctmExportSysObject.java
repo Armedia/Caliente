@@ -37,6 +37,8 @@ import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
+import com.documentum.fc.client.IDfFormat;
+import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
@@ -619,6 +621,27 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 			// For references, we stop here
 			return req;
+		}
+
+		// Export the format
+		IDfFormat format = sysObject.getFormat();
+		if (format != null) {
+			req.add(this.factory.newExportDelegate(format));
+		}
+
+		// Export the owner
+		String owner = DctmMappingUtils.substituteMappableUsers(session, sysObject.getOwnerName());
+		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
+			IDfUser user = session.getUser(sysObject.getOwnerName());
+			if (user != null) {
+				req.add(this.factory.newExportDelegate(user));
+			}
+		}
+
+		// Export the group
+		IDfGroup group = session.getGroup(sysObject.getGroupName());
+		if (group != null) {
+			req.add(this.factory.newExportDelegate(group));
 		}
 
 		// Export the ACL requirements

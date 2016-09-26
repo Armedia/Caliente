@@ -153,27 +153,6 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		IDfFolder folder, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, folder, ctx);
 
-		String owner = DctmMappingUtils.resolveMappableUser(session, folder.getOwnerName());
-		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
-			IDfUser user = session.getUser(owner);
-			if (user != null) {
-				ret.add(this.factory.newExportDelegate(user));
-			}
-		}
-
-		// Do the others
-		IDfPersistentObject[] dep = {
-			// The group
-			session.getGroup(folder.getGroupName()),
-		};
-
-		for (IDfPersistentObject obj : dep) {
-			if (obj == null) {
-				continue;
-			}
-			ret.add(this.factory.newExportDelegate(obj));
-		}
-
 		CmfProperty<IDfValue> usersWithDefaultFolder = marshaled.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
 		if (usersWithDefaultFolder == null) { throw new Exception(
 			String.format("The export for folder [%s] does not contain the critical property [%s]",
@@ -206,12 +185,6 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			ret.add(this.factory.newExportDelegate(group));
 		}
 
-		// Export the object type
-		// Save filestore name
-		// String storageType = folder.getStorageType();
-		// if (StringUtils.isNotBlank(storageType)) {
-		// RepositoryConfiguration.getRepositoryConfiguration().addFileStore(storageType);
-		// }
 		return ret;
 	}
 }
