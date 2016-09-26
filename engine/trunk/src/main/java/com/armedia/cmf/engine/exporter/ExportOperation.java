@@ -3,7 +3,7 @@ package com.armedia.cmf.engine.exporter;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-final class ExportStatus {
+final class ExportOperation {
 
 	private static final AtomicLong COUNTER = new AtomicLong(0);
 
@@ -11,14 +11,14 @@ final class ExportStatus {
 	final String creatorThread;
 	final ExportTarget target;
 	private final AtomicBoolean waiting = new AtomicBoolean(false);
-	private boolean exported = false;
+	private boolean completed = false;
 	private boolean success = false;
 
-	ExportStatus(ExportTarget target) {
+	ExportOperation(ExportTarget target) {
 		this.creatorThread = Thread.currentThread().getName();
-		this.objectNumber = ExportStatus.COUNTER.getAndIncrement();
+		this.objectNumber = ExportOperation.COUNTER.getAndIncrement();
 		this.target = target;
-		this.exported = false;
+		this.completed = false;
 	}
 
 	String getCreatorThread() {
@@ -45,19 +45,23 @@ final class ExportStatus {
 		return this.success;
 	}
 
-	synchronized void markExported(boolean success) {
-		this.exported = true;
+	synchronized void setCompleted(boolean success) {
+		this.completed = true;
 		this.success |= success;
 		notify();
 	}
 
-	synchronized long waitUntilExported() throws InterruptedException {
-		return waitUntilExported(0);
+	synchronized boolean isCompleted() {
+		return this.completed;
 	}
 
-	synchronized long waitUntilExported(long timeout) throws InterruptedException {
+	synchronized long waitUntilCompleted() throws InterruptedException {
+		return waitUntilCompleted(0);
+	}
+
+	synchronized long waitUntilCompleted(long timeout) throws InterruptedException {
 		final long start = System.currentTimeMillis();
-		while (!this.exported) {
+		while (!this.completed) {
 			wait(timeout);
 		}
 		try {

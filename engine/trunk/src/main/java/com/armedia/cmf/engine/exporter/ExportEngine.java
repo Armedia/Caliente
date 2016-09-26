@@ -176,7 +176,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private Result exportObject(ExportState exportState, final ExportTarget referrent, final ExportTarget target,
 		final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
-		final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportStatus> statusMap)
+		final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportOperation> statusMap)
 		throws ExportException, CmfStorageException {
 		try {
 			listenerDelegator.objectExportStarted(exportState.jobId, target.getType(), target.getId());
@@ -204,7 +204,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private Result doExportObject(ExportState exportState, final ExportTarget referrent, final ExportTarget target,
 		final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
-		final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportStatus> statusMap)
+		final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportOperation> statusMap)
 		throws ExportException, CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -228,14 +228,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
 
 		// First, make sure other threads don't work on this same object
-		ExportStatus thisStatus = null;
+		ExportOperation thisStatus = null;
 		boolean locked = false;
 		try {
 			locked = objectStore.lockForStorage(type, id);
 			if (locked) {
 				// We got the lock, which means we create the locker object
-				thisStatus = new ExportStatus(target);
-				ExportStatus old = statusMap.put(target, thisStatus);
+				thisStatus = new ExportOperation(target);
+				ExportOperation old = statusMap.put(target, thisStatus);
 				if (old != null) { throw new ExportException(String.format(
 					"Duplicate export status for [%s] - this should be impossible! This means DB lock markers are broken!",
 					target)); }
@@ -263,7 +263,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					.trace(String.format("%s was locked for storage by this thread, but is already stored...", label));
 			}
 			// Just in case...
-			thisStatus.markExported(true);
+			thisStatus.setCompleted(true);
 			return new Result(ExportSkipReason.ALREADY_STORED);
 		}
 
@@ -345,13 +345,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				for (ExportTarget requirement : waitTargets) {
 					// We need to wait for each of these to be stored...so find their lock object
 					// and listen on it...?
-					ExportStatus status = statusMap.get(requirement);
+					ExportOperation status = statusMap.get(requirement);
 					if (status == null) { throw new ExportException(
 						String.format("No export status found for requirement [%s] of %s", requirement, label)); }
 					try {
 						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, label,
 							status.getObjectNumber(), status.getCreatorThread());
-						long waitTime = status.waitUntilExported();
+						long waitTime = status.waitUntilCompleted();
 						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, label, waitTime);
 					} catch (InterruptedException e) {
 						Thread.interrupted();
@@ -489,7 +489,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			success = true;
 			return result;
 		} finally {
-			thisStatus.markExported(success);
+			thisStatus.setCompleted(success);
 			if (referrent != null) {
 				ctx.popReferrent();
 			}
@@ -585,7 +585,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
 		}
 		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
-		final Map<ExportTarget, ExportStatus> statusMap = new ConcurrentHashMap<ExportTarget, ExportStatus>();
+		final Map<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<ExportTarget, ExportOperation>();
 
 		PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
 			backlogSize) {
