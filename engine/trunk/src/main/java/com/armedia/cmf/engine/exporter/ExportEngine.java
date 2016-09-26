@@ -369,7 +369,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				sourceObject.requirementsExported(marshaled, ctx);
 			} catch (Exception e) {
-				this.log.error(String.format("Failed to run the post-requirements callback for %s", label), e);
+				throw new ExportException(String.format("Failed to run the post-requirements callback for %s", label),
+					e);
 			}
 
 			final boolean latestOnly = ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY);
@@ -396,7 +397,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					sourceObject.antecedentsExported(marshaled, ctx);
 				} catch (Exception e) {
-					this.log.error(String.format("Failed to run the post-antecedents callback for %s", label), e);
+					throw new ExportException(
+						String.format("Failed to run the post-antecedents callback for %s", label), e);
 				}
 			}
 
@@ -458,7 +460,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					sourceObject.successorsExported(marshaled, ctx);
 				} catch (Exception e) {
-					this.log.error(String.format("Failed to run the post-successors callback for %s", label), e);
+					throw new ExportException(String.format("Failed to run the post-successors callback for %s", label),
+						e);
 				}
 			}
 
@@ -482,7 +485,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				sourceObject.dependentsExported(marshaled, ctx);
 			} catch (Exception e) {
-				this.log.error(String.format("Failed to run the post-dependents callback for %s", label), e);
+				throw new ExportException(String.format("Failed to run the post-dependents callback for %s", label), e);
 			}
 
 			Result result = new Result(ret, marshaled);
