@@ -505,6 +505,8 @@ public class Validator {
 	private final String reportMarker;
 	private final Map<ValidationErrorType, AtomicLong> faultCounters;
 	private final Map<ValidationErrorType, CSVPrinter> errors;
+	private final AtomicLong failureCount = new AtomicLong(0);
+	private final AtomicLong successCount = new AtomicLong(0);
 	private final AtomicLong faultCount = new AtomicLong(0);
 	private final Path sourceRoot;
 	private final Path candidateRoot;
@@ -920,6 +922,7 @@ public class Validator {
 				this.log.error(
 					String.format("Unexpected Exception caught while processing [%s]", relativePath.toString()), t);
 			} finally {
+				(validated ? this.successCount : this.failureCount).incrementAndGet();
 				this.log.info("Validation for [{}] {}", relativePath.toString(), validated ? "PASSED" : "FAILED");
 			}
 		} finally {
@@ -941,7 +944,9 @@ public class Validator {
 				IOUtils.closeQuietly(this.errors.get(t));
 				this.log.info("Detected {} {} faults", this.faultCounters.get(t).get(), t.name());
 			}
-			this.log.info("Detected {} faults total", this.faultCount.get());
+			this.log.info("Detected {} individual faults total", this.faultCount.get());
+			this.log.info("{} objects total PASSED", this.successCount.get());
+			this.log.info("{} objects total FAILED", this.failureCount.get());
 		} finally {
 			resetState();
 			this.closed.set(true);

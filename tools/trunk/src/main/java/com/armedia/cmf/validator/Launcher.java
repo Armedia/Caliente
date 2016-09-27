@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -68,6 +69,7 @@ public class Launcher {
 
 			final Validator validator = new Validator(reportDir.toPath(), biFile.toPath(), beFile.toPath(),
 				CLIParam.model.getAllString());
+			final long start = System.currentTimeMillis();
 			try {
 				final PooledWorkers<Object, Path> workers = new PooledWorkers<Object, Path>() {
 					@Override
@@ -101,7 +103,20 @@ public class Launcher {
 					workers.waitForCompletion();
 				}
 			} finally {
-				validator.writeAndClear();
+				long duration = System.currentTimeMillis() - start;
+				final long hours = TimeUnit.MILLISECONDS.toHours(duration);
+				duration -= TimeUnit.HOURS.toMillis(hours);
+				final long minutes = TimeUnit.MILLISECONDS.toMinutes(duration);
+				duration -= TimeUnit.MINUTES.toMillis(minutes);
+				final long seconds = TimeUnit.MILLISECONDS.toSeconds(duration);
+				duration -= TimeUnit.SECONDS.toMillis(seconds);
+
+				try {
+					validator.writeAndClear();
+				} finally {
+					Launcher.LOG
+						.info(String.format("Total duration: %d:%02d:%02d.%03d", hours, minutes, seconds, duration));
+				}
 			}
 
 			return 0;
