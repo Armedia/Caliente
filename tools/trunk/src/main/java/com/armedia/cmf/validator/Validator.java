@@ -85,6 +85,7 @@ public class Validator {
 		TYPE_MISMATCH, // type or aspects fail to meet requirements
 		ASPECT_MISSING, // type or aspects fail to meet requirements
 		ATTRIBUTE_VALUE, // attribute values are different
+		MANDATORY_ATTRIBUTE_MISSING, // mandatory attribute not set
 		CONTENT_MISMATCH, // content size or checksum mismatch
 		//
 		;
@@ -225,7 +226,7 @@ public class Validator {
 		private CSVPrinter createOutputFile(File baseDir, String marker) throws IOException {
 			// Open the file
 			File targetFile = new File(baseDir,
-				String.format("faults.%s.%s.csv", marker, this.type.name().toLowerCase()));
+				String.format("cmf-validator.faults.%s.%s.csv", marker, this.type.name().toLowerCase()));
 
 			// Clear out garbage
 			if (targetFile.exists() && targetFile.isFile()) {
@@ -385,13 +386,18 @@ public class Validator {
 		private final Object candidateValue;
 		private final String remarks;
 
-		private AttributeFault(Path path, SchemaAttribute attribute, Object sourceValue, Object candidateValue,
-			String remarks) {
-			super(ValidationErrorType.ATTRIBUTE_VALUE, path);
+		private AttributeFault(ValidationErrorType type, Path path, SchemaAttribute attribute, Object sourceValue,
+			Object candidateValue, String remarks) {
+			super(type, path);
 			this.attribute = attribute;
 			this.sourceValue = sourceValue;
 			this.candidateValue = candidateValue;
 			this.remarks = remarks;
+		}
+
+		private AttributeFault(Path path, SchemaAttribute attribute, Object sourceValue, Object candidateValue,
+			String remarks) {
+			this(ValidationErrorType.ATTRIBUTE_VALUE, path, attribute, sourceValue, candidateValue, remarks);
 		}
 
 		@Override
@@ -412,6 +418,14 @@ public class Validator {
 			p.print("SOURCE VALUE");
 			p.print("CANDIDATE VALUE");
 			p.print("REMARKS");
+		}
+	}
+
+	public static class MandatoryAttributeMissingFault extends AttributeFault {
+		private MandatoryAttributeMissingFault(Path path, SchemaAttribute attribute, Object sourceValue,
+			Object candidateValue, String remarks) {
+			super(ValidationErrorType.MANDATORY_ATTRIBUTE_MISSING, path, attribute, sourceValue, candidateValue,
+				remarks);
 		}
 	}
 
@@ -703,8 +717,21 @@ public class Validator {
 			final String candidateValueStr = candidateData.getProperty(attributeName);
 
 			// If the attribute isn't present in the source, we don't check against the candidate,
-			// nor do we report a fault
+			// nor do we report a fault...unless it's a mandatory attribute
 			if (sourceValueStr == null) {
+				if (!attribute.name.startsWith("sys:")) {
+					// This isn't a system attribute, so we log it
+					switch (attribute.mandatory) {
+						case ENFORCED:
+							// fall-through
+						case RELAXED:
+							reportFault(new MandatoryAttributeMissingFault(relativePath, attribute, sourceValueStr,
+								candidateValueStr, String.format("%s ATTRIBUTE MISSING", attribute.mandatory.name())));
+							// fall-through
+						case OPTIONAL:
+							break;
+					}
+				}
 				continue;
 			}
 
@@ -725,6 +752,7 @@ public class Validator {
 				faultReported = true;
 			}
 		}
+
 		return !faultReported;
 	}
 
