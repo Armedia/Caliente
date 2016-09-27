@@ -39,7 +39,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +63,6 @@ public class Validator {
 	private static final String METADATA_MARKER_PATTERN = String.format("\\Q%s\\E", Validator.METADATA_MARKER);
 	private static final Pattern CHECKSUM_PARSER = Pattern.compile("^([^:]+):(\\d+):((?:[a-f0-9]{2})+)$",
 		Pattern.CASE_INSENSITIVE);
-
-	private static final String REPORT_MARKER_FORMAT = "yyyyMMdd-HHmmss";
 
 	private static final String CONTENT_TYPE = "cm:content";
 
@@ -518,10 +515,9 @@ public class Validator {
 	private final AtomicBoolean closed = new AtomicBoolean(false);
 
 	public Validator(final Path reportDir, final Path sourceRoot, final Path candidateRoot,
-		Collection<String> contentModel) throws Exception {
+		Collection<String> contentModel, String reportMarker) throws Exception {
 		this.reportDir = reportDir.toFile();
-		// TODO: Format as UTC or local time?
-		this.reportMarker = DateFormatUtils.format(new Date(), Validator.REPORT_MARKER_FORMAT);
+		this.reportMarker = reportMarker;
 		this.sourceRoot = sourceRoot;
 		this.candidateRoot = candidateRoot;
 
@@ -548,6 +544,10 @@ public class Validator {
 
 	public final Path getCandidateRoot() {
 		return this.candidateRoot;
+	}
+
+	public final String getReportMarker() {
+		return this.reportMarker;
 	}
 
 	private void reportFault(ValidationFault fault) {
