@@ -83,7 +83,7 @@ public class Launcher {
 			log.info("Bulk Import path: [{}]", biFile.getAbsolutePath());
 			log.info("Bulk Export path: [{}]", beFile.getAbsolutePath());
 			log.info("Report directory: [{}]", reportDir.getAbsolutePath());
-			log.info("Content models  : [{}]", CLIParam.model.getAllString());
+			log.info("Content models  : {}", CLIParam.model.getAllString());
 			log.info("Report marker   : [{}]", reportMarker);
 
 			final Validator validator = new Validator(reportDir.toPath(), biFile.toPath(), beFile.toPath(),
