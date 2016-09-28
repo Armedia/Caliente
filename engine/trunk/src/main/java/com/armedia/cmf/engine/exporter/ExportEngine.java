@@ -74,6 +74,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
+	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
+
 	private class ExportListenerDelegator extends ListenerDelegator<ExportResult> implements ExportEngineListener {
 
 		private final Collection<ExportEngineListener> listeners = getListeners();
@@ -178,15 +180,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
 		final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportOperation> statusMap)
 		throws ExportException, CmfStorageException {
+		if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
 		try {
-			listenerDelegator.objectExportStarted(exportState.jobId, target.getType(), target.getId());
 			Result result = null;
-			if (ctx.isSupported(target.getType())) {
-				result = doExportObject(exportState, referrent, target, sourceObject, ctx, listenerDelegator,
-					statusMap);
-			} else {
-				result = new Result(ExportSkipReason.UNSUPPORTED);
-			}
+			listenerDelegator.objectExportStarted(exportState.jobId, target.getType(), target.getId());
+			result = doExportObject(exportState, referrent, target, sourceObject, ctx, listenerDelegator, statusMap);
 			if ((result.objectNumber != null) && (result.marshaled != null)) {
 				listenerDelegator.objectExportCompleted(exportState.jobId, result.marshaled, result.objectNumber);
 			} else {
