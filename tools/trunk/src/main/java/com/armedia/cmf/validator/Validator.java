@@ -15,11 +15,13 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -76,6 +78,20 @@ public class Validator {
 		m.put("app:folderlink", "arm:reference");
 		m.put("app:filelink", "arm:reference");
 		REFERENCE_TYPE_MAPPING = Tools.freezeMap(new LinkedHashMap<String, String>(m));
+	}
+
+	private static final Map<String, Set<String>> ALLOWED_ENFORCED_MISSES;
+	static {
+		Map<String, Set<String>> m = new TreeMap<String, Set<String>>();
+		Set<String> s = new TreeSet<String>();
+		s.add("cm:created");
+		s.add("cm:creator");
+		s.add("cm:modified");
+		s.add("cm:modifier");
+		s = Tools.freezeSet(new LinkedHashSet<String>(s));
+		m.put("arm:reference", s);
+		m.put("arm:rendition", s);
+		ALLOWED_ENFORCED_MISSES = Tools.freezeMap(new LinkedHashMap<String, Set<String>>(m));
 	}
 
 	private static enum ValidationErrorType {
@@ -723,11 +739,19 @@ public class Validator {
 					// This isn't a system attribute, so we log it
 					switch (attribute.mandatory) {
 						case ENFORCED:
-							// fall-through
+							Set<String> misses = Validator.ALLOWED_ENFORCED_MISSES.get(alfrescoType.getName());
+							if (misses == null) {
+								misses = Collections.emptySet();
+							}
+							if (!misses.contains(attribute.name)) {
+								reportFault(new MandatoryAttributeMissingFault(relativePath, attribute, sourceValueStr,
+									candidateValueStr,
+									String.format("%s ATTRIBUTE MISSING", attribute.mandatory.name())));
+								faultReported = true;
+							}
+							break;
 						case RELAXED:
-							reportFault(new MandatoryAttributeMissingFault(relativePath, attribute, sourceValueStr,
-								candidateValueStr, String.format("%s ATTRIBUTE MISSING", attribute.mandatory.name())));
-							// fall-through
+							break;
 						case OPTIONAL:
 							break;
 					}
