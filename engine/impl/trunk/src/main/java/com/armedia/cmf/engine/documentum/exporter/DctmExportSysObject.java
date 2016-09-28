@@ -33,7 +33,6 @@ import com.armedia.cmf.storage.CmfObjectRef;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
@@ -211,23 +210,22 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		final int parentCount = object.getValueCount(DctmAttributes.I_FOLDER_ID);
 		for (int i = 0; i < parentCount; i++) {
 			final IDfValue folderId = object.getRepeatingValue(DctmAttributes.I_FOLDER_ID, i);
-			final IDfFolder parent;
-			try {
-				parent = session.getFolderBySpecification(folderId.asId().getId());
-				if (!aclInheritedSet) {
-					// Is the object's ACL the same as its parent folder's?
-					IDfACL parentACL = parent.getACL();
-					if (Tools.equals(parentACL.getObjectId(), acl.getObjectId())) {
-						aclInheritedProp
-							.setValue(DfValueFactory.newStringValue(String.format("FOLDER[%s]", folderId.asString())));
-						aclInheritedSet = true;
-					}
-				}
-			} catch (DfIdNotFoundException e) {
+			final IDfFolder parent = session.getFolderBySpecification(folderId.asId().getId());
+			if ((parent == null) && !folderId.asId().isNull()) {
 				this.log
 					.warn(String.format("%s [%s](%s) references non-existent folder [%s]", object.getType().getName(),
 						object.getObjectName(), object.getObjectId().getId(), folderId.asString()));
 				continue;
+			}
+
+			if (!aclInheritedSet) {
+				// Is the object's ACL the same as its parent folder's?
+				IDfACL parentACL = parent.getACL();
+				if (Tools.equals(parentACL.getObjectId(), acl.getObjectId())) {
+					aclInheritedProp
+						.setValue(DfValueFactory.newStringValue(String.format("FOLDER[%s]", folderId.asString())));
+					aclInheritedSet = true;
+				}
 			}
 			parents.addValue(folderId);
 			final int pathCount = parent.getFolderPathCount();
