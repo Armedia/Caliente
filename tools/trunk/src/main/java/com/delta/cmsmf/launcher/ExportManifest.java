@@ -63,7 +63,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 			this.sourceId = StringEscapeUtils.escapeCsv(object.getId());
 			this.label = StringEscapeUtils.escapeCsv(object.getLabel());
 			this.result = result;
-			this.extraInfo = extraInfo;
+			this.extraInfo = StringEscapeUtils.escapeCsv(extraInfo);
 			if (result != ExportResult.FAILED) {
 				this.thrown = null;
 			} else {
@@ -77,8 +77,8 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 		}
 
-		private Record(CmfType type, String objectId, ExportResult result) {
-			this(type, objectId, result, null, null);
+		private Record(CmfType type, String objectId, ExportResult result, String extraInfo) {
+			this(type, objectId, result, null, extraInfo);
 		}
 
 		private Record(CmfType type, String objectId, ExportResult result, Throwable thrown, String extraInfo) {
@@ -88,7 +88,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 			this.sourceId = StringEscapeUtils.escapeCsv(objectId);
 			this.label = "";
 			this.result = result;
-			this.extraInfo = extraInfo;
+			this.extraInfo = StringEscapeUtils.escapeCsv(extraInfo);
 			if (result != ExportResult.FAILED) {
 				this.thrown = null;
 			} else {
@@ -160,7 +160,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 			case SKIPPED:
 			case UNSUPPORTED:
 			case DEPENDENCY_FAILED:
-				new Record(objectType, objectId, ExportResult.SKIPPED).log(this.manifestLog);
+				new Record(objectType, objectId, ExportResult.SKIPPED, extraInfo).log(this.manifestLog);
 				break;
 			default:
 				break;
