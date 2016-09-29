@@ -815,18 +815,75 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	private boolean isStored(Connection c, CmfType type, String objectId) throws SQLException {
-		return JdbcTools.getQueryRunner().query(c, translateQuery(JdbcDialect.Query.CHECK_IF_OBJECT_EXISTS),
-			JdbcTools.HANDLER_EXISTS, JdbcTools.composeDatabaseId(type, objectId), type.name());
-	}
-
 	@Override
-	protected boolean isStored(JdbcOperation operation, CmfType type, String objectId) throws CmfStorageException {
+	protected StoreStatus getStoreStatus(JdbcOperation operation, final CmfType type, final String objectId)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		final String dbId = JdbcTools.composeDatabaseId(type, objectId);
 		try {
-			return isStored(operation.getConnection(), type, objectId);
+			// Get the result string from the EXPORT_PLAN
+			/*
+			boolean exists = qr.query(c, translateQuery(JdbcDialect.Query.CHECK_IF_OBJECT_EXISTS),
+				JdbcTools.HANDLER_EXISTS, dbId, type.name());
+			*/
+			// If it does exist, then this one MUST return exactly one result.
+			String result = qr.query(c, translateQuery(JdbcDialect.Query.GET_EXPORT_RESULT),
+				new ResultSetHandler<String>() {
+					@Override
+					public String handle(ResultSet rs) throws SQLException {
+						if (rs.next()) {
+							String v = rs.getString(1);
+							return (rs.wasNull() ? null : v);
+						}
+						throw new SQLException(
+							String.format("Failed to locate the export result for [%s::%s]", type.name(), objectId));
+					}
+				}, dbId, type.name());
+			if (result == null) { return null; }
+			return StoreStatus.valueOf(result);
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to check whether object [%s] was already serialized", objectId), e);
+		}
+	}
+
+	@Override
+	protected <V> boolean markStoreStatus(JdbcOperation operation, CmfType type, String id, StoreStatus status)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		final String dbid = JdbcTools.composeDatabaseId(type, id);
+		try {
+			StoreStatus existingStatus = getStoreStatus(operation, type, id);
+			if (existingStatus == status) {
+				// If we've already marked the status, then we're ok...right?
+				return false;
+			}
+
+			// If we have a non-null status that isn't the same as the one we're looking for, then
+			// we have a problem...
+			if (existingStatus != null) { throw new CmfStorageException(String
+				.format("A status of [%s] was already stored for [%s::%s]", existingStatus.name(), type.name(), id)); }
+
+			// No existing status, so we can continue
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR [%s::%s]", status.name(),
+					type.name(), id));
+			}
+			int result = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_EXPORT_RESULT), status.name(),
+				type.name(), dbid);
+			if (result != 1) { throw new CmfStorageException(
+				String.format("FAILED TO SET THE RESULT TO [%s] for [%s::%s] - ALREADY SET (%d updated)", status.name(),
+					type.name(), id, result)); }
+			if (this.log.isDebugEnabled()) {
+				this.log
+					.debug(String.format("SET THE EXPORT RESULT TO [%s] FOR [%s::%s]", status.name(), type.name(), id));
+			}
+			return true;
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Failed to set the storage status to [%s] for [%s::%s]", status.name(), type, id), e);
 		}
 	}
 

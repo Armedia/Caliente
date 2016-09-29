@@ -138,18 +138,27 @@ public abstract class JdbcDialect {
 				"   values (?, ?, ?, ?, ?, ?)" //
 		),
 
-		QUERY_EXPORT_PLAN_DUPE( //
-			"       select * " + //
-				"     from cmf_export_plan " + //
-				"    where object_id = ?" //
-		),
-
 		INSERT_EXPORT_PLAN( //
 			"       insert into " + //
 				"          cmf_export_plan (" + //
 				"              object_type, object_id" + //
 				"          ) " + //
 				"   values (?, ?) " //
+		),
+
+		UPDATE_EXPORT_RESULT( //
+			"       update cmf_export_plan " + //
+				"          set result = ? " + //
+				"   where object_type = ? " + //
+				"     and object_id = ? " + //
+				"     and result is null " //
+		),
+
+		GET_EXPORT_RESULT( //
+			"       select result " + //
+				"     from cmf_export_plan " + //
+				"    where object_id = ? " + //
+				"      and object_type = ?" //
 		),
 
 		DELETE_EXPORT_PLAN( //

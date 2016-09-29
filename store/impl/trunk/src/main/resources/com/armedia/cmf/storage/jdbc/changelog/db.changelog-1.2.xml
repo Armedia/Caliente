@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+	<changeSet author="cmf" id="1003">
+    	<preConditions>
+    		<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.1.xml"/>
+	    </preConditions>
+
+		<dropDefaultValue tableName="cmf_export_plan" columnName="traversed" columnDataType="boolean" />
+		<dropIndex tableName="cmf_export_plan" indexName="idx_cmf_export_plan" />
+		<dropColumn tableName="cmf_export_plan" columnName="traversed" />
+	    <addColumn tableName="cmf_export_plan">
+			<column name="result" type="varchar(64)" remarks="The outcome of the storage operation">
+				<constraints nullable="true" />
+			</column>
+	    </addColumn>
+	</changeSet>
+</databaseChangeLog>
