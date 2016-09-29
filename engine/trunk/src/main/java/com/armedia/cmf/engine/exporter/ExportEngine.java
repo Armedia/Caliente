@@ -265,7 +265,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		final LockStatus locked;
 		try {
-			locked = objectStore.lockForStorage(type, id);
+			CmfType rt = (referrent != null ? referrent.getType() : null);
+			String rid = (referrent != null ? referrent.getId() : null);
+			locked = objectStore.lockForStorage(type, id, rt, rid);
 			switch (locked) {
 				case LOCK_ACQUIRED:
 					// We got the lock, which means we create the locker object
