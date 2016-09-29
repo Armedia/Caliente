@@ -861,10 +861,23 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				return false;
 			}
 
-			// If we have a non-null status that isn't the same as the one we're looking for, then
-			// we have a problem...
-			if (existingStatus != null) { throw new CmfStorageException(String
-				.format("A status of [%s] was already stored for [%s::%s]", existingStatus.name(), type.name(), id)); }
+			if (existingStatus != null) {
+				switch (existingStatus) {
+					case FAILED:
+					case SKIPPED:
+						// If the existing status is either FAILED or SKIPPED, this is only a
+						// problem if the new status is STORED...if this is the case, then we can
+						// safely return false because a status has already been set
+						if (status != StoreStatus.STORED) { return false; }
+						// fall-through
+					case STORED:
+						// If the existing status is stored, then this is a problem because we can't
+						// fail after we've succeeded
+						throw new CmfStorageException(String.format(
+							"A status of [%s] was already stored for [%s::%s] - can't set the new status of [%s](message=%s)",
+							existingStatus.name(), type.name(), id, status.name(), message));
+				}
+			}
 
 			// No existing status, so we can continue
 			if (this.log.isTraceEnabled()) {
