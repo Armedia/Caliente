@@ -27,6 +27,30 @@ import com.armedia.commons.utilities.Tools;
  */
 public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends CmfStore<C, O> {
 
+	public static enum LockStatus {
+		//
+		LOCK_ACQUIRED, // Lock was acquired by the current thread
+		LOCK_CONCURRENT, // Lock is concurrent, but the object's storage outcome is unknown
+		ALREADY_STORED, // Lock was not acquired, but the object was stored successfully
+		ALREADY_FAILED, // Lock was not acquired, but the object failed to be stored
+		//
+		;
+	}
+
+	public static enum StoreStatus {
+		//
+		STORED(LockStatus.ALREADY_STORED), // Object was stored successfully
+		FAILED(LockStatus.ALREADY_FAILED), // Object was not stored due to a failure
+		//
+		;
+
+		private final LockStatus lockStatus;
+
+		private StoreStatus(LockStatus lockStatus) {
+			this.lockStatus = lockStatus;
+		}
+	}
+
 	private class Mapper extends CmfAttributeMapper {
 
 		private final O operation;
@@ -167,6 +191,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			boolean ok = false;
 			try {
 				Long ret = storeObject(operation, object, translator);
+				markStoreStatus(operation, object.getType(), object.getId(), StoreStatus.STORED);
 				object.setNumber(ret);
 				if (tx) {
 					operation.commit();
@@ -189,6 +214,39 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> Long storeObject(O operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
+		throws CmfStorageException;
+
+	public final <V> boolean markStoreStatus(CmfType type, String id, StoreStatus status) throws CmfStorageException {
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type"); }
+		if (id == null) { throw new IllegalArgumentException("Must provide an object id"); }
+		if (status == null) { throw new IllegalArgumentException("Must provide a status to mark the object with"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				final boolean ret = markStoreStatus(operation, type, id, status);
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return ret;
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format("Failed to rollback the transaction for [%s::%s]", type.name(), id),
+							e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract <V> boolean markStoreStatus(O operation, CmfType type, String id, StoreStatus status)
 		throws CmfStorageException;
 
 	public final <V> void setContentInfo(CmfObject<V> object, Collection<CmfContentInfo> content)
@@ -248,14 +306,14 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> List<CmfContentInfo> getContentInfo(O operation, CmfObject<V> object)
 		throws CmfStorageException;
 
-	public final boolean isStored(CmfType type, String objectId) throws CmfStorageException {
+	public final StoreStatus getStoreStatus(CmfType type, String objectId) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return isStored(operation, type, objectId);
+				return getStoreStatus(operation, type, objectId);
 			} finally {
 				if (tx) {
 					try {
@@ -271,9 +329,10 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract boolean isStored(O operation, CmfType type, String objectId) throws CmfStorageException;
+	protected abstract StoreStatus getStoreStatus(O operation, CmfType type, String objectId)
+		throws CmfStorageException;
 
-	public final boolean lockForStorage(CmfType type, String objectId) throws CmfStorageException {
+	public final LockStatus lockForStorage(CmfType type, String objectId) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginConcurrentInvocation();
@@ -281,7 +340,30 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				boolean ret = lockForStorage(operation, type, objectId);
+				boolean locked = lockForStorage(operation, type, objectId);
+				final StoreStatus storeStatus = getStoreStatus(operation, type, objectId);
+				final LockStatus ret;
+				if (locked) {
+					if (storeStatus != null) {
+						// WTF? We have an issue here - we got the lock, but we also have a
+						// non-null status??
+						throw new CmfStorageException(String.format(
+							"Unexpected storage status [%s] detected for [%s::%s] while acquiring storage lock",
+							storeStatus.name(), type.name(), objectId));
+					}
+					// We acquired the lock...and there is no existing status
+					ret = LockStatus.LOCK_ACQUIRED;
+				} else {
+					// We didn't acquire the lock...so...what's the status?
+					if (storeStatus == null) {
+						// We didn't get the lock, but the object hasn't yet been fully stored by
+						// someone else...
+						ret = LockStatus.LOCK_CONCURRENT;
+					} else {
+						// We didn't get the lock, but someone else already did their thing here
+						ret = storeStatus.lockStatus;
+					}
+				}
 				if (tx) {
 					operation.commit();
 				}
