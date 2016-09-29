@@ -199,6 +199,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					case ALREADY_STORED:
 						// The object is already stored, so it can be safely and quietly skipped
 						// fall-through...
+					case ALREADY_FAILED:
+						// The object is already failed, so it can be safely and quietly skipped
+						// fall-through...
 					case ALREADY_LOCKED:
 						// We don't report anything for these, since the object
 						// is either being stored by another thread...
@@ -288,7 +291,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					if (this.log.isTraceEnabled()) {
 						this.log.trace(msg);
 					}
-					return new Result(ExportSkipReason.DEPENDENCY_FAILED, msg);
+					return new Result(ExportSkipReason.ALREADY_FAILED, msg);
 
 				case ALREADY_STORED:
 					if (this.log.isTraceEnabled()) {
@@ -371,6 +374,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					continue;
 				}
 				switch (r.skipReason) {
+					case ALREADY_FAILED: // fall-through
 					case DEPENDENCY_FAILED:
 						// A dependency has failed, we fail immediately...
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
@@ -409,11 +413,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							String.format("Thread interrupted waiting on the export of [%s] by %s", requirement, label),
 							e);
 					}
-					if (!status.isSuccessful()) {
-						//
-						return new Result(ExportSkipReason.DEPENDENCY_FAILED,
-							String.format("A required object [%s] failed to serialize for %s", requirement, label));
-					}
+					if (!status.isSuccessful()) { return new Result(ExportSkipReason.DEPENDENCY_FAILED,
+						String.format("A required object [%s] failed to serialize for %s", requirement, label)); }
 				}
 			} finally {
 				thisStatus.endWait();

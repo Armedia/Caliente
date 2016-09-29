@@ -5,6 +5,7 @@ public enum ExportSkipReason {
 	UNSUPPORTED("Object archetype is disabled or unsupported"),
 	ALREADY_LOCKED("Already locked"),
 	ALREADY_STORED("Already stored"),
+	ALREADY_FAILED("Already failed"),
 	SKIPPED("Explicitly skipped"),
 	DEPENDENCY_FAILED("A dependency failed to export"),
 	//
