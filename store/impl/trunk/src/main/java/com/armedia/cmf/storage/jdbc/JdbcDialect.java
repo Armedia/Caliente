@@ -148,8 +148,8 @@ public abstract class JdbcDialect {
 
 		UPDATE_EXPORT_RESULT( //
 			"       update cmf_export_plan " + //
-				"          set result = ? " + //
-				// " set result = ?, message = ? " + //
+				"          set result = ?, " + //
+				"              message = ? " + //
 				"   where object_type = ? " + //
 				"     and object_id = ? " + //
 				"     and result is null " //
