@@ -441,10 +441,17 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						referenced.size()));
 				}
 				for (ExportDelegate<?, S, W, V, C, ?, ?> antecedent : referenced) {
-					exportObject(exportState, target, antecedent.getExportTarget(), antecedent, ctx, listenerDelegator,
-						statusMap);
+					try {
+						exportObject(exportState, target, antecedent.getExportTarget(), antecedent, ctx,
+							listenerDelegator, statusMap);
+					} catch (Exception e) {
+						// This exception will already be logged...so we simply accept the failure
+						// and report it upwards, without bubbling up the exception to be reported
+						// 1000 times
+						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
+							"An antecedent object [%s] failed to serialize for %s", antecedent.exportTarget, label));
+					}
 				}
-
 				try {
 					sourceObject.antecedentsExported(marshaled, ctx);
 				} catch (Exception e) {
@@ -505,8 +512,16 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						label, referenced.size()));
 				}
 				for (ExportDelegate<?, S, W, V, C, ?, ?> successor : referenced) {
-					exportObject(exportState, target, successor.getExportTarget(), successor, ctx, listenerDelegator,
-						statusMap);
+					try {
+						exportObject(exportState, target, successor.getExportTarget(), successor, ctx,
+							listenerDelegator, statusMap);
+					} catch (Exception e) {
+						// This exception will already be logged...so we simply accept the failure
+						// and report it upwards, without bubbling up the exception to be reported
+						// 1000 times
+						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
+							"A successor object [%s] failed to serialize for %s", successor.exportTarget, label));
+					}
 				}
 
 				try {
@@ -529,9 +544,20 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("%s has %d dependent objects to store", label, referenced.size()));
 			}
+			int dependentsExported = 0;
 			for (ExportDelegate<?, S, W, V, C, ?, ?> dependent : referenced) {
-				exportObject(exportState, target, dependent.getExportTarget(), dependent, ctx, listenerDelegator,
-					statusMap);
+				try {
+					exportObject(exportState, target, dependent.getExportTarget(), dependent, ctx, listenerDelegator,
+						statusMap);
+				} catch (Exception e) {
+					// Contrary to previous cases, this isn't a failure because this doesn't
+					// stop the object from being properly represented...
+					dependentsExported++;
+				}
+			}
+			if (dependentsExported != referenced.size()) {
+				this.log.warn("Failed to store all dependent objects for {} - only exported {} of {}", label,
+					dependentsExported, referenced.size());
 			}
 
 			try {
