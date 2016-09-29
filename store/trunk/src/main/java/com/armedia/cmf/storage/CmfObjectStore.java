@@ -386,37 +386,6 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract boolean lockForStorage(O operation, CmfType type, String objectId) throws CmfStorageException;
 
-	public final boolean unlockForStorage(CmfType type, String objectId) throws CmfStorageException {
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
-		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
-		O operation = beginConcurrentInvocation();
-		try {
-			final boolean tx = operation.begin();
-			boolean ok = false;
-			try {
-				boolean ret = unlockForStorage(operation, type, objectId);
-				if (tx) {
-					operation.commit();
-				}
-				ok = true;
-				return ret;
-			} finally {
-				if (tx && !ok) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s (%s)", type, objectId),
-							e);
-					}
-				}
-			}
-		} finally {
-			endConcurrentInvocation(operation);
-		}
-	}
-
-	protected abstract boolean unlockForStorage(O operation, CmfType type, String objectId) throws CmfStorageException;
-
 	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator) {
 		// Ensure type mapping takes place, and ensure that translation also takes place
