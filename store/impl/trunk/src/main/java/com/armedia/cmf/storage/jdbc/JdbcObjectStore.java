@@ -855,30 +855,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		QueryRunner qr = JdbcTools.getQueryRunner();
 		final String dbid = JdbcTools.composeDatabaseId(type, id);
 		try {
-			StoreStatus existingStatus = getStoreStatus(operation, type, id);
-			if (existingStatus == status) {
-				// If we've already marked the status, then we're ok...right?
-				return false;
-			}
-
-			if (existingStatus != null) {
-				switch (existingStatus) {
-					case FAILED:
-					case SKIPPED:
-						// If the existing status is either FAILED or SKIPPED, this is only a
-						// problem if the new status is STORED...if this is the case, then we can
-						// safely return false because a status has already been set
-						if (status != StoreStatus.STORED) { return false; }
-						// fall-through
-					case STORED:
-						// If the existing status is stored, then this is a problem because we can't
-						// fail after we've succeeded
-						throw new CmfStorageException(String.format(
-							"A status of [%s] was already stored for [%s::%s] - can't set the new status of [%s](message=%s)",
-							existingStatus.name(), type.name(), id, status.name(), message));
-				}
-			}
-
 			// No existing status, so we can continue
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR [%s::%s]", status.name(),
@@ -886,14 +862,38 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 			int result = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_EXPORT_RESULT), status.name(), message,
 				type.name(), dbid);
-			if (result != 1) { throw new CmfStorageException(
-				String.format("FAILED TO SET THE RESULT TO [%s] for [%s::%s] - ALREADY SET (%d updated)", status.name(),
-					type.name(), id, result)); }
-			if (this.log.isDebugEnabled()) {
-				this.log
-					.debug(String.format("SET THE EXPORT RESULT TO [%s] FOR [%s::%s]", status.name(), type.name(), id));
+			if (result == 1) {
+				if (this.log.isDebugEnabled()) {
+					this.log.debug(
+						String.format("SET THE EXPORT RESULT TO [%s] FOR [%s::%s]", status.name(), type.name(), id));
+				}
+				return true;
 			}
-			return true;
+
+			if (result > 1) { throw new CmfStorageException(
+				String.format("REFERENTIAL INTEGRITY IS NOT BEING ENFORCED: %d PLAN records for [%s::%s]", result,
+					type.name(), id)); }
+
+			// If we've come this far, then we failed to set the status. This may or may not be a
+			// problem...
+			StoreStatus existing = getStoreStatus(operation, type, id);
+			if (existing != null) {
+				// If the existing status was already set, this isn't really a problem - we just
+				// report the discrepancy if necessary, and return false...then move on
+				if (existing != status) {
+					this.log
+						.warn(String.format("FAILED TO SET THE RESULT TO [%s] for [%s::%s] (%d updated, existing=%s)",
+							status.name(), type.name(), id, result, existing.name()));
+				}
+				return false;
+			}
+
+			// HUH?? WTF?!!? This means that we failed to update the record because it
+			// doesn't exist...
+			// TODO: Should we, instead of failing, insert the record? That might prove problematic
+			throw new CmfStorageException(
+				String.format("FAILED TO SET THE RESULT TO [%s] for [%s::%s] - NO EXISTING RECORD TO STORE",
+					status.name(), type.name(), id, result));
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to set the storage status to [%s] for [%s::%s]", status.name(), type, id), e);
