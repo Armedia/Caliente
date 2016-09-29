@@ -58,14 +58,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private class Result {
 		private final Long objectNumber;
-		private final CmfObject<V> marshaled;
-		private final ExportSkipReason message;
+		private final CmfObject<V> object;
+		private final ExportSkipReason skipReason;
 		private final String extraInfo;
 
 		public Result(Long objectNumber, CmfObject<V> marshaled) {
 			this.objectNumber = objectNumber;
-			this.marshaled = marshaled;
-			this.message = null;
+			this.object = marshaled;
+			this.skipReason = null;
 			this.extraInfo = null;
 		}
 
@@ -75,8 +75,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		public Result(ExportSkipReason message, String extraInfo) {
 			this.objectNumber = null;
-			this.marshaled = null;
-			this.message = message;
+			this.object = null;
+			this.skipReason = message;
 			this.extraInfo = extraInfo;
 		}
 	}
@@ -192,10 +192,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			listenerDelegator.objectExportStarted(exportState.jobId, target.getType(), target.getId());
 			final Result result = doExportObject(exportState, referrent, target, sourceObject, ctx, listenerDelegator,
 				statusMap);
-			if ((result.objectNumber != null) && (result.marshaled != null)) {
-				listenerDelegator.objectExportCompleted(exportState.jobId, result.marshaled, result.objectNumber);
+			if ((result.objectNumber != null) && (result.object != null)) {
+				listenerDelegator.objectExportCompleted(exportState.jobId, result.object, result.objectNumber);
 			} else {
-				switch (result.message) {
+				switch (result.skipReason) {
 					case ALREADY_STORED:
 						// The object is already stored, so it can be safely and quietly skipped
 						// fall-through...
@@ -210,7 +210,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						if (exportState.objectStore.markStoreStatus(target.getType(), target.getId(),
 							StoreStatus.FAILED, result.extraInfo)) {
 							listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(),
-								result.message, result.extraInfo);
+								result.skipReason, result.extraInfo);
 						}
 						break;
 				}
@@ -367,10 +367,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 
 				// If there is no message, the result is success
-				if (r.message == null) {
+				if (r.skipReason == null) {
 					continue;
 				}
-				switch (r.message) {
+				switch (r.skipReason) {
 					case DEPENDENCY_FAILED:
 						// A dependency has failed, we fail immediately...
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
@@ -736,8 +736,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						if (result != null) {
 							if (this.log.isDebugEnabled()) {
 								this.log.debug(
-									String.format("Exported %s [%s](%s) in position %d", result.marshaled.getType(),
-										result.marshaled.getLabel(), result.marshaled.getId(), result.objectNumber));
+									String.format("Exported %s [%s](%s) in position %d", result.object.getType(),
+										result.object.getLabel(), result.object.getId(), result.objectNumber));
 							}
 						}
 						ok = true;
