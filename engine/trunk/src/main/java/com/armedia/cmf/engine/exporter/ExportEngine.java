@@ -208,7 +208,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					case DEPENDENCY_FAILED: // fall-through
 					case UNSUPPORTED:
 						if (exportState.objectStore.markStoreStatus(target.getType(), target.getId(),
-							StoreStatus.FAILED, result.extraInfo)) {
+							StoreStatus.SKIPPED, result.extraInfo)) {
 							listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(),
 								result.skipReason, result.extraInfo);
 						}
@@ -735,8 +735,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							statusMap);
 						if (result != null) {
 							if (this.log.isDebugEnabled()) {
-								this.log.debug(
-									String.format("Exported %s [%s](%s) in position %d", result.object.getType(),
+								this.log
+									.debug(String.format("Exported %s [%s](%s) in position %d", result.object.getType(),
 										result.object.getLabel(), result.object.getId(), result.objectNumber));
 							}
 						}
