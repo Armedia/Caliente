@@ -337,7 +337,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract StoreStatus getStoreStatus(O operation, CmfType type, String objectId)
 		throws CmfStorageException;
 
-	public final LockStatus lockForStorage(CmfType type, String objectId) throws CmfStorageException {
+	public final LockStatus lockForStorage(CmfType type, String objectId, CmfType referrentType, String referrentId)
+		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
 		O operation = beginConcurrentInvocation();
@@ -345,7 +346,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				boolean locked = lockForStorage(operation, type, objectId);
+				boolean locked = lockForStorage(operation, type, objectId, referrentType, referrentId);
 				final StoreStatus storeStatus = getStoreStatus(operation, type, objectId);
 				final LockStatus ret;
 				if (locked) {
@@ -389,7 +390,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract boolean lockForStorage(O operation, CmfType type, String objectId) throws CmfStorageException;
+	protected abstract boolean lockForStorage(O operation, CmfType type, String objectId, CmfType referrentType,
+		String referrentId) throws CmfStorageException;
 
 	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator) {
