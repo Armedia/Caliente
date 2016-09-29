@@ -47,6 +47,7 @@ import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
+import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
@@ -207,7 +208,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					case DEPENDENCY_FAILED: // fall-through
 					case UNSUPPORTED:
 						if (exportState.objectStore.markStoreStatus(target.getType(), target.getId(),
-							StoreStatus.FAILED)) {
+							StoreStatus.FAILED, result.extraInfo)) {
 							listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(),
 								result.message, result.extraInfo);
 						}
@@ -219,7 +220,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				listenerDelegator.objectExportFailed(exportState.jobId, target.getType(), target.getId(), e);
 			} finally {
-				exportState.objectStore.markStoreStatus(target.getType(), target.getId(), StoreStatus.FAILED);
+				exportState.objectStore.markStoreStatus(target.getType(), target.getId(), StoreStatus.FAILED,
+					Tools.dumpStackTrace(e));
 			}
 			if (e instanceof ExportException) { throw ExportException.class.cast(e); }
 			if (e instanceof CmfStorageException) { throw CmfStorageException.class.cast(e); }
