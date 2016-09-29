@@ -219,31 +219,6 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, CmfObject<IDfValue> marshaled,
-		IDfGroup group, DctmExportContext ctx) throws Exception {
-		Collection<DctmExportDelegate<?>> ret = super.findDependents(session, marshaled, group, ctx);
-
-		// Avoid calling DQL twice
-		CmfProperty<IDfValue> property = marshaled.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
-		if (property == null) { throw new Exception(
-			String.format("The export for group [%s] does not contain the critical property [%s]", marshaled.getLabel(),
-				DctmGroup.USERS_WITH_DEFAULT_GROUP)); }
-
-		for (IDfValue v : property) {
-			IDfUser user = session.getUser(v.asString());
-			if (user == null) {
-				// in theory, this should be impossible as we just got the list via a direct query
-				// to dm_user, and thus the users listed do exist
-				throw new Exception(
-					String.format("Missing dependent for group [%s] - user [%s] not found (as default group)",
-						group.getGroupName(), v.asString()));
-			}
-			ret.add(this.factory.newExportDelegate(user));
-		}
-		return ret;
-	}
-
-	@Override
 	protected String calculateName(IDfGroup group) throws Exception {
 		return group.getGroupName();
 	}
