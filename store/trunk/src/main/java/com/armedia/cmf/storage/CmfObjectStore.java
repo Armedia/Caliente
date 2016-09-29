@@ -191,7 +191,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			boolean ok = false;
 			try {
 				Long ret = storeObject(operation, object, translator);
-				markStoreStatus(operation, object.getType(), object.getId(), StoreStatus.STORED);
+				markStoreStatus(operation, object.getType(), object.getId(), StoreStatus.STORED, null);
 				object.setNumber(ret);
 				if (tx) {
 					operation.commit();
@@ -217,6 +217,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		throws CmfStorageException;
 
 	public final <V> boolean markStoreStatus(CmfType type, String id, StoreStatus status) throws CmfStorageException {
+		return markStoreStatus(type, id, status, null);
+	}
+
+	public final <V> boolean markStoreStatus(CmfType type, String id, StoreStatus status, String message)
+		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide an object id"); }
 		if (status == null) { throw new IllegalArgumentException("Must provide a status to mark the object with"); }
@@ -225,7 +230,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				final boolean ret = markStoreStatus(operation, type, id, status);
+				final boolean ret = markStoreStatus(operation, type, id, status, message);
 				if (tx) {
 					operation.commit();
 				}
@@ -246,8 +251,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> boolean markStoreStatus(O operation, CmfType type, String id, StoreStatus status)
-		throws CmfStorageException;
+	protected abstract <V> boolean markStoreStatus(O operation, CmfType type, String id, StoreStatus status,
+		String message) throws CmfStorageException;
 
 	public final <V> void setContentInfo(CmfObject<V> object, Collection<CmfContentInfo> content)
 		throws CmfStorageException {
