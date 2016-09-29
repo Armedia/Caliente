@@ -336,15 +336,21 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	@Override
 	public final void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason,
 		String extraInfo) {
-		if (reason == ExportSkipReason.SKIPPED) {
-			if (extraInfo != null) {
-				this.console.info(String.format("%s object [%s] was skipped (%s: %s)", objectType.name(), objectId,
-					reason, extraInfo));
-			} else {
-				this.console
-					.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
-			}
-			this.counter.increment(objectType, ExportResult.SKIPPED);
+		switch (reason) {
+			case SKIPPED:
+			case UNSUPPORTED:
+			case DEPENDENCY_FAILED:
+				if (extraInfo != null) {
+					this.console.info(String.format("%s object [%s] was skipped (%s: %s)", objectType.name(), objectId,
+						reason, extraInfo));
+				} else {
+					this.console
+						.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
+				}
+				this.counter.increment(objectType, ExportResult.SKIPPED);
+				break;
+			default:
+				break;
 		}
 	}
 

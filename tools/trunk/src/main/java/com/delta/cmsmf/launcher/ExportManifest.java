@@ -156,8 +156,14 @@ public class ExportManifest extends DefaultExportEngineListener {
 		// problem to be reported or deduced from it
 		if (!this.types.contains(objectType)) { return; }
 		if (!this.results.contains(ExportResult.SKIPPED)) { return; }
-		if (reason == ExportSkipReason.SKIPPED) {
-			new Record(objectType, objectId, ExportResult.SKIPPED).log(this.manifestLog);
+		switch (reason) {
+			case SKIPPED:
+			case UNSUPPORTED:
+			case DEPENDENCY_FAILED:
+				new Record(objectType, objectId, ExportResult.SKIPPED).log(this.manifestLog);
+				break;
+			default:
+				break;
 		}
 	}
 
