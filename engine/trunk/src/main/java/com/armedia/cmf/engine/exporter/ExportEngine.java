@@ -286,14 +286,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					if (this.log.isTraceEnabled()) {
 						this.log.trace(msg);
 					}
-					// thisStatus.setCompleted(false);
 					return new Result(ExportSkipReason.DEPENDENCY_FAILED, msg);
 
 				case ALREADY_STORED:
 					if (this.log.isTraceEnabled()) {
 						this.log.trace(String.format("%s is already locked for storage, skipping it", label));
 					}
-					// thisStatus.setCompleted(true);
 					return new Result(ExportSkipReason.ALREADY_STORED);
 			}
 		} catch (CmfStorageException e) {
