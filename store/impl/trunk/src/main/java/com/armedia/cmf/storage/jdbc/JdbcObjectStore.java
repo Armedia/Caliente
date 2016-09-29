@@ -1195,7 +1195,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected boolean lockForStorage(JdbcOperation operation, CmfType type, String id) throws CmfStorageException {
+	protected boolean lockForStorage(JdbcOperation operation, CmfType type, String id, CmfType referrentType,
+		String referrentId) throws CmfStorageException {
+		// TODO: Add support for re-entrancy by only allowing a lock to be re-obtained if the same
+		// object is being locked while being referenced by the same referrent. A "none" referrent
+		// (null referrent values) is supported.
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcTools.getQueryRunner();
 		final String dbid = JdbcTools.composeDatabaseId(type, id);
