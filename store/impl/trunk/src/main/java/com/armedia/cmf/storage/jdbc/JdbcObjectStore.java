@@ -849,8 +849,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> boolean markStoreStatus(JdbcOperation operation, CmfType type, String id, StoreStatus status)
-		throws CmfStorageException {
+	protected <V> boolean markStoreStatus(JdbcOperation operation, CmfType type, String id, StoreStatus status,
+		String message) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcTools.getQueryRunner();
 		final String dbid = JdbcTools.composeDatabaseId(type, id);
@@ -871,6 +871,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				this.log.trace(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR [%s::%s]", status.name(),
 					type.name(), id));
 			}
+			// TODO: Integrate the message into the update
+			/*
+			int result = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_EXPORT_RESULT), status.name(), message,
+				type.name(), dbid);
+			 */
 			int result = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_EXPORT_RESULT), status.name(),
 				type.name(), dbid);
 			if (result != 1) { throw new CmfStorageException(
