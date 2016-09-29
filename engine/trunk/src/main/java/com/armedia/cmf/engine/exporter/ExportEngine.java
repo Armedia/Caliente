@@ -15,12 +15,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 
 import com.armedia.cmf.engine.CmfCrypt;
@@ -36,6 +40,8 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectCounter;
 import com.armedia.cmf.storage.CmfObjectSpec;
 import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.cmf.storage.CmfObjectStore.LockStatus;
+import com.armedia.cmf.storage.CmfObjectStore.StoreStatus;
 import com.armedia.cmf.storage.CmfStorageException;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.CfgTools;
@@ -178,22 +184,43 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private Result exportObject(ExportState exportState, final ExportTarget referrent, final ExportTarget target,
 		final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
-		final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportOperation> statusMap)
+		final ExportListenerDelegator listenerDelegator, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
 		throws ExportException, CmfStorageException {
 		if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
 		try {
-			Result result = null;
 			listenerDelegator.objectExportStarted(exportState.jobId, target.getType(), target.getId());
-			result = doExportObject(exportState, referrent, target, sourceObject, ctx, listenerDelegator, statusMap);
+			final Result result = doExportObject(exportState, referrent, target, sourceObject, ctx, listenerDelegator,
+				statusMap);
 			if ((result.objectNumber != null) && (result.marshaled != null)) {
 				listenerDelegator.objectExportCompleted(exportState.jobId, result.marshaled, result.objectNumber);
 			} else {
-				listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(), result.message,
-					result.extraInfo);
+				switch (result.message) {
+					case ALREADY_STORED:
+						// The object is already stored, so it can be safely and quietly skipped
+						// fall-through...
+					case ALREADY_LOCKED:
+						// We don't report anything for these, since the object
+						// is either being stored by another thread...
+						break;
+
+					case SKIPPED: // fall-through
+					case DEPENDENCY_FAILED: // fall-through
+					case UNSUPPORTED:
+						if (exportState.objectStore.markStoreStatus(target.getType(), target.getId(),
+							StoreStatus.FAILED)) {
+							listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(),
+								result.message, result.extraInfo);
+						}
+						break;
+				}
 			}
 			return result;
 		} catch (Exception e) {
-			listenerDelegator.objectExportFailed(exportState.jobId, target.getType(), target.getId(), e);
+			try {
+				listenerDelegator.objectExportFailed(exportState.jobId, target.getType(), target.getId(), e);
+			} finally {
+				exportState.objectStore.markStoreStatus(target.getType(), target.getId(), StoreStatus.FAILED);
+			}
 			if (e instanceof ExportException) { throw ExportException.class.cast(e); }
 			if (e instanceof CmfStorageException) { throw CmfStorageException.class.cast(e); }
 			throw RuntimeException.class.cast(e);
@@ -202,7 +229,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private Result doExportObject(ExportState exportState, final ExportTarget referrent, final ExportTarget target,
 		final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
-		final ExportListenerDelegator listenerDelegator, final Map<ExportTarget, ExportOperation> statusMap)
+		final ExportListenerDelegator listenerDelegator, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
 		throws ExportException, CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -226,43 +253,50 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
 
 		// First, make sure other threads don't work on this same object
-		ExportOperation thisStatus = null;
-		boolean locked = false;
+		final ExportOperation thisStatus = ConcurrentUtils.createIfAbsentUnchecked(statusMap, target,
+			new ConcurrentInitializer<ExportOperation>() {
+				@Override
+				public ExportOperation get() throws ConcurrentException {
+					return new ExportOperation(target);
+				}
+			});
+
+		final LockStatus locked;
 		try {
 			locked = objectStore.lockForStorage(type, id);
-			if (locked) {
-				// We got the lock, which means we create the locker object
-				thisStatus = new ExportOperation(target);
-				ExportOperation old = statusMap.put(target, thisStatus);
-				if (old != null) { throw new ExportException(String.format(
-					"Duplicate export status for [%s] - this should be impossible! This means DB lock markers are broken!",
-					target)); }
-				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("Locked %s for storage", label));
-				}
+			switch (locked) {
+				case LOCK_ACQUIRED:
+					// We got the lock, which means we create the locker object
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(String.format("Locked %s for storage", label));
+					}
+					break;
+
+				case LOCK_CONCURRENT:
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(
+							String.format("%s is already locked for storage by another thread, skipping it", label));
+					}
+					return new Result(ExportSkipReason.ALREADY_LOCKED);
+
+				case ALREADY_FAILED:
+					String msg = String.format("%s was already failed, skipping it", label);
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(msg);
+					}
+					// thisStatus.setCompleted(false);
+					return new Result(ExportSkipReason.DEPENDENCY_FAILED, msg);
+
+				case ALREADY_STORED:
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(String.format("%s is already locked for storage, skipping it", label));
+					}
+					// thisStatus.setCompleted(true);
+					return new Result(ExportSkipReason.ALREADY_STORED);
 			}
 		} catch (CmfStorageException e) {
 			throw new ExportException(
 				String.format("Exception caught attempting to lock a %s for storage [%s](%s)", type, label, id), e);
-		}
-
-		if (!locked) {
-			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("%s is already locked for storage, skipping it", label));
-			}
-			return new Result(ExportSkipReason.ALREADY_LOCKED);
-		}
-
-		// Make sure the object hasn't already been exported
-		if (objectStore.isStored(type, id)) {
-			// Should be impossible, but still guard against it
-			if (this.log.isTraceEnabled()) {
-				this.log
-					.trace(String.format("%s was locked for storage by this thread, but is already stored...", label));
-			}
-			// Just in case...
-			thisStatus.setCompleted(true);
-			return new Result(ExportSkipReason.ALREADY_STORED);
 		}
 
 		/*
@@ -318,13 +352,28 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				if (requirement.getExportTarget().equals(target)) {
 					continue;
 				}
-				Result r = exportObject(exportState, target, requirement.getExportTarget(), requirement, ctx,
-					listenerDelegator, statusMap);
+				final Result r;
+				try {
+					r = exportObject(exportState, target, requirement.getExportTarget(), requirement, ctx,
+						listenerDelegator, statusMap);
+				} catch (Exception e) {
+					// This exception will already be logged...so we simply accept the failure and
+					// report it upwards, without bubbling up the exception to be reported 1000
+					// times
+					return new Result(ExportSkipReason.DEPENDENCY_FAILED, String
+						.format("A required object [%s] failed to serialize for %s", requirement.exportTarget, label));
+				}
+
 				// If there is no message, the result is success
 				if (r.message == null) {
 					continue;
 				}
 				switch (r.message) {
+					case DEPENDENCY_FAILED:
+						// A dependency has failed, we fail immediately...
+						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
+							"A required object [%s] failed to serialize for %s", requirement.exportTarget, label));
+
 					case ALREADY_LOCKED:
 						if (!ctx.isReferrentLoop(requirement.exportTarget)
 							&& ctx.shouldWaitForRequirement(target.getType(), requirement.getType())) {
@@ -332,6 +381,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							waitTargets.add(requirement.getExportTarget());
 						}
 						break;
+
 					default:
 						// Already stored, skipped, or is unsupported... we need not wait
 						break;
@@ -357,8 +407,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							String.format("Thread interrupted waiting on the export of [%s] by %s", requirement, label),
 							e);
 					}
-					if (!status.isSuccessful()) { return new Result(ExportSkipReason.DEPENDENCY_FAILED,
-						String.format("A required object [%s] failed to serialize for %s", requirement, label)); }
+					if (!status.isSuccessful()) {
+						//
+						return new Result(ExportSkipReason.DEPENDENCY_FAILED,
+							String.format("A required object [%s] failed to serialize for %s", requirement, label));
+					}
 				}
 			} finally {
 				thisStatus.endWait();
@@ -409,6 +462,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			final Long ret = objectStore.storeObject(marshaled, getTranslator());
+
 			if (ret == null) {
 				// Should be impossible, but still guard against it
 				if (this.log.isTraceEnabled()) {
@@ -586,7 +640,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
 		}
 		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
-		final Map<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<ExportTarget, ExportOperation>();
+		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<ExportTarget, ExportOperation>();
 
 		PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
 			backlogSize) {
