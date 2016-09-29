@@ -16,5 +16,18 @@
 				<constraints nullable="true" />
 			</column>
 	    </addColumn>
+		<sql>
+			update cmf_export_plan p
+			   set p.result = (
+			          select 'STORED'
+			            from cmf_object o
+			           where p.object_id = o.object_id
+			   )
+		</sql>
+		<sql>
+			update cmf_export_plan p
+			   set p.result = 'FAILED'
+			 where p.result is null
+		</sql>
 	</changeSet>
 </databaseChangeLog>
