@@ -76,7 +76,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			this.objectNumber = null;
 			this.marshaled = null;
 			this.message = message;
-			this.extraInfo = null;
+			this.extraInfo = extraInfo;
 		}
 	}
 
