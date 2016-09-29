@@ -40,6 +40,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	public static enum StoreStatus {
 		//
 		STORED(LockStatus.ALREADY_STORED), // Object was stored successfully
+		SKIPPED(LockStatus.ALREADY_FAILED), // Object was deliberately skipped
 		FAILED(LockStatus.ALREADY_FAILED), // Object was not stored due to a failure
 		//
 		;
