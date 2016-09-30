@@ -22,7 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
@@ -261,7 +260,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final ExportOperation thisStatus = ConcurrentUtils.createIfAbsentUnchecked(statusMap, target,
 			new ConcurrentInitializer<ExportOperation>() {
 				@Override
-				public ExportOperation get() throws ConcurrentException {
+				public ExportOperation get() {
 					return new ExportOperation(target);
 				}
 			});
