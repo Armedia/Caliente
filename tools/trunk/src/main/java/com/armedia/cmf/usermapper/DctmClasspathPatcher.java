@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,21 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 
 	public DctmClasspathPatcher() {
 		super();
+	}
+
+	private File createFile(String path) {
+		return createFile(null, path);
+	}
+
+	private File createFile(File parent, String path) {
+		File f = (parent != null ? new File(parent, path) : new File(path));
+		try {
+			f = f.getCanonicalFile();
+		} catch (IOException e) {
+			f = f.getAbsoluteFile();
+			this.log.warn(String.format("Failed to canonicalize the path for [%s]", f.getAbsolutePath()), e);
+		}
+		return f;
 	}
 
 	@Override
@@ -40,16 +56,11 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 
 		List<URL> ret = new ArrayList<URL>(3);
 		try {
-
-			String var = System.getProperty("user.dir");
-			File f = new File(var);
-			ret.add(f.toURI().toURL());
-
-			var = CLIParam.dfc_prop.getString();
+			String var = CLIParam.dfc_prop.getString("dfc.properties");
 			if (var != null) {
-				f = new File(var);
+				File f = createFile(var);
 				if (f.exists() && f.isFile() && f.canRead()) {
-					System.setProperty(DctmClasspathPatcher.DFC_PROPERTIES_PROP, f.getCanonicalPath());
+					System.setProperty(DctmClasspathPatcher.DFC_PROPERTIES_PROP, f.getAbsolutePath());
 				}
 			}
 
@@ -64,11 +75,14 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 			}
 
 			if (var != null) {
-				f = new File(var).getCanonicalFile();
+				File f = createFile(var);
+				if (!f.exists()) {
+					FileUtils.forceMkdir(f);
+				}
 				if (!f.isDirectory()) { throw new FileNotFoundException(
 					String.format("Could not find the directory [%s]", f.getAbsolutePath())); }
 
-				ret.add(new File(f, "config").toURI().toURL());
+				ret.add(createFile(f, "config").toURI().toURL());
 			}
 
 			// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
@@ -83,14 +97,14 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 
 			if (var != null) {
 				// Next, is it a directory?
-				f = new File(var).getCanonicalFile();
+				File f = createFile(var);
 				if (!f.isDirectory()) { throw new FileNotFoundException(
 					String.format("Could not find the [%s] directory [%s]", DctmClasspathPatcher.ENV_DOCUMENTUM_SHARED,
 						f.getAbsolutePath())); }
 
 				// Next, does dctm.jar exist in there?
 				if (!dfcFound) {
-					File tgt = new File(f, DctmClasspathPatcher.DCTM_JAR);
+					File tgt = createFile(f, DctmClasspathPatcher.DCTM_JAR);
 					if (!tgt.isFile()) { throw new FileNotFoundException(
 						String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath())); }
 
@@ -98,9 +112,9 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 					ret.add(tgt.toURI().toURL());
 				}
 			}
-			return ret;
 		} catch (IOException e) {
-			throw new RuntimeException("Failed to configure the dynamic classpath for Documentum support", e);
+			throw new RuntimeException("Failed to configure the dynamic classpath", e);
 		}
+		return ret;
 	}
 }
