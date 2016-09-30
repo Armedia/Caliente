@@ -1,14 +1,11 @@
 package com.delta.cmsmf.launcher.dctm;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -17,13 +14,10 @@ import org.slf4j.LoggerFactory;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.utils.ClasspathPatcher;
 
-import liquibase.util.file.FilenameUtils;
-
 public class DctmClasspathPatcher extends ClasspathPatcher {
 
 	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	protected static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
-	protected static final String ENV_DOCUMENTUM_EXTRA = "DOCUMENTUM_EXTRA";
 	protected static final String ENV_DOCUMENTUM = "DOCUMENTUM";
 	protected static final String DCTM_JAR = "dctm.jar";
 	protected static final String DFC_TEST_CLASS = "com.documentum.fc.client.IDfFolder";
@@ -65,16 +59,9 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 
 		List<URL> ret = new ArrayList<URL>(3);
 		try {
-
-			String var = System.getProperty("user.dir");
-			File userDir = createFile(var);
-
-			File f = userDir;
-			ret.add(f.toURI().toURL());
-
-			var = CLIParam.dfc_prop.getString();
+			String var = CLIParam.dfc_prop.getString("dfc.properties");
 			if (var != null) {
-				f = createFile(var);
+				File f = createFile(var);
 				if (f.exists() && f.isFile() && f.canRead()) {
 					System.setProperty(DctmClasspathPatcher.DFC_PROPERTIES_PROP, f.getAbsolutePath());
 				}
@@ -91,7 +78,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 			}
 
 			if (var != null) {
-				f = createFile(var);
+				File f = createFile(var);
 				if (!f.exists()) {
 					FileUtils.forceMkdir(f);
 				}
@@ -113,7 +100,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 
 			if (var != null) {
 				// Next, is it a directory?
-				f = createFile(var);
+				File f = createFile(var);
 				if (!f.isDirectory()) { throw new FileNotFoundException(
 					String.format("Could not find the [%s] directory [%s]", DctmClasspathPatcher.ENV_DOCUMENTUM_SHARED,
 						f.getAbsolutePath())); }
@@ -126,41 +113,6 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 
 					// Next, to the classpath
 					ret.add(tgt.toURI().toURL());
-				}
-			}
-
-			// Next, identify the DOCUMENTUM_EXTRA location, and all the JAR and ZIP files in there
-			// (non-recursive), including a "classes" directory
-			var = CLIParam.dctm_extra.getString(System.getenv(DctmClasspathPatcher.ENV_DOCUMENTUM_EXTRA));
-			if (var == null) {
-				var = "dctm_extra";
-			}
-			if (var != null) {
-				// Next, is it a directory?
-				f = createFile(var);
-				if (f.isDirectory() && f.canRead()) {
-					// Ok so we have the directory...does "classes" exist?
-					File k = createFile(f, "classes");
-					if (k.exists() && k.isDirectory() && k.canRead()) {
-						ret.add(k.toURI().toURL());
-					}
-
-					FileFilter filter = new FileFilter() {
-						@Override
-						public boolean accept(File pathname) {
-							if (!pathname.isFile()) { return false; }
-							String ext = FilenameUtils.getExtension(pathname.getName()).toLowerCase();
-							return (ext.equals("zip") || ext.equals("jar"));
-						}
-					};
-					// Make sure they're sorted by name
-					Map<String, URL> urls = new TreeMap<String, URL>();
-					for (File jar : f.listFiles(filter)) {
-						urls.put(jar.getName(), jar.toURI().toURL());
-					}
-					for (String s : urls.keySet()) {
-						ret.add(urls.get(s));
-					}
 				}
 			}
 		} catch (IOException e) {
