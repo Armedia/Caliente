@@ -304,22 +304,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				String.format("Exception caught attempting to lock a %s for storage [%s](%s)", type, label, id), e);
 		}
 
-		/*
-		try {
-		
-		} finally {
-			try {
-				objectStore.unlockForStorage(type, id);
-			} catch (CmfStorageException e) {
-				if (this.log.isTraceEnabled()) {
-					this.log.error(String.format("Failed to unlock the object [%s::%s]", type.name(), id), e);
-				}
-			} finally {
-				statusMap.remove(target);
-			}
-		}
-		*/
-
 		boolean success = false;
 		if (referrent != null) {
 			ctx.pushReferrent(referrent);
