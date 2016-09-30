@@ -23,6 +23,9 @@ public enum CLIParam {
 	//
 	help(0, "This help message"),
 	debug(0, "Enable debugging"),
+	lib(
+		1,
+		"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath"),
 	dfc_prop(1, "The dfc.properties file to use instead of the default"),
 	docbase(1, true, "The Documentum repostory name to connect to"),
 	dfc(1, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
