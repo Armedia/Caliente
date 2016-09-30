@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+	<changeSet author="cmf" id="2002">
+    	<preConditions>
+    		<changeSetExecuted id="2001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog.content-1.0.xml"/>
+	    </preConditions>
+
+		<!-- First, add the new columns -->
+	    <addColumn tableName="cmf_content_stream">
+			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier">
+				<constraints nullable="false" />
+			</column>
+	    </addColumn>
+
+		<!-- Now, drop the keys that need fixing -->
+		<dropPrimaryKey tableName="cmf_content_stream" />
+
+		<!-- And re-add them, repaired -->
+		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, rendition_id, rendition_page, modifier" />
+	</changeSet>
+</databaseChangeLog>
