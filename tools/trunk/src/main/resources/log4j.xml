@@ -12,13 +12,11 @@
 		<appender-ref ref="stdout" />
 	</appender>
 
-	<appender name="default" class="org.apache.log4j.RollingFileAppender">
+	<appender name="default" class="org.apache.log4j.FileAppender">
 		<param name="File" value="${logName}.log" />
 		<param name="ImmediateFlush" value="true" />
 		<param name="Append" value="true" />
 		<param name="Threshold" value="trace" />
-		<param name="MaxBackupIndex" value="10" />
-		<param name="MaxFileSize" value="1024MB" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n" />
 		</layout>
@@ -28,12 +26,11 @@
 		<appender-ref ref="default" />
 	</appender>
 
-	<appender name="manifest" class="org.apache.log4j.RollingFileAppender">
+	<appender name="manifest" class="org.apache.log4j.FileAppender">
 		<param name="File" value="${logName}.manifest.csv" />
 		<param name="ImmediateFlush" value="true" />
 		<param name="Append" value="false" />
 		<param name="Threshold" value="trace" />
-		<param name="MaxFileSize" value="1536MB" />
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern" value="%m%n" />
 		</layout>
