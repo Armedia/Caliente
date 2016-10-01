@@ -1036,11 +1036,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		ResultSet rs = null;
 		Set<String> tableNames = new TreeSet<String>();
 		try {
-			rs = dmd.getTables(null, null, "cmf_%", new String[] {
+			rs = dmd.getTables(null, null, null, new String[] {
 				"TABLE"
 			});
 			while (rs.next()) {
-				tableNames.add(rs.getString("TABLE_NAME"));
+				String tn = rs.getString("TABLE_NAME");
+				if (tn.toLowerCase().startsWith("cmf_")) {
+					tableNames.add(tn);
+				}
 			}
 			return tableNames;
 		} finally {
