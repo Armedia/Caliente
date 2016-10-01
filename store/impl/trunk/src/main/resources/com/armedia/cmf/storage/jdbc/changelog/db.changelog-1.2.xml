@@ -16,7 +16,7 @@
 				<constraints nullable="true" />
 			</column>
 	    </addColumn>
-		<sql>
+		<sql dbms="h2">
 			update cmf_export_plan p
 			   set p.result = (
 			          select 'STORED'
@@ -24,10 +24,16 @@
 			           where p.object_id = o.object_id
 			   )
 		</sql>
+		<sql dbms="postgresql">
+			update cmf_export_plan
+			   set result = 'STORED'
+			  from cmf_object o
+			 where cmf_export_plan.object_id = o.object_id
+		</sql>
 		<sql>
-			update cmf_export_plan p
-			   set p.result = 'FAILED'
-			 where p.result is null
+			update cmf_export_plan
+			   set result = 'FAILED'
+			 where result is null
 		</sql>
 	</changeSet>
 </databaseChangeLog>

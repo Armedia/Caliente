@@ -9,6 +9,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -1035,7 +1036,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		ResultSet rs = null;
 		Set<String> tableNames = new TreeSet<String>();
 		try {
-			rs = dmd.getTables(null, null, "CMF_%", new String[] {
+			rs = dmd.getTables(null, null, "cmf_%", new String[] {
 				"TABLE"
 			});
 			while (rs.next()) {
@@ -1056,18 +1057,21 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		*/
 		final Connection c = operation.getConnection();
 		try {
+			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
+			if (!referentialIntegrityOff) {
+				// If we couldn't turn off referential integrity, then we couldn't perform
+				// the optimized clear
+				return false;
+			}
 			Set<String> tables = getCmfTables(c);
 			Statement s = c.createStatement();
-			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
 			try {
 				final String sqlFmt = translateQuery(JdbcDialect.Query.TRUNCATE_TABLE_FMT);
 				for (String t : tables) {
 					s.executeUpdate(String.format(sqlFmt, t));
 				}
 			} finally {
-				if (referentialIntegrityOff) {
-					enableReferentialIntegrity(operation);
-				}
+				enableReferentialIntegrity(operation);
 				DbUtils.close(s);
 			}
 			return true;
@@ -1216,7 +1220,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcTools.getQueryRunner();
 		final String dbid = JdbcTools.composeDatabaseId(type, id);
+		Savepoint savePoint = null;
 		try {
+			savePoint = c.setSavepoint();
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("ATTEMPTING TO PERSIST DEPENDENCY [%s::%s]", type.name(), id));
 			}
@@ -1225,11 +1231,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
 			}
+			savePoint = commitSavepoint(c, savePoint);
 			return true;
 		} catch (SQLException e) {
+			rollbackSavepoint(c, savePoint);
 			if (this.dialect.isDuplicateKeyException(e)) {
-				// We're good...ish... PostgreSQL will have invalidated the transaction, which can
-				// bring problems for other operations within this transaction
+				// We're good! With the use of savepoints, the transaction will remain valid and
+				// thus we'll be OK to continue using the transaction in other connections
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
 				}
@@ -1491,11 +1499,15 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		if (sql == null) { return false; }
 		Connection c = operation.getConnection();
 		Statement s = null;
+		Savepoint savePoint = null;
 		try {
 			s = c.createStatement();
+			savePoint = c.setSavepoint();
 			s.execute(sql);
+			savePoint = commitSavepoint(c, savePoint);
 			return true;
 		} catch (SQLException e) {
+			rollbackSavepoint(c, savePoint);
 			this.log.trace("Failed to disable the referential integrity constraints", e);
 			return false;
 		} finally {
@@ -1642,5 +1654,25 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected void closeCachedTargets(Object state) throws CmfStorageException {
 		CachedTargetState.convert(state).close();
+	}
+
+	private void rollbackSavepoint(Connection c, Savepoint savePoint) {
+		if (savePoint == null) { return; }
+		try {
+			c.rollback(savePoint);
+		} catch (SQLException e) {
+			this.log.trace("Failed to roll back to the established SavePoint", e);
+		}
+	}
+
+	private Savepoint commitSavepoint(Connection c, Savepoint savePoint) {
+		if (savePoint == null) { return null; }
+		try {
+			c.releaseSavepoint(savePoint);
+			return null;
+		} catch (SQLException e) {
+			this.log.trace("Failed to roll back to the established SavePoint", e);
+			return savePoint;
+		}
 	}
 }

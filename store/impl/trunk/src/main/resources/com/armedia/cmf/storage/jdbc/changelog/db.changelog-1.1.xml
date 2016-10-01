@@ -35,7 +35,7 @@
 			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page, modifier"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 
-		<sql>
+		<sql dbms="h2">
 			update cmf_content c
 			   set c.modifier = (
 			          select p.value
@@ -45,6 +45,15 @@
 			             and c.rendition_page = p.rendition_page
 			             and p.name = 'page_modifier'
 			       )
+		</sql>
+		<sql dbms="postgresql">
+			update cmf_content
+			   set modifier = p.value
+			  from cmf_content_property p
+			 where cmf_content.object_id = p.object_id
+               and cmf_content.rendition_id = p.rendition_id
+               and cmf_content.rendition_page = p.rendition_page
+               and p.name = 'page_modifier'
 		</sql>
 	</changeSet>
 </databaseChangeLog>
