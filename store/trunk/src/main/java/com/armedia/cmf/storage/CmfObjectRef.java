@@ -4,27 +4,40 @@ import java.io.Serializable;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
+public class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final CmfType type;
 	private final String id;
+
+	CmfObjectRef() {
+		this.type = null;
+		this.id = null;
+	}
+
+	CmfObjectRef(CmfObjectRef other) {
+		if (other == null) { throw new IllegalArgumentException("Must provide another object to build from"); }
+		this.type = other.type;
+		this.id = other.id;
+	}
 
 	public CmfObjectRef(CmfObject<?> object) {
 		this.type = object.getType();
 		this.id = object.getId();
 	}
 
-	public CmfObjectRef(CmfType parentType, String parentId) {
-		this.type = parentType;
-		this.id = parentId;
+	public CmfObjectRef(CmfType type, String id) {
+		if (type == null) { throw new IllegalArgumentException("Must provide the object's type"); }
+		if (id == null) { throw new IllegalArgumentException("Must provide the object's ID"); }
+		this.type = type;
+		this.id = id;
 	}
 
-	public CmfType getType() {
+	public final CmfType getType() {
 		return this.type;
 	}
 
-	public String getId() {
+	public final String getId() {
 		return this.id;
 	}
 
@@ -50,5 +63,14 @@ public final class CmfObjectRef implements Comparable<CmfObjectRef>, Serializabl
 		r = Tools.compare(this.id, o.id);
 		if (r != 0) { return r; }
 		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("CmfObjectRef [type=%s, id=%s]", this.type.name(), this.id);
+	}
+
+	public final String getShortLabel() {
+		return String.format("[%s::%s]", this.type.name(), this.id);
 	}
 }

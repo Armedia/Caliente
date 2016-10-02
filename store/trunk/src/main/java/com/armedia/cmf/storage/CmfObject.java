@@ -17,7 +17,11 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public class CmfObject<V> extends CmfObjectSpec {
+	private static final long serialVersionUID = 1L;
 
+	/**
+	 *
+	 */
 	private Long number = null;
 	private final String name;
 	private final Collection<CmfObjectRef> parentIds;

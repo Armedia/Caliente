@@ -192,7 +192,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			boolean ok = false;
 			try {
 				Long ret = storeObject(operation, object, translator);
-				markStoreStatus(operation, object.getType(), object.getId(), StoreStatus.STORED, null);
+				markStoreStatus(operation, object, StoreStatus.STORED, null);
 				object.setNumber(ret);
 				if (tx) {
 					operation.commit();
@@ -217,21 +217,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> Long storeObject(O operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
 		throws CmfStorageException;
 
-	public final <V> boolean markStoreStatus(CmfType type, String id, StoreStatus status) throws CmfStorageException {
-		return markStoreStatus(type, id, status, null);
+	public final <V> boolean markStoreStatus(CmfObjectRef target, StoreStatus status) throws CmfStorageException {
+		return markStoreStatus(target, status, null);
 	}
 
-	public final <V> boolean markStoreStatus(CmfType type, String id, StoreStatus status, String message)
+	public final <V> boolean markStoreStatus(CmfObjectRef target, StoreStatus status, String message)
 		throws CmfStorageException {
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type"); }
-		if (id == null) { throw new IllegalArgumentException("Must provide an object id"); }
+		if (target == null) { throw new IllegalArgumentException("Must provide an object target"); }
 		if (status == null) { throw new IllegalArgumentException("Must provide a status to mark the object with"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				final boolean ret = markStoreStatus(operation, type, id, status, message);
+				final boolean ret = markStoreStatus(operation, target, status, message);
 				if (tx) {
 					operation.commit();
 				}
@@ -242,8 +241,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for [%s::%s]", type.name(), id),
-							e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for %s", target.getShortLabel()), e);
 					}
 				}
 			}
@@ -252,8 +251,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> boolean markStoreStatus(O operation, CmfType type, String id, StoreStatus status,
-		String message) throws CmfStorageException;
+	protected abstract <V> boolean markStoreStatus(O operation, CmfObjectRef target, StoreStatus status, String message)
+		throws CmfStorageException;
 
 	public final <V> void setContentInfo(CmfObject<V> object, Collection<CmfContentInfo> content)
 		throws CmfStorageException {
@@ -312,21 +311,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> List<CmfContentInfo> getContentInfo(O operation, CmfObject<V> object)
 		throws CmfStorageException;
 
-	public final StoreStatus getStoreStatus(CmfType type, String objectId) throws CmfStorageException {
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
-		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
+	public final StoreStatus getStoreStatus(CmfObjectRef target) throws CmfStorageException {
+		if (target == null) { throw new IllegalArgumentException("Must provide an object spec to check for"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return getStoreStatus(operation, type, objectId);
+				return getStoreStatus(operation, target);
 			} finally {
 				if (tx) {
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s (%s)", type, objectId),
-							e);
+						this.log.warn(String.format("Failed to rollback the transaction for %s (%s)",
+							target.getType().name(), target.getId()), e);
 					}
 				}
 			}
@@ -335,28 +333,25 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract StoreStatus getStoreStatus(O operation, CmfType type, String objectId)
-		throws CmfStorageException;
+	protected abstract StoreStatus getStoreStatus(O operation, CmfObjectRef target) throws CmfStorageException;
 
-	public final LockStatus lockForStorage(CmfType type, String objectId, CmfType referrentType, String referrentId)
-		throws CmfStorageException {
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
-		if (objectId == null) { throw new IllegalArgumentException("Must provide an object id to check for"); }
+	public final LockStatus lockForStorage(CmfObjectRef target, CmfObjectRef referrent) throws CmfStorageException {
+		if (target == null) { throw new IllegalArgumentException("Must provide an object spec to check for"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				boolean locked = lockForStorage(operation, type, objectId, referrentType, referrentId);
-				final StoreStatus storeStatus = getStoreStatus(operation, type, objectId);
+				boolean locked = lockForStorage(operation, target, referrent);
+				final StoreStatus storeStatus = getStoreStatus(operation, target);
 				final LockStatus ret;
 				if (locked) {
 					if (storeStatus != null) {
 						// WTF? We have an issue here - we got the lock, but we also have a
 						// non-null status??
-						throw new CmfStorageException(String.format(
-							"Unexpected storage status [%s] detected for [%s::%s] while acquiring storage lock",
-							storeStatus.name(), type.name(), objectId));
+						throw new CmfStorageException(
+							String.format("Unexpected storage status [%s] detected for %s while acquiring storage lock",
+								storeStatus.name(), target.getShortLabel()));
 					}
 					// We acquired the lock...and there is no existing status
 					ret = LockStatus.LOCK_ACQUIRED;
@@ -381,8 +376,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s (%s)", type, objectId),
-							e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for %s", target.getShortLabel()), e);
 					}
 				}
 			}
@@ -391,8 +386,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract boolean lockForStorage(O operation, CmfType type, String objectId, CmfType referrentType,
-		String referrentId) throws CmfStorageException;
+	protected abstract boolean lockForStorage(O operation, CmfObjectRef target, CmfObjectRef referrent)
+		throws CmfStorageException;
 
 	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator) {
@@ -808,12 +803,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract void resetAltNames(O operation) throws CmfStorageException;
 
-	public final <V> void renameObject(final CmfObject<V> object, final String newName) throws CmfStorageException {
+	public final <V> boolean renameObject(final CmfObject<V> object, final String newName) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to rename"); }
 		if (newName == null) { throw new IllegalArgumentException("Must provide new name for the object"); }
 
 		// Shortcut - do nothing if there's no name change
-		if (Tools.equals(newName, object.getName())) { return; }
+		if (Tools.equals(newName, object.getName())) { return false; }
 
 		O operation = beginExclusiveInvocation();
 		try {
@@ -825,6 +820,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					operation.commit();
 				}
 				ok = true;
+				return true;
 			} finally {
 				if (tx && !ok) {
 					if (tx && !ok) {
