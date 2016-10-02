@@ -717,7 +717,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			}
 
-			if (!settings.getBoolean(ImportSetting.NO_NAME_FIX)) {
+			if (settings.getBoolean(ImportSetting.NAME_FIX)) {
 				CmfNameFixer<V> nameFixer = getNameFixer(output);
 				if (nameFixer != null) {
 					output.info("Fixing all object names dynamically...");
@@ -726,7 +726,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			}
 
-			if (!isSupportsDuplicateFileNames() && !settings.getBoolean(ImportSetting.NO_DEDUP)) {
+			if (!isSupportsDuplicateFileNames() && settings.getBoolean(ImportSetting.DEDUP)) {
 				// Handle deduplication globally as well, since we may have cross-type collisions
 				int pass = 0;
 				outer: for (;;) {
