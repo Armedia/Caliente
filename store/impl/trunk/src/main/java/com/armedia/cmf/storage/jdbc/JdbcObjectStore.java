@@ -817,11 +817,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected StoreStatus getStoreStatus(JdbcOperation operation, final CmfType type, final String objectId)
+	protected StoreStatus getStoreStatus(JdbcOperation operation, final CmfObjectRef target)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final QueryRunner qr = JdbcTools.getQueryRunner();
-		final String dbId = JdbcTools.composeDatabaseId(type, objectId);
+		final String dbId = JdbcTools.composeDatabaseId(target);
 		try {
 			// Get the result string from the EXPORT_PLAN
 			/*
@@ -838,53 +838,52 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							return (rs.wasNull() ? null : v);
 						}
 						throw new SQLException(
-							String.format("Failed to locate the export result for [%s::%s]", type.name(), objectId));
+							String.format("Failed to locate the export result for %s", target.getShortLabel()));
 					}
-				}, dbId, type.name());
+				}, dbId, target.getType().name());
 			if (result == null) { return null; }
 			return StoreStatus.valueOf(result);
 		} catch (SQLException e) {
 			throw new CmfStorageException(
-				String.format("Failed to check whether object [%s] was already serialized", objectId), e);
+				String.format("Failed to check whether object %s was already serialized", target.getShortLabel()), e);
 		}
 	}
 
 	@Override
-	protected <V> boolean markStoreStatus(JdbcOperation operation, CmfType type, String id, StoreStatus status,
+	protected <V> boolean markStoreStatus(JdbcOperation operation, CmfObjectRef target, StoreStatus status,
 		String message) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcTools.getQueryRunner();
-		final String dbid = JdbcTools.composeDatabaseId(type, id);
+		final String dbid = JdbcTools.composeDatabaseId(target);
 		try {
 			// No existing status, so we can continue
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR [%s::%s]", status.name(),
-					type.name(), id));
+				this.log.trace(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR %s", status.name(),
+					target.getShortLabel()));
 			}
 			int result = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_EXPORT_RESULT), status.name(), message,
-				type.name(), dbid);
+				target.getType().name(), dbid);
 			if (result == 1) {
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(
-						String.format("SET THE EXPORT RESULT TO [%s] FOR [%s::%s]", status.name(), type.name(), id));
+						String.format("SET THE EXPORT RESULT TO [%s] FOR %s", status.name(), target.getShortLabel()));
 				}
 				return true;
 			}
 
 			if (result > 1) { throw new CmfStorageException(
-				String.format("REFERENTIAL INTEGRITY IS NOT BEING ENFORCED: %d PLAN records for [%s::%s]", result,
-					type.name(), id)); }
+				String.format("REFERENTIAL INTEGRITY IS NOT BEING ENFORCED: %d PLAN records for %s", result,
+					target.getShortLabel())); }
 
 			// If we've come this far, then we failed to set the status. This may or may not be a
 			// problem...
-			StoreStatus existing = getStoreStatus(operation, type, id);
+			StoreStatus existing = getStoreStatus(operation, target);
 			if (existing != null) {
 				// If the existing status was already set, this isn't really a problem - we just
 				// report the discrepancy if necessary, and return false...then move on
 				if (existing != status) {
-					this.log
-						.warn(String.format("FAILED TO SET THE RESULT TO [%s] for [%s::%s] (%d updated, existing=%s)",
-							status.name(), type.name(), id, result, existing.name()));
+					this.log.warn(String.format("FAILED TO SET THE RESULT TO [%s] for %s (%d updated, existing=%s)",
+						status.name(), target.getShortLabel(), result, existing.name()));
 				}
 				return false;
 			}
@@ -893,11 +892,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			// doesn't exist...
 			// TODO: Should we, instead of failing, insert the record? That might prove problematic
 			throw new CmfStorageException(
-				String.format("FAILED TO SET THE RESULT TO [%s] for [%s::%s] - NO EXISTING RECORD TO STORE",
-					status.name(), type.name(), id, result));
+				String.format("FAILED TO SET THE RESULT TO [%s] for %s - NO EXISTING RECORD TO STORE", status.name(),
+					target.getShortLabel(), result));
 		} catch (SQLException e) {
 			throw new CmfStorageException(
-				String.format("Failed to set the storage status to [%s] for [%s::%s]", status.name(), type, id), e);
+				String.format("Failed to set the storage status to [%s] for %s", status.name(), target.getShortLabel()),
+				e);
 		}
 	}
 
@@ -1215,24 +1215,24 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected boolean lockForStorage(JdbcOperation operation, CmfType type, String id, CmfType referrentType,
-		String referrentId) throws CmfStorageException {
+	protected boolean lockForStorage(JdbcOperation operation, CmfObjectRef target, CmfObjectRef referrent)
+		throws CmfStorageException {
 		// TODO: Add support for re-entrancy by only allowing a lock to be re-obtained if the same
 		// object is being locked while being referenced by the same referrent. A "none" referrent
 		// (null referrent values) is supported.
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcTools.getQueryRunner();
-		final String dbid = JdbcTools.composeDatabaseId(type, id);
+		final String dbid = JdbcTools.composeDatabaseId(target);
 		Savepoint savePoint = null;
 		try {
 			savePoint = c.setSavepoint();
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("ATTEMPTING TO PERSIST DEPENDENCY [%s::%s]", type.name(), id));
+				this.log.trace(String.format("ATTEMPTING TO PERSIST DEPENDENCY %s", target.getShortLabel()));
 			}
-			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_EXPORT_PLAN), JdbcTools.HANDLER_NULL, type.name(),
-				dbid);
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_EXPORT_PLAN), JdbcTools.HANDLER_NULL,
+				target.getType().name(), dbid);
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("PERSISTED DEPENDENCY [%s::%s]", type.name(), id));
+				this.log.debug(String.format("PERSISTED DEPENDENCY %s", target.getShortLabel()));
 			}
 			savePoint = commitSavepoint(c, savePoint);
 			return true;
@@ -1242,11 +1242,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				// We're good! With the use of savepoints, the transaction will remain valid and
 				// thus we'll be OK to continue using the transaction in other connections
 				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("DUPLICATE DEPENDENCY [%s::%s]", type.name(), id));
+					this.log.trace(String.format("DUPLICATE DEPENDENCY %s", target.getShortLabel()));
 				}
 				return false;
 			}
-			throw new CmfStorageException(String.format("Failed to persist the dependency [%s::%s]", type.name(), id),
+			throw new CmfStorageException(String.format("Failed to persist the dependency %s", target.getShortLabel()),
 				e);
 		}
 	}
