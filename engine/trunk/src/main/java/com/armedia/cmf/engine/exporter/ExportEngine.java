@@ -209,8 +209,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					case SKIPPED: // fall-through
 					case DEPENDENCY_FAILED: // fall-through
 					case UNSUPPORTED:
-						if (exportState.objectStore.markStoreStatus(target.getType(), target.getId(),
-							StoreStatus.SKIPPED, result.extraInfo)) {
+						if (exportState.objectStore.markStoreStatus(target, StoreStatus.SKIPPED, result.extraInfo)) {
 							listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(),
 								result.skipReason, result.extraInfo);
 						}
@@ -222,8 +221,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				listenerDelegator.objectExportFailed(exportState.jobId, target.getType(), target.getId(), e);
 			} finally {
-				exportState.objectStore.markStoreStatus(target.getType(), target.getId(), StoreStatus.FAILED,
-					Tools.dumpStackTrace(e));
+				exportState.objectStore.markStoreStatus(target, StoreStatus.FAILED, Tools.dumpStackTrace(e));
 			}
 			if (e instanceof ExportException) { throw ExportException.class.cast(e); }
 			if (e instanceof CmfStorageException) { throw CmfStorageException.class.cast(e); }
@@ -267,9 +265,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		final LockStatus locked;
 		try {
-			CmfType rt = (referrent != null ? referrent.getType() : null);
-			String rid = (referrent != null ? referrent.getId() : null);
-			locked = objectStore.lockForStorage(type, id, rt, rid);
+			locked = objectStore.lockForStorage(target, referrent);
 			switch (locked) {
 				case LOCK_ACQUIRED:
 					// We got the lock, which means we create the locker object
@@ -873,7 +869,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							temp = new ArrayList<CmfObjectSpec>(segmentSize);
 						}
 					}
-					temp.add(it.next().toObjectSpec());
+					temp.add(it.next());
 				}
 				queue.put(temp);
 				queue.put(end);
