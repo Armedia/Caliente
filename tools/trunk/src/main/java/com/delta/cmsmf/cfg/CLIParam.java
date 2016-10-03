@@ -137,8 +137,8 @@ public enum CLIParam {
 		Setting.FILENAME_MAP,
 		1,
 		"The Properties (XML) file that contains the static filename mappings to be applied"),
-	object_jdbc_config(null, 1, "The properties file to use for Object Store DB configuration"),
-	content_jdbc_config(null, 1, "The properties file to use for Content Store DB configuration"),
+	object_store_config(null, 1, "The properties file to use for Object Store DB configuration"),
+	content_store_config(null, 1, "The properties file to use for Content Store DB configuration"),
 	//
 	;
 

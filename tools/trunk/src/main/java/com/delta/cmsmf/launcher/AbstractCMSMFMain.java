@@ -27,8 +27,8 @@ import com.delta.cmsmf.cfg.SettingManager;
 
 public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CMSMFMain {
 
-	private static final String JDBC_XML_PROPERTIES_BASE = "cmsmf.%s.jdbc.xml";
-	private static final String JDBC_PROPERTIES_BASE = "cmsmf.%s.jdbc.properties";
+	private static final String STORE_XML_PROPERTIES_BASE = "cmsmf.%s.store.xml";
+	private static final String STORE_PROPERTIES_BASE = "cmsmf.%s.store.properties";
 
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
 
@@ -90,13 +90,13 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 
-			Properties jdbcProps = loadJDBCProperties("object", CLIParam.object_jdbc_config.getString());
+			Properties jdbcProps = loadJDBCProperties("object", CLIParam.object_store_config.getString());
 			if ((jdbcProps != null) && !jdbcProps.isEmpty()) {
 				Map<String, String> m = cfg.getSettings();
 				for (String s : jdbcProps.stringPropertyNames()) {
 					String v = jdbcProps.getProperty(s);
 					if (v != null) {
-						m.put(String.format("jdbc.%s", s), v);
+						m.put(s, v);
 					}
 				}
 			}
@@ -121,13 +121,13 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 
-			jdbcProps = loadJDBCProperties("content", CLIParam.content_jdbc_config.getString());
+			jdbcProps = loadJDBCProperties("content", CLIParam.content_store_config.getString());
 			if ((jdbcProps != null) && !jdbcProps.isEmpty()) {
 				Map<String, String> m = cfg.getSettings();
 				for (String s : jdbcProps.stringPropertyNames()) {
 					String v = jdbcProps.getProperty(s);
 					if (v != null) {
-						m.put(String.format("jdbc.%s", s), v);
+						m.put(s, v);
 					}
 				}
 			}
@@ -219,7 +219,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		}
 
 		// First, try the XML variant
-		File f = createFile(String.format(AbstractCMSMFMain.JDBC_XML_PROPERTIES_BASE, type));
+		File f = createFile(String.format(AbstractCMSMFMain.STORE_XML_PROPERTIES_BASE, type));
 		if (f.exists() && f.isFile() && f.canRead()) {
 			Properties p = new Properties();
 			InputStream in = null;
@@ -235,7 +235,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			}
 		}
 
-		f = createFile(String.format(AbstractCMSMFMain.JDBC_PROPERTIES_BASE, type));
+		f = createFile(String.format(AbstractCMSMFMain.STORE_PROPERTIES_BASE, type));
 		if (f.exists() && f.isFile() && f.canRead()) {
 			Properties p = new Properties();
 			InputStream in = null;
