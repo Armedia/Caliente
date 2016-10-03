@@ -27,8 +27,6 @@ import com.delta.cmsmf.cfg.SettingManager;
 
 public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CMSMFMain {
 
-	private static final String STORE_XML_PROPERTIES_BASE = "cmsmf.%s.store.xml";
-	private static final String STORE_PROPERTIES_BASE = "cmsmf.%s.store.properties";
 	private static final String STORE_TYPE_PROPERTY = "cmsmf.store.type";
 
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
@@ -222,44 +220,9 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 					this.console.info("Loaded the {} store properties from [{}]", type, f.getAbsolutePath());
 				}
 			}
+		} else {
+			this.console.info("No special {} store properties set, using defaulted values", type);
 		}
-
-		// First, try the XML variant
-		File f = createFile(String.format(AbstractCMSMFMain.STORE_XML_PROPERTIES_BASE, type));
-		if (f.exists() && f.isFile() && f.canRead()) {
-			InputStream in = null;
-			try {
-				in = new FileInputStream(f);
-				p.loadFromXML(in);
-				this.console.info("Loaded the {} store XML properties from [{}]", type, f.getAbsolutePath());
-				return p;
-			} catch (Exception e) {
-				throw new IOException(
-					String.format("Failed to load the %s store properties XML from [%s]", type, f.getAbsolutePath()),
-					e);
-			} finally {
-				IOUtils.closeQuietly(in);
-			}
-		}
-
-		f = createFile(String.format(AbstractCMSMFMain.STORE_PROPERTIES_BASE, type));
-		if (f.exists() && f.isFile() && f.canRead()) {
-			InputStream in = null;
-			try {
-				in = new FileInputStream(f);
-				p.load(in);
-				this.console.info("Loaded the {} store properties from [{}]", type, f.getAbsolutePath());
-				return p;
-			} catch (Exception e) {
-				throw new IOException(
-					String.format("Failed to load the %s store properties XML from [%s]", type, f.getAbsolutePath()),
-					e);
-			} finally {
-				IOUtils.closeQuietly(in);
-			}
-		}
-
-		this.console.info("No special {} store properties set, using defaulted values", type);
 		return p;
 	}
 }
