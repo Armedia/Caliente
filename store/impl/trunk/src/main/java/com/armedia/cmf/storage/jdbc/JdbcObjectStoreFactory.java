@@ -32,11 +32,10 @@ public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<Connection, Jd
 				ds = locator.locateDataSource(cfg);
 			} catch (Exception e) {
 				if (JdbcObjectStoreFactory.LOG.isTraceEnabled()) {
-					JdbcObjectStoreFactory.LOG
-						.warn(
-							String.format(
-								"Exception caught attempting to locate a DataSource via %s for CmfObjectStore %s[%s]",
-								locator.getClass().getCanonicalName(), configuration.getName(), configuration.getId()),
+					JdbcObjectStoreFactory.LOG.warn(
+						String.format(
+							"Exception caught attempting to locate a DataSource via %s for CmfObjectStore %s[%s]",
+							locator.getClass().getCanonicalName(), configuration.getType(), configuration.getId()),
 						e);
 				}
 				continue;
@@ -45,13 +44,13 @@ public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<Connection, Jd
 				return new JdbcObjectStore(ds, cfg.getBoolean(Setting.UPDATE_SCHEMA), cleanData);
 			} catch (Exception e) {
 				throw new CmfStorageException(String.format("Failed to initialize the CmsObjectStore %s[%s]",
-					configuration.getName(), configuration.getId()), e);
+					configuration.getType(), configuration.getId()), e);
 			}
 		}
 
 		// If we got here, then we have no locator for that datasource, so we simply explode
 		throw new CmfStorageException(
 			String.format("Failed to locate a DataSource for building the CmfObjectStore %s[%s]",
-				configuration.getName(), configuration.getId()));
+				configuration.getType(), configuration.getId()));
 	}
 }
