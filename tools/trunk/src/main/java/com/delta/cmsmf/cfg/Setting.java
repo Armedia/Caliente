@@ -24,7 +24,6 @@ public enum Setting {
 	},
 	CONTENT_ORGANIZATION("content.organization"),
 	DB_DIRECTORY("db.directory"),
-	DB_TYPE("db.type"),
 	DEFAULT_USER_PASSWORD("default.user.password"),
 	OWNER_ATTRIBUTES("owner.attributes"),
 	MAIL_RECIPIENTS("mail.recipients"),
@@ -42,10 +41,6 @@ public enum Setting {
 	SHPT_SOURCE_PREFIX("shpt.source.prefix"),
 	STATE_FOLDER("state.folder"),
 	EXPORT_BATCH_SIZE("export.batch.size"),
-	JDBC_DRIVER("jdbc.driver"),
-	JDBC_URL("jdbc.url"),
-	JDBC_USER("jdbc.user"),
-	JDBC_PASSWORD("jdbc.password"),
 	MANIFEST_OUTCOMES("manifest.outcomes"),
 	MANIFEST_TYPES("manifest.types"),
 

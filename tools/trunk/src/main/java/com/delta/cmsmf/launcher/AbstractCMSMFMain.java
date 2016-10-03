@@ -1,7 +1,16 @@
 package com.delta.cmsmf.launcher;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.InvalidPropertiesFormatException;
+import java.util.Map;
+import java.util.Properties;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +28,9 @@ import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.cfg.SettingManager;
 
 public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CMSMFMain {
+
+	private static final String JDBC_XML_PROPERTIES_BASE = "${type}.jdbc.xml";
+	private static final String JDBC_PROPERTIES_BASE = "${type}.jdbc.properties";
 
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
 
@@ -74,16 +86,28 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 			CmfStores.initializeConfigurations();
 
-			// TODO: Add support for configurable store names
 			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("jdbc");
+
 			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
+
+			Properties jdbcProps = loadJDBCProperties("object", CLIParam.object_jdbc_config.getString());
+			if ((jdbcProps != null) && !jdbcProps.isEmpty()) {
+				Map<String, String> m = cfg.getSettings();
+				for (String s : jdbcProps.stringPropertyNames()) {
+					String v = jdbcProps.getProperty(s);
+					if (v != null) {
+						m.put(String.format("jdbc.%s", s), v);
+					}
+				}
+			}
+
 			this.cmfObjectStore = CmfStores.createObjectStore(cfg);
 
 			final boolean directFsExport = CLIParam.direct_fs.isPresent();
 
-			// TODO: Add support for JDBC content storage
+			// TODO: Add support for configurable content store names
 			final String contentStoreName = (directFsExport ? "direct" : "local");
 			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 			if (!directFsExport) {
@@ -98,6 +122,17 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
+
+			jdbcProps = loadJDBCProperties("content", CLIParam.content_jdbc_config.getString());
+			if ((jdbcProps != null) && !jdbcProps.isEmpty()) {
+				Map<String, String> m = cfg.getSettings();
+				for (String s : jdbcProps.stringPropertyNames()) {
+					String v = jdbcProps.getProperty(s);
+					if (v != null) {
+						m.put(String.format("jdbc.%s", s), v);
+					}
+				}
+			}
 
 			this.cmfContentStore = CmfStores.createContentStore(cfg);
 
@@ -130,5 +165,96 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 	protected String getContentStrategyName() {
 		return LocalOrganizationStrategy.NAME;
+	}
+
+	private File createFile(String path) {
+		File f = new File(path);
+		try {
+			f = f.getCanonicalFile();
+		} catch (IOException e) {
+			// Do nothing
+		} finally {
+			f = f.getAbsoluteFile();
+		}
+		return f;
+	}
+
+	protected Properties loadJDBCProperties(String type, String jdbcConfig) throws IOException {
+		if (jdbcConfig != null) {
+			File f = createFile(jdbcConfig);
+			if (!f.exists()) { throw new IOException(
+				String.format("The JDBC properties file at [%s] doesn't exist", f.getAbsolutePath())); }
+			if (!f.isFile()) { throw new IOException(
+				String.format("The JDBC properties file at [%s] is not a regular file", f.getAbsolutePath())); }
+			if (!f.canRead()) { throw new IOException(
+				String.format("The JDBC properties file at [%s] can't be read", f.getAbsolutePath())); }
+
+			Properties p = new Properties();
+			InputStream in = null;
+			boolean ok = false;
+			try {
+				in = new FileInputStream(f);
+				p.loadFromXML(in);
+				ok = true;
+				return p;
+			} catch (InvalidPropertiesFormatException e) {
+				this.console.warn("JDBC properties at [{}] aren't in XML format, trying the classical format",
+					f.getAbsolutePath());
+				p.clear();
+				IOUtils.closeQuietly(in);
+				in = new FileInputStream(f);
+				try {
+					p.load(in);
+				} catch (IllegalArgumentException e2) {
+					throw new IOException(
+						String.format("Failed to load the JDBC properties from [%s]", f.getAbsolutePath()), e2);
+				}
+				ok = true;
+				return p;
+			} finally {
+				IOUtils.closeQuietly(in);
+				if (ok) {
+					this.console.info("Loaded the JDBC properties from [{}]", f.getAbsolutePath());
+				}
+			}
+		}
+
+		Map<String, String> m = Collections.singletonMap("type", type);
+		// First, try the XML variant
+		jdbcConfig = StrSubstitutor.replace(AbstractCMSMFMain.JDBC_XML_PROPERTIES_BASE, m);
+		File f = createFile(jdbcConfig);
+		if (f.exists() && f.isFile() && f.canRead()) {
+			Properties p = new Properties();
+			InputStream in = null;
+			try {
+				in = new FileInputStream(f);
+				p.loadFromXML(in);
+				return p;
+			} catch (Exception e) {
+				throw new IOException(
+					String.format("Failed to load the JDBC properties XML from [%s]", f.getAbsolutePath()), e);
+			} finally {
+				IOUtils.closeQuietly(in);
+			}
+		}
+
+		jdbcConfig = StrSubstitutor.replace(AbstractCMSMFMain.JDBC_PROPERTIES_BASE, m);
+		f = createFile(jdbcConfig);
+		if (f.exists() && f.isFile() && f.canRead()) {
+			Properties p = new Properties();
+			InputStream in = null;
+			try {
+				in = new FileInputStream(f);
+				p.load(in);
+				return p;
+			} catch (Exception e) {
+				throw new IOException(
+					String.format("Failed to load the JDBC properties XML from [%s]", f.getAbsolutePath()), e);
+			} finally {
+				IOUtils.closeQuietly(in);
+			}
+		}
+
+		return null;
 	}
 }

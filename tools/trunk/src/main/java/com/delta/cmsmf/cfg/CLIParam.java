@@ -93,7 +93,6 @@ public enum CLIParam {
 		1,
 		"The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)"),
 	db(Setting.DB_DIRECTORY, 1, "The Database directory to use"),
-	db_type(Setting.DB_TYPE, 1, "The Database type to use"),
 	content(
 		Setting.CONTENT_DIRECTORY,
 		1,
@@ -138,6 +137,8 @@ public enum CLIParam {
 		Setting.FILENAME_MAP,
 		1,
 		"The Properties (XML) file that contains the static filename mappings to be applied"),
+	object_jdbc_config(null, 1, "The properties file to use for Object Store DB configuration"),
+	content_jdbc_config(null, 1, "The properties file to use for Content Store DB configuration"),
 	//
 	;
 
