@@ -6,11 +6,11 @@
 		<setting name="name1">value1</setting>
 	</settings>
 	<objectstore id="dummy">
-		<name>className</name>
+		<type>typeName</type>
 		<settings />
 	</objectstore>
 	<contentstore id="dummy">
-		<name>className</name>
+		<type>typeName</type>
 		<settings />
 	</contentstore>
 </stores>

@@ -117,8 +117,8 @@ public final class CmfStores {
 			"Must provide a configuration to construct the instance from"); }
 		final String id = configuration.getId();
 		if (id == null) { throw new IllegalArgumentException("The configuration does not specify the store id"); }
-		final String name = configuration.getName();
-		if (name == null) { throw new IllegalArgumentException("The configuration does not specify the store name"); }
+		final String type = configuration.getType();
+		if (type == null) { throw new IllegalArgumentException("The configuration does not specify the store type"); }
 
 		final Lock l = this.lock.writeLock();
 		l.lock();
@@ -127,9 +127,9 @@ public final class CmfStores {
 			if (dupe != null) { throw new DuplicateCmfStoreException(
 				String.format("Duplicate store requested: [%s] already exists, and is of class [%s]", id,
 					dupe.getClass().getCanonicalName())); }
-			CmfStoreFactory<?> factory = this.factories.get(name);
+			CmfStoreFactory<?> factory = this.factories.get(type);
 			if (factory == null) { throw new CmfStorageException(
-				String.format("No factory found for object store class [%s]", name)); }
+				String.format("No factory found for object store type [%s]", type)); }
 			CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 			CmfStore<?, ?> instance = factory.newInstance(configuration,
 				cfg.getBoolean(CmfStoreFactory.CFG_CLEAN_DATA, false));
