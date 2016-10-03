@@ -255,6 +255,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			}
 		}
 
+		this.console.info("No special {} store properties set, using defaulted values", type);
 		return null;
 	}
 }
