@@ -83,22 +83,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 			CmfStores.initializeConfigurations();
 
-			Properties storeProps = loadStoreProperties("object", CLIParam.object_store_config.getString());
-
 			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("default");
-			String storeType = storeProps.getProperty(AbstractCMSMFMain.STORE_TYPE_PROPERTY);
-			if (!StringUtils.isEmpty(storeType)) {
-				cfg.setType(storeType);
-			}
-			if (!storeProps.isEmpty()) {
-				Map<String, String> m = cfg.getSettings();
-				for (String s : storeProps.stringPropertyNames()) {
-					String v = storeProps.getProperty(s);
-					if (v != null) {
-						m.put(s, v);
-					}
-				}
-			}
+			applyStoreProperties(cfg, loadStoreProperties("object", CLIParam.object_store_config.getString()));
 			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
@@ -107,7 +93,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 			final boolean directFsExport = CLIParam.direct_fs.isPresent();
 
-			storeProps = loadStoreProperties("content", CLIParam.content_store_config.getString());
 			final String contentStoreName = (directFsExport ? "direct" : "default");
 			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 			if (!directFsExport) {
@@ -118,19 +103,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 				if (!StringUtils.isBlank(strategy)) {
 					cfg.getSettings().put("dir.content.strategy", strategy);
 				}
-				storeType = storeProps.getProperty(AbstractCMSMFMain.STORE_TYPE_PROPERTY);
-				if (!StringUtils.isEmpty(storeType)) {
-					cfg.setType(storeType);
-				}
-				if (!storeProps.isEmpty()) {
-					Map<String, String> m = cfg.getSettings();
-					for (String s : storeProps.stringPropertyNames()) {
-						String v = storeProps.getProperty(s);
-						if (v != null) {
-							m.put(s, v);
-						}
-					}
-				}
+				applyStoreProperties(cfg, loadStoreProperties("content", CLIParam.content_store_config.getString()));
 			}
 			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
@@ -224,5 +197,21 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			this.console.info("No special {} store properties set, using defaulted values", type);
 		}
 		return p;
+	}
+
+	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
+		if ((properties == null) || properties.isEmpty()) { return false; }
+		String storeType = properties.getProperty(AbstractCMSMFMain.STORE_TYPE_PROPERTY);
+		if (!StringUtils.isEmpty(storeType)) {
+			cfg.setType(storeType);
+		}
+		Map<String, String> m = cfg.getSettings();
+		for (String s : properties.stringPropertyNames()) {
+			String v = properties.getProperty(s);
+			if (v != null) {
+				m.put(s, v);
+			}
+		}
+		return true;
 	}
 }
