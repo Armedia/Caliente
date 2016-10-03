@@ -29,8 +29,8 @@ import com.delta.cmsmf.cfg.SettingManager;
 
 public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CMSMFMain {
 
-	private static final String JDBC_XML_PROPERTIES_BASE = "${type}.jdbc.xml";
-	private static final String JDBC_PROPERTIES_BASE = "${type}.jdbc.properties";
+	private static final String JDBC_XML_PROPERTIES_BASE = "cmsmf.${type}.jdbc.xml";
+	private static final String JDBC_PROPERTIES_BASE = "cmsmf.${type}.jdbc.properties";
 
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
 
