@@ -4,13 +4,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +27,8 @@ import com.delta.cmsmf.cfg.SettingManager;
 
 public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CMSMFMain {
 
-	private static final String JDBC_XML_PROPERTIES_BASE = "cmsmf.${type}.jdbc.xml";
-	private static final String JDBC_PROPERTIES_BASE = "cmsmf.${type}.jdbc.properties";
+	private static final String JDBC_XML_PROPERTIES_BASE = "cmsmf.%s.jdbc.xml";
+	private static final String JDBC_PROPERTIES_BASE = "cmsmf.%s.jdbc.properties";
 
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
 
@@ -179,7 +177,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		return f;
 	}
 
-	protected Properties loadJDBCProperties(String type, String jdbcConfig) throws IOException {
+	protected Properties loadJDBCProperties(String type, final String jdbcConfig) throws IOException {
 		if (jdbcConfig != null) {
 			File f = createFile(jdbcConfig);
 			if (!f.exists()) { throw new IOException(
@@ -198,7 +196,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 				ok = true;
 				return p;
 			} catch (InvalidPropertiesFormatException e) {
-				this.console.warn("JDBC properties at [{}] aren't in XML format, trying the classical format",
+				this.console.warn("JDBC {} properties at [{}] aren't in XML format, trying the classical format", type,
 					f.getAbsolutePath());
 				p.clear();
 				IOUtils.closeQuietly(in);
@@ -207,22 +205,21 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 					p.load(in);
 				} catch (IllegalArgumentException e2) {
 					throw new IOException(
-						String.format("Failed to load the JDBC properties from [%s]", f.getAbsolutePath()), e2);
+						String.format("Failed to load the %s JDBC properties from [%s]", type, f.getAbsolutePath()),
+						e2);
 				}
 				ok = true;
 				return p;
 			} finally {
 				IOUtils.closeQuietly(in);
 				if (ok) {
-					this.console.info("Loaded the JDBC properties from [{}]", f.getAbsolutePath());
+					this.console.info("Loaded the {} JDBC properties from [{}]", type, f.getAbsolutePath());
 				}
 			}
 		}
 
-		Map<String, String> m = Collections.singletonMap("type", type);
 		// First, try the XML variant
-		jdbcConfig = StrSubstitutor.replace(AbstractCMSMFMain.JDBC_XML_PROPERTIES_BASE, m);
-		File f = createFile(jdbcConfig);
+		File f = createFile(String.format(AbstractCMSMFMain.JDBC_XML_PROPERTIES_BASE, type));
 		if (f.exists() && f.isFile() && f.canRead()) {
 			Properties p = new Properties();
 			InputStream in = null;
@@ -232,14 +229,13 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 				return p;
 			} catch (Exception e) {
 				throw new IOException(
-					String.format("Failed to load the JDBC properties XML from [%s]", f.getAbsolutePath()), e);
+					String.format("Failed to load the %s JDBC properties XML from [%s]", type, f.getAbsolutePath()), e);
 			} finally {
 				IOUtils.closeQuietly(in);
 			}
 		}
 
-		jdbcConfig = StrSubstitutor.replace(AbstractCMSMFMain.JDBC_PROPERTIES_BASE, m);
-		f = createFile(jdbcConfig);
+		f = createFile(String.format(AbstractCMSMFMain.JDBC_PROPERTIES_BASE, type));
 		if (f.exists() && f.isFile() && f.canRead()) {
 			Properties p = new Properties();
 			InputStream in = null;
@@ -249,7 +245,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 				return p;
 			} catch (Exception e) {
 				throw new IOException(
-					String.format("Failed to load the JDBC properties XML from [%s]", f.getAbsolutePath()), e);
+					String.format("Failed to load the %s JDBC properties XML from [%s]", type, f.getAbsolutePath()), e);
 			} finally {
 				IOUtils.closeQuietly(in);
 			}
