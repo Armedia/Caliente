@@ -7,7 +7,7 @@
 	</settings>
 
 	<objectstore id="dctmTest">
-		<name>jdbc</name>
+		<type>jdbc</type>
 		<settings>
 			<setting name="location.type">pooled</setting>
 			<setting name="jdbc.url">jdbc:h2:${tmpdir}/metadata;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
@@ -16,7 +16,7 @@
 	</objectstore>
 
 	<contentstore id="dctmTest">
-		<name>local</name>
+		<type>local</type>
 		<settings>
 			<setting name="base.dir">${tmpdir}/content</setting>
 			<setting name="uri.strategy">documentum</setting>
