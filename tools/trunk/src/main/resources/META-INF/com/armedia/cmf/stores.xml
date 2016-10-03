@@ -18,7 +18,7 @@
 		</settings>
 	</objectstore>
 
-	<contentstore id="local">
+	<contentstore id="default">
 		<type>local</type>
 		<settings>
 			<setting name="base.dir">${dir.content}</setting>
@@ -32,7 +32,7 @@
 		</settings>
 	</contentstore>
 
-	<contentstore id="default">
+	<contentstore id="jdbc">
 		<type>jdbc</type>
 		<settings>
 			<setting name="location.type">pooled</setting>
