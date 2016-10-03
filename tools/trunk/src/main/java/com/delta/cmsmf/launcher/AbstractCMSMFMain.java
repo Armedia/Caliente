@@ -29,6 +29,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 	private static final String STORE_XML_PROPERTIES_BASE = "cmsmf.%s.store.xml";
 	private static final String STORE_PROPERTIES_BASE = "cmsmf.%s.store.properties";
+	private static final String STORE_TYPE_PROPERTY = "cmsmf.store.type";
 
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
 
@@ -84,29 +85,32 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 			CmfStores.initializeConfigurations();
 
-			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("jdbc");
+			Properties storeProps = loadStoreProperties("object", CLIParam.object_store_config.getString());
 
-			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
-			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
-			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
-
-			Properties jdbcProps = loadStoreProperties("object", CLIParam.object_store_config.getString());
-			if ((jdbcProps != null) && !jdbcProps.isEmpty()) {
+			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("default");
+			String storeType = storeProps.getProperty(AbstractCMSMFMain.STORE_TYPE_PROPERTY);
+			if (!StringUtils.isEmpty(storeType)) {
+				cfg.setType(storeType);
+			}
+			if (!storeProps.isEmpty()) {
 				Map<String, String> m = cfg.getSettings();
-				for (String s : jdbcProps.stringPropertyNames()) {
-					String v = jdbcProps.getProperty(s);
+				for (String s : storeProps.stringPropertyNames()) {
+					String v = storeProps.getProperty(s);
 					if (v != null) {
 						m.put(s, v);
 					}
 				}
 			}
+			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
+			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
+			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 
 			this.cmfObjectStore = CmfStores.createObjectStore(cfg);
 
 			final boolean directFsExport = CLIParam.direct_fs.isPresent();
 
-			// TODO: Add support for configurable content store names
-			final String contentStoreName = (directFsExport ? "direct" : "local");
+			storeProps = loadStoreProperties("content", CLIParam.content_store_config.getString());
+			final String contentStoreName = (directFsExport ? "direct" : "default");
 			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 			if (!directFsExport) {
 				String strategy = CLIParam.content_strategy.getString();
@@ -116,21 +120,23 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 				if (!StringUtils.isBlank(strategy)) {
 					cfg.getSettings().put("dir.content.strategy", strategy);
 				}
+				storeType = storeProps.getProperty(AbstractCMSMFMain.STORE_TYPE_PROPERTY);
+				if (!StringUtils.isEmpty(storeType)) {
+					cfg.setType(storeType);
+				}
+				if (!storeProps.isEmpty()) {
+					Map<String, String> m = cfg.getSettings();
+					for (String s : storeProps.stringPropertyNames()) {
+						String v = storeProps.getProperty(s);
+						if (v != null) {
+							m.put(s, v);
+						}
+					}
+				}
 			}
 			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
-
-			jdbcProps = loadStoreProperties("content", CLIParam.content_store_config.getString());
-			if ((jdbcProps != null) && !jdbcProps.isEmpty()) {
-				Map<String, String> m = cfg.getSettings();
-				for (String s : jdbcProps.stringPropertyNames()) {
-					String v = jdbcProps.getProperty(s);
-					if (v != null) {
-						m.put(s, v);
-					}
-				}
-			}
 
 			this.cmfContentStore = CmfStores.createContentStore(cfg);
 
@@ -178,6 +184,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	}
 
 	protected Properties loadStoreProperties(String type, final String jdbcConfig) throws IOException {
+		Properties p = new Properties();
 		if (jdbcConfig != null) {
 			File f = createFile(jdbcConfig);
 			if (!f.exists()) { throw new IOException(
@@ -187,7 +194,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			if (!f.canRead()) { throw new IOException(
 				String.format("The %s store properties file at [%s] can't be read", type, f.getAbsolutePath())); }
 
-			Properties p = new Properties();
 			InputStream in = null;
 			boolean ok = false;
 			try {
@@ -221,7 +227,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		// First, try the XML variant
 		File f = createFile(String.format(AbstractCMSMFMain.STORE_XML_PROPERTIES_BASE, type));
 		if (f.exists() && f.isFile() && f.canRead()) {
-			Properties p = new Properties();
 			InputStream in = null;
 			try {
 				in = new FileInputStream(f);
@@ -239,7 +244,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 		f = createFile(String.format(AbstractCMSMFMain.STORE_PROPERTIES_BASE, type));
 		if (f.exists() && f.isFile() && f.canRead()) {
-			Properties p = new Properties();
 			InputStream in = null;
 			try {
 				in = new FileInputStream(f);
@@ -256,6 +260,6 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		}
 
 		this.console.info("No special {} store properties set, using defaulted values", type);
-		return null;
+		return p;
 	}
 }
