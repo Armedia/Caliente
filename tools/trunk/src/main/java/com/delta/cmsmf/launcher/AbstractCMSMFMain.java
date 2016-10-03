@@ -90,7 +90,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 
-			Properties jdbcProps = loadJDBCProperties("object", CLIParam.object_store_config.getString());
+			Properties jdbcProps = loadStoreProperties("object", CLIParam.object_store_config.getString());
 			if ((jdbcProps != null) && !jdbcProps.isEmpty()) {
 				Map<String, String> m = cfg.getSettings();
 				for (String s : jdbcProps.stringPropertyNames()) {
@@ -121,7 +121,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 
-			jdbcProps = loadJDBCProperties("content", CLIParam.content_store_config.getString());
+			jdbcProps = loadStoreProperties("content", CLIParam.content_store_config.getString());
 			if ((jdbcProps != null) && !jdbcProps.isEmpty()) {
 				Map<String, String> m = cfg.getSettings();
 				for (String s : jdbcProps.stringPropertyNames()) {
@@ -177,15 +177,15 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		return f;
 	}
 
-	protected Properties loadJDBCProperties(String type, final String jdbcConfig) throws IOException {
+	protected Properties loadStoreProperties(String type, final String jdbcConfig) throws IOException {
 		if (jdbcConfig != null) {
 			File f = createFile(jdbcConfig);
 			if (!f.exists()) { throw new IOException(
-				String.format("The JDBC properties file at [%s] doesn't exist", f.getAbsolutePath())); }
-			if (!f.isFile()) { throw new IOException(
-				String.format("The JDBC properties file at [%s] is not a regular file", f.getAbsolutePath())); }
+				String.format("The %s store properties file at [%s] doesn't exist", type, f.getAbsolutePath())); }
+			if (!f.isFile()) { throw new IOException(String
+				.format("The %s store properties file at [%s] is not a regular file", type, f.getAbsolutePath())); }
 			if (!f.canRead()) { throw new IOException(
-				String.format("The JDBC properties file at [%s] can't be read", f.getAbsolutePath())); }
+				String.format("The %s store properties file at [%s] can't be read", type, f.getAbsolutePath())); }
 
 			Properties p = new Properties();
 			InputStream in = null;
@@ -196,8 +196,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 				ok = true;
 				return p;
 			} catch (InvalidPropertiesFormatException e) {
-				this.console.warn("JDBC {} properties at [{}] aren't in XML format, trying the classical format", type,
-					f.getAbsolutePath());
+				this.console.warn("The {} store properties at [{}] aren't in XML format, trying the classic format",
+					type, f.getAbsolutePath());
 				p.clear();
 				IOUtils.closeQuietly(in);
 				in = new FileInputStream(f);
@@ -205,7 +205,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 					p.load(in);
 				} catch (IllegalArgumentException e2) {
 					throw new IOException(
-						String.format("Failed to load the %s JDBC properties from [%s]", type, f.getAbsolutePath()),
+						String.format("Failed to load the %s store properties from [%s]", type, f.getAbsolutePath()),
 						e2);
 				}
 				ok = true;
@@ -213,7 +213,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			} finally {
 				IOUtils.closeQuietly(in);
 				if (ok) {
-					this.console.info("Loaded the {} JDBC properties from [{}]", type, f.getAbsolutePath());
+					this.console.info("Loaded the {} store properties from [{}]", type, f.getAbsolutePath());
 				}
 			}
 		}
@@ -226,10 +226,12 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			try {
 				in = new FileInputStream(f);
 				p.loadFromXML(in);
+				this.console.info("Loaded the {} store XML properties from [{}]", type, f.getAbsolutePath());
 				return p;
 			} catch (Exception e) {
 				throw new IOException(
-					String.format("Failed to load the %s JDBC properties XML from [%s]", type, f.getAbsolutePath()), e);
+					String.format("Failed to load the %s store properties XML from [%s]", type, f.getAbsolutePath()),
+					e);
 			} finally {
 				IOUtils.closeQuietly(in);
 			}
@@ -242,10 +244,12 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 			try {
 				in = new FileInputStream(f);
 				p.load(in);
+				this.console.info("Loaded the {} store properties from [{}]", type, f.getAbsolutePath());
 				return p;
 			} catch (Exception e) {
 				throw new IOException(
-					String.format("Failed to load the %s JDBC properties XML from [%s]", type, f.getAbsolutePath()), e);
+					String.format("Failed to load the %s store properties XML from [%s]", type, f.getAbsolutePath()),
+					e);
 			} finally {
 				IOUtils.closeQuietly(in);
 			}
