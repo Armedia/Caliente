@@ -46,6 +46,13 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 			" order by o.batch_id, o.object_number" //
 	;
 
+	private static final String RESET_ALT_NAME = //
+		"       update cmf_alt_name " + //
+			"      set new_name = o.object_name " + //
+			"     from cmf_object o " + //
+			"    where cmf_alt_name.object_id = o.object_id " //
+	;
+
 	private static final String TRUNCATE_TABLE_FMT = //
 		"     truncate table %s cascade " //
 	;
@@ -82,6 +89,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.ENABLE_REFERENTIAL_INTEGRITY;
 			case DISABLE_REFERENTIAL_INTEGRITY:
 				return JdbcDialectPostgreSQL.DISABLE_REFERENTIAL_INTEGRITY;
+			case RESET_ALT_NAME:
+				return JdbcDialectPostgreSQL.RESET_ALT_NAME;
 			default:
 				break;
 		}
