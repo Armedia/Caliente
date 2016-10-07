@@ -24,7 +24,6 @@ import com.armedia.cmf.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationS
 import com.armedia.cmf.engine.importer.DefaultImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportEngine;
 import com.armedia.cmf.engine.importer.ImportEngineListener;
-import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.importer.ImportState;
@@ -260,22 +259,14 @@ public class AlfImportEngine extends
 		}
 	};
 
-	private final Map<UUID, ImportState> states = new ConcurrentHashMap<UUID, ImportState>();
-
 	private final ImportEngineListener listener = new DefaultImportEngineListener() {
 
 		private final PrintWriter nullWriter = new PrintWriter(new NullOutputStream());
 		private final Map<UUID, PrintWriter> writers = new ConcurrentHashMap<UUID, PrintWriter>();
 
 		@Override
-		public void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
-			ImportState state = AlfImportEngine.this.states.get(jobId);
-			if (state == null) {
-				this.log.error("Failed to find the import state for job {}", jobId.toString());
-				return;
-			}
-
-			File rootLocation = state.streamStore.getRootLocation();
+		protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
+			File rootLocation = importState.streamStore.getRootLocation();
 			if (rootLocation != null) {
 				// Initialize the manifest for this job
 				File biRoot = new File(rootLocation, AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
@@ -287,11 +278,11 @@ public class AlfImportEngine extends
 				}
 				try {
 					FileUtils.forceMkdir(biRoot);
-					this.writers.put(jobId, new PrintWriter(manifest));
+					this.writers.put(importState.jobId, new PrintWriter(manifest));
 				} catch (IOException e) {
 					// Log a warning
 					this.log.error(String.format("Failed to initialize the output manifest for job %s at [%s]",
-						jobId.toString(), manifest.getAbsolutePath()), e);
+						importState.jobId.toString(), manifest.getAbsolutePath()), e);
 				}
 			}
 		}
@@ -334,7 +325,7 @@ public class AlfImportEngine extends
 		}
 
 		@Override
-		public void importFinished(UUID jobId, Map<ImportResult, Integer> counters) {
+		protected void importFinishedImpl(UUID jobId, Map<ImportResult, Long> counters) {
 			PrintWriter w = getWriter(jobId);
 			w.flush();
 			IOUtils.closeQuietly(w);
@@ -413,21 +404,5 @@ public class AlfImportEngine extends
 	@Override
 	protected Set<String> getTargetNames() {
 		return AlfCommon.TARGETS;
-	}
-
-	@Override
-	protected void prepareImport(ImportState importState) throws CmfStorageException, ImportException {
-		super.prepareImport(importState);
-		this.states.put(importState.jobId, importState);
-	}
-
-	@Override
-	protected void importFinalized(ImportState importState) throws CmfStorageException, ImportException {
-		this.states.remove(importState.jobId);
-	}
-
-	@Override
-	protected void importFailed(ImportState importState) throws CmfStorageException, ImportException {
-		this.states.remove(importState.jobId);
 	}
 }
