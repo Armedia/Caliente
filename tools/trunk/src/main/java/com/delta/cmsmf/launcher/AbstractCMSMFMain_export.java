@@ -365,12 +365,13 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		this.console.info("");
 		this.console.info("Export Summary");
 		this.console.info("");
+		final String format = "%-16s : %12d";
 		for (CmfType t : CmfType.values()) {
 			Integer v = summary.get(t);
 			if ((v == null) || (v.intValue() == 0)) {
 				continue;
 			}
-			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
+			this.console.info(String.format(format, t.name(), v.intValue()));
 		}
 		this.console.info("");
 		Map<ExportResult, Integer> m = this.counter.getCummulative();
@@ -382,7 +383,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			if (i == null) {
 				i = zero;
 			}
-			this.console.info(String.format("%-16s : %8d", r.name(), i.intValue()));
+			this.console.info(String.format(format, r.name(), i.intValue()));
 		}
 		this.console.info("");
 		this.console.info("Export process finished");
