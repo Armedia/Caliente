@@ -21,7 +21,6 @@ import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
-import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -140,7 +139,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to link folder [%s](%s) to user [%s] as its default folder - %s",
 					this.cmfObject.getLabel(), folder.getObjectId().getId(), actualUser, e.getMessage());
-				if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
 			}
@@ -148,7 +146,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				String msg = String.format(
 					"Failed to link folder [%s](%s) to user [%s] as its default folder - the user wasn't found - probably didn't need to be copied over",
 					this.cmfObject.getLabel(), folder.getObjectId().getId(), actualUser);
-				if (context.isSupported(CmfType.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
 			}
@@ -186,7 +183,6 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 					String msg = String.format(
 						"Failed to link folder [%s](%s) to group [%s] as its default folder - the group wasn't found - probably didn't need to be copied over",
 						this.cmfObject.getLabel(), folder.getObjectId().getId(), g);
-					if (context.isSupported(CmfType.GROUP)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 					continue;
 				}
