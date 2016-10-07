@@ -901,13 +901,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	private Map<CmfType, Integer> getStoredObjectTypes(Connection c) throws CmfStorageException {
+	private Map<CmfType, Long> getStoredObjectTypes(Connection c) throws CmfStorageException {
 		try {
 			return new QueryRunner().query(c, translateQuery(JdbcDialect.Query.LOAD_OBJECT_TYPES),
-				new ResultSetHandler<Map<CmfType, Integer>>() {
+				new ResultSetHandler<Map<CmfType, Long>>() {
 					@Override
-					public Map<CmfType, Integer> handle(ResultSet rs) throws SQLException {
-						Map<CmfType, Integer> ret = new EnumMap<CmfType, Integer>(CmfType.class);
+					public Map<CmfType, Long> handle(ResultSet rs) throws SQLException {
+						Map<CmfType, Long> ret = new EnumMap<CmfType, Long>(CmfType.class);
 						while (rs.next()) {
 							String t = rs.getString(1);
 							if ((t == null) || rs.wasNull()) {
@@ -915,7 +915,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 								continue;
 							}
 							try {
-								ret.put(CmfType.decodeString(t), rs.getInt(2));
+								ret.put(CmfType.decodeString(t), rs.getLong(2));
 							} catch (IllegalArgumentException e) {
 								JdbcObjectStore.this.log
 									.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
@@ -931,7 +931,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<CmfType, Integer> getStoredObjectTypes(JdbcOperation operation) throws CmfStorageException {
+	protected Map<CmfType, Long> getStoredObjectTypes(JdbcOperation operation) throws CmfStorageException {
 		return getStoredObjectTypes(operation.getConnection());
 	}
 
