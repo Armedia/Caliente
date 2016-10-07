@@ -135,7 +135,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void exportStarted(ExportState exportState) {
+	protected void exportStartedImpl(ExportState exportState) {
 		this.openBatches.clear();
 		this.manifestLog.info(String.format(ExportManifest.RECORD_FORMAT, "DATE", "TYPE", "RESULT", "BATCH_ID",
 			"SOURCE_ID", "LABEL", "ERROR_DATA"));

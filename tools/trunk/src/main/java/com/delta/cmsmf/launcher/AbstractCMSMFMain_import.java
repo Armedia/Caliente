@@ -23,6 +23,7 @@ import com.armedia.cmf.engine.importer.ImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
 import com.armedia.cmf.engine.importer.ImportSetting;
+import com.armedia.cmf.engine.importer.ImportState;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfObjectCounter;
 import com.armedia.cmf.storage.CmfType;
@@ -40,8 +41,8 @@ public abstract class AbstractCMSMFMain_import
 	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
 	private final AtomicInteger aggregateCurrent = new AtomicInteger(0);
 
-	private final Map<CmfType, Integer> total = new HashMap<CmfType, Integer>();
-	private final Map<CmfType, AtomicInteger> current = new HashMap<CmfType, AtomicInteger>();
+	private final Map<CmfType, Long> total = new HashMap<CmfType, Long>();
+	private final Map<CmfType, AtomicLong> current = new HashMap<CmfType, AtomicLong>();
 
 	public AbstractCMSMFMain_import(ImportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine, true, false);
@@ -192,25 +193,25 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
+	public final void importStarted(ImportState importState, Map<CmfType, Long> summary) {
 		this.aggregateCurrent.set(0);
 		this.total.clear();
 		this.current.clear();
 		this.console.info("Import process started");
 		for (CmfType t : CmfType.values()) {
-			Integer v = summary.get(t);
-			if ((v == null) || (v.intValue() == 0)) {
+			Long v = summary.get(t);
+			if ((v == null) || (v.longValue() == 0)) {
 				continue;
 			}
-			this.console.info(String.format("%-16s : %8d", t.name(), v.intValue()));
+			this.console.info(String.format("%-16s : %8d", t.name(), v.longValue()));
 			this.aggregateTotal.addAndGet(v.intValue());
 			this.total.put(t, v);
-			this.current.put(t, new AtomicInteger(0));
+			this.current.put(t, new AtomicLong(0));
 		}
 	}
 
 	@Override
-	public final void objectTypeImportStarted(UUID jobId, CmfType objectType, int totalObjects) {
+	public final void objectTypeImportStarted(UUID jobId, CmfType objectType, long totalObjects) {
 		showProgress(objectType);
 		this.console.info(String.format("Object import started for %d %s objects", totalObjects, objectType.name()));
 	}
@@ -253,27 +254,27 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Integer> counters) {
+	public final void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Long> counters) {
 		this.console.info(String.format("Finished importing %s objects", objectType.name()));
 		for (ImportResult r : ImportResult.values()) {
-			Integer v = counters.get(r);
-			if ((v == null) || (v.intValue() == 0)) {
+			Long v = counters.get(r);
+			if ((v == null) || (v.longValue() == 0)) {
 				continue;
 			}
-			this.console.info(String.format("%-10s: %8d", r.name(), v.intValue()));
+			this.console.info(String.format("%-10s: %8d", r.name(), v.longValue()));
 		}
 		showProgress(objectType);
 	}
 
 	@Override
-	public final void importFinished(UUID jobId, Map<ImportResult, Integer> counters) {
+	public final void importFinished(UUID jobId, Map<ImportResult, Long> counters) {
 		this.console.info("Import process finished");
 		for (ImportResult r : ImportResult.values()) {
-			Integer v = counters.get(r);
-			if ((v == null) || (v.intValue() == 0)) {
+			Long v = counters.get(r);
+			if ((v == null) || (v.longValue() == 0)) {
 				continue;
 			}
-			this.console.info(String.format("%-10s: %8d", r.name(), v.intValue()));
+			this.console.info(String.format("%-10s: %8d", r.name(), v.longValue()));
 		}
 		showProgress(null);
 	}

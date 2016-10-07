@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import com.armedia.cmf.engine.importer.DefaultImportEngineListener;
 import com.armedia.cmf.engine.importer.ImportOutcome;
 import com.armedia.cmf.engine.importer.ImportResult;
+import com.armedia.cmf.engine.importer.ImportState;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
@@ -105,7 +106,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
+	protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
 		// Clear manifest
 		this.openBatches.clear();
 		this.manifestLog.info(String.format(ImportManifest.RECORD_FORMAT, "DATE", "TYPE", "RESULT", "BATCH_ID",
@@ -172,7 +173,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void importFinished(UUID jobId, Map<ImportResult, Integer> counters) {
+	protected void importFinishedImpl(UUID jobId, Map<ImportResult, Long> counters) {
 		// We're done...
 	}
 }

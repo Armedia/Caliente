@@ -147,7 +147,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			Setting.THREADS.getInt(AbstractCMSMFMain.DEFAULT_THREADS));
 
 		Date end = null;
-		Map<CmfType, Integer> summary = null;
+		Map<CmfType, Long> summary = null;
 		String exceptionReport = null;
 		StringBuilder report = new StringBuilder();
 		Date start = null;
@@ -273,9 +273,9 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 
 		if (summary != null) {
 			report.append(String.format("%n%n%nExported Object Summary:%n")).append(StringUtils.repeat("=", 30));
-			int total = 0;
+			long total = 0;
 			for (CmfType t : summary.keySet()) {
-				Integer count = summary.get(t);
+				Long count = summary.get(t);
 				if ((count == null) || (count == 0)) {
 					continue;
 				}
@@ -288,11 +288,11 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		report.append(String.format("%n%n%nFull Result Report:%n")).append(StringUtils.repeat("=", 30));
 		report.append(String.format("%n%s%n", this.counter.generateFullReport(0)));
 
-		Map<ExportResult, Integer> m = this.counter.getCummulative();
-		final Integer zero = Integer.valueOf(0);
+		Map<ExportResult, Long> m = this.counter.getCummulative();
+		final Long zero = Long.valueOf(0);
 		report.append(String.format("Result summary:%n%n")).append(StringUtils.repeat("=", 30));
 		for (ExportResult r : ExportResult.values()) {
-			Integer i = m.get(r);
+			Long i = m.get(r);
 			if (i == null) {
 				i = zero;
 			}
@@ -361,29 +361,29 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	}
 
 	@Override
-	public final void exportFinished(ExportState exportState, Map<CmfType, Integer> summary) {
+	public final void exportFinished(UUID jobId, Map<CmfType, Long> summary) {
 		this.console.info("");
 		this.console.info("Export Summary");
 		this.console.info("");
 		final String format = "%-16s : %12d";
 		for (CmfType t : CmfType.values()) {
-			Integer v = summary.get(t);
-			if ((v == null) || (v.intValue() == 0)) {
+			Long v = summary.get(t);
+			if ((v == null) || (v.longValue() == 0)) {
 				continue;
 			}
-			this.console.info(String.format(format, t.name(), v.intValue()));
+			this.console.info(String.format(format, t.name(), v.longValue()));
 		}
 		this.console.info("");
-		Map<ExportResult, Integer> m = this.counter.getCummulative();
-		final Integer zero = Integer.valueOf(0);
+		Map<ExportResult, Long> m = this.counter.getCummulative();
+		final Long zero = Long.valueOf(0);
 		this.console.info("Result summary:");
 		this.console.info("");
 		for (ExportResult r : ExportResult.values()) {
-			Integer i = m.get(r);
+			Long i = m.get(r);
 			if (i == null) {
 				i = zero;
 			}
-			this.console.info(String.format(format, r.name(), i.intValue()));
+			this.console.info(String.format(format, r.name(), i.longValue()));
 		}
 		this.console.info("");
 		this.console.info("Export process finished");
