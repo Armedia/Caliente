@@ -748,7 +748,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		return this.mapper.constructMapping(type, name, source, target);
 	}
 
-	public final Map<CmfType, Integer> getStoredObjectTypes() throws CmfStorageException {
+	public final Map<CmfType, Long> getStoredObjectTypes() throws CmfStorageException {
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -764,7 +764,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract Map<CmfType, Integer> getStoredObjectTypes(O operation) throws CmfStorageException;
+	protected abstract Map<CmfType, Long> getStoredObjectTypes(O operation) throws CmfStorageException;
 
 	public final CmfAttributeMapper getAttributeMapper() {
 		return this.mapper;
