@@ -113,7 +113,7 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected boolean abortImport(CmfType type, int errors) {
+	protected boolean abortImport(CmfType type, long errors) {
 		if (type == CmfType.DATASTORE) {
 			// We MUST have all datastores present
 			return (errors > 0);
