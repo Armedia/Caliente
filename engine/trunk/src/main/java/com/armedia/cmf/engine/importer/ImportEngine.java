@@ -133,10 +133,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void importStarted(UUID jobId, Map<CmfType, Integer> summary) {
+		public void importStarted(ImportState importState, Map<CmfType, Long> summary) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
-					l.importStarted(jobId, summary);
+					l.importStarted(importState, summary);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -146,7 +146,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectTypeImportStarted(UUID jobId, CmfType objectType, int totalObjects) {
+		public void objectTypeImportStarted(UUID jobId, CmfType objectType, long totalObjects) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectTypeImportStarted(jobId, objectType, totalObjects);
@@ -200,7 +200,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Integer> counters) {
+		public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Long> counters) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectTypeImportFinished(jobId, objectType, counters);
@@ -213,7 +213,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void importFinished(UUID jobId, Map<ImportResult, Integer> counters) {
+		public void importFinished(UUID jobId, Map<ImportResult, Long> counters) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.importFinished(jobId, counters);
@@ -313,82 +313,66 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		final CfgTools configuration = new CfgTools(settings);
 
-		ImportState importState = new ImportState(output, objectStore, streamStore, configuration);
-
-		prepareImport(importState);
-		boolean ok = false;
+		final ImportState importState = new ImportState(output, objectStore, streamStore, configuration);
+		final SessionFactory<S> sessionFactory;
 		try {
+			sessionFactory = newSessionFactory(configuration, this.crypto);
+		} catch (Exception e) {
+			throw new ImportException("Failed to configure the session factory to carry out the import", e);
+		}
 
-			final SessionFactory<S> sessionFactory;
+		try {
+			SessionWrapper<S> baseSession = null;
 			try {
-				sessionFactory = newSessionFactory(configuration, this.crypto);
+				baseSession = sessionFactory.acquireSession();
 			} catch (Exception e) {
-				throw new ImportException("Failed to configure the session factory to carry out the import", e);
+				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
+			ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
+			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
+			CmfTypeMapper typeMapper = null;
 			try {
-				SessionWrapper<S> baseSession = null;
 				try {
-					baseSession = sessionFactory.acquireSession();
+					contextFactory = newContextFactory(baseSession.getWrapped(), configuration);
 				} catch (Exception e) {
-					throw new ImportException("Failed to obtain the import initialization session", e);
+					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}
-
-				ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
-				ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
-				CmfTypeMapper typeMapper = null;
 				try {
-					try {
-						contextFactory = newContextFactory(baseSession.getWrapped(), configuration);
-					} catch (Exception e) {
-						throw new ImportException("Failed to configure the context factory to carry out the import", e);
-					}
-					try {
-						delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
-					} catch (Exception e) {
-						throw new ImportException("Failed to configure the delegate factory to carry out the import",
-							e);
-					}
-
-					try {
-						typeMapper = getTypeMapper(baseSession.getWrapped(), configuration);
-					} catch (Exception e) {
-						throw new ImportException("Failed to configure the required type mapper", e);
-					}
-
-					try {
-						baseSession.close();
-					} finally {
-						baseSession = null;
-					}
-
-					CmfObjectCounter<ImportResult> result = runImportImpl(importState, sessionFactory, counter,
-						contextFactory, delegateFactory, typeMapper);
-					ok = true;
-					return result;
-				} finally {
-					if (baseSession != null) {
-						baseSession.close();
-					}
-					if (typeMapper != null) {
-						typeMapper.close();
-					}
-					if (delegateFactory != null) {
-						delegateFactory.close();
-					}
-					if (contextFactory != null) {
-						contextFactory.close();
-					}
+					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
+				} catch (Exception e) {
+					throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
 				}
+
+				try {
+					typeMapper = getTypeMapper(baseSession.getWrapped(), configuration);
+				} catch (Exception e) {
+					throw new ImportException("Failed to configure the required type mapper", e);
+				}
+
+				try {
+					baseSession.close();
+				} finally {
+					baseSession = null;
+				}
+
+				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, typeMapper);
 			} finally {
-				sessionFactory.close();
+				if (baseSession != null) {
+					baseSession.close();
+				}
+				if (typeMapper != null) {
+					typeMapper.close();
+				}
+				if (delegateFactory != null) {
+					delegateFactory.close();
+				}
+				if (contextFactory != null) {
+					contextFactory.close();
+				}
 			}
 		} finally {
-			if (ok) {
-				importFinalized(importState);
-			} else {
-				importFailed(importState);
-			}
+			sessionFactory.close();
 		}
 	}
 
@@ -661,7 +645,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		};
 
 		try {
-			Map<CmfType, Integer> containedTypes;
+			Map<CmfType, Long> containedTypes;
 			try {
 				containedTypes = objectStore.getStoredObjectTypes();
 			} catch (CmfStorageException e) {
@@ -678,7 +662,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			List<Future<?>> futures = new ArrayList<Future<?>>();
 			List<Batch> remaining = new ArrayList<Batch>();
 			objectStore.clearAttributeMappings();
-			listenerDelegator.importStarted(jobId, containedTypes);
+			listenerDelegator.importStarted(importState, containedTypes);
 
 			// Ensure the target path exists
 			{
@@ -767,7 +751,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			final CmfAttributeTranslator<V> translator = getTranslator();
 			for (final CmfType type : CmfType.values()) {
-				final Integer total = containedTypes.get(type);
+				final Long total = containedTypes.get(type);
 				if (total == null) {
 					this.log.warn(String.format("No %s objects are contained in the export", type.name()));
 					continue;
@@ -802,7 +786,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				// dictate how the parallelism will work (i.e. batches are parallel and
 				// their contents serialized, or batches' contents are parallel and batches
 				// are serialized).
-				final int workerCount = (strategy.isParallelCapable() ? Math.min(total, threadCount) : 1);
+				final long workerCount = (strategy.isParallelCapable() ? Math.min(total, threadCount) : 1);
 				for (int i = 0; i < workerCount; i++) {
 					futures.add(executor.submit(worker));
 				}
@@ -1025,8 +1009,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 
 				// Finally, decide what to do if errors were encountered
-				final Map<ImportResult, Integer> results = listenerDelegator.getCounters(type);
-				final int errorCount = results.get(ImportResult.FAILED);
+				final Map<ImportResult, Long> results = listenerDelegator.getCounters(type);
+				final long errorCount = results.get(ImportResult.FAILED);
 				if (abortImport(type, errorCount)) {
 					this.log.info(
 						String.format("Import aborted due to %d errors detected while importing objects of type %s",
@@ -1072,7 +1056,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	protected boolean abortImport(CmfType type, int errors) {
+	protected boolean abortImport(CmfType type, long errors) {
 		return false;
 	}
 
@@ -1085,18 +1069,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	protected void initContext(C ctx) {
-	}
-
-	protected void prepareImport(ImportState importState) throws CmfStorageException, ImportException {
-		// In case we wish to do something before the import process runs...
-	}
-
-	protected void importFinalized(ImportState importState) throws CmfStorageException, ImportException {
-		// In case we need to do some cleanup
-	}
-
-	protected void importFailed(ImportState importState) throws CmfStorageException, ImportException {
-		// In case we need to do some cleanup
 	}
 
 	@Override

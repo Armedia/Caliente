@@ -161,10 +161,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void exportFinished(ExportState exportState, Map<CmfType, Integer> summary) {
+		public void exportFinished(UUID jobId, Map<CmfType, Long> summary) {
 			for (ExportEngineListener l : this.listeners) {
 				try {
-					l.exportFinished(exportState, summary);
+					l.exportFinished(jobId, summary);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -803,13 +803,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			results.close();
 			baseSession.close(false);
 
-			Map<CmfType, Integer> summary = Collections.emptyMap();
+			Map<CmfType, Long> summary = Collections.emptyMap();
 			try {
 				summary = objectStore.getStoredObjectTypes();
 			} catch (CmfStorageException e) {
 				this.log.warn("Exception caught attempting to get the work summary", e);
 			}
-			listenerDelegator.exportFinished(exportState, summary);
+			listenerDelegator.exportFinished(exportState.jobId, summary);
 		}
 	}
 

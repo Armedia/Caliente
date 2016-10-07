@@ -91,15 +91,15 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 			return this.counter;
 		}
 
-		public final Map<R, Integer> getCummulative() {
+		public final Map<R, Long> getCummulative() {
 			return this.counter.getCummulative();
 		}
 
-		public final Map<CmfType, Map<R, Integer>> getCounters() {
+		public final Map<CmfType, Map<R, Long>> getCounters() {
 			return this.counter.getCounters();
 		}
 
-		public final Map<R, Integer> getCounters(CmfType type) {
+		public final Map<R, Long> getCounters(CmfType type) {
 			return this.counter.getCounters(type);
 		}
 	}

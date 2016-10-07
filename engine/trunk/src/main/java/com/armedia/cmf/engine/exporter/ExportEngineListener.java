@@ -1,6 +1,7 @@
 package com.armedia.cmf.engine.exporter;
 
 import java.util.Map;
+import java.util.UUID;
 
 import com.armedia.cmf.storage.CmfType;
 
@@ -20,5 +21,5 @@ public interface ExportEngineListener extends ExportListener {
 	 * </p>
 	 *
 	 */
-	public void exportFinished(ExportState exportState, Map<CmfType, Integer> summary);
+	public void exportFinished(UUID jobId, Map<CmfType, Long> summary);
 }

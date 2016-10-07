@@ -16,7 +16,7 @@ public interface ImportEngineListener extends ImportListener {
 	 *
 	 * @param summary
 	 */
-	public void importStarted(UUID jobId, Map<CmfType, Integer> summary);
+	public void importStarted(ImportState importState, Map<CmfType, Long> summary);
 
 	/**
 	 * <p>
@@ -27,7 +27,7 @@ public interface ImportEngineListener extends ImportListener {
 	 * @param objectType
 	 * @param totalObjects
 	 */
-	public void objectTypeImportStarted(UUID jobId, CmfType objectType, int totalObjects);
+	public void objectTypeImportStarted(UUID jobId, CmfType objectType, long totalObjects);
 
 	/**
 	 * <p>
@@ -38,7 +38,7 @@ public interface ImportEngineListener extends ImportListener {
 	 * @param objectType
 	 * @param counters
 	 */
-	public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Integer> counters);
+	public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Long> counters);
 
 	/**
 	 * <p>
@@ -48,5 +48,5 @@ public interface ImportEngineListener extends ImportListener {
 	 *
 	 * @param counters
 	 */
-	public void importFinished(UUID jobId, Map<ImportResult, Integer> counters);
+	public void importFinished(UUID jobId, Map<ImportResult, Long> counters);
 }
