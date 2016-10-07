@@ -194,7 +194,7 @@ public class XmlImportDelegateFactory
 		}
 
 		@Override
-		public void objectTypeImportFinished(UUID jobId, CmfType cmfType, Map<ImportResult, Integer> counters) {
+		public void objectTypeImportFinished(UUID jobId, CmfType cmfType, Map<ImportResult, Long> counters) {
 			AggregatorBase<?> root = XmlImportDelegateFactory.this.xml.get(cmfType);
 			if ((root == null) || (root.getCount() == 0)) {
 				// If there is no aggregator, or it's empty, skip it
