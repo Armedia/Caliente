@@ -830,15 +830,24 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			public Long call() throws Exception {
 				long cached = 0;
 				store.clearTargetCache();
+				final long start = System.currentTimeMillis();
 				while (true) {
 					Collection<CmfObjectSpec> c = queue.take();
+					final long now = System.currentTimeMillis();
 					if (c.isEmpty()) {
 						// We're done
 						return cached;
 					}
 
 					try {
-						output.info("Caching {} targets ({} total so far)", c.size(), cached);
+						if (cached > 0) {
+							double perSecond = ((double) cached) / ((double) (now - start));
+							double msPer = ((double) (now - start)) / ((double) cached);
+							output.info("Caching {} targets ({} total so far @ {}/s | {}ms per item)", c.size(), cached,
+								perSecond, msPer);
+						} else {
+							output.info("Caching {} targets ({} total so far)", c.size(), cached);
+						}
 						store.cacheTargets(c);
 						cached += c.size();
 					} finally {
