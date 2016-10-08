@@ -841,10 +841,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 					try {
 						if (cached > 0) {
-							double perSecond = ((double) cached) / ((double) (now - start));
+							double perSecond = (((double) cached) / ((double) (now - start))) * 1000;
 							double msPer = ((double) (now - start)) / ((double) cached);
-							output.info("Caching {} targets ({} total so far @ {}/s | {}ms per item)", c.size(), cached,
-								perSecond, msPer);
+							output.info("Caching {} targets ({} total so far @ {} items/s | {} ms per item)", c.size(),
+								cached, String.format("%.2f", perSecond), String.format("%.2f", msPer));
 						} else {
 							output.info("Caching {} targets ({} total so far)", c.size(), cached);
 						}
