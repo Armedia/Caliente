@@ -161,7 +161,7 @@ public class FilenameMapper {
 		}
 	}
 
-	private static final IdValidator ID_VALIDATOR = new IdValidator() {
+	private static final IdValidator<CmfObjectRef> ID_VALIDATOR = new IdValidator<CmfObjectRef>() {
 
 		@Override
 		public boolean isValidId(CmfObjectRef id) {
@@ -353,7 +353,8 @@ public class FilenameMapper {
 		}
 
 		try {
-			final FilenameDeduplicator deduplicator = new FilenameDeduplicator(FilenameMapper.ID_VALIDATOR);
+			final FilenameDeduplicator<CmfObjectRef> deduplicator = new FilenameDeduplicator<CmfObjectRef>(
+				FilenameMapper.ID_VALIDATOR);
 
 			IDfSession session = dfcPool.acquireSession();
 			final Runtime runtime = Runtime.getRuntime();
@@ -435,7 +436,7 @@ public class FilenameMapper {
 					final Map<String, Object> resolverMap = new HashMap<String, Object>();
 					// This is the only one that never changes...so we add it once and never again
 					resolverMap.put("fixChar", Tools.coalesce(fixChar, FilenameMapper.DEFAULT_FIX_CHAR).toString());
-					long fixes = deduplicator.fixConflicts(new ConflictResolver() {
+					long fixes = deduplicator.fixConflicts(new ConflictResolver<CmfObjectRef>() {
 						@Override
 						public String resolveConflict(CmfObjectRef entryId, String currentName, long count) {
 							resolverMap.put("typeName", entryId.getType().name());
@@ -452,7 +453,7 @@ public class FilenameMapper {
 						}
 					});
 					FilenameMapper.log.info("Conflicts fixed: {}", fixes);
-					deduplicator.processRenamedEntries(new Processor() {
+					deduplicator.processRenamedEntries(new Processor<CmfObjectRef>() {
 						@Override
 						public void processEntry(CmfObjectRef entryId, String entryName) {
 							String key = FilenameMapper.generateKey(entryId);

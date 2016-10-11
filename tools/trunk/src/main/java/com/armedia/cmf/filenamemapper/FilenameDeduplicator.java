@@ -21,29 +21,29 @@ import com.armedia.cmf.storage.CmfObjectRef;
 import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.Tools;
 
-public class FilenameDeduplicator {
+public class FilenameDeduplicator<R extends CmfObjectRef> {
 
-	public static interface IdValidator {
-		public boolean isValidId(CmfObjectRef id);
+	public static interface IdValidator<R extends CmfObjectRef> {
+		public boolean isValidId(R id);
 	}
 
-	public static interface Renamer {
-		public String getNewName(CmfObjectRef entryId, String currentName);
+	public static interface Renamer<R extends CmfObjectRef> {
+		public String getNewName(R entryId, String currentName);
 	}
 
-	public static interface ConflictResolver {
-		public String resolveConflict(CmfObjectRef entryId, String currentName, long count);
+	public static interface ConflictResolver<R extends CmfObjectRef> {
+		public String resolveConflict(R entryId, String currentName, long count);
 	}
 
-	public static interface Processor {
-		public void processEntry(CmfObjectRef entryId, String entryName);
+	public static interface Processor<R extends CmfObjectRef> {
+		public void processEntry(R entryId, String entryName);
 	}
 
 	private class FSObject {
 		protected final ReadWriteLock mainLock = new ReentrantReadWriteLock();
-		protected final CmfObjectRef id;
+		protected final R id;
 
-		private FSObject(CmfObjectRef id) {
+		private FSObject(R id) {
 			if (id == null) { throw new IllegalArgumentException("Must provide a non-null id"); }
 			this.id = id;
 		}
@@ -56,24 +56,25 @@ public class FilenameDeduplicator {
 		@Override
 		public final boolean equals(Object obj) {
 			if (!Tools.baseEquals(this, obj)) { return false; }
-			FSObject other = FSObject.class.cast(obj);
+			@SuppressWarnings("unchecked")
+			FSObject other = (FSObject) obj;
 			if (getOuterType() != other.getOuterType()) { return false; }
 			if (!Tools.equals(this.id, other.id)) { return false; }
 			return true;
 		}
 
-		private FilenameDeduplicator getOuterType() {
+		private FilenameDeduplicator<R> getOuterType() {
 			return FilenameDeduplicator.this;
 		}
 	}
 
 	private class FSEntry extends FSObject implements Comparable<FSEntry> {
 		private final ReadWriteLock parentsLock = new ReentrantReadWriteLock();
-		private final Map<CmfObjectRef, FSEntryContainer> parents = new HashMap<CmfObjectRef, FSEntryContainer>();
+		private final Map<R, FSEntryContainer> parents = new HashMap<R, FSEntryContainer>();
 		private final String originalName;
 		private String newName = null;
 
-		private FSEntry(CmfObjectRef id, String originalName) {
+		private FSEntry(R id, String originalName) {
 			super(id);
 			if (StringUtils
 				.isEmpty(originalName)) { throw new IllegalArgumentException("Must provide a non-null original name"); }
@@ -136,7 +137,7 @@ public class FilenameDeduplicator {
 			if (r != 0) { return r; }
 
 			// Then, the one with the "newest" ID sorts first
-			r = Tools.compare(this.id, o.id);
+			r = Tools.compare(this.id.getId(), o.id.getId());
 			if (r != 0) { return -r; }
 
 			return 0;
@@ -148,20 +149,20 @@ public class FilenameDeduplicator {
 		private final ReadWriteLock childrenLock = new ReentrantReadWriteLock();
 
 		// Children, indexed by name...
-		private final Map<String, Map<CmfObjectRef, FSEntry>> children = new HashMap<String, Map<CmfObjectRef, FSEntry>>();
+		private final Map<String, Map<R, FSEntry>> children = new HashMap<String, Map<R, FSEntry>>();
 
 		private final ReadWriteLock conflictsLock = new ReentrantReadWriteLock();
 
 		// Names that are in conflict...
 		private final Set<String> conflicts = new HashSet<String>();
 
-		private FSEntryContainer(CmfObjectRef id) {
+		private FSEntryContainer(R id) {
 			super(id);
 		}
 
 		private void addChild(FSEntry child) {
 			if (child == null) { throw new IllegalArgumentException("Must provide a non-null child"); }
-			Map<CmfObjectRef, FSEntry> namedChildren = null;
+			Map<R, FSEntry> namedChildren = null;
 			final boolean newConflict;
 
 			Lock l = this.childrenLock.writeLock();
@@ -171,7 +172,7 @@ public class FilenameDeduplicator {
 				if (namedChildren == null) {
 					// This is a new object name, so we create the map to contain
 					// all entries with that name
-					namedChildren = new HashMap<CmfObjectRef, FSEntry>();
+					namedChildren = new HashMap<R, FSEntry>();
 					this.children.put(child.newName, namedChildren);
 				}
 				namedChildren.put(child.id, child);
@@ -199,7 +200,7 @@ public class FilenameDeduplicator {
 			Lock l = this.childrenLock.writeLock();
 			l.lock();
 			try {
-				final Map<CmfObjectRef, FSEntry> oldNamedChildren = this.children.get(oldName);
+				final Map<R, FSEntry> oldNamedChildren = this.children.get(oldName);
 				if (oldNamedChildren == null) {
 					// ERROR!! Parent link defect
 					throw new IllegalStateException("An entry refers to a parent that knows nothing about it");
@@ -207,9 +208,9 @@ public class FilenameDeduplicator {
 				oldNamedChildren.remove(child.id);
 				oldSize = oldNamedChildren.size();
 
-				Map<CmfObjectRef, FSEntry> newNamedChildren = this.children.get(child.newName);
+				Map<R, FSEntry> newNamedChildren = this.children.get(child.newName);
 				if (newNamedChildren == null) {
-					newNamedChildren = new HashMap<CmfObjectRef, FSEntry>();
+					newNamedChildren = new HashMap<R, FSEntry>();
 					this.children.put(child.newName, newNamedChildren);
 				}
 				newNamedChildren.put(child.id, child);
@@ -277,33 +278,40 @@ public class FilenameDeduplicator {
 		}
 	}
 
-	private static final IdValidator DEFAULT_VALIDATOR = new IdValidator() {
+	protected static class DefaultIdValidator<R extends CmfObjectRef> implements IdValidator<R> {
 		@Override
-		public boolean isValidId(CmfObjectRef id) {
+		public boolean isValidId(R id) {
 			return (id != null) && (id.getType() != null) && (id.getId() != null);
 		}
-	};
+	}
+
+	protected static final <R extends CmfObjectRef> IdValidator<R> getDefaultValidator() {
+		return new DefaultIdValidator<R>();
+	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final LockDispenser<CmfObjectRef, Object> containerLocks = LockDispenser.getBasic();
-	private final Map<CmfObjectRef, FSEntryContainer> containers = new ConcurrentHashMap<CmfObjectRef, FSEntryContainer>();
+	private final LockDispenser<R, Object> containerLocks = LockDispenser.getBasic();
+	private final Map<R, FSEntryContainer> containers = new ConcurrentHashMap<R, FSEntryContainer>();
 
-	private final LockDispenser<CmfObjectRef, Object> allEntriesLocks = LockDispenser.getBasic();
-	private final Map<CmfObjectRef, FSEntry> allEntries = new ConcurrentHashMap<CmfObjectRef, FSEntry>();
+	private final LockDispenser<R, Object> allEntriesLocks = LockDispenser.getBasic();
+	private final Map<R, FSEntry> allEntries = new ConcurrentHashMap<R, FSEntry>();
 
-	private final Map<CmfObjectRef, FSEntryContainer> conflictContainers = new ConcurrentHashMap<CmfObjectRef, FSEntryContainer>();
+	private final Map<R, FSEntryContainer> conflictContainers = new ConcurrentHashMap<R, FSEntryContainer>();
 
-	private final Map<CmfObjectRef, FSEntry> renamedEntries = new ConcurrentHashMap<CmfObjectRef, FSEntry>();
+	private final Map<R, FSEntry> renamedEntries = new ConcurrentHashMap<R, FSEntry>();
 
-	private final IdValidator idValidator;
+	private final IdValidator<R> idValidator;
 
 	public FilenameDeduplicator() {
 		this(null);
 	}
 
-	public FilenameDeduplicator(IdValidator idValidator) {
-		this.idValidator = Tools.coalesce(idValidator, FilenameDeduplicator.DEFAULT_VALIDATOR);
+	public FilenameDeduplicator(IdValidator<R> idValidator) {
+		if (idValidator == null) {
+			idValidator = FilenameDeduplicator.getDefaultValidator();
+		}
+		this.idValidator = idValidator;
 	}
 
 	private void conflictsDetected(FSEntryContainer container) {
@@ -314,7 +322,7 @@ public class FilenameDeduplicator {
 		this.conflictContainers.remove(container.id);
 	}
 
-	private FSEntryContainer getContainer(CmfObjectRef id) {
+	private FSEntryContainer getContainer(R id) {
 		synchronized (this.containerLocks.getLock(id)) {
 			FSEntryContainer ret = this.containers.get(id);
 			if (ret == null) {
@@ -325,7 +333,7 @@ public class FilenameDeduplicator {
 		}
 	}
 
-	public synchronized long renameEntries(Renamer renamer) {
+	public synchronized long renameEntries(Renamer<R> renamer) {
 		long count = 0;
 		for (FSEntry e : this.allEntries.values()) {
 			final String newName = renamer.getNewName(e.id, e.newName);
@@ -336,17 +344,17 @@ public class FilenameDeduplicator {
 		return count;
 	}
 
-	public synchronized long fixConflicts(ConflictResolver resolver) {
+	public synchronized long fixConflicts(ConflictResolver<R> resolver) {
 		return fixConflicts(resolver, null);
 	}
 
-	public synchronized long fixConflicts(ConflictResolver resolver, Comparator<FSEntry> comparator) {
+	public synchronized long fixConflicts(ConflictResolver<R> resolver, Comparator<FSEntry> comparator) {
 		long count = 0;
 		nextConflict: while (!this.conflictContainers.isEmpty()) {
 			int deltas = 0;
 			for (FSEntryContainer c : this.conflictContainers.values()) {
 				for (String s : c.conflicts) {
-					Map<CmfObjectRef, FSEntry> conflictEntries = c.children.get(s);
+					Map<R, FSEntry> conflictEntries = c.children.get(s);
 					// Sort the entries...this will only be slow when there are many, MANY
 					// entries with a naming conflict. By taking this approach, we make it
 					// so that we're now able to choose what order the entries will be renamed
@@ -395,20 +403,20 @@ public class FilenameDeduplicator {
 		for (FSEntryContainer c : this.conflictContainers.values()) {
 			output.info("Container [{}]", c.id, c.conflicts);
 			for (String s : c.conflicts) {
-				Map<CmfObjectRef, FSEntry> conflictEntries = c.children.get(s);
+				Map<R, FSEntry> conflictEntries = c.children.get(s);
 				output.info("\t{} : {}", s, conflictEntries.size());
 			}
 		}
 	}
 
-	public synchronized void processRenamedEntries(Processor p) {
+	public synchronized void processRenamedEntries(Processor<R> p) {
 		if (p == null) { return; }
 		for (FSEntry e : this.renamedEntries.values()) {
 			p.processEntry(e.id, e.newName);
 		}
 	}
 
-	public boolean addEntry(CmfObjectRef containerId, CmfObjectRef entryId, String name) {
+	public boolean addEntry(R containerId, R entryId, String name) {
 		if (!this.idValidator.isValidId(containerId)) { return false; }
 		if (!this.idValidator.isValidId(entryId)) { return false; }
 		final FSEntryContainer container = getContainer(containerId);
