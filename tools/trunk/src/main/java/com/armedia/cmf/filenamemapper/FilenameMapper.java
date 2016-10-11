@@ -226,7 +226,6 @@ public class FilenameMapper {
 			case 0x0c:
 				return CmfType.FOLDER;
 
-			case 0x08:
 			case 0x09:
 				return CmfType.DOCUMENT;
 
