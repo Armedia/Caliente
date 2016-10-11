@@ -31,7 +31,7 @@ public enum CLIParam {
 	dfc(1, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
 	dctm(1, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
 	dctm_user(1, true, "The username to connect to Documentum with"),
-	dctm_pass(1, true, "The password to connect to Documentum with"),
+	dctm_pass(1, "The password to connect to Documentum with"),
 	dctm_sam(
 		-1,
 		"The Documentum attribute to attempt to use for mapping directly to the sAMAccountName. Multiple instances of this parameter may be specified and each will be tried in turn.  The default mode is to first try user_login_name, then try user_os_name"),
