@@ -25,6 +25,7 @@ import com.armedia.cmf.filenamemapper.FilenameDeduplicator.ConflictResolver;
 import com.armedia.cmf.filenamemapper.FilenameDeduplicator.IdValidator;
 import com.armedia.cmf.filenamemapper.FilenameDeduplicator.Processor;
 import com.armedia.cmf.filenamemapper.tools.DfUtils;
+import com.armedia.cmf.storage.CmfObjectRef;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
@@ -163,9 +164,11 @@ public class FilenameMapper {
 	private static final IdValidator ID_VALIDATOR = new IdValidator() {
 
 		@Override
-		public boolean isValidId(String id) {
-			if (StringUtils.isEmpty(id)) { return false; }
-			return (FilenameMapper.decodeType(id) != null);
+		public boolean isValidId(CmfObjectRef id) {
+			if (id == null) { return false; }
+			if (id.getType() == null) { return false; }
+			if (StringUtils.isEmpty(id.getId())) { return false; }
+			return (FilenameMapper.decodeType(id.getId()) != null);
 		}
 
 	};
@@ -223,12 +226,27 @@ public class FilenameMapper {
 			case 0x0c:
 				return CmfType.FOLDER;
 
+			case 0x08:
 			case 0x09:
 				return CmfType.DOCUMENT;
 
 			default:
 				return null;
 		}
+	}
+
+	private static CmfObjectRef newObjectRef(CmfType type, String idString) {
+		if (type == null) {
+			// If we weren't given a type, then we try to identify it
+			type = FilenameMapper.decodeType(idString);
+			// If we failed to identify the type, then we can't return a reference
+			if (type == null) { return null; }
+		}
+		return new CmfObjectRef(type, idString);
+	}
+
+	private static CmfObjectRef newObjectRef(String idString) {
+		return FilenameMapper.newObjectRef(null, idString);
 	}
 
 	private static boolean checkDedupPattern(String pattern) {
@@ -243,10 +261,9 @@ public class FilenameMapper {
 		return found.contains("id");
 	}
 
-	private static String generateKey(String entryId) {
-		CmfType t = FilenameMapper.decodeType(entryId);
-		if (t == null) { return null; }
-		return String.format("%s # %s", t.name(), entryId);
+	private static String generateKey(CmfObjectRef entryId) {
+		if (entryId == null) { return null; }
+		return String.format("%s # %s", entryId.getType().name(), entryId.getId());
 	}
 
 	static int run() throws Exception {
@@ -374,7 +391,7 @@ public class FilenameMapper {
 								// If it was renamed, then the mapping is output, conflict
 								// or no conflict. If the same entry later has a conflict,
 								// it will be overwritten anyway...
-								String key = FilenameMapper.generateKey(entryId);
+								String key = FilenameMapper.generateKey(FilenameMapper.newObjectRef(entryId));
 								if (key != null) {
 									finalMap.setProperty(key, name);
 								}
@@ -382,7 +399,11 @@ public class FilenameMapper {
 						}
 
 						if (dedupEnabled) {
-							deduplicator.addEntry(containerId, entryId, name);
+							CmfObjectRef containerRef = FilenameMapper.newObjectRef(CmfType.FOLDER, containerId);
+							CmfObjectRef entryRef = FilenameMapper.newObjectRef(entryId);
+							if ((containerRef != null) && (entryRef != null)) {
+								deduplicator.addEntry(containerRef, entryRef, name);
+							}
 						}
 
 						if ((++count % 1000) == 0) {
@@ -416,8 +437,10 @@ public class FilenameMapper {
 					resolverMap.put("fixChar", Tools.coalesce(fixChar, FilenameMapper.DEFAULT_FIX_CHAR).toString());
 					long fixes = deduplicator.fixConflicts(new ConflictResolver() {
 						@Override
-						public String resolveConflict(String entryId, String currentName, long count) {
-							resolverMap.put("id", entryId);
+						public String resolveConflict(CmfObjectRef entryId, String currentName, long count) {
+							resolverMap.put("typeName", entryId.getType().name());
+							resolverMap.put("typeOrdinal", entryId.getType().ordinal());
+							resolverMap.put("id", entryId.getId());
 							resolverMap.put("name", currentName);
 							resolverMap.put("count", count);
 							String newName = StrSubstitutor.replace(resolverPattern, resolverMap);
@@ -431,7 +454,7 @@ public class FilenameMapper {
 					FilenameMapper.log.info("Conflicts fixed: {}", fixes);
 					deduplicator.processRenamedEntries(new Processor() {
 						@Override
-						public void processEntry(String entryId, String entryName) {
+						public void processEntry(CmfObjectRef entryId, String entryName) {
 							String key = FilenameMapper.generateKey(entryId);
 							if (key != null) {
 								finalMap.setProperty(key, entryName);
