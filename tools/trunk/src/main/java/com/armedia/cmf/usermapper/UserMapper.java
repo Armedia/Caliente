@@ -1,5 +1,6 @@
 package com.armedia.cmf.usermapper;
 
+import java.io.Console;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -389,6 +390,15 @@ public class UserMapper {
 		}
 	}
 
+	private static String getPasswordValue(CLIParam param, String prompt, Object... promptParams) {
+		final Console console = System.console();
+		if (param.isPresent()) { return CLIParam.ldap_pass.getString(); }
+		if (console == null) { return null; }
+		char[] pass = console.readPassword(prompt, promptParams);
+		if (pass != null) { return new String(pass); }
+		return null;
+	}
+
 	private static Set<String> getMappingAttributes(DfcSessionPool pool) throws Exception {
 		List<String> attributes = CLIParam.dctm_sam.getAllString(UserMapper.DEFAULT_DCTM_SAM_ATTRIBUTES);
 		// Shortcut - if there's nothing to validate, don't bother validating...
@@ -440,7 +450,8 @@ public class UserMapper {
 		try {
 			final String docbase = CLIParam.docbase.getString();
 			final String dctmUser = CLIParam.dctm_user.getString();
-			final String dctmPass = CLIParam.dctm_pass.getString();
+			final String dctmPass = UserMapper.getPasswordValue(CLIParam.dctm_pass,
+				"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(dctmUser, ""), docbase);
 
 			try {
 				dfcPool = new DfcSessionPool(docbase, dctmUser, dctmPass);
@@ -480,7 +491,10 @@ public class UserMapper {
 				}
 
 				final String bindDn = CLIParam.ldap_binddn.getString();
-				final String bindPass = CLIParam.ldap_pass.getString();
+				final String bindPass = UserMapper.getPasswordValue(CLIParam.ldap_pass,
+					"Please enter the LDAP Password for DN [%s] at %s: ", Tools.coalesce(bindDn, ""),
+					ldapUrl.toString());
+
 				final boolean ldapOnDemand = CLIParam.ldap_on_demand.isPresent();
 
 				final SSLSocketFactory sslSocketFactory;
@@ -776,7 +790,9 @@ public class UserMapper {
 			}
 			UserMapper.log.info("File generation completed");
 			return 0;
-		} finally {
+		} finally
+
+		{
 			if (executor != null) {
 				executor.shutdownNow();
 			}
