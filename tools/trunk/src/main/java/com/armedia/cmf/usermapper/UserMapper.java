@@ -392,7 +392,7 @@ public class UserMapper {
 
 	private static String getPasswordValue(CLIParam param, String prompt, Object... promptParams) {
 		final Console console = System.console();
-		if (param.isPresent()) { return CLIParam.ldap_pass.getString(); }
+		if ((param != null) && param.isPresent()) { return param.getString(); }
 		if (console == null) { return null; }
 		char[] pass = console.readPassword(prompt, promptParams);
 		if (pass != null) { return new String(pass); }
