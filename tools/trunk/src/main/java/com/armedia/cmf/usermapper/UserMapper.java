@@ -256,14 +256,20 @@ public class UserMapper {
 		groupRecords.flush();
 	}
 
-	private static CSVPrinter newCSVPrinter(String name, Set<String> headings, String source) throws IOException {
+	private static CSVPrinter newCSVPrinter(String name, String docbase, Set<String> headings, String source)
+		throws IOException {
 		if (StringUtils.isEmpty(source)) {
 			source = "INTERNAL";
+		}
+		if (!StringUtils.isBlank(docbase)) {
+			docbase = String.format(".%s", docbase.toLowerCase());
+		} else {
+			docbase = "";
 		}
 		source = source.toUpperCase();
 		source = source.replaceAll("\\s", "_");
 		CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
-		File f = new File(String.format("new_%s.%s.csv", name, source.toUpperCase())).getAbsoluteFile();
+		File f = new File(String.format("new_%s%s.%s.csv", name, docbase, source.toUpperCase())).getAbsoluteFile();
 		try {
 			f = f.getCanonicalFile();
 		} catch (IOException e) {
@@ -279,10 +285,16 @@ public class UserMapper {
 		return ret;
 	}
 
-	private static int writeMappings(String startMarkerString, Properties userMapping, Properties groupMapping) {
+	private static int writeMappings(String startMarkerString, String docbase, Properties userMapping,
+		Properties groupMapping) {
 		File mapFile = null;
 		FileOutputStream out = null;
-		mapFile = new File("usermap.xml").getAbsoluteFile();
+		if (!StringUtils.isBlank(docbase)) {
+			docbase = String.format(".%s", docbase.toLowerCase());
+		} else {
+			docbase = "";
+		}
+		mapFile = new File(String.format("usermap%s.xml", docbase)).getAbsoluteFile();
 		try {
 			try {
 				mapFile = mapFile.getCanonicalFile();
@@ -302,7 +314,7 @@ public class UserMapper {
 			IOUtils.closeQuietly(out);
 		}
 
-		mapFile = new File("groupmap.xml").getAbsoluteFile();
+		mapFile = new File(String.format("groupmap%s.xml", docbase)).getAbsoluteFile();
 		try {
 			try {
 				mapFile = mapFile.getCanonicalFile();
@@ -699,7 +711,7 @@ public class UserMapper {
 				groupSources.add(group.getSource());
 			}
 
-			int ret = UserMapper.writeMappings(startMarkerString, userMapping, groupMapping);
+			int ret = UserMapper.writeMappings(startMarkerString, docbase, userMapping, groupMapping);
 			if (ret != 0) { return ret; }
 
 			final Map<String, CSVPrinter> userRecords = new HashMap<String, CSVPrinter>();
@@ -707,11 +719,11 @@ public class UserMapper {
 			try {
 				for (String source : userSources) {
 					userRecords.put(source,
-						UserMapper.newCSVPrinter("users", UserMapper.USER_HEADINGS.keySet(), source));
+						UserMapper.newCSVPrinter("users", docbase, UserMapper.USER_HEADINGS.keySet(), source));
 				}
 				for (String source : groupSources) {
 					groupRecords.put(source,
-						UserMapper.newCSVPrinter("groups", UserMapper.GROUP_HEADINGS.keySet(), source));
+						UserMapper.newCSVPrinter("groups", docbase, UserMapper.GROUP_HEADINGS.keySet(), source));
 				}
 			} catch (IOException e) {
 				UserMapper.log.error("Failed to initialize the CSV files", e);
