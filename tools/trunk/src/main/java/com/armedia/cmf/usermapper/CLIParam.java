@@ -42,6 +42,9 @@ public enum CLIParam {
 	ldap_group_basedn(1, "The Base DN to search LDAP for groups (SUB scope)"),
 	ldap_pass(1, "The password to bind to LDAP with"),
 	ldap_on_demand(0, "Execute LDAP queries on demand vs. batched up front"),
+	add_docbase(
+		0,
+		"Add the docbase name to the files generated (use for running multiple instances at once in the same directory)"),
 	//
 	;
 

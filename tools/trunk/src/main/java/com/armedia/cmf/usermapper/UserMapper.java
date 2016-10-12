@@ -256,16 +256,18 @@ public class UserMapper {
 		groupRecords.flush();
 	}
 
+	private static String getDocbaseSuffix(String docbase) {
+		if (!CLIParam.add_docbase.isPresent()) { return ""; }
+		if (StringUtils.isBlank(docbase)) { return ""; }
+		return String.format(".%s", docbase.toLowerCase());
+	}
+
 	private static CSVPrinter newCSVPrinter(String name, String docbase, Set<String> headings, String source)
 		throws IOException {
 		if (StringUtils.isEmpty(source)) {
 			source = "INTERNAL";
 		}
-		if (!StringUtils.isBlank(docbase)) {
-			docbase = String.format(".%s", docbase.toLowerCase());
-		} else {
-			docbase = "";
-		}
+		docbase = UserMapper.getDocbaseSuffix(docbase);
 		source = source.toUpperCase();
 		source = source.replaceAll("\\s", "_");
 		CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
@@ -289,11 +291,7 @@ public class UserMapper {
 		Properties groupMapping) {
 		File mapFile = null;
 		FileOutputStream out = null;
-		if (!StringUtils.isBlank(docbase)) {
-			docbase = String.format(".%s", docbase.toLowerCase());
-		} else {
-			docbase = "";
-		}
+		docbase = UserMapper.getDocbaseSuffix(docbase);
 		mapFile = new File(String.format("usermap%s.xml", docbase)).getAbsoluteFile();
 		try {
 			try {
