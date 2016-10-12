@@ -394,6 +394,9 @@ public class UserMapper {
 		final Console console = System.console();
 		if ((param != null) && param.isPresent()) { return param.getString(); }
 		if (console == null) { return null; }
+		if (prompt == null) {
+			prompt = "Password:";
+		}
 		char[] pass = console.readPassword(prompt, promptParams);
 		if (pass != null) { return new String(pass); }
 		return null;
