@@ -1,5 +1,6 @@
 package com.armedia.cmf.filenamemapper;
 
+import java.io.Console;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -265,10 +266,23 @@ public class FilenameMapper {
 		return String.format("%s # %s", entryId.getType().name(), entryId.getId());
 	}
 
+	private static String getPasswordValue(CLIParam param, String prompt, Object... promptParams) {
+		final Console console = System.console();
+		if ((param != null) && param.isPresent()) { return param.getString(); }
+		if (console == null) { return null; }
+		if (prompt == null) {
+			prompt = "Password:";
+		}
+		char[] pass = console.readPassword(prompt, promptParams);
+		if (pass != null) { return new String(pass); }
+		return null;
+	}
+
 	static int run() throws Exception {
 		final String docbase = CLIParam.docbase.getString();
 		final String dctmUser = CLIParam.dctm_user.getString();
-		final String dctmPass = CLIParam.dctm_pass.getString();
+		final String dctmPass = FilenameMapper.getPasswordValue(CLIParam.dctm_pass,
+			"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(dctmUser, ""), docbase);
 
 		final File targetFile;
 		{
