@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.mail.MessagingException;
@@ -37,12 +36,14 @@ import com.delta.cmsmf.utils.CMSMFUtils;
 public abstract class AbstractCMSMFMain_import
 	extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
 
+	private static final Integer PROGRESS_INTERVAL = 5;
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
-	private final AtomicInteger aggregateTotal = new AtomicInteger(0);
-	private final AtomicInteger aggregateCurrent = new AtomicInteger(0);
+	private final AtomicLong aggregateTotal = new AtomicLong(0);
+	private final AtomicLong aggregateCurrent = new AtomicLong(0);
 
 	private final Map<CmfType, Long> total = new HashMap<CmfType, Long>();
 	private final Map<CmfType, AtomicLong> current = new HashMap<CmfType, AtomicLong>();
+	private final Map<CmfType, AtomicLong> previous = new HashMap<CmfType, AtomicLong>();
 
 	public AbstractCMSMFMain_import(ImportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine, true, false);
@@ -170,25 +171,40 @@ public abstract class AbstractCMSMFMain_import
 
 		boolean milestone = (aggregateTotal.intValue() == aggregateCurrent.intValue());
 
-		String objectLine = "";
+		final Long current;
+		final Long total;
 		if (objectType != null) {
-			final Double itemTotal = this.total.get(objectType).doubleValue();
-			final Double itemCurrent = this.current.get(objectType).doubleValue();
-			final Double itemPct = (itemCurrent / itemTotal) * 100.0;
-			objectLine = String.format("%n\tProcessed %d/%d %s objects (%.2f%%)", itemCurrent.intValue(),
-				itemTotal.intValue(), objectType.name(), itemPct);
-			milestone |= (itemTotal.intValue() == itemCurrent.intValue());
+			current = this.current.get(objectType).get();
+			total = this.total.get(objectType);
+			milestone |= (total.longValue() == current.longValue());
+		} else {
+			current = null;
+			total = null;
 		}
 
 		// Is it time to show progress? Have 10 seconds passed?
 		long now = System.currentTimeMillis();
 		long last = this.progressReporter.get();
-		boolean shouldDisplay = (milestone || ((now - last) >= TimeUnit.MILLISECONDS.convert(5, TimeUnit.SECONDS)));
+		boolean shouldDisplay = (milestone || ((now - last) >= TimeUnit.MILLISECONDS
+			.convert(AbstractCMSMFMain_import.PROGRESS_INTERVAL, TimeUnit.SECONDS)));
+
 		// This avoids a race condition where we don't show successive progress reports from
 		// different threads
 		if (shouldDisplay && this.progressReporter.compareAndSet(last, now)) {
+			String objectLine = "";
+			if (current != null) {
+				final AtomicLong itemPrev = this.previous.get(objectType);
+				final Double prev = itemPrev.doubleValue();
+				itemPrev.set(current);
+				final long count = (current.longValue() - prev.longValue());
+				final Double itemPct = (current.doubleValue() / total.doubleValue()) * 100.0;
+				final Double itemRate = (count / AbstractCMSMFMain_import.PROGRESS_INTERVAL.doubleValue());
+
+				objectLine = String.format("%n\tProcessed %d/%d %s objects (%.2f%%, ~%.2f/s, %d since last report)",
+					current.longValue(), total.longValue(), objectType.name(), itemPct, itemRate, count);
+			}
 			this.console.info(String.format("PROGRESS REPORT%s%n\tProcessed %d/%d objects in total (%.2f%%)",
-				objectLine, aggregateCurrent.intValue(), aggregateTotal.intValue(), aggregatePct));
+				objectLine, aggregateCurrent.longValue(), aggregateTotal.longValue(), aggregatePct));
 		}
 	}
 
@@ -207,6 +223,7 @@ public abstract class AbstractCMSMFMain_import
 			this.aggregateTotal.addAndGet(v.intValue());
 			this.total.put(t, v);
 			this.current.put(t, new AtomicLong(0));
+			this.previous.put(t, new AtomicLong(0));
 		}
 	}
 
