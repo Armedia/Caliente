@@ -565,9 +565,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected final File generateMetadataFile(final AlfImportContext ctx, final Properties p, final File main)
 		throws ImportException {
 		String mainName = main.getName();
-		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(mainName);
-		final String suffix = (m.matches() ? m.group(1) : "");
-
+		final String suffix = AlfImportDelegateFactory.parseVersionSuffix(mainName);
 		mainName = mainName.substring(0, mainName.length() - suffix.length());
 		final File meta = new File(main.getParentFile(),
 			String.format("%s%s%s", mainName, AlfImportFileableDelegate.METADATA_SUFFIX, suffix));
@@ -706,8 +704,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
 				// location with no version number - including the properties.
 				String mainName = main.getName();
-				final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(mainName);
-				final String suffix = (m.matches() ? m.group(1) : "");
+				final String suffix = AlfImportDelegateFactory.parseVersionSuffix(mainName);
 				if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
 					final String versionTag = String.format("\\Q%s\\E$", suffix);
 					File newMain = new File(main.getAbsolutePath().replaceAll(versionTag, ""));

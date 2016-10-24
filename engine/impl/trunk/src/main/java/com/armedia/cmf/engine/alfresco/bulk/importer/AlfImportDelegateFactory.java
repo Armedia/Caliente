@@ -48,7 +48,7 @@ import com.armedia.commons.utilities.XmlTools;
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
 
-	static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
+	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
 
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
@@ -233,23 +233,28 @@ public class AlfImportDelegateFactory
 		return f.getAbsoluteFile();
 	}
 
-	static final File removeVersionTag(File f) {
-		return AlfImportDelegateFactory.removeVersionTag(f.toPath()).toFile();
-	}
-
-	static final Path removeVersionTag(Path p) {
-		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(p.toString());
-		if (!m.matches()) { return p; }
-		final String versionTag = String.format("\\Q%s\\E$", m.group(1));
-		Path parent = p.getParent();
-		String name = p.getFileName().toString().replaceAll(versionTag, "");
-		return (parent != null ? parent.resolve(name) : Paths.get(name));
+	static final String parseVersionSuffix(String s) {
+		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(s);
+		if (!m.matches()) { return ""; }
+		return m.group(1);
 	}
 
 	static final String parseVersionNumber(String s) {
 		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(s);
 		if (!m.matches()) { return null; }
 		return m.group(2);
+	}
+
+	static final File removeVersionTag(File f) {
+		return AlfImportDelegateFactory.removeVersionTag(f.toPath()).toFile();
+	}
+
+	static final Path removeVersionTag(Path p) {
+		final String suffix = AlfImportDelegateFactory.parseVersionSuffix(p.toString());
+		if (suffix == null) { return p; }
+		Path parent = p.getParent();
+		String name = p.getFileName().toString().replaceAll(String.format("\\Q%s\\E$", suffix), "");
+		return (parent != null ? parent.resolve(name) : Paths.get(name));
 	}
 
 	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File root, File contentFile,
