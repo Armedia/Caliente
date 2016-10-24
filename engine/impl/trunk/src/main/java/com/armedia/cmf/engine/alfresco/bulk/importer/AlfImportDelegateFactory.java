@@ -18,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
@@ -30,6 +31,7 @@ import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.cmf.engine.alfresco.bulk.importer.cache.CacheItem;
 import com.armedia.cmf.engine.alfresco.bulk.importer.cache.CacheItemMarker;
+import com.armedia.cmf.engine.alfresco.bulk.importer.cache.CacheItemVersion;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.converter.IntermediateProperty;
@@ -47,6 +49,9 @@ import com.armedia.commons.utilities.XmlTools;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
+
+	private final static String FILE_CACHE_FILE = "scan.files.xml";
+	private final static String FOLDER_CACHE_FILE = "scan.folders.xml";
 
 	private static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
 
@@ -71,6 +76,7 @@ public class AlfImportDelegateFactory
 
 	private final File db;
 	private final File content;
+	private final Path biRootPath;
 
 	private final Properties typeMap = new Properties();
 	private final Properties userMap = new Properties();
@@ -84,7 +90,11 @@ public class AlfImportDelegateFactory
 
 	private final ThreadLocal<List<CacheItemMarker>> currentVersions = new ThreadLocal<List<CacheItemMarker>>();
 
-	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration) throws IOException, JAXBException {
+	private final AlfXmlIndex fileIndex;
+	private final AlfXmlIndex folderIndex;
+
+	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
+		throws IOException, JAXBException, XMLStreamException {
 		super(engine, configuration);
 		String db = configuration.getString(AlfSessionFactory.DB);
 		if (db != null) {
@@ -102,6 +112,13 @@ public class AlfImportDelegateFactory
 		FileUtils.forceMkdir(this.content);
 		final File modelDir = new File(this.content, AlfImportDelegateFactory.MODEL_DIR_NAME);
 		FileUtils.forceMkdir(modelDir);
+
+		final File biRootFile = new File(this.content, AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
+		this.biRootPath = biRootFile.toPath();
+		this.fileIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FILE_CACHE_FILE),
+			CacheItem.class, CacheItemVersion.class);
+		this.folderIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FOLDER_CACHE_FILE),
+			CacheItem.class, CacheItemVersion.class);
 
 		String contentModels = configuration.getString(AlfSessionFactory.CONTENT_MODEL);
 		if (contentModels == null) { throw new IllegalStateException(
@@ -257,8 +274,8 @@ public class AlfImportDelegateFactory
 		return (parent != null ? parent.resolve(name) : Paths.get(name));
 	}
 
-	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File root, File contentFile,
-		File metadataFile) throws ImportException {
+	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile)
+		throws ImportException {
 
 		List<CacheItemMarker> markerList = this.currentVersions.get();
 		if (markerList == null) {
@@ -303,16 +320,12 @@ public class AlfImportDelegateFactory
 
 		// We don't use canonicalize() here because we want to be able to respect symlinks if
 		// for whatever reason they need to be employed
-		root = new File(AlfImportDelegateFactory.normalizeAbsolute(root),
-			AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
 		contentFile = AlfImportDelegateFactory.normalizeAbsolute(contentFile);
 		metadataFile = AlfImportDelegateFactory.normalizeAbsolute(metadataFile);
 
 		// basePath is the base path within which the entire import resides
-		final Path basePath = root.toPath();
-
-		final Path relativeContentPath = basePath.relativize(contentFile.toPath());
-		final Path relativeMetadataPath = basePath.relativize(metadataFile.toPath());
+		final Path relativeContentPath = this.biRootPath.relativize(contentFile.toPath());
+		final Path relativeMetadataPath = this.biRootPath.relativize(metadataFile.toPath());
 		final Path relativeMetadataParent = relativeMetadataPath.getParent();
 
 		CacheItemMarker thisMarker = new CacheItemMarker();
@@ -362,65 +375,14 @@ public class AlfImportDelegateFactory
 		}
 
 		CacheItem item = headMarker.getItem(markerList);
-		CacheItem item2 = headMarker.getItem(markerList);
 		markerList.clear();
-		item.hashCode();
-		item2.hashCode();
 
-		// TODO: Write out the XML
-
-		// If this is the last version, then output the XML...
-		/*
-		final Marshaller m = JAXBContext.newInstance(CacheItem.class, CacheItemVersion.class).createMarshaller();
-		m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
-		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-		
-		final XMLStreamWriter xml = new IndentingXMLStreamWriter(XMLOutputFactory.newInstance().createXMLStreamWriter(System.out));
-		xml.writeStartDocument("UTF-8", "1.0");
-		xml.writeStartElement("scan");
-		xml.flush();
-		
-		for (Object xml : xmlObjects) {
-			m.marshal(cacheItem, xml);
-			xml.flush();
+		try {
+			(directory ? this.folderIndex : this.fileIndex).marshal(item);
+		} catch (Exception e) {
+			throw new ImportException(
+				String.format("Failed to serialize the %s to XML: %s", directory ? "directory" : "folder", item), e);
 		}
-		
-		xml.writeEndDocument();
-		xml.flush();
-		 */
-		/*
-		<?xml version="1.0" encoding="UTF-8"?>
-		<scan>
-			<item>
-				<directory>true</directory>
-				<name>name</name>
-				<fsRelativePath>fsRelativePathInTheFS</fsRelativePath>
-				<relativePath>relativePathOnTheCMS</relativePath>
-				<versions>
-					<version>
-						<number>1.0</number>
-						<content>contentFile</content>
-						<metadata>metadataFile</metadata>
-					</version>
-					<!-- version... -->
-				</versions>
-			</item>
-			<item>
-				<directory>false</directory>
-				<name>name</name>
-				<fsRelativePath>fsRelativePathInTheFS</fsRelativePath>
-				<relativePath>relativePathOnTheCMS</relativePath>
-				<versions>
-					<version>
-						<number>1.0</number>
-						<content>contentFile</content>
-						<metadata>metadataFile</metadata>
-					</version>
-					<!-- version... -->
-				</versions>
-			</item>
-		</scan>
-		*/
 	}
 
 	public final AlfrescoType mapType(String type) {
@@ -445,6 +407,8 @@ public class AlfImportDelegateFactory
 
 	@Override
 	public void close() {
+		this.fileIndex.close();
+		this.folderIndex.close();
 		super.close();
 	}
 }

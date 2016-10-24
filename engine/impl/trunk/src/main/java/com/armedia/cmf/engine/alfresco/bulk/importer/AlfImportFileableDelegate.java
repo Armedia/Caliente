@@ -587,7 +587,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			IOUtils.closeQuietly(out);
 		}
 
-		this.factory.storeToIndex(this.cmfObject, ctx.getContentStore().getRootLocation(), main, meta);
+		this.factory.storeToIndex(this.cmfObject, main, meta);
 		return meta;
 	}
 
