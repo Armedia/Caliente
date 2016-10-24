@@ -383,8 +383,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		// the IDs that we want fixed.
 
 		Map<CmfType, Map<String, String>> idMap = new EnumMap<CmfType, Map<String, String>>(CmfType.class);
-		for (Object k : p.keySet()) {
-			final String key = k.toString();
+		for (String key : p.stringPropertyNames()) {
 			final String fixedName = p.getProperty(key);
 			Matcher matcher = ImportEngine.MAP_KEY_PARSER.matcher(key);
 			if (!matcher.matches()) {
