@@ -564,23 +564,35 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty("dctm:binding_label", StringUtils.isEmpty(label) ? "CURRENT" : label);
 	}
 
-	protected final void storeProperties(Properties p, File f) throws ImportException {
+	protected final File generateMetadataFile(final AlfImportContext ctx, final Properties p, final File main)
+		throws ImportException {
+		String mainName = main.getName();
+		final Matcher m = AlfImportFileableDelegate.SUFFIX.matcher(mainName);
+		final String suffix = (m.matches() ? m.group(1) : "");
+
+		mainName = mainName.substring(0, mainName.length() - suffix.length());
+		final File meta = new File(main.getParentFile(),
+			String.format("%s%s%s", mainName, AlfImportFileableDelegate.METADATA_SUFFIX, suffix));
+
 		final OutputStream out;
 		try {
-			out = new FileOutputStream(f);
+			out = new FileOutputStream(meta);
 		} catch (FileNotFoundException e) {
-			throw new ImportException(String.format("Failed to open the properties file at [%s]", f.getAbsolutePath()),
-				e);
+			throw new ImportException(
+				String.format("Failed to open the properties file at [%s]", main.getAbsolutePath()), e);
 		}
 		try {
 			p.storeToXML(out, null);
 		} catch (IOException e) {
-			f.delete();
+			meta.delete();
 			throw new ImportException(
-				String.format("Failed to write to the properties file at [%s]", f.getAbsolutePath()), e);
+				String.format("Failed to write to the properties file at [%s]", main.getAbsolutePath()), e);
 		} finally {
 			IOUtils.closeQuietly(out);
 		}
+
+		this.factory.storeToIndex(this.cmfObject, ctx.getContentStore().getRootLocation(), main, meta);
+		return meta;
 	}
 
 	@Override
@@ -630,14 +642,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					this.cmfObject.getLabel())) { return Collections.singleton(ImportOutcome.SKIPPED); }
 			}
 
-			String mainName = main.getName();
-			final Matcher m = AlfImportFileableDelegate.SUFFIX.matcher(mainName);
-			final String suffix = (m.matches() ? m.group(1) : "");
-
-			mainName = mainName.substring(0, mainName.length() - suffix.length());
-			final File meta = new File(main.getParentFile(),
-				String.format("%s%s%s", mainName, AlfImportFileableDelegate.METADATA_SUFFIX, suffix));
-
 			// Ok...so...now that we know where the metadata properties must go, we write them
 			// out
 			Properties p = new Properties();
@@ -651,7 +655,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				populateRenditionAttributes(p, targetType, content);
 			}
 
-			storeProperties(p, meta);
+			final File meta = generateMetadataFile(ctx, p, main);
 
 			if (this.virtual) {
 				final File refHome = meta.getParentFile();
@@ -659,23 +663,17 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				Properties versionProps = new Properties();
 				populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
 
-				File directoryMeta = null;
 				if (this.cmfObject.isBatchHead()) {
-					directoryMeta = refHome.getParentFile();
-					directoryMeta = new File(directoryMeta.getParentFile(),
-						String.format("%s%s", directoryMeta.getName(), AlfImportFileableDelegate.METADATA_SUFFIX));
-					storeProperties(versionProps, directoryMeta);
+					generateMetadataFile(ctx, versionProps, refHome.getParentFile());
 				}
 
-				directoryMeta = new File(refHome.getParentFile(),
-					String.format("%s%s", refHome.getName(), AlfImportFileableDelegate.METADATA_SUFFIX));
 				versionProps.setProperty("cm:name", refHome.getName());
 				versionProps.setProperty("dctm:object_name", refHome.getName());
 				versionProps.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, this.vdocVersion.getName());
 				Set<String> aspects = new LinkedHashSet<String>(this.vdocVersion.getAspects());
 				aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
 				versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
-				storeProperties(versionProps, directoryMeta);
+				generateMetadataFile(ctx, versionProps, refHome);
 
 				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
 				if (members != null) {
@@ -701,16 +699,17 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						populateVdocReference(memberProps, memberData[0], memberData[0], memberData[1], memberData[2]);
 
 						File refTarget = new File(refHome, memberData[0]);
-						File refMeta = new File(refHome,
-							String.format("%s%s", refTarget.getName(), AlfImportFileableDelegate.METADATA_SUFFIX));
 						createStub(refTarget, member.asString());
-						storeProperties(memberProps, refMeta);
+						generateMetadataFile(ctx, memberProps, refTarget);
 					}
 				}
 			} else {
 				// IF (and only if) the document is also the head document, but not the latest
 				// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
 				// location with no version number - including the properties.
+				String mainName = main.getName();
+				final Matcher m = AlfImportFileableDelegate.SUFFIX.matcher(mainName);
+				final String suffix = (m.matches() ? m.group(1) : "");
 				if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
 					final String versionTag = String.format("\\Q%s\\E$", suffix);
 					File newMain = new File(main.getAbsolutePath().replaceAll(versionTag, ""));
@@ -721,7 +720,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						FileUtils.copyFile(meta, newMeta);
 						ok = true;
 					} catch (IOException e) {
-
+						throw new ImportException(
+							String.format("Failed to create a copy of the HEAD version for [%s](%s) from [%s] to [%s]",
+								this.cmfObject.getLabel(), this.cmfObject.getId(), main.getAbsolutePath(),
+								newMain.getAbsolutePath()),
+							e);
 					} finally {
 						if (!ok) {
 							newMain.delete();

@@ -3,7 +3,10 @@ package com.armedia.cmf.engine.alfresco.bulk.importer;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -18,17 +21,24 @@ import javax.xml.bind.JAXBException;
 import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionWrapper;
+import com.armedia.cmf.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationStrategy;
+import com.armedia.cmf.engine.alfresco.bulk.importer.cache.CacheItem;
+import com.armedia.cmf.engine.alfresco.bulk.importer.cache.CacheItemMarker;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.importer.ImportDelegateFactory;
+import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.engine.tools.MappingTools;
 import com.armedia.cmf.engine.tools.MappingTools.MappingValidator;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.cmf.storage.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -37,6 +47,8 @@ import com.armedia.commons.utilities.XmlTools;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
+
+	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
 	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^([^\\[]+)(?:\\[(.*)\\])?$");
 
@@ -67,6 +79,8 @@ public class AlfImportDelegateFactory
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
 	private final Map<String, AlfrescoType> mappedTypes;
+
+	private final ThreadLocal<List<CacheItemMarker>> currentVersions = new ThreadLocal<List<CacheItemMarker>>();
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration) throws IOException, JAXBException {
 		super(engine, configuration);
@@ -209,6 +223,172 @@ public class AlfImportDelegateFactory
 			this.userLoginMap.setProperty(userName, login);
 		}
 		return true;
+	}
+
+	final File normalizeAbsolute(File f) {
+		f = f.getAbsoluteFile();
+		f = new File(FilenameUtils.normalize(f.getAbsolutePath()));
+		return f.getAbsoluteFile();
+	}
+
+	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File root, File contentFile,
+		File metadataFile) throws ImportException {
+
+		List<CacheItemMarker> markerList = this.currentVersions.get();
+		if (markerList == null) {
+			markerList = new ArrayList<CacheItemMarker>();
+			this.currentVersions.set(markerList);
+		}
+
+		CmfProperty<CmfValue> vCounter = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
+		CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
+		CmfProperty<CmfValue> vIndex = cmfObject.getProperty(IntermediateProperty.VERSION_INDEX);
+
+		final boolean directory = contentFile.isDirectory();
+		final int head;
+		final int count;
+		final long current;
+
+		if ((vCounter == null) || !vCounter.hasValues() || //
+			(vHeadIndex == null) || !vHeadIndex.hasValues() || //
+			(vIndex == null) || !vIndex.hasValues()) {
+			if (!directory) {
+				// ERROR: insufficient data
+				throw new ImportException(
+					String.format("No version indexes found for (%s)[%s]", cmfObject.getLabel(), cmfObject.getId()));
+			}
+			// It's OK for directories...everything is 1
+			head = 1;
+			count = 1;
+			current = 1;
+		} else {
+			head = vHeadIndex.getValue().asInteger();
+			count = vCounter.getValue().asInteger();
+			current = vIndex.getValue().asInteger();
+		}
+
+		if (current == 1) {
+			// Paranoid...just make sure ;)
+			markerList.clear();
+		}
+
+		final boolean isHeadVersion = (head == current);
+		final boolean isLastVersion = (count == current);
+
+		// We don't use canonicalize() here because we want to be able to respect symlinks if
+		// for whatever reason they need to be employed
+		root = new File(normalizeAbsolute(root), AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
+		contentFile = normalizeAbsolute(contentFile);
+		metadataFile = normalizeAbsolute(metadataFile);
+
+		// basePath is the base path within which the entire import resides
+		final Path basePath = root.toPath();
+
+		final Path relativeContentPath = basePath.relativize(contentFile.toPath());
+		final Path relativeMetadataPath = basePath.relativize(metadataFile.toPath());
+		final Path relativeMetadataParent = relativeMetadataPath.getParent();
+
+		CacheItemMarker thisMarker = new CacheItemMarker();
+		thisMarker.setDirectory(directory);
+		thisMarker.setName(cmfObject.getName());
+		thisMarker.setContent(relativeContentPath);
+		thisMarker.setMetadata(relativeMetadataPath);
+		thisMarker.setLocalPath(relativeMetadataParent != null ? relativeMetadataParent : Paths.get(""));
+
+		BigDecimal number = AlfImportDelegateFactory.LAST_INDEX;
+		if (!isHeadVersion || !isLastVersion) {
+			number = new BigDecimal(current);
+		}
+		// TODO: Do 0.XX or just XX?
+		thisMarker.setNumber(number);
+
+		CmfProperty<CmfValue> cmsPathProp = cmfObject.getProperty(IntermediateProperty.PATH);
+		String cmsPath = ((cmsPathProp == null) || !cmsPathProp.hasValues() ? "" : cmsPathProp.getValue().asString());
+		// Remove the leading slash(es)
+		while (cmsPath.startsWith("/")) {
+			cmsPath = cmsPath.substring(1);
+		}
+		thisMarker.setCmsPath(cmsPath);
+
+		markerList.add(thisMarker);
+
+		if (!isLastVersion) {
+			// more versions to come, so we simply keep going...
+			// can't output the XML element just yet...
+			return;
+		}
+
+		CacheItemMarker headMarker = thisMarker;
+		if (!isHeadVersion) {
+			// This is not the head version. We need to make a copy
+			// of it and change the version number...
+			headMarker = markerList.get(head - 1);
+			headMarker = headMarker.clone();
+			headMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
+			markerList.add(headMarker);
+			// TODO: Remove the version suffixes
+		}
+
+		CacheItem item = headMarker.getItem(markerList);
+		CacheItem item2 = headMarker.getItem(markerList);
+		markerList.clear();
+		item.hashCode();
+		item2.hashCode();
+
+		// TODO: Write out the XML
+
+		// If this is the last version, then output the XML...
+		/*
+		final Marshaller m = JAXBContext.newInstance(CacheItem.class, CacheItemVersion.class).createMarshaller();
+		m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		
+		final XMLStreamWriter xml = new IndentingXMLStreamWriter(XMLOutputFactory.newInstance().createXMLStreamWriter(System.out));
+		xml.writeStartDocument("UTF-8", "1.0");
+		xml.writeStartElement("scan");
+		xml.flush();
+		
+		for (Object xml : xmlObjects) {
+			m.marshal(cacheItem, xml);
+			xml.flush();
+		}
+		
+		xml.writeEndDocument();
+		xml.flush();
+		 */
+		/*
+		<?xml version="1.0" encoding="UTF-8"?>
+		<scan>
+			<item>
+				<directory>true</directory>
+				<name>name</name>
+				<fsRelativePath>fsRelativePathInTheFS</fsRelativePath>
+				<relativePath>relativePathOnTheCMS</relativePath>
+				<versions>
+					<version>
+						<number>1.0</number>
+						<content>contentFile</content>
+						<metadata>metadataFile</metadata>
+					</version>
+					<!-- version... -->
+				</versions>
+			</item>
+			<item>
+				<directory>false</directory>
+				<name>name</name>
+				<fsRelativePath>fsRelativePathInTheFS</fsRelativePath>
+				<relativePath>relativePathOnTheCMS</relativePath>
+				<versions>
+					<version>
+						<number>1.0</number>
+						<content>contentFile</content>
+						<metadata>metadataFile</metadata>
+					</version>
+					<!-- version... -->
+				</versions>
+			</item>
+		</scan>
+		*/
 	}
 
 	public final AlfrescoType mapType(String type) {
