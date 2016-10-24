@@ -48,7 +48,7 @@ import com.armedia.commons.utilities.XmlTools;
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
 
-	static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+))?)$");
+	static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+)?))$");
 
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
@@ -321,7 +321,7 @@ public class AlfImportDelegateFactory
 		if (!isHeadVersion || !isLastVersion) {
 			// Parse out the version number, so we don't have to muck around with having
 			// to guess which "type" is in use
-			String n = AlfImportDelegateFactory.parseVersionNumber(metadataFile.getName());
+			String n = AlfImportDelegateFactory.parseVersionNumber(contentFile.getName());
 			if (n != null) {
 				number = new BigDecimal(n);
 			}
