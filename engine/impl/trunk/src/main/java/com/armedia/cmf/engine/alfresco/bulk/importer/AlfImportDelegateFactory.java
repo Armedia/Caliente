@@ -48,6 +48,8 @@ import com.armedia.commons.utilities.XmlTools;
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
 
+	static final Pattern VERSION_SUFFIX = Pattern.compile("^.*(\\.v(\\d+(?:\\.\\d+))?)$");
+
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
 	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^([^\\[]+)(?:\\[(.*)\\])?$");
@@ -225,10 +227,29 @@ public class AlfImportDelegateFactory
 		return true;
 	}
 
-	final File normalizeAbsolute(File f) {
+	static final File normalizeAbsolute(File f) {
 		f = f.getAbsoluteFile();
 		f = new File(FilenameUtils.normalize(f.getAbsolutePath()));
 		return f.getAbsoluteFile();
+	}
+
+	static final File removeVersionTag(File f) {
+		return AlfImportDelegateFactory.removeVersionTag(f.toPath()).toFile();
+	}
+
+	static final Path removeVersionTag(Path p) {
+		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(p.toString());
+		if (!m.matches()) { return p; }
+		final String versionTag = String.format("\\Q%s\\E$", m.group(1));
+		Path parent = p.getParent();
+		String name = p.getFileName().toString().replaceAll(versionTag, "");
+		return (parent != null ? parent.resolve(name) : Paths.get(name));
+	}
+
+	static final String parseVersionNumber(String s) {
+		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(s);
+		if (!m.matches()) { return null; }
+		return m.group(2);
 	}
 
 	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File root, File contentFile,
@@ -277,9 +298,10 @@ public class AlfImportDelegateFactory
 
 		// We don't use canonicalize() here because we want to be able to respect symlinks if
 		// for whatever reason they need to be employed
-		root = new File(normalizeAbsolute(root), AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
-		contentFile = normalizeAbsolute(contentFile);
-		metadataFile = normalizeAbsolute(metadataFile);
+		root = new File(AlfImportDelegateFactory.normalizeAbsolute(root),
+			AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
+		contentFile = AlfImportDelegateFactory.normalizeAbsolute(contentFile);
+		metadataFile = AlfImportDelegateFactory.normalizeAbsolute(metadataFile);
 
 		// basePath is the base path within which the entire import resides
 		final Path basePath = root.toPath();
@@ -297,9 +319,13 @@ public class AlfImportDelegateFactory
 
 		BigDecimal number = AlfImportDelegateFactory.LAST_INDEX;
 		if (!isHeadVersion || !isLastVersion) {
-			number = new BigDecimal(current);
+			// Parse out the version number, so we don't have to muck around with having
+			// to guess which "type" is in use
+			String n = AlfImportDelegateFactory.parseVersionNumber(metadataFile.getName());
+			if (n != null) {
+				number = new BigDecimal(n);
+			}
 		}
-		// TODO: Do 0.XX or just XX?
 		thisMarker.setNumber(number);
 
 		CmfProperty<CmfValue> cmsPathProp = cmfObject.getProperty(IntermediateProperty.PATH);
@@ -325,8 +351,9 @@ public class AlfImportDelegateFactory
 			headMarker = markerList.get(head - 1);
 			headMarker = headMarker.clone();
 			headMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
+			headMarker.setContent(AlfImportDelegateFactory.removeVersionTag(headMarker.getContent()));
+			headMarker.setMetadata(AlfImportDelegateFactory.removeVersionTag(headMarker.getMetadata()));
 			markerList.add(headMarker);
-			// TODO: Remove the version suffixes
 		}
 
 		CacheItem item = headMarker.getItem(markerList);

@@ -185,8 +185,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		USER_CONVERSIONS = Tools.freezeSet(new HashSet<String>(m.keySet()));
 	}
 
-	private static final Pattern SUFFIX = Pattern.compile("^.*(\\.v\\d+(?:\\.\\d+)?)$");
-
 	private final boolean reference;
 	private final boolean virtual;
 	private final AlfrescoType defaultType;
@@ -567,7 +565,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected final File generateMetadataFile(final AlfImportContext ctx, final Properties p, final File main)
 		throws ImportException {
 		String mainName = main.getName();
-		final Matcher m = AlfImportFileableDelegate.SUFFIX.matcher(mainName);
+		final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(mainName);
 		final String suffix = (m.matches() ? m.group(1) : "");
 
 		mainName = mainName.substring(0, mainName.length() - suffix.length());
@@ -708,7 +706,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
 				// location with no version number - including the properties.
 				String mainName = main.getName();
-				final Matcher m = AlfImportFileableDelegate.SUFFIX.matcher(mainName);
+				final Matcher m = AlfImportDelegateFactory.VERSION_SUFFIX.matcher(mainName);
 				final String suffix = (m.matches() ? m.group(1) : "");
 				if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
 					final String versionTag = String.format("\\Q%s\\E$", suffix);
