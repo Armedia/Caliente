@@ -4,11 +4,13 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -18,11 +20,16 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+
+import com.armedia.commons.utilities.Tools;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
 
 public class AlfXmlIndex implements Closeable {
+
+	private static final Class<?>[] NO_CLASSES = {};
 
 	private final File target;
 	private final Collection<Class<?>> supportedClasses;
@@ -33,18 +40,17 @@ public class AlfXmlIndex implements Closeable {
 	private boolean initialized = false;
 	private boolean closed = false;
 
-	public AlfXmlIndex(File target, Class<?>... classes)
-		throws XMLStreamException, JAXBException, FileNotFoundException {
+	public AlfXmlIndex(File target, Class<?>... classes) {
 		this.target = target;
-		this.supportedClasses = Arrays.asList(classes);
-
-		JAXBContext jaxbContext = getJAXBContext(classes);
-		this.marshaller = getMarshaller(jaxbContext);
-
-		this.out = new FileOutputStream(target);
-
-		XMLOutputFactory factory = getXMLOutputFactory();
-		this.xml = getXMLStreamWriter(factory, this.out);
+		List<Class<?>> l = new ArrayList<Class<?>>();
+		if (classes != null) {
+			for (Class<?> c : classes) {
+				if (c != null) {
+					l.add(c);
+				}
+			}
+		}
+		this.supportedClasses = Tools.freezeList(l);
 	}
 
 	protected JAXBContext getJAXBContext(Class<?>... classes) throws JAXBException {
@@ -95,6 +101,14 @@ public class AlfXmlIndex implements Closeable {
 		if (this.initialized) { return false; }
 		boolean ok = false;
 		try {
+			JAXBContext jaxbContext = getJAXBContext(this.supportedClasses.toArray(AlfXmlIndex.NO_CLASSES));
+			this.marshaller = getMarshaller(jaxbContext);
+
+			this.out = new FileOutputStream(this.target);
+
+			XMLOutputFactory factory = getXMLOutputFactory();
+			this.xml = getXMLStreamWriter(factory, this.out);
+
 			this.xml.writeStartDocument(getEncoding(), getVersion());
 			this.xml.writeStartElement(getRootElement());
 			Map<String, String> m = getRootAttributes();
@@ -109,10 +123,17 @@ public class AlfXmlIndex implements Closeable {
 			this.xml.flush();
 			ok = true;
 			return true;
+		} catch (JAXBException | FileNotFoundException e) {
+			throw new XMLStreamException("Exception caught while initializing the XML stream", e);
 		} finally {
 			this.initialized = ok;
 			if (!ok) {
 				close();
+				try {
+					FileUtils.forceDelete(this.target);
+				} catch (IOException e) {
+					// Ignore...
+				}
 			}
 		}
 	}
