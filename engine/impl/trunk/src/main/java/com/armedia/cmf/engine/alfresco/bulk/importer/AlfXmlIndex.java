@@ -197,17 +197,31 @@ public class AlfXmlIndex implements Closeable {
 		this.xml.flush();
 	}
 
+	public synchronized void end() throws XMLStreamException {
+		assertOpen();
+		this.xml.writeEndDocument();
+		flush();
+	}
+
+	private void closeXml() {
+		try {
+			this.xml.close();
+		} catch (XMLStreamException e) {
+			// Log it...???
+		}
+	}
+
 	@Override
 	public synchronized void close() {
 		if (isClosed()) { return; }
 		try {
 			if (this.initialized) {
 				try {
-					flush();
-					this.xml.close();
+					end();
 				} catch (XMLStreamException e) {
 					// Log it...???
 				} finally {
+					closeXml();
 					IOUtils.closeQuietly(this.out);
 					this.out = null;
 					this.xml = null;
