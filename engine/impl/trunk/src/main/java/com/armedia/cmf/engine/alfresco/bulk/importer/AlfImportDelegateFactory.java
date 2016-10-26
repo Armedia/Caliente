@@ -321,7 +321,7 @@ public class AlfImportDelegateFactory
 		CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
 		CmfProperty<CmfValue> vIndex = cmfObject.getProperty(IntermediateProperty.VERSION_INDEX);
 
-		final boolean directory = contentFile.isDirectory();
+		final boolean folder = contentFile.isDirectory();
 		final int head;
 		final int count;
 		final long current;
@@ -329,7 +329,7 @@ public class AlfImportDelegateFactory
 		if ((vCounter == null) || !vCounter.hasValues() || //
 			(vHeadIndex == null) || !vHeadIndex.hasValues() || //
 			(vIndex == null) || !vIndex.hasValues()) {
-			if (!directory) {
+			if (!folder) {
 				// ERROR: insufficient data
 				throw new ImportException(
 					String.format("No version indexes found for (%s)[%s]", cmfObject.getLabel(), cmfObject.getId()));
@@ -363,7 +363,7 @@ public class AlfImportDelegateFactory
 		final Path relativeMetadataParent = relativeMetadataPath.getParent();
 
 		CacheItemMarker thisMarker = new CacheItemMarker();
-		thisMarker.setDirectory(directory);
+		thisMarker.setDirectory(folder);
 		thisMarker.setName(cmfObject.getName());
 		thisMarker.setContent(relativeContentPath);
 		thisMarker.setMetadata(relativeMetadataPath);
@@ -412,10 +412,10 @@ public class AlfImportDelegateFactory
 		markerList.clear();
 
 		try {
-			(directory ? this.folderIndex : this.fileIndex).marshal(item);
+			(folder ? this.folderIndex : this.fileIndex).marshal(item);
 		} catch (Exception e) {
 			throw new ImportException(
-				String.format("Failed to serialize the %s to XML: %s", directory ? "directory" : "folder", item), e);
+				String.format("Failed to serialize the %s to XML: %s", folder ? "folder" : "file", item), e);
 		}
 	}
 
