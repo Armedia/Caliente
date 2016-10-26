@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -92,6 +93,7 @@ public class AlfImportDelegateFactory
 
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
+	private final AtomicBoolean manifestSerialized = new AtomicBoolean(false);
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException {
@@ -274,8 +276,40 @@ public class AlfImportDelegateFactory
 		return (parent != null ? parent.resolve(name) : Paths.get(name));
 	}
 
+	private final void storeIngestionIndexToScanIndex() throws ImportException {
+		if (!this.manifestSerialized.compareAndSet(false, true)) {
+			// This will only happen once
+			return;
+		}
+
+		final String name = AlfImportEngine.MANIFEST_NAME;
+		final Path relativeContentPath = Paths.get(name);
+
+		CacheItemMarker thisMarker = new CacheItemMarker();
+		thisMarker.setDirectory(false);
+		thisMarker.setName(name);
+		thisMarker.setContent(relativeContentPath);
+		thisMarker.setMetadata(null);
+		thisMarker.setLocalPath(Paths.get(""));
+
+		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
+		thisMarker.setCmsPath("");
+
+		List<CacheItemMarker> markerList = new ArrayList<CacheItemMarker>(1);
+		markerList.add(thisMarker);
+
+		final CacheItem item = thisMarker.getItem(markerList);
+		try {
+			this.fileIndex.marshal(item);
+		} catch (Exception e) {
+			throw new ImportException(String.format("Failed to serialize the file to XML: %s", item), e);
+		}
+	}
+
 	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile)
 		throws ImportException {
+
+		storeIngestionIndexToScanIndex();
 
 		List<CacheItemMarker> markerList = this.currentVersions.get();
 		if (markerList == null) {

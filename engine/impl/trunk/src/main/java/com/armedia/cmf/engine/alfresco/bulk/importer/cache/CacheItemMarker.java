@@ -99,8 +99,16 @@ public class CacheItemMarker implements Cloneable {
 	public CacheItemVersion getVersion() {
 		CacheItemVersion version = new CacheItemVersion();
 		version.setNumber(this.number);
-		version.setContent(convertToSlashes(this.content.toString()));
-		version.setMetadata(convertToSlashes(this.metadata.toString()));
+		if (this.content != null) {
+			version.setContent(convertToSlashes(this.content.toString()));
+		} else {
+			version.setContent(null);
+		}
+		if (this.metadata != null) {
+			version.setMetadata(convertToSlashes(this.metadata.toString()));
+		} else {
+			version.setMetadata(null);
+		}
 		return version;
 	}
 

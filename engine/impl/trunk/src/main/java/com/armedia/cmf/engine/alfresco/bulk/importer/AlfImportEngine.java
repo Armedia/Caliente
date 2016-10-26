@@ -41,7 +41,7 @@ import com.armedia.commons.utilities.Tools;
 public class AlfImportEngine extends
 	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory> {
 
-	private static final String MANIFEST_NAME = "CALIENTE_INGESTION_INDEX.txt";
+	static final String MANIFEST_NAME = "CALIENTE_INGESTION_INDEX.txt";
 
 	private static final class NameFixer implements CmfNameFixer<CmfValue> {
 
