@@ -192,6 +192,21 @@ public class AlfXmlIndex implements Closeable {
 		return ret;
 	}
 
+	public synchronized long marshal(Collection<Object> objects) throws JAXBException, XMLStreamException {
+		init();
+		if (objects == null) { return 0; }
+		long ret = 0;
+		for (Object o : objects) {
+			if (o == null) {
+				continue;
+			}
+			this.marshaller.marshal(o, this.xml);
+			ret++;
+		}
+		this.xml.flush();
+		return ret;
+	}
+
 	public synchronized void flush() throws XMLStreamException {
 		assertOpen();
 		this.xml.flush();

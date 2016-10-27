@@ -24,7 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.cmf.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationStrategy;
-import com.armedia.cmf.engine.alfresco.bulk.importer.AlfImportDelegateFactory.ScanIndexElement;
+import com.armedia.cmf.engine.alfresco.bulk.importer.cache.CacheItemMarker.MarkerType;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.cmf.engine.alfresco.bulk.importer.model.SchemaAttribute;
 import com.armedia.cmf.engine.converter.IntermediateAttribute;
@@ -658,7 +658,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			// out
 			Properties p = new Properties();
 			final boolean primaryRendition = content.isDefaultRendition() && (content.getRenditionPage() == 0);
-			final ScanIndexElement scanIndexElement = (primaryRendition ? ScanIndexElement.NORMAL : ScanIndexElement.RENDITION_ENTRY);
+			final MarkerType markerType = (primaryRendition ? MarkerType.NORMAL : MarkerType.RENDITION_ENTRY);
 			if (primaryRendition) {
 				// First page of the default rendition gets ALL the metadata. Everything
 				// else only gets supplementary metadata
@@ -668,14 +668,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				// metadata set on it
 				populateRenditionAttributes(p, targetType, content);
 				if (!rootIndexed) {
-					this.factory.storeToIndex(this.cmfObject, p, main, null, ScanIndexElement.RENDITION_ROOT);
-					this.factory.storeToIndex(this.cmfObject, p, main, null, ScanIndexElement.RENDITION_TYPE);
+					this.factory.storeToIndex(this.cmfObject, p, main, null, MarkerType.RENDITION_ROOT);
+					this.factory.storeToIndex(this.cmfObject, p, main, null, MarkerType.RENDITION_TYPE);
 					rootIndexed = true;
 				}
 			}
 
 			final File meta = generateMetadataFile(ctx, p, main);
-			this.factory.storeToIndex(this.cmfObject, p, main, meta, scanIndexElement);
+			this.factory.storeToIndex(this.cmfObject, p, main, meta, markerType);
 
 			if (this.virtual) {
 				final File vdocVersion = meta.getParentFile();
@@ -686,7 +686,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				if (this.cmfObject.isBatchHead()) {
 					final File vdocRootMeta = generateMetadataFile(ctx, versionProps, vdocVersion.getParentFile());
 					this.factory.storeToIndex(this.cmfObject, versionProps, vdocVersion.getParentFile(), vdocRootMeta,
-						ScanIndexElement.VDOC_ROOT);
+						MarkerType.VDOC_ROOT);
 				}
 
 				versionProps.setProperty("cm:name", vdocVersion.getName());
@@ -697,7 +697,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
 				final File vdocVersionMeta = generateMetadataFile(ctx, versionProps, vdocVersion);
 				this.factory.storeToIndex(this.cmfObject, versionProps, vdocVersion, vdocVersionMeta,
-					ScanIndexElement.VDOC_VERSION);
+					MarkerType.VDOC_VERSION);
 
 				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
 				if (members != null) {
@@ -727,7 +727,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						createStub(vdocMember, member.asString());
 						File vdocMemberMeta = generateMetadataFile(ctx, vdocMemberProperties, vdocMember);
 						this.factory.storeToIndex(this.cmfObject, vdocMemberProperties, vdocMember, vdocMemberMeta,
-							ScanIndexElement.VDOC_MEMBER);
+							MarkerType.VDOC_MEMBER);
 					}
 				}
 			} else {

@@ -3,25 +3,63 @@ package com.armedia.cmf.engine.alfresco.bulk.importer.cache;
 import java.io.File;
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 
 public class CacheItemMarker implements Cloneable {
-	protected String name;
+	public static enum MarkerType {
+		//
+		NORMAL, // A standalone file or folder
+		RENDITION_ROOT(true), // The root directory that contains all renditions
+		RENDITION_TYPE(true), // The directory that contains each rendition type
+		RENDITION_ENTRY, // The renditions themselves
+		VDOC_ROOT(true), // A Virtual Document's root directory
+		VDOC_VERSION(true), // A Virtual Document version's directory
+		VDOC_MEMBER, // A Virtual Document version's member
+		//
+		;
 
-	protected boolean directory;
+		private final Boolean staticValue;
 
-	protected Path localPath;
+		private MarkerType() {
+			this(null);
+		}
 
-	protected String cmsPath;
+		private MarkerType(Boolean value) {
+			this.staticValue = value;
+		}
 
-	protected BigDecimal number;
+		public boolean isFolder(File contentFile) {
+			if (this.staticValue != null) { return this.staticValue.booleanValue(); }
+			return contentFile.isDirectory();
+		}
+	}
 
-	protected Path content;
+	private final MarkerType type;
 
-	protected Path metadata;
+	private String name;
+
+	private boolean directory;
+
+	private int index;
+
+	private int headIndex;
+
+	private int versionCount;
+
+	private Path localPath;
+
+	private String cmsPath;
+
+	private BigDecimal number;
+
+	private Path content;
+
+	private Path metadata;
 
 	protected CacheItemMarker(CacheItemMarker copy) {
 		if (copy == null) { throw new IllegalArgumentException("Must provide an object to base the copy off of"); }
+		this.type = copy.type;
 		this.name = copy.name;
 		this.directory = copy.directory;
 		this.localPath = copy.localPath;
@@ -31,7 +69,16 @@ public class CacheItemMarker implements Cloneable {
 		this.metadata = copy.metadata;
 	}
 
+	public CacheItemMarker(MarkerType type) {
+		this.type = type;
+	}
+
 	public CacheItemMarker() {
+		this(MarkerType.NORMAL);
+	}
+
+	public MarkerType getType() {
+		return this.type;
 	}
 
 	public boolean isDirectory() {
@@ -40,6 +87,42 @@ public class CacheItemMarker implements Cloneable {
 
 	public void setDirectory(boolean directory) {
 		this.directory = directory;
+	}
+
+	public int getThisIndex() {
+		return this.index;
+	}
+
+	public void setIndex(int thisIndex) {
+		this.index = thisIndex;
+	}
+
+	public int getHeadIndex() {
+		return this.headIndex;
+	}
+
+	public void setHeadIndex(int headIndex) {
+		this.headIndex = headIndex;
+	}
+
+	public int getVersionCount() {
+		return this.versionCount;
+	}
+
+	public void setVersionCount(int versionCount) {
+		this.versionCount = versionCount;
+	}
+
+	public boolean isFirstVersion() {
+		return (this.index == 1);
+	}
+
+	public boolean isLastVersion() {
+		return (this.index == this.versionCount);
+	}
+
+	public boolean isHeadVersion() {
+		return (this.index == this.headIndex);
 	}
 
 	public Path getLocalPath() {
@@ -92,7 +175,9 @@ public class CacheItemMarker implements Cloneable {
 
 	@Override
 	public String toString() {
-		return String.format("CacheItemMarker [name=%s, cmsPath=%s, number=%s, content=%s, metadata=%s]", this.name,
+		return String.format(
+			"CacheItemMarker [type=%s, name=%s, directory=%s, thisIndex=%s, headIndex=%s, versionCount=%s, localPath=%s, cmsPath=%s, number=%s, content=%s, metadata=%s]",
+			this.type, this.name, this.directory, this.index, this.headIndex, this.versionCount, this.localPath,
 			this.cmsPath, this.number, this.content, this.metadata);
 	}
 
@@ -110,6 +195,10 @@ public class CacheItemMarker implements Cloneable {
 			version.setMetadata(null);
 		}
 		return version;
+	}
+
+	public CacheItem getItem() {
+		return getItem(Collections.singletonList(this));
 	}
 
 	public CacheItem getItem(List<CacheItemMarker> markers) {
