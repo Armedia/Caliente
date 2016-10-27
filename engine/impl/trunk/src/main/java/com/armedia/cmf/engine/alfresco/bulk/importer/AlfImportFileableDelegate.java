@@ -632,7 +632,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			contents = Collections.singleton(new CmfContentInfo());
 		}
 
-		boolean renditionRootIndexed = false;
+		boolean rootIndexed = false;
 		for (CmfContentInfo content : contents) {
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(this.factory.getTranslator(),
 				this.cmfObject, content);
@@ -667,10 +667,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				// This is a supplementary rendition, and thus will need some minimal
 				// metadata set on it
 				populateRenditionAttributes(p, targetType, content);
-				if (!renditionRootIndexed) {
+				if (!rootIndexed) {
 					this.factory.storeToIndex(this.cmfObject, p, main, null, ElementType.RENDITION_ROOT);
 					this.factory.storeToIndex(this.cmfObject, p, main, null, ElementType.RENDITION_TYPE);
-					renditionRootIndexed = true;
+					rootIndexed = true;
 				}
 			}
 
