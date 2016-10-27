@@ -378,7 +378,6 @@ public class AlfImportDelegateFactory
 
 		CacheItemMarker thisMarker = new CacheItemMarker();
 		thisMarker.setDirectory(folder);
-		thisMarker.setName(cmfObject.getName());
 		thisMarker.setContent(relativeContentPath);
 		thisMarker.setMetadata(relativeMetadataPath);
 		thisMarker.setLocalPath(relativeMetadataParent != null ? relativeMetadataParent : Paths.get(""));
@@ -404,10 +403,12 @@ public class AlfImportDelegateFactory
 		switch (type) {
 			case NORMAL:
 			case VDOC_ROOT:
+				thisMarker.setName(cmfObject.getName());
 				break;
 			default:
 				// We also need to check what this element's path relative to its "cmsPath" needs
 				// to be, so we can append it
+				thisMarker.setName(contentFile.getName());
 				cmsPathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 				String specialCmsPath = ((cmsPathProp == null) || !cmsPathProp.hasValues() ? ""
 					: cmsPathProp.getValue().asString());
