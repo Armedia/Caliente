@@ -398,8 +398,14 @@ public class AlfImportDelegateFactory
 			case RENDITION_TYPE:
 				contentFile = contentFile.getParentFile();
 				// Fall-through
-			case NORMAL:
 			case RENDITION_ENTRY:
+				// Renditions and their hierarchy folders are standalone...
+				head = 1;
+				count = 1;
+				current = 1;
+				break;
+
+			case NORMAL:
 			case VDOC_ROOT:
 			case VDOC_MEMBER:
 			case VDOC_VERSION:
@@ -539,20 +545,30 @@ public class AlfImportDelegateFactory
 		storeIngestionIndexToScanIndex();
 
 		final CacheItemMarker thisMarker = generateItemMarker(cmfObject, metadata, contentFile, metadataFile, type);
+		List<CacheItemMarker> markerList = null;
 		switch (type) {
 			case VDOC_MEMBER:
 			case VDOC_ROOT:
 			case VDOC_VERSION:
 				handleVirtual(cmfObject, metadata, contentFile, metadataFile, type, thisMarker);
 				return;
+
+			case RENDITION_ROOT:
+			case RENDITION_TYPE:
+			case RENDITION_ENTRY:
+				markerList = new ArrayList<CacheItemMarker>(1);
+				break;
+
+			case NORMAL:
+				this.currentVersions.get();
+				if (markerList == null) {
+					markerList = new ArrayList<CacheItemMarker>();
+					this.currentVersions.set(markerList);
+				}
+				break;
+
 			default:
 				break;
-		}
-
-		List<CacheItemMarker> markerList = this.currentVersions.get();
-		if (markerList == null) {
-			markerList = new ArrayList<CacheItemMarker>();
-			this.currentVersions.set(markerList);
 		}
 
 		markerList.add(thisMarker);
@@ -610,7 +626,6 @@ public class AlfImportDelegateFactory
 
 	@Override
 	public void close() {
-		"".hashCode();
 		for (VirtualDocument vdoc : this.vdocs.values()) {
 			try {
 				vdoc.serialize();
