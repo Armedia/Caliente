@@ -51,17 +51,32 @@ import com.armedia.commons.utilities.XmlTools;
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
 
-	static enum ElementType {
+	static enum ScanIndexElement {
 		//
 		NORMAL, // A standalone file or folder
-		RENDITION_ROOT, // The root directory that contains all renditions
-		RENDITION_TYPE, // The directory that contains each rendition type
+		RENDITION_ROOT(true), // The root directory that contains all renditions
+		RENDITION_TYPE(true), // The directory that contains each rendition type
 		RENDITION_ENTRY, // The renditions themselves
-		VDOC_ROOT, // A Virtual Document's root directory
-		VDOC_VERSION, // A Virtual Document version's directory
+		VDOC_ROOT(true), // A Virtual Document's root directory
+		VDOC_VERSION(true), // A Virtual Document version's directory
 		VDOC_MEMBER, // A Virtual Document version's member
 		//
 		;
+
+		private final Boolean staticValue;
+
+		private ScanIndexElement() {
+			this(null);
+		}
+
+		private ScanIndexElement(Boolean value) {
+			this.staticValue = value;
+		}
+
+		public boolean isFolder(File contentFile) {
+			if (this.staticValue != null) { return this.staticValue.booleanValue(); }
+			return contentFile.isDirectory();
+		}
 	}
 
 	private final static String FILE_CACHE_FILE = "scan.files.xml";
@@ -321,7 +336,7 @@ public class AlfImportDelegateFactory
 	}
 
 	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, Properties metadata, File contentFile,
-		File metadataFile, ElementType type) throws ImportException {
+		File metadataFile, ScanIndexElement type) throws ImportException {
 
 		storeIngestionIndexToScanIndex();
 
@@ -331,10 +346,10 @@ public class AlfImportDelegateFactory
 			this.currentVersions.set(markerList);
 		}
 
+		final boolean folder = type.isFolder(contentFile);
 		final int head;
 		final int count;
 		final long current;
-		final boolean folder;
 		switch (type) {
 			case RENDITION_ROOT:
 				contentFile = contentFile.getParentFile();
@@ -347,14 +362,12 @@ public class AlfImportDelegateFactory
 				head = 1;
 				count = 1;
 				current = 1;
-				folder = true;
 				break;
 
 			case NORMAL:
 			case RENDITION_ENTRY:
 			case VDOC_MEMBER:
 			default:
-				folder = contentFile.isDirectory();
 				CmfProperty<CmfValue> vCounter = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
 				CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
 				CmfProperty<CmfValue> vIndex = cmfObject.getProperty(IntermediateProperty.VERSION_INDEX);
