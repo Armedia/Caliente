@@ -51,6 +51,18 @@ import com.armedia.commons.utilities.XmlTools;
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
 
+	static enum ElementType {
+		//
+		NORMAL, // A standalone file or folder
+		RENDITION_ROOT, // The root directory that contains all renditions
+		RENDITION_ENTRY, // A supplementary rendition
+		VDOC_ROOT, // A Virtual Document's root directory
+		VDOC_VERSION, // A Virtual Document version's directory
+		VDOC_MEMBER, // A Virtual Document version's member
+		//
+		;
+	}
+
 	private final static String FILE_CACHE_FILE = "scan.files.xml";
 	private final static String FOLDER_CACHE_FILE = "scan.folders.xml";
 
@@ -306,10 +318,12 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile)
-		throws ImportException {
+	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, Properties metadata, File contentFile,
+		File metadataFile, ElementType type) throws ImportException {
 
 		storeIngestionIndexToScanIndex();
+
+		// TODO: Support VDocs and renditions
 
 		List<CacheItemMarker> markerList = this.currentVersions.get();
 		if (markerList == null) {
@@ -385,6 +399,22 @@ public class AlfImportDelegateFactory
 		// Remove the leading slash(es)
 		while (cmsPath.startsWith("/")) {
 			cmsPath = cmsPath.substring(1);
+		}
+
+		switch (type) {
+			case NORMAL:
+			case VDOC_ROOT:
+				break;
+			default:
+				// We also need to check what this element's path relative to its "cmsPath" needs
+				// to be, so we can append it
+				cmsPathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+				String specialCmsPath = ((cmsPathProp == null) || !cmsPathProp.hasValues() ? ""
+					: cmsPathProp.getValue().asString());
+				Path p = Paths.get(specialCmsPath);
+				p = p.relativize(relativeContentPath);
+				cmsPath = String.format("%s/%s", cmsPath, p.getParent().toString());
+				break;
 		}
 		thisMarker.setCmsPath(cmsPath);
 
