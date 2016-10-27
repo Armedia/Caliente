@@ -55,7 +55,8 @@ public class AlfImportDelegateFactory
 		//
 		NORMAL, // A standalone file or folder
 		RENDITION_ROOT, // The root directory that contains all renditions
-		RENDITION_ENTRY, // A supplementary rendition
+		RENDITION_TYPE, // The directory that contains each rendition type
+		RENDITION_ENTRY, // The renditions themselves
 		VDOC_ROOT, // A Virtual Document's root directory
 		VDOC_VERSION, // A Virtual Document version's directory
 		VDOC_MEMBER, // A Virtual Document version's member
@@ -259,6 +260,7 @@ public class AlfImportDelegateFactory
 	}
 
 	static final File normalizeAbsolute(File f) {
+		if (f == null) { return null; }
 		f = f.getAbsoluteFile();
 		f = new File(FilenameUtils.normalize(f.getAbsolutePath()));
 		return f.getAbsoluteFile();
@@ -323,39 +325,57 @@ public class AlfImportDelegateFactory
 
 		storeIngestionIndexToScanIndex();
 
-		// TODO: Support VDocs and renditions
-
 		List<CacheItemMarker> markerList = this.currentVersions.get();
 		if (markerList == null) {
 			markerList = new ArrayList<CacheItemMarker>();
 			this.currentVersions.set(markerList);
 		}
 
-		CmfProperty<CmfValue> vCounter = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
-		CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
-		CmfProperty<CmfValue> vIndex = cmfObject.getProperty(IntermediateProperty.VERSION_INDEX);
-
-		final boolean folder = contentFile.isDirectory();
 		final int head;
 		final int count;
 		final long current;
+		final boolean folder;
+		switch (type) {
+			case RENDITION_ROOT:
+				contentFile = contentFile.getParentFile();
+				// Fall-through
+			case RENDITION_TYPE:
+				contentFile = contentFile.getParentFile();
+				// Fall-through
+			case VDOC_VERSION:
+			case VDOC_ROOT:
+				head = 1;
+				count = 1;
+				current = 1;
+				folder = true;
+				break;
 
-		if ((vCounter == null) || !vCounter.hasValues() || //
-			(vHeadIndex == null) || !vHeadIndex.hasValues() || //
-			(vIndex == null) || !vIndex.hasValues()) {
-			if (!folder) {
-				// ERROR: insufficient data
-				throw new ImportException(
-					String.format("No version indexes found for (%s)[%s]", cmfObject.getLabel(), cmfObject.getId()));
-			}
-			// It's OK for directories...everything is 1
-			head = 1;
-			count = 1;
-			current = 1;
-		} else {
-			head = vHeadIndex.getValue().asInteger();
-			count = vCounter.getValue().asInteger();
-			current = vIndex.getValue().asInteger();
+			case NORMAL:
+			case RENDITION_ENTRY:
+			case VDOC_MEMBER:
+			default:
+				folder = contentFile.isDirectory();
+				CmfProperty<CmfValue> vCounter = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
+				CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
+				CmfProperty<CmfValue> vIndex = cmfObject.getProperty(IntermediateProperty.VERSION_INDEX);
+				if ((vCounter == null) || !vCounter.hasValues() || //
+					(vHeadIndex == null) || !vHeadIndex.hasValues() || //
+					(vIndex == null) || !vIndex.hasValues()) {
+					if (!folder) {
+						// ERROR: insufficient data
+						throw new ImportException(String.format("No version indexes found for (%s)[%s]",
+							cmfObject.getLabel(), cmfObject.getId()));
+					}
+					// It's OK for directories...everything is 1
+					head = 1;
+					count = 1;
+					current = 1;
+				} else {
+					head = vHeadIndex.getValue().asInteger();
+					count = vCounter.getValue().asInteger();
+					current = vIndex.getValue().asInteger();
+				}
+				break;
 		}
 
 		if (current == 1) {
@@ -373,8 +393,9 @@ public class AlfImportDelegateFactory
 
 		// basePath is the base path within which the entire import resides
 		final Path relativeContentPath = this.biRootPath.relativize(contentFile.toPath());
-		final Path relativeMetadataPath = this.biRootPath.relativize(metadataFile.toPath());
-		final Path relativeMetadataParent = relativeMetadataPath.getParent();
+		final Path relativeMetadataPath = (metadataFile != null ? this.biRootPath.relativize(metadataFile.toPath())
+			: null);
+		final Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
 
 		CacheItemMarker thisMarker = new CacheItemMarker();
 		thisMarker.setDirectory(folder);
@@ -400,21 +421,37 @@ public class AlfImportDelegateFactory
 			cmsPath = cmsPath.substring(1);
 		}
 
+		String append = null;
+		// This is the base name, others may change it...
+		thisMarker.setName(contentFile.getName());
 		switch (type) {
 			case NORMAL:
 			case VDOC_ROOT:
 				thisMarker.setName(cmfObject.getName());
 				break;
-			default:
-				// We also need to check what this element's path relative to its "cmsPath" needs
-				// to be, so we can append it
-				thisMarker.setName(contentFile.getName());
+
+			case VDOC_MEMBER:
+				// For the member, we have to append one more item to the cmsPath
+				append = contentFile.getParentFile().getName();
+				// fall-through
+			case VDOC_VERSION:
+				cmsPath = String.format("%s/%s", cmsPath, cmfObject.getName());
+				if (append != null) {
+					cmsPath = String.format("%s/%s", cmsPath, append);
+				}
+				break;
+
+			case RENDITION_ENTRY:
+			case RENDITION_TYPE:
 				cmsPathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 				String specialCmsPath = ((cmsPathProp == null) || !cmsPathProp.hasValues() ? ""
 					: cmsPathProp.getValue().asString());
 				Path p = Paths.get(specialCmsPath);
 				p = p.relativize(relativeContentPath);
 				cmsPath = String.format("%s/%s", cmsPath, p.getParent().toString());
+				break;
+
+			default:
 				break;
 		}
 		thisMarker.setCmsPath(cmsPath);
