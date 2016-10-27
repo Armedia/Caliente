@@ -560,7 +560,7 @@ public class AlfImportDelegateFactory
 				break;
 
 			case NORMAL:
-				this.currentVersions.get();
+				markerList = this.currentVersions.get();
 				if (markerList == null) {
 					markerList = new ArrayList<CacheItemMarker>();
 					this.currentVersions.set(markerList);
