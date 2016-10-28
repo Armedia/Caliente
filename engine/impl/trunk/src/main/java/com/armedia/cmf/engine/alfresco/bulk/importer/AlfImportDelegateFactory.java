@@ -577,10 +577,6 @@ public class AlfImportDelegateFactory
 				break;
 		}
 
-		if (thisMarker.getName().equalsIgnoreCase("VDoc without root streams.bin")) {
-			"".hashCode();
-		}
-
 		markerList.add(thisMarker);
 
 		final boolean folder = thisMarker.isDirectory();
