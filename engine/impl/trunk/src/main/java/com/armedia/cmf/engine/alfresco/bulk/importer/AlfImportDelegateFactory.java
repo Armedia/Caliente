@@ -550,9 +550,6 @@ public class AlfImportDelegateFactory
 		storeIngestionIndexToScanIndex();
 
 		final CacheItemMarker thisMarker = generateItemMarker(cmfObject, contentFile, metadataFile, type);
-		if (thisMarker.getName().equalsIgnoreCase("VDoc without root streams.bin")) {
-			"".hashCode();
-		}
 		List<CacheItemMarker> markerList = null;
 		switch (type) {
 			case VDOC_ROOT:
