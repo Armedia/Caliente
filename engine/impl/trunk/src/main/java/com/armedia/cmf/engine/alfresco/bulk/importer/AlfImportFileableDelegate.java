@@ -632,6 +632,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			contents = Collections.singleton(new CmfContentInfo());
 		}
 
+		boolean vdocRootIndexed = false;
+		Set<String> vdocVersionsIndexed = new HashSet<String>();
 		boolean renditionsRootIndexed = false;
 		Set<String> renditionTypesIndexed = new HashSet<String>();
 		for (CmfContentInfo content : contents) {
@@ -680,24 +682,27 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			final File meta = generateMetadataFile(ctx, p, main);
 			if (this.virtual) {
 				final File vdocVersion = meta.getParentFile();
-				// Does the reference home already have properties? If not, then add them...
-				Properties versionProps = new Properties();
-				populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
+				if (vdocVersionsIndexed.add(vdocVersion.getName())) {
+					// Does the reference home already have properties? If not, then add them...
+					Properties versionProps = new Properties();
+					populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
 
-				if (this.cmfObject.isBatchHead()) {
-					final File vdocRootMeta = generateMetadataFile(ctx, versionProps, vdocVersion.getParentFile());
-					this.factory.storeToIndex(this.cmfObject, vdocVersion.getParentFile(), vdocRootMeta,
-						MarkerType.VDOC_ROOT);
+					if (this.cmfObject.isBatchHead() && !vdocRootIndexed) {
+						final File vdocRootMeta = generateMetadataFile(ctx, versionProps, vdocVersion.getParentFile());
+						this.factory.storeToIndex(this.cmfObject, vdocVersion.getParentFile(), vdocRootMeta,
+							MarkerType.VDOC_ROOT);
+						vdocRootIndexed = true;
+					}
+
+					versionProps.setProperty("cm:name", vdocVersion.getName());
+					versionProps.setProperty("dctm:object_name", vdocVersion.getName());
+					versionProps.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, this.vdocVersion.getName());
+					Set<String> aspects = new LinkedHashSet<String>(this.vdocVersion.getAspects());
+					aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
+					versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
+					final File vdocVersionMeta = generateMetadataFile(ctx, versionProps, vdocVersion);
+					this.factory.storeToIndex(this.cmfObject, vdocVersion, vdocVersionMeta, MarkerType.VDOC_VERSION);
 				}
-
-				versionProps.setProperty("cm:name", vdocVersion.getName());
-				versionProps.setProperty("dctm:object_name", vdocVersion.getName());
-				versionProps.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, this.vdocVersion.getName());
-				Set<String> aspects = new LinkedHashSet<String>(this.vdocVersion.getAspects());
-				aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
-				versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
-				final File vdocVersionMeta = generateMetadataFile(ctx, versionProps, vdocVersion);
-				this.factory.storeToIndex(this.cmfObject, vdocVersion, vdocVersionMeta, MarkerType.VDOC_VERSION);
 				this.factory.storeToIndex(this.cmfObject, main, meta, MarkerType.VDOC_STREAM);
 
 				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
