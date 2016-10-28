@@ -290,7 +290,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 		String renditionId = null;
 		if (content.getRendition() != 0) {
-			renditionId = String.format("%08x", content.getRendition());
+			renditionId = String.format("%08x.%s", content.getRendition(), format);
 		} else {
 			renditionId = null;
 		}
