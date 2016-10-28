@@ -669,17 +669,15 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				// metadata set on it
 				populateRenditionAttributes(p, targetType, content);
 				if (!renditionsRootIndexed) {
-					this.factory.storeToIndex(this.cmfObject, p, main, null, MarkerType.RENDITION_ROOT);
+					this.factory.storeToIndex(this.cmfObject, main, null, MarkerType.RENDITION_ROOT);
 					renditionsRootIndexed = true;
 				}
 				if (renditionTypesIndexed.add(content.getRenditionIdentifier())) {
-					this.factory.storeToIndex(this.cmfObject, p, main, null, MarkerType.RENDITION_TYPE);
+					this.factory.storeToIndex(this.cmfObject, main, null, MarkerType.RENDITION_TYPE);
 				}
 			}
 
 			final File meta = generateMetadataFile(ctx, p, main);
-			this.factory.storeToIndex(this.cmfObject, p, main, meta, markerType);
-
 			if (this.virtual) {
 				final File vdocVersion = meta.getParentFile();
 				// Does the reference home already have properties? If not, then add them...
@@ -688,7 +686,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 				if (this.cmfObject.isBatchHead()) {
 					final File vdocRootMeta = generateMetadataFile(ctx, versionProps, vdocVersion.getParentFile());
-					this.factory.storeToIndex(this.cmfObject, versionProps, vdocVersion.getParentFile(), vdocRootMeta,
+					this.factory.storeToIndex(this.cmfObject, vdocVersion.getParentFile(), vdocRootMeta,
 						MarkerType.VDOC_ROOT);
 				}
 
@@ -699,8 +697,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
 				versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
 				final File vdocVersionMeta = generateMetadataFile(ctx, versionProps, vdocVersion);
-				this.factory.storeToIndex(this.cmfObject, versionProps, vdocVersion, vdocVersionMeta,
-					MarkerType.VDOC_VERSION);
+				this.factory.storeToIndex(this.cmfObject, vdocVersion, vdocVersionMeta, MarkerType.VDOC_VERSION);
+				this.factory.storeToIndex(this.cmfObject, main, meta, MarkerType.VDOC_STREAM);
 
 				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
 				if (members != null) {
@@ -729,11 +727,13 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						File vdocMember = new File(vdocVersion, memberData[0]);
 						createStub(vdocMember, member.asString());
 						File vdocMemberMeta = generateMetadataFile(ctx, vdocMemberProperties, vdocMember);
-						this.factory.storeToIndex(this.cmfObject, vdocMemberProperties, vdocMember, vdocMemberMeta,
-							MarkerType.VDOC_MEMBER);
+						this.factory.storeToIndex(this.cmfObject, vdocMember, vdocMemberMeta,
+							MarkerType.VDOC_REFERENCE);
 					}
 				}
 			} else {
+				this.factory.storeToIndex(this.cmfObject, main, meta, markerType);
+
 				// IF (and only if) the document is also the head document, but not the latest
 				// version (i.e. mid-tree "CURRENT", we need to copy everything over to a "new"
 				// location with no version number - including the properties.

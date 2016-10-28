@@ -385,8 +385,8 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	protected final CacheItemMarker generateItemMarker(final CmfObject<CmfValue> cmfObject, Properties metadata,
-		File contentFile, File metadataFile, MarkerType type) throws ImportException {
+	protected final CacheItemMarker generateItemMarker(final CmfObject<CmfValue> cmfObject, File contentFile,
+		File metadataFile, MarkerType type) throws ImportException {
 		final boolean folder = type.isFolder(contentFile);
 		final int head;
 		final int count;
@@ -399,16 +399,16 @@ public class AlfImportDelegateFactory
 				contentFile = contentFile.getParentFile();
 				// Fall-through
 			case RENDITION_ENTRY:
-				// Renditions and their hierarchy folders are standalone...
+			case VDOC_ROOT:
+			case VDOC_VERSION:
+			case VDOC_REFERENCE:
+			case VDOC_STREAM:
 				head = 1;
 				count = 1;
 				current = 1;
 				break;
 
 			case NORMAL:
-			case VDOC_ROOT:
-			case VDOC_MEMBER:
-			case VDOC_VERSION:
 			default:
 				CmfProperty<CmfValue> vCounter = cmfObject.getProperty(IntermediateProperty.VERSION_COUNT);
 				CmfProperty<CmfValue> vHeadIndex = cmfObject.getProperty(IntermediateProperty.VERSION_HEAD_INDEX);
@@ -480,7 +480,11 @@ public class AlfImportDelegateFactory
 				thisMarker.setName(cmfObject.getName());
 				break;
 
-			case VDOC_MEMBER:
+			case VDOC_STREAM:
+				// For the primary streams, we set the same name of the object
+				thisMarker.setName(cmfObject.getName());
+				// fall-through
+			case VDOC_REFERENCE:
 				// For the member, we have to append one more item to the cmsPath
 				append = contentFile.getParentFile().getName();
 				// fall-through
@@ -511,8 +515,8 @@ public class AlfImportDelegateFactory
 		return thisMarker;
 	}
 
-	private final void handleVirtual(final CmfObject<CmfValue> cmfObject, Properties metadata, File contentFile,
-		File metadataFile, MarkerType type, CacheItemMarker thisMarker) throws ImportException {
+	private final void handleVirtual(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile,
+		MarkerType type, CacheItemMarker thisMarker) throws ImportException {
 		VirtualDocument vdoc = ConcurrentUtils.createIfAbsentUnchecked(this.vdocs, cmfObject.getBatchId(),
 			new ConcurrentInitializer<VirtualDocument>() {
 				@Override
@@ -530,7 +534,8 @@ public class AlfImportDelegateFactory
 				vdoc.addVersion(thisMarker);
 				break;
 
-			case VDOC_MEMBER:
+			case VDOC_STREAM:
+			case VDOC_REFERENCE:
 				vdoc.addMember(contentFile.getParentFile().getName(), thisMarker);
 				break;
 
@@ -539,18 +544,22 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, Properties metadata, File contentFile,
-		File metadataFile, MarkerType type) throws ImportException {
+	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile,
+		MarkerType type) throws ImportException {
 
 		storeIngestionIndexToScanIndex();
 
-		final CacheItemMarker thisMarker = generateItemMarker(cmfObject, metadata, contentFile, metadataFile, type);
+		final CacheItemMarker thisMarker = generateItemMarker(cmfObject, contentFile, metadataFile, type);
+		if (thisMarker.getName().equalsIgnoreCase("VDoc without root streams.bin")) {
+			"".hashCode();
+		}
 		List<CacheItemMarker> markerList = null;
 		switch (type) {
-			case VDOC_MEMBER:
 			case VDOC_ROOT:
 			case VDOC_VERSION:
-				handleVirtual(cmfObject, metadata, contentFile, metadataFile, type, thisMarker);
+			case VDOC_STREAM:
+			case VDOC_REFERENCE:
+				handleVirtual(cmfObject, contentFile, metadataFile, type, thisMarker);
 				return;
 
 			case RENDITION_ROOT:
@@ -569,6 +578,10 @@ public class AlfImportDelegateFactory
 
 			default:
 				break;
+		}
+
+		if (thisMarker.getName().equalsIgnoreCase("VDoc without root streams.bin")) {
+			"".hashCode();
 		}
 
 		markerList.add(thisMarker);
