@@ -87,7 +87,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 					}
 				}
 			}
-			this.defaultAspects = Tools.freezeSet(defaultAspects);
+			this.defaultAspects = Tools.freezeSet(defaultAspects, true);
 		}
 
 		private T attachAspects(Set<String> aspects) throws DfException {
