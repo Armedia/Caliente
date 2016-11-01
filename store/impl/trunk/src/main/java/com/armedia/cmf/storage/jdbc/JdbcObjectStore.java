@@ -1322,7 +1322,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 				pArr[4] = s;
 				pArr[5] = i.getProperty(s);
-				if (pArr[4] == null) {
+				if (pArr[5] == null) {
 					continue;
 				}
 				properties.add(pArr.clone());
