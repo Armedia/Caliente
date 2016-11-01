@@ -93,6 +93,9 @@ public class DctmAttributes {
 	/** The group_permit attribute of dm_sysobject. */
 	public static final String GROUP_PERMIT = "group_permit";
 
+	/** The world_permit attribute of dm_sysobject. */
+	public static final String WORLD_PERMIT = "world_permit";
+
 	/** The i_vstamp attribute of dm_sysobject. */
 	public static final String I_VSTAMP = "i_vstamp";
 

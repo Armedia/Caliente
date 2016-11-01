@@ -48,7 +48,8 @@ public class DctmAttributeHandlers {
 		 *         {@code false})
 		 * @throws DfException
 		 */
-		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute) throws DfException {
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
+			throws DfException {
 			return true;
 		}
 
@@ -99,7 +100,8 @@ public class DctmAttributeHandlers {
 	public static final AttributeHandler DEFAULT_HANDLER = new AttributeHandler();
 	public static final AttributeHandler NO_IMPORT_HANDLER = new AttributeHandler() {
 		@Override
-		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute) throws DfException {
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
+			throws DfException {
 			return false;
 		}
 	};
@@ -117,7 +119,8 @@ public class DctmAttributeHandlers {
 		}
 
 		@Override
-		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute) throws DfException {
+		public boolean includeInImport(IDfPersistentObject object, CmfAttribute<IDfValue> attribute)
+			throws DfException {
 			return false;
 		}
 	};
@@ -161,8 +164,8 @@ public class DctmAttributeHandlers {
 		//
 		// ACL
 		//
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.OWNER_NAME,
+			DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
 			DctmAttributes.OBJECT_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
@@ -170,8 +173,8 @@ public class DctmAttributeHandlers {
 			DctmAttributes.R_ACCESSOR_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
 			DctmAttributes.R_ACCESSOR_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
-			DctmAttributes.R_IS_GROUP, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING, DctmAttributes.R_IS_GROUP,
+			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.ACL, DctmDataType.DF_STRING,
 			DctmAttributes.R_ACCESSOR_XPERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
@@ -186,11 +189,17 @@ public class DctmAttributeHandlers {
 			DctmAttributes.I_CHRONICLE_ID, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
+			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_INTEGER,
+			DctmAttributes.OWNER_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
 			DctmAttributes.GROUP_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_INTEGER,
+			DctmAttributes.GROUP_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_INTEGER,
+			DctmAttributes.WORLD_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.USER_NAME_HANDLER);
+			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
 			DctmAttributes.ACL_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
@@ -222,11 +231,17 @@ public class DctmAttributeHandlers {
 			DctmAttributes.OBJECT_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
+			DctmAttributes.OWNER_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_INTEGER,
+			DctmAttributes.OWNER_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
 			DctmAttributes.GROUP_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_INTEGER,
+			DctmAttributes.GROUP_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_INTEGER,
+			DctmAttributes.WORLD_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.USER_NAME_HANDLER);
+			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
 			DctmAttributes.ACL_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
@@ -274,16 +289,16 @@ public class DctmAttributeHandlers {
 			DctmAttributes.ATTR_COUNT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING,
 			DctmAttributes.ATTR_COUNT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING,
-			DctmAttributes.START_POS, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING, DctmAttributes.START_POS,
+			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING, DctmAttributes.NAME,
 			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING,
 			DctmAttributes.SUPER_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING,
-			DctmAttributes.ATTR_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING,
-			DctmAttributes.ATTR_TYPE, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING, DctmAttributes.ATTR_NAME,
+			DctmAttributeHandlers.NO_IMPORT_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING, DctmAttributes.ATTR_TYPE,
+			DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING,
 			DctmAttributes.ATTR_LENGTH, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.TYPE, DctmDataType.DF_STRING,
@@ -322,8 +337,8 @@ public class DctmAttributeHandlers {
 
 		// This will help intercept user names that need to be mapped to "dynamic" names on the
 		// target DB, taken from the session config
-		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING,
-			DctmAttributes.USER_NAME, DctmAttributeHandlers.USER_NAME_HANDLER);
+		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.USER, DctmDataType.DF_STRING, DctmAttributes.USER_NAME,
+			DctmAttributeHandlers.USER_NAME_HANDLER);
 	}
 
 	void initOperatorNames(CfgTools cfg) {
@@ -344,12 +359,14 @@ public class DctmAttributeHandlers {
 	private DctmAttributeHandlers() {
 	}
 
-	private static Map<String, AttributeHandler> getAttributeHandlerMap(DctmObjectType objectType, DctmDataType dataType) {
+	private static Map<String, AttributeHandler> getAttributeHandlerMap(DctmObjectType objectType,
+		DctmDataType dataType) {
 		if (dataType == null) { throw new IllegalArgumentException(
 			"Must provide a data type to retrieve the interceptor for"); }
-		if (dataType == DctmDataType.DF_UNDEFINED) { throw new IllegalArgumentException("DF_UNDEFINED is not supported"); }
-		return (objectType == null ? DctmAttributeHandlers.GLOBAL.get(dataType) : DctmAttributeHandlers.PER_TYPE.get(
-			objectType).get(dataType));
+		if (dataType == DctmDataType.DF_UNDEFINED) { throw new IllegalArgumentException(
+			"DF_UNDEFINED is not supported"); }
+		return (objectType == null ? DctmAttributeHandlers.GLOBAL.get(dataType)
+			: DctmAttributeHandlers.PER_TYPE.get(objectType).get(dataType));
 	}
 
 	public static AttributeHandler removeAttributeHandler(DctmObjectType objectType, DctmDataType dataType,
@@ -394,7 +411,8 @@ public class DctmAttributeHandlers {
 
 	public static AttributeHandler getAttributeHandler(DctmObjectType objectType, DctmDataType dataType,
 		String attributeName) {
-		if (attributeName == null) { throw new IllegalArgumentException("Must provide an attribute name to intercept"); }
+		if (attributeName == null) { throw new IllegalArgumentException(
+			"Must provide an attribute name to intercept"); }
 		AttributeHandler ret = DctmAttributeHandlers.getAttributeHandlerMap(objectType, dataType).get(attributeName);
 		if (ret == null) {
 			// Nothing, so try for the global one
