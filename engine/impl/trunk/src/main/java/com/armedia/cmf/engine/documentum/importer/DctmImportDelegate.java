@@ -194,6 +194,26 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		}
 	}
 
+	protected void copyBaseAttributes(T object) throws DfException {
+		// We remove the version labels as well
+		// Set "default" attributes
+		for (CmfAttribute<IDfValue> attribute : this.cmfObject.getAttributes()) {
+			// TODO check to see if we need to set any internal or system attributes of various
+			// types
+			final String name = attribute.getName();
+			final AttributeHandler handler = getAttributeHandler(attribute);
+
+			// for now ignore setting internal and system attributes
+			boolean doSet = (!name.startsWith("r_") && !name.startsWith("i_"));
+			// allow for a last-minute interception...
+			doSet &= handler.includeInImport(object, attribute);
+
+			if (doSet) {
+				copyAttributeToObject(attribute, object);
+			}
+		}
+	}
+
 	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 
@@ -283,23 +303,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			}
 			 */
 
-			// We remove the version labels as well
-			// Set "default" attributes
-			for (CmfAttribute<IDfValue> attribute : this.cmfObject.getAttributes()) {
-				// TODO check to see if we need to set any internal or system attributes of various
-				// types
-				final String name = attribute.getName();
-				final AttributeHandler handler = getAttributeHandler(attribute);
-
-				// for now ignore setting internal and system attributes
-				boolean doSet = (!name.startsWith("r_") && !name.startsWith("i_"));
-				// allow for a last-minute interception...
-				doSet &= handler.includeInImport(object, attribute);
-
-				if (doSet) {
-					copyAttributeToObject(attribute, object);
-				}
-			}
+			copyBaseAttributes(object);
 
 			if (updateVersionLabels) {
 				CmfAttribute<IDfValue> versionLabel = this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL);
