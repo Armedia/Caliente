@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+	<changeSet author="cmf" id="1002">
+    	<preConditions>
+    		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
+	    </preConditions>
+
+		<!-- Extension element definitions -->
+		<createTable tableName="cmf_extension_element">
+			<column name="element_id" type="varchar(96)" remarks="This opaque attribute identiﬁes the ID of the extension element">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar(1024)" remarks="The extension's name">
+				<constraints nullable="false" />
+			</column>
+			<column name="namespace" type="varchar(1024)" remarks="The extension's namespace">
+				<constraints nullable="true" />
+			</column>
+			<column name="value" type="text" remarks="The extension's value">
+				<constraints nullable="true" />
+			</column>
+			<column name="parent_id" type="varchar(96)" remarks="The parent extension element">
+				<constraints nullable="true" />
+			</column>
+			<column name="position" type="bigint" remarks="The extension's position in the child list">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_extension_element" columnNames="element_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_extension_element_tree"
+			baseTableName="cmf_extension_element" baseColumnNames="parent_id"
+			referencedTableName="cmf_extension_element" referencedColumnNames="element_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addUniqueConstraint constraintName="cmfee_list_position" tableName="cmf_extension_element"
+			columnNames="parent_id, position" />
+
+		<!-- The object extensions themselves, associated to each object stored -->
+		<createTable tableName="cmf_object_extension">
+			<column name="object_id" type="varchar(96)" remarks="The extension ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="level" type="varchar(64)" remarks="The extension set's level">
+				<constraints nullable="false" />
+			</column>
+			<column name="element_id" type="varchar(96)" remarks="The root element for the extension tree">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_object_extension" columnNames="object_id, level" />
+		<addForeignKeyConstraint constraintName="fk_cmf_object_extension_object"
+			baseTableName="cmf_object_extension" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addForeignKeyConstraint constraintName="fk_cmf_object_extension_element"
+			baseTableName="cmf_object_extension" baseColumnNames="element_id"
+			referencedTableName="cmf_extension_element" referencedColumnNames="element_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addUniqueConstraint constraintName="cmf_extension_level" tableName="cmf_extension"
+			columnNames="object_id, level" />
+
+	</changeSet>
+</databaseChangeLog>
