@@ -71,12 +71,21 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			this.ref = new AtomicReference<T>(object);
 			IDfSession session = object.getSession();
 			IDfType type = object.getType();
-			IDfTypeInfo typeInfo = IDfTypeInfo.class.cast(session.getObjectByQualification(
-				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId()))));
+			IDfPersistentObject info = session.getObjectByQualification(
+				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId())));
 			Set<String> defaultAspects = Collections.emptySet();
-			if (typeInfo != null) {
-				// These are the aspects that need not be added or removed
-				defaultAspects = typeInfo.getDefaultAspects();
+			if ((info != null) && info.hasAttr(DctmAttributes.DEFAULT_ASPECTS)) {
+				if (IDfTypeInfo.class.isInstance(info)) {
+					IDfTypeInfo typeInfo = IDfTypeInfo.class.cast(info);
+					// These are the aspects that need not be added or removed
+					defaultAspects = typeInfo.getDefaultAspects();
+				} else {
+					final int c = info.getValueCount(DctmAttributes.DEFAULT_ASPECTS);
+					defaultAspects = new LinkedHashSet<String>();
+					for (int i = 0; i < c; i++) {
+						defaultAspects.add(info.getRepeatingString(DctmAttributes.DEFAULT_ASPECTS, i));
+					}
+				}
 			}
 			this.defaultAspects = Tools.freezeSet(defaultAspects);
 		}
