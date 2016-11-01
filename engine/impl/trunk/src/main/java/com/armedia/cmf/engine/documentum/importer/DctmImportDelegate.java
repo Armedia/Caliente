@@ -42,6 +42,7 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.IDfTypeInfo;
 import com.documentum.fc.client.aspect.IDfAspects;
 import com.documentum.fc.client.aspect.IDfAttachAspectCallback;
 import com.documentum.fc.client.aspect.IDfDetachAspectCallback;
@@ -61,6 +62,61 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 
 	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory.newStringValue("CURRENT");
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
+
+	private final class AspectHelper implements IDfAttachAspectCallback, IDfDetachAspectCallback {
+		private final AtomicReference<T> ref;
+		private final Set<String> defaultAspects;
+
+		private AspectHelper(T object) throws DfException {
+			this.ref = new AtomicReference<T>(object);
+			IDfSession session = object.getSession();
+			IDfType type = object.getType();
+			IDfTypeInfo typeInfo = IDfTypeInfo.class.cast(session.getObjectByQualification(
+				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId()))));
+			Set<String> defaultAspects = Collections.emptySet();
+			if (typeInfo != null) {
+				// These are the aspects that need not be added or removed
+				defaultAspects = typeInfo.getDefaultAspects();
+			}
+			this.defaultAspects = Tools.freezeSet(defaultAspects);
+		}
+
+		private T attachAspects(Set<String> aspects) throws DfException {
+			for (String a : aspects) {
+				// We make sure we don't attach aspects that are part of the type
+				if (this.defaultAspects.contains(a)) {
+					continue;
+				}
+				IDfAspects.class.cast(this.ref.get()).attachAspect(a, this);
+			}
+			return this.ref.get();
+		}
+
+		@Override
+		public void doPostAttach(IDfPersistentObject object) throws Exception {
+			this.ref.set(castObject(object));
+		}
+
+		private T detachAspects(Set<String> aspects) throws DfException {
+			for (String a : aspects) {
+				// We make sure we don't detach aspects that are part of the type
+				if (this.defaultAspects.contains(a)) {
+					continue;
+				}
+				IDfAspects.class.cast(this.ref.get()).detachAspect(a, this);
+			}
+			return this.ref.get();
+		}
+
+		@Override
+		public void doPostDetach(IDfPersistentObject object) throws Exception {
+			this.ref.set(castObject(object));
+		}
+
+		public T get() {
+			return this.ref.get();
+		}
+	}
 
 	private final DctmObjectType dctmType;
 
@@ -350,39 +406,18 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			}
 		}
 
-		// Next... remove from the list of aspects to be detached, the aspects which we know
-		// we'll have to keep
+		final AspectHelper helper = new AspectHelper(object);
+
+		// Detach only those aspects we won't have to re-add later
 		Set<String> oldAspects = new LinkedHashSet<String>(currentAspects);
 		oldAspects.removeAll(newAspects);
+		helper.detachAspects(oldAspects);
 
-		// Now, detach the aspects that need detaching
-		final AtomicReference<T> ref = new AtomicReference<T>(object);
-		for (String a : oldAspects) {
-			IDfAspects aspectsView = IDfAspects.class.cast(ref.get());
-			aspectsView.detachAspect(a, new IDfDetachAspectCallback() {
-				@Override
-				public void doPostDetach(IDfPersistentObject object) throws Exception {
-					ref.set(castObject(object));
-				}
-			});
-		}
-
-		// Next, remove from the list of aspects to be attached, the aspects that are currently
-		// already attached...
+		// Attach only those aspects we don't already have
 		newAspects.removeAll(currentAspects);
+		helper.attachAspects(newAspects);
 
-		// Finally, attach the aspects that need attaching
-		for (String a : newAspects) {
-			IDfAspects aspectsView = IDfAspects.class.cast(ref.get());
-			aspectsView.attachAspect(a, new IDfAttachAspectCallback() {
-				@Override
-				public void doPostAttach(IDfPersistentObject object) throws Exception {
-					ref.set(castObject(object));
-				}
-			});
-		}
-
-		return ref.get();
+		return helper.get();
 	}
 
 	protected final AttributeHandler getAttributeHandler(IDfAttr attr) {
