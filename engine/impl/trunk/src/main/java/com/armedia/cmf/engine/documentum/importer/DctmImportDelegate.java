@@ -42,7 +42,6 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
-import com.documentum.fc.client.IDfTypeInfo;
 import com.documentum.fc.client.aspect.IDfAspects;
 import com.documentum.fc.client.aspect.IDfAttachAspectCallback;
 import com.documentum.fc.client.aspect.IDfDetachAspectCallback;
@@ -75,16 +74,10 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId())));
 			Set<String> defaultAspects = Collections.emptySet();
 			if ((info != null) && info.hasAttr(DctmAttributes.DEFAULT_ASPECTS)) {
-				if (IDfTypeInfo.class.isInstance(info)) {
-					IDfTypeInfo typeInfo = IDfTypeInfo.class.cast(info);
-					// These are the aspects that need not be added or removed
-					defaultAspects = typeInfo.getDefaultAspects();
-				} else {
-					final int c = info.getValueCount(DctmAttributes.DEFAULT_ASPECTS);
-					defaultAspects = new LinkedHashSet<String>();
-					for (int i = 0; i < c; i++) {
-						defaultAspects.add(info.getRepeatingString(DctmAttributes.DEFAULT_ASPECTS, i));
-					}
+				final int c = info.getValueCount(DctmAttributes.DEFAULT_ASPECTS);
+				defaultAspects = new LinkedHashSet<String>();
+				for (int i = 0; i < c; i++) {
+					defaultAspects.add(info.getRepeatingString(DctmAttributes.DEFAULT_ASPECTS, i));
 				}
 			}
 			this.defaultAspects = Tools.freezeSet(defaultAspects, true);
