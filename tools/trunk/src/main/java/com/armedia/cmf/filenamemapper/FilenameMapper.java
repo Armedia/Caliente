@@ -367,7 +367,7 @@ public class FilenameMapper {
 
 		try {
 			final FilenameDeduplicator<CmfObjectRef> deduplicator = new FilenameDeduplicator<CmfObjectRef>(
-				FilenameMapper.ID_VALIDATOR);
+				FilenameMapper.ID_VALIDATOR, CLIParam.ignore_case.isPresent());
 
 			IDfSession session = dfcPool.acquireSession();
 			final Runtime runtime = Runtime.getRuntime();

@@ -23,6 +23,42 @@ import com.armedia.commons.utilities.Tools;
 
 public class FilenameDeduplicator<R extends CmfObjectRef> {
 
+	private static enum Canonicalizer {
+		//
+		// Same string, no change
+		NO_CHANGE() {
+		},
+		// Case insensitive (fold to uppercase)
+		CASE_INSENSITIVE() {
+			@Override
+			protected String doCanonicalize(String name) {
+				return name.toUpperCase();
+			}
+		},
+		//
+		;
+
+		protected String doCanonicalize(String name) {
+			return name;
+		}
+
+		public final String canonicalize(String name) {
+			if (name == null) { return null; }
+			return doCanonicalize(name);
+		}
+
+		public final boolean equals(String a, String b) {
+			return (compare(a, b) == 0);
+		}
+
+		public final int compare(String a, String b) {
+			if (a == b) { return 0; }
+			if (a == null) { return -1; }
+			if (b == null) { return 1; }
+			return canonicalize(a).compareTo(canonicalize(b));
+		}
+	}
+
 	public static interface IdValidator<R extends CmfObjectRef> {
 		public boolean isValidId(R id);
 	}
@@ -94,7 +130,7 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 
 		private boolean setName(final String newName) {
 			if (StringUtils.isEmpty(newName)) { return false; }
-			if (Tools.equals(this.newName, newName)) { return false; }
+			if (FilenameDeduplicator.this.canonicalizer.equals(this.newName, newName)) { return false; }
 			final String oldName;
 			Lock l = this.mainLock.writeLock();
 			l.lock();
@@ -128,8 +164,8 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 		public int compareTo(FSEntry o) {
 			if (o == null) { return 1; }
 
-			// First, sort by name
-			int r = Tools.compare(this.newName, o.newName);
+			// First, sort by name (take case sensitivity into account)
+			int r = FilenameDeduplicator.this.canonicalizer.compare(this.newName, o.newName);
 			if (r != 0) { return r; }
 
 			// Then, the one with the fewest parents sorts first
@@ -167,13 +203,14 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 
 			Lock l = this.childrenLock.writeLock();
 			l.lock();
+			final String childName = FilenameDeduplicator.this.canonicalizer.canonicalize(child.newName);
 			try {
-				namedChildren = this.children.get(child.newName);
+				namedChildren = this.children.get(childName);
 				if (namedChildren == null) {
 					// This is a new object name, so we create the map to contain
 					// all entries with that name
 					namedChildren = new HashMap<R, FSEntry>();
-					this.children.put(child.newName, namedChildren);
+					this.children.put(childName, namedChildren);
 				}
 				namedChildren.put(child.id, child);
 				newConflict = (namedChildren.size() > 1);
@@ -185,7 +222,7 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 				l = this.conflictsLock.writeLock();
 				l.lock();
 				try {
-					this.conflicts.add(child.newName);
+					this.conflicts.add(childName);
 					conflictsDetected(this);
 				} finally {
 					l.unlock();
@@ -199,8 +236,10 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 
 			Lock l = this.childrenLock.writeLock();
 			l.lock();
+			final String canonicalOldName = FilenameDeduplicator.this.canonicalizer.canonicalize(oldName);
+			final String canonicalNewName = FilenameDeduplicator.this.canonicalizer.canonicalize(child.newName);
 			try {
-				final Map<R, FSEntry> oldNamedChildren = this.children.get(oldName);
+				final Map<R, FSEntry> oldNamedChildren = this.children.get(canonicalOldName);
 				if (oldNamedChildren == null) {
 					// ERROR!! Parent link defect
 					throw new IllegalStateException("An entry refers to a parent that knows nothing about it");
@@ -208,10 +247,10 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 				oldNamedChildren.remove(child.id);
 				oldSize = oldNamedChildren.size();
 
-				Map<R, FSEntry> newNamedChildren = this.children.get(child.newName);
+				Map<R, FSEntry> newNamedChildren = this.children.get(canonicalNewName);
 				if (newNamedChildren == null) {
 					newNamedChildren = new HashMap<R, FSEntry>();
-					this.children.put(child.newName, newNamedChildren);
+					this.children.put(canonicalNewName, newNamedChildren);
 				}
 				newNamedChildren.put(child.id, child);
 				newSize = newNamedChildren.size();
@@ -228,13 +267,13 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 				if (oldSize == 1) {
 					// There is only one file left with the old name, so
 					// we can remove the name from the conflict list
-					this.conflicts.remove(oldName);
+					this.conflicts.remove(canonicalOldName);
 				}
 
 				if (newSize > 1) {
 					// The new name generates a conflict, so add it to the
 					// conflict set
-					this.conflicts.add(child.newName);
+					this.conflicts.add(canonicalNewName);
 				}
 				newConflict = !this.conflicts.isEmpty();
 			} finally {
@@ -254,7 +293,7 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 			}
 			// Finally, mark the entry as renamed. But if it got renamed to its original
 			// name, then unmark it as renamed so we don't do anything to it
-			if (Tools.equals(child.originalName, child.newName)) {
+			if (FilenameDeduplicator.this.canonicalizer.equals(child.originalName, child.newName)) {
 				FilenameDeduplicator.this.renamedEntries.remove(child.id);
 			} else {
 				FilenameDeduplicator.this.renamedEntries.put(child.id, child);
@@ -303,15 +342,18 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 
 	private final IdValidator<R> idValidator;
 
-	public FilenameDeduplicator() {
-		this(null);
+	private final Canonicalizer canonicalizer;
+
+	public FilenameDeduplicator(boolean ignoreCase) {
+		this(null, ignoreCase);
 	}
 
-	public FilenameDeduplicator(IdValidator<R> idValidator) {
+	public FilenameDeduplicator(IdValidator<R> idValidator, boolean ignoreCase) {
 		if (idValidator == null) {
 			idValidator = FilenameDeduplicator.getDefaultValidator();
 		}
 		this.idValidator = idValidator;
+		this.canonicalizer = (ignoreCase ? Canonicalizer.CASE_INSENSITIVE : Canonicalizer.NO_CHANGE);
 	}
 
 	private void conflictsDetected(FSEntryContainer container) {

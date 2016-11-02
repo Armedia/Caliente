@@ -35,6 +35,7 @@ public enum CLIParam {
 	no_fix(0, "Disable filename fixes"),
 	no_length_fix(0, "Disable length repairs on the filename fixer"),
 	no_char_fix(0, "Disable invalid character repairs on the filename fixer"),
+	ignore_case(0, "Disable case sensitivity when performing name comparisons"),
 	fix_char(
 		1,
 		"Use the given character as the replacement for illegal characters (default is '_', must not be a forbidden character in the target fix scheme, and the period ('.') and spaces are not allowed in Windows)"),
