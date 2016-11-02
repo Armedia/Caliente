@@ -47,6 +47,9 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	MAPPED_ATTR_NAME(CmfDataType.STRING),
 	VDOC_HISTORY(CmfDataType.BOOLEAN),
 	VDOC_MEMBER(CmfDataType.STRING),
+	DEFAULT_ACL(CmfDataType.STRING),
+	DEFAULT_ASPECTS(CmfDataType.STRING),
+	DEFAULT_STORAGE(CmfDataType.STRING),
 	//
 	;
 
