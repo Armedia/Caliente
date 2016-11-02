@@ -265,6 +265,9 @@ public class DctmAttributes {
 	/** The default_aspects attribute of dmi_type_info. */
 	public static final String DEFAULT_ASPECTS = "default_aspects";
 
+	/** The default_storage attribute of dmi_type_info. */
+	public static final String DEFAULT_STORAGE = "default_storage";
+
 	// dm_format Attributes
 	/** The name attribute of dm_format. */
 	public static final String NAME = "name";

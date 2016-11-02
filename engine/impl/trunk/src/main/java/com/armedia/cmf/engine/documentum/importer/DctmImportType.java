@@ -22,6 +22,7 @@ import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
@@ -78,12 +79,41 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		DfUtils.closeQuietly(DfUtils.executeQuery(session, aclDql));
 	}
 
+	protected void setDefaultAspects(DctmImportContext ctx, IDfType type) throws DfException {
+		CmfProperty<IDfValue> prop = this.cmfObject.getProperty(IntermediateProperty.DEFAULT_ASPECTS);
+		if ((prop == null) || !prop.hasValues()) { return; }
+
+		final IDfSession session = ctx.getSession();
+		for (IDfValue v : prop) {
+			final String aclDql = String.format("ALTER TYPE %s ADD DEFAULT ASPECT %s", type.getName(), v.asString());
+			// TODO: Should the aspect name be quoted? The docs don't say so...
+			DfUtils.closeQuietly(DfUtils.executeQuery(session, aclDql));
+		}
+	}
+
+	protected void setDefaultStorage(DctmImportContext ctx, IDfType type) throws DfException {
+		CmfProperty<IDfValue> prop = this.cmfObject.getProperty(IntermediateProperty.DEFAULT_STORAGE);
+		if ((prop == null) || !prop.hasValues()) { return; }
+
+		final IDfSession session = ctx.getSession();
+
+		final String storeName = prop.getValue().asString();
+		IDfStore store = DfUtils.getStore(session, storeName);
+		if (store == null) {
+			this.log.warn(
+				"Type [{}] references non-existent store [{}] as a default store - can't replicate the setting",
+				type.getName(), storeName);
+			return;
+		}
+		final String aclDql = String.format("ALTER TYPE %s SET DEFAULT STORAGE %s", type.getName(), store.getName());
+		DfUtils.closeQuietly(DfUtils.executeQuery(session, aclDql));
+	}
+
 	@Override
 	protected IDfType newObject(DctmImportContext ctx) throws DfException {
 		String typeName = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString();
 		String superTypeName = this.cmfObject.getAttribute(DctmAttributes.SUPER_NAME).getValue().asString();
 		final IDfSession session = ctx.getSession();
-		// TODO: Ensure the supertype is there
 		IDfType superType = null;
 		if (superTypeName.length() > 0) {
 			superType = session.getType(superTypeName);
@@ -164,8 +194,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			while (resultCol.next()) {
 				IDfType type = castObject(session.getObject(resultCol.getId(DctmAttributes.NEW_OBJECT_ID)));
 				setDefaultACL(ctx, type);
-				// TODO: set default aspects?
-				// TODO: set default storage area?
+				setDefaultAspects(ctx, type);
+				setDefaultStorage(ctx, type);
 				// TODO: set default group?
 				// TODO: set default lifecycle?
 				// TODO: set check constraints?

@@ -6,10 +6,12 @@ package com.armedia.cmf.engine.documentum.exporter;
 
 import java.util.Collection;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
-import com.armedia.cmf.engine.documentum.DctmDataType;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
+import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.documentum.DfValueFactory;
 import com.armedia.cmf.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.cmf.engine.exporter.ExportException;
@@ -17,11 +19,13 @@ import com.armedia.cmf.storage.CmfAttributeTranslator;
 import com.armedia.cmf.storage.CmfDataType;
 import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
+import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfValidator;
 import com.documentum.fc.client.IDfValueAssistance;
+import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfAttr;
@@ -71,6 +75,35 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	protected boolean getExtraProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
 		IDfType type) throws DfException, ExportException {
 
+		// First, as much as we can get from the type info
+		IDfPersistentObject typeInfo = ctx.getSession().getObjectByQualification(
+			String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(type.getObjectId().getId())));
+		if (typeInfo != null) {
+			String aclDom = typeInfo.getString(DctmAttributes.ACL_DOMAIN);
+			String aclName = typeInfo.getString(DctmAttributes.ACL_NAME);
+			if (!StringUtils.isEmpty(aclDom) && !StringUtils.isEmpty(aclName)) {
+				properties.add(new CmfProperty<IDfValue>(IntermediateProperty.DEFAULT_ACL, CmfDataType.STRING, false,
+					DfValueFactory.newStringValue(String.format("%s:%s", aclDom, aclName))));
+			}
+
+			String defaultStorage = typeInfo.getString(DctmAttributes.DEFAULT_STORAGE);
+			if (!StringUtils.isEmpty(defaultStorage)) {
+				try {
+					IDfStore store = IDfStore.class.cast(ctx.getSession().getObject(new DfId(defaultStorage)));
+					properties.add(new CmfProperty<IDfValue>(IntermediateProperty.DEFAULT_STORAGE, CmfDataType.STRING,
+						false, DfValueFactory.newStringValue(store.getName())));
+				} catch (DfObjectNotFoundException e) {
+					throw new ExportException(
+						String.format("Type [%s] references a nonexistent default object store with ID [%s]",
+							type.getName(), defaultStorage),
+						e);
+				}
+			}
+
+			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.DEFAULT_ASPECTS, CmfDataType.STRING, true,
+				DfValueFactory.getAllRepeatingValues(DctmAttributes.DEFAULT_ASPECTS, typeInfo)));
+		}
+
 		// Now for the value assistance
 		final IDfPersistentObject obj = ctx.getSession().getObject(new DfId(ctx.getReferrent().getId()));
 		final int attCount = type.getTypeAttrCount();
@@ -82,9 +115,6 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			final int dataType = attr.getDataType();
 			final int length = attr.getLength();
 			final String desc = type.getTypeAttrDescription(name);
-
-			ctx.printf("TYPEEXPORT: %s::%s (%s/%s/%d/%s)", type.getName(), name, repeating ? "R" : "S",
-				DctmDataType.fromDataType(dataType), length, desc);
 
 			final IDfValueAssistance va;
 			if (obj.hasAttr(name)) {
