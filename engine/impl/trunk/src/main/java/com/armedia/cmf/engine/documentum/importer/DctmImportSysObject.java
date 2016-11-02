@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +41,7 @@ import com.armedia.cmf.storage.CmfObject;
 import com.armedia.cmf.storage.CmfProperty;
 import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
-import com.documentum.fc.client.DfIdNotFoundException;
+import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.DfPermit;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
@@ -66,6 +68,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	private static final Collection<String> NO_PERMITS = Collections.emptySet();
 
 	protected static final String BRANCH_MARKER = "branchMarker";
+
+	private static final Pattern ACL_INHERITANCE_PARSER = Pattern.compile("^(\\w+)\\[(.*)\\]$");
 
 	private static final Set<String> AUTO_PERMITS;
 
@@ -416,8 +420,126 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 	}
 
+	protected boolean restoreInheritedAcl(T sysObj, DctmImportContext ctx) throws DfException, ImportException {
+		CmfProperty<IDfValue> prop = this.cmfObject.getProperty(IntermediateProperty.ACL_INHERITANCE);
+		if ((prop == null) || !prop.hasValues()) { return false; }
+		String inheritanceSpec = prop.getValue().asString();
+		Matcher m = DctmImportSysObject.ACL_INHERITANCE_PARSER.matcher(inheritanceSpec);
+		if (!m.matches()) {
+			this.log.warn("Invalid inheritance specification [{}] for {} [{}]({})", inheritanceSpec,
+				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
+			return false;
+		}
+
+		// Format will be inheritanceType[reference] where inheritanceType is NONE, TYPE, USER or
+		// FOLDER, and reference is either empty (NONE), the type ID, user ID, or folder ID
+		String type = m.group(1);
+		String reference = m.group(2);
+
+		if ("NONE".equalsIgnoreCase(type)) {
+			// No ACL inheritance...just return and let the normal code apply
+			return false;
+		}
+
+		String actualReference = null;
+		String aclDomain = null;
+		String aclName = null;
+
+		final IDfSession session = ctx.getSession();
+
+		if ("FOLDER".equalsIgnoreCase(type)) {
+			Mapping map = ctx.getAttributeMapper().getTargetMapping(CmfType.FOLDER, DctmAttributes.R_OBJECT_ID,
+				reference);
+			if (map == null) {
+				// No mapping...parent hasn't been mapped
+				throw new ImportException(String.format(
+					"Can't inherit an ACL from a parent folder for %s [%s](%s) - the source parent ID [%s] couldn't be mapped to a target object",
+					this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(), reference));
+			}
+
+			final IDfFolder parent;
+			try {
+				parent = session.getFolderBySpecification(map.getTargetValue());
+			} catch (DfObjectNotFoundException e) {
+				throw new ImportException(String.format(
+					"Can't inherit an ACL from a parent folder for %s [%s](%s) - the parent with ID [%s] doesn't exist",
+					this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(),
+					map.getTargetValue()));
+			}
+
+			final IDfACL acl = parent.getACL();
+			if (acl != null) {
+				sysObj.setACL(acl);
+				return true;
+			}
+
+			this.log.warn(
+				"Can't inherit an ACL from parent folder [{}] for {} [{}]({}) - the parent has no ACL to inherit from",
+				parent.getFolderPath(0), this.cmfObject.getType().name(), this.cmfObject.getLabel(),
+				this.cmfObject.getId());
+			return false;
+		}
+
+		if ("TYPE".equalsIgnoreCase(type)) {
+			// ACL inherited from the object's type...
+			IDfType t = session.getType(reference);
+			if (t == null) { throw new ImportException(
+				String.format("Can't inherit an ACL from type [%s] for %s [%s](%s) - the type doesn't exist", reference,
+					this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+
+			actualReference = t.getName();
+
+			IDfPersistentObject typeInfo = session.getObjectByQualification(
+				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(t.getObjectId().getId())));
+			if (typeInfo == null) {
+				this.log.warn("Can't inherit an ACL from type [{}] for {} [{}]({}) - couldn't locate the type's info",
+					type, actualReference, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
+					this.cmfObject.getId());
+				return false;
+			}
+
+			aclDomain = typeInfo.getString(DctmAttributes.ACL_DOMAIN);
+			aclName = typeInfo.getString(DctmAttributes.ACL_NAME);
+		}
+
+		if ("USER".equalsIgnoreCase(type)) {
+			// ACL inherited from the object's owner...
+			final String user = DctmMappingUtils.resolveMappableUser(session, reference);
+			IDfUser u = session.getUser(user);
+			if (u == null) { throw new ImportException(String.format(
+				"Can't inherit an ACL from user [%s] for %s [%s](%s) - the user doesn't exist (mapped to [%s])",
+				reference, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(), user)); }
+
+			actualReference = u.getUserName();
+			aclDomain = u.getACLDomain();
+			aclName = u.getACLName();
+		}
+
+		if (actualReference == null) {
+			this.log.warn("Unsupported inheritance specification [{}] for {} [{}]({})", inheritanceSpec,
+				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
+			return false;
+		}
+
+		if (StringUtils.isEmpty(aclName) || StringUtils.isEmpty(aclDomain)) { throw new ImportException(String.format(
+			"The %s [%s] doesn't contain any ACL information - can't inherit an ACL for %s [%s](%s)", type,
+			actualReference, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+
+		final IDfACL acl = session.getACL(aclDomain, aclName);
+		if (acl == null) { throw new ImportException(
+			String.format("The %s [%s] references a nonexistent ACL [%s::%s] - can't inherit an ACL for %s [%s](%s)",
+				type, actualReference, aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
+				this.cmfObject.getId())); }
+
+		sysObj.setACL(acl);
+		return true;
+	}
+
 	protected void restoreAcl(T sysObject, DctmImportContext ctx) throws DfException, ImportException {
 		final IDfSession session = ctx.getSession();
+
+		// First, see if there's ACL inheritance to be applied...
+		if (restoreInheritedAcl(sysObject, ctx)) { return; }
 
 		// First, find the ACL_ID property - if it doesn't exist, we have no ACL to restore
 		CmfProperty<IDfValue> aclIdProp = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
@@ -437,7 +559,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					IDfACL acl = IDfACL.class.cast(session.getObject(new DfId(m.getTargetValue())));
 					sysObject.setACL(acl);
 					return;
-				} catch (DfIdNotFoundException e) {
+				} catch (DfObjectNotFoundException e) {
 				}
 
 				// ACL or not, we're done here...

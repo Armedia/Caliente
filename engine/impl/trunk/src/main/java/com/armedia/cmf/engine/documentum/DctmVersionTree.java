@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
+import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -90,7 +91,7 @@ public class DctmVersionTree {
 	 *             an unrecoverable processing error ocurred
 	 * @throws DfException
 	 *             raised by the underlying DFC
-	 * @throws DfIdNotFoundException
+	 * @throws DfObjectNotFoundException
 	 *             if the given chronicle id refers to a missing chronicle and no objects were found
 	 * @throws IllegalArgumentException
 	 *             raised if the session is {@code null}, the chronicle is {@code null}, or

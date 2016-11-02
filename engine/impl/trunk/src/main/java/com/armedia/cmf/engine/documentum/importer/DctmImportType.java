@@ -4,13 +4,19 @@
 
 package com.armedia.cmf.engine.documentum.importer;
 
+import com.armedia.cmf.engine.converter.IntermediateProperty;
 import com.armedia.cmf.engine.documentum.DctmAttributes;
 import com.armedia.cmf.engine.documentum.DctmObjectType;
 import com.armedia.cmf.engine.documentum.DfUtils;
 import com.armedia.cmf.engine.importer.ImportException;
 import com.armedia.cmf.storage.CmfAttribute;
+import com.armedia.cmf.storage.CmfAttributeMapper.Mapping;
 import com.armedia.cmf.storage.CmfObject;
+import com.armedia.cmf.storage.CmfProperty;
+import com.armedia.cmf.storage.CmfType;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfObjectNotFoundException;
+import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -40,6 +46,36 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			superName = "";
 		}
 		return String.format("%s%s", type.getName(), superName);
+	}
+
+	protected void setDefaultACL(DctmImportContext ctx, IDfType type) throws DfException {
+		CmfProperty<IDfValue> prop = this.cmfObject.getProperty(IntermediateProperty.DEFAULT_ACL);
+		if ((prop == null) || !prop.hasValues()) { return; }
+
+		// Step 1: is the ACL there?
+		IDfId aclId = prop.getValue().asId();
+		Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID, aclId.getId());
+		if (m == null) {
+			// The mapping isn't there...we can't set it...
+			this.log.warn("The ACL with ID[{}], specified as default for type [{}] was not imported", aclId.getId(),
+				type.getName());
+			return;
+		}
+
+		final IDfSession session = ctx.getSession();
+		final IDfACL acl;
+		try {
+			acl = IDfACL.class.cast(session.getObject(aclId));
+		} catch (DfObjectNotFoundException e) {
+			// The mapping isn't there...we can't set it...
+			this.log.warn("The ACL with ID[{}], specified as default for type [{}] is not available", aclId.getId(),
+				type.getName());
+			return;
+		}
+
+		final String aclDql = String.format("ALTER TYPE %s SET DEFAULT ACL %s IN %s", type.getName(),
+			DfUtils.quoteString(acl.getObjectName()), DfUtils.quoteString(acl.getDomain()));
+		DfUtils.closeQuietly(DfUtils.executeQuery(session, aclDql));
 	}
 
 	@Override
@@ -126,7 +162,17 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		IDfCollection resultCol = DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_QUERY);
 		try {
 			while (resultCol.next()) {
-				return castObject(session.getObject(resultCol.getId(DctmAttributes.NEW_OBJECT_ID)));
+				IDfType type = castObject(session.getObject(resultCol.getId(DctmAttributes.NEW_OBJECT_ID)));
+				setDefaultACL(ctx, type);
+				// TODO: set default aspects?
+				// TODO: set default storage area?
+				// TODO: set default group?
+				// TODO: set default lifecycle?
+				// TODO: set check constraints?
+				// TODO: set value assistance?
+				// TODO: property defaults?
+				// TODO: other type settings?
+				return type;
 			}
 			// Nothing was created... we should explode
 			throw new DfException(String.format("Failed to create the type [%s] with DQL: %s", typeName, dql));
