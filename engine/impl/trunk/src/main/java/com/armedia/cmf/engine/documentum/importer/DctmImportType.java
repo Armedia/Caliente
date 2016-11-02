@@ -85,6 +85,14 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 
 		final IDfSession session = ctx.getSession();
 		for (IDfValue v : prop) {
+			IDfPersistentObject o = session.getObjectByQualification(
+				String.format("dmc_aspect_type where object_name = %s", DfUtils.quoteString(v.asString())));
+			if (o == null) {
+				this.log.warn(
+					"Type [{}] references non-existent aspect [{}] as a default aspect - can't replicate the setting because the aspect doesn't exist",
+					type.getName(), v.asString());
+				continue;
+			}
 			final String aclDql = String.format("ALTER TYPE %s ADD DEFAULT ASPECT %s", type.getName(), v.asString());
 			// TODO: Should the aspect name be quoted? The docs don't say so...
 			DfUtils.closeQuietly(DfUtils.executeQuery(session, aclDql));
