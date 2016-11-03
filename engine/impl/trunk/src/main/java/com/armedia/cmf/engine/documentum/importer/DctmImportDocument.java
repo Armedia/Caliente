@@ -710,7 +710,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 			if (fromDctm) {
 				// Parse out the rendition number for this one...
-				rendition = (info.isDefaultRendition() ? 0 : Integer.valueOf(info.getRenditionIdentifier(), 16));
+				info.getRenditionIdentifier();
+				rendition = (info.isDefaultRendition() ? 0
+					: Integer.valueOf(info.getProperty(DctmAttributes.RENDITION)));
 				if ((rendition == 0) && !info.isDefaultRendition()) {
 					this.log.warn(String.format(
 						"%s %s [%s](%s) has a non-default rendition with an ID of 0, which is not allowed (%s)",
