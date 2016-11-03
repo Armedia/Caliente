@@ -199,7 +199,7 @@ public class DctmAttributeHandlers {
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_INTEGER,
 			DctmAttributes.WORLD_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.DOCUMENT, DctmDataType.DF_STRING,
 			DctmAttributes.ACL_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 
@@ -241,7 +241,7 @@ public class DctmAttributeHandlers {
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_INTEGER,
 			DctmAttributes.WORLD_PERMIT, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
-			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.NO_IMPORT_HANDLER);
+			DctmAttributes.ACL_DOMAIN, DctmAttributeHandlers.USER_NAME_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
 			DctmAttributes.ACL_NAME, DctmAttributeHandlers.NO_IMPORT_HANDLER);
 		DctmAttributeHandlers.setAttributeHandler(DctmObjectType.FOLDER, DctmDataType.DF_STRING,
