@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<types
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.armedia.com/ns/cmf/engine/xml"
+	xsi:schemaLocation="http://www.armedia.com/ns/cmf/engine/xml platform:/resource/cmf-engine-xml/src/main/resources/cmf-engine-xml.xsd ">
+	<type>
+		<name>name</name>
+		<superType>superType</superType>
+		<attributes>
+			<attribute dataType="BOOLEAN" length="1" name="xxx" repeating="false" inherited="true" sourceName="x" />
+		</attributes>
+		<properties>
+			<property dataType="BOOLEAN" name="xxx" repeating="true">
+				<value>value1</value>
+				<value>value2</value>
+				<value>value3</value>
+				<value>value4</value>
+				<value>value5</value>
+				<value>value6</value>
+			</property>
+		</properties>
+	</type>
+</types>
