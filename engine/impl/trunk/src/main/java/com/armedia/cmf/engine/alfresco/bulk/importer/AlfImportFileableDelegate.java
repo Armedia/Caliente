@@ -662,6 +662,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			Properties p = new Properties();
 			final boolean primaryRendition = content.isDefaultRendition() && (content.getRenditionPage() == 0);
 			final MarkerType markerType = (primaryRendition ? MarkerType.NORMAL : MarkerType.RENDITION_ENTRY);
+
+			if (this.virtual && !primaryRendition) {
+				// This is a VDoc rendition...and is currently not supported
+				this.log.warn("VDoc renditions aren't yet supported for [{}]({})", this.cmfObject.getLabel(),
+					this.cmfObject.getId());
+				continue;
+			}
+
 			if (primaryRendition) {
 				// First page of the default rendition gets ALL the metadata. Everything
 				// else only gets supplementary metadata
@@ -682,12 +690,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			final File meta = generateMetadataFile(ctx, p, main);
 			if (this.virtual) {
 				File vdocVersion = meta.getParentFile();
-				if (!primaryRendition) {
-					// This is a VDoc rendition...and is currently not supported
-					this.log.warn("VDoc renditions aren't yet supported for [{}]({})", this.cmfObject.getLabel(),
-						this.cmfObject.getId());
-					continue;
-				}
 				if (vdocVersionsIndexed.add(vdocVersion.getName())) {
 					// Does the reference home already have properties? If not, then add them...
 					Properties versionProps = new Properties();
