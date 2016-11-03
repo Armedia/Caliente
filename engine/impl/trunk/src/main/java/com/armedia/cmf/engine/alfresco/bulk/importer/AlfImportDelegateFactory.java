@@ -401,8 +401,9 @@ public class AlfImportDelegateFactory
 			case RENDITION_ENTRY:
 			case VDOC_ROOT:
 			case VDOC_VERSION:
-			case VDOC_REFERENCE:
 			case VDOC_STREAM:
+			case VDOC_RENDITION:
+			case VDOC_REFERENCE:
 				head = 1;
 				count = 1;
 				current = 1;
@@ -480,6 +481,9 @@ public class AlfImportDelegateFactory
 				thisMarker.setName(cmfObject.getName());
 				break;
 
+			case VDOC_RENDITION:
+				"".hashCode();
+				// fall-through
 			case VDOC_STREAM:
 				// For the primary streams, we set the same name of the object
 				thisMarker.setName(cmfObject.getName());
@@ -534,6 +538,7 @@ public class AlfImportDelegateFactory
 				vdoc.addVersion(thisMarker);
 				break;
 
+			case VDOC_RENDITION:
 			case VDOC_STREAM:
 			case VDOC_REFERENCE:
 				vdoc.addMember(contentFile.getParentFile().getName(), thisMarker);
@@ -555,6 +560,7 @@ public class AlfImportDelegateFactory
 			case VDOC_ROOT:
 			case VDOC_VERSION:
 			case VDOC_STREAM:
+			case VDOC_RENDITION:
 			case VDOC_REFERENCE:
 				handleVirtual(cmfObject, contentFile, metadataFile, type, thisMarker);
 				return;

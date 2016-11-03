@@ -681,7 +681,13 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 			final File meta = generateMetadataFile(ctx, p, main);
 			if (this.virtual) {
-				final File vdocVersion = meta.getParentFile();
+				File vdocVersion = meta.getParentFile();
+				if (!primaryRendition) {
+					// This is a VDoc rendition...and is currently not supported
+					this.log.warn("VDoc renditions aren't yet supported for [{}]({})", this.cmfObject.getLabel(),
+						this.cmfObject.getId());
+					continue;
+				}
 				if (vdocVersionsIndexed.add(vdocVersion.getName())) {
 					// Does the reference home already have properties? If not, then add them...
 					Properties versionProps = new Properties();
@@ -703,7 +709,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					final File vdocVersionMeta = generateMetadataFile(ctx, versionProps, vdocVersion);
 					this.factory.storeToIndex(this.cmfObject, vdocVersion, vdocVersionMeta, MarkerType.VDOC_VERSION);
 				}
-				this.factory.storeToIndex(this.cmfObject, main, meta, MarkerType.VDOC_STREAM);
+				this.factory.storeToIndex(this.cmfObject, main, meta,
+					(primaryRendition ? MarkerType.VDOC_STREAM : MarkerType.VDOC_RENDITION));
 
 				CmfProperty<CmfValue> members = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
 				if (members != null) {
