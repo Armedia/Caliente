@@ -242,7 +242,7 @@ public class Validator {
 		private CSVPrinter createOutputFile(File baseDir, String marker) throws IOException {
 			// Open the file
 			File targetFile = new File(baseDir,
-				String.format("cmf-validator-faults.%s.%s.csv", marker, this.type.name().toLowerCase()));
+				String.format("caliente-validator-faults.%s.%s.csv", marker, this.type.name().toLowerCase()));
 
 			// Clear out garbage
 			if (targetFile.exists() && targetFile.isFile()) {

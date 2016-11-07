@@ -17,7 +17,7 @@ import com.armedia.commons.utilities.Tools;
 public class CommonClasspathPatcher extends ClasspathPatcher {
 
 	private static final String ENV_LIB = "CMF_USERMAPPER_LIB";
-	private static final String DEFAULT_LIB = "cmf-user-mapper.lib";
+	private static final String DEFAULT_LIB = "caliente.lib";
 
 	private static final FileFilter LIB_FILTER = new FileFilter() {
 		@Override

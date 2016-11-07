@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>cmf-engine</name>
-	<comment>JavaCC Nature</comment>
+	<name>caliente-engine-api</name>
 	<projects>
 	</projects>
 	<buildSpec>
-		<buildCommand>
-			<name>sf.eclipse.javacc.javaccbuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
 		<buildCommand>
 			<name>org.eclipse.wst.common.project.facet.core.builder</name>
 			<arguments>
@@ -38,7 +32,6 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>com.nwire.studio.tools.nwireNature</nature>
 		<nature>org.eclipse.wst.common.project.facet.core.nature</nature>
-		<nature>sf.eclipse.javacc.javaccnature</nature>
 	</natures>
 	<filteredResources>
 		<filter>

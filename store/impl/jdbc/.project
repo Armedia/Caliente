@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>cmf-storage-jdbc</name>
+	<name>caliente-store-impl-jdbc</name>
 	<comment></comment>
 	<projects>
 	</projects>

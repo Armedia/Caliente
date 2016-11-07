@@ -11,7 +11,7 @@
     </node>
     <node name="schemas">
       <node name="schema-1">
-        <attribute name="location" value="platform:/resource/cmf-storage-api/src/main/resources/stores.xsd"/>
+        <attribute name="location" value="platform:/resource/caliente-store-api/src/main/resources/stores.xsd"/>
       </node>
     </node>
   </facet>

@@ -48,7 +48,7 @@ public class Launcher {
 			return 1;
 		}
 		final String reportMarker = DateFormatUtils.format(new Date(), Launcher.REPORT_MARKER_FORMAT);
-		System.setProperty("logName", String.format("cmf-validator-%s", reportMarker));
+		System.setProperty("logName", String.format("caliente-validator-%s", reportMarker));
 		final Logger log = LoggerFactory.getLogger(Launcher.class);
 
 		try {
