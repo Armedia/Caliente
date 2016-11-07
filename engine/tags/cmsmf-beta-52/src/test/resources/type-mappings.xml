@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-<properties>
-	<comment>Type Mappings</comment>
-	<entry key="a">b</entry>
-	<entry key="b">c</entry>
-	<entry key="c">d</entry>
-</properties>
