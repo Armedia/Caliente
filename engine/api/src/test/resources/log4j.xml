@@ -10,7 +10,7 @@
 
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
 
-	<logger name="com.armedia.cmf">
+	<logger name="com.armedia.caliente">
 		<level value="DEBUG"/>
 	</logger>
 

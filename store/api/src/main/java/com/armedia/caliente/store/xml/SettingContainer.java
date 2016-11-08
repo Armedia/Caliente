@@ -1,0 +1,119 @@
+package com.armedia.caliente.store.xml;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlTransient;
+
+import org.apache.commons.lang3.text.StrLookup;
+import org.apache.commons.lang3.text.StrSubstitutor;
+
+import com.armedia.commons.utilities.Tools;
+
+@XmlTransient
+public class SettingContainer implements Cloneable {
+
+	@XmlTransient
+	private static class Lookup extends StrLookup<String> {
+
+		private final Map<String, String> settings;
+		private final String envPrefix = "ENV.";
+		private final int envPrefixLength = this.envPrefix.length();
+
+		Lookup(Map<String, String> settings) {
+			this.settings = settings;
+		}
+
+		@Override
+		public String lookup(String key) {
+			if (this.settings.containsKey(key)) { return this.settings.get(key); }
+			if (key.startsWith(this.envPrefix)) {
+				return System.getenv(key.substring(this.envPrefixLength));
+			} else {
+				return System.getProperty(key);
+			}
+		}
+
+	};
+
+	@XmlElementWrapper(name = "settings", required = false)
+	@XmlElement(name = "setting", required = false)
+	private List<Setting> setting;
+
+	@XmlTransient
+	private Map<String, String> settings = new LinkedHashMap<String, String>();
+
+	@XmlTransient
+	private SettingContainer parent = null;
+
+	protected void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
+		this.settings = new LinkedHashMap<String, String>();
+		if (this.setting != null) {
+			for (Setting s : this.setting) {
+				this.settings.put(s.getName(), s.getValue());
+			}
+		}
+		if ((parent != null) && (parent instanceof SettingContainer)) {
+			this.parent = SettingContainer.class.cast(parent);
+		}
+	}
+
+	protected void beforeMarshal(Marshaller marshaller) {
+		this.setting = new ArrayList<Setting>(this.settings.size());
+		for (Map.Entry<String, String> e : this.settings.entrySet()) {
+			Setting s = new Setting();
+			s.setName(e.getKey());
+			s.setValue(e.getValue());
+			this.setting.add(s);
+		}
+	}
+
+	protected final SettingContainer getParent() {
+		return this.parent;
+	}
+
+	public final Map<String, String> getSettings() {
+		return this.settings;
+	}
+
+	@SuppressWarnings("unchecked")
+	public final Map<String, String> getEffectiveSettings() {
+		final Map<String, String> m = new HashMap<String, String>();
+		Tools.overlayMaps(m, getSettings(), (this.parent != null ? this.parent.getEffectiveSettings() : null));
+		StrSubstitutor sub = new StrSubstitutor(new Lookup(m));
+		// We make a copy of the keys to avoid concurrent modification errors
+		for (String k : new HashSet<String>(m.keySet())) {
+			m.put(k, sub.replace(m.get(k)));
+		}
+		return m;
+	}
+
+	@Override
+	public SettingContainer clone() {
+		final SettingContainer newClone;
+		try {
+			newClone = SettingContainer.class.cast(super.clone());
+		} catch (CloneNotSupportedException e) {
+			// if java.lang.Object isn't cloneable, we're screwed anyway...
+			throw new RuntimeException("Can't clone the SettingContainer", e);
+		}
+		if (this.setting != null) {
+			newClone.setting = new ArrayList<Setting>(this.setting);
+		}
+		if (this.settings != null) {
+			newClone.settings = new HashMap<String, String>(this.settings);
+		}
+		if (this.parent != null) {
+			newClone.parent = this.parent.clone();
+		}
+		return newClone;
+	}
+}
