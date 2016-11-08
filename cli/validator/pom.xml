@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<name>Armedia Caliente Tools - Alfresco BI/BE Validator</name>
+	<name>Armedia Caliente CLI - Alfresco BI/BE Validator</name>
 	<description>A standalone tool to validate an Alresco BE dump against a Caliente BI ingestible</description>
-	<groupId>com.armedia.caliente.tools</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>validator</artifactId>
 	<packaging>jar</packaging>
 

@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<name>Armedia Caliente Tools - Documentum Filename Mapper</name>
+	<name>Armedia Caliente CLI - Documentum Filename Mapper</name>
 	<description>A standalone tool to repair and deduplicate filenames (Documentum version)</description>
-	<groupId>com.armedia.caliente.tools</groupId>
+	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>filename-mapper</artifactId>
 	<packaging>jar</packaging>
 
