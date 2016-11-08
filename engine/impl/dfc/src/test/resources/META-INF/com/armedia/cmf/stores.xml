@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<stores xmlns="http://www.armedia.com/ns/cmf/stores"
+<stores xmlns="http://www.armedia.com/ns/caliente/stores"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/cmf/stores http://www.armedia.com/ns/cmf/stores">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores http://www.armedia.com/ns/caliente/stores">
 	<settings>
-		<setting name="tmpdir">${user.dir}/cmf</setting>
+		<setting name="tmpdir">${user.dir}/caliente</setting>
 	</settings>
 
 	<objectstore id="dctmTest">

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<stores xmlns="http://www.armedia.com/ns/cmf/stores"
+<stores xmlns="http://www.armedia.com/ns/caliente/stores"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores platform:/resource/caliente-store-api/src/main/resources/stores.xsd">
 	<settings>
