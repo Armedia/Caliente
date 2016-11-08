@@ -291,7 +291,7 @@
 					<artifactId>maven-shade-plugin</artifactId>
 					<version>2.4.3</version>
 					<configuration>
-						<finalName>${project.artifactId}-${project.version}-${buildNumber}-exe</finalName>
+						<finalName>${project.artifactId}-${project.version}-${build.number}-exe</finalName>
 						<createSourcesJar>true</createSourcesJar>
 						<shadedSourcesContent>true</shadedSourcesContent>
 						<createDependencyReducedPom>false</createDependencyReducedPom>
