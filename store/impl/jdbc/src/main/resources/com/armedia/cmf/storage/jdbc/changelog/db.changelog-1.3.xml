@@ -4,14 +4,16 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 	<changeSet author="cmf" id="1004">
-    	<preConditions>
-    		<changeSetExecuted id="1003" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.2.xml"/>
-	    </preConditions>
+		<preConditions>
+			<changeSetExecuted id="1003" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.2.xml"/>
+		</preConditions>
 
-	    <addColumn tableName="cmf_export_plan">
+		<addColumn tableName="cmf_export_plan">
 			<column name="message" type="text" remarks="Additional information about the export outcome">
 				<constraints nullable="true" />
 			</column>
-	    </addColumn>
+		</addColumn>
+
+		<validCheckSum/>
 	</changeSet>
 </databaseChangeLog>

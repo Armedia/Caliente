@@ -182,8 +182,8 @@
 				  and ct.parent_id = sq.parent_id
 				  and co.object_id = cn.object_id
 				  and cn.new_name = sq.new_name
- 			 order by sq.parent_id, cn.new_name, co.object_number
- 		</createView>
+			 order by sq.parent_id, cn.new_name, co.object_number
+		</createView>
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="cmf_attribute">
@@ -360,5 +360,7 @@
 			baseTableName="cmf_content_property" baseColumnNames="object_id, rendition_id, rendition_page"
 			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page"
 			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<validCheckSum/>
 	</changeSet>
 </databaseChangeLog>
