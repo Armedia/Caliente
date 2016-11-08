@@ -32,7 +32,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.7</project.build.target>
 		<dfc.version>6.7-SP1</dfc.version>
-		<build.number>dev</build.number>
+		<build.number>SNAPSHOT-r${buildNumber}</build.number>
 	</properties>
 
 	<repositories>
@@ -395,12 +395,6 @@
 			<id>release</id>
 			<properties>
 				<build.number>final</build.number>
-			</properties>
-		</profile>
-		<profile>
-			<id>test</id>
-			<properties>
-				<build.number>r${buildNumber}</build.number>
 			</properties>
 		</profile>
 	</profiles>
