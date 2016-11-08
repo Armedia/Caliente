@@ -73,11 +73,6 @@
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<createSourcesJar>true</createSourcesJar>
-							<shadedSourcesContent>true</shadedSourcesContent>
-							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>exe</shadedClassifierName>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<mainClass>com.armedia.cmf.filenamemapper.Launcher</mainClass>
