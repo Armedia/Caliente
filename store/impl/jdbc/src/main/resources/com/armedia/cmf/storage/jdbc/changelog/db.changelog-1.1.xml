@@ -4,6 +4,7 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 	<changeSet author="cmf" id="1002">
+		<validCheckSum>any</validCheckSum>
 		<preConditions>
 			<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
 		</preConditions>
@@ -55,7 +56,5 @@
 			   and cmf_content.rendition_page = p.rendition_page
 			   and p.name = 'page_modifier'
 		</sql>
-
-		<validCheckSum/>
 	</changeSet>
 </databaseChangeLog>
