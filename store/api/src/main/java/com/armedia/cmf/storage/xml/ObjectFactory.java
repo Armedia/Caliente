@@ -8,7 +8,7 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-	public static final String NAMESPACE = "http://www.armedia.com/ns/cmf/stores";
+	public static final String NAMESPACE = "http://www.armedia.com/ns/caliente/stores";
 
 	private final static QName _Stores_QNAME = new QName(ObjectFactory.NAMESPACE, "stores");
 
