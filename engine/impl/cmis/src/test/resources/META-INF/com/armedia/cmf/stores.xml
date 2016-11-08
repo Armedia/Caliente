@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <stores xmlns="http://www.armedia.com/ns/cmf/stores"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/cmf/stores http://www.armedia.com/ns/cmf/stores">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores platform:/resource/caliente-store-api/src/main/resources/stores.xsd">
 	<settings>
 		<setting name="target">${user.dir}/test</setting>
 		<setting name="dir.metadata">${target}</setting>
