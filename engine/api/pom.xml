@@ -4,7 +4,6 @@
 
 	<name>Armedia Caliente Engine - Base Engine Component</name>
 	<description>The engine which implements Caliente's base data transfer algorithms</description>
-	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente-engine</artifactId>
 	<packaging>bundle</packaging>
 
